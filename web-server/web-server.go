@@ -47,6 +47,8 @@ func (ws* WebServer) serveFile(rw http.ResponseWriter, rq *http.Request) {
 	}
 	
 	file, err := os.Open(fileDestination)
+	defer file.Close()
+	
 	if err != nil {
 		http.Error(rw, "Can't open file!", http.StatusInternalServerError)
 		return
