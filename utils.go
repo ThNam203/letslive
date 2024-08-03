@@ -7,7 +7,7 @@ import (
 )
 
 func resetWorkingSpace(fileDestination string) {
-	
+
 }
 
 func touch(fileDestination string) {
@@ -25,4 +25,12 @@ func touch(fileDestination string) {
 			log.Fatal(err)
 		}
 	}
+}
+
+func isFileExists(path string) bool {
+	if _, err := os.Stat(path); err != nil && os.IsNotExist(err) {
+		return false
+	}
+
+	return true
 }
