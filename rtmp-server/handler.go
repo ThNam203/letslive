@@ -49,7 +49,7 @@ func (h *Handler) OnPublish(_ *rtmp.StreamContext, timestamp uint32, cmd *rtmpms
 		os.TempDir(),
 		filepath.Clean(filepath.Join("/", fmt.Sprintf("%s.flv", cmd.PublishingName))),
 	)
-	
+
 	f, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create flv file")
@@ -141,3 +141,4 @@ func (h *Handler) OnClose() {
 		_ = h.flvFile.Close()
 	}
 }
+

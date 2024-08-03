@@ -1,0 +1,25 @@
+publicHLSPath: public/hls
+ffmpegPath: /usr/local/bin/ffmpeg
+webServerPort: 8080
+
+ffmpegSettings:
+  masterFileName: index.m3u8
+  hlsTime: 2
+  crf: 21
+  preset: ultrafast
+  hlsListSize: 10
+  hlsMaxSize: 20
+
+  qualities:
+    - resolution: 640x360
+      maxBitrate: 365k
+      fps: 30
+      bufSize: 730k
+    - resolution: 1280x720
+      maxBitrate: 4.5M
+      fps: 60
+      bufSize: 9M
+    - resolution: 1920x1080
+      maxBitrate: 7.8M
+      fps: 60
+      bufSize: 15.6M

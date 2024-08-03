@@ -16,4 +16,5 @@ require (
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/yutopp/go-amf0 v0.1.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
