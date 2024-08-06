@@ -1,23 +1,23 @@
 package main
 
 import (
-	"log"
-	"os"
+	config "sen1or/lets-live/config"
+	rtmpserver "sen1or/lets-live/rtmp-server"
 	webserver "sen1or/lets-live/web-server"
-
-	"github.com/joho/godotenv"
+	"strconv"
 )
 
-func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Can not load environment variables")
-	}
+var configuration = config.GetConfig()
 
-    baseDirectory := os.Getenv("WEB_SERVER_BASE_DIRECTORY")
-	webServerListenAddr := "localhost:" + os.Getenv("WEB_SERVER_PORT")
+func main() {
+	resetWorkingSpace()
+
+	baseDirectory := configuration.PublicHLSPath
+	webServerListenAddr := "localhost:" + strconv.Itoa(configuration.WebServerPort)
 	allowedSuffixes := [2]string{".ts", ".m3u8"}
 
 	MyWebServer := webserver.NewWebServer(webServerListenAddr, allowedSuffixes[:], baseDirectory)
-	MyWebServer.ListenAndServe()
+	go MyWebServer.ListenAndServe()
+
+	rtmpserver.StartRTMPService()
 }

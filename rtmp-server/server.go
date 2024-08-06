@@ -4,12 +4,14 @@ import (
 	"io"
 	"log"
 	"net"
+	"sen1or/lets-live/config"
 
 	"github.com/sirupsen/logrus"
 	"github.com/yutopp/go-rtmp"
 )
 
 type RTMPServer struct {
+	config config.Config
 }
 
 func (sv *RTMPServer) Listen() {
@@ -26,7 +28,9 @@ func (sv *RTMPServer) Listen() {
 	srv := rtmp.NewServer(&rtmp.ServerConfig{
 		OnConnect: func(conn net.Conn) (io.ReadWriteCloser, *rtmp.ConnConfig) {
 			l := logrus.StandardLogger()
-			h := &Handler{}
+			h := &Handler{
+				config: sv.config,
+			}
 
 			return conn, &rtmp.ConnConfig{
 				Handler: h,
@@ -43,4 +47,14 @@ func (sv *RTMPServer) Listen() {
 	if err := srv.Serve(listener); err != nil {
 		log.Fatal("RTMP server can't serve")
 	}
+}
+
+func StartRTMPService() {
+	var config = config.GetConfig()
+
+	server := &RTMPServer{
+		config: config,
+	}
+
+	server.Listen()
 }
