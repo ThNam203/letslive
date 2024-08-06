@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"log"
@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	PublicHLSPath string        `yaml:"publicHLSPath"`
-	WebServerPort string        `yaml:"webServerPort"`
+	WebServerPort int           `yaml:"webServerPort"`
 	FFMpegSetting FFMpegSetting `yaml:"ffmpegSetting"`
 }
 
@@ -31,7 +31,12 @@ type FFMpegQuality struct {
 	BufSize    string `yaml:"bufSize"`
 }
 
-func getConfig() Config {
+var configuration *Config = nil
+
+func GetConfig() Config {
+	if configuration != nil {
+		return *configuration
+	}
 	configurationPath := "config/configuration.yaml"
 
 	if !isFileExists(configurationPath) {
@@ -40,16 +45,37 @@ func getConfig() Config {
 
 	configFile, err := os.ReadFile(configurationPath)
 	if err != nil {
-		panic("error reading configuration file")
+		log.Fatal("error reading configuration file")
 	}
 
 	var config Config
 	err = yaml.Unmarshal(configFile, &config)
+
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
+
+	checkConfig(config)
+	configuration = &config
 
 	return config
 }
 
-// TODO: check config
+func checkConfig(config Config) {
+	if !isFileExists(config.PublicHLSPath) {
+		log.Fatalf("PublicHLSPath %s doesn't exist", config.PublicHLSPath)
+	}
+
+	if !isFileExists(config.FFMpegSetting.FFMpegPath) {
+		log.Fatalf("ffmpeg path %s doesn't exist", config.FFMpegSetting.FFMpegPath)
+	}
+}
+
+func isFileExists(path string) bool {
+	if _, err := os.Stat(path); err != nil && os.IsNotExist(err) {
+		log.Println(path)
+		return false
+	}
+
+	return true
+}

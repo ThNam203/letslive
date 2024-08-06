@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sen1or/lets-live/config"
 
 	"github.com/pkg/errors"
 	"github.com/yutopp/go-flv"
@@ -21,6 +22,7 @@ type Handler struct {
 	rtmp.DefaultHandler
 	flvFile *os.File
 	flvEnc  *flv.Encoder
+	config  config.Config
 }
 
 func (h *Handler) OnServe(conn *rtmp.Conn) {
@@ -45,12 +47,12 @@ func (h *Handler) OnPublish(_ *rtmp.StreamContext, timestamp uint32, cmd *rtmpms
 	}
 
 	// Record streams as FLV!
-	p := filepath.Join(
+	pipePath := filepath.Join(
 		os.TempDir(),
 		filepath.Clean(filepath.Join("/", fmt.Sprintf("%s.flv", cmd.PublishingName))),
 	)
 
-	f, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY, 0666)
+	f, err := os.OpenFile(pipePath, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create flv file")
 	}
@@ -62,6 +64,8 @@ func (h *Handler) OnPublish(_ *rtmp.StreamContext, timestamp uint32, cmd *rtmpms
 		return errors.Wrap(err, "Failed to create flv encoder")
 	}
 	h.flvEnc = enc
+
+	go startFfmpeg(pipePath)
 
 	return nil
 }
@@ -141,4 +145,3 @@ func (h *Handler) OnClose() {
 		_ = h.flvFile.Close()
 	}
 }
-

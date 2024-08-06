@@ -1,8 +1,8 @@
 publicHLSPath: public/hls
-ffmpegPath: /usr/local/bin/ffmpeg
 webServerPort: 8080
 
-ffmpegSettings:
+ffmpegSetting:
+  ffmpegPath: /usr/bin/ffmpeg
   masterFileName: index.m3u8
   hlsTime: 2
   crf: 21

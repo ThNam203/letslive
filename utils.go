@@ -3,11 +3,18 @@ package main
 import (
 	"log"
 	"os"
+	"sen1or/lets-live/config"
 	"time"
 )
 
-func resetWorkingSpace(fileDestination string) {
-
+func resetWorkingSpace() {
+	var config = config.GetConfig()
+	if err := os.RemoveAll(config.PublicHLSPath); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.MkdirAll("/home/sen1or/Desktop/.life/projects/lets-live/public/hls", 0777); err != nil {
+		log.Panic(err)
+	}
 }
 
 func touch(fileDestination string) {
