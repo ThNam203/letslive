@@ -15,7 +15,7 @@ type RTMPServer struct {
 }
 
 func (sv *RTMPServer) Listen() {
-	tcpAddr, err := net.ResolveTCPAddr("tcp", ":1935")
+	tcpAddr, err := net.ResolveTCPAddr("tcp", ":1936")
 	if err != nil {
 		log.Fatal("Can't resolve address for RTMP server!")
 	}
