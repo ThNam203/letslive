@@ -9,18 +9,18 @@ import (
 
 type IBackend interface {
 	SetAlive(bool)
-	IAlive() 									bool
-	GetURL()									*url.URL
-	GetActiveConnections()						int
+	IsAlive() bool
+	GetURL() *url.URL
+	GetActiveConnections() int
 	Serve(http.ResponseWriter, *http.Request)
 }
 
 type Backend struct {
-	url				*url.URL
-	mux				sync.RWMutex
-	connections		int
-	alive			bool
-	reverseProxy	*httputil.ReverseProxy
+	url          *url.URL
+	mux          *sync.RWMutex
+	connections  int
+	alive        bool
+	reverseProxy *httputil.ReverseProxy
 }
 
 func (backend *Backend) SetAlive(isAlive bool) {
@@ -31,7 +31,7 @@ func (backend *Backend) SetAlive(isAlive bool) {
 
 func (backend *Backend) IsAlive() bool {
 	backend.mux.RLock()
-	defer backend.mux.RUnlock();
+	defer backend.mux.RUnlock()
 	return backend.alive
 }
 
@@ -51,18 +51,20 @@ func (backend *Backend) Serve(rw http.ResponseWriter, rq *http.Request) {
 		backend.connections--
 		backend.mux.Unlock()
 	}()
-	
+
 	backend.mux.Lock()
-	backend.connections++	
+	backend.connections++
 	backend.mux.Unlock()
 
-	backend.reverseProxy.ServeHTTP(rw, rq);
+	backend.reverseProxy.ServeHTTP(rw, rq)
 }
 
-func NewBackend(u *url.URL, rp *httputil.ReverseProxy) *Backend {
+func NewBackend(u *url.URL) *Backend {
 	return &Backend{
 		url:          u,
 		alive:        true,
-		reverseProxy: rp,
+		mux:          &sync.RWMutex{},
+		connections:  0,
+		reverseProxy: httputil.NewSingleHostReverseProxy(u),
 	}
 }

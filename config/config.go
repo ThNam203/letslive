@@ -11,6 +11,8 @@ type Config struct {
 	PublicHLSPath string        `yaml:"publicHLSPath"`
 	WebServerPort int           `yaml:"webServerPort"`
 	FFMpegSetting FFMpegSetting `yaml:"ffmpegSetting"`
+	IPFS          IPFSSetting   `yaml:"ipfs"`
+	LoadBalancer  LoadBalancer  `yaml:"loadBalancer"`
 }
 
 type FFMpegSetting struct {
@@ -29,6 +31,22 @@ type FFMpegQuality struct {
 	MaxBitrate string `yaml:"maxBitrate"`
 	FPS        int    `yaml:"fps"`
 	BufSize    string `yaml:"bufSize"`
+}
+
+type IPFSSetting struct {
+	Enabled bool   `yaml:"enabled"`
+	Gateway string `yaml:"gateway"`
+}
+
+type LoadBalancer struct {
+	HTTP LBSetting `yaml:"http"`
+	TCP  LBSetting `yaml:"tcp"`
+}
+
+type LBSetting struct {
+	Name string `yaml:"name"`
+	From string `yaml:"from"`
+	To   []string
 }
 
 var configuration *Config = nil

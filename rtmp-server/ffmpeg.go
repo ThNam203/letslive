@@ -56,10 +56,9 @@ func startFfmpeg(pipePath string) {
 	ffmpegFlagsString := strings.Join(ffmpegFlags, " ")
 	ffmpegCommand := "cat " + pipePath + " | " + configuration.FFMpegSetting.FFMpegPath + " " + ffmpegFlagsString
 
+	// TODO: implements a function to check if the file has been created or not
 	time.Sleep(4 * time.Second)
-	fmt.Println("STARTED TRANSCODING")
-	output, err := exec.Command("sh", "-c", ffmpegCommand).Output()
-	fmt.Println("OUTPUT IS: ", output)
+	_, err := exec.Command("sh", "-c", ffmpegCommand).Output()
 	if err != nil {
 		log.Panic(err)
 	}

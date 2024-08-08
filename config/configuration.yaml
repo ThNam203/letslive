@@ -23,3 +23,20 @@ ffmpegSetting:
       maxBitrate: 7.8M
       fps: 60
       bufSize: 15.6M
+
+ipfs:
+  enabled: true
+  gateway: https://ipfs.io
+
+loadBalancer:
+  http:
+    name: http-load-balancer
+    from: 8080
+    to:
+      - http://0.0.0.0:8081
+  tcp:
+    name: tcp-load-balancer
+    from: 0.0.0.0:1935
+    to:
+      - localhost:1936
+

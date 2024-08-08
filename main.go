@@ -1,7 +1,9 @@
 package main
 
 import (
+	"log"
 	config "sen1or/lets-live/config"
+	loadbalancer "sen1or/lets-live/load-balancer"
 	rtmpserver "sen1or/lets-live/rtmp-server"
 	webserver "sen1or/lets-live/web-server"
 	"strconv"
@@ -18,6 +20,15 @@ func main() {
 
 	MyWebServer := webserver.NewWebServer(webServerListenAddr, allowedSuffixes[:], baseDirectory)
 	go MyWebServer.ListenAndServe()
+	go rtmpserver.StartRTMPService()
+	go setupTCPLoadBalancer()
+	select {}
+}
 
-	rtmpserver.StartRTMPService()
+func setupTCPLoadBalancer() {
+	lb := loadbalancer.NewTCPLoadBalancer(configuration.LoadBalancer.TCP)
+	err := lb.ListenAndServe()
+	if err != nil {
+		log.Panic(err)
+	}
 }
