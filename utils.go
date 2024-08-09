@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"os"
-	"sen1or/lets-live/config"
+	"sen1or/lets-live/internal/config"
 	"time"
 )
 

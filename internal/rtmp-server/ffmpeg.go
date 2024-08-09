@@ -5,7 +5,7 @@ import (
 	"log"
 	"os/exec"
 	"path/filepath"
-	"sen1or/lets-live/config"
+	"sen1or/lets-live/internal/config"
 	"strings"
 	"time"
 )

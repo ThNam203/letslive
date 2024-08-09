@@ -4,7 +4,7 @@ import (
 	"io"
 	"log"
 	"net"
-	"sen1or/lets-live/config"
+	"sen1or/lets-live/internal/config"
 
 	"github.com/sirupsen/logrus"
 	"github.com/yutopp/go-rtmp"
