@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	config "sen1or/lets-live/config"
+	config "sen1or/lets-live/internal/config"
 )
 
 type HTTPLoadBalancer struct {

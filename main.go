@@ -2,10 +2,10 @@ package main
 
 import (
 	"log"
-	config "sen1or/lets-live/config"
-	loadbalancer "sen1or/lets-live/load-balancer"
-	rtmpserver "sen1or/lets-live/rtmp-server"
-	webserver "sen1or/lets-live/web-server"
+	"sen1or/lets-live/internal/config"
+	loadbalancer "sen1or/lets-live/internal/load-balancer"
+	rtmpserver "sen1or/lets-live/internal/rtmp-server"
+	webserver "sen1or/lets-live/internal/web-server"
 	"strconv"
 )
 

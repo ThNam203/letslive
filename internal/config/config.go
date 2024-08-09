@@ -55,7 +55,7 @@ func GetConfig() Config {
 	if configuration != nil {
 		return *configuration
 	}
-	configurationPath := "config/configuration.yaml"
+	configurationPath := "internal/config/configuration.yaml"
 
 	if !isFileExists(configurationPath) {
 		log.Fatal("configuration.yaml is required")

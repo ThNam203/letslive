@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"sen1or/lets-live/config"
+	"sen1or/lets-live/internal/config"
 
 	"github.com/pkg/errors"
 	"github.com/yutopp/go-flv"

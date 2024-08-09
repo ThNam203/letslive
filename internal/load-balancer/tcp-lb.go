@@ -6,7 +6,7 @@ import (
 	"log"
 	"net"
 	"net/url"
-	"sen1or/lets-live/config"
+	"sen1or/lets-live/internal/config"
 	"sync"
 	"time"
 )

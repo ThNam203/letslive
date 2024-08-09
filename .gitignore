@@ -1,2 +1,4 @@
 .env
+
+internal/public
 public
