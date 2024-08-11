@@ -9,7 +9,7 @@ import (
 func AutoMigrateAllTables(dbConn gorm.DB) error {
 	migrator := dbConn.Migrator()
 
-	err := migrator.AutoMigrate(&domain.User{})
+	err := migrator.AutoMigrate(&domain.User{}, &domain.RefreshToken{})
 	if err != nil {
 		return err
 	}
