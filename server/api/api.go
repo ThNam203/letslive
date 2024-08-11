@@ -11,14 +11,17 @@ import (
 )
 
 type api struct {
-	userRepo domain.UserRepository
+	userRepo         domain.UserRepository
+	refreshTokenRepo domain.RefreshTokenRepository
 }
 
 func NewApi(dbConn gorm.DB) *api {
 	var userRepo = repository.NewUserRepository(dbConn)
+	var refreshTokenRepo = repository.NewRefreshTokenRepository(dbConn)
 
 	return &api{
-		userRepo: userRepo,
+		userRepo:         userRepo,
+		refreshTokenRepo: refreshTokenRepo,
 	}
 }
 
@@ -37,6 +40,9 @@ func (a *api) Routes() *http.ServeMux {
 	serveMux := http.NewServeMux()
 
 	serveMux.HandleFunc("GET /v1/users/{id}", a.GetUserByIdHandler)
+
+	serveMux.HandleFunc("POST /v1/auth/signup", a.SignUpHandler)
+	serveMux.HandleFunc("POST /v1/auth/login", a.LogInHandler)
 
 	return serveMux
 }
