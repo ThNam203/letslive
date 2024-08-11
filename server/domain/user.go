@@ -4,21 +4,21 @@ import (
 	"sen1or/lets-live/server/util"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid/v5"
 	"gorm.io/gorm"
 )
 
 type User struct {
 	gorm.Model
-	ID           uuid.UUID `gorm:"primaryKey" validate:"required,uuid"`
-	Username     string    `gorm:"unique;size:20;not null" validate:"required,gte=6,lte=20"`
-	Email        string    `gorm:"unique;not null" validate:"required,email"`
+	ID           uuid.UUID `json:"id" gorm:"primaryKey"`
+	Username     string    `json:"username" gorm:"unique;size:20;not null"`
+	Email        string    `json:"email" gorm:"unique;not null"`
 	PasswordHash string    `gorm:"not null" validate:"required"`
 }
 
-var validate *validator.Validate = validator.New(validator.WithRequiredStructEnabled())
-
 func (u *User) Validate() error {
+	// TODO: make validate variable singleton
+	validate := validator.New(validator.WithRequiredStructEnabled())
 	err := validate.Struct(&u)
 
 	if err != nil {
@@ -30,9 +30,11 @@ func (u *User) Validate() error {
 }
 
 type UserRepository interface {
-	GetByID(string) (User, error)
-	GetByName(string) (User, error)
-	Create(*User) error
-	Update(*User) error
+	GetByID(string) (*User, error)
+	GetByName(string) (*User, error)
+	GetByEmail(string) (*User, error)
+
+	Create(User) error
+	Update(User) error
 	Delete(string) error
 }
