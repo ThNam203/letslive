@@ -2,15 +2,19 @@ package api
 
 import (
 	"log"
+	"net"
 	"net/http"
 	"sen1or/lets-live/server/domain"
 	"sen1or/lets-live/server/repository"
 	"time"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 type api struct {
+	logger *zap.Logger
+
 	userRepo         domain.UserRepository
 	refreshTokenRepo domain.RefreshTokenRepository
 }
@@ -44,10 +48,87 @@ func (a *api) Routes() *http.ServeMux {
 	serveMux.HandleFunc("POST /v1/auth/signup", a.SignUpHandler)
 	serveMux.HandleFunc("POST /v1/auth/login", a.LogInHandler)
 
+	a.addGlobalMiddlewares(serveMux, a.loggingMiddleware, a.corsMiddleware)
+
 	return serveMux
 }
 
 func (a *api) errorResponse(w http.ResponseWriter, status int, err error) {
 	w.Header().Add("X-LetsLive-Error", err.Error())
 	http.Error(w, err.Error(), status)
+}
+
+func (a *api) addGlobalMiddlewares(r *http.ServeMux, middlewares ...func(next http.Handler) http.Handler) http.Handler {
+	var wrappedHandler http.Handler
+	wrappedHandler = r
+
+	for _, mw := range middlewares {
+		wrappedHandler = mw(wrappedHandler)
+	}
+
+	return wrappedHandler
+}
+
+func (a *api) corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5000")
+		next.ServeHTTP(w, r)
+	})
+}
+
+type LoggingResponseWriter struct {
+	w          http.ResponseWriter
+	statusCode int
+	bytes      int
+}
+
+func (lrw *LoggingResponseWriter) Header() http.Header {
+	return lrw.w.Header()
+}
+
+func (lrw *LoggingResponseWriter) Write(data []byte) (int, error) {
+	wb, err := lrw.w.Write(data)
+	lrw.bytes += wb
+	return wb, err
+}
+
+func (lrw *LoggingResponseWriter) WriteHeader(statusCode int) {
+	lrw.w.WriteHeader(statusCode)
+	lrw.statusCode = statusCode
+}
+
+func (a *api) loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		timeStart := time.Now()
+		lrw := &LoggingResponseWriter{w: w}
+		next.ServeHTTP(lrw, r)
+
+		duration := time.Since(timeStart).Milliseconds()
+		remoteAddr := r.Header.Get("X-Forwarded-For")
+		if remoteAddr == "" {
+			if ip, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
+				remoteAddr = "unknown address"
+			} else {
+				remoteAddr = ip
+			}
+		}
+
+		fields := []zap.Field{
+			zap.Int64("duration", duration),
+			zap.String("method", r.Method),
+			zap.String("remote#addr", remoteAddr),
+			zap.Int("response#bytes", lrw.bytes),
+			zap.Int("response#status", lrw.statusCode),
+			zap.String("uri", r.RequestURI),
+		}
+
+		if lrw.statusCode == 200 {
+			a.logger.Info("Server: ", fields...)
+		} else {
+			err := lrw.w.Header().Get("X-LetsLive-Error")
+			a.logger.Error(err, fields...)
+		}
+
+		// TODO: prometheus
+	})
 }
