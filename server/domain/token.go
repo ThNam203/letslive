@@ -18,6 +18,7 @@ type RefreshToken struct {
 }
 
 type RefreshTokenRepository interface {
+	RevokeAll(userId uuid.UUID) error
 	RevokeByValue(string) error
 	Create(RefreshToken) error
 	FindByValue(string) (*RefreshToken, error)

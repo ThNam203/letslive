@@ -34,6 +34,13 @@ func (r *postgresRefreshTokenRepo) RevokeByValue(tokenValue string) error {
 	return result.Error
 }
 
+func (r *postgresRefreshTokenRepo) RevokeAll(userId uuid.UUID) error {
+	var refreshToken domain.RefreshToken
+	var timeNow = time.Now()
+	result := r.db.Model(&refreshToken).Where("user_id = ?", userId).Updates(&domain.RefreshToken{RevokedAt: &timeNow})
+
+	return result.Error
+}
 func (r *postgresRefreshTokenRepo) Create(tokenRecord domain.RefreshToken) error {
 	result := r.db.Create(&tokenRecord)
 	return result.Error
@@ -52,7 +59,8 @@ func (r *postgresRefreshTokenRepo) FindByValue(tokenValue string) (*domain.Refre
 
 func (r *postgresRefreshTokenRepo) GenerateTokenPair(userId uuid.UUID) (refreshToken string, accessToken string, err error) {
 	unsignedRefreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId": userId.String(),
+		"userId":    userId.String(),
+		"expiresAt": time.Now().Add(config.RefreshTokenExpiresDuration),
 	})
 
 	unsignedAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
