@@ -16,6 +16,7 @@ import (
 
 type api struct {
 	logger *zap.Logger
+	db     *gorm.DB // For raw sql queries
 
 	userRepo         domain.UserRepository
 	refreshTokenRepo domain.RefreshTokenRepository
@@ -28,6 +29,7 @@ func NewApi(dbConn gorm.DB) *api {
 
 	return &api{
 		logger: logger,
+		db:     &dbConn,
 
 		userRepo:         userRepo,
 		refreshTokenRepo: refreshTokenRepo,

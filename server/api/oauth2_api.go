@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/gofrs/uuid/v5"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"gorm.io/gorm"
 )
 
 type googleOAuthUser struct {
@@ -77,8 +79,8 @@ func (a *api) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var oauthUser googleOAuthUser
-	if err := json.Unmarshal(data, &oauthUser); err != nil {
+	var returnedOAuthUser googleOAuthUser
+	if err := json.Unmarshal(data, &returnedOAuthUser); err != nil {
 		a.setError(w, fmt.Errorf("user data format not valid"))
 		http.Redirect(w, r, urlDirectOnFail, http.StatusTemporaryRedirect)
 		return
@@ -87,24 +89,36 @@ func (a *api) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request) {
 	// TODO: MORE PROPER WAY TO HANDLE USERNAME
 	userId, _ := uuid.NewGen().NewV4()
 	usernameId, _ := uuid.NewGen().NewV4()
-	username := "ll" + usernameId.String()[:5]
+	username := "ll-" + usernameId.String()[:5]
 
-	newOAuthUser := &domain.User{
+	newOAuthUserRecord := &domain.User{
 		ID:         userId,
 		Username:   username,
-		Email:      oauthUser.Email,
-		IsVerified: oauthUser.VerifiedEmail,
+		Email:      returnedOAuthUser.Email,
+		IsVerified: returnedOAuthUser.VerifiedEmail,
 	}
 
-	err = a.userRepo.Create(*newOAuthUser)
+	// The final UserId that will be used to generate token pair
+	var finalUserId uuid.UUID
 
-	if err != nil {
-		a.setError(w, fmt.Errorf("error while saving user"))
-		http.Redirect(w, r, urlDirectOnFail, http.StatusTemporaryRedirect)
-		return
+	// Check if the user had already singed up before
+	existedRecord, err := a.userRepo.GetByEmail(returnedOAuthUser.Email)
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		err = a.userRepo.Create(*newOAuthUserRecord)
+
+		if err != nil {
+			a.setError(w, fmt.Errorf("error while saving user"))
+			http.Redirect(w, r, urlDirectOnFail, http.StatusTemporaryRedirect)
+			return
+		}
+
+		finalUserId = newOAuthUserRecord.ID
+	} else {
+		finalUserId = existedRecord.ID
+		a.refreshTokenRepo.RevokeAll(finalUserId)
 	}
 
-	refreshToken, accessToken, err := a.refreshTokenRepo.GenerateTokenPair(newOAuthUser.ID)
+	refreshToken, accessToken, err := a.refreshTokenRepo.GenerateTokenPair(finalUserId)
 
 	if err != nil {
 		a.setError(w, err)
