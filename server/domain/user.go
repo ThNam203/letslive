@@ -2,6 +2,7 @@ package domain
 
 import (
 	"sen1or/lets-live/server/util"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid/v5"
@@ -9,11 +10,17 @@ import (
 )
 
 type User struct {
-	gorm.Model
 	ID           uuid.UUID `json:"id" gorm:"primaryKey"`
 	Username     string    `json:"username" gorm:"unique;size:20;not null"`
 	Email        string    `json:"email" gorm:"unique;not null"`
-	PasswordHash string    `gorm:"not null" validate:"required"`
+	PasswordHash string
+	IsVerified   bool `json:"isVerified" gorm:"not full;default:false"`
+
+	RefreshTokens []RefreshToken
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt
 }
 
 func (u *User) Validate() error {

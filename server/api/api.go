@@ -4,10 +4,12 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"sen1or/lets-live/server/config"
 	"sen1or/lets-live/server/domain"
 	"sen1or/lets-live/server/repository"
 	"time"
 
+	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -22,8 +24,11 @@ type api struct {
 func NewApi(dbConn gorm.DB) *api {
 	var userRepo = repository.NewUserRepository(dbConn)
 	var refreshTokenRepo = repository.NewRefreshTokenRepository(dbConn)
+	var logger, _ = zap.NewProduction()
 
 	return &api{
+		logger: logger,
+
 		userRepo:         userRepo,
 		refreshTokenRepo: refreshTokenRepo,
 	}
@@ -40,22 +45,57 @@ func (a *api) ListenAndServe() {
 	log.Println("server ending: ", server.ListenAndServe())
 }
 
-func (a *api) Routes() *http.ServeMux {
-	serveMux := http.NewServeMux()
+func (a *api) Routes() *mux.Router {
+	router := mux.NewRouter()
 
-	serveMux.HandleFunc("GET /v1/users/{id}", a.GetUserByIdHandler)
+	router.HandleFunc("/v1/users/{id}", a.GetUserByIdHandler).Methods("GET")
 
-	serveMux.HandleFunc("POST /v1/auth/signup", a.SignUpHandler)
-	serveMux.HandleFunc("POST /v1/auth/login", a.LogInHandler)
+	router.HandleFunc("/v1/auth/signup", a.SignUpHandler).Methods("POST")
+	router.HandleFunc("/v1/auth/login", a.LogInHandler).Methods("POST")
+	router.HandleFunc("/v1/auth/google", a.OAuthGoogleLogin).Methods("GET")
+	router.HandleFunc("/v1/auth/google/callback", a.OAuthGoogleCallBack).Methods("GET")
 
-	a.addGlobalMiddlewares(serveMux, a.loggingMiddleware, a.corsMiddleware)
+	router.Use(a.corsMiddleware)
+	router.Use(a.loggingMiddleware)
 
-	return serveMux
+	return router
 }
 
+// Set the error to the custom "X-LetsLive-Error" header
+// The function doesn't end the request, if so call errorResponse
+func (a *api) setError(w http.ResponseWriter, err error) {
+	w.Header().Add("X-LetsLive-Error", err.Error())
+}
+
+// Set error to the custom header and write the error to the request
+// After calling, the request will end and no other write should be done
 func (a *api) errorResponse(w http.ResponseWriter, status int, err error) {
 	w.Header().Add("X-LetsLive-Error", err.Error())
 	http.Error(w, err.Error(), status)
+}
+
+func (a *api) setTokens(w http.ResponseWriter, refreshToken string, accessToken string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:  "refreshToken",
+		Value: refreshToken,
+
+		Expires:  time.Now().Add(config.RefreshTokenExpiresDuration),
+		MaxAge:   config.RefreshTokenMaxAge,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteDefaultMode,
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:  "accessToken",
+		Value: accessToken,
+
+		Expires:  time.Now().Add(config.AccessTokenExpiresDuration),
+		MaxAge:   config.AccessTokenMaxAge,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteDefaultMode,
+	})
 }
 
 func (a *api) addGlobalMiddlewares(r *http.ServeMux, middlewares ...func(next http.Handler) http.Handler) http.Handler {
@@ -126,7 +166,12 @@ func (a *api) loggingMiddleware(next http.Handler) http.Handler {
 			a.logger.Info("Server: ", fields...)
 		} else {
 			err := lrw.w.Header().Get("X-LetsLive-Error")
-			a.logger.Error(err, fields...)
+			if len(err) == 0 {
+				a.logger.Info("Server: ", fields...)
+			} else {
+				a.logger.Error(err, fields...)
+
+			}
 		}
 
 		// TODO: prometheus

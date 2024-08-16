@@ -1,3 +1,5 @@
+'use client'
+
 import { CarbonEmail } from "@/components/icons/email";
 import { LogosFacebook } from "@/components/icons/facebook";
 import { LogosGoogleIcon } from "@/components/icons/google";
@@ -13,7 +15,10 @@ export default function SignUpPage() {
         </h1>
         <p className="text-md">Choose a method below to begin</p>
         <div className="flex gap-2 my-2">
-          <div className="flex items-center justify-center gap-1 rounded-md border-gray-300 border w-[200px] h-[50px] hover:cursor-pointer">
+          <div onClick={() => {
+            window.location.href = "http://localhost:8000/v1/auth/google"
+        }
+            } className="flex items-center justify-center gap-1 rounded-md border-gray-300 border w-[200px] h-[50px] hover:cursor-pointer">
             <LogosGoogleIcon /> Google
           </div>
           <div className="flex items-center justify-center gap-1 rounded-md border-gray-300 border w-[200px] h-[50px] hover:cursor-pointer">
