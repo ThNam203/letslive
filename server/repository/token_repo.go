@@ -29,7 +29,6 @@ func (r *postgresRefreshTokenRepo) RevokeByValue(tokenValue string) error {
 		return result.Error
 	}
 
-	refreshToken.Revoked = false
 	result = r.db.Save(refreshToken)
 
 	return result.Error
@@ -56,20 +55,20 @@ func (r *postgresRefreshTokenRepo) GenerateTokenPair(userId uuid.UUID) (refreshT
 		"userId": userId.String(),
 	})
 
-	unsignedAccessToken := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+	unsignedAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userId":    userId.String(),
 		"expiresAt": time.Now().Add(config.AccessTokenExpiresDuration),
 	})
 
-	refreshToken, err = unsignedRefreshToken.SignedString(os.Getenv("REFRESH_TOKEN_SECRET"))
-	accessToken, err = unsignedAccessToken.SignedString(os.Getenv("ACCESS_TOKEN_SECRET"))
+	refreshToken, err = unsignedRefreshToken.SignedString([]byte(os.Getenv("REFRESH_TOKEN_SECRET")))
+	accessToken, err = unsignedAccessToken.SignedString([]byte(os.Getenv("ACCESS_TOKEN_SECRET")))
 
 	if err != nil {
 		return "", "", err
 	}
 
 	refreshTokenExpiresAt := time.Now().Add(config.RefreshTokenExpiresDuration)
-	refreshTokenRecord, err := createRefreshTokenObject(refreshToken, refreshTokenExpiresAt)
+	refreshTokenRecord, err := createRefreshTokenObject(refreshToken, refreshTokenExpiresAt, userId)
 
 	if err != nil {
 		return "", "", err
@@ -82,7 +81,7 @@ func (r *postgresRefreshTokenRepo) GenerateTokenPair(userId uuid.UUID) (refreshT
 	return
 }
 
-func createRefreshTokenObject(signedRefreshToken string, expiresAt time.Time) (*domain.RefreshToken, error) {
+func createRefreshTokenObject(signedRefreshToken string, expiresAt time.Time, userId uuid.UUID) (*domain.RefreshToken, error) {
 	uuid, err := uuid.NewV4()
 	if err != nil {
 		return nil, err
@@ -90,6 +89,7 @@ func createRefreshTokenObject(signedRefreshToken string, expiresAt time.Time) (*
 
 	refreshToken := &domain.RefreshToken{
 		ID:        uuid,
+		UserID:    userId,
 		Value:     signedRefreshToken,
 		ExpiresAt: expiresAt,
 	}

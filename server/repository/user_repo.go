@@ -52,7 +52,7 @@ func (r *postgresUserRepo) GetByEmail(email string) (*domain.User, error) {
 }
 
 func (r *postgresUserRepo) Create(newUser domain.User) error {
-	result := r.db.Create(newUser)
+	result := r.db.Create(&newUser)
 	return result.Error
 }
 
