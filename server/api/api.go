@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"sen1or/lets-live/server/config"
 	"sen1or/lets-live/server/domain"
 	"sen1or/lets-live/server/repository"
@@ -36,7 +37,7 @@ func NewApi(dbConn gorm.DB) *api {
 	}
 }
 
-func (a *api) ListenAndServe() {
+func (a *api) ListenAndServeTLS() {
 	server := &http.Server{
 		Addr:         ":8000",
 		Handler:      a.Routes(),
@@ -44,7 +45,17 @@ func (a *api) ListenAndServe() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	log.Println("server ending: ", server.ListenAndServe())
+	log.Println("backend started")
+
+	if _, err := os.Stat(config.SERVER_CRT_FILE); err != nil {
+		log.Panic("error loading server cert file", err.Error())
+	}
+
+	if _, err := os.Stat(config.SERVER_KEY_FILE); err != nil {
+		log.Panic("error loading server key file", err.Error())
+	}
+
+	log.Panic("server ends: ", server.ListenAndServeTLS(config.SERVER_CRT_FILE, config.SERVER_KEY_FILE))
 }
 
 func (a *api) Routes() *mux.Router {
@@ -81,8 +92,8 @@ func (a *api) setTokens(w http.ResponseWriter, refreshToken string, accessToken 
 		Name:  "refreshToken",
 		Value: refreshToken,
 
-		Expires:  time.Now().Add(config.RefreshTokenExpiresDuration),
-		MaxAge:   config.RefreshTokenMaxAge,
+		Expires:  time.Now().Add(config.REFRESH_TOKEN_EXPIRES_DURATION),
+		MaxAge:   config.REFRESH_TOKEN_MAX_AGE,
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteDefaultMode,
@@ -92,8 +103,8 @@ func (a *api) setTokens(w http.ResponseWriter, refreshToken string, accessToken 
 		Name:  "accessToken",
 		Value: accessToken,
 
-		Expires:  time.Now().Add(config.AccessTokenExpiresDuration),
-		MaxAge:   config.AccessTokenMaxAge,
+		Expires:  time.Now().Add(config.ACCESS_TOKEN_EXPIRES_DURATION),
+		MaxAge:   config.ACCESS_TOKEN_MAX_AGE,
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteDefaultMode,

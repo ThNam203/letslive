@@ -23,7 +23,7 @@ func main() {
 	dbConn := GetDatabaseConnection()
 	hack.AutoMigrateAllTables(*dbConn)
 	api := api.NewApi(*dbConn)
-	go api.ListenAndServe()
+	go api.ListenAndServeTLS()
 
 	baseDirectory := configuration.PublicHLSPath
 	webServerListenAddr := "localhost:" + strconv.Itoa(configuration.WebServerPort)
