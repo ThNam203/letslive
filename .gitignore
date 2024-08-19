@@ -2,3 +2,6 @@
 
 internal/public
 public
+
+server/server.key
+server/server.crt

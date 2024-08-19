@@ -46,7 +46,7 @@ func (a *api) OAuthGoogleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func generateOAuthCookieState(w http.ResponseWriter) (string, error) {
-	var expiration = time.Now().Add(30 * 24 * time.Hour)
+	var expiration = time.Now().Add(1 * time.Hour)
 
 	b := make([]byte, 16)
 	_, err := rand.Read(b)

@@ -60,12 +60,12 @@ func (r *postgresRefreshTokenRepo) FindByValue(tokenValue string) (*domain.Refre
 func (r *postgresRefreshTokenRepo) GenerateTokenPair(userId uuid.UUID) (refreshToken string, accessToken string, err error) {
 	unsignedRefreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userId":    userId.String(),
-		"expiresAt": time.Now().Add(config.RefreshTokenExpiresDuration),
+		"expiresAt": time.Now().Add(config.REFRESH_TOKEN_EXPIRES_DURATION),
 	})
 
 	unsignedAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userId":    userId.String(),
-		"expiresAt": time.Now().Add(config.AccessTokenExpiresDuration),
+		"expiresAt": time.Now().Add(config.ACCESS_TOKEN_EXPIRES_DURATION),
 	})
 
 	refreshToken, err = unsignedRefreshToken.SignedString([]byte(os.Getenv("REFRESH_TOKEN_SECRET")))
@@ -75,7 +75,7 @@ func (r *postgresRefreshTokenRepo) GenerateTokenPair(userId uuid.UUID) (refreshT
 		return "", "", err
 	}
 
-	refreshTokenExpiresAt := time.Now().Add(config.RefreshTokenExpiresDuration)
+	refreshTokenExpiresAt := time.Now().Add(config.REFRESH_TOKEN_EXPIRES_DURATION)
 	refreshTokenRecord, err := createRefreshTokenObject(refreshToken, refreshTokenExpiresAt, userId)
 
 	if err != nil {
