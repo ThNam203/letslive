@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -21,11 +22,13 @@ type api struct {
 
 	userRepo         domain.UserRepository
 	refreshTokenRepo domain.RefreshTokenRepository
+	verifyTokenRepo  domain.VerifyTokenRepository
 }
 
 func NewApi(dbConn gorm.DB) *api {
 	var userRepo = repository.NewUserRepository(dbConn)
 	var refreshTokenRepo = repository.NewRefreshTokenRepository(dbConn)
+	var verifyTokenRepo = repository.NewVerifyTokenRepo(dbConn)
 	var logger, _ = zap.NewProduction()
 
 	return &api{
@@ -34,6 +37,7 @@ func NewApi(dbConn gorm.DB) *api {
 
 		userRepo:         userRepo,
 		refreshTokenRepo: refreshTokenRepo,
+		verifyTokenRepo:  verifyTokenRepo,
 	}
 }
 
@@ -44,8 +48,6 @@ func (a *api) ListenAndServeTLS() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
-
-	log.Println("backend started")
 
 	if _, err := os.Stat(config.SERVER_CRT_FILE); err != nil {
 		log.Panic("error loading server cert file", err.Error())
@@ -67,11 +69,18 @@ func (a *api) Routes() *mux.Router {
 	router.HandleFunc("/v1/auth/login", a.LogInHandler).Methods("POST")
 	router.HandleFunc("/v1/auth/google", a.OAuthGoogleLogin).Methods("GET")
 	router.HandleFunc("/v1/auth/google/callback", a.OAuthGoogleCallBack).Methods("GET")
+	router.HandleFunc("/v1/auth/verify", a.verifyEmailHandler).Methods("GET")
 
-	router.Use(a.corsMiddleware)
+	router.PathPrefix("/").HandlerFunc(a.RouteNotFound)
+
 	router.Use(a.loggingMiddleware)
+	router.Use(a.corsMiddleware)
 
 	return router
+}
+
+func (a *api) RouteNotFound(w http.ResponseWriter, r *http.Request) {
+	a.errorResponse(w, http.StatusNotFound, fmt.Errorf("route not found"))
 }
 
 // Set the error to the custom "X-LetsLive-Error" header
@@ -111,20 +120,17 @@ func (a *api) setTokens(w http.ResponseWriter, refreshToken string, accessToken 
 	})
 }
 
-func (a *api) addGlobalMiddlewares(r *http.ServeMux, middlewares ...func(next http.Handler) http.Handler) http.Handler {
-	var wrappedHandler http.Handler
-	wrappedHandler = r
-
-	for _, mw := range middlewares {
-		wrappedHandler = mw(wrappedHandler)
-	}
-
-	return wrappedHandler
-}
-
 func (a *api) corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5000")
+		w.Header().Set("Access-Control-Allow-Methods", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }

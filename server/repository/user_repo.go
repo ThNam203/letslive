@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"errors"
 	"sen1or/lets-live/server/domain"
 
+	"github.com/gofrs/uuid/v5"
 	"gorm.io/gorm"
 )
 
@@ -17,15 +17,11 @@ func NewUserRepository(conn gorm.DB) domain.UserRepository {
 	}
 }
 
-func (r *postgresUserRepo) GetByID(userId string) (*domain.User, error) {
+func (r *postgresUserRepo) GetByID(userId uuid.UUID) (*domain.User, error) {
 	var user domain.User
-	result := r.db.First(&user, "id = ?", userId)
+	result := r.db.First(&user, "id = ?", userId.String())
 	if result.Error != nil {
-		if errors.Is(gorm.ErrRecordNotFound, result.Error) {
-			return nil, gorm.ErrRecordNotFound
-		} else {
-			return nil, errors.New("internal server error")
-		}
+		return nil, result.Error
 	}
 
 	return &user, nil
@@ -57,7 +53,7 @@ func (r *postgresUserRepo) Create(newUser domain.User) error {
 }
 
 func (r *postgresUserRepo) Update(user domain.User) error {
-	tx := r.db.Model(&user).Where("id = ", user.ID).Updates(&user)
+	tx := r.db.Updates(&user)
 	return tx.Error
 
 }
