@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"sen1or/lets-live/internal/config"
 	loadbalancer "sen1or/lets-live/internal/load-balancer"
 	rtmpserver "sen1or/lets-live/internal/rtmp-server"
@@ -45,7 +47,14 @@ func setupTCPLoadBalancer() {
 }
 
 func GetDatabaseConnection() *gorm.DB {
-	var dsn = "host=localhost user=postgres password=postgres dbname=lets-live port=5432 sslmode=disable TimeZone=Asia/Saigon"
+	host := os.Getenv("POSTGRES_HOST")
+	user := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	dbname := os.Getenv("POSTGRES_DB")
+	port := os.Getenv("POSTGRES_PORT")
+
+	var dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Saigon", host, user, password, dbname, port)
+
 	var db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Panic(err)
