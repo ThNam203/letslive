@@ -6,7 +6,9 @@ import { IconEyeOff } from "@/components/icons/eye-off";
 import { IconPasswordOutline } from "@/components/icons/password";
 import { IconUserOutline } from "@/components/icons/user";
 import GLOBAL from "@/global";
+import { Spinner } from "@nextui-org/spinner";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function SignUpForm() {
     const [email, setEmail] = useState("");
@@ -15,15 +17,21 @@ export default function SignUpForm() {
     const [hidingPassword, setHidingPassword] = useState(true);
     const [confirmPassword, setConfirmPassword] = useState("");
     const [hidingConfirmPassword, setHidingConfirmPassword] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({
         email: "",
         password: "",
         confirmPassword: "",
-        username: ""
+        username: "",
     });
 
     const validate = () => {
-        const newErrors = { email: "", password: "", confirmPassword: "", username: "" };
+        const newErrors = {
+            email: "",
+            password: "",
+            confirmPassword: "",
+            username: "",
+        };
 
         if (!email) {
             newErrors.email = "Email is required";
@@ -61,26 +69,34 @@ export default function SignUpForm() {
         );
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         e.stopPropagation();
-        
+        setIsLoading(true);
+
         if (validate()) {
             // TODO: create a universal function to call api
-            fetch(GLOBAL.API_URL + "/v1/auth/signup", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email, username, password }),
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    console.log(data);
-                })
-                .catch((err) => {
-                    console.error(err);
+            const url = GLOBAL.API_URL + "/v1/auth/signup";
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ email, username, password }),
                 });
+                const resData = await response.text();
+
+                if (!response.ok) {
+                    toast.error(resData);
+                } else {
+                    toast.success("Account created successfully.");
+                }
+            } catch (err) {
+                toast.error("An error occurred. Please try again later." + err);
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -190,9 +206,11 @@ export default function SignUpForm() {
 
             <button
                 type="submit"
+                disabled={isLoading}
                 className="w-full rounded-md flex justify-center items-center bg-blue-400 hover:bg-blue-500 text-white h-[50px] border-transparent border mt-4 font-semibold"
             >
                 SIGN UP
+                {isLoading && <Spinner className="ml-2" />}
             </button>
         </form>
     );

@@ -9,7 +9,7 @@ export default function SignUpPage() {
     return (
         <section className="flex items-center justify-center h-screen w-screen">
             <div className="flex flex-col justify-center rounded-xl p-12 bg-white">
-                <h1 className="text-lg font-bold">LET&aposS LIVE</h1>
+                <h1 className="text-lg font-bold">LET&apos;S LIVE</h1>
                 <h1 className="text-2xl font-bold mb-1">
                     Welcome! Sign up for a new world?
                 </h1>
@@ -31,10 +31,10 @@ export default function SignUpPage() {
                 <p className="text-end text-sm opacity-80 mt-4">
                     Already have an account?
                     <a
-                        href="/signin"
+                        href="/login"
                         className="ml-2 text-blue-400 font-bold hover:text-blue-600"
                     >
-                        Sign in
+                        Log in
                     </a>
                 </p>
             </div>

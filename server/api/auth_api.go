@@ -61,7 +61,7 @@ func (a *api) LogInHandler(w http.ResponseWriter, r *http.Request) {
 
 	a.setTokens(w, refreshToken, accessToken)
 
-	w.WriteHeader(http.StatusOK)
+	http.Redirect(w, r, "/", http.StatusOK)
 }
 
 func (a *api) SignUpHandler(w http.ResponseWriter, r *http.Request) {
@@ -102,9 +102,7 @@ func (a *api) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 
 	go a.sendConfirmEmail(user.ID, user.Email)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(*user)
+	http.Redirect(w, r, "/", http.StatusOK)
 }
 
 func (a *api) verifyEmailHandler(w http.ResponseWriter, r *http.Request) {
