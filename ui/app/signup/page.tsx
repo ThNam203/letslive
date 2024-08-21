@@ -9,7 +9,7 @@ export default function SignUpPage() {
     return (
         <section className="flex items-center justify-center h-screen w-screen">
             <div className="flex flex-col justify-center rounded-xl p-12 bg-white">
-                <h1 className="text-lg font-bold">LET'S LIVE</h1>
+                <h1 className="text-lg font-bold">LET&aposS LIVE</h1>
                 <h1 className="text-2xl font-bold mb-1">
                     Welcome! Sign up for a new world?
                 </h1>
