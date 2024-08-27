@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { NextUIProvider } from "@nextui-org/system";
-import ReduxProvider from "@/redux/provider";
+import StoreProvider from "@/redux/provider";
 import Toast from "@/components/Toaster";
+import React, { Suspense } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,10 +21,10 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={inter.className}>
-                <ReduxProvider>
+                <StoreProvider>
                     <NextUIProvider>{children}</NextUIProvider>
                     <Toast />
-                </ReduxProvider>
+                </StoreProvider>
             </body>
         </html>
     );
