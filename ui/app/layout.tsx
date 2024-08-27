@@ -5,6 +5,7 @@ import { NextUIProvider } from "@nextui-org/system";
 import StoreProvider from "@/redux/provider";
 import Toast from "@/components/Toaster";
 import React, { Suspense } from "react";
+import Loading from "@/app/loading";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,8 +23,10 @@ export default function RootLayout({
         <html lang="en">
             <body className={inter.className}>
                 <StoreProvider>
-                    <NextUIProvider>{children}</NextUIProvider>
-                    <Toast />
+                    <Suspense fallback={<Loading />}>
+                        <NextUIProvider>{children}</NextUIProvider>
+                        <Toast />
+                    </Suspense>
                 </StoreProvider>
             </body>
         </html>
