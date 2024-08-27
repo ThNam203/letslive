@@ -8,5 +8,5 @@ export default function GlobalError({
     error: Error & { digest?: string };
     reset: () => void;
 }) {
-    return <GlobalErrorComponent error={error} reset={reset} />;
+    return <GlobalErrorComponent error={error} reset={reset} type="500"/>;
 }
