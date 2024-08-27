@@ -12,7 +12,8 @@ func resetWorkingSpace() {
 	if err := os.RemoveAll(config.PublicHLSPath); err != nil {
 		log.Fatal(err)
 	}
-	if err := os.MkdirAll("/home/sen1or/Desktop/.life/projects/lets-live/public/hls", 0777); err != nil {
+
+	if err := os.MkdirAll("./public/hls", 0777); err != nil {
 		log.Panic(err)
 	}
 }

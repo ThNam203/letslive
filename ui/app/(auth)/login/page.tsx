@@ -1,5 +1,3 @@
-"use client"
-
 import OAuthLoginBtn from "@/components/buttons/OAuthLoginBtn";
 import LogInForm from "@/components/forms/LoginForm";
 import { IconFacebook } from "@/components/icons/facebook";

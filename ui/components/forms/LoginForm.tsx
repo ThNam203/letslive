@@ -43,10 +43,8 @@ export default function LogInForm() {
         e.preventDefault();
         e.stopPropagation();
 
-        setIsLoading(true);
-
         if (validate()) {
-            // TODO: create a universal function to call api
+            setIsLoading(true);
             fetch(GLOBAL.API_URL + "/v1/auth/login", {
                 method: "POST",
                 headers: {
