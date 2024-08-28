@@ -1,6 +1,8 @@
 .env
 
 internal/public
+internal/ipfs/hls
+
 public
 
 server/server.key
