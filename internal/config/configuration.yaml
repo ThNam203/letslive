@@ -1,4 +1,5 @@
 publicHLSPath: public/hls
+privateHLSPath: private/hls
 webServerPort: 8080
 
 ffmpegSetting:

@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"sen1or/lets-live/internal"
 	"sen1or/lets-live/internal/config"
+	"sen1or/lets-live/internal/ipfs"
 	loadbalancer "sen1or/lets-live/internal/load-balancer"
 	rtmpserver "sen1or/lets-live/internal/rtmp-server"
 	webserver "sen1or/lets-live/internal/web-server"
@@ -17,7 +20,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var configuration = config.GetConfig()
+var cfg = config.GetConfig()
 
 func main() {
 	resetWorkingSpace()
@@ -25,25 +28,37 @@ func main() {
 	dbConn := GetDatabaseConnection()
 	hack.AutoMigrateAllTables(*dbConn)
 	api := api.NewApi(*dbConn)
-	go api.ListenAndServeTLS()
+	api.ListenAndServeTLS()
 
-	baseDirectory := configuration.PublicHLSPath
-	webServerListenAddr := "localhost:" + strconv.Itoa(configuration.WebServerPort)
+	webServerListenAddr := "localhost:" + strconv.Itoa(cfg.WebServerPort)
 	allowedSuffixes := [2]string{".ts", ".m3u8"}
+	MyWebServer := webserver.NewWebServer(webServerListenAddr, allowedSuffixes[:], cfg.PrivateHLSPath)
+	MyWebServer.ListenAndServe()
 
-	MyWebServer := webserver.NewWebServer(webServerListenAddr, allowedSuffixes[:], baseDirectory)
-	go MyWebServer.ListenAndServe()
-	go rtmpserver.StartRTMPService()
-	go setupTCPLoadBalancer()
+	ipfsStorage := ipfs.NewIPFSStorage(cfg.PrivateHLSPath, cfg.IPFS.Gateway)
+	rtmpserver.StartRTMPService()
+	setupTCPLoadBalancer()
+	go internal.MonitorHLSStreamContent(cfg.PrivateHLSPath, ipfsStorage)
+
+	log.Println("Setup all done!")
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for range c {
+			os.Exit(1)
+		}
+	}()
 	select {}
 }
 
 func setupTCPLoadBalancer() {
-	lb := loadbalancer.NewTCPLoadBalancer(configuration.LoadBalancer.TCP)
-	err := lb.ListenAndServe()
-	if err != nil {
-		log.Panic(err)
-	}
+	lb := loadbalancer.NewTCPLoadBalancer(cfg.LoadBalancer.TCP)
+	go (func() {
+		err := lb.ListenAndServe()
+		if err != nil {
+			log.Panic(err)
+		}
+	})()
 }
 
 func GetDatabaseConnection() *gorm.DB {

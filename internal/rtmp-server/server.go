@@ -1,6 +1,7 @@
 package rtmpserver
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -56,5 +57,7 @@ func StartRTMPService() {
 		config: config,
 	}
 
-	server.Listen()
+	go server.Listen()
+	fmt.Println("rtmp server listening")
+
 }

@@ -57,7 +57,10 @@ func (a *api) ListenAndServeTLS() {
 		log.Panic("error loading server key file", err.Error())
 	}
 
-	log.Panic("server ends: ", server.ListenAndServeTLS(config.SERVER_CRT_FILE, config.SERVER_KEY_FILE))
+	go (func() {
+		log.Panic("server ends: ", server.ListenAndServeTLS(config.SERVER_CRT_FILE, config.SERVER_KEY_FILE))
+	})()
+	log.Println("server api started")
 }
 
 func (a *api) Routes() *mux.Router {

@@ -4,6 +4,7 @@ internal/public
 internal/ipfs/hls
 
 public
+private
 
 server/server.key
 server/server.crt
