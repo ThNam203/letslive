@@ -8,11 +8,12 @@ import (
 )
 
 type Config struct {
-	PublicHLSPath string        `yaml:"publicHLSPath"`
-	WebServerPort int           `yaml:"webServerPort"`
-	FFMpegSetting FFMpegSetting `yaml:"ffmpegSetting"`
-	IPFS          IPFSSetting   `yaml:"ipfs"`
-	LoadBalancer  LoadBalancer  `yaml:"loadBalancer"`
+	PublicHLSPath  string        `yaml:"publicHLSPath"`
+	PrivateHLSPath string        `yaml:"privateHLSPath"`
+	WebServerPort  int           `yaml:"webServerPort"`
+	FFMpegSetting  FFMpegSetting `yaml:"ffmpegSetting"`
+	IPFS           IPFSSetting   `yaml:"ipfs"`
+	LoadBalancer   LoadBalancer  `yaml:"loadBalancer"`
 }
 
 type FFMpegSetting struct {
@@ -80,8 +81,12 @@ func GetConfig() Config {
 }
 
 func checkConfig(config Config) {
-	if !isFileExists(config.PublicHLSPath) {
-		log.Fatalf("PublicHLSPath %s doesn't exist", config.PublicHLSPath)
+	if config.PublicHLSPath == "" {
+		log.Fatal("empty PublicHLSPath")
+	}
+
+	if config.PrivateHLSPath == "" {
+		log.Fatal("empty PrivateHLSPath")
 	}
 
 	if !isFileExists(config.FFMpegSetting.FFMpegPath) {

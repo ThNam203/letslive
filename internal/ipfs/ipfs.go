@@ -1,11 +1,13 @@
 package ipfs
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"sen1or/lets-live/internal"
 	"sync"
 
 	"github.com/ipfs/boxo/files"
@@ -13,6 +15,7 @@ import (
 	"github.com/ipfs/kubo/config"
 	"github.com/ipfs/kubo/core"
 	"github.com/ipfs/kubo/core/coreapi"
+	"github.com/ipfs/kubo/core/corehttp"
 	iface "github.com/ipfs/kubo/core/coreiface"
 	"github.com/ipfs/kubo/core/coreiface/options"
 	"github.com/ipfs/kubo/core/node/libp2p"
@@ -22,28 +25,26 @@ import (
 	"github.com/multiformats/go-multiaddr"
 )
 
-type IIPFSStorage interface {
-	// // Save the file and return its hash string
-	//Save(filePath string) (string, error)
-
-	// The function save the file and add into a hls directory
-	// Return final hash after adding file hash into directory
-	SaveIntoHLSDirectory(filePath string) (string, error)
-}
-
 // TODO: add way to check if hls directory exists
 type IPFSStorage struct {
 	ipfsApi iface.CoreAPI
 	node    *core.IpfsNode
 	ctx     context.Context
+	gateway string
 
+	hlsDirectory     string
 	hlsDirectoryHash string
 }
 
-func NewIPFSStorage(ctx context.Context) IIPFSStorage {
+func NewIPFSStorage(hlsDirectory string, gateway string) internal.Storage {
+	ctx := context.Background()
+
 	ipfsStorage := &IPFSStorage{
-		ctx: ctx,
+		ctx:          ctx,
+		hlsDirectory: hlsDirectory,
+		gateway:      gateway,
 	}
+
 	ipfsStorage.setup()
 
 	return ipfsStorage
@@ -57,14 +58,45 @@ func (s *IPFSStorage) setup() {
 
 	s.ipfsApi = *ipfsApi
 	s.node = node
-	fmt.Println("IPFS storage is running")
 
-	hlsDirectoryHashString, err := s.AddDirectory("./hls")
+	hashResultChan := make(chan string, 1)
+	go (func() {
+		hlsDirectoryHashString, err := s.AddDirectory(s.hlsDirectory)
+		hashResultChan <- hlsDirectoryHashString
+
+		if err != nil {
+			log.Panicf("failed to add hls directory: %s", err)
+		}
+	})()
+
+	s.hlsDirectoryHash = <-hashResultChan
+	go s.goOnlineIPFSNode()
+}
+
+func (s *IPFSStorage) GenerateRemotePlaylist(playlistPath string, variant internal.HLSVariant) (string, error) {
+	file, err := os.Open(playlistPath)
 	if err != nil {
-		log.Panicf("failed to add hls directory: %s", err)
+		return "", fmt.Errorf("can't open playlist %s: %s", playlistPath, err)
+	}
+	defer file.Close()
+
+	var newPlaylist string = ""
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line[0] != '#' {
+			segment := variant.GetSegmentByFilename(line)
+			if segment == nil || segment.FullLocalPath == "" {
+				line = ""
+			} else {
+				line = segment.IPFSRemoteId
+			}
+		}
+
+		newPlaylist = newPlaylist + line + "\n"
 	}
 
-	s.hlsDirectoryHash = hlsDirectoryHashString
+	return newPlaylist, nil
 }
 
 // create and return the directory hash string
@@ -115,7 +147,8 @@ func (s *IPFSStorage) SaveIntoHLSDirectory(filePath string) (string, error) {
 	}
 
 	finalHash, err := s.addHashedFileToDirectory(fileCid, s.hlsDirectoryHash, filepath.Base(filePath))
-	return finalHash, err
+	// TODO: use gateway instead
+	return "http://localhost:5002" + finalHash, err
 }
 
 // Add the hashed file into "hls" directory hash which is already get added into IPFS storage
@@ -160,8 +193,7 @@ func createIPFSNode(ctx context.Context, repoPath string) (*iface.CoreAPI, *core
 	}
 
 	node, err := core.NewNode(ctx, nodeOptions)
-	// TODO:
-	// node.IsDaemon = true
+	node.IsDaemon = true
 
 	if err != nil {
 		return nil, nil, err
@@ -189,8 +221,6 @@ func setupPlugins(repoPath string) error {
 	return nil
 }
 
-// Setting buffer to 7.5M
-// Explain: https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes
 func createTempRepo() (string, error) {
 	repoPath, err := os.MkdirTemp("", "ipfs-shell")
 	if err != nil {
@@ -236,7 +266,7 @@ func (s *IPFSStorage) spawnEphemeral() (*iface.CoreAPI, *core.IpfsNode, error) {
 	return api, node, err
 }
 
-func connectToPeers(ctx context.Context, ipfs iface.CoreAPI, peers []string) error {
+func (s *IPFSStorage) connectToPeers(peers []string) error {
 	var wg sync.WaitGroup
 	peerInfos := make(map[peer.ID]*peer.AddrInfo, len(peers))
 	for _, addrStr := range peers {
@@ -260,7 +290,7 @@ func connectToPeers(ctx context.Context, ipfs iface.CoreAPI, peers []string) err
 	for _, peerInfo := range peerInfos {
 		go func(peerInfo *peer.AddrInfo) {
 			defer wg.Done()
-			err := ipfs.Swarm().Connect(ctx, *peerInfo)
+			err := s.ipfsApi.Swarm().Connect(s.ctx, *peerInfo)
 			if err != nil {
 				log.Printf("failed to connect to %s: %s", peerInfo.ID, err)
 			}
@@ -268,4 +298,38 @@ func connectToPeers(ctx context.Context, ipfs iface.CoreAPI, peers []string) err
 	}
 	wg.Wait()
 	return nil
+}
+
+func (s *IPFSStorage) goOnlineIPFSNode() {
+	defer log.Println("IPFS node exited")
+	log.Println("IPFS node is running")
+
+	bootstrapNodes := []string{
+		// IPFS Bootstrapper nodes.
+		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+
+		// IPFS Cluster Pinning nodes
+		// "/ip4/138.201.67.219/tcp/4001/p2p/QmUd6zHcbkbcs7SMxwLs48qZVX3vpcM8errYS7xEczwRMA",
+
+		// "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",      // mars.i.ipfs.io
+		// "/ip4/104.131.131.82/udp/4001/quic/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ", // mars.i.ipfs.io
+
+		// You can add more nodes here, for example, another IPFS node you might have running locally, mine was:
+		// "/ip4/127.0.0.1/tcp/4010/p2p/QmZp2fhDLxjYue2RiUvLwT9MWdnbDxam32qYFnGmxZDh5L",
+		// "/ip4/127.0.0.1/udp/4010/quic/p2p/QmZp2fhDLxjYue2RiUvLwT9MWdnbDxam32qYFnGmxZDh5L",
+	}
+
+	go s.connectToPeers(bootstrapNodes)
+
+	addr := "/ip4/127.0.0.1/tcp/5002"
+	var opts = []corehttp.ServeOption{
+		corehttp.GatewayOption("/ipfs", "/ipns"),
+	}
+
+	if err := corehttp.ListenAndServe(s.node, addr, opts...); err != nil {
+		return
+	}
 }

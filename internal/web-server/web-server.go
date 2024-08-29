@@ -76,7 +76,10 @@ func (ws *WebServer) serveFile(rw http.ResponseWriter, rq *http.Request) {
 func (ws *WebServer) ListenAndServe() {
 	serveMux := http.NewServeMux()
 	serveMux.HandleFunc("/", ws.serveFile)
-	log.Fatal(http.ListenAndServe(ws.ListenAddr, serveMux))
+	go (func() {
+		log.Fatal(http.ListenAndServe(ws.ListenAddr, serveMux))
+	})()
+	log.Println("web server started")
 }
 
 func NewWebServer(listenAddr string, allowedSuffixes []string, baseDirectory string) *WebServer {
@@ -86,4 +89,3 @@ func NewWebServer(listenAddr string, allowedSuffixes []string, baseDirectory str
 		BaseDirectory:   baseDirectory,
 	}
 }
-

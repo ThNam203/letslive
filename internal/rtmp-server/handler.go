@@ -46,6 +46,13 @@ func (h *Handler) OnPublish(_ *rtmp.StreamContext, timestamp uint32, cmd *rtmpms
 		return errors.New("PublishingName is empty")
 	}
 
+	privateWorkingDir := filepath.Join(h.config.PrivateHLSPath, cmd.PublishingName)
+	publicWorkingDir := filepath.Join(h.config.PublicHLSPath, cmd.PublishingName)
+	os.RemoveAll(privateWorkingDir)
+	os.MkdirAll(privateWorkingDir, 0777)
+	os.RemoveAll(publicWorkingDir)
+	os.MkdirAll(publicWorkingDir, 0777)
+
 	// Record streams as FLV!
 	pipePath := filepath.Join(
 		os.TempDir(),
@@ -65,7 +72,7 @@ func (h *Handler) OnPublish(_ *rtmp.StreamContext, timestamp uint32, cmd *rtmpms
 	}
 	h.flvEnc = enc
 
-	go startFfmpeg(pipePath)
+	go startFfmpeg(pipePath, cmd.PublishingName)
 
 	return nil
 }

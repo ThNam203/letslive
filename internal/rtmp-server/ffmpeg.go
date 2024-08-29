@@ -1,6 +1,7 @@
 package rtmpserver
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os/exec"
@@ -10,10 +11,10 @@ import (
 	"time"
 )
 
-func startFfmpeg(pipePath string) {
-	var configuration = config.GetConfig()
+var configuration = config.GetConfig()
 
-	var outputDir = configuration.PublicHLSPath
+func startFfmpeg(pipePath string, publishName string) {
+	var outputDir = filepath.Join(configuration.PrivateHLSPath, publishName)
 
 	var videoMaps = make([]string, 0)
 	var audioMaps = make([]string, 0)
@@ -57,9 +58,12 @@ func startFfmpeg(pipePath string) {
 	ffmpegCommand := "cat " + pipePath + " | " + configuration.FFMpegSetting.FFMpegPath + " " + ffmpegFlagsString
 
 	// TODO: implements a function to check if the file has been created or not
-	time.Sleep(4 * time.Second)
-	_, err := exec.Command("sh", "-c", ffmpegCommand).Output()
+	time.Sleep(1 * time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	logs, err := exec.CommandContext(ctx, "sh", "-c", ffmpegCommand).Output()
 	if err != nil {
-		log.Panic(err)
+		log.Panicf("failed to run ffmpeg command %s: %s, logs: %s", ffmpegCommand, err, string(logs))
 	}
 }
