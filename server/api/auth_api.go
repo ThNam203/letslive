@@ -16,19 +16,31 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type userLogInForm struct {
-	Email    string `validate:"required,email"`
-	Password string `validate:"required,gte=8,lte=72"`
+type logInForm struct {
+	Email    string `validate:"required,email" example:"hthnam203@gmail.com"`
+	Password string `validate:"required,gte=8,lte=72" example:"123123123"`
 }
 
 type signUpForm struct {
-	Username string `validate:"required,gte=6,lte=50"`
-	Email    string `validate:"required,email"`
-	Password string `validate:"required,gte=8,lte=72"`
+	Username string `validate:"required,gte=6,lte=50" example:"sen1or"`
+	Email    string `validate:"required,email" example:"hthnam203@gmail.com"`
+	Password string `validate:"required,gte=8,lte=72" example:"123123123"`
 }
 
+// LogInHandler handles user login.
+// @Summary Log in a user
+// @Description Authenticate user with email and password
+// @Tags Authentication
+// @Accept  json
+// @Param   userCredentials  body  logInForm  true  "User credentials"
+// @Success 204
+// @Header 204 {string} refreshToken "Refresh Token"
+// @Header 204 {string} accessToken "Access Token"
+// @Failure 400 {string} string "Invalid body"
+// @Failure 401 {string} string "Username or password is not correct"
+// @Router /auth/login [post]
 func (a *api) LogInHandler(w http.ResponseWriter, r *http.Request) {
-	var userCredentials userLogInForm
+	var userCredentials logInForm
 	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
 		a.errorResponse(w, http.StatusBadRequest, err)
 		return
@@ -64,6 +76,19 @@ func (a *api) LogInHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusOK)
 }
 
+// SignUpHandler handles user registration.
+// @Summary Sign up a new user
+// @Description Register a new user with username, email, and password
+// @Description On success, redirect user to index page and set refresh and access token in cookie
+// @Tags Authentication
+// @Accept  json
+// @Param userForm body signUpForm true "User registration data"
+// @Success 204
+// @Header 204 {string} refreshToken "Refresh Token"
+// @Header 204 {string} accessToken "Access Token"
+// @Failure 400 {object} HTTPErrorResponse
+// @Failure 500 {object} HTTPErrorResponse
+// @Router /auth/signup [post]
 func (a *api) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	var userForm signUpForm
 	json.NewDecoder(r.Body).Decode(&userForm)
@@ -105,6 +130,16 @@ func (a *api) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusOK)
 }
 
+// verifyEmailHandler verifies a user's email address.
+// @Summary Verify user email
+// @Description Verifies a user's email address with the provided token
+// @Tags Authentication
+// @Accept  json
+// @Param   token  query  string  true  "Email verification token"
+// @Success 200 {string} string "Return a Email verification complete! string"
+// @Failure 400 {string} string "Verify token expired or invalid."
+// @Failure 500 {string} string "An error occurred while verifying the user."
+// @Router /auth/verify [get]
 func (a *api) verifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 	var token = r.URL.Query().Get("token")
 

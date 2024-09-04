@@ -1,17 +1,20 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	_ "sen1or/lets-live/docs"
 	"sen1or/lets-live/server/config"
 	"sen1or/lets-live/server/domain"
 	"sen1or/lets-live/server/repository"
 	"time"
 
 	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -60,19 +63,36 @@ func (a *api) ListenAndServeTLS() {
 	go (func() {
 		log.Panic("server ends: ", server.ListenAndServeTLS(config.SERVER_CRT_FILE, config.SERVER_KEY_FILE))
 	})()
+
 	log.Println("server api started")
 }
 
+// @title           Let's Live API
+// @version         0.1
+// @description     The server API
+
+// @contact.name   Nam Huynh
+// @contact.email  hthnam203@gmail.com
+
+// @host      localhost:8000
+// @BasePath  /v1
 func (a *api) Routes() *mux.Router {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/v1/users/{id}", a.GetUserByIdHandler).Methods("GET")
+	router.HandleFunc("/v1/users/{id}", a.GetUserByIdHandler).Methods(http.MethodGet)
 
-	router.HandleFunc("/v1/auth/signup", a.SignUpHandler).Methods("POST")
-	router.HandleFunc("/v1/auth/login", a.LogInHandler).Methods("POST")
-	router.HandleFunc("/v1/auth/google", a.OAuthGoogleLogin).Methods("GET")
-	router.HandleFunc("/v1/auth/google/callback", a.OAuthGoogleCallBack).Methods("GET")
-	router.HandleFunc("/v1/auth/verify", a.verifyEmailHandler).Methods("GET")
+	router.HandleFunc("/v1/auth/signup", a.SignUpHandler).Methods(http.MethodPost)
+	router.HandleFunc("/v1/auth/login", a.LogInHandler).Methods(http.MethodPost)
+	router.HandleFunc("/v1/auth/google", a.OAuthGoogleLogin).Methods(http.MethodGet)
+	router.HandleFunc("/v1/auth/google/callback", a.OAuthGoogleCallBack).Methods(http.MethodGet)
+	router.HandleFunc("/v1/auth/verify", a.verifyEmailHandler).Methods(http.MethodGet)
+
+	router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
+		httpSwagger.URL("https://localhost:8000/swagger/doc.json"),
+		httpSwagger.DeepLinking(true),
+		httpSwagger.DocExpansion("none"),
+		httpSwagger.DomID("swagger-ui"),
+	)).Methods(http.MethodGet)
 
 	router.PathPrefix("/").HandlerFunc(a.RouteNotFound)
 
@@ -92,11 +112,21 @@ func (a *api) setError(w http.ResponseWriter, err error) {
 	w.Header().Add("X-LetsLive-Error", err.Error())
 }
 
+type HTTPErrorResponse struct {
+	Code    int    `json:"code" example:"500"`
+	Message string `json:"message" example:"internal server error"`
+}
+
 // Set error to the custom header and write the error to the request
 // After calling, the request will end and no other write should be done
 func (a *api) errorResponse(w http.ResponseWriter, status int, err error) {
 	w.Header().Add("X-LetsLive-Error", err.Error())
-	http.Error(w, err.Error(), status)
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(HTTPErrorResponse{
+		Message: err.Error(),
+	})
 }
 
 func (a *api) setTokens(w http.ResponseWriter, refreshToken string, accessToken string) {
