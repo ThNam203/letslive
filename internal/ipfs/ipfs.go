@@ -232,6 +232,17 @@ func createTempRepo() (string, error) {
 		return "", fmt.Errorf("failed to init config file for repo: %s", err)
 	}
 
+	// https://github.com/ipfs/kubo/blob/master/docs/experimental-features.md#ipfs-filestore
+	cfg.Experimental.FilestoreEnabled = true
+	// https://github.com/ipfs/kubo/blob/master/docs/experimental-features.md#ipfs-urlstore
+	cfg.Experimental.UrlstoreEnabled = true
+	// https://github.com/ipfs/kubo/blob/master/docs/experimental-features.md#ipfs-p2p
+	cfg.Experimental.Libp2pStreamMounting = true
+	// https://github.com/ipfs/kubo/blob/master/docs/experimental-features.md#p2p-http-proxy
+	cfg.Experimental.P2pHttpProxy = true
+	// See also: https://github.com/ipfs/kubo/blob/master/docs/config.md
+	// And: https://github.com/ipfs/kubo/blob/master/docs/experimental-features.md
+
 	err = fsrepo.Init(repoPath, cfg)
 	if err != nil {
 		return "", fmt.Errorf("failed to create ephemeral node: %s", err)
@@ -306,10 +317,10 @@ func (s *IPFSStorage) goOnlineIPFSNode() {
 
 	bootstrapNodes := []string{
 		// IPFS Bootstrapper nodes.
-		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
-		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+		"/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+		"/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+		"/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+		"/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
 
 		// IPFS Cluster Pinning nodes
 		// "/ip4/138.201.67.219/tcp/4001/p2p/QmUd6zHcbkbcs7SMxwLs48qZVX3vpcM8errYS7xEczwRMA",
@@ -330,6 +341,7 @@ func (s *IPFSStorage) goOnlineIPFSNode() {
 	}
 
 	if err := corehttp.ListenAndServe(s.node, addr, opts...); err != nil {
+		log.Println("ipfs bootstraping failed: %s", err)
 		return
 	}
 }

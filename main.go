@@ -5,15 +5,11 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"sen1or/lets-live/internal"
 	"sen1or/lets-live/internal/config"
-	"sen1or/lets-live/internal/ipfs"
 	loadbalancer "sen1or/lets-live/internal/load-balancer"
 	rtmpserver "sen1or/lets-live/internal/rtmp-server"
-	webserver "sen1or/lets-live/internal/web-server"
 	"sen1or/lets-live/server/api"
 	"sen1or/lets-live/server/hack"
-	"strconv"
 
 	_ "github.com/joho/godotenv/autoload"
 	"gorm.io/driver/postgres"
@@ -30,17 +26,16 @@ func main() {
 	api := api.NewApi(*dbConn)
 	api.ListenAndServeTLS()
 
-	webServerListenAddr := "localhost:" + strconv.Itoa(cfg.WebServerPort)
-	allowedSuffixes := [2]string{".ts", ".m3u8"}
-	MyWebServer := webserver.NewWebServer(webServerListenAddr, allowedSuffixes[:], cfg.PrivateHLSPath)
-	MyWebServer.ListenAndServe()
+	//webServerListenAddr := "localhost:" + strconv.Itoa(cfg.WebServerPort)
+	//allowedSuffixes := [2]string{".ts", ".m3u8"}
+	//MyWebServer := webserver.NewWebServer(webServerListenAddr, allowedSuffixes[:], cfg.PrivateHLSPath)
+	//MyWebServer.ListenAndServe()
 
-	ipfsStorage := ipfs.NewIPFSStorage(cfg.PrivateHLSPath, cfg.IPFS.Gateway)
+	//ipfsStorage := ipfs.NewIPFSStorage(cfg.PrivateHLSPath, cfg.IPFS.Gateway)
 	rtmpserver.StartRTMPService()
 	setupTCPLoadBalancer()
-	go internal.MonitorHLSStreamContent(cfg.PrivateHLSPath, ipfsStorage)
+	//go internal.MonitorHLSStreamContent(cfg.PrivateHLSPath, ipfsStorage)
 
-	log.Println("Setup all done!")
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -48,6 +43,8 @@ func main() {
 			os.Exit(1)
 		}
 	}()
+
+	log.Println("Setup all done!")
 	select {}
 }
 
