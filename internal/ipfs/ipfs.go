@@ -71,7 +71,7 @@ func (s *IPFSStorage) setup() {
 	}
 
 	// TODO: connect to other peers and go online instead of local gateway
-	// go s.goOnlineIPFSNode()
+	go s.goOnlineIPFSNode()
 }
 
 func (s *IPFSStorage) GenerateRemotePlaylist(playlistPath string, variant internal.HLSVariant) (string, error) {
@@ -187,6 +187,8 @@ func createIPFSNode(ctx context.Context, repoPath string) (*iface.CoreAPI, *core
 		return nil, nil, err
 	}
 
+	repo.SetConfigKey("Addresses.Gateway", "/ip4/0.0.0.0/tcp/8080")
+
 	nodeOptions := &core.BuildCfg{
 		Online:  true,
 		Routing: libp2p.DHTOption,
@@ -194,7 +196,7 @@ func createIPFSNode(ctx context.Context, repoPath string) (*iface.CoreAPI, *core
 	}
 
 	node, err := core.NewNode(ctx, nodeOptions)
-	node.IsDaemon = true
+	// node.IsDaemon = true
 
 	if err != nil {
 		return nil, nil, err
@@ -316,27 +318,27 @@ func (s *IPFSStorage) connectToPeers(peers []string) error {
 }
 
 func (s *IPFSStorage) goOnlineIPFSNode() {
-	bootstrapNodes := []string{
-		// IPFS Bootstrapper nodes.
-		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
-		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+	// bootstrapNodes := []string{
+	// IPFS Bootstrapper nodes.
+	// "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+	// "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+	// "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+	// "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
 
-		// IPFS Cluster Pinning nodes
-		// "/ip4/138.201.67.219/tcp/4001/p2p/QmUd6zHcbkbcs7SMxwLs48qZVX3vpcM8errYS7xEczwRMA",
+	// IPFS Cluster Pinning nodes
+	// "/ip4/138.201.67.219/tcp/4001/p2p/QmUd6zHcbkbcs7SMxwLs48qZVX3vpcM8errYS7xEczwRMA",
 
-		// "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",      // mars.i.ipfs.io
-		// "/ip4/104.131.131.82/udp/4001/quic/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ", // mars.i.ipfs.io
+	// "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",      // mars.i.ipfs.io
+	// "/ip4/104.131.131.82/udp/4001/quic/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ", // mars.i.ipfs.io
 
-		// You can add more nodes here, for example, another IPFS node you might have running locally, mine was:
-		// "/ip4/127.0.0.1/tcp/4010/p2p/QmZp2fhDLxjYue2RiUvLwT9MWdnbDxam32qYFnGmxZDh5L",
-		// "/ip4/127.0.0.1/udp/4010/quic/p2p/QmZp2fhDLxjYue2RiUvLwT9MWdnbDxam32qYFnGmxZDh5L",
-	}
+	// You can add more nodes here, for example, another IPFS node you might have running locally, mine was:
+	// "/ip4/127.0.0.1/tcp/4010/p2p/QmZp2fhDLxjYue2RiUvLwT9MWdnbDxam32qYFnGmxZDh5L",
+	// "/ip4/127.0.0.1/udp/4010/quic/p2p/QmZp2fhDLxjYue2RiUvLwT9MWdnbDxam32qYFnGmxZDh5L",
+	// }
 
-	go s.connectToPeers(bootstrapNodes)
+	// go s.connectToPeers(bootstrapNodes)
 
-	addr := "/ip4/127.0.0.1/tcp/5002"
+	addr := "/ip4/127.0.0.1/tcp/8080"
 	var opts = []corehttp.ServeOption{
 		corehttp.GatewayOption("/ipfs", "/ipns"),
 	}

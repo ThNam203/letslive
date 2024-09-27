@@ -1,15 +1,24 @@
 package ipfs
 
 import (
-	"context"
+	"os"
+	"sen1or/lets-live/internal/config"
 	"testing"
 )
 
 func TestCreateIPFSNode(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	cfg := config.GetConfig()
+	ipfsStorage := NewIPFSStorage(cfg.PrivateHLSPath, "http://localhost:8080/")
 
-	ipfsStorage := NewIPFSStorage(ctx)
+	file, err := os.OpenFile("./test.txt", os.O_CREATE|os.O_WRONLY, os.ModePerm)
+	if err != nil {
+		t.Error("failed to create file")
+	}
+
+	file.Write([]byte("please do work for me please, i dont want to have bad grades"))
+	file.Close()
+
+	ipfsStorage.SaveIntoHLSDirectory("./test.txt")
 
 	if ipfsStorage == nil {
 		t.Fatal("where is my ipfs storage")

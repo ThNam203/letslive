@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sen1or/lets-live/internal/config"
+	"sen1or/lets-live/logger"
 	"strconv"
 	"strings"
 	"time"
@@ -86,6 +87,12 @@ func MonitorHLSStreamContent(monitorPath string, storage Storage) {
 					// TODO: properly handle
 					if utf8.RuneCountInString(publishName) < 10 {
 						continue
+					}
+
+					if err := os.MkdirAll(filepath.Join(cfg.PublicHLSPath, publishName), os.ModePerm); err != nil {
+						logger.Errorw("failed to create publish folder", "path", filepath.Join(cfg.PublicHLSPath, publishName))
+					} else {
+						logger.Infof("created publish folder: %s", filepath.Join(cfg.PublicHLSPath, publishName))
 					}
 
 					publishFolderHash, err := storage.AddDirectory(event.Path)
