@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"sen1or/lets-live/internal"
+	"sen1or/lets-live/logger"
+
 	"sync"
 
 	"github.com/ipfs/boxo/files"
@@ -52,6 +54,7 @@ func NewIPFSStorage(hlsDirectory string, gateway string) internal.Storage {
 
 func (s *IPFSStorage) setup() {
 	ipfsApi, node, err := s.spawnEphemeral()
+
 	if err != nil {
 		log.Panic(err)
 	}
@@ -59,18 +62,16 @@ func (s *IPFSStorage) setup() {
 	s.ipfsApi = *ipfsApi
 	s.node = node
 
-	hashResultChan := make(chan string, 1)
-	go (func() {
-		hlsDirectoryHashString, err := s.AddDirectory(s.hlsDirectory)
-		hashResultChan <- hlsDirectoryHashString
+	hlsDirectoryHashString, err := s.AddDirectory(s.hlsDirectory)
+	s.hlsDirectoryHash = hlsDirectoryHashString
 
-		if err != nil {
-			log.Panicf("failed to add hls directory: %s", err)
-		}
-	})()
+	logger.Infof("added hls directory to ipfs with hash %s", hlsDirectoryHashString)
+	if err != nil {
+		logger.Infof("failed to add hls directory: %s", err)
+	}
 
-	s.hlsDirectoryHash = <-hashResultChan
-	go s.goOnlineIPFSNode()
+	// TODO: connect to other peers and go online instead of local gateway
+	// go s.goOnlineIPFSNode()
 }
 
 func (s *IPFSStorage) GenerateRemotePlaylist(playlistPath string, variant internal.HLSVariant) (string, error) {
@@ -147,8 +148,8 @@ func (s *IPFSStorage) SaveIntoHLSDirectory(filePath string) (string, error) {
 	}
 
 	finalHash, err := s.addHashedFileToDirectory(fileCid, s.hlsDirectoryHash, filepath.Base(filePath))
-	// TODO: use gateway instead
-	return "http://localhost:5002" + finalHash, err
+	logger.Infof("segment saved with cid %s and final hash %s", fileCid.String(), finalHash)
+	return s.gateway + finalHash, err
 }
 
 // Add the hashed file into "hls" directory hash which is already get added into IPFS storage
@@ -254,6 +255,7 @@ var loadPluginsOnce sync.Once
 
 // Function "spawnEphemeral" Create a temporary just for one run
 func (s *IPFSStorage) spawnEphemeral() (*iface.CoreAPI, *core.IpfsNode, error) {
+	log.Println("spawing ephemeral ipfs")
 	var onceErr error
 	loadPluginsOnce.Do(func() {
 		onceErr = setupPlugins("")
@@ -304,6 +306,8 @@ func (s *IPFSStorage) connectToPeers(peers []string) error {
 			err := s.ipfsApi.Swarm().Connect(s.ctx, *peerInfo)
 			if err != nil {
 				log.Printf("failed to connect to %s: %s", peerInfo.ID, err)
+			} else {
+				log.Printf("ipfs connectted to %s", peerInfo.ID)
 			}
 		}(peerInfo)
 	}
@@ -312,15 +316,12 @@ func (s *IPFSStorage) connectToPeers(peers []string) error {
 }
 
 func (s *IPFSStorage) goOnlineIPFSNode() {
-	defer log.Println("IPFS node exited")
-	log.Println("IPFS node is running")
-
 	bootstrapNodes := []string{
 		// IPFS Bootstrapper nodes.
-		"/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-		"/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-		"/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
-		"/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+		// "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
 
 		// IPFS Cluster Pinning nodes
 		// "/ip4/138.201.67.219/tcp/4001/p2p/QmUd6zHcbkbcs7SMxwLs48qZVX3vpcM8errYS7xEczwRMA",

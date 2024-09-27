@@ -5,11 +5,16 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sen1or/lets-live/internal"
 	"sen1or/lets-live/internal/config"
+	"sen1or/lets-live/internal/ipfs"
 	loadbalancer "sen1or/lets-live/internal/load-balancer"
-	rtmpserver "sen1or/lets-live/internal/rtmp-server"
+	rtmpserver "sen1or/lets-live/internal/rtmp"
+	webserver "sen1or/lets-live/internal/web-server"
+	"sen1or/lets-live/logger"
 	"sen1or/lets-live/server/api"
 	"sen1or/lets-live/server/hack"
+	"strconv"
 
 	_ "github.com/joho/godotenv/autoload"
 	"gorm.io/driver/postgres"
@@ -19,22 +24,20 @@ import (
 var cfg = config.GetConfig()
 
 func main() {
+	logger.Init()
 	resetWorkingSpace()
 
-	dbConn := GetDatabaseConnection()
-	hack.AutoMigrateAllTables(*dbConn)
-	api := api.NewApi(*dbConn)
-	api.ListenAndServeTLS()
+	go RunBackend()
 
-	//webServerListenAddr := "localhost:" + strconv.Itoa(cfg.WebServerPort)
-	//allowedSuffixes := [2]string{".ts", ".m3u8"}
-	//MyWebServer := webserver.NewWebServer(webServerListenAddr, allowedSuffixes[:], cfg.PrivateHLSPath)
-	//MyWebServer.ListenAndServe()
+	webServerListenAddr := "localhost:" + strconv.Itoa(cfg.WebServerPort)
+	allowedSuffixes := [2]string{".ts", ".m3u8"}
+	MyWebServer := webserver.NewWebServer(webServerListenAddr, allowedSuffixes[:], cfg.PrivateHLSPath)
+	MyWebServer.ListenAndServe()
 
-	//ipfsStorage := ipfs.NewIPFSStorage(cfg.PrivateHLSPath, cfg.IPFS.Gateway)
-	rtmpserver.StartRTMPService()
+	ipfsStorage := ipfs.NewIPFSStorage(cfg.PrivateHLSPath, cfg.IPFS.Gateway)
 	setupTCPLoadBalancer()
-	//go internal.MonitorHLSStreamContent(cfg.PrivateHLSPath, ipfsStorage)
+	go rtmpserver.Start(1936)
+	go internal.MonitorHLSStreamContent(cfg.PrivateHLSPath, ipfsStorage)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -49,13 +52,21 @@ func main() {
 }
 
 func setupTCPLoadBalancer() {
-	lb := loadbalancer.NewTCPLoadBalancer(cfg.LoadBalancer.TCP)
 	go (func() {
+		lb := loadbalancer.NewTCPLoadBalancer(cfg.LoadBalancer.TCP)
+
 		err := lb.ListenAndServe()
 		if err != nil {
 			log.Panic(err)
 		}
 	})()
+}
+
+func RunBackend() {
+	dbConn := GetDatabaseConnection()
+	hack.AutoMigrateAllTables(*dbConn)
+	api := api.NewApi(*dbConn)
+	api.ListenAndServeTLS()
 }
 
 func GetDatabaseConnection() *gorm.DB {

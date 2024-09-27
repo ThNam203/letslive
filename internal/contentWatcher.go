@@ -77,8 +77,6 @@ func MonitorHLSStreamContent(monitorPath string, storage Storage) {
 					continue
 				}
 
-				fmt.Printf("path: %s, event: %s\n", event.Path, event.Op.String())
-
 				// NOT SURE WHAT IS CREATED FIRST
 				// handle creating the publish name folder
 				if event.IsDir() && event.Op == watcher.Create {
@@ -148,7 +146,7 @@ func MonitorHLSStreamContent(monitorPath string, storage Storage) {
 					newObjectPathChannel := make(chan string, 1)
 					go func() {
 						newObjectPath, err := storage.SaveIntoHLSDirectory(event.Path)
-						//newObjectPath, err := uuid.NewGen().NewV4()
+
 						if err != nil {
 							fmt.Printf("error while saving segments into ipfs: %s\n", err)
 						}
