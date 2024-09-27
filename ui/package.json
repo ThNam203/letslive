@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@helia/unixfs": "^3.0.7",
     "@nextui-org/popover": "^2.1.27",
     "@nextui-org/spinner": "^2.0.33",
     "@nextui-org/system": "^2.2.5",
@@ -16,6 +17,7 @@
     "@reduxjs/toolkit": "^2.2.7",
     "clsx": "^2.1.1",
     "framer-motion": "^11.3.28",
+    "helia": "^4.2.6",
     "next": "14.2.5",
     "react": "^18",
     "react-dom": "^18",

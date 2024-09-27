@@ -27,7 +27,7 @@ ffmpegSetting:
 
 ipfs:
   enabled: true
-  gateway: https://ipfs.io
+  gateway: http://127.0.0.1:8080
 
 loadBalancer:
   http:

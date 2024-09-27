@@ -1,19 +1,29 @@
-package rtmpserver
+package rtmp
 
 import (
-	"context"
 	"fmt"
-	"log"
+	"io"
 	"os/exec"
 	"path/filepath"
 	"sen1or/lets-live/internal/config"
+	"sen1or/lets-live/logger"
 	"strings"
-	"time"
 )
 
 var configuration = config.GetConfig()
 
-func startFfmpeg(pipePath string, publishName string) {
+type Transcoder struct {
+	stdin       *io.PipeReader
+	commandExec *exec.Cmd
+}
+
+func NewTranscoder(pipeOut *io.PipeReader) *Transcoder {
+	return &Transcoder{
+		stdin: pipeOut,
+	}
+}
+
+func (t *Transcoder) Start(publishName string) {
 	var outputDir = filepath.Join(configuration.PrivateHLSPath, publishName)
 
 	var videoMaps = make([]string, 0)
@@ -32,7 +42,7 @@ func startFfmpeg(pipePath string, publishName string) {
 	var ffmpegFlags = []string{
 		"-hide_banner",
 		"-re",
-		"-i pipe:",
+		"-i pipe:0",
 		fmt.Sprintf("-preset %s", configuration.FFMpegSetting.Preset),
 		"-sc_threshold 0",
 		"-c:v libx264",
@@ -55,15 +65,27 @@ func startFfmpeg(pipePath string, publishName string) {
 	}
 
 	ffmpegFlagsString := strings.Join(ffmpegFlags, " ")
-	ffmpegCommand := "cat " + pipePath + " | " + configuration.FFMpegSetting.FFMpegPath + " " + ffmpegFlagsString
+	ffmpegCommand := configuration.FFMpegSetting.FFMpegPath + " " + ffmpegFlagsString
 
-	// TODO: implements a function to check if the file has been created or not
-	time.Sleep(1 * time.Second)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.commandExec = exec.Command("sh", "-c", ffmpegCommand)
+	t.commandExec.Stdin = t.stdin
 
-	logs, err := exec.CommandContext(ctx, "sh", "-c", ffmpegCommand).Output()
+	// TODO: logs out error
+	// stderr, err := execCommand.StderrPipe()
+
+	if err := t.commandExec.Start(); err != nil {
+		logger.Errorf("error while starting ffmpeg command: %s", err)
+	}
+
+	err := t.commandExec.Wait()
 	if err != nil {
-		log.Panicf("failed to run ffmpeg command %s: %s, logs: %s", ffmpegCommand, err, string(logs))
+		logger.Debugf("ffmpeg failed: %s", err)
+	}
+}
+
+func (t *Transcoder) Stop() {
+	err := t.commandExec.Process.Kill()
+	if err != nil {
+		logger.Debugf("transcoder is killed: %s", err)
 	}
 }
