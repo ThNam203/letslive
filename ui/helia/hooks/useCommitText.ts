@@ -1,23 +1,22 @@
 /* eslint-disable no-console */
 
 import { useState, useCallback } from 'react'
-import { useHelia } from '@/hooks/useHelia'
+import { useHelia } from '@/helia/hooks/helia'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
 export const useCommitText = () => {
   const { helia, fs, error, starting } = useHelia()
-  const [cid, setCid] = useState(null)
+  const [cid, setCid] = useState<any>(null)
   const [cidString, setCidString] = useState('')
   const [committedText, setCommittedText] = useState('')
 
-  const commitText = useCallback(async (text) => {
+  const commitText = useCallback(async (text: string) => {
     if (!error && !starting) {
       try {
-        const cid = await fs.addBytes(
-          encoder.encode(text),
-          helia.blockstore
+        const cid = await fs!.addBytes(
+          encoder.encode(text)
         )
         setCid(cid)
         setCidString(cid.toString())
@@ -34,7 +33,7 @@ export const useCommitText = () => {
     let text = ''
     if (!error && !starting) {
       try {
-        for await (const chunk of fs.cat(cid)) {
+        for await (const chunk of fs!.cat(cid)) {
           text += decoder.decode(chunk, {
             stream: true
           })
