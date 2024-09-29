@@ -1,6 +1,6 @@
 publicHLSPath: public/hls
 privateHLSPath: private/hls
-webServerPort: 8888
+webServerPort: 8889
 
 ffmpegSetting:
   ffmpegPath: /usr/bin/ffmpeg
@@ -32,9 +32,9 @@ ipfs:
 loadBalancer:
   http:
     name: http-load-balancer
-    from: 8080
+    from: 8888
     to:
-      - http://0.0.0.0:8081
+      - http://0.0.0.0:8889
   tcp:
     name: tcp-load-balancer
     from: 0.0.0.0:1935

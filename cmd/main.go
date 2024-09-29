@@ -14,7 +14,6 @@ import (
 	"sen1or/lets-live/logger"
 	"sen1or/lets-live/server/api"
 	"sen1or/lets-live/server/hack"
-	"strconv"
 
 	_ "github.com/joho/godotenv/autoload"
 	"gorm.io/driver/postgres"
@@ -29,9 +28,8 @@ func main() {
 
 	go RunBackend()
 
-	webServerListenAddr := "localhost:" + strconv.Itoa(cfg.WebServerPort)
 	allowedSuffixes := [2]string{".ts", ".m3u8"}
-	MyWebServer := webserver.NewWebServer(webServerListenAddr, allowedSuffixes[:], cfg.PrivateHLSPath)
+	MyWebServer := webserver.NewWebServer(cfg.WebServerPort, allowedSuffixes[:], cfg.PublicHLSPath)
 	MyWebServer.ListenAndServe()
 
 	ipfsStorage := ipfs.NewIPFSStorage(cfg.PrivateHLSPath, cfg.IPFS.Gateway)

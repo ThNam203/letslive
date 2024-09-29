@@ -24,12 +24,10 @@ export default function RootLayout({
         <html lang="en">
             <body className={inter.className}>
                 <StoreProvider>
-                    <HeliaProvider>
                     <Suspense fallback={<Loading />}>
                         <NextUIProvider>{children}</NextUIProvider>
                         <Toast />
                     </Suspense>
-                    </HeliaProvider>
                 </StoreProvider>
             </body>
         </html>
