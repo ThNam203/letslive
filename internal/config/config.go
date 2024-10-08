@@ -11,6 +11,7 @@ type Config struct {
 	PublicHLSPath  string        `yaml:"publicHLSPath"`
 	PrivateHLSPath string        `yaml:"privateHLSPath"`
 	WebServerPort  int           `yaml:"webServerPort"`
+	ServerURL      string        `yaml:"serverURL"`
 	FFMpegSetting  FFMpegSetting `yaml:"ffmpegSetting"`
 	IPFS           IPFSSetting   `yaml:"ipfs"`
 	LoadBalancer   LoadBalancer  `yaml:"loadBalancer"`

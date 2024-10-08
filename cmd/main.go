@@ -5,11 +5,15 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"sen1or/lets-live/internal"
+
+	//"sen1or/lets-live/internal"
+	// "sen1or/lets-live/internal"
 	"sen1or/lets-live/internal/config"
-	"sen1or/lets-live/internal/ipfs"
+	"sen1or/lets-live/internal/rtmp"
+
+	//"sen1or/lets-live/internal/ipfs"
 	loadbalancer "sen1or/lets-live/internal/load-balancer"
-	rtmpserver "sen1or/lets-live/internal/rtmp"
+	//rtmpserver "sen1or/lets-live/internal/rtmp"
 	webserver "sen1or/lets-live/internal/web-server"
 	"sen1or/lets-live/logger"
 	"sen1or/lets-live/server/api"
@@ -32,10 +36,12 @@ func main() {
 	MyWebServer := webserver.NewWebServer(cfg.WebServerPort, allowedSuffixes[:], cfg.PublicHLSPath)
 	MyWebServer.ListenAndServe()
 
-	ipfsStorage := ipfs.NewIPFSStorage(cfg.PrivateHLSPath, cfg.IPFS.Gateway)
+	//ipfsStorage := ipfs.NewIPFSStorage(cfg.PrivateHLSPath, cfg.IPFS.Gateway)
+	//go internal.MonitorHLSStreamContent(cfg.PrivateHLSPath, ipfsStorage)
+
 	setupTCPLoadBalancer()
-	go rtmpserver.Start(1936)
-	go internal.MonitorHLSStreamContent(cfg.PrivateHLSPath, ipfsStorage)
+	rtmpServer := rtmp.NewRTMPServer(1936, cfg.ServerURL)
+	go rtmpServer.Start()
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -76,7 +82,9 @@ func GetDatabaseConnection() *gorm.DB {
 
 	var dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Saigon", host, user, password, dbname, port)
 
-	var db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	var db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+		DryRun: false,
+	})
 	if err != nil {
 		log.Panic(err)
 	}

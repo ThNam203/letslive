@@ -47,15 +47,31 @@ func (r *postgresUserRepo) GetByEmail(email string) (*domain.User, error) {
 	return &user, nil
 }
 
+func (r *postgresUserRepo) GetByAPIKey(apiKey uuid.UUID) (*domain.User, error) {
+	var user domain.User
+	result := r.db.Where("stream_api_key = ?", apiKey).First(&user)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &user, nil
+}
+
 func (r *postgresUserRepo) Create(newUser domain.User) error {
 	result := r.db.Create(&newUser)
 	return result.Error
 }
 
+// CAREFUL: gorm only update non-blank value (false, 0, nil...)
+// if you want to update everything, use save
 func (r *postgresUserRepo) Update(user domain.User) error {
 	tx := r.db.Updates(&user)
 	return tx.Error
+}
 
+func (r *postgresUserRepo) Save(user domain.User) error {
+	tx := r.db.Save(&user)
+	return tx.Error
 }
 
 func (r *postgresUserRepo) Delete(userId string) error {

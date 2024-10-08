@@ -11,6 +11,7 @@ import (
 	"sen1or/lets-live/server/config"
 	"sen1or/lets-live/server/domain"
 	"sen1or/lets-live/server/repository"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -20,14 +21,16 @@ import (
 )
 
 type api struct {
-	logger *zap.Logger
-	db     *gorm.DB // For raw sql queries
+	logger    *zap.Logger
+	db        *gorm.DB // For raw sql queries
+	serverURL string
 
 	userRepo         domain.UserRepository
 	refreshTokenRepo domain.RefreshTokenRepository
 	verifyTokenRepo  domain.VerifyTokenRepository
 }
 
+// TODO: make tls usable
 func NewApi(dbConn gorm.DB) *api {
 	var userRepo = repository.NewUserRepository(dbConn)
 	var refreshTokenRepo = repository.NewRefreshTokenRepository(dbConn)
@@ -35,8 +38,9 @@ func NewApi(dbConn gorm.DB) *api {
 	var logger, _ = zap.NewProduction()
 
 	return &api{
-		logger: logger,
-		db:     &dbConn,
+		logger:    logger,
+		db:        &dbConn,
+		serverURL: "http://localhost:8000",
 
 		userRepo:         userRepo,
 		refreshTokenRepo: refreshTokenRepo,
@@ -52,17 +56,23 @@ func (a *api) ListenAndServeTLS() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	if _, err := os.Stat(config.SERVER_CRT_FILE); err != nil {
-		log.Panic("error loading server cert file", err.Error())
-	}
+	if strings.Contains(a.serverURL, "https") {
+		if _, err := os.Stat(config.SERVER_CRT_FILE); err != nil {
+			log.Panic("error loading server cert file", err.Error())
+		}
 
-	if _, err := os.Stat(config.SERVER_KEY_FILE); err != nil {
-		log.Panic("error loading server key file", err.Error())
-	}
+		if _, err := os.Stat(config.SERVER_KEY_FILE); err != nil {
+			log.Panic("error loading server key file", err.Error())
+		}
 
-	go (func() {
-		log.Panic("server ends: ", server.ListenAndServeTLS(config.SERVER_CRT_FILE, config.SERVER_KEY_FILE))
-	})()
+		go (func() {
+			log.Panic("server ends: ", server.ListenAndServeTLS(config.SERVER_CRT_FILE, config.SERVER_KEY_FILE))
+		})()
+	} else {
+		go (func() {
+			log.Panic("server ends: ", server.ListenAndServe())
+		})()
+	}
 
 	log.Println("server api started")
 }
@@ -81,6 +91,9 @@ func (a *api) Routes() *mux.Router {
 
 	router.HandleFunc("/v1/users/{id}", a.GetUserByIdHandler).Methods(http.MethodGet)
 
+	router.HandleFunc("/v1/streams/{apiKey}/online", a.SetUserStreamOnline).Methods(http.MethodPatch)
+	router.HandleFunc("/v1/streams/{apiKey}/offline", a.SetUserStreamOffline).Methods(http.MethodPatch)
+
 	router.HandleFunc("/v1/auth/signup", a.SignUpHandler).Methods(http.MethodPost)
 	router.HandleFunc("/v1/auth/login", a.LogInHandler).Methods(http.MethodPost)
 	router.HandleFunc("/v1/auth/google", a.OAuthGoogleLogin).Methods(http.MethodGet)
@@ -88,7 +101,7 @@ func (a *api) Routes() *mux.Router {
 	router.HandleFunc("/v1/auth/verify", a.verifyEmailHandler).Methods(http.MethodGet)
 
 	router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
-		httpSwagger.URL("https://localhost:8000/swagger/doc.json"),
+		httpSwagger.URL(a.serverURL+"/swagger/doc.json"),
 		httpSwagger.DeepLinking(true),
 		httpSwagger.DocExpansion("none"),
 		httpSwagger.DomID("swagger-ui"),
@@ -214,14 +227,14 @@ func (a *api) loggingMiddleware(next http.Handler) http.Handler {
 			zap.String("uri", r.RequestURI),
 		}
 
-		if lrw.statusCode == 200 {
-			a.logger.Info("Server: ", fields...)
+		if lrw.statusCode/100 == 2 {
+			a.logger.Info("success api call", fields...)
 		} else {
 			err := lrw.w.Header().Get("X-LetsLive-Error")
 			if len(err) == 0 {
-				a.logger.Info("Server: ", fields...)
+				a.logger.Info("failed api call", fields...)
 			} else {
-				a.logger.Error(err, fields...)
+				a.logger.Error("failed api call: "+err, fields...)
 
 			}
 		}

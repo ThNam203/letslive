@@ -51,7 +51,7 @@ func (r *postgresVerifyTokenRepo) UpdateToken(verifyToken domain.VerifyToken) er
 	return result.Error
 }
 
-func (r *postgresVerifyTokenRepo) DeleteToken(tokenId uint) error {
+func (r *postgresVerifyTokenRepo) DeleteToken(tokenId uuid.UUID) error {
 	result := r.db.Where("id = ?", tokenId).Delete(&domain.VerifyToken{})
 	return result.Error
 }
