@@ -202,7 +202,7 @@ func (a *api) sendConfirmEmail(userId uuid.UUID, userEmail string) {
 </head>
 <body>
     <p>This is a test email with a clickable link.</p>
-	<p>Click <a href="https://localhost:8000/v1/auth/verify?token=` + verifyToken.Token + `">here</a> to confirm your email.</p>
+	<p>Click <a href="` + a.serverURL + `/v1/auth/verify?token=` + verifyToken.Token + `">here</a> to confirm your email.</p>
 </body>
 </html>`
 

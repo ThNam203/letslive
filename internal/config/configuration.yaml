@@ -1,6 +1,7 @@
 publicHLSPath: public/hls
 privateHLSPath: private/hls
 webServerPort: 8889
+serverURL: http://localhost:8000
 
 ffmpegSetting:
   ffmpegPath: /usr/bin/ffmpeg
