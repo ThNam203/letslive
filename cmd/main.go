@@ -8,7 +8,9 @@ import (
 
 	//"sen1or/lets-live/internal"
 	// "sen1or/lets-live/internal"
+	"sen1or/lets-live/internal"
 	"sen1or/lets-live/internal/config"
+	"sen1or/lets-live/internal/ipfs"
 	"sen1or/lets-live/internal/rtmp"
 
 	//"sen1or/lets-live/internal/ipfs"
@@ -33,11 +35,11 @@ func main() {
 	go RunBackend()
 
 	allowedSuffixes := [2]string{".ts", ".m3u8"}
-	MyWebServer := webserver.NewWebServer(cfg.WebServerPort, allowedSuffixes[:], cfg.PrivateHLSPath)
+	MyWebServer := webserver.NewWebServer(cfg.WebServerPort, allowedSuffixes[:], cfg.PublicHLSPath)
 	MyWebServer.ListenAndServe()
 
-	//ipfsStorage := ipfs.NewIPFSStorage(cfg.PrivateHLSPath, cfg.IPFS.Gateway)
-	//go internal.MonitorHLSStreamContent(cfg.PrivateHLSPath, ipfsStorage)
+	ipfsStorage := ipfs.NewIPFSStorage(cfg.PrivateHLSPath, cfg.IPFS.Gateway)
+	go internal.MonitorHLSStreamContent(cfg.PrivateHLSPath, ipfsStorage)
 
 	setupTCPLoadBalancer()
 	rtmpServer := rtmp.NewRTMPServer(1936, cfg.ServerURL)
