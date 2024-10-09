@@ -42,7 +42,15 @@ func (a *api) SetUserStreamOnline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	response := struct {
+		UserID string `json:"userID"`
+	}{
+		UserID: user.ID.String(),
+	}
+
+	w.Header().Set("Content-Type", "application/text")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (a *api) SetUserStreamOffline(w http.ResponseWriter, r *http.Request) {
