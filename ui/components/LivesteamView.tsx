@@ -12,7 +12,7 @@ import { LuMoreVertical } from "react-icons/lu";
 import IconButton from "@/components/buttons/IconBtn";
 import TagButton from "@/components/buttons/TagBtn";
 import { Hover3DBox } from "@/components/Hover3DBox";
-import { Stream } from "@/models/Stream";
+import { OnlineStream } from "@/app/(main)/page";
 
 const ContentView = ({
   title,
@@ -102,7 +102,7 @@ const LiveChannelListView = ({
   streams,
 }: {
   limitView: number;
-  streams: Stream[];
+  streams: OnlineStream[];
 }) => {
   const router = useRouter();
   streams = streams.slice(0, limitView);
@@ -110,16 +110,15 @@ const LiveChannelListView = ({
   return (
     <div className="w-full grid xl:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 max-sm:grid-cols-1 gap-4">
       {streams.map((stream, idx) => {
-        const user = users.find((user) => user.id === stream.ownerId);
         return (
           <LiveChannelView
             key={idx}
-            channel={user ? user.username : ""}
-            title={stream.title}
-            tags={stream.tags}
+            channel={stream.username}
+            title={"An online stream!"}
+            tags={["English", "Troll"]}
             viewers={120}
-            category={stream.category}
-            onClick={() => router.push(`/livestream`)}
+            category={"Troll VietNam"}
+            onClick={() => router.push(`/users/${stream.id}`)}
           />
         );
       })}
@@ -134,7 +133,7 @@ const RecommendStreamView = ({
   separate,
 }: {
   title: ReactNode;
-  streams: Stream[];
+  streams: OnlineStream[];
   limitView?: number;
   separate: ReactNode;
 }) => {

@@ -3,17 +3,40 @@
 import { CustomLink } from "@/components/Hover3DBox";
 import { RecommendStreamView } from "@/components/LivesteamView";
 import Separator from "@/components/Separator";
-import { streams } from "@/fakedata/leftbar";
 import { useEffect, useState } from "react";
-import { LuChevronDown, LuChevronRight } from "react-icons/lu";
+import { LuChevronDown } from "react-icons/lu";
+
+export interface OnlineStream {
+    id: string //user id
+    username: string
+    email: string
+    isVerified: boolean
+    isOnline: boolean
+    createdAt: string
+    streamAPIKey: string
+  }
 
 export default function HomePage() {
     const [limitView, setLimitView] = useState<number[]>([4, 4, 4]);
+    const [streams, setStreams] = useState<OnlineStream[]>([]);
+
     const handleShowMoreBtn = (index: number) => {
         const newLimitView = [...limitView];
         newLimitView[index] += 8;
         setLimitView(newLimitView);
     };
+
+    useEffect(() => {
+        const getOnlineStreams = async () => {
+            fetch("http://localhost:8000/v1/streams")
+                .then((res) => res.json())
+                .then((data) => {
+                    setStreams(data);
+                });
+            }
+
+            getOnlineStreams();
+    }, []);
 
     return (
         <div className="flex flex-col w-full max-h-full p-8 overflow-y-scroll overflow-x-hidden">

@@ -16,7 +16,7 @@ type User struct {
 	IsVerified   bool      `json:"isVerified" gorm:"not null;default:false"`
 	IsOnline     bool      `json:"isOnline" gorm:"not null;default:false"`
 	CreatedAt    time.Time `json:"createdAt" gorm:"default:current_timestamp"`
-	StreamAPIKey uuid.UUID `json:"streamAPIKey" gorm:"type:uuid;not null;default:uuid_generate_v4()"`
+	StreamAPIKey uuid.UUID `json:"streamAPIKey" gorm:"type:uuid;not null;default:uuid_generate_v4()"` //TODO: hide stream api
 
 	RefreshTokens []RefreshToken `json:"-"`
 	VerifyTokens  []VerifyToken  `json:"-"`

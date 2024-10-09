@@ -1,6 +1,7 @@
 package rtmp
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -73,16 +74,20 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	streamingKeyComponents := strings.Split(c.URL.Path, "/")
 	streamingKey := streamingKeyComponents[len(streamingKeyComponents)-1]
 
-	if err := s.onConnect(streamingKey); err != nil {
+	streamInfo, err := s.onConnect(streamingKey)
+	if err != nil {
+		logger.Errorw("request failed", "err", err)
 		nc.Close()
 		return
 	}
+
+	logger.Infof("GET THE STREAM INFO WITH USERID - %s", streamInfo.UserID)
 
 	pipeOut, pipeIn := io.Pipe()
 
 	go func() {
 		transcoder := NewTranscoder(pipeOut)
-		transcoder.Start(streamingKey)
+		transcoder.Start(streamInfo.UserID)
 	}()
 
 	w := flv.NewMuxer(pipeIn)
@@ -102,28 +107,33 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	}
 }
 
-func (s *RTMPServer) onConnect(streamingKey string) error {
+type response struct {
+	UserID string
+}
+
+func (s *RTMPServer) onConnect(streamingKey string) (info *response, err error) {
 	logger.Infow("a stream is connected", "stream api key", streamingKey)
 	req, err := http.NewRequest(http.MethodPatch, s.MainServerURL+fmt.Sprintf("/v1/streams/%s/online", streamingKey), nil)
 	if err != nil {
-		logger.Errorw("failed to make http request")
-		return err
+		return nil, err
 	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		logger.Errorw("request failed", "err", err)
-		return err
+		return nil, err
 	} else if res.StatusCode/100 != 2 {
 		buf := new(strings.Builder)
 		errMsg, _ := io.Copy(buf, res.Body)
-		logger.Errorw("request failed", "status code", res.StatusCode, "msg", errMsg)
-		return errors.New("request failed with status code" + string(res.StatusCode))
+		return nil, errors.New("request failed with status code" + string(res.StatusCode) + ", msg: " + string(errMsg))
 	}
 
 	defer res.Body.Close()
+	var streamInfo response
+	if err := json.NewDecoder(res.Body).Decode(&streamInfo); err != nil {
+		return nil, errors.New("failed to decode the response")
+	}
 
-	return nil
+	return &streamInfo, nil
 }
 
 func (s *RTMPServer) onDisconnect(streamingKey string) {
