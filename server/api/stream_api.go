@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -79,4 +80,19 @@ func (a *api) SetUserStreamOffline(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (a *api) GetOnlineStreams(w http.ResponseWriter, r *http.Request) {
+	streamingUsers, err := a.userRepo.GetStreamingUsers()
+	if err != nil {
+		a.errorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(streamingUsers); err != nil {
+		a.errorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
 }

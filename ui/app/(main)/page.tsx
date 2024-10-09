@@ -17,9 +17,9 @@ export default function HomePage() {
 
     return (
         <div className="flex flex-col w-full max-h-full p-8 overflow-y-scroll overflow-x-hidden">
-            <div className="h-[600px] w-[300px] bg-red-300">
-                {/* <Carousel />  */}
-            </div>
+            {/* <div className="h-[600px] w-[300px] bg-red-300">
+                <Carousel />
+            </div> */}
             <RecommendStreamView
                 title={
                     <span>
@@ -43,7 +43,7 @@ export default function HomePage() {
                     </div>
                 }
             />
-            <RecommendStreamView
+            {/* <RecommendStreamView
                 title={<span>Featured Clips We Think You&#39;ll Like</span>}
                 streams={streams}
                 limitView={limitView[1]}
@@ -80,7 +80,7 @@ export default function HomePage() {
                         <Separator />
                     </div>
                 }
-            />
+            /> */}
         </div>
     );
 }

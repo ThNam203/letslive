@@ -57,6 +57,16 @@ func (r *postgresUserRepo) GetByAPIKey(apiKey uuid.UUID) (*domain.User, error) {
 	return &user, nil
 }
 
+func (r *postgresUserRepo) GetStreamingUsers() ([]domain.User, error) {
+	var streamingUsers []domain.User
+	result := r.db.Where("is_online = ?", true).Find(&streamingUsers)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return streamingUsers, nil
+}
+
 func (r *postgresUserRepo) Create(newUser domain.User) error {
 	result := r.db.Create(&newUser)
 	return result.Error
