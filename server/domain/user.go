@@ -39,6 +39,7 @@ type UserRepository interface {
 	GetByName(string) (*User, error)
 	GetByEmail(string) (*User, error)
 	GetByAPIKey(uuid.UUID) (*User, error)
+	GetStreamingUsers() ([]User, error)
 
 	Create(User) error
 	Update(User) error

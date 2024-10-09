@@ -93,6 +93,7 @@ func (a *api) Routes() *mux.Router {
 
 	router.HandleFunc("/v1/streams/{apiKey}/online", a.SetUserStreamOnline).Methods(http.MethodPatch)
 	router.HandleFunc("/v1/streams/{apiKey}/offline", a.SetUserStreamOffline).Methods(http.MethodPatch)
+	router.HandleFunc("/v1/streams", a.GetOnlineStreams).Methods(http.MethodGet)
 
 	router.HandleFunc("/v1/auth/signup", a.SignUpHandler).Methods(http.MethodPost)
 	router.HandleFunc("/v1/auth/login", a.LogInHandler).Methods(http.MethodPost)
