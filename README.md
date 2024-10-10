@@ -8,5 +8,6 @@ The project aims to create a functioning livestreaming website from a to z like 
 - Golang
 - FFMpeg
 - CephFS
+- IPFS
 - Prometheus and Grafana
-- Docker
+- Docker and K8s
