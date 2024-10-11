@@ -1,0 +1,50 @@
+services:
+  letslive_backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: letslive_backend
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_HOST: letslive_database
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: lets-live
+      POSTGRES_PORT: 5432
+    volumes:
+      - ./backend/docker/generated/private:/usr/local/bin/private
+      - ./backend/docker/generated/public:/usr/local/bin/public
+    depends_on:
+      letslive_database:
+        condition: service_healthy
+
+  letslive_database:
+    image: postgres:16.3
+    container_name: letslive_db
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: lets-live
+    volumes:
+      - ./docker-entrypoint-initdb:/docker-entrypoint-initdb.d/
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+
+  letslive_ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    container_name: letslive_ui
+    ports:
+      - "5000:5000"
+    depends_on:
+      - letslive_backend
+
+volumes:
+  postgres_data:
