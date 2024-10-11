@@ -13,7 +13,7 @@ import { ClassValue } from "clsx";
 import Tag from "@/components/Tag";
 import TagButton from "@/components/buttons/TagBtn";
 import { Hover3DBox } from "@/components/Hover3DBox";
-import { Stream } from "@/models/Stream";
+// import { Stream } from "@/models/Stream";
 import { Tab, TabContent } from "@/components/Tab";
 import { SearchInput } from "@/components/Input";
 import { DefaultOption } from "@/components/Option";
@@ -88,7 +88,7 @@ const CategoryListView = ({
 }: {
   className?: ClassValue;
   limitView: number;
-  streams: Stream[];
+  streams: any[];
 }) => {
   const streamingData = streams.slice(0, limitView);
   return (

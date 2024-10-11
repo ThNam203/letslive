@@ -3,7 +3,7 @@ import { ClassValue } from "clsx";
 import { cn } from "@/utils/cn";
 import { ReactNode } from "react";
 import { Channel } from "@/models/Channel";
-import { channels, streams, users } from "@/fakedata/leftbar";
+import { channels, users } from "@/fakedata/leftbar";
 import IconButton from "@/components/buttons/IconBtn";
 
 const ChannelViewItem = ({
@@ -54,12 +54,6 @@ const View = ({
   );
 };
 
-const userData = users;
-const streamOwnerIds = streams.map((stream) => stream.ownerId);
-const followingChannels: Channel[] = channels.filter((channel) =>
-  streamOwnerIds.includes(channel.id)
-);
-
 const recommendChannels: Channel[] = [channels[1], channels[2], channels[3]];
 
 export const LeftBar = () => {
@@ -77,7 +71,7 @@ export const LeftBar = () => {
           disabled={true}
         />
       </div>
-      {followingChannels.map((channel, idx) => {
+      {/* {followingChannels.map((channel, idx) => {
         // TODO: WRONG LOGIC
         const user = userData.find((user) => user.id === channel.id);
         return (
@@ -87,7 +81,7 @@ export const LeftBar = () => {
             category={"what is this"}
           />
         );
-      })}
+      })} */}
       <div className="flex flex-row justify-between items-center px-2 mt-2">
         <Title icon={<LuVideo size={20} />}>RECOMMEND CHANNELS</Title>
       </div>
