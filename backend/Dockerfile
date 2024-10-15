@@ -12,4 +12,5 @@ RUN go build -v -o /usr/local/bin/app ./cmd/
 
 # the set-udp-buffer-size.sh doesn't work smh
 # TODO: somehow make it works please
-CMD ["/bin/bash", "-c", "./set-udp-buffer-size.sh && /usr/local/bin/app"]
+# CMD ["/bin/bash", "-c", "./set-udp-buffer-size.sh && /usr/local/bin/app"]
+CMD ["/bin/bash", "-c", "/usr/local/bin/app"]

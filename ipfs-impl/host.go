@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"io"
 	"math/rand"
+	"os"
 	"time"
 
 	ipns "github.com/ipfs/boxo/ipns"
@@ -30,20 +33,17 @@ var connMgr, _ = connmgr.NewConnManager(100, 400, connmgr.WithGracePeriod(time.M
 func NewLibp2pHost(
 	ctx context.Context,
 	ds datastore.Batching,
-) (host.Host, *dualdht.DHT, error) {
+	isBootstrapHost bool) (host.Host, *dualdht.DHT, error) {
 	var ddht *dualdht.DHT
 	var err error
 
-	var r io.Reader
-	r = rand.New(rand.NewSource(time.Now().Unix()))
-
-	priv, _, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
+	priv, err := generatePrivKey(isBootstrapHost)
 	if err != nil {
 		panic(err)
 	}
 
-	addr1, _ := multiaddr.NewMultiaddr("/ip4/0.0.0.0/tcp/4002")
-	addr2, _ := multiaddr.NewMultiaddr("/ip4/0.0.0.0/udp/4002/quic-v1")
+	addr1, _ := multiaddr.NewMultiaddr("/ip4/0.0.0.0/tcp/4001")
+	addr2, _ := multiaddr.NewMultiaddr("/ip4/0.0.0.0/udp/4001/quic-v1")
 	addrs := []multiaddr.Multiaddr{addr1, addr2}
 
 	// we are creating a LAN network so no need NAT or any security methods
@@ -70,6 +70,48 @@ func NewLibp2pHost(
 	return h, ddht, nil
 }
 
+// if the host is a normal node, just create a random priv key
+//
+// if the host is for a bootstrap node
+// we use the same private key to persist the host identity which allows other nodes to connect
+//
+// if there is no private key ("bootstrap_priv.key" file)
+// then generate randomly one and store and load it
+func generatePrivKey(isBootstrapHost bool) (crypto.PrivKey, error) {
+	var finalPriv crypto.PrivKey
+	var r io.Reader
+
+	if !isBootstrapHost {
+		var err error
+		r = rand.New(rand.NewSource(time.Now().Unix()))
+		finalPriv, _, err = crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		_, err := os.Stat("./bootstrap_priv.key")
+
+		// generate a random priv key and store it
+		if err != nil && errors.Is(err, os.ErrNotExist) {
+			r = rand.New(rand.NewSource(time.Now().Unix()))
+			priv, _, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
+			if err != nil {
+				return nil, err
+			}
+
+			if err := savePrivateKey(priv); err != nil {
+				return nil, err
+			}
+		}
+
+		if finalPriv, err = loadPrivateKey(); err != nil {
+			return nil, err
+		}
+	}
+
+	return finalPriv, nil
+}
+
 // see more: DualDHT vs KademliaDHT
 func newDHT(ctx context.Context, h host.Host, ds datastore.Batching) (*dualdht.DHT, error) {
 	dhtOpts := []dualdht.Option{
@@ -84,4 +126,28 @@ func newDHT(ctx context.Context, h host.Host, ds datastore.Batching) (*dualdht.D
 	}
 
 	return dualdht.New(ctx, h, dhtOpts...)
+}
+
+func savePrivateKey(privKey crypto.PrivKey) error {
+	data, err := crypto.MarshalPrivateKey(privKey)
+	if err != nil {
+		return fmt.Errorf("error marshaling private key: %v", err)
+	}
+
+	// Write the byte array to a file
+	return os.WriteFile("bootstrap_priv.key", data, 0644)
+}
+
+func loadPrivateKey() (crypto.PrivKey, error) {
+	data, err := os.ReadFile("bootstrap_priv.key")
+	if err != nil {
+		return nil, fmt.Errorf("error reading private key file: %v", err)
+	}
+
+	key, err := crypto.UnmarshalPrivateKey(data)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshaling private key: %v", err)
+	}
+
+	return key, nil
 }

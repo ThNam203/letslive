@@ -46,5 +46,68 @@ services:
     depends_on:
       - letslive_backend
 
+  ipfs_bootstrap:
+    build:
+      context: ./ipfs-impl
+      dockerfile: Dockerfile
+    container_name: ipfs_bootstrap
+    command: ["/usr/local/bin/app", "-b"] # run as bootstrap node
+    ports:
+      - "4001:4001"
+      - "5001:5001"
+      - "8080:8080"
+    expose:
+      - "4001"
+    networks:
+      ipfs-network:
+        ipv4_address: 10.5.0.2
+        aliases:
+          - ipfs_bootstrap_node
+
+  #### Use the command below to get the bootstrap ip on host, then replace it with "127.0.0.1" or just set it static like me
+  #### docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
+
+  ipfs_node_1:
+    build:
+      context: ./ipfs-impl
+      dockerfile: Dockerfile
+    container_name: ipfs_node_1
+    # change the address to reflex to yours
+    command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
+    networks:
+      ipfs-network:
+        #ipv4_address: 10.5.0.3
+        aliases:
+          - ipfs_bootstrap_node
+    expose:
+      - "4001"
+    depends_on:
+      - ipfs_bootstrap
+
+  ipfs_node_2:
+    build:
+      context: ./ipfs-impl
+      dockerfile: Dockerfile
+    container_name: ipfs_node_2
+    # change the address to reflex to yours
+    command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
+    networks:
+      ipfs-network:
+        #ipv4_address: 10.5.0.4
+        aliases:
+          - ipfs_bootstrap_node
+    expose:
+      - "4001"
+    depends_on:
+      - ipfs_bootstrap
+
+
+networks:
+  ipfs-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+
 volumes:
   postgres_data:

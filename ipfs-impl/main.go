@@ -21,7 +21,7 @@ func main() {
 
 	var bootstrapNodeAddr string
 
-	isBootstrapNode := flag.Bool("t", false, "Use if the node is a bootstrap node")
+	isBootstrapNode := flag.Bool("b", false, "Use if the node is a bootstrap node")
 	flag.StringVar(&bootstrapNodeAddr, "a", "", "The boostrap node address")
 
 	flag.Parse()
@@ -45,7 +45,7 @@ func main() {
 
 func RunBootstrapNode(ctx context.Context) error {
 	ds := NewInMemoryDatastore()
-	host, dht, err := NewLibp2pHost(ctx, ds)
+	host, dht, err := NewLibp2pHost(ctx, ds, true)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func RunNormalNode(ctx context.Context, bootstrapNodeAddr string) error {
 
 	// create node
 	ds := NewInMemoryDatastore()
-	host, dht, err := NewLibp2pHost(ctx, ds)
+	host, dht, err := NewLibp2pHost(ctx, ds, false)
 	if err != nil {
 		return err
 	}
@@ -86,12 +86,15 @@ func RunNormalNode(ctx context.Context, bootstrapNodeAddr string) error {
 		return err
 	}
 
+	hostAddr, _ := multiaddr.NewMultiaddr(fmt.Sprintf("/p2p/%s", ipfsNode.host.ID().String()))
+	addr := ipfsNode.host.Addrs()[0]
+	log.Printf("running as normal with addr: %s, trying to connect with bootstrap node", addr.Encapsulate(hostAddr))
+
 	// connect to bootstrap node
-	log.Printf("running as normal node, connecting to bootstrap node addr %s\n", bootstrapNodeAddr)
 	if err := host.Connect(ctx, *targetInfo); err != nil {
 		return err
 	}
-	log.Println("connected successfully")
+	log.Printf("connected to bootstrap node (%s)\n", bootstrapNodeAddr)
 
 	return nil
 }
