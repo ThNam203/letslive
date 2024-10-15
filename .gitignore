@@ -1,10 +1,12 @@
 .env
 
-internal/public
-internal/ipfs/hls
+backend/internal/public
+backend/internal/ipfs/hls
 
-public
+backend/public
 private
 
-server/server.key
-server/server.crt
+backend/server.key
+backend/server.crt
+# generated files from docker
+backend/docker
