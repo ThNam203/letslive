@@ -40,6 +40,7 @@ func NewLibp2pHost(
 	var ddht *dualdht.DHT
 	var err error
 
+	// if node is bootstrap node, use a static priv key to persist node identity to ease the node connections
 	priv, err := generatePrivKey(isBootstrapHost)
 	if err != nil {
 		panic(err)

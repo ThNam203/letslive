@@ -4,8 +4,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 
+	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 )
@@ -29,6 +32,8 @@ func main() {
 		if err := RunBootstrapNode(ctx); err != nil {
 			panic(err)
 		}
+
+		//fmt.Println("cai con cac")
 	} else {
 		if len(bootstrapNodeAddr) == 0 {
 			log.Panic("missing bootstrap node address")
@@ -58,7 +63,52 @@ func RunBootstrapNode(ctx context.Context) error {
 	addr := ipfsNode.host.Addrs()[0]
 	log.Println("running as bootstrap node, ignore -a flag if there is any")
 	log.Printf("** bootstrap node address: %s\n", addr.Encapsulate(hostAddr))
+
+	// serve files
+	http.HandleFunc("/ipfs/{ipfsCid}", getFileHandler)
+	go func() {
+		if err := http.ListenAndServe(":8080", nil); err != nil {
+			log.Fatalf("ListenAndServe: %v", err)
+		}
+	}()
+	log.Println("start serving files on 8080")
+
 	return nil
+}
+
+func getFileHandler(w http.ResponseWriter, req *http.Request) {
+	// Enable CORS for everyone
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+
+	// Handle OPTIONS request for CORS preflight
+	if req.Method == http.MethodOptions {
+		return
+	}
+
+	fileCidString := req.PathValue("fileCid")
+	fileCid, err := cid.Decode(fileCidString)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	file, err := ipfsNode.GetFile(req.Context(), fileCid)
+	if err != nil {
+		http.Error(w, "failed to retrieve file: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	// set the appropriate headers for file serving
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileCidString+"\"")
+
+	// copy the file content to the response writer
+	if _, err := io.Copy(w, file); err != nil {
+		http.Error(w, "failed to send file: "+err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func RunNormalNode(ctx context.Context, bootstrapNodeAddr string) error {
