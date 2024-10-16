@@ -65,7 +65,7 @@ func RunBootstrapNode(ctx context.Context) error {
 	log.Printf("** bootstrap node address: %s\n", addr.Encapsulate(hostAddr))
 
 	// serve files
-	http.HandleFunc("/ipfs/{ipfsCid}", getFileHandler)
+	http.HandleFunc("/ipfs/{fileCid}", getFileHandler)
 	go func() {
 		if err := http.ListenAndServe(":8080", nil); err != nil {
 			log.Fatalf("ListenAndServe: %v", err)
@@ -88,6 +88,8 @@ func getFileHandler(w http.ResponseWriter, req *http.Request) {
 
 	fileCidString := req.PathValue("fileCid")
 	fileCid, err := cid.Decode(fileCidString)
+
+	fmt.Printf("getting file for cid: %s\n", fileCidString)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
