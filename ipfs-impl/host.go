@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -18,8 +19,10 @@ import (
 	record "github.com/libp2p/go-libp2p-record"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/pnet"
 	"github.com/libp2p/go-libp2p/core/routing"
 	"github.com/libp2p/go-libp2p/p2p/net/connmgr"
+	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
 	"github.com/multiformats/go-multiaddr"
 )
 
@@ -42,18 +45,27 @@ func NewLibp2pHost(
 		panic(err)
 	}
 
-	addr1, _ := multiaddr.NewMultiaddr("/ip4/0.0.0.0/tcp/4001")
-	addr2, _ := multiaddr.NewMultiaddr("/ip4/0.0.0.0/udp/4001/quic-v1")
-	addrs := []multiaddr.Multiaddr{addr1, addr2}
+	listenAddr, err := multiaddr.NewMultiaddr("/ip4/0.0.0.0/tcp/4001")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	swarmKeyFile, err := os.ReadFile("swarm.key")
+	psk, err := pnet.DecodeV1PSK(bytes.NewReader(swarmKeyFile))
+	if err != nil {
+		return nil, nil, fmt.Errorf("error loading swarm key: :%s", err)
+	}
 
 	// we are creating a LAN network so no need NAT or any security methods
 	opts := []libp2p.Option{
 		libp2p.Identity(priv),
-		libp2p.ListenAddrs(addrs...),
+		libp2p.PrivateNetwork(psk),
+		libp2p.ListenAddrs(listenAddr),
 		libp2p.ConnectionManager(connMgr),
 		//libp2p.Security(libp2ptls.ID, libp2ptls.New),
 		//libp2p.Security(noise.ID, noise.New),
-		libp2p.DefaultTransports,
+		libp2p.Transport(tcp.NewTCPTransport),
+		// libp2p.Transport(quic.NewTransport), -- remove QUIC cause QUIC does not support private network
 		//libp2p.NATPortMap(),
 		libp2p.Routing(func(h host.Host) (routing.PeerRouting, error) {
 			ddht, err = newDHT(ctx, h, ds)
@@ -89,7 +101,8 @@ func generatePrivKey(isBootstrapHost bool) (crypto.PrivKey, error) {
 			return nil, err
 		}
 	} else {
-		_, err := os.Stat("./bootstrap_priv.key")
+		privKeyFileName := "bootstrap_priv.key"
+		_, err := os.Stat(privKeyFileName)
 
 		// generate a random priv key and store it
 		if err != nil && errors.Is(err, os.ErrNotExist) {
@@ -99,12 +112,12 @@ func generatePrivKey(isBootstrapHost bool) (crypto.PrivKey, error) {
 				return nil, err
 			}
 
-			if err := savePrivateKey(priv); err != nil {
+			if err := SavePrivateKey(priv, privKeyFileName); err != nil {
 				return nil, err
 			}
 		}
 
-		if finalPriv, err = loadPrivateKey(); err != nil {
+		if finalPriv, err = LoadPrivateKey(privKeyFileName); err != nil {
 			return nil, err
 		}
 	}
@@ -126,28 +139,4 @@ func newDHT(ctx context.Context, h host.Host, ds datastore.Batching) (*dualdht.D
 	}
 
 	return dualdht.New(ctx, h, dhtOpts...)
-}
-
-func savePrivateKey(privKey crypto.PrivKey) error {
-	data, err := crypto.MarshalPrivateKey(privKey)
-	if err != nil {
-		return fmt.Errorf("error marshaling private key: %v", err)
-	}
-
-	// Write the byte array to a file
-	return os.WriteFile("bootstrap_priv.key", data, 0644)
-}
-
-func loadPrivateKey() (crypto.PrivKey, error) {
-	data, err := os.ReadFile("bootstrap_priv.key")
-	if err != nil {
-		return nil, fmt.Errorf("error reading private key file: %v", err)
-	}
-
-	key, err := crypto.UnmarshalPrivateKey(data)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshaling private key: %v", err)
-	}
-
-	return key, nil
 }
