@@ -96,7 +96,8 @@ func (ws *WebServer) ListenAndServe() {
 			logger.Errorf("failed to start web server: %s", err.Error())
 		}
 	})()
-	logger.Infow("web server started")
+
+	logger.Infow("web server started", "port", ws.ListenPort)
 }
 
 func NewWebServer(listenPort int, allowedSuffixes []string, baseDirectory string) *WebServer {
@@ -109,7 +110,7 @@ func NewWebServer(listenPort int, allowedSuffixes []string, baseDirectory string
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5000")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
