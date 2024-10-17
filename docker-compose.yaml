@@ -5,7 +5,9 @@ services:
       dockerfile: Dockerfile
     container_name: letslive_backend
     ports:
-      - "8000:8000"
+      - "8000:8000" # api server
+      - "1935:1935" # rtmp server
+      - "8889:8889" # web server
     environment:
       POSTGRES_HOST: letslive_database
       POSTGRES_USER: postgres
@@ -13,11 +15,15 @@ services:
       POSTGRES_DB: lets-live
       POSTGRES_PORT: 5432
     volumes:
-      - ./backend/docker/generated/private:/usr/local/bin/private
-      - ./backend/docker/generated/public:/usr/local/bin/public
+      - ./backend/docker/generated/private:/usr/src/app/private
+      - ./backend/docker/generated/public:/usr/src/app/public
     depends_on:
       letslive_database:
         condition: service_healthy
+      ipfs_bootstrap:
+        condition: service_started
+      nginx:
+        condition: service_started
 
   letslive_database:
     image: postgres:16.3
