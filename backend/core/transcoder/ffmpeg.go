@@ -1,4 +1,4 @@
-package rtmp
+package transcoder
 
 import (
 	"fmt"

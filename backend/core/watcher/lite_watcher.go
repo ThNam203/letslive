@@ -1,4 +1,4 @@
-package core
+package watcher
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"sen1or/lets-live/core/config"
 	"sen1or/lets-live/core/logger"
+	"sen1or/lets-live/core/storage"
+	"sen1or/lets-live/models"
 	"strconv"
 	"strings"
 	"time"
@@ -15,37 +17,7 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
-type HLSSegment struct {
-	PublishName        string
-	VariantIndex       int
-	FullLocalPath      string // the full path to the file on disk
-	RelativeRemotePath string // for example "1/stream0.ts", without the first part "http://...."
-	IPFSRemoteId       string // hash id used with ipfs
-}
-
-// Multiple bitrates
-type HLSVariant struct {
-	VariantIndex uint8
-	Segments     []HLSSegment
-}
-
-type HLSStream struct {
-	Variants              []HLSVariant
-	PublishName           string
-	PublishFolderRemoteId string
-}
-
-func (v *HLSVariant) GetSegmentByFilename(fileName string) *HLSSegment {
-	for _, segment := range v.Segments {
-		if filepath.Base(segment.FullLocalPath) == fileName {
-			return &segment
-		}
-	}
-
-	return nil
-}
-
-func getSegmentFromPath(segmentFullPath string) *HLSSegment {
+func getSegmentFromPath(segmentFullPath string) *models.HLSSegment {
 	pathComponents := strings.Split(segmentFullPath, "/")
 	index, err := strconv.Atoi(pathComponents[len(pathComponents)-2])
 	if err != nil {
@@ -56,7 +28,7 @@ func getSegmentFromPath(segmentFullPath string) *HLSSegment {
 	name := pathComponents[len(pathComponents)-1]
 	publishName := pathComponents[len(pathComponents)-3]
 
-	return &HLSSegment{
+	return &models.HLSSegment{
 		VariantIndex:       index,
 		FullLocalPath:      segmentFullPath,
 		RelativeRemotePath: filepath.Join(string(index), name),
@@ -65,9 +37,25 @@ func getSegmentFromPath(segmentFullPath string) *HLSSegment {
 }
 
 var cfg = config.GetConfig()
-var streams = make(map[string]HLSStream)
+var streams = make(map[string]models.HLSStream)
 
-func MonitorHLSStreamContent(monitorPath string, storage Storage) {
+// there is another type of Storage (KuboStorage which implements my Storage inteface)
+// but it has so many features and my custom storage can not implement the Storage interface right now
+// so for now I will use the CustomStorage directly (not using the Storage Interface)
+// TODO: hope to be able to implement the Storage interface to the CustomStorage
+type StreamWatcher struct {
+	monitorPath string
+	storage     storage.Storage
+}
+
+func NewStreamWatcher(monitorPath string, storage storage.Storage) *StreamWatcher {
+	return &StreamWatcher{
+		monitorPath: monitorPath,
+		storage:     storage,
+	}
+}
+
+func (m *StreamWatcher) MonitorHLSStreamContent() {
 	w := watcher.New()
 
 	go func() {
@@ -95,21 +83,17 @@ func MonitorHLSStreamContent(monitorPath string, storage Storage) {
 						logger.Infof("created publish folder: %s", filepath.Join(cfg.PublicHLSPath, publishName))
 					}
 
-					publishFolderHash, err := storage.AddDirectory(event.Path)
-					if err != nil {
-						fmt.Println("failed to add publish folder into storage")
-						return
-					}
-
-					variants := make([]HLSVariant, len(cfg.FFMpegSetting.Qualities))
+					variants := make([]models.HLSVariant, len(cfg.FFMpegSetting.Qualities))
 					for index := range variants {
-						variants[index] = HLSVariant{uint8(index), make([]HLSSegment, 0)}
+						variants[index] = models.HLSVariant{
+							VariantIndex: uint8(index),
+							Segments:     make([]models.HLSSegment, 0),
+						}
 					}
 
-					streams[publishName] = HLSStream{
-						PublishName:           publishName,
-						Variants:              variants,
-						PublishFolderRemoteId: publishFolderHash,
+					streams[publishName] = models.HLSStream{
+						PublishName: publishName,
+						Variants:    variants,
 					}
 
 					log.Printf("created hls stream %+v\n", streams[publishName])
@@ -132,7 +116,7 @@ func MonitorHLSStreamContent(monitorPath string, storage Storage) {
 						continue
 					}
 					variant := streams[info.PublishName].Variants[info.VariantIndex]
-					newPlaylist, err := storage.GenerateRemotePlaylist(event.Path, variant)
+					newPlaylist, err := generateRemotePlaylist(event.Path, variant)
 					if err != nil {
 						fmt.Println("error generating remote playlist")
 						continue
@@ -152,7 +136,7 @@ func MonitorHLSStreamContent(monitorPath string, storage Storage) {
 
 					newObjectPathChannel := make(chan string, 1)
 					go func() {
-						newObjectPath, err := storage.SaveIntoHLSDirectory(event.Path)
+						newObjectPath, err := m.storage.AddFile(event.Path)
 
 						if err != nil {
 							fmt.Printf("error while saving segments into ipfs: %s\n", err)
@@ -174,7 +158,7 @@ func MonitorHLSStreamContent(monitorPath string, storage Storage) {
 	}()
 
 	// Watch the hls segment storage folder recursively for changes.
-	if err := w.AddRecursive(monitorPath); err != nil {
+	if err := w.AddRecursive(m.monitorPath); err != nil {
 		log.Fatalln(err)
 	}
 

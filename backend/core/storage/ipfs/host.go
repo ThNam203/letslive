@@ -35,13 +35,12 @@ var connMgr, _ = connmgr.NewConnManager(100, 400, connmgr.WithGracePeriod(time.M
 
 func NewLibp2pHost(
 	ctx context.Context,
-	ds datastore.Batching,
-	isBootstrapHost bool) (host.Host, *dualdht.DHT, error) {
+	ds datastore.Batching) (host.Host, *dualdht.DHT, error) {
 	var ddht *dualdht.DHT
 	var err error
 
 	// if node is bootstrap node, use a static priv key to persist node identity to ease the node connections
-	priv, err := generatePrivKey(isBootstrapHost)
+	priv, err := generatePrivKey()
 	if err != nil {
 		panic(err)
 	}
@@ -51,7 +50,13 @@ func NewLibp2pHost(
 		return nil, nil, err
 	}
 
-	swarmKeyFile, err := os.ReadFile("swarm.key")
+	swarmKeyFile, err := os.ReadFile("./core/storage/ipfs/swarm.key")
+	if err != nil && errors.Is(err, os.ErrNotExist) {
+		return nil, nil, errors.New("swarm.key file not found")
+	} else if err != nil {
+		return nil, nil, err
+	}
+
 	psk, err := pnet.DecodeV1PSK(bytes.NewReader(swarmKeyFile))
 	if err != nil {
 		return nil, nil, fmt.Errorf("error loading swarm key: :%s", err)
@@ -83,44 +88,14 @@ func NewLibp2pHost(
 	return h, ddht, nil
 }
 
-// if the host is a normal node, just create a random priv key
-//
-// if the host is for a bootstrap node
-// we use the same private key to persist the host identity which allows other nodes to connect
-//
-// if there is no private key ("bootstrap_priv.key" file)
-// then generate randomly one and store and load it
-func generatePrivKey(isBootstrapHost bool) (crypto.PrivKey, error) {
+func generatePrivKey() (crypto.PrivKey, error) {
 	var finalPriv crypto.PrivKey
 	var r io.Reader
 
-	if !isBootstrapHost {
-		var err error
-		r = rand.New(rand.NewSource(time.Now().Unix()))
-		finalPriv, _, err = crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		privKeyFileName := "bootstrap_priv.key"
-		_, err := os.Stat(privKeyFileName)
-
-		// generate a random priv key and store it
-		if err != nil && errors.Is(err, os.ErrNotExist) {
-			r = rand.New(rand.NewSource(time.Now().Unix()))
-			priv, _, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
-			if err != nil {
-				return nil, err
-			}
-
-			if err := SavePrivateKey(priv, privKeyFileName); err != nil {
-				return nil, err
-			}
-		}
-
-		if finalPriv, err = LoadPrivateKey(privKeyFileName); err != nil {
-			return nil, err
-		}
+	r = rand.New(rand.NewSource(time.Now().Unix()))
+	finalPriv, _, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
+	if err != nil {
+		return nil, err
 	}
 
 	return finalPriv, nil

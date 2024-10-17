@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"sen1or/lets-live/core/storage"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
@@ -12,13 +14,11 @@ import (
 type CustomStorage struct {
 	ipfsNode          *Peer
 	bootstrapNodeAddr string
+	gateway           string
 	ctx               context.Context
 }
 
-func NewCustomStorage(ctx context.Context, bootstrapNodeAddr string) *CustomStorage {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
+func NewCustomStorage(ctx context.Context, gateway string, bootstrapNodeAddr string) storage.Storage {
 	if len(bootstrapNodeAddr) == 0 {
 		log.Panic("missing bootstrap node address")
 	}
@@ -26,6 +26,7 @@ func NewCustomStorage(ctx context.Context, bootstrapNodeAddr string) *CustomStor
 	storage := &CustomStorage{
 		bootstrapNodeAddr: bootstrapNodeAddr,
 		ctx:               ctx,
+		gateway:           gateway,
 	}
 
 	if err := storage.SetupNode(); err != nil {
@@ -33,6 +34,22 @@ func NewCustomStorage(ctx context.Context, bootstrapNodeAddr string) *CustomStor
 	}
 
 	return storage
+}
+
+func (s *CustomStorage) AddFile(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+
+	if err != nil {
+		return "", fmt.Errorf("failed to get file: %s", err)
+	}
+
+	fileCid, err := s.ipfsNode.AddFile(s.ctx, file)
+	if err != nil {
+		return "", fmt.Errorf("failed to add file into ipfs: %s", err)
+	}
+
+	return fmt.Sprintf("%s/ipfs/%s", s.gateway, fileCid.String()), nil
+
 }
 
 func (s *CustomStorage) SetupNode() error {
@@ -49,7 +66,7 @@ func (s *CustomStorage) SetupNode() error {
 
 	// create node
 	ds := NewInMemoryDatastore()
-	host, dht, err := NewLibp2pHost(s.ctx, ds, false)
+	host, dht, err := NewLibp2pHost(s.ctx, ds)
 	if err != nil {
 		return err
 	}
@@ -65,9 +82,10 @@ func (s *CustomStorage) SetupNode() error {
 
 	// connect to bootstrap node
 	if err := host.Connect(s.ctx, *targetInfo); err != nil {
-		return err
+		log.Printf("failed to connect to bootstrap node (%s)\n", s.bootstrapNodeAddr)
+	} else {
+		log.Printf("connected to bootstrap node (%s)\n", s.bootstrapNodeAddr)
 	}
-	log.Printf("connected to bootstrap node (%s)\n", s.bootstrapNodeAddr)
 
 	s.ipfsNode = node
 
