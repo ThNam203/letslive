@@ -49,21 +49,9 @@ func (s *CustomStorage) AddFile(filePath string) (string, error) {
 	}
 
 	return fmt.Sprintf("%s/ipfs/%s", s.gateway, fileCid.String()), nil
-
 }
 
 func (s *CustomStorage) SetupNode() error {
-	// parse the bootstrap node address
-	targetAddr, err := multiaddr.NewMultiaddr(s.bootstrapNodeAddr)
-	if err != nil {
-		return err
-	}
-
-	targetInfo, err := peer.AddrInfoFromP2pAddr(targetAddr)
-	if err != nil {
-		return err
-	}
-
 	// create node
 	ds := NewInMemoryDatastore()
 	host, dht, err := NewLibp2pHost(s.ctx, ds)
@@ -81,8 +69,19 @@ func (s *CustomStorage) SetupNode() error {
 	log.Printf("running as normal with addr: %s, trying to connect with bootstrap node", addr.Encapsulate(hostAddr))
 
 	// connect to bootstrap node
+	// parse the bootstrap node address
+	targetAddr, err := multiaddr.NewMultiaddr(s.bootstrapNodeAddr)
+	if err != nil {
+		return err
+	}
+
+	targetInfo, err := peer.AddrInfoFromP2pAddr(targetAddr)
+	if err != nil {
+		return err
+	}
+
 	if err := host.Connect(s.ctx, *targetInfo); err != nil {
-		log.Printf("failed to connect to bootstrap node (%s)\n", s.bootstrapNodeAddr)
+		log.Printf("failed to connect to bootstrap node (%s)\n", err)
 	} else {
 		log.Printf("connected to bootstrap node (%s)\n", s.bootstrapNodeAddr)
 	}

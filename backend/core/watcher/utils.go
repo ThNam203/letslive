@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sen1or/lets-live/models"
 )
 
+// rewrite the playlist to point to remote resources
 func generateRemotePlaylist(playlistPath string, variant models.HLSVariant) (string, error) {
 	file, err := os.Open(playlistPath)
 	if err != nil {
@@ -23,7 +25,8 @@ func generateRemotePlaylist(playlistPath string, variant models.HLSVariant) (str
 			if segment == nil || segment.FullLocalPath == "" {
 				line = ""
 			} else {
-				line = segment.IPFSRemoteId
+				// adding fileName allow players to know the file is .ts instead of just file cid
+				line = fmt.Sprintf("%s?fileName=%s", segment.IPFSRemoteId, filepath.Base(segment.FullLocalPath))
 			}
 		}
 

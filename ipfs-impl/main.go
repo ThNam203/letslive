@@ -86,6 +86,12 @@ func getFileHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	fileName := req.URL.Query().Get("fileName")
+	if len(fileName) == 0 {
+		http.Error(w, "no file name provided", http.StatusBadRequest)
+		return
+	}
+
 	fileCidString := req.PathValue("fileCid")
 	fileCid, err := cid.Decode(fileCidString)
 
@@ -104,8 +110,8 @@ func getFileHandler(w http.ResponseWriter, req *http.Request) {
 	defer file.Close()
 
 	// set the appropriate headers for file serving
-	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileCidString+"\"")
+	w.Header().Set("Content-Type", "video/MP2T")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
 
 	// copy the file content to the response writer
 	if _, err := io.Copy(w, file); err != nil {
