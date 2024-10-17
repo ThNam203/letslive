@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -8,10 +9,10 @@ import (
 
 	"sen1or/lets-live/api/hack"
 	httpServer "sen1or/lets-live/api/http"
-	"sen1or/lets-live/core"
 	"sen1or/lets-live/core/config"
-	"sen1or/lets-live/core/ipfs"
 	"sen1or/lets-live/core/rtmp"
+	"sen1or/lets-live/core/storage/ipfs"
+	"sen1or/lets-live/core/watcher"
 
 	loadbalancer "sen1or/lets-live/core/load-balancer"
 	"sen1or/lets-live/core/logger"
@@ -28,14 +29,19 @@ func main() {
 	logger.Init()
 	resetWorkingSpace()
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	go RunBackend()
 
 	allowedSuffixes := [2]string{".ts", ".m3u8"}
 	MyWebServer := webserver.NewWebServer(cfg.WebServerPort, allowedSuffixes[:], cfg.PublicHLSPath)
 	MyWebServer.ListenAndServe()
 
-	ipfsStorage := ipfs.NewKuboStorage(cfg.PrivateHLSPath, cfg.IPFS.Gateway)
-	go core.MonitorHLSStreamContent(cfg.PrivateHLSPath, ipfsStorage)
+	//ipfsStorage := ipfs.NewKuboStorage(cfg.PrivateHLSPath, cfg.IPFS.Gateway)
+	ipfsStorage := ipfs.NewCustomStorage(ctx, cfg.IPFS.Gateway, cfg.IPFS.BootstrapNodeAddr)
+	monitor := watcher.NewStreamWatcher(cfg.PrivateHLSPath, ipfsStorage)
+	go monitor.MonitorHLSStreamContent()
 
 	setupTCPLoadBalancer()
 	rtmpServer := rtmp.NewRTMPServer(1936, cfg.ServerURL)

@@ -1,18 +1,16 @@
 package ipfs
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-	"sen1or/lets-live/core"
 	"sen1or/lets-live/core/logger"
+	"sen1or/lets-live/core/storage"
 
 	"sync"
 
-	"github.com/ipfs/boxo/files"
 	"github.com/ipfs/boxo/path"
 	"github.com/ipfs/kubo/config"
 	kuboCore "github.com/ipfs/kubo/core"
@@ -43,7 +41,7 @@ type KuboStorage struct {
 	hlsDirectoryHash string
 }
 
-func NewKuboStorage(hlsDirectory string, gateway string) core.Storage {
+func NewKuboStorage(hlsDirectory string, gateway string) storage.Storage {
 	ctx := context.Background()
 
 	ipfsStorage := &KuboStorage{
@@ -79,32 +77,6 @@ func (s *KuboStorage) setup() {
 	go s.goOnlineIPFSNode()
 }
 
-func (s *KuboStorage) GenerateRemotePlaylist(playlistPath string, variant core.HLSVariant) (string, error) {
-	file, err := os.Open(playlistPath)
-	if err != nil {
-		return "", fmt.Errorf("can't open playlist %s: %s", playlistPath, err)
-	}
-	defer file.Close()
-
-	var newPlaylist string = ""
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line[0] != '#' {
-			segment := variant.GetSegmentByFilename(line)
-			if segment == nil || segment.FullLocalPath == "" {
-				line = ""
-			} else {
-				line = segment.IPFSRemoteId
-			}
-		}
-
-		newPlaylist = newPlaylist + line + "\n"
-	}
-
-	return newPlaylist, nil
-}
-
 // create and return the directory hash string
 func (s *KuboStorage) AddDirectory(directoryPath string) (string, error) {
 	directoryNode, err := getUnixfsNode(directoryPath)
@@ -126,34 +98,46 @@ func (s *KuboStorage) AddDirectory(directoryPath string) (string, error) {
 	return directoryHash.String(), nil
 }
 
-func (s *KuboStorage) Save(filePath string) (path.Path, error) {
+func (s *KuboStorage) AddFile(filePath string) (string, error) {
 	file, err := getUnixfsNode(filePath)
 	defer file.Close()
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to get file: %s", err)
+		return "", fmt.Errorf("failed to get file: %s", err)
 	}
 
 	opts := []options.UnixfsAddOption{
 		options.Unixfs.Pin(false),
 	}
 
-	fileCid, err := s.ipfsApi.Unixfs().Add(s.ctx, file, opts...)
+	p, err := s.ipfsApi.Unixfs().Add(s.ctx, file, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to add file into ipfs: %s", err)
+		return "", fmt.Errorf("failed to add file into ipfs: %s", err)
 	}
 
-	return fileCid, err
+	return s.gateway + p.String(), err
 }
 
-func (s *KuboStorage) SaveIntoHLSDirectory(filePath string) (string, error) {
-	fileCid, err := s.Save(filePath)
+// TODO: Should add this fucntion to the Storage interface... or not
+func (s *KuboStorage) AddFileIntoHLSDirectory(filePath string) (string, error) {
+	file, err := getUnixfsNode(filePath)
+	defer file.Close()
+
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get file: %s", err)
 	}
 
-	finalHash, err := s.addHashedFileToDirectory(fileCid, s.hlsDirectoryHash, filepath.Base(filePath))
-	logger.Infof("segment saved with cid %s and final hash %s", fileCid.String(), finalHash)
+	opts := []options.UnixfsAddOption{
+		options.Unixfs.Pin(false),
+	}
+
+	p, err := s.ipfsApi.Unixfs().Add(s.ctx, file, opts...)
+	if err != nil {
+		return "", fmt.Errorf("failed to add file into ipfs: %s", err)
+	}
+
+	finalHash, err := s.addHashedFileToDirectory(p, s.hlsDirectoryHash, filepath.Base(filePath))
+	logger.Infof("segment saved with cid %s and final hash %s", p.RootCid().String(), finalHash)
 	return s.gateway + finalHash, err
 }
 
@@ -170,20 +154,6 @@ func (s *KuboStorage) addHashedFileToDirectory(fileHash path.Path, directoryToAd
 	}
 
 	return filepath.Join(newDirectoryHash.String(), filename), nil
-}
-
-func getUnixfsNode(path string) (files.Node, error) {
-	st, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
-
-	f, err := files.NewSerialFile(path, false, st)
-	if err != nil {
-		return nil, err
-	}
-
-	return f, nil
 }
 
 func createIPFSNode(ctx context.Context, repoPath string) (*iface.CoreAPI, *kuboCore.IpfsNode, error) {

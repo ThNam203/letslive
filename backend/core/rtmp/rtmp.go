@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"sen1or/lets-live/core/logger"
+	"sen1or/lets-live/core/transcoder"
 	"strconv"
 	"strings"
 
@@ -86,7 +87,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	pipeOut, pipeIn := io.Pipe()
 
 	go func() {
-		transcoder := NewTranscoder(pipeOut)
+		transcoder := transcoder.NewTranscoder(pipeOut)
 		transcoder.Start(streamInfo.UserID)
 	}()
 
