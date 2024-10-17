@@ -28,7 +28,8 @@ ffmpegSetting:
 
 ipfs:
   enabled: true
-  gateway: http://127.0.0.1:8080
+  gateway: http://localhost:8888 # the nginx server address (docker-compose.yaml file)
+  bootstrapNodeAddr: /ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb # docker-compose file
 
 loadBalancer:
   http:

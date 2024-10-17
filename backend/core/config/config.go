@@ -36,8 +36,9 @@ type FFMpegQuality struct {
 }
 
 type IPFSSetting struct {
-	Enabled bool   `yaml:"enabled"`
-	Gateway string `yaml:"gateway"`
+	Enabled           bool   `yaml:"enabled"`
+	Gateway           string `yaml:"gateway"`
+	BootstrapNodeAddr string `yaml:"bootstrapNodeAddr"`
 }
 
 type LoadBalancer struct {
