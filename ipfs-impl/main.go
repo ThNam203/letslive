@@ -7,10 +7,15 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p/core/peer"
+	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
+	"github.com/libp2p/go-libp2p/p2p/protocol/ping"
 	"github.com/multiformats/go-multiaddr"
+	prom "github.com/prometheus/client_golang/prometheus"
+	httpprom "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -48,8 +53,21 @@ func main() {
 }
 
 func RunBootstrapNode(ctx context.Context) error {
+	// setting prometheus
+	rcmgr.MustRegisterWith(prom.DefaultRegisterer)
+	str, err := rcmgr.NewStatsTraceReporter()
+	if err != nil {
+		return err
+	}
+
+	rmgr, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(rcmgr.DefaultLimits.AutoScale()), rcmgr.WithTraceReporter(str))
+	if err != nil {
+		return err
+	}
+
+	// create node
 	ds := NewInMemoryDatastore()
-	host, dht, err := NewLibp2pHost(ctx, ds, true)
+	host, dht, err := NewLibp2pBoostrapHost(ctx, ds, rmgr)
 	if err != nil {
 		return err
 	}
@@ -59,13 +77,16 @@ func RunBootstrapNode(ctx context.Context) error {
 		return err
 	}
 
+	// for debug: showing boostrap node's address
 	hostAddr, _ := multiaddr.NewMultiaddr(fmt.Sprintf("/p2p/%s", ipfsNode.host.ID().String()))
 	addr := ipfsNode.host.Addrs()[0]
 	log.Println("running as bootstrap node, ignore -a flag if there is any")
 	log.Printf("** bootstrap node address: %s\n", addr.Encapsulate(hostAddr))
 
-	// serve files
+	// serve files and metrics
 	http.HandleFunc("/ipfs/{fileCid}", getFileHandler)
+	http.Handle("/metrics", httpprom.Handler())
+
 	go func() {
 		if err := http.ListenAndServe(":8080", nil); err != nil {
 			log.Fatalf("ListenAndServe: %v", err)
@@ -133,7 +154,7 @@ func RunNormalNode(ctx context.Context, bootstrapNodeAddr string) error {
 
 	// create node
 	ds := NewInMemoryDatastore()
-	host, dht, err := NewLibp2pHost(ctx, ds, false)
+	host, dht, err := NewLibp2pHost(ctx, ds)
 	if err != nil {
 		return err
 	}
@@ -152,6 +173,21 @@ func RunNormalNode(ctx context.Context, bootstrapNodeAddr string) error {
 		return err
 	}
 	log.Printf("connected to bootstrap node (%s)\n", bootstrapNodeAddr)
+
+	// ping allows to test for measurements between nodes (in this app it is from nodes to bootstrap node)
+	p := ping.Ping(ctx, host, targetInfo.ID)
+
+	go func() {
+		for {
+			res := <-p
+			if res.Error != nil {
+				log.Printf("failed to ping to bootstrap node: %s\n", res.Error.Error())
+				panic(res)
+			}
+
+			time.Sleep(5 * time.Second)
+		}
+	}()
 
 	return nil
 }
