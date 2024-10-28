@@ -1,4 +1,4 @@
-package http
+package handlers
 
 import (
 	"encoding/json"
@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
-	"sen1or/lets-live/api/domains"
+	"sen1or/lets-live/auth/config"
+	"sen1or/lets-live/auth/controllers"
+	"sen1or/lets-live/auth/domains"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -27,6 +29,26 @@ type signUpForm struct {
 	Password string `validate:"required,gte=8,lte=72" example:"123123123"`
 }
 
+type AuthHandler struct {
+	ErrorHandler
+	refreshTokenCtrl *controllers.RefreshTokenController
+	userCtrl         *controllers.UserController
+	verifyTokenCtrl  *controllers.VerifyTokenController
+	authServerURL    string
+}
+
+func NewAuthHandler(refreshTokenCtrl *controllers.RefreshTokenController,
+	userCtrl *controllers.UserController,
+	verifyTokenCtrl *controllers.VerifyTokenController,
+	authServerURL string) *AuthHandler {
+	return &AuthHandler{
+		userCtrl:         userCtrl,
+		verifyTokenCtrl:  verifyTokenCtrl,
+		refreshTokenCtrl: refreshTokenCtrl,
+		authServerURL:    authServerURL,
+	}
+}
+
 // LogInHandler handles user login.
 // @Summary Log in a user
 // @Description Authenticate user with email and password
@@ -39,39 +61,39 @@ type signUpForm struct {
 // @Failure 400 {string} string "Invalid body"
 // @Failure 401 {string} string "Username or password is not correct"
 // @Router /auth/login [post]
-func (a *APIServer) LogInHandler(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 	var userCredentials logInForm
 	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
-		a.errorResponse(w, http.StatusBadRequest, err)
+		h.WriteErrorResponse(w, http.StatusBadRequest, err)
 		return
 	}
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	err := validate.Struct(&userCredentials)
 	if err != nil {
-		a.errorResponse(w, http.StatusBadRequest, err)
+		h.WriteErrorResponse(w, http.StatusBadRequest, err)
 		return
 	}
 
-	user, err := a.userRepo.GetByEmail(userCredentials.Email)
+	user, err := h.userCtrl.GetByEmail(userCredentials.Email)
 	if err != nil {
-		a.errorResponse(w, http.StatusBadRequest, err)
+		h.WriteErrorResponse(w, http.StatusBadRequest, err)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(userCredentials.Password)); err != nil {
-		a.errorResponse(w, http.StatusUnauthorized, errors.New("username or password is not correct!"))
+		h.WriteErrorResponse(w, http.StatusUnauthorized, errors.New("username or password is not correct!"))
 		return
 	}
 
 	// TODO: sync the expires date of refresh token in database with client
-	refreshToken, accessToken, err := a.refreshTokenRepo.GenerateTokenPair(user.ID)
+	refreshToken, accessToken, err := h.refreshTokenCtrl.GenerateTokenPair(user.ID)
 	if err != nil {
-		a.errorResponse(w, http.StatusInternalServerError, err)
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	a.setTokens(w, refreshToken, accessToken)
+	h.setTokens(w, refreshToken, accessToken)
 
 	http.Redirect(w, r, "/", http.StatusOK)
 }
@@ -89,27 +111,27 @@ func (a *APIServer) LogInHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} HTTPErrorResponse
 // @Failure 500 {object} HTTPErrorResponse
 // @Router /auth/signup [post]
-func (a *APIServer) SignUpHandler(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	var userForm signUpForm
 	json.NewDecoder(r.Body).Decode(&userForm)
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	err := validate.Struct(&userForm)
 	if err != nil {
-		a.errorResponse(w, http.StatusBadRequest, err)
+		h.WriteErrorResponse(w, http.StatusBadRequest, err)
 		return
 	}
 
 	uuid, err := uuid.NewGen().NewV4()
 	if err != nil {
-		a.errorResponse(w, http.StatusInternalServerError, err)
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userForm.Password), bcrypt.DefaultCost)
 
 	if err != nil {
-		a.errorResponse(w, http.StatusInternalServerError, err)
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -120,12 +142,12 @@ func (a *APIServer) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		PasswordHash: string(hashedPassword),
 	}
 
-	if err := a.userRepo.Create(*user); err != nil {
-		a.errorResponse(w, http.StatusInternalServerError, err)
+	if err := h.userCtrl.Create(user); err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	go a.sendConfirmEmail(user.ID, user.Email)
+	go h.sendConfirmEmail(user.ID, user.Email, h.authServerURL)
 
 	http.Redirect(w, r, "/", http.StatusOK)
 }
@@ -140,29 +162,27 @@ func (a *APIServer) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "Verify token expired or invalid."
 // @Failure 500 {string} string "An error occurred while verifying the user."
 // @Router /auth/verify [get]
-func (a *APIServer) verifyEmailHandler(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 	var token = r.URL.Query().Get("token")
 
-	var verifyToken domains.VerifyToken
-	result := a.db.Unscoped().First(&verifyToken, "token = ?", token)
-
-	if result.Error != nil {
-		a.errorResponse(w, http.StatusBadRequest, result.Error)
+	verifyToken, err := h.verifyTokenCtrl.GetByValue(token)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, err)
 		return
 	}
 
-	user, err := a.userRepo.GetByID(verifyToken.UserID)
+	user, err := h.userCtrl.GetByID(verifyToken.UserID)
 	if err != nil {
-		a.errorResponse(w, http.StatusInternalServerError, err)
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	} else if user.IsVerified {
 		w.Write([]byte("Your email has already been verified!"))
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
 	if verifyToken.ExpiresAt.Before(time.Now()) {
-		a.errorResponse(w, http.StatusBadRequest, fmt.Errorf("verify token expired: %s", verifyToken.ExpiresAt.Local().String()))
+		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("verify token expired: %s", verifyToken.ExpiresAt.Local().String()))
 		return
 	}
 
@@ -171,18 +191,18 @@ func (a *APIServer) verifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 		IsVerified: true,
 	}
 
-	if err := a.userRepo.Update(*updateVerifiedUser); err != nil {
-		a.errorResponse(w, http.StatusInternalServerError, err)
+	if err := h.userCtrl.Update(updateVerifiedUser); err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	a.verifyTokenRepo.DeleteToken(verifyToken.ID)
+	h.verifyTokenCtrl.DeleteByID(verifyToken.ID)
 	w.Write([]byte("Email verification complete!"))
 	w.WriteHeader(http.StatusOK)
 }
 
-func (a *APIServer) sendConfirmEmail(userId uuid.UUID, userEmail string) {
-	verifyToken, err := a.verifyTokenRepo.CreateToken(userId)
+func (h *AuthHandler) sendConfirmEmail(userId uuid.UUID, userEmail string, authServerURL string) {
+	verifyToken, err := h.verifyTokenCtrl.Create(userId)
 	if err != nil {
 		log.Printf("error while trying to create verify token: %s", err.Error())
 		return
@@ -202,7 +222,7 @@ func (a *APIServer) sendConfirmEmail(userId uuid.UUID, userEmail string) {
 </head>
 <body>
     <p>This is a test email with a clickable link.</p>
-	<p>Click <a href="` + a.serverURL + `/v1/auth/verify?token=` + verifyToken.Token + `">here</a> to confirm your email.</p>
+	<p>Click <a href="` + authServerURL + `/v1/auth/verify?token=` + verifyToken.Token + `">here</a> to confirm your email.</p>
 </body>
 </html>`
 
@@ -218,4 +238,28 @@ func (a *APIServer) sendConfirmEmail(userId uuid.UUID, userEmail string) {
 	if err != nil {
 		log.Printf("failed trying to send confirmation email: %s", err.Error())
 	}
+}
+
+func (h *AuthHandler) setTokens(w http.ResponseWriter, refreshToken string, accessToken string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:  "refreshToken",
+		Value: refreshToken,
+
+		Expires:  time.Now().Add(config.REFRESH_TOKEN_EXPIRES_DURATION),
+		MaxAge:   config.REFRESH_TOKEN_MAX_AGE,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteDefaultMode,
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:  "accessToken",
+		Value: accessToken,
+
+		Expires:  time.Now().Add(config.ACCESS_TOKEN_EXPIRES_DURATION),
+		MaxAge:   config.ACCESS_TOKEN_MAX_AGE,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteDefaultMode,
+	})
 }

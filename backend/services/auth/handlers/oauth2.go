@@ -1,4 +1,4 @@
-package http
+package handlers
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"sen1or/lets-live/api/domains"
+	"sen1or/lets-live/auth/domains"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -34,10 +34,10 @@ var googleOauthConfig = &oauth2.Config{
 	Endpoint:     google.Endpoint,
 }
 
-func (a *APIServer) OAuthGoogleLogin(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) OAuthGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	oauthState, err := generateOAuthCookieState(w)
 	if err != nil {
-		a.errorResponse(w, http.StatusInternalServerError, err)
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -61,27 +61,27 @@ func generateOAuthCookieState(w http.ResponseWriter) (string, error) {
 	return state, nil
 }
 
-func (a *APIServer) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request) {
 	oauthState, _ := r.Cookie("oauthstate")
 	clientAddr := os.Getenv("CLIENT_URL")
 	urlDirectOnFail := clientAddr + "/auth/login"
 
 	if r.FormValue("state") != oauthState.Value {
-		a.setError(w, fmt.Errorf("invalid state, csrf attack?"))
+		h.SetError(w, fmt.Errorf("invalid state, csrf attack?"))
 		http.Redirect(w, r, urlDirectOnFail, http.StatusTemporaryRedirect)
 		return
 	}
 
 	data, err := getUserDataFromGoogle(r.FormValue("code"))
 	if err != nil {
-		a.setError(w, fmt.Errorf("can't get user data"))
+		h.SetError(w, fmt.Errorf("can't get user data"))
 		http.Redirect(w, r, urlDirectOnFail, http.StatusTemporaryRedirect)
 		return
 	}
 
 	var returnedOAuthUser googleOAuthUser
 	if err := json.Unmarshal(data, &returnedOAuthUser); err != nil {
-		a.setError(w, fmt.Errorf("user data format not valid"))
+		h.SetError(w, fmt.Errorf("user data format not valid"))
 		http.Redirect(w, r, urlDirectOnFail, http.StatusTemporaryRedirect)
 		return
 	}
@@ -102,12 +102,12 @@ func (a *APIServer) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request) 
 	var finalUserId uuid.UUID
 
 	// Check if the user had already singed up before
-	existedRecord, err := a.userRepo.GetByEmail(returnedOAuthUser.Email)
+	existedRecord, err := h.userCtrl.GetByEmail(returnedOAuthUser.Email)
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
-		err = a.userRepo.Create(*newOAuthUserRecord)
+		err = h.userCtrl.Create(newOAuthUserRecord)
 
 		if err != nil {
-			a.setError(w, fmt.Errorf("error while saving user"))
+			h.SetError(w, fmt.Errorf("error while saving user"))
 			http.Redirect(w, r, urlDirectOnFail, http.StatusTemporaryRedirect)
 			return
 		}
@@ -115,18 +115,18 @@ func (a *APIServer) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request) 
 		finalUserId = newOAuthUserRecord.ID
 	} else {
 		finalUserId = existedRecord.ID
-		a.refreshTokenRepo.RevokeAll(finalUserId)
+		h.refreshTokenCtrl.RevokeAllTokensOfUser(finalUserId)
 	}
 
-	refreshToken, accessToken, err := a.refreshTokenRepo.GenerateTokenPair(finalUserId)
+	refreshToken, accessToken, err := h.refreshTokenCtrl.GenerateTokenPair(finalUserId)
 
 	if err != nil {
-		a.setError(w, err)
+		h.SetError(w, err)
 		http.Redirect(w, r, urlDirectOnFail, http.StatusTemporaryRedirect)
 		return
 	}
 
-	a.setTokens(w, refreshToken, accessToken)
+	h.setTokens(w, refreshToken, accessToken)
 	http.Redirect(w, r, clientAddr, http.StatusTemporaryRedirect)
 }
 
