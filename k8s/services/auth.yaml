@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: letslive-auth-service
+spec:
+  selector:
+    app: letslive-auth  # match the label specified in the Deployment
+  ports:
+    - protocol: TCP
+      port: 7777        # service port (inside the cluster)
+      targetPort: 7777  # container port in the pod
+  type: ClusterIP
