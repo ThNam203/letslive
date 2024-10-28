@@ -6,7 +6,4 @@ backend/internal/ipfs/hls
 backend/public
 private
 
-backend/server.key
-backend/server.crt
-# generated files from docker
-backend/docker
+k8s/secrets

@@ -1,51 +1,41 @@
 services:
-  letslive_backend:
+  letslive_auth:
     build:
-      context: ./backend
+      context: ./backend/services/auth/
       dockerfile: Dockerfile
     container_name: letslive_backend
     ports:
-      - "8000:8000" # api server
-      - "1935:1935" # rtmp server
-      - "8889:8889" # web server
+      - "7777:7777"
     environment:
-      POSTGRES_HOST: letslive_database
+      POSTGRES_HOST: localhost
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: lets-live
+      POSTGRES_DB: letslive_auth
       POSTGRES_PORT: 5432
-    volumes:
-      - ./backend/docker/generated/private:/usr/src/app/private
-      - ./backend/docker/generated/public:/usr/src/app/public
     networks:
       ipfs-network:
         ipv4_address: 10.5.0.11
     depends_on:
-      letslive_database:
+      letslive_auth_db:
         condition: service_healthy
-      ipfs_bootstrap:
-        condition: service_started
-      nginx:
-        condition: service_started
 
-  letslive_database:
+  letslive_auth_db:
     image: postgres:16.3
-    container_name: letslive_db
-    shm_size: 128mb
+    container_name: letslive_auth_db
+    shm_size: 64mb
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: lets-live
+      POSTGRES_DB: letslive_auth
     volumes:
-      - ./docker-entrypoint-initdb:/docker-entrypoint-initdb.d/
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_letslive_auth_data:/var/lib/postgresql/letslive_auth_db
     networks:
       ipfs-network:
         ipv4_address: 10.5.0.12
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 2s
-      timeout: 5s
+      interval: 5s
+      timeout: 10s
       retries: 5
 
   letslive_ui:
@@ -58,115 +48,113 @@ services:
         ipv4_address: 10.5.0.13
     ports:
       - "5000:5000"
-    depends_on:
-      - letslive_backend
 
   # serve the ipfs content using the bootstrap node (node has an http route to get files)
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    ports:
-      - "8888:80"  # Expose Nginx on port 80 to access externally
-    volumes:
-      - ./ipfs-impl/nginx.conf:/etc/nginx/nginx.conf  # nginx config
-    networks:
-      ipfs-network:
-        ipv4_address: 10.5.0.10
+  #nginx:
+  #  image: nginx:latest
+  #  container_name: nginx
+  #  ports:
+  #    - "8888:80"  # Expose Nginx on port 80 to access externally
+  #  volumes:
+  #    - ./ipfs-impl/nginx.conf:/etc/nginx/nginx.conf  # nginx config
+  #  networks:
+  #    ipfs-network:
+  #      ipv4_address: 10.5.0.10
 
-  ipfs_bootstrap:
-    build:
-      context: ./ipfs-impl
-      dockerfile: Dockerfile
-    container_name: ipfs_bootstrap
-    command: ["/usr/local/bin/app", "-b"] # run as bootstrap node
-    ports:
-      - "4001:4001"
-      - "8080:8080"
-    expose:
-      - "4001"
-      - "8080"
-    networks:
-      ipfs-network:
-        ipv4_address: 10.5.0.2
-        aliases:
-          - ipfs_bootstrap_node
+  #ipfs_bootstrap:
+  #  build:
+  #    context: ./ipfs-impl
+  #    dockerfile: Dockerfile
+  #  container_name: ipfs_bootstrap
+  #  command: ["/usr/local/bin/app", "-b"] # run as bootstrap node
+  #  ports:
+  #    - "4001:4001"
+  #    - "8080:8080"
+  #  expose:
+  #    - "4001"
+  #    - "8080"
+  #  networks:
+  #    ipfs-network:
+  #      ipv4_address: 10.5.0.2
+  #      aliases:
+  #        - ipfs_bootstrap_node
 
-  #### Use the command below to get the bootstrap ip on host, then replace it with "127.0.0.1" or just set it static like me
-  #### docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
-  
-  ipfs_node_1:
-    build:
-      context: ./ipfs-impl
-      dockerfile: Dockerfile
-    container_name: ipfs_node_1
-    # change the address to reflex to yours
-    command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
-    networks:
-      ipfs-network:
-        #ipv4_address: 10.5.0.3
-        aliases:
-          - ipfs_bootstrap_node
-    expose:
-      - "4001"
-    depends_on:
-      - ipfs_bootstrap
+  ##### Use the command below to get the bootstrap ip on host, then replace it with "127.0.0.1" or just set it static like me
+  ##### docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
+  #
+  #ipfs_node_1:
+  #  build:
+  #    context: ./ipfs-impl
+  #    dockerfile: Dockerfile
+  #  container_name: ipfs_node_1
+  #  # change the address to reflex to yours
+  #  command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
+  #  networks:
+  #    ipfs-network:
+  #      #ipv4_address: 10.5.0.3
+  #      aliases:
+  #        - ipfs_bootstrap_node
+  #  expose:
+  #    - "4001"
+  #  depends_on:
+  #    - ipfs_bootstrap
 
-  ipfs_node_2:
-    build:
-      context: ./ipfs-impl
-      dockerfile: Dockerfile
-    container_name: ipfs_node_2
-    # change the address to reflex to yours
-    command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
-    networks:
-      ipfs-network:
-        #ipv4_address: 10.5.0.4
-        aliases:
-          - ipfs_bootstrap_node
-    expose:
-      - "4001"
-    depends_on:
-      - ipfs_bootstrap
+  #ipfs_node_2:
+  #  build:
+  #    context: ./ipfs-impl
+  #    dockerfile: Dockerfile
+  #  container_name: ipfs_node_2
+  #  # change the address to reflex to yours
+  #  command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
+  #  networks:
+  #    ipfs-network:
+  #      #ipv4_address: 10.5.0.4
+  #      aliases:
+  #        - ipfs_bootstrap_node
+  #  expose:
+  #    - "4001"
+  #  depends_on:
+  #    - ipfs_bootstrap
 
-  # showing bootstrap node metrics
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./ipfs-impl/prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      ipfs-network:
-    depends_on:
-      ipfs_bootstrap:
-        condition: service_started
+  ## showing bootstrap node metrics
+  #prometheus:
+  #  image: prom/prometheus:latest
+  #  ports:
+  #    - "9090:9090"
+  #  volumes:
+  #    - ./ipfs-impl/prometheus.yml:/etc/prometheus/prometheus.yml
+  #  networks:
+  #    ipfs-network:
+  #  depends_on:
+  #    ipfs_bootstrap:
+  #      condition: service_started
 
-  grafana:
-    image: grafana/grafana:latest
-    depends_on:
-      - prometheus
-    ports:
-      - "3000:3000"
-    logging:        # does not work?
-      driver: none
-    attach: false
-    environment:
-      - GF_AUTH_DISABLE_LOGIN_FORM=true
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-    volumes:
-      - ./ipfs-impl/dashboards/dashboard.yml:/etc/grafana/provisioning/dashboards/main.yml
-      - ./ipfs-impl/dashboards/datasources.yml:/etc/grafana/provisioning/datasources/prom.yml
-      - ./ipfs-impl/dashboards/autonat/autonat.json:/var/lib/grafana/dashboards/autonat.json
-      - ./ipfs-impl/dashboards/autorelay/autorelay.json:/var/lib/grafana/dashboards/autorelay.json
-      - ./ipfs-impl/dashboards/eventbus/eventbus.json:/var/lib/grafana/dashboards/eventbus.json
-      - ./ipfs-impl/dashboards/holepunch/holepunch.json:/var/lib/grafana/dashboards/holepunch.json
-      - ./ipfs-impl/dashboards/identify/identify.json:/var/lib/grafana/dashboards/identify.json
-      - ./ipfs-impl/dashboards/relaysvc/relaysvc.json:/var/lib/grafana/dashboards/relaysvc.json
-      - ./ipfs-impl/dashboards/swarm/swarm.json:/var/lib/grafana/dashboards/swarm.json
-      - ./ipfs-impl/dashboards/resource-manager/resource-manager.json:/var/lib/grafana/dashboards/resource-manager.json
-    networks:
-      ipfs-network:
+  #grafana:
+  #  image: grafana/grafana:latest
+  #  depends_on:
+  #    - prometheus
+  #  ports:
+  #    - "3000:3000"
+  #  logging:        # does not work?
+  #    driver: none
+  #  attach: false
+  #  environment:
+  #    - GF_AUTH_DISABLE_LOGIN_FORM=true
+  #    - GF_AUTH_ANONYMOUS_ENABLED=true
+  #    - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+  #  volumes:
+  #    - ./ipfs-impl/dashboards/dashboard.yml:/etc/grafana/provisioning/dashboards/main.yml
+  #    - ./ipfs-impl/dashboards/datasources.yml:/etc/grafana/provisioning/datasources/prom.yml
+  #    - ./ipfs-impl/dashboards/autonat/autonat.json:/var/lib/grafana/dashboards/autonat.json
+  #    - ./ipfs-impl/dashboards/autorelay/autorelay.json:/var/lib/grafana/dashboards/autorelay.json
+  #    - ./ipfs-impl/dashboards/eventbus/eventbus.json:/var/lib/grafana/dashboards/eventbus.json
+  #    - ./ipfs-impl/dashboards/holepunch/holepunch.json:/var/lib/grafana/dashboards/holepunch.json
+  #    - ./ipfs-impl/dashboards/identify/identify.json:/var/lib/grafana/dashboards/identify.json
+  #    - ./ipfs-impl/dashboards/relaysvc/relaysvc.json:/var/lib/grafana/dashboards/relaysvc.json
+  #    - ./ipfs-impl/dashboards/swarm/swarm.json:/var/lib/grafana/dashboards/swarm.json
+  #    - ./ipfs-impl/dashboards/resource-manager/resource-manager.json:/var/lib/grafana/dashboards/resource-manager.json
+  #  networks:
+  #    ipfs-network:
 
 networks:
   ipfs-network:
@@ -176,4 +164,4 @@ networks:
         - subnet: 10.5.0.0/16
 
 volumes:
-  postgres_data:
+  postgres_letslive_auth_data:
