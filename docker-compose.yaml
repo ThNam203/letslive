@@ -3,18 +3,13 @@ services:
     build:
       context: ./backend/services/auth/
       dockerfile: Dockerfile
-    container_name: letslive_backend
+    container_name: letslive_auth
     ports:
       - "7777:7777"
     environment:
-      POSTGRES_HOST: localhost
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: letslive_auth
-      POSTGRES_PORT: 5432
+      - POSTGRES_URL=postgres://postgres:postgres@letslive_auth_db:5432/letslive_auth?sslmode=disable
     networks:
-      ipfs-network:
-        ipv4_address: 10.5.0.11
+      auth_network:
     depends_on:
       letslive_auth_db:
         condition: service_healthy
@@ -28,10 +23,9 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: letslive_auth
     volumes:
-      - postgres_letslive_auth_data:/var/lib/postgresql/letslive_auth_db
+      - postgres_letslive_auth_data:/var/lib/postgresql/data
     networks:
-      ipfs-network:
-        ipv4_address: 10.5.0.12
+      auth_network:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -44,7 +38,7 @@ services:
       dockerfile: Dockerfile
     container_name: letslive_ui
     networks:
-      ipfs-network:
+      ipfs_network:
         ipv4_address: 10.5.0.13
     ports:
       - "5000:5000"
@@ -58,7 +52,7 @@ services:
   #  volumes:
   #    - ./ipfs-impl/nginx.conf:/etc/nginx/nginx.conf  # nginx config
   #  networks:
-  #    ipfs-network:
+  #    ipfs_network:
   #      ipv4_address: 10.5.0.10
 
   #ipfs_bootstrap:
@@ -74,7 +68,7 @@ services:
   #    - "4001"
   #    - "8080"
   #  networks:
-  #    ipfs-network:
+  #    ipfs_network:
   #      ipv4_address: 10.5.0.2
   #      aliases:
   #        - ipfs_bootstrap_node
@@ -90,7 +84,7 @@ services:
   #  # change the address to reflex to yours
   #  command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
   #  networks:
-  #    ipfs-network:
+  #    ipfs_network:
   #      #ipv4_address: 10.5.0.3
   #      aliases:
   #        - ipfs_bootstrap_node
@@ -107,7 +101,7 @@ services:
   #  # change the address to reflex to yours
   #  command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
   #  networks:
-  #    ipfs-network:
+  #    ipfs_network:
   #      #ipv4_address: 10.5.0.4
   #      aliases:
   #        - ipfs_bootstrap_node
@@ -124,7 +118,7 @@ services:
   #  volumes:
   #    - ./ipfs-impl/prometheus.yml:/etc/prometheus/prometheus.yml
   #  networks:
-  #    ipfs-network:
+  #    ipfs_network:
   #  depends_on:
   #    ipfs_bootstrap:
   #      condition: service_started
@@ -154,14 +148,17 @@ services:
   #    - ./ipfs-impl/dashboards/swarm/swarm.json:/var/lib/grafana/dashboards/swarm.json
   #    - ./ipfs-impl/dashboards/resource-manager/resource-manager.json:/var/lib/grafana/dashboards/resource-manager.json
   #  networks:
-  #    ipfs-network:
+  #    ipfs_network:
 
 networks:
-  ipfs-network:
+  ipfs_network:
     driver: bridge
     ipam:
       config:
         - subnet: 10.5.0.0/16
+
+  auth_network:
+    driver: bridge
 
 volumes:
   postgres_letslive_auth_data:
