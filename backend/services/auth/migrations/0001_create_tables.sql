@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE "users" (
@@ -40,3 +41,13 @@ CREATE TABLE "verify_tokens" (
 );
 
 CREATE INDEX IF NOT EXISTS "idx_verify_tokens_user_id" ON "verify_tokens" ("user_id");
+
+-- +goose Down
+DROP INDEX IF EXISTS "idx_verify_tokens_user_id";
+DROP TABLE IF EXISTS "verify_tokens";
+
+DROP INDEX IF EXISTS "idx_refresh_tokens_user_id";
+DROP TABLE IF EXISTS "refresh_tokens";
+
+DROP TABLE IF EXISTS "users";
+DROP EXTENSION IF EXISTS "uuid-ossp";

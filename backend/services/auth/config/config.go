@@ -2,7 +2,11 @@ package config
 
 import "time"
 
+// TODO: make in to a yaml config file
 const (
+	AUTH_SERVER_HOST = "127.0.0.1"
+	AUTH_SERVER_PORT = "7777"
+
 	REFRESH_TOKEN_EXPIRES_DURATION = 7 * 24 * time.Hour
 	ACCESS_TOKEN_EXPIRES_DURATION  = 5 * time.Minute
 
