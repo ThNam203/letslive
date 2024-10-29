@@ -1,0 +1,10 @@
+providers:
+  consul:
+    refreshInterval: 30s
+    endpoint:
+      address: "127.0.0.1:8500"
+    exposedByDefault: false # only exposes services with "traefik.enable=true" tag
+
+# API and dashboard configuration
+api:
+  insecure: true
