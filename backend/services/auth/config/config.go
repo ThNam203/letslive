@@ -4,7 +4,8 @@ import "time"
 
 // TODO: make in to a yaml config file
 const (
-	SERVICE_NAME     = "auth"
+	SERVICE_NAME = "auth"
+
 	AUTH_SERVER_HOST = "127.0.0.1"
 	AUTH_SERVER_PORT = "7777"
 
@@ -19,3 +20,5 @@ const (
 	SERVER_CRT_FILE = "server/server.crt"
 	SERVER_KEY_FILE = "server/server.key"
 )
+
+var REGISTRY_TAGS = []string{"traefik.enable=true"}
