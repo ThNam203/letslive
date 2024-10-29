@@ -13,6 +13,8 @@ services:
     depends_on:
       letslive_auth_db:
         condition: service_healthy
+      consul:
+        condition: service_healthy
 
   letslive_auth_db:
     image: postgres:16.3
@@ -37,12 +39,21 @@ services:
       context: ./ui
       dockerfile: Dockerfile
     container_name: letslive_ui
-    networks:
-      ipfs_network:
-        ipv4_address: 10.5.0.13
     ports:
       - "5000:5000"
 
+  consul:
+    image: hashicorp/consul:latest
+    container_name: consul
+    ports:
+      - "8500:8500"  # Consul UI and API
+      - "8600:8600/udp"  # DNS
+    command: agent -dev -client=0.0.0.0 -enable-script-checks
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8500/v1/status/leader"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
   # serve the ipfs content using the bootstrap node (node has an http route to get files)
   #nginx:
   #  image: nginx:latest
