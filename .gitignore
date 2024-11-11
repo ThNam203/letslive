@@ -2,6 +2,7 @@
 
 backend/internal/public
 backend/internal/ipfs/hls
+backend/docker
 
 backend/public
 private
