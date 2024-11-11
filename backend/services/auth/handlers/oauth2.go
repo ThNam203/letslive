@@ -118,7 +118,7 @@ func (h *AuthHandler) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request
 		h.refreshTokenCtrl.RevokeAllTokensOfUser(finalUserId)
 	}
 
-	refreshToken, accessToken, err := h.refreshTokenCtrl.GenerateTokenPair(finalUserId)
+	tokensInfo, err := h.refreshTokenCtrl.GenerateTokenPair(finalUserId)
 
 	if err != nil {
 		h.SetError(w, err)
@@ -126,7 +126,8 @@ func (h *AuthHandler) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	h.setTokens(w, refreshToken, accessToken)
+	h.setTokens(w, tokensInfo.RefreshToken, tokensInfo.AccessToken, tokensInfo.RefreshTokenExpiresAt, tokensInfo.AccessTokenExpiresAt)
+
 	http.Redirect(w, r, clientAddr, http.StatusTemporaryRedirect)
 }
 

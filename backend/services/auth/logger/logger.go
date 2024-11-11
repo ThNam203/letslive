@@ -1,8 +1,6 @@
 package logger
 
 import (
-	"fmt"
-
 	"go.uber.org/zap"
 )
 
@@ -13,8 +11,6 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println("init roi day ne")
 
 	// defer logger.Sync() // flushes buffer, if any
 	logger = zapLogger.Sugar()

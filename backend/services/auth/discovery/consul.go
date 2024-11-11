@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sen1or/lets-live/auth/config"
+	"sen1or/lets-live/auth/logger"
 	"strconv"
 
 	capi "github.com/hashicorp/consul/api"
@@ -37,12 +39,19 @@ func (r *ConsulRegistry) Register(ctx context.Context, hostPort string, serviceN
 		return err
 	}
 
+	logger.Infof("http://%s/v1/health", config.MyConfig.Service.Address)
+
 	return r.client.Agent().ServiceRegister(&capi.AgentServiceRegistration{
 		Address: host,
 		ID:      instanceID,
 		Name:    serviceName,
 		Port:    port,
-		Check:   &capi.AgentServiceCheck{CheckID: instanceID, TTL: "5s"},
+		Check: &capi.AgentServiceCheck{
+			//HTTP:     fmt.Sprintf("http://%s:%s/v1/health", config.MyConfig.Service.Host, config.MyConfig.Service.Port),
+			HTTP:     fmt.Sprintf("http://%s/v1/health", config.MyConfig.Service.Address),
+			Interval: "10s",
+			Timeout:  "1s",
+		},
 	})
 }
 
@@ -64,8 +73,4 @@ func (r *ConsulRegistry) ServiceAddresses(ctx context.Context, serviceName strin
 	}
 
 	return res, nil
-}
-
-func (r *ConsulRegistry) ReportHealthyState(_ string, instanceID string) error {
-	return r.client.Agent().PassTTL(instanceID, "good health")
 }

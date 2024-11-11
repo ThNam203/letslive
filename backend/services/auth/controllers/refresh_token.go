@@ -21,36 +21,63 @@ func NewRefreshTokenController(repo repositories.RefreshTokenRepository) *Refres
 	}
 }
 
-func (c *RefreshTokenController) GenerateTokenPair(userId uuid.UUID) (refreshToken string, accessToken string, err error) {
+func (c *RefreshTokenController) GenerateTokenPair(userId uuid.UUID) (
+	*struct {
+		RefreshToken          string
+		AccessToken           string
+		RefreshTokenExpiresAt time.Time
+		AccessTokenExpiresAt  time.Time
+	}, error) {
+	refreshTokenExpiresDuration, err := time.ParseDuration(config.MyConfig.Tokens.RefreshTokenExpiresDuration)
+	if err != nil {
+		return nil, err
+	}
+	accessTokenExpiresDuration, err := time.ParseDuration(config.MyConfig.Tokens.AccessTokenExpiresDuration)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshTokenExpiresAt := time.Now().Add(refreshTokenExpiresDuration)
+	accessTokenExpiresAt := time.Now().Add(accessTokenExpiresDuration)
+
 	unsignedRefreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userId":    userId.String(),
-		"expiresAt": time.Now().Add(config.REFRESH_TOKEN_EXPIRES_DURATION),
+		"expiresAt": refreshTokenExpiresAt,
 	})
 
 	unsignedAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userId":    userId.String(),
-		"expiresAt": time.Now().Add(config.ACCESS_TOKEN_EXPIRES_DURATION),
+		"expiresAt": accessTokenExpiresAt,
 	})
 
-	refreshToken, err = unsignedRefreshToken.SignedString([]byte(os.Getenv("REFRESH_TOKEN_SECRET")))
-	accessToken, err = unsignedAccessToken.SignedString([]byte(os.Getenv("ACCESS_TOKEN_SECRET")))
+	refreshToken, err := unsignedRefreshToken.SignedString([]byte(os.Getenv("REFRESH_TOKEN_SECRET")))
+	accessToken, err := unsignedAccessToken.SignedString([]byte(os.Getenv("ACCESS_TOKEN_SECRET")))
 
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
-	refreshTokenExpiresAt := time.Now().Add(config.REFRESH_TOKEN_EXPIRES_DURATION)
 	refreshTokenRecord, err := c.createRefreshTokenObject(refreshToken, refreshTokenExpiresAt, userId)
 
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
 	if err := c.repo.Create(refreshTokenRecord); err != nil {
-		return "", "", err
+		return nil, err
 	}
 
-	return
+	return &struct {
+		RefreshToken          string
+		AccessToken           string
+		RefreshTokenExpiresAt time.Time
+		AccessTokenExpiresAt  time.Time
+	}{
+		RefreshToken:          refreshToken,
+		AccessToken:           accessToken,
+		RefreshTokenExpiresAt: refreshTokenExpiresAt,
+		AccessTokenExpiresAt:  accessTokenExpiresAt,
+	}, nil
 }
 
 func (c *RefreshTokenController) createRefreshTokenObject(signedRefreshToken string, expiresAt time.Time, userId uuid.UUID) (*domains.RefreshToken, error) {

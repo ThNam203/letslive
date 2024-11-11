@@ -86,14 +86,13 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: sync the expires date of refresh token in database with client
-	refreshToken, accessToken, err := h.refreshTokenCtrl.GenerateTokenPair(user.ID)
+	tokensInfo, err := h.refreshTokenCtrl.GenerateTokenPair(user.ID)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	h.setTokens(w, refreshToken, accessToken)
+	h.setTokens(w, tokensInfo.RefreshToken, tokensInfo.AccessToken, tokensInfo.RefreshTokenExpiresAt, tokensInfo.AccessTokenExpiresAt)
 
 	http.Redirect(w, r, "/", http.StatusOK)
 }
@@ -240,13 +239,16 @@ func (h *AuthHandler) sendConfirmEmail(userId uuid.UUID, userEmail string, authS
 	}
 }
 
-func (h *AuthHandler) setTokens(w http.ResponseWriter, refreshToken string, accessToken string) {
+func (h *AuthHandler) setTokens(w http.ResponseWriter, refreshToken string, accessToken string, refreshTokenExpiresAt time.Time, accessTokenExpiresAt time.Time) {
+	refreshTokenMaxAge, _ := time.ParseDuration(config.MyConfig.Tokens.RefreshTokenExpiresDuration)
+	accessTokenMaxAge, _ := time.ParseDuration(config.MyConfig.Tokens.AccessTokenExpiresDuration)
+
 	http.SetCookie(w, &http.Cookie{
 		Name:  "refreshToken",
 		Value: refreshToken,
 
-		Expires:  time.Now().Add(config.REFRESH_TOKEN_EXPIRES_DURATION),
-		MaxAge:   config.REFRESH_TOKEN_MAX_AGE,
+		Expires:  refreshTokenExpiresAt,
+		MaxAge:   int(refreshTokenMaxAge.Seconds()),
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteDefaultMode,
@@ -256,8 +258,8 @@ func (h *AuthHandler) setTokens(w http.ResponseWriter, refreshToken string, acce
 		Name:  "accessToken",
 		Value: accessToken,
 
-		Expires:  time.Now().Add(config.ACCESS_TOKEN_EXPIRES_DURATION),
-		MaxAge:   config.ACCESS_TOKEN_MAX_AGE,
+		Expires:  accessTokenExpiresAt,
+		MaxAge:   int(accessTokenMaxAge.Seconds()),
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteDefaultMode,

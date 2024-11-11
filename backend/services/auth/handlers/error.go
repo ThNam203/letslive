@@ -8,6 +8,10 @@ import (
 
 type ErrorHandler struct{}
 
+func NewErrorHandler() *ErrorHandler {
+	return &ErrorHandler{}
+}
+
 // Set the error message to the custom "X-LetsLive-Error" header
 // The function doesn't end the request, if so call errorResponse
 func (h *ErrorHandler) SetError(w http.ResponseWriter, err error) {
