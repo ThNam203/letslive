@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"sen1or/lets-live/auth/config"
 	"sen1or/lets-live/auth/controllers"
+	"sen1or/lets-live/auth/logger"
 
 	// TODO: add swagger _ "sen1or/lets-live/auth/docs"
 	"sen1or/lets-live/auth/handlers"
@@ -24,8 +27,9 @@ type APIServer struct {
 	dbConn    *pgx.Conn // For raw sql queries
 	serverURL string
 
-	authHandler  *handlers.AuthHandler
-	errorHandler *handlers.ErrorHandler
+	authHandler   *handlers.AuthHandler
+	errorHandler  *handlers.ErrorHandler
+	healthHandler *handlers.HealthHandler
 
 	loggingMiddleware middlewares.Middleware
 	corsMiddleware    middlewares.Middleware
@@ -50,8 +54,9 @@ func NewAPIServer(dbConn *pgx.Conn, authServerURL string) *APIServer {
 		dbConn:    dbConn,
 		serverURL: authServerURL,
 
-		authHandler:  authHandler,
-		errorHandler: &handlers.ErrorHandler{},
+		authHandler:   authHandler,
+		errorHandler:  handlers.NewErrorHandler(),
+		healthHandler: handlers.NewHeathHandler(),
 
 		loggingMiddleware: middlewares.NewLoggingMiddleware(logger),
 		corsMiddleware:    middlewares.NewCORSMiddleware(),
@@ -66,25 +71,38 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	if useTLS {
-		if _, err := os.Stat(config.SERVER_CRT_FILE); err != nil {
-			log.Panic("error loading server cert file", err.Error())
-		}
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
 
-		if _, err := os.Stat(config.SERVER_KEY_FILE); err != nil {
-			log.Panic("error loading server key file", err.Error())
-		}
+	go func() {
+		if useTLS {
+			if _, err := os.Stat(config.MyConfig.SSL.ServerCrtFile); err != nil {
+				log.Panic("error cant get server cert file", err.Error())
+			}
 
-		go (func() {
-			log.Panic("server ends: ", server.ListenAndServeTLS(config.SERVER_CRT_FILE, config.SERVER_KEY_FILE))
-		})()
-	} else {
-		go (func() {
+			if _, err := os.Stat(config.MyConfig.SSL.ServerKeyFile); err != nil {
+				log.Panic("error cant get server key file", err.Error())
+			}
+
+			log.Panic("server ends: ", server.ListenAndServeTLS(config.MyConfig.SSL.ServerCrtFile, config.MyConfig.SSL.ServerKeyFile))
+		} else {
 			log.Panic("server ends: ", server.ListenAndServe())
-		})()
+		}
+	}()
+
+	log.Printf("server running on addr: %s", a.serverURL)
+	<-quit
+
+	// Shutdown gracefully
+	logger.Infow("shutting down server...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		logger.Errorf("server shutdown failed: %+v", err)
 	}
 
-	log.Printf("server running on addr: %s", server.Addr)
+	logger.Infow("server exited gracefully")
 }
 
 // @title           Let's Live API
@@ -104,6 +122,8 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("GET /v1/auth/google", a.authHandler.OAuthGoogleLogin)
 	sm.HandleFunc("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBack)
 	sm.HandleFunc("GET /v1/auth/verify", a.authHandler.VerifyEmailHandler)
+
+	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 
 	sm.HandleFunc("GET /v1/swagger", httpSwagger.Handler(
 		httpSwagger.URL(a.serverURL+"/swagger/doc.json"),
