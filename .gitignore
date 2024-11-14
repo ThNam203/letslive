@@ -1,10 +1,7 @@
 .env
 
-backend/internal/public
-backend/internal/ipfs/hls
-backend/docker
-
-backend/public
-private
+# ignore generated ffmpeg files
+backend/transcode/public
+backend/transcode/private
 
 k8s/secrets

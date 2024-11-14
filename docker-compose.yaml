@@ -1,54 +1,54 @@
 services:
-  letslive_auth:
-    build:
-      context: ./backend/services/auth/
-      dockerfile: Dockerfile
-    container_name: letslive_auth
-    ports:
-      - "7777:7777"
-    networks:
-      auth_network:
-    depends_on:
-      letslive_auth_db:
-        condition: service_healthy
-      consul:
-        condition: service_healthy
-      configserver:
-        condition: service_healthy
+  #letslive_auth:
+  #  build:
+  #    context: ./backend/auth/
+  #    dockerfile: Dockerfile
+  #  container_name: letslive_auth
+  #  ports:
+  #    - "7777:7777"
+  #  networks:
+  #    auth_network:
+  #  depends_on:
+  #    letslive_auth_db:
+  #      condition: service_healthy
+  #    consul:
+  #      condition: service_healthy
+  #    configserver:
+  #      condition: service_healthy
 
-  letslive_auth_db:
-    image: postgres:16.3
-    container_name: letslive_auth_db
-    shm_size: 64mb
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: letslive_auth
-    volumes:
-      - postgres_letslive_auth_data:/var/lib/postgresql/data
-    networks:
-      auth_network:
-    expose:
-      - "5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 10s
-      retries: 5
+  #letslive_auth_db:
+  #  image: postgres:16.3
+  #  container_name: letslive_auth_db
+  #  shm_size: 64mb
+  #  environment:
+  #    POSTGRES_USER: postgres
+  #    POSTGRES_PASSWORD: postgres
+  #    POSTGRES_DB: letslive_auth
+  #  volumes:
+  #    - postgres_letslive_auth_data:/var/lib/postgresql/data
+  #  networks:
+  #    auth_network:
+  #  expose:
+  #    - "5432"
+  #  healthcheck:
+  #    test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #    interval: 5s
+  #    timeout: 10s
+  #    retries: 5
 
-  letslive_ui:
-    build:
-      context: ./ui
-      dockerfile: Dockerfile
-    container_name: letslive_ui
-    networks:
-      general_network:
-    ports:
-      - "5000:5000"
+  #letslive_ui:
+  #  build:
+  #    context: ./ui
+  #    dockerfile: Dockerfile
+  #  container_name: letslive_ui
+  #  networks:
+  #    general_network:
+  #  ports:
+  #    - "5000:5000"
 
   configserver:
     build:
-      context: ./backend/services/configserver
+      context: ./backend/configserver
       dockerfile: Dockerfile
     container_name: letslive_configserver
     ports:
