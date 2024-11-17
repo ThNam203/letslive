@@ -27,7 +27,6 @@ func NewConsulRegistry(addr string) (Registry, error) {
 	}, nil
 }
 
-// address should be like "http://foobar" without the port
 func (r *ConsulRegistry) Register(ctx context.Context, hostPort string, serviceHealthCheckURL string, serviceName string, instanceID string) error {
 	host, portStr, err := net.SplitHostPort(hostPort)
 	if err != nil {
@@ -45,10 +44,9 @@ func (r *ConsulRegistry) Register(ctx context.Context, hostPort string, serviceH
 		Name:    serviceName,
 		Port:    port,
 		Check: &capi.AgentServiceCheck{
-			//HTTP:     fmt.Sprintf("http://%s:%s/v1/health", config.MyConfig.Service.Host, config.MyConfig.Service.Port),
-			HTTP:     fmt.Sprintf("%s/v1/health", serviceHealthCheckURL),
-			Interval: "10s",
-			Timeout:  "1s",
+			HTTP:     serviceHealthCheckURL,
+			Interval: "30s",
+			Timeout:  "5s",
 		},
 	})
 }
