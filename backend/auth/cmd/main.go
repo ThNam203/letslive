@@ -46,7 +46,7 @@ func ConnectDB(ctx context.Context, config *cfg.Config) *pgx.Conn {
 }
 
 func StartDiscovery(ctx context.Context, config *cfg.Config) {
-	registry, err := discovery.NewConsulRegistry(config.Registry.Address)
+	registry, err := discovery.NewConsulRegistry(config.Registry.RegistryService.Address)
 	if err != nil {
 		logger.Panicf("failed to start discovery mechanism: %s", err)
 	}
@@ -55,7 +55,7 @@ func StartDiscovery(ctx context.Context, config *cfg.Config) {
 	serviceHealthCheckURL := fmt.Sprintf("http://%s:%s/v1/health", config.Service.Hostname, config.Service.APIPort)
 	instanceID := discovery.GenerateInstanceID(serviceName)
 
-	if err := registry.Register(ctx, config.Registry.Address, serviceHealthCheckURL, serviceName, instanceID); err != nil {
+	if err := registry.Register(ctx, config.Registry.RegistryService.Address, serviceHealthCheckURL, serviceName, instanceID); err != nil {
 		logger.Panicf("failed to register server: %s", err)
 	}
 

@@ -20,7 +20,7 @@ func StartMigration(connectionString string) {
 		}
 	}()
 
-	if err := goose.Up(db, "migrations"); err != nil {
+	if err := goose.Up(db, "./"); err != nil {
 		panic(err)
 	}
 }

@@ -12,7 +12,7 @@ import (
 
 const (
 	CONFIG_SERVER_PROTOCOL             = "http"
-	CONFIG_SERVER_ADDRESS              = "letslive_configserver:8181"
+	CONFIG_SERVER_ADDRESS              = "configserver:8181"
 	CONFIG_SERVER_SERVICE_APPLICATION  = "auth_service"
 	CONFIG_SERVER_SERVICE_PROFILE      = "default"
 	CONFIG_SERVER_REGISTRY_APPLICATION = "registry_service"
@@ -20,8 +20,10 @@ const (
 )
 
 type RegistryConfig struct {
-	Address string   `yaml:"address"`
-	Tags    []string `yaml:"tags"`
+	RegistryService struct {
+		Address string   `yaml:"address"`
+		Tags    []string `yaml:"tags"`
+	} `yaml:"registry"`
 }
 
 type Config struct {
@@ -61,6 +63,8 @@ func RetrieveConfig() *Config {
 
 	config.Database.ConnectionString = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?%s", config.Database.User, config.Database.Password, config.Database.Host, config.Database.Port, config.Database.Name, strings.Join(config.Database.Params, "&"))
 
+	logger.Infow("config received successfully", "value", config)
+
 	return config
 }
 
@@ -87,7 +91,7 @@ func retrieveConfig() (*Config, error) {
 	var config Config
 	err = yaml.Unmarshal(body, &config)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshaling JSON: %v", err)
+		return nil, fmt.Errorf("error unmarshaling config: %v", err)
 	}
 
 	// -------------------
