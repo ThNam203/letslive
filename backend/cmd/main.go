@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 
-	"sen1or/lets-live/api/hack"
 	httpServer "sen1or/lets-live/api/http"
 	"sen1or/lets-live/core/config"
 	"sen1or/lets-live/core/rtmp"
