@@ -1,12 +1,7 @@
 .env
 
-backend/internal/public
-backend/internal/ipfs/hls
+# ignore generated ffmpeg files
+backend/transcode/public
+backend/transcode/private
 
-backend/public
-private
-
-backend/server.key
-backend/server.crt
-# generated files from docker
-backend/docker
+k8s/secrets
