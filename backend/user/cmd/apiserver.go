@@ -13,7 +13,6 @@ import (
 	"sen1or/lets-live/user/middlewares"
 	"sen1or/lets-live/user/repositories"
 
-	// TODO: add swagger _ "sen1or/lets-live/auth/docs"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -36,7 +35,7 @@ type APIServer struct {
 }
 
 // TODO: make tls usable
-func NewAPIServer(dbConn *pgx.Conn, authServerURL string, cfg config.Config) *APIServer {
+func NewAPIServer(dbConn *pgx.Conn, serverURL string, cfg config.Config) *APIServer {
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var userCtrl = controllers.NewUserController(userRepo)
 	var userHandler = handlers.NewUserHandler(userCtrl)
@@ -46,7 +45,7 @@ func NewAPIServer(dbConn *pgx.Conn, authServerURL string, cfg config.Config) *AP
 	return &APIServer{
 		logger:    logger,
 		dbConn:    dbConn,
-		serverURL: authServerURL,
+		serverURL: serverURL,
 
 		errorHandler:  handlers.NewErrorHandler(),
 		healthHandler: handlers.NewHeathHandler(),

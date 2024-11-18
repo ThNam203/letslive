@@ -10,9 +10,8 @@ import (
 )
 
 const (
-	CONFIG_SERVER_PROTOCOL = "http"
-	//CONFIG_SERVER_ADDRESS              = "letslive_configserver:8181"
-	CONFIG_SERVER_ADDRESS              = "localhost:8181"
+	CONFIG_SERVER_PROTOCOL             = "http"
+	CONFIG_SERVER_ADDRESS              = "configserver:8181"
 	CONFIG_SERVER_SERVICE_APPLICATION  = "transcode_service"
 	CONFIG_SERVER_SERVICE_PROFILE      = "default"
 	CONFIG_SERVER_REGISTRY_APPLICATION = "registry_service"
@@ -20,8 +19,10 @@ const (
 )
 
 type RegistryConfig struct {
-	Address string   `yaml:"address"`
-	Tags    []string `yaml:"tags"`
+	Service struct {
+		Address string   `yaml:"address"`
+		Tags    []string `yaml:"tags"`
+	} `yaml:"registry"`
 }
 
 type Config struct {

@@ -12,7 +12,7 @@ spring:
           clone-on-start: true
           force-pull: true
   main:
-    show_banner: false
+    show_banner: "off"
 
 logging:
   level:
