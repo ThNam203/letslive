@@ -3,5 +3,6 @@
 # ignore generated ffmpeg files
 backend/transcode/public
 backend/transcode/private
+backend/transcode/dockervolume
 
 k8s/secrets

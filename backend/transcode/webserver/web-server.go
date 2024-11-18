@@ -89,7 +89,10 @@ func (ws *WebServer) serveFile(rw http.ResponseWriter, rq *http.Request) {
 func (ws *WebServer) ListenAndServe() {
 	router := mux.NewRouter()
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(ws.BaseDirectory))))
-	// router.HandleFunc("/", ws.serveFile)
+	router.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
 	router.Use(corsMiddleware)
 
 	server := &http.Server{
