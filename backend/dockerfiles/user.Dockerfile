@@ -6,8 +6,8 @@ COPY ../go.mod ../go.sum ./
 RUN go mod download && go mod verify
 
 COPY ../pkg ./pkg
-COPY ../auth ./auth
+COPY ../user ./user
 
-RUN go build -v -o /usr/local/bin/app ./auth/cmd/
+RUN go build -v -o /usr/local/bin/app ./user/cmd/
 
 CMD ["app"]

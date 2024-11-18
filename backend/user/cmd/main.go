@@ -2,15 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net"
 
-	// TODO: add swagger
-	//_ "sen1or/lets-live/auth/docs"
-
-	cfg "sen1or/lets-live/auth/config"
-	"sen1or/lets-live/auth/migrations"
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
+	cfg "sen1or/lets-live/user/config"
+	"sen1or/lets-live/user/migrations"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -28,7 +26,7 @@ func main() {
 	dbConn := ConnectDB(ctx, config)
 	defer dbConn.Close(ctx)
 
-	listenAddr := net.JoinHostPort(config.Service.BindAddress, string(config.Service.Port))
+	listenAddr := net.JoinHostPort(config.Service.APIBindAddress, string(config.Service.APIPort))
 
 	server := NewAPIServer(dbConn, listenAddr, *config)
 	go server.ListenAndServe(false)
@@ -45,7 +43,7 @@ func ConnectDB(ctx context.Context, config *cfg.Config) *pgx.Conn {
 }
 
 func StartDiscovery(ctx context.Context, config *cfg.Config) {
-	registry, err := discovery.NewConsulRegistry(config.Registry.Address)
+	registry, err := discovery.NewConsulRegistry(config.Registry.RegistryService.Address)
 	if err != nil {
 		logger.Panicf("failed to start discovery mechanism: %s", err)
 	}
@@ -53,7 +51,8 @@ func StartDiscovery(ctx context.Context, config *cfg.Config) {
 	serviceName := config.Service.Name
 
 	instanceID := discovery.GenerateInstanceID(serviceName)
-	if err := registry.Register(ctx, config.Registry.Address, config.Service.URL, serviceName, instanceID); err != nil {
+	serviceHealthCheckURL := fmt.Sprintf("http://%s:%s/v1/health", config.Service.Hostname, config.Service.APIPort)
+	if err := registry.Register(ctx, config.Registry.RegistryService.Address, serviceHealthCheckURL, serviceName, instanceID, config.Registry.RegistryService.Tags); err != nil {
 		logger.Panicf("failed to register server: %s", err)
 	}
 

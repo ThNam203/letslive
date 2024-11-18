@@ -75,6 +75,7 @@ func (s *RTMPServer) Start() {
 	}
 }
 
+// TODO: make a controller for user service
 // TODO: check if on disconnect do we need to manually close nc
 func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	c.LogTagEvent = func(isRead bool, t flvio.Tag) {
@@ -86,29 +87,20 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	streamingKeyComponents := strings.Split(c.URL.Path, "/")
 	streamingKey := streamingKeyComponents[len(streamingKeyComponents)-1]
 
-	//streamInfo, err := s.onConnect(streamingKey)
-	//if err != nil {
-	//	logger.Errorw("request failed", "err", err)
-	//	nc.Close()
-	//	return
-	//}
+	streamInfo, err := s.onConnect(streamingKey)
+	if err != nil {
+		logger.Errorw("request failed", "err", err)
+		nc.Close()
+		return
+	}
 
-	//logger.Infof("GET THE STREAM INFO WITH USERID - %s", streamInfo.UserID)
-
-	//pipeOut, pipeIn := io.Pipe()
-
-	//go func() {
-	//	transcoder := transcoder.NewTranscoder(pipeOut, s.config)
-	//	transcoder.Start(streamInfo.UserID)
-	//}()
-
-	logger.Infof("GET THE STREAM INFO WITH USERID - %s", "1cf65df3-1f9f-4e81-94e5-951a99bcb4ce")
+	logger.Infof("getting user info (id: %s)", streamInfo.UserID)
 
 	pipeOut, pipeIn := io.Pipe()
 
 	go func() {
 		transcoder := transcoder.NewTranscoder(pipeOut, s.config)
-		transcoder.Start("1cf65df3-1f9f-4e81-94e5-951a99bcb4ce")
+		transcoder.Start(streamInfo.UserID)
 	}()
 
 	w := flv.NewMuxer(pipeIn)

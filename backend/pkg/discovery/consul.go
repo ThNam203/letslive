@@ -27,7 +27,7 @@ func NewConsulRegistry(addr string) (Registry, error) {
 	}, nil
 }
 
-func (r *ConsulRegistry) Register(ctx context.Context, hostPort string, serviceHealthCheckURL string, serviceName string, instanceID string) error {
+func (r *ConsulRegistry) Register(ctx context.Context, hostPort string, serviceHealthCheckURL string, serviceName string, instanceID string, tags []string) error {
 	host, portStr, err := net.SplitHostPort(hostPort)
 	if err != nil {
 		return err
@@ -45,9 +45,10 @@ func (r *ConsulRegistry) Register(ctx context.Context, hostPort string, serviceH
 		Port:    port,
 		Check: &capi.AgentServiceCheck{
 			HTTP:     serviceHealthCheckURL,
-			Interval: "30s",
-			Timeout:  "5s",
+			Interval: "15s",
+			Timeout:  "2s",
 		},
+		Tags: tags,
 	})
 }
 

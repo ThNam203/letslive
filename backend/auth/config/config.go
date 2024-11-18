@@ -56,19 +56,23 @@ type Config struct {
 }
 
 func RetrieveConfig() *Config {
-	config, err := retrieveConfig()
+	config, err := retrieveServiceConfig()
 	if err != nil {
 		logger.Panicf("failed to get config from config server: %s", err)
 	}
 
 	config.Database.ConnectionString = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?%s", config.Database.User, config.Database.Password, config.Database.Host, config.Database.Port, config.Database.Name, strings.Join(config.Database.Params, "&"))
 
-	logger.Infow("config received successfully", "value", config)
+	registryConfig, err := retrieveRegistryConfig()
+	if err != nil {
+		logger.Panicf("failed to get registry config: %s", err)
+	}
+	config.Registry = *registryConfig
 
 	return config
 }
 
-func retrieveConfig() (*Config, error) {
+func retrieveServiceConfig() (*Config, error) {
 	url := fmt.Sprintf("%s://%s/%s-%s.yml", CONFIG_SERVER_PROTOCOL, CONFIG_SERVER_ADDRESS, CONFIG_SERVER_SERVICE_APPLICATION, CONFIG_SERVER_SERVICE_PROFILE)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -93,14 +97,6 @@ func retrieveConfig() (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshaling config: %v", err)
 	}
-
-	// -------------------
-	registryConfig, err := retrieveRegistryConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	config.Registry = *registryConfig
 
 	return &config, nil
 }

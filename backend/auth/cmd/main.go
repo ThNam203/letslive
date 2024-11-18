@@ -55,7 +55,7 @@ func StartDiscovery(ctx context.Context, config *cfg.Config) {
 	serviceHealthCheckURL := fmt.Sprintf("http://%s:%s/v1/health", config.Service.Hostname, config.Service.APIPort)
 	instanceID := discovery.GenerateInstanceID(serviceName)
 
-	if err := registry.Register(ctx, config.Registry.RegistryService.Address, serviceHealthCheckURL, serviceName, instanceID); err != nil {
+	if err := registry.Register(ctx, config.Registry.RegistryService.Address, serviceHealthCheckURL, serviceName, instanceID, config.Registry.RegistryService.Tags); err != nil {
 		logger.Panicf("failed to register server: %s", err)
 	}
 
