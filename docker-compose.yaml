@@ -75,6 +75,28 @@ services:
       timeout: 10s
       retries: 5
 
+  letslive_transcode:
+    build:
+      context: ./backend
+      dockerfile: ./dockerfiles/transcode.Dockerfile
+    container_name: letslive_transcode
+    ports:
+      - "1935:1935"
+      - "8889:8889" # expose the webserver
+    networks:
+      user_network:
+      general_network:
+    depends_on:
+      letslive_user_db:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+    volumes:
+      - ./backend/transcode/dockervolume/private:/usr/src/app/transcode/private
+      - ./backend/transcode/dockervolume/public:/usr/src/app/transcode/public
+
   #letslive_ui:
   #  build:
   #    context: ./ui
