@@ -1,0 +1,17 @@
+{
+  "service": {
+    "name": "kong_db",
+    "id": "letslive_kong_db",
+    "tags": ["database", "postgresql", "kong"],
+    "address": "letslive_kong_db",
+    "port": 5432,
+    "check": {
+      "id": "postgres-check",
+      "name": "PostgreSQL TCP Check",
+      "tcp": "letslive_kong_db:5432",
+      "interval": "30s",
+      "timeout": "2s"
+    }
+  },
+    "recursors": ["127.0.0.11"]
+}

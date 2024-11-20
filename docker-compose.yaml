@@ -4,8 +4,8 @@ services:
       context: ./backend
       dockerfile: ./dockerfiles/auth.Dockerfile
     container_name: letslive_auth
-    #ports:
-    #  - "7777:7777"
+    ports:
+      - "7777:7777"
     networks:
       auth_network:
       general_network:
@@ -43,7 +43,7 @@ services:
       dockerfile: ./dockerfiles/user.Dockerfile
     container_name: letslive_user
     ports:
-      - "7777:7777"
+      - "7778:7778"
     networks:
       user_network:
       general_network:
@@ -82,7 +82,7 @@ services:
     container_name: letslive_transcode
     ports:
       - "1935:1935"
-      - "8889:8889" # expose the webserver
+      - "7779:7779" # expose the webserver
     networks:
       user_network:
       general_network:
@@ -132,10 +132,17 @@ services:
     ports:
       - "8500:8500"  # Consul UI and API
       - "8600:8600/udp"  # DNS
-    command: agent -dev -client=0.0.0.0 -enable-script-checks
+    expose:
+      - "8500"
+      - "8600"
+    command: agent -dev -client=0.0.0.0 -enable-script-checks -bootstrap-expect=1 -config-dir=/consul/config
+    volumes:
+      - ./configs/consul.json:/consul/config/consul.json
     networks:
       auth_network:
       user_network:
+      kong_network:
+        ipv4_address: 192.168.1.10
       general_network:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8500/v1/status/leader"]
@@ -143,18 +150,100 @@ services:
       timeout: 10s
       retries: 5
 
-  traefik:
-    image: traefik:v3.1.7
-    volumes:
-      - "./configs/traefik.yaml:/etc/traefik/traefik.yml"
-    ports:
-      - "80:80"
-      - "8999:8080" # traefik dashboard
+  kong_migration:
+    image: kong:latest
+    command: "kong migrations bootstrap"
+    container_name: letslive_kong_migration
     networks:
+      - kong_network
+    restart: on-failure
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: letslive_kong_db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kongpass
+    links:
+      - letslive_kong_db
+    depends_on:
+      - letslive_kong_db
+
+  kong:
+    image: kong:latest
+    container_name: letslive_kong-gateway
+    networks:
+      kong_network:
+      general_network:
+    restart: always
+    environment:
+      KONG_DATABASE: postgres
+      #KONG_PG_HOST: kong_db.service.consul # the dns resolver change the kong default dns to consul -> kong can't find the db host so we use .service.consul
+      KONG_PG_HOST: 192.168.1.11
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kongpass
+      KONG_DNS_RESOLVER: "192.168.1.10:8600,127.0.0.11"
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_ADMIN_LISTEN_SSL: "0.0.0.0:8444"
+      KONG_ADMIN_GUI_URL: http://localhost:8002
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "8001:8001"
+      - "8002:8002"
+      - "8444:8444"
+    #dns:
+    #  - 192.168.1.10:8600
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://kong:8001"]
+      interval: 5s
+      timeout: 2s
+      retries: 15
+    depends_on:
+      - letslive_kong_db
+      - kong_migration
+      - consul
+
+  letslive_kong_db:
+    image: postgres:16.3
+    container_name: letslive_kong_db
+    shm_size: 64mb
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kongpass
+      POSTGRES_DB: kong
+    volumes:
+      - postgres_letslive_kong_data:/var/lib/postgresql/data
+    networks:
+      kong_network:
+        ipv4_address: 192.168.1.11
       general_network:
     depends_on:
-      consul: 
+      consul:
         condition: service_healthy
+    ports:
+      - "5555:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  # TODO: remove (or load balancing)? using kong instead for api gateway
+  #traefik:
+  #  image: traefik:v3.1.7
+  #  volumes:
+  #    - "./configs/traefik.yaml:/etc/traefik/traefik.yml"
+  #  ports:
+  #    - "80:80"
+  #    - "8999:8080" # traefik dashboard
+  #  networks:
+  #    general_network:
+  #  depends_on:
+  #    consul: 
+  #      condition: service_healthy
 
   # serve the ipfs content using the bootstrap node (node has an http route to get files)
   #nginx:
@@ -279,6 +368,13 @@ networks:
   general_network:
     driver: bridge
 
+  kong_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+
 volumes:
   postgres_letslive_auth_data:
   postgres_letslive_user_data:
+  postgres_letslive_kong_data:

@@ -31,7 +31,7 @@ type Config struct {
 		Name           string `yaml:"name"`
 		Hostname       string `yaml:"hostname"`
 		APIBindAddress string `yaml:"apiBindAddress"`
-		APIPort        string `yaml:"apiPort"`
+		APIPort        int    `yaml:"apiPort"`
 	} `yaml:"service"`
 	Registry RegistryConfig
 	SSL      struct {

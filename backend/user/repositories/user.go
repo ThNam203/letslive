@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"errors"
 	"sen1or/lets-live/user/domains"
 
 	"github.com/gofrs/uuid/v5"
@@ -16,8 +17,8 @@ type UserRepository interface {
 	GetByFacebookID(string) (*domains.User, error)
 	GetStreamingUsers() ([]domains.User, error)
 
-	Create(*domains.User) error
-	Update(*domains.User) error
+	Create(domains.User) (*domains.User, error)
+	Update(domains.User) (*domains.User, error)
 	Delete(uuid.UUID) error
 }
 
@@ -40,6 +41,10 @@ func (r *postgresUserRepo) GetByID(userId uuid.UUID) (*domains.User, error) {
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
 
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrRecordNotFound
+		}
+
 		return nil, err
 	}
 
@@ -55,6 +60,10 @@ func (r *postgresUserRepo) GetByName(username string) (*domains.User, error) {
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrRecordNotFound
+		}
+
 		return nil, err
 	}
 
@@ -70,12 +79,16 @@ func (r *postgresUserRepo) GetByEmail(email string) (*domains.User, error) {
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrRecordNotFound
+		}
 		return nil, err
 	}
 
 	return &user, nil
 }
 
+// TODO: revise the oauth2 login
 func (r *postgresUserRepo) GetByFacebookID(facebookID string) (*domains.User, error) {
 	rows, err := r.dbConn.Query(context.Background(), "select * from users where facebook_id = $1", facebookID)
 	if err != nil {
@@ -85,6 +98,9 @@ func (r *postgresUserRepo) GetByFacebookID(facebookID string) (*domains.User, er
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrRecordNotFound
+		}
 		return nil, err
 	}
 
@@ -101,6 +117,9 @@ func (r *postgresUserRepo) GetByAPIKey(apiKey uuid.UUID) (*domains.User, error) 
 	defer rows.Close()
 
 	user, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrRecordNotFound
+	}
 
 	return &user, nil
 }
@@ -112,31 +131,69 @@ func (r *postgresUserRepo) GetStreamingUsers() ([]domains.User, error) {
 	streamingUsers, err := pgx.CollectRows(rows, pgx.RowToStructByName[domains.User])
 
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrRecordNotFound
+		}
+
 		return nil, err
 	}
 
 	return streamingUsers, nil
 }
 
-func (r *postgresUserRepo) Create(newUser *domains.User) error {
+func (r *postgresUserRepo) Create(newUser domains.User) (*domains.User, error) {
 	params := pgx.NamedArgs{
 		"username":    newUser.Username,
 		"email":       newUser.Email,
 		"is_verified": newUser.IsVerified,
 	}
 
-	_, err := r.dbConn.Exec(context.Background(), "insert into users (username, email, is_verified) values (@username, @email, @is_verified)", params)
+	rows, err := r.dbConn.Query(context.Background(), "insert into users (username, email, is_verified) values (@username, @email, @is_verified) returning *", params)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-	return err
+	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrRecordNotFound
+		}
+
+		return nil, err
+	}
+
+	return &user, err
 }
 
-func (r *postgresUserRepo) Update(user *domains.User) error {
-	_, err := r.dbConn.Exec(context.Background(), "UPDATE users SET username = $1, is_verified = $2 WHERE id = $3", user.Username, user.IsVerified, user.ID)
-	return err
+func (r *postgresUserRepo) Update(user domains.User) (*domains.User, error) {
+	rows, err := r.dbConn.Query(context.Background(), "UPDATE users SET username = $1, is_verified = $2 WHERE id = $3 RETURNING *", user.Username, user.IsVerified, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	updatedUser, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrRecordNotFound
+		}
+
+		return nil, err
+	}
+
+	return &updatedUser, err
 }
 
 func (r *postgresUserRepo) Delete(userID uuid.UUID) error {
 	_, err := r.dbConn.Exec(context.Background(), "DELETE FROM users WHERE id = $1", userID.String())
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrRecordNotFound
+		}
+
+		return err // lol
+	}
+
 	return err
 }
-

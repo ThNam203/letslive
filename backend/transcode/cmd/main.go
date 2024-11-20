@@ -28,10 +28,10 @@ func main() {
 	}
 
 	// TODO: fix this, we need a webserver built into the transcode (not the pkg/webserver, use nginx instead)
-	serviceHealthCheckURL := fmt.Sprintf("http://%s:%d/v1/health", config.Service.Hostname, config.Webserver.Port)
-	logger.Infof("service health check url: %s", serviceHealthCheckURL)
+	serviceHostPort := fmt.Sprintf("%s:%d", config.Service.Hostname, config.Webserver.Port)
+	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/health", serviceHostPort)
 	instanceID := discovery.GenerateInstanceID(config.Service.Name)
-	registry.Register(ctx, config.Registry.Service.Address, serviceHealthCheckURL, config.Service.Name, instanceID, config.Registry.Service.Tags)
+	registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, config.Service.Name, instanceID, config.Registry.Service.Tags)
 
 	allowedSuffixes := [2]string{".ts", ".m3u8"}
 	MyWebServer := webserver.NewWebServer(config.Webserver.Port, allowedSuffixes[:], config.Transcode.PublicHLSPath)

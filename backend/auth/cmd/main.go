@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"net"
 
 	// TODO: add swagger
 	//_ "sen1or/lets-live/auth/docs"
@@ -24,14 +23,16 @@ func main() {
 	migrations.StartMigration(config.Database.ConnectionString)
 
 	// for consul service discovery
-	go StartDiscovery(ctx, config)
+	registry, err := discovery.NewConsulRegistry(config.Registry.RegistryService.Address)
+	if err != nil {
+		logger.Panicf("failed to start discovery mechanism: %s", err)
+	}
+	go RegisterToDiscoveryService(ctx, registry, config)
 
 	dbConn := ConnectDB(ctx, config)
 	defer dbConn.Close(ctx)
 
-	listenAddr := net.JoinHostPort(config.Service.APIBindAddress, string(config.Service.APIPort))
-
-	server := NewAPIServer(dbConn, listenAddr, *config)
+	server := NewAPIServer(dbConn, registry, *config)
 	go server.ListenAndServe(false)
 	select {}
 }
@@ -45,17 +46,13 @@ func ConnectDB(ctx context.Context, config *cfg.Config) *pgx.Conn {
 	return dbConn
 }
 
-func StartDiscovery(ctx context.Context, config *cfg.Config) {
-	registry, err := discovery.NewConsulRegistry(config.Registry.RegistryService.Address)
-	if err != nil {
-		logger.Panicf("failed to start discovery mechanism: %s", err)
-	}
-
+func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry, config *cfg.Config) {
 	serviceName := config.Service.Name
-	serviceHealthCheckURL := fmt.Sprintf("http://%s:%s/v1/health", config.Service.Hostname, config.Service.APIPort)
+	serviceHostPort := fmt.Sprintf("%s:%d", config.Service.Hostname, config.Service.APIPort)
+	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/health", serviceHostPort)
 	instanceID := discovery.GenerateInstanceID(serviceName)
 
-	if err := registry.Register(ctx, config.Registry.RegistryService.Address, serviceHealthCheckURL, serviceName, instanceID, config.Registry.RegistryService.Tags); err != nil {
+	if err := registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, serviceName, instanceID, config.Registry.RegistryService.Tags); err != nil {
 		logger.Panicf("failed to register server: %s", err)
 	}
 

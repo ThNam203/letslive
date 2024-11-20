@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,23 +11,16 @@ import (
 	"os"
 	"sen1or/lets-live/auth/controllers"
 	"sen1or/lets-live/auth/domains"
+	"sen1or/lets-live/auth/dto"
+	usergateway "sen1or/lets-live/auth/gateway/user/http"
+	"sen1or/lets-live/auth/utils"
+	userdto "sen1or/lets-live/user/dto"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid/v5"
 	"golang.org/x/crypto/bcrypt"
 )
-
-type logInForm struct {
-	Email    string `validate:"required,email" example:"hthnam203@gmail.com"`
-	Password string `validate:"required,gte=8,lte=72" example:"123123123"`
-}
-
-type signUpForm struct {
-	Username string `validate:"required,gte=6,lte=50" example:"sen1or"`
-	Email    string `validate:"required,email" example:"hthnam203@gmail.com"`
-	Password string `validate:"required,gte=8,lte=72" example:"123123123"`
-}
 
 type AuthHandlerConfig struct {
 	RefreshTokenExpiresDuration string
@@ -36,23 +30,28 @@ type AuthHandlerConfig struct {
 type AuthHandler struct {
 	ErrorHandler
 	refreshTokenCtrl *controllers.RefreshTokenController
-	userCtrl         *controllers.UserController
+	authCtrl         *controllers.AuthController
 	verifyTokenCtrl  *controllers.VerifyTokenController
+	gateway          *usergateway.UserGateway
 	authServerURL    string
 	config           AuthHandlerConfig
 }
 
-func NewAuthHandler(refreshTokenCtrl *controllers.RefreshTokenController,
-	userCtrl *controllers.UserController,
+func NewAuthHandler(
+	refreshTokenCtrl *controllers.RefreshTokenController,
+	authCtrl *controllers.AuthController,
 	verifyTokenCtrl *controllers.VerifyTokenController,
 	authServerURL string,
-	config AuthHandlerConfig) *AuthHandler {
+	config AuthHandlerConfig,
+	gateway *usergateway.UserGateway,
+) *AuthHandler {
 	return &AuthHandler{
-		userCtrl:         userCtrl,
+		authCtrl:         authCtrl,
 		verifyTokenCtrl:  verifyTokenCtrl,
 		refreshTokenCtrl: refreshTokenCtrl,
 		authServerURL:    authServerURL,
 		config:           config,
+		gateway:          gateway,
 	}
 }
 
@@ -69,7 +68,7 @@ func NewAuthHandler(refreshTokenCtrl *controllers.RefreshTokenController,
 // @Failure 401 {string} string "Username or password is not correct"
 // @Router /auth/login [post]
 func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
-	var userCredentials logInForm
+	var userCredentials dto.LogInRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, err)
 		return
@@ -82,7 +81,7 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.userCtrl.GetByEmail(userCredentials.Email)
+	user, err := h.authCtrl.GetByEmail(userCredentials.Email)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, err)
 		return
@@ -118,43 +117,54 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} HTTPErrorResponse
 // @Router /auth/signup [post]
 func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
-	var userForm signUpForm
-	json.NewDecoder(r.Body).Decode(&userForm)
+	var userForm dto.SignUpRequestDTO
+	if err := json.NewDecoder(r.Body).Decode(&userForm); err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
 
-	validate := validator.New(validator.WithRequiredStructEnabled())
-	err := validate.Struct(&userForm)
+	err := utils.Validator.Struct(&userForm)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, err)
 		return
 	}
 
-	uuid, err := uuid.NewGen().NewV4()
-	if err != nil {
-		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
-		return
-	}
-
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userForm.Password), bcrypt.DefaultCost)
-
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	user := &domains.User{
-		ID:           uuid,
+	dto := &userdto.CreateUserRequestDTO{
+		Username: userForm.Username,
+		Email:    userForm.Email,
+	}
+
+	createdUser, err := h.gateway.CreateNewUser(context.Background(), *dto)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	user := &domains.Auth{
+		UserID:       createdUser.ID,
 		Email:        userForm.Email,
 		PasswordHash: string(hashedPassword),
+		IsVerified:   false,
 	}
 
-	if err := h.userCtrl.Create(user); err != nil {
+	createdAuth, err := h.authCtrl.Create(*user)
+	if err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	go h.sendConfirmEmail(user.ID, user.Email, h.authServerURL)
 
-	http.Redirect(w, r, "/", http.StatusOK)
+	//http.Redirect(w, r, "/", http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(createdAuth)
 }
 
 // verifyEmailHandler verifies a user's email address.
@@ -176,7 +186,7 @@ func (h *AuthHandler) VerifyEmailHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, err := h.userCtrl.GetByID(verifyToken.UserID)
+	user, err := h.authCtrl.GetByID(verifyToken.UserID)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
@@ -191,12 +201,13 @@ func (h *AuthHandler) VerifyEmailHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	updateVerifiedUser := &domains.User{
+	updateVerifiedAuth := &domains.Auth{
 		ID:         user.ID,
 		IsVerified: true,
 	}
 
-	if err := h.userCtrl.Update(updateVerifiedUser); err != nil {
+	_, err = h.authCtrl.UpdateUserVerify(*updateVerifiedAuth)
+	if err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
@@ -271,3 +282,64 @@ func (h *AuthHandler) setTokens(w http.ResponseWriter, refreshToken string, acce
 		SameSite: http.SameSiteDefaultMode,
 	})
 }
+
+func (h *AuthHandler) GetAuthByUserIDHandler(w http.ResponseWriter, r *http.Request) {
+	userId := r.PathValue("id")
+	if len(userId) == 0 {
+		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing user id"))
+		return
+	}
+
+	userUUID, err := uuid.FromString(userId)
+
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("userId not valid"))
+	}
+	user, err := h.authCtrl.GetByID(userUUID)
+
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(user)
+}
+
+// TODO: change to update password route
+//func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
+//	userID := r.PathValue("id")
+//	if len(userID) == 0 {
+//		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing user id"))
+//		return
+//	}
+//	userUUID, err := uuid.FromString(userID)
+//
+//	if err != nil {
+//		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("userId not valid"))
+//	}
+//	user, err := h.ctrl.GetByID(userUUID)
+//
+//	if err != nil {
+//		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+//		return
+//	}
+//
+//	var requestBody domains.Auth
+//	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+//		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error decoding request body: %s", err.Error()))
+//		return
+//	}
+//
+//	requestBody.ID = userUUID
+//
+//	if err := h.ctrl.Update(&requestBody); err != nil {
+//		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+//		return
+//	}
+//
+//	w.Header().Set("Content-Type", "application/json")
+//	w.WriteHeader(http.StatusOK)
+//	json.NewEncoder(w).Encode(user)
+//}
