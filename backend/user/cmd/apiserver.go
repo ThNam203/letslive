@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -21,10 +22,9 @@ import (
 )
 
 type APIServer struct {
-	logger    *zap.Logger
-	dbConn    *pgx.Conn // For raw sql queries
-	serverURL string
-	config    config.Config
+	logger *zap.Logger
+	dbConn *pgx.Conn // For raw sql queries
+	config config.Config
 
 	errorHandler  *handlers.ErrorHandler
 	healthHandler *handlers.HealthHandler
@@ -43,9 +43,9 @@ func NewAPIServer(dbConn *pgx.Conn, serverURL string, cfg config.Config) *APISer
 	var logger, _ = zap.NewProduction()
 
 	return &APIServer{
-		logger:    logger,
-		dbConn:    dbConn,
-		serverURL: serverURL,
+		logger: logger,
+		dbConn: dbConn,
+		config: cfg,
 
 		errorHandler:  handlers.NewErrorHandler(),
 		healthHandler: handlers.NewHeathHandler(),
@@ -58,7 +58,7 @@ func NewAPIServer(dbConn *pgx.Conn, serverURL string, cfg config.Config) *APISer
 
 func (a *APIServer) ListenAndServe(useTLS bool) {
 	server := &http.Server{
-		Addr:         a.serverURL,
+		Addr:         fmt.Sprintf("%s:%d", a.config.Service.APIBindAddress, a.config.Service.APIPort),
 		Handler:      a.getHandler(),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -83,7 +83,7 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 		}
 	}()
 
-	log.Printf("server running on addr: %s", a.serverURL)
+	log.Printf("server running on addr: %s", server.Addr)
 	<-quit
 
 	// Shutdown gracefully
@@ -116,7 +116,7 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 
 	sm.HandleFunc("GET /v1/swagger", httpSwagger.Handler(
-		httpSwagger.URL(a.serverURL+"/swagger/doc.json"),
+		httpSwagger.URL(fmt.Sprintf("http://%s:%d/swagger/doc.json", a.config.Service.Hostname, a.config.Service.APIPort)),
 		httpSwagger.DeepLinking(true),
 		httpSwagger.DocExpansion("none"),
 		httpSwagger.DomID("swagger-ui"),

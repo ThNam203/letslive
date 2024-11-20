@@ -27,8 +27,8 @@ func NewConsulRegistry(addr string) (Registry, error) {
 	}, nil
 }
 
-func (r *ConsulRegistry) Register(ctx context.Context, hostPort string, serviceHealthCheckURL string, serviceName string, instanceID string, tags []string) error {
-	host, portStr, err := net.SplitHostPort(hostPort)
+func (r *ConsulRegistry) Register(ctx context.Context, serviceHostPort string, serviceHealthCheckURL string, serviceName string, instanceID string, tags []string) error {
+	host, portStr, err := net.SplitHostPort(serviceHostPort)
 	if err != nil {
 		return err
 	}

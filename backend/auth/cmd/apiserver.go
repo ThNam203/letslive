@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"sen1or/lets-live/auth/config"
 	"sen1or/lets-live/auth/controllers"
+	usergateway "sen1or/lets-live/auth/gateway/user/http"
+	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 
 	// TODO: add swagger _ "sen1or/lets-live/auth/docs"
@@ -23,10 +26,9 @@ import (
 )
 
 type APIServer struct {
-	logger    *zap.Logger
-	dbConn    *pgx.Conn // For raw sql queries
-	serverURL string
-	config    config.Config
+	logger *zap.Logger
+	dbConn *pgx.Conn // For raw sql queries
+	config config.Config
 
 	authHandler   *handlers.AuthHandler
 	errorHandler  *handlers.ErrorHandler
@@ -37,12 +39,12 @@ type APIServer struct {
 }
 
 // TODO: make tls usable
-func NewAPIServer(dbConn *pgx.Conn, authServerURL string, cfg config.Config) *APIServer {
-	var userRepo = repositories.NewUserRepository(dbConn)
+func NewAPIServer(dbConn *pgx.Conn, registry discovery.Registry, cfg config.Config) *APIServer {
+	var userRepo = repositories.NewAuthRepository(dbConn)
 	var refreshTokenRepo = repositories.NewRefreshTokenRepository(dbConn)
 	var verifyTokenRepo = repositories.NewVerifyTokenRepo(dbConn)
 
-	var userCtrl = controllers.NewUserController(userRepo)
+	var authCtrl = controllers.NewAuthController(userRepo)
 	var refreshTokenCtrl = controllers.NewRefreshTokenController(refreshTokenRepo, controllers.RefreshTokenControllerConfig(cfg.Tokens))
 	var verifyTokenCtrl = controllers.NewVerifyTokenController(verifyTokenRepo)
 
@@ -50,14 +52,17 @@ func NewAPIServer(dbConn *pgx.Conn, authServerURL string, cfg config.Config) *AP
 		RefreshTokenExpiresDuration: cfg.Tokens.RefreshTokenExpiresDuration,
 		AccessTokenExpiresDuration:  cfg.Tokens.AccessTokenExpiresDuration,
 	}
-	var authHandler = handlers.NewAuthHandler(refreshTokenCtrl, userCtrl, verifyTokenCtrl, authServerURL, authConfig)
+
+	authServerURL := fmt.Sprintf("http://%s:%d", cfg.Service.Hostname, cfg.Service.APIPort)
+	userGateway := usergateway.NewUserGateway(registry)
+	var authHandler = handlers.NewAuthHandler(refreshTokenCtrl, authCtrl, verifyTokenCtrl, authServerURL, authConfig, userGateway)
 
 	var logger, _ = zap.NewProduction()
 
 	return &APIServer{
-		logger:    logger,
-		dbConn:    dbConn,
-		serverURL: authServerURL,
+		logger: logger,
+		dbConn: dbConn,
+		config: cfg,
 
 		authHandler:   authHandler,
 		errorHandler:  handlers.NewErrorHandler(),
@@ -70,7 +75,7 @@ func NewAPIServer(dbConn *pgx.Conn, authServerURL string, cfg config.Config) *AP
 
 func (a *APIServer) ListenAndServe(useTLS bool) {
 	server := &http.Server{
-		Addr:         a.serverURL,
+		Addr:         fmt.Sprintf("%s:%d", a.config.Service.APIBindAddress, a.config.Service.APIPort),
 		Handler:      a.getHandler(),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -95,7 +100,7 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 		}
 	}()
 
-	log.Printf("server running on addr: %s", a.serverURL)
+	log.Printf("server running on addr: %s", server.Addr)
 	<-quit
 
 	// Shutdown gracefully
@@ -131,7 +136,7 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 
 	sm.HandleFunc("GET /v1/swagger", httpSwagger.Handler(
-		httpSwagger.URL(a.serverURL+"/swagger/doc.json"),
+		httpSwagger.URL(fmt.Sprintf("localhost:%d/swagger/doc.json", a.config.Service.APIPort)),
 		httpSwagger.DeepLinking(true),
 		httpSwagger.DocExpansion("none"),
 		httpSwagger.DomID("swagger-ui"),

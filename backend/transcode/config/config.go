@@ -31,7 +31,7 @@ type Config struct {
 		Hostname        string `yaml:"hostname"`
 		APIPort         int    `yaml:"apiPort"`
 		RtmpBindAddress string `yaml:"rtmpBindAddress"`
-		Port            string `yaml:"port"`
+		Port            int    `yaml:"port"`
 	} `yaml:"service"`
 	Registry RegistryConfig
 	RTMP     struct {
