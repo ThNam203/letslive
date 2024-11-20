@@ -216,6 +216,7 @@ services:
       POSTGRES_DB: kong
     volumes:
       - postgres_letslive_kong_data:/var/lib/postgresql/data
+      - ./configs/kong_backup/kongdb_backup_20230816:/kongdb_backup
     networks:
       kong_network:
         ipv4_address: 192.168.1.11
