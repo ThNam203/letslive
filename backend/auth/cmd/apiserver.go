@@ -131,7 +131,7 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("POST /v1/auth/login", a.authHandler.LogInHandler)
 	sm.HandleFunc("GET /v1/auth/google", a.authHandler.OAuthGoogleLogin)
 	sm.HandleFunc("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBack)
-	sm.HandleFunc("GET /v1/auth/verify", a.authHandler.VerifyEmailHandler)
+	sm.HandleFunc("GET /v1/auth/email-verify", a.authHandler.VerifyEmailHandler)
 
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 
