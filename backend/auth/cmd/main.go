@@ -8,7 +8,7 @@ import (
 	//_ "sen1or/lets-live/auth/docs"
 
 	cfg "sen1or/lets-live/auth/config"
-	"sen1or/lets-live/auth/migrations"
+	"sen1or/lets-live/auth/utils"
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 
@@ -20,7 +20,7 @@ func main() {
 
 	logger.Init()
 	config := cfg.RetrieveConfig()
-	migrations.StartMigration(config.Database.ConnectionString)
+	utils.StartMigration(config.Database.ConnectionString)
 
 	// for consul service discovery
 	registry, err := discovery.NewConsulRegistry(config.Registry.RegistryService.Address)

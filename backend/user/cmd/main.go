@@ -8,7 +8,7 @@ import (
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 	cfg "sen1or/lets-live/user/config"
-	"sen1or/lets-live/user/migrations"
+	"sen1or/lets-live/user/utils"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -18,7 +18,7 @@ func main() {
 
 	logger.Init()
 	config := cfg.RetrieveConfig()
-	migrations.StartMigration(config.Database.ConnectionString)
+	utils.StartMigration(config.Database.ConnectionString)
 
 	// for consul service discovery
 	go StartDiscovery(ctx, config)
