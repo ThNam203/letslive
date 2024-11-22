@@ -1,4 +1,4 @@
-package migrations
+package utils
 
 import (
 	"database/sql"
@@ -20,7 +20,7 @@ func StartMigration(connectionString string) {
 		}
 	}()
 
-	if err := goose.Up(db, "./"); err != nil {
+	if err := goose.Up(db, "../migrations/"); err != nil {
 		panic(err)
 	}
 }
