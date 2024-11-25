@@ -39,6 +39,7 @@ type Config struct {
 		ServerKeyFile string `yaml:"server-key-file"`
 	} `yaml:"ssl"`
 	Database struct {
+		MigrationPath    string   `yaml:"migration-path"`
 		User             string   `yaml:"user"`
 		Password         string   `yaml:"password"`
 		Host             string   `yaml:"host"`

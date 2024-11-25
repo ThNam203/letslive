@@ -8,7 +8,7 @@ import (
 	"github.com/pressly/goose"
 )
 
-func StartMigration(connectionString string) {
+func StartMigration(connectionString string, migrationPath string) {
 	db, err := sql.Open("pgx", connectionString)
 	if err != nil {
 		panic(err)
@@ -20,7 +20,7 @@ func StartMigration(connectionString string) {
 		}
 	}()
 
-	if err := goose.Up(db, "./"); err != nil {
+	if err := goose.Up(db, migrationPath); err != nil {
 		panic(err)
 	}
 }

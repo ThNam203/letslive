@@ -5,4 +5,6 @@ backend/transcode/public
 backend/transcode/private
 backend/transcode/dockervolume
 
+tests/.venv
+
 k8s/secrets
