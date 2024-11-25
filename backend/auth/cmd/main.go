@@ -20,7 +20,7 @@ func main() {
 
 	logger.Init()
 	config := cfg.RetrieveConfig()
-	utils.StartMigration(config.Database.ConnectionString)
+	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
 
 	// for consul service discovery
 	registry, err := discovery.NewConsulRegistry(config.Registry.RegistryService.Address)

@@ -16,7 +16,6 @@ import (
 	// TODO: add swagger _ "sen1or/lets-live/auth/docs"
 	"sen1or/lets-live/auth/handlers"
 	"sen1or/lets-live/auth/middlewares"
-	_ "sen1or/lets-live/auth/migrations"
 	"sen1or/lets-live/auth/repositories"
 	"time"
 
