@@ -35,10 +35,8 @@ type Config struct {
 	} `yaml:"service"`
 	Registry RegistryConfig
 	Tokens   struct {
-		RefreshTokenExpiresDuration string `yaml:"refresh-token-expires-duration"`
-		AccessTokenExpiresDuration  string `yaml:"access-token-expires-duration"`
-		RefreshTokenMaxAge          int    `yaml:"refresh-token-max-age"`
-		AccessTokenMaxAge           int    `yaml:"access-token-max-age"`
+		RefreshTokenMaxAge int `yaml:"refresh-token-max-age"`
+		AccessTokenMaxAge  int `yaml:"access-token-max-age"`
 	} `yaml:"tokens"`
 	SSL struct {
 		ServerCrtFile string `yaml:"server-crt-file"`
