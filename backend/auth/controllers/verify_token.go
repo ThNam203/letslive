@@ -26,9 +26,9 @@ func (c *VerifyTokenController) Create(userID uuid.UUID) (*domains.VerifyToken, 
 		UserID:    userID,
 	}
 
-	result := c.repo.Create(newToken)
-	if result.Error != nil {
-		return nil, result
+	err := c.repo.Create(*newToken)
+	if err != nil {
+		return nil, err
 	}
 
 	return newToken, nil

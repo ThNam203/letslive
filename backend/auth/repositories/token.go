@@ -55,6 +55,7 @@ func (r *postgresRefreshTokenRepo) FindByValue(tokenValue string) (*domains.Refr
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	token, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.RefreshToken])
 
