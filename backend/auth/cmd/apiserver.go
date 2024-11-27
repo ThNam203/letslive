@@ -44,17 +44,12 @@ func NewAPIServer(dbConn *pgx.Conn, registry discovery.Registry, cfg config.Conf
 	var verifyTokenRepo = repositories.NewVerifyTokenRepo(dbConn)
 
 	var authCtrl = controllers.NewAuthController(userRepo)
-	var refreshTokenCtrl = controllers.NewRefreshTokenController(refreshTokenRepo, controllers.RefreshTokenControllerConfig(cfg.Tokens))
+	var tokenCtrl = controllers.NewTokenController(refreshTokenRepo, controllers.TokenControllerConfig(cfg.Tokens))
 	var verifyTokenCtrl = controllers.NewVerifyTokenController(verifyTokenRepo)
-
-	authConfig := handlers.AuthHandlerConfig{
-		RefreshTokenExpiresDuration: cfg.Tokens.RefreshTokenExpiresDuration,
-		AccessTokenExpiresDuration:  cfg.Tokens.AccessTokenExpiresDuration,
-	}
 
 	authServerURL := fmt.Sprintf("http://%s:%d", cfg.Service.Hostname, cfg.Service.APIPort)
 	userGateway := usergateway.NewUserGateway(registry)
-	var authHandler = handlers.NewAuthHandler(refreshTokenCtrl, authCtrl, verifyTokenCtrl, authServerURL, authConfig, userGateway)
+	var authHandler = handlers.NewAuthHandler(tokenCtrl, authCtrl, verifyTokenCtrl, authServerURL, userGateway)
 
 	var logger, _ = zap.NewProduction()
 
@@ -128,6 +123,8 @@ func (a *APIServer) getHandler() http.Handler {
 
 	sm.HandleFunc("POST /v1/auth/signup", a.authHandler.SignUpHandler)
 	sm.HandleFunc("POST /v1/auth/login", a.authHandler.LogInHandler)
+	sm.HandleFunc("GET /v1/auth/refresh-token", a.authHandler.RefreshTokenHandler)
+
 	sm.HandleFunc("GET /v1/auth/google", a.authHandler.OAuthGoogleLogin)
 	sm.HandleFunc("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBack)
 	sm.HandleFunc("GET /v1/auth/email-verify", a.authHandler.VerifyEmailHandler)

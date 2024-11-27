@@ -115,10 +115,10 @@ func (h *AuthHandler) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request
 		finalUserId = newOAuthUserRecord.ID
 	} else {
 		finalUserId = existedRecord.ID
-		h.refreshTokenCtrl.RevokeAllTokensOfUser(finalUserId)
+		h.tokenCtrl.RevokeAllTokensOfUser(finalUserId)
 	}
 
-	tokensInfo, err := h.refreshTokenCtrl.GenerateTokenPair(finalUserId)
+	tokensInfo, err := h.tokenCtrl.GenerateTokenPair(finalUserId.String())
 
 	if err != nil {
 		h.SetError(w, err)
@@ -126,7 +126,8 @@ func (h *AuthHandler) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	h.setTokens(w, tokensInfo.RefreshToken, tokensInfo.AccessToken, tokensInfo.RefreshTokenExpiresAt, tokensInfo.AccessTokenExpiresAt)
+	h.setAccessTokenCookie(w, tokensInfo.AccessToken, tokensInfo.AccessTokenMaxAge)
+	h.setRefreshTokenCookie(w, tokensInfo.RefreshToken, tokensInfo.RefreshTokenMaxAge)
 
 	http.Redirect(w, r, clientAddr, http.StatusTemporaryRedirect)
 }

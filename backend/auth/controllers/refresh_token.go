@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"sen1or/lets-live/auth/domains"
 	"sen1or/lets-live/auth/repositories"
@@ -10,88 +12,147 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type RefreshTokenControllerConfig struct {
-	RefreshTokenExpiresDuration string
-	AccessTokenExpiresDuration  string
-	RefreshTokenMaxAge          int
-	AccessTokenMaxAge           int
+type TokenControllerConfig struct {
+	RefreshTokenMaxAge int
+	AccessTokenMaxAge  int
 }
 
-type RefreshTokenController struct {
+type MyCustomClaims struct {
+	UserId string `json:"userId"`
+	jwt.RegisteredClaims
+}
+
+type TokenController struct {
 	repo   repositories.RefreshTokenRepository
-	config RefreshTokenControllerConfig
+	config TokenControllerConfig
 }
 
-func NewRefreshTokenController(repo repositories.RefreshTokenRepository, cfg RefreshTokenControllerConfig) *RefreshTokenController {
-	return &RefreshTokenController{
+func NewTokenController(repo repositories.RefreshTokenRepository, cfg TokenControllerConfig) *TokenController {
+	return &TokenController{
 		repo:   repo,
 		config: cfg,
 	}
 }
 
-func (c *RefreshTokenController) GenerateTokenPair(userId uuid.UUID) (
+// generate the refresh token with access token (for login and signup)
+func (c *TokenController) GenerateTokenPair(userId string) (
 	*struct {
-		RefreshToken          string
-		AccessToken           string
-		RefreshTokenExpiresAt time.Time
-		AccessTokenExpiresAt  time.Time
+		RefreshToken       string
+		RefreshTokenMaxAge int
+		AccessToken        string
+		AccessTokenMaxAge  int
 	}, error) {
-	refreshTokenExpiresDuration, err := time.ParseDuration(c.config.RefreshTokenExpiresDuration)
-	if err != nil {
-		return nil, err
-	}
-	accessTokenExpiresDuration, err := time.ParseDuration(c.config.AccessTokenExpiresDuration)
+
+	refreshToken, err := c.generateRefreshToken(userId)
 	if err != nil {
 		return nil, err
 	}
 
+	accessToken, err := c.generateAccessToken(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &struct {
+		RefreshToken       string
+		RefreshTokenMaxAge int
+		AccessToken        string
+		AccessTokenMaxAge  int
+	}{
+		RefreshToken:       refreshToken,
+		RefreshTokenMaxAge: c.config.RefreshTokenMaxAge,
+		AccessToken:        accessToken,
+		AccessTokenMaxAge:  c.config.AccessTokenMaxAge,
+	}, nil
+}
+
+// create a new access token for the refresh token
+// the process is called "refresh token"
+func (c *TokenController) RefreshToken(refreshToken string) (
+	*struct {
+		AccessToken       string
+		AccessTokenMaxAge int
+	}, error) {
+	myClaims := MyCustomClaims{}
+	parsedToken, err := jwt.NewParser().ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (interface{}, error) {
+		return os.Getenv("REFRESH_TOKEN_SECRET"), nil
+	})
+	if err != nil && !parsedToken.Valid {
+		return nil, errors.New("token parsing failed")
+	}
+
+	accessToken, err := c.generateAccessToken(myClaims.UserId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to refresh token: %s", err)
+	}
+
+	return &struct {
+		AccessToken       string
+		AccessTokenMaxAge int
+	}{
+		AccessToken:       accessToken,
+		AccessTokenMaxAge: c.config.AccessTokenMaxAge,
+	}, nil
+}
+
+func (c *TokenController) generateRefreshToken(userId string) (string, error) {
+	refreshTokenExpiresDuration := time.Duration(c.config.RefreshTokenMaxAge) * time.Second
 	refreshTokenExpiresAt := time.Now().Add(refreshTokenExpiresDuration)
-	accessTokenExpiresAt := time.Now().Add(accessTokenExpiresDuration)
-
-	unsignedRefreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId":    userId.String(),
-		"expiresAt": refreshTokenExpiresAt,
-	})
-
-	unsignedAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId":    userId.String(),
-		"expiresAt": accessTokenExpiresAt,
-	})
+	myClaims := MyCustomClaims{
+		userId,
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(refreshTokenExpiresAt),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Issuer:    "letslive",
+			Subject:   "auth",
+		},
+	}
+	unsignedRefreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, myClaims)
 
 	refreshToken, err := unsignedRefreshToken.SignedString([]byte(os.Getenv("REFRESH_TOKEN_SECRET")))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	accessToken, err := unsignedAccessToken.SignedString([]byte(os.Getenv("ACCESS_TOKEN_SECRET")))
-	if err != nil {
-		return nil, err
-	}
-
+	userIdUUID := uuid.FromStringOrNil(userId)
 	refreshTokenRecord := &domains.RefreshToken{
-		UserID:    userId,
+		UserID:    userIdUUID,
 		Value:     refreshToken,
 		ExpiresAt: refreshTokenExpiresAt,
 	}
 
 	if err := c.repo.Create(refreshTokenRecord); err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return &struct {
-		RefreshToken          string
-		AccessToken           string
-		RefreshTokenExpiresAt time.Time
-		AccessTokenExpiresAt  time.Time
-	}{
-		RefreshToken:          refreshToken,
-		AccessToken:           accessToken,
-		RefreshTokenExpiresAt: refreshTokenExpiresAt,
-		AccessTokenExpiresAt:  accessTokenExpiresAt,
-	}, nil
+	return refreshToken, nil
 }
 
-func (c *RefreshTokenController) RevokeTokenByValue(tokenValue string) error {
+func (c *TokenController) generateAccessToken(userId string) (string, error) {
+	accessTokenDuration := time.Duration(c.config.AccessTokenMaxAge) * time.Second
+	accessTokenExpiresAt := time.Now().Add(accessTokenDuration)
+	myClaims := MyCustomClaims{
+		userId,
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(accessTokenExpiresAt),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Issuer:    "letslive",
+			Subject:   "auth",
+		},
+	}
+	unsignedAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, myClaims)
+
+	accessToken, err := unsignedAccessToken.SignedString([]byte(os.Getenv("ACCESS_TOKEN_SECRET")))
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
+}
+
+func (c *TokenController) RevokeTokenByValue(tokenValue string) error {
 	token, err := c.repo.FindByValue(tokenValue)
 	if err != nil {
 		return err
@@ -104,6 +165,6 @@ func (c *RefreshTokenController) RevokeTokenByValue(tokenValue string) error {
 	return err
 }
 
-func (c *RefreshTokenController) RevokeAllTokensOfUser(userID uuid.UUID) error {
+func (c *TokenController) RevokeAllTokensOfUser(userID uuid.UUID) error {
 	return c.repo.RevokeAllTokensOfUser(userID)
 }

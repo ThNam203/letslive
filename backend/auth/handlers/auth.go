@@ -23,36 +23,28 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthHandlerConfig struct {
-	RefreshTokenExpiresDuration string
-	AccessTokenExpiresDuration  string
-}
-
 type AuthHandler struct {
 	ErrorHandler
-	refreshTokenCtrl *controllers.RefreshTokenController
-	authCtrl         *controllers.AuthController
-	verifyTokenCtrl  *controllers.VerifyTokenController
-	gateway          *usergateway.UserGateway
-	authServerURL    string
-	config           AuthHandlerConfig
+	tokenCtrl       *controllers.TokenController
+	authCtrl        *controllers.AuthController
+	verifyTokenCtrl *controllers.VerifyTokenController
+	gateway         *usergateway.UserGateway
+	authServerURL   string
 }
 
 func NewAuthHandler(
-	refreshTokenCtrl *controllers.RefreshTokenController,
+	tokenCtrl *controllers.TokenController,
 	authCtrl *controllers.AuthController,
 	verifyTokenCtrl *controllers.VerifyTokenController,
 	authServerURL string,
-	config AuthHandlerConfig,
 	gateway *usergateway.UserGateway,
 ) *AuthHandler {
 	return &AuthHandler{
-		authCtrl:         authCtrl,
-		verifyTokenCtrl:  verifyTokenCtrl,
-		refreshTokenCtrl: refreshTokenCtrl,
-		authServerURL:    authServerURL,
-		config:           config,
-		gateway:          gateway,
+		authCtrl:        authCtrl,
+		verifyTokenCtrl: verifyTokenCtrl,
+		tokenCtrl:       tokenCtrl,
+		authServerURL:   authServerURL,
+		gateway:         gateway,
 	}
 }
 
@@ -82,21 +74,47 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.authCtrl.GetByEmail(userCredentials.Email)
+	auth, err := h.authCtrl.GetByEmail(userCredentials.Email)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(userCredentials.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(auth.PasswordHash), []byte(userCredentials.Password)); err != nil {
 		h.WriteErrorResponse(w, http.StatusUnauthorized, errors.New("username or password is not correct!"))
 		return
 	}
 
-	if err := h.setAuthJWTsInCookie(user.ID, w); err != nil {
+	if err := h.setAuthJWTsInCookie(auth.UserID.String(), w); err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+	refreshTokenCookie, err := r.Cookie("REFRESH_TOKEN")
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing refresh token"))
+		return
+	}
+
+	accessTokenInfo, err := h.tokenCtrl.RefreshToken(refreshTokenCookie.Value)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("can't refresh token: %s", err.Error()))
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:  "accessToken",
+		Value: accessTokenInfo.AccessToken,
+
+		MaxAge:   accessTokenInfo.AccessTokenMaxAge,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteDefaultMode,
+	})
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -161,7 +179,7 @@ func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 
 	h.sendConfirmEmail(auth.UserID, auth.Email, h.authServerURL)
 
-	if err := h.setAuthJWTsInCookie(auth.UserID, w); err != nil {
+	if err := h.setAuthJWTsInCookie(auth.UserID.String(), w); err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
@@ -171,13 +189,15 @@ func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(createdAuthDTO)
 }
 
-func (h *AuthHandler) setAuthJWTsInCookie(userId uuid.UUID, w http.ResponseWriter) error {
-	tokensInfo, err := h.refreshTokenCtrl.GenerateTokenPair(userId)
+func (h *AuthHandler) setAuthJWTsInCookie(userId string, w http.ResponseWriter) error {
+	tokensInfo, err := h.tokenCtrl.GenerateTokenPair(userId)
 	if err != nil {
 		return err
 	}
 
-	h.setTokens(w, tokensInfo.RefreshToken, tokensInfo.AccessToken, tokensInfo.RefreshTokenExpiresAt, tokensInfo.AccessTokenExpiresAt)
+	h.setAccessTokenCookie(w, tokensInfo.AccessToken, tokensInfo.AccessTokenMaxAge)
+	h.setRefreshTokenCookie(w, tokensInfo.RefreshToken, tokensInfo.RefreshTokenMaxAge)
+
 	return nil
 }
 
@@ -270,33 +290,6 @@ func (h *AuthHandler) sendConfirmEmail(userId uuid.UUID, userEmail string, authS
 	}
 }
 
-func (h *AuthHandler) setTokens(w http.ResponseWriter, refreshToken string, accessToken string, refreshTokenExpiresAt time.Time, accessTokenExpiresAt time.Time) {
-	refreshTokenMaxAge, _ := time.ParseDuration(h.config.RefreshTokenExpiresDuration)
-	accessTokenMaxAge, _ := time.ParseDuration(h.config.AccessTokenExpiresDuration)
-
-	http.SetCookie(w, &http.Cookie{
-		Name:  "refreshToken",
-		Value: refreshToken,
-
-		Expires:  refreshTokenExpiresAt,
-		MaxAge:   int(refreshTokenMaxAge.Seconds()),
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteDefaultMode,
-	})
-
-	http.SetCookie(w, &http.Cookie{
-		Name:  "accessToken",
-		Value: accessToken,
-
-		Expires:  accessTokenExpiresAt,
-		MaxAge:   int(accessTokenMaxAge.Seconds()),
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteDefaultMode,
-	})
-}
-
 func (h *AuthHandler) GetAuthByUserIDHandler(w http.ResponseWriter, r *http.Request) {
 	userId := r.PathValue("id")
 	if len(userId) == 0 {
@@ -307,7 +300,7 @@ func (h *AuthHandler) GetAuthByUserIDHandler(w http.ResponseWriter, r *http.Requ
 	userUUID, err := uuid.FromString(userId)
 
 	if err != nil {
-		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("userId not valid"))
+		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("user id not valid"))
 	}
 	user, err := h.authCtrl.GetByID(userUUID)
 
@@ -321,39 +314,27 @@ func (h *AuthHandler) GetAuthByUserIDHandler(w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(user)
 }
 
-// TODO: change to update password route
-//func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
-//	userID := r.PathValue("id")
-//	if len(userID) == 0 {
-//		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing user id"))
-//		return
-//	}
-//	userUUID, err := uuid.FromString(userID)
-//
-//	if err != nil {
-//		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("userId not valid"))
-//	}
-//	user, err := h.ctrl.GetByID(userUUID)
-//
-//	if err != nil {
-//		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
-//		return
-//	}
-//
-//	var requestBody domains.Auth
-//	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-//		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error decoding request body: %s", err.Error()))
-//		return
-//	}
-//
-//	requestBody.ID = userUUID
-//
-//	if err := h.ctrl.Update(&requestBody); err != nil {
-//		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
-//		return
-//	}
-//
-//	w.Header().Set("Content-Type", "application/json")
-//	w.WriteHeader(http.StatusOK)
-//	json.NewEncoder(w).Encode(user)
-//}
+func (h *AuthHandler) setRefreshTokenCookie(w http.ResponseWriter, refreshToken string, maxAge int) {
+	http.SetCookie(w, &http.Cookie{
+		Name:  "refreshToken",
+		Value: refreshToken,
+
+		MaxAge:   maxAge,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteDefaultMode,
+	})
+}
+
+func (h *AuthHandler) setAccessTokenCookie(w http.ResponseWriter, accessToken string, maxAge int) {
+	http.SetCookie(w, &http.Cookie{
+		Name:  "accessToken",
+		Value: accessToken,
+
+		MaxAge:   maxAge,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteDefaultMode,
+	})
+
+}
