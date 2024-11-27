@@ -14,6 +14,7 @@ import (
 	"sen1or/lets-live/auth/dto"
 	usergateway "sen1or/lets-live/auth/gateway/user/http"
 	"sen1or/lets-live/auth/utils"
+	"sen1or/lets-live/pkg/logger"
 	userdto "sen1or/lets-live/user/dto"
 	"time"
 
@@ -158,7 +159,7 @@ func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go h.sendConfirmEmail(auth.UserID, auth.Email, h.authServerURL)
+	h.sendConfirmEmail(auth.UserID, auth.Email, h.authServerURL)
 
 	if err := h.setAuthJWTsInCookie(auth.UserID, w); err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
@@ -233,7 +234,7 @@ func (h *AuthHandler) VerifyEmailHandler(w http.ResponseWriter, r *http.Request)
 func (h *AuthHandler) sendConfirmEmail(userId uuid.UUID, userEmail string, authServerURL string) {
 	verifyToken, err := h.verifyTokenCtrl.Create(userId)
 	if err != nil {
-		log.Printf("error while trying to create verify token: %s", err.Error())
+		logger.Errorf("error while trying to create verify token: %s", err.Error())
 		return
 	}
 

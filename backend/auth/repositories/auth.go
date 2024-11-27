@@ -35,6 +35,7 @@ func (r *postgresAuthRepo) GetByID(authID uuid.UUID) (*domains.Auth, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Auth])
 	if err != nil {
@@ -52,6 +53,7 @@ func (r *postgresAuthRepo) GetByUserID(userID uuid.UUID) (*domains.Auth, error) 
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Auth])
 	if err != nil {
@@ -88,6 +90,11 @@ func (r *postgresAuthRepo) Create(newAuth domains.Auth) (*domains.Auth, error) {
 	}
 
 	rows, err := r.dbConn.Query(context.Background(), "insert into auths (email, password_hash, is_verified, user_id) values (@email, @password_hash, @is_verified, @user_id) RETURNING *", params)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Auth])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -101,6 +108,10 @@ func (r *postgresAuthRepo) Create(newAuth domains.Auth) (*domains.Auth, error) {
 
 func (r *postgresAuthRepo) UpdatePasswordHash(user domains.Auth) (*domains.Auth, error) {
 	rows, err := r.dbConn.Query(context.Background(), "UPDATE auths SET password_hash = $1 WHERE id = $3 RETURNING *", user.PasswordHash, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
 	updatedAuth, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Auth])
 	if err != nil {
@@ -116,6 +127,10 @@ func (r *postgresAuthRepo) UpdatePasswordHash(user domains.Auth) (*domains.Auth,
 
 func (r *postgresAuthRepo) UpdateVerify(user domains.Auth) (*domains.Auth, error) {
 	rows, err := r.dbConn.Query(context.Background(), "UPDATE auths SET is_verified = $2 WHERE id = $3 RETURNING *", user.IsVerified, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
 	updatedAuth, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Auth])
 	if err != nil {
