@@ -26,8 +26,7 @@ func (g *UserGateway) CreateNewUser(ctx context.Context, userRequestDTO dto.Crea
 		return nil, err
 	}
 
-	// /v1/{id}
-	url := fmt.Sprintf("http://%s/v1/user/%s", addr)
+	url := fmt.Sprintf("http://%s/v1/user", addr)
 	payloadBuf := new(bytes.Buffer)
 	if err := json.NewEncoder(payloadBuf).Encode(&userRequestDTO); err != nil {
 		return nil, fmt.Errorf("failed to encode user dto body: %s", err)
@@ -40,11 +39,12 @@ func (g *UserGateway) CreateNewUser(ctx context.Context, userRequestDTO dto.Crea
 
 	resq, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to call request: %s", err)
 	}
+	defer resq.Body.Close()
 
 	if resq.StatusCode/100 != 2 {
-		return nil, fmt.Errorf("failed to request for creating user: %s", err)
+		return nil, fmt.Errorf("failed calling request for creating user: error code %d", resq.StatusCode)
 	}
 
 	var createdUser dto.CreateUserResponseDTO

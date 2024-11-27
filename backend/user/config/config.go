@@ -64,8 +64,6 @@ func RetrieveConfig() *Config {
 	}
 	config.Registry = *registryConfig
 
-	logger.Infow("config retrieved successfully", config)
-
 	return config
 }
 

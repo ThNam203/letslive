@@ -84,9 +84,10 @@ func (r *postgresAuthRepo) Create(newAuth domains.Auth) (*domains.Auth, error) {
 		"email":         newAuth.Email,
 		"password_hash": newAuth.PasswordHash,
 		"is_verified":   newAuth.IsVerified,
+		"user_id":       newAuth.UserID,
 	}
 
-	rows, err := r.dbConn.Query(context.Background(), "insert into auths (email, password_hash, is_verified) values (@email, @password_hash, @is_verified) RETURNING *", params)
+	rows, err := r.dbConn.Query(context.Background(), "insert into auths (email, password_hash, is_verified, user_id) values (@email, @password_hash, @is_verified, @user_id) RETURNING *", params)
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Auth])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

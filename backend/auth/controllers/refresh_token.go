@@ -59,16 +59,19 @@ func (c *RefreshTokenController) GenerateTokenPair(userId uuid.UUID) (
 	})
 
 	refreshToken, err := unsignedRefreshToken.SignedString([]byte(os.Getenv("REFRESH_TOKEN_SECRET")))
-	accessToken, err := unsignedAccessToken.SignedString([]byte(os.Getenv("ACCESS_TOKEN_SECRET")))
-
 	if err != nil {
 		return nil, err
 	}
 
-	refreshTokenRecord, err := c.createRefreshTokenObject(refreshToken, refreshTokenExpiresAt, userId)
-
+	accessToken, err := unsignedAccessToken.SignedString([]byte(os.Getenv("ACCESS_TOKEN_SECRET")))
 	if err != nil {
 		return nil, err
+	}
+
+	refreshTokenRecord := &domains.RefreshToken{
+		UserID:    userId,
+		Value:     refreshToken,
+		ExpiresAt: refreshTokenExpiresAt,
 	}
 
 	if err := c.repo.Create(refreshTokenRecord); err != nil {
@@ -86,22 +89,6 @@ func (c *RefreshTokenController) GenerateTokenPair(userId uuid.UUID) (
 		RefreshTokenExpiresAt: refreshTokenExpiresAt,
 		AccessTokenExpiresAt:  accessTokenExpiresAt,
 	}, nil
-}
-
-func (c *RefreshTokenController) createRefreshTokenObject(signedRefreshToken string, expiresAt time.Time, userId uuid.UUID) (*domains.RefreshToken, error) {
-	uuid, err := uuid.NewV4()
-	if err != nil {
-		return nil, err
-	}
-
-	refreshToken := &domains.RefreshToken{
-		ID:        uuid,
-		UserID:    userId,
-		Value:     signedRefreshToken,
-		ExpiresAt: expiresAt,
-	}
-
-	return refreshToken, nil
 }
 
 func (c *RefreshTokenController) RevokeTokenByValue(tokenValue string) error {

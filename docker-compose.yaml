@@ -30,6 +30,8 @@ services:
       - postgres_letslive_auth_data:/var/lib/postgresql/data
     networks:
       general_network:
+    ports:
+      - "9990:5432"
     expose:
       - "5432"
     healthcheck:
@@ -69,6 +71,8 @@ services:
       - postgres_letslive_user_data:/var/lib/postgresql/data
     networks:
       general_network:
+    ports:
+      - "9991:5432"
     expose:
       - "5432"
     healthcheck:
@@ -139,7 +143,7 @@ services:
     expose:
       - "8500"
       - "8600"
-    command: agent -dev -client=0.0.0.0 -enable-script-checks -bootstrap-expect=1 -config-dir=/consul/config
+    command: agent -dev -client=0.0.0.0 -log-level=error -enable-script-checks -bootstrap-expect=1 -config-dir=/consul/config
     volumes:
       - ./configs/consul.json:/consul/config/consul.json
     networks:
@@ -225,7 +229,7 @@ services:
       consul:
         condition: service_healthy
     ports:
-      - "5555:5432"
+      - "9989:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U kong"]
       interval: 5s

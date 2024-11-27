@@ -16,9 +16,11 @@ spring:
 
 logging:
   level:
+    root: WARN
     org:
       springframework:
         cloud: DEBUG
+        web: DEBUG
 
 management:
   endpoints:
