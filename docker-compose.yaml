@@ -6,8 +6,9 @@ services:
     container_name: letslive_auth
     ports:
       - "7777:7777"
+    expose:
+      - "7777"
     networks:
-      auth_network:
       general_network:
     depends_on:
       letslive_auth_db:
@@ -28,7 +29,7 @@ services:
     volumes:
       - postgres_letslive_auth_data:/var/lib/postgresql/data
     networks:
-      auth_network:
+      general_network:
     expose:
       - "5432"
     healthcheck:
@@ -44,8 +45,9 @@ services:
     container_name: letslive_user
     ports:
       - "7778:7778"
+    expose:
+      - "7778"
     networks:
-      user_network:
       general_network:
     depends_on:
       letslive_user_db:
@@ -66,7 +68,7 @@ services:
     volumes:
       - postgres_letslive_user_data:/var/lib/postgresql/data
     networks:
-      user_network:
+      general_network:
     expose:
       - "5432"
     healthcheck:
@@ -83,8 +85,10 @@ services:
     ports:
       - "1935:1935"
       - "7779:7779" # expose the webserver
+    expose:
+      - "1935"
+      - "7779"
     networks:
-      user_network:
       general_network:
     depends_on:
       letslive_user_db:
@@ -139,8 +143,6 @@ services:
     volumes:
       - ./configs/consul.json:/consul/config/consul.json
     networks:
-      auth_network:
-      user_network:
       kong_network:
         ipv4_address: 192.168.1.10
       general_network:
@@ -176,8 +178,7 @@ services:
     restart: always
     environment:
       KONG_DATABASE: postgres
-      #KONG_PG_HOST: kong_db.service.consul # the dns resolver change the kong default dns to consul -> kong can't find the db host so we use .service.consul
-      KONG_PG_HOST: 192.168.1.11
+      KONG_PG_HOST: letslive_kong_db
       KONG_PG_USER: kong
       KONG_PG_PASSWORD: kongpass
       KONG_DNS_RESOLVER: "192.168.1.10:8600,127.0.0.11"
@@ -219,7 +220,6 @@ services:
       - ./configs/kong_backup/kongdb_backup_20230816:/kongdb_backup
     networks:
       kong_network:
-        ipv4_address: 192.168.1.11
       general_network:
     depends_on:
       consul:
