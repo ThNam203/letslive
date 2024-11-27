@@ -111,6 +111,7 @@ func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
 	sm.HandleFunc("GET /v1/user/{id}", a.userHandler.GetUserByID)
+	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUser)
 	sm.HandleFunc("POST /v1/user/{id}", a.userHandler.UpdateUser)
 
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)

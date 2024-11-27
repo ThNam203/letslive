@@ -92,15 +92,12 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokensInfo, err := h.refreshTokenCtrl.GenerateTokenPair(user.ID)
-	if err != nil {
+	if err := h.setAuthJWTsInCookie(user.ID, w); err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	h.setTokens(w, tokensInfo.RefreshToken, tokensInfo.AccessToken, tokensInfo.RefreshTokenExpiresAt, tokensInfo.AccessTokenExpiresAt)
-
-	http.Redirect(w, r, "/", http.StatusOK)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // SignUpHandler handles user registration.
@@ -146,25 +143,41 @@ func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := &domains.Auth{
+	auth := &domains.Auth{
 		UserID:       createdUser.ID,
 		Email:        userForm.Email,
 		PasswordHash: string(hashedPassword),
 		IsVerified:   false,
 	}
 
-	createdAuth, err := h.authCtrl.Create(*user)
+	createdAuthDTO, err := h.authCtrl.Create(*auth)
+	createdAuthDTO.Username = createdUser.Username
+
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	go h.sendConfirmEmail(user.ID, user.Email, h.authServerURL)
+	go h.sendConfirmEmail(auth.UserID, auth.Email, h.authServerURL)
 
-	//http.Redirect(w, r, "/", http.StatusCreated)
+	if err := h.setAuthJWTsInCookie(auth.UserID, w); err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(createdAuth)
+	json.NewEncoder(w).Encode(createdAuthDTO)
+}
+
+func (h *AuthHandler) setAuthJWTsInCookie(userId uuid.UUID, w http.ResponseWriter) error {
+	tokensInfo, err := h.refreshTokenCtrl.GenerateTokenPair(userId)
+	if err != nil {
+		return err
+	}
+
+	h.setTokens(w, tokensInfo.RefreshToken, tokensInfo.AccessToken, tokensInfo.RefreshTokenExpiresAt, tokensInfo.AccessTokenExpiresAt)
+	return nil
 }
 
 // verifyEmailHandler verifies a user's email address.

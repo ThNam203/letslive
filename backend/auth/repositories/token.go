@@ -40,13 +40,12 @@ func (r *postgresRefreshTokenRepo) RevokeAllTokensOfUser(userID uuid.UUID) error
 }
 func (r *postgresRefreshTokenRepo) Create(tokenRecord *domains.RefreshToken) error {
 	params := pgx.NamedArgs{
-		"id":         tokenRecord.ID,
 		"value":      tokenRecord.Value,
 		"expires_at": tokenRecord.ExpiresAt,
 		"user_id":    tokenRecord.UserID,
 	}
 
-	_, err := r.dbConn.Exec(context.Background(), "insert into users (id, value, expires_at, user_id) values (@id, @value, @expires_at, @user_id)", params)
+	_, err := r.dbConn.Exec(context.Background(), "insert into refresh_tokens (value, expires_at, user_id) values (@value, @expires_at, @user_id)", params)
 
 	return err
 }
