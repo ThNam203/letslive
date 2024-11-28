@@ -6,6 +6,7 @@ import (
 	"os"
 	"sen1or/lets-live/pkg/logger"
 	cfg "sen1or/lets-live/transcode/config"
+	usergateway "sen1or/lets-live/transcode/gateway/user/http"
 	"sen1or/lets-live/transcode/rtmp"
 	"sen1or/lets-live/transcode/webserver"
 
@@ -43,7 +44,9 @@ func main() {
 	//monitor := watcher.NewStreamWatcher(config.Transcode.PrivateHLSPath, ipfsStorage, *config)
 	//go monitor.MonitorHLSStreamContent()
 
-	rtmpServer := rtmp.NewRTMPServer(rtmp.RTMPServerConfig{Port: config.RTMP.Port, Registry: registry, Config: *config})
+	userGateway := usergateway.NewUserGateway(registry)
+
+	rtmpServer := rtmp.NewRTMPServer(rtmp.RTMPServerConfig{Port: config.RTMP.Port, Registry: &registry, Config: *config}, userGateway)
 	go rtmpServer.Start()
 	select {}
 }

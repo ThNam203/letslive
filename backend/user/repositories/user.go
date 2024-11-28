@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type UserRepository interface {
@@ -23,10 +24,10 @@ type UserRepository interface {
 }
 
 type postgresUserRepo struct {
-	dbConn *pgx.Conn
+	dbConn *pgxpool.Pool
 }
 
-func NewUserRepository(conn *pgx.Conn) UserRepository {
+func NewUserRepository(conn *pgxpool.Pool) UserRepository {
 	return &postgresUserRepo{
 		dbConn: conn,
 	}
@@ -143,12 +144,11 @@ func (r *postgresUserRepo) GetStreamingUsers() ([]domains.User, error) {
 
 func (r *postgresUserRepo) Create(newUser domains.User) (*domains.User, error) {
 	params := pgx.NamedArgs{
-		"username":    newUser.Username,
-		"email":       newUser.Email,
-		"is_verified": newUser.IsVerified,
+		"username": newUser.Username,
+		"email":    newUser.Email,
 	}
 
-	rows, err := r.dbConn.Query(context.Background(), "insert into users (username, email, is_verified) values (@username, @email, @is_verified) returning *", params)
+	rows, err := r.dbConn.Query(context.Background(), "insert into users (username, email) values (@username, @email) returning *", params)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (r *postgresUserRepo) Create(newUser domains.User) (*domains.User, error) {
 }
 
 func (r *postgresUserRepo) Update(user domains.User) (*domains.User, error) {
-	rows, err := r.dbConn.Query(context.Background(), "UPDATE users SET username = $1, is_verified = $2 WHERE id = $3 RETURNING *", user.Username, user.IsVerified, user.ID)
+	rows, err := r.dbConn.Query(context.Background(), "UPDATE users SET username = $1, is_online = $2  WHERE id = $3 RETURNING *", user.Username, user.IsOnline, user.ID)
 	if err != nil {
 		return nil, err
 	}

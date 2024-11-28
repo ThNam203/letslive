@@ -2,19 +2,19 @@ package rtmp
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net"
-	"net/http"
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/transcode/config"
+	usergateway "sen1or/lets-live/transcode/gateway/user/http"
 	"sen1or/lets-live/transcode/transcoder"
+	"sen1or/lets-live/user/dto"
 	"strconv"
 	"strings"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/nareix/joy5/format/flv"
 	"github.com/nareix/joy5/format/flv/flvio"
 	"github.com/nareix/joy5/format/rtmp"
@@ -22,21 +22,23 @@ import (
 
 type RTMPServerConfig struct {
 	Port     int
-	Registry discovery.Registry
+	Registry *discovery.Registry
 	Config   config.Config
 }
 
 type RTMPServer struct {
-	Port     int
-	Registry discovery.Registry
-	config   config.Config
+	Port        int
+	Registry    *discovery.Registry
+	userGateway *usergateway.UserGateway
+	config      config.Config
 }
 
-func NewRTMPServer(config RTMPServerConfig) *RTMPServer {
+func NewRTMPServer(config RTMPServerConfig, userGateway *usergateway.UserGateway) *RTMPServer {
 	return &RTMPServer{
-		Port:     config.Port,
-		Registry: config.Registry,
-		config:   config.Config,
+		Port:        config.Port,
+		Registry:    config.Registry,
+		config:      config.Config,
+		userGateway: userGateway,
 	}
 }
 
@@ -75,32 +77,29 @@ func (s *RTMPServer) Start() {
 	}
 }
 
-// TODO: make a controller for user service
 // TODO: check if on disconnect do we need to manually close nc
 func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	c.LogTagEvent = func(isRead bool, t flvio.Tag) {
 		if t.Type == flvio.TAG_AMF0 {
-			logger.Debugw("RTMP log tag", t.DebugFields())
+			logger.Infof("RTMP log tag", t.DebugFields())
 		}
 	}
 
 	streamingKeyComponents := strings.Split(c.URL.Path, "/")
 	streamingKey := streamingKeyComponents[len(streamingKeyComponents)-1]
 
-	streamInfo, err := s.onConnect(streamingKey)
+	userId, err := s.onConnect(streamingKey)
 	if err != nil {
-		logger.Errorw("request failed", "err", err)
+		logger.Errorf("stream connection failed: %s", err)
 		nc.Close()
 		return
 	}
-
-	logger.Infof("getting user info (id: %s)", streamInfo.UserID)
 
 	pipeOut, pipeIn := io.Pipe()
 
 	go func() {
 		transcoder := transcoder.NewTranscoder(pipeOut, s.config)
-		transcoder.Start(streamInfo.UserID)
+		transcoder.Start(userId)
 	}()
 
 	w := flv.NewMuxer(pipeIn)
@@ -120,65 +119,38 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	}
 }
 
-type response struct {
-	UserID string
+// check if stream api key exists
+// then update the user status to online
+// return the user id to be used as publishName
+func (s *RTMPServer) onConnect(streamingKey string) (string, error) {
+	userInfo, errRes := s.userGateway.GetUserInformation(context.Background(), streamingKey)
+	if errRes != nil {
+		return "", fmt.Errorf("failed to get user information: %s", errRes.Message)
+	}
+
+	updateUserDTO := &dto.UpdateUserRequestDTO{
+		ID:       userInfo.ID,
+		IsOnline: func(b bool) *bool { return &b }(true), // wtf
+	}
+
+	errRes = s.userGateway.UpdateUserLiveStatus(context.Background(), *updateUserDTO)
+	if errRes != nil {
+		return "", fmt.Errorf("failed to get service connection: %s", errRes.Message)
+	}
+
+	return userInfo.ID.String(), nil
 }
 
-func (s *RTMPServer) onConnect(streamingKey string) (info *response, err error) {
-	logger.Infow("a stream is connected", "stream api key", streamingKey)
-
-	userServerAddress, err := s.Registry.ServiceAddress(context.Background(), "user")
-	if err != nil {
-		logger.Errorf("failed to get service connection: %s", err)
-		return
+// change the status of user to be not online
+func (s *RTMPServer) onDisconnect(userId string) {
+	userIdUUID, _ := uuid.FromString(userId)
+	updateUserDTO := &dto.UpdateUserRequestDTO{
+		ID:       userIdUUID,
+		IsOnline: func(b bool) *bool { return &b }(true), // wtf
 	}
 
-	req, err := http.NewRequest(http.MethodPatch, fmt.Sprintf("%s/v1/streams/%s/online", userServerAddress, streamingKey), nil)
-	if err != nil {
-		return nil, err
+	errRes := s.userGateway.UpdateUserLiveStatus(context.Background(), *updateUserDTO)
+	if errRes != nil {
+		logger.Errorf("failed to get service connection: %s", errRes.Message)
 	}
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	} else if res.StatusCode/100 != 2 {
-		buf := new(strings.Builder)
-		errMsg, _ := io.Copy(buf, res.Body)
-		return nil, errors.New("request failed with status code" + string(res.StatusCode) + ", msg: " + string(errMsg))
-	}
-
-	defer res.Body.Close()
-	var streamInfo response
-	if err := json.NewDecoder(res.Body).Decode(&streamInfo); err != nil {
-		return nil, errors.New("failed to decode the response")
-	}
-
-	return &streamInfo, nil
-}
-
-func (s *RTMPServer) onDisconnect(streamingKey string) {
-	logger.Infof(fmt.Sprintf("a stream disconnected with stream key %s", streamingKey))
-
-	userServerAddress, err := s.Registry.ServiceAddress(context.Background(), "user")
-	if err != nil {
-		logger.Errorf("failed to get service connection: %s", err)
-		return
-	}
-
-	req, err := http.NewRequest(http.MethodPatch, fmt.Sprintf("%s/v1/streams/%s/offline", userServerAddress, streamingKey), nil)
-	if err != nil {
-		logger.Errorw("failed to make http request")
-		return
-	}
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		logger.Errorf("http client failed: ", err)
-	} else if res.StatusCode/100 != 2 {
-		buf := new(strings.Builder)
-		errMsg, _ := io.Copy(buf, res.Body)
-		logger.Errorf("request failed: %s", string(errMsg))
-	}
-
-	defer res.Body.Close()
 }

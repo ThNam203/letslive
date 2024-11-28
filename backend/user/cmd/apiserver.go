@@ -16,14 +16,14 @@ import (
 
 	"time"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
 )
 
 type APIServer struct {
 	logger *zap.Logger
-	dbConn *pgx.Conn // For raw sql queries
+	dbConn *pgxpool.Pool // For raw sql queries
 	config config.Config
 
 	errorHandler  *handlers.ErrorHandler
@@ -35,7 +35,7 @@ type APIServer struct {
 }
 
 // TODO: make tls usable
-func NewAPIServer(dbConn *pgx.Conn, serverURL string, cfg config.Config) *APIServer {
+func NewAPIServer(dbConn *pgxpool.Pool, serverURL string, cfg config.Config) *APIServer {
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var userCtrl = controllers.NewUserController(userRepo)
 	var userHandler = handlers.NewUserHandler(userCtrl)
@@ -111,10 +111,12 @@ func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
 	sm.HandleFunc("GET /v1/user/{id}", a.userHandler.GetUserByID)
+	sm.HandleFunc("GET /v1/user", a.userHandler.GetUserByQueries)
 	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUser)
-	sm.HandleFunc("POST /v1/user/{id}", a.userHandler.UpdateUser)
+	sm.HandleFunc("PUT /v1/user/{id}", a.userHandler.UpdateUser)
+	sm.HandleFunc("GET /v1/user/me", a.userHandler.GetCurrentUserInfo)
 
-	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
+	sm.HandleFunc("GET /v1/user/health", a.healthHandler.GetHealthyState)
 
 	sm.HandleFunc("GET /v1/swagger", httpSwagger.Handler(
 		httpSwagger.URL(fmt.Sprintf("http://%s:%d/swagger/doc.json", a.config.Service.Hostname, a.config.Service.APIPort)),

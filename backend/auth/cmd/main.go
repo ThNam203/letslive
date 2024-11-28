@@ -12,7 +12,7 @@ import (
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
@@ -30,15 +30,15 @@ func main() {
 	go RegisterToDiscoveryService(ctx, registry, config)
 
 	dbConn := ConnectDB(ctx, config)
-	defer dbConn.Close(ctx)
+	defer dbConn.Close()
 
 	server := NewAPIServer(dbConn, registry, *config)
 	go server.ListenAndServe(false)
 	select {}
 }
 
-func ConnectDB(ctx context.Context, config *cfg.Config) *pgx.Conn {
-	dbConn, err := pgx.Connect(ctx, config.Database.ConnectionString)
+func ConnectDB(ctx context.Context, config *cfg.Config) *pgxpool.Pool {
+	dbConn, err := pgxpool.New(ctx, config.Database.ConnectionString)
 	if err != nil {
 		logger.Panicf("unable to connect to database: %v\n", "err", err)
 	}
@@ -49,7 +49,7 @@ func ConnectDB(ctx context.Context, config *cfg.Config) *pgx.Conn {
 func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry, config *cfg.Config) {
 	serviceName := config.Service.Name
 	serviceHostPort := fmt.Sprintf("%s:%d", config.Service.Hostname, config.Service.APIPort)
-	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/health", serviceHostPort)
+	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/auth/health", serviceHostPort)
 	instanceID := discovery.GenerateInstanceID(serviceName)
 
 	if err := registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, serviceName, instanceID, config.Registry.RegistryService.Tags); err != nil {

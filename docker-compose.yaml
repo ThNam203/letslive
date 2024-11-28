@@ -88,10 +88,12 @@ services:
     container_name: letslive_transcode
     ports:
       - "1935:1935"
-      - "7779:7779" # expose the webserver
+      - "7779:7779" 
+      - "8889:8889" # expose the webserver
     expose:
       - "1935"
       - "7779"
+      - "8889"
     networks:
       general_network:
     depends_on:

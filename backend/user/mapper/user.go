@@ -34,13 +34,6 @@ func UserToGetUserResponseDTO(user domains.User) *dto.GetUserResponseDTO {
 	}
 }
 
-func UpdateUserRequestDTOToUser(dto dto.UpdateUserRequestDTO) *domains.User {
-	return &domains.User{
-		ID:       dto.ID,
-		Username: dto.Username,
-	}
-}
-
 func UserToUpdateUserResponseDTO(user domains.User) *dto.UpdateUserResponseDTO {
 	return &dto.UpdateUserResponseDTO{
 		ID:           user.ID,

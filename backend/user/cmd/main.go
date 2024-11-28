@@ -10,7 +10,7 @@ import (
 	cfg "sen1or/lets-live/user/config"
 	"sen1or/lets-live/user/utils"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
@@ -24,7 +24,7 @@ func main() {
 	go StartDiscovery(ctx, config)
 
 	dbConn := ConnectDB(ctx, config)
-	defer dbConn.Close(ctx)
+	defer dbConn.Close()
 
 	listenAddr := net.JoinHostPort(config.Service.APIBindAddress, string(config.Service.APIPort))
 
@@ -33,8 +33,8 @@ func main() {
 	select {}
 }
 
-func ConnectDB(ctx context.Context, config *cfg.Config) *pgx.Conn {
-	dbConn, err := pgx.Connect(ctx, config.Database.ConnectionString)
+func ConnectDB(ctx context.Context, config *cfg.Config) *pgxpool.Pool {
+	dbConn, err := pgxpool.New(ctx, config.Database.ConnectionString)
 	if err != nil {
 		logger.Panicf("unable to connect to database: %v\n", "err", err)
 	}
@@ -50,7 +50,7 @@ func StartDiscovery(ctx context.Context, config *cfg.Config) {
 
 	serviceName := config.Service.Name
 	serviceHostPort := fmt.Sprintf("%s:%d", config.Service.Hostname, config.Service.APIPort)
-	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/health", serviceHostPort)
+	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/user/health", serviceHostPort)
 	instanceID := discovery.GenerateInstanceID(serviceName)
 	if err := registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, serviceName, instanceID, config.Registry.RegistryService.Tags); err != nil {
 		logger.Panicf("failed to register server: %s", err)

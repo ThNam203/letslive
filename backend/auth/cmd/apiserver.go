@@ -19,14 +19,14 @@ import (
 	"sen1or/lets-live/auth/repositories"
 	"time"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
 )
 
 type APIServer struct {
 	logger *zap.Logger
-	dbConn *pgx.Conn // For raw sql queries
+	dbConn *pgxpool.Pool
 	config config.Config
 
 	authHandler   *handlers.AuthHandler
@@ -38,7 +38,7 @@ type APIServer struct {
 }
 
 // TODO: make tls usable
-func NewAPIServer(dbConn *pgx.Conn, registry discovery.Registry, cfg config.Config) *APIServer {
+func NewAPIServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg config.Config) *APIServer {
 	var userRepo = repositories.NewAuthRepository(dbConn)
 	var refreshTokenRepo = repositories.NewRefreshTokenRepository(dbConn)
 	var verifyTokenRepo = repositories.NewVerifyTokenRepo(dbConn)
@@ -123,13 +123,13 @@ func (a *APIServer) getHandler() http.Handler {
 
 	sm.HandleFunc("POST /v1/auth/signup", a.authHandler.SignUpHandler)
 	sm.HandleFunc("POST /v1/auth/login", a.authHandler.LogInHandler)
-	sm.HandleFunc("GET /v1/auth/refresh-token", a.authHandler.RefreshTokenHandler)
+	sm.HandleFunc("POST /v1/auth/refresh-token", a.authHandler.RefreshTokenHandler)
 
 	sm.HandleFunc("GET /v1/auth/google", a.authHandler.OAuthGoogleLogin)
 	sm.HandleFunc("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBack)
 	sm.HandleFunc("GET /v1/auth/email-verify", a.authHandler.VerifyEmailHandler)
 
-	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
+	sm.HandleFunc("GET /v1/auth/health", a.healthHandler.GetHealthyState)
 
 	sm.HandleFunc("GET /v1/swagger", httpSwagger.Handler(
 		httpSwagger.URL(fmt.Sprintf("localhost:%d/swagger/doc.json", a.config.Service.APIPort)),
