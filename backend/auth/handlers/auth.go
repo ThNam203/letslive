@@ -156,9 +156,9 @@ func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		Email:    userForm.Email,
 	}
 
-	createdUser, err := h.gateway.CreateNewUser(context.Background(), *dto)
-	if err != nil {
-		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+	createdUser, errRes := h.gateway.CreateNewUser(context.Background(), *dto)
+	if errRes != nil {
+		h.WriteErrorResponse(w, errRes.StatusCode, errors.New(errRes.Message))
 		return
 	}
 
