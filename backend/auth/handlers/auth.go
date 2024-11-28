@@ -106,16 +106,7 @@ func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:  "accessToken",
-		Value: accessTokenInfo.AccessToken,
-
-		MaxAge:   accessTokenInfo.AccessTokenMaxAge,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteDefaultMode,
-	})
-
+	h.setAccessTokenCookie(w, accessTokenInfo.AccessToken, accessTokenInfo.AccessTokenMaxAge)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -316,7 +307,7 @@ func (h *AuthHandler) GetAuthByUserIDHandler(w http.ResponseWriter, r *http.Requ
 
 func (h *AuthHandler) setRefreshTokenCookie(w http.ResponseWriter, refreshToken string, maxAge int) {
 	http.SetCookie(w, &http.Cookie{
-		Name:  "refreshToken",
+		Name:  "REFRESH_TOKEN",
 		Value: refreshToken,
 
 		MaxAge:   maxAge,
@@ -328,7 +319,7 @@ func (h *AuthHandler) setRefreshTokenCookie(w http.ResponseWriter, refreshToken 
 
 func (h *AuthHandler) setAccessTokenCookie(w http.ResponseWriter, accessToken string, maxAge int) {
 	http.SetCookie(w, &http.Cookie{
-		Name:  "accessToken",
+		Name:  "ACCESS_TOKEN",
 		Value: accessToken,
 
 		MaxAge:   maxAge,

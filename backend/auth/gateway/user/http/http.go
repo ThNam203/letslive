@@ -51,25 +51,31 @@ func (g *UserGateway) CreateNewUser(ctx context.Context, userRequestDTO dto.Crea
 		}
 	}
 
-	resq, err := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, &ErrorResponse{
 			Message:    fmt.Sprintf("failed to call request: %s", err),
 			StatusCode: http.StatusInternalServerError,
 		}
 	}
-	defer resq.Body.Close()
+	defer resp.Body.Close()
 
-	if resq.StatusCode/100 != 2 {
+	if resp.StatusCode/100 != 2 {
 		resInfo := ErrorResponse{}
-		json.NewDecoder(req.Body).Decode(&resInfo)
+		if err := json.NewDecoder(resp.Body).Decode(&resInfo); err != nil {
+			return nil, &ErrorResponse{
+				Message:    fmt.Sprintf("failed to decode error response from user service: %s", err),
+				StatusCode: http.StatusInternalServerError,
+			}
+		}
+
 		return nil, &resInfo
 	}
 
 	var createdUser dto.CreateUserResponseDTO
-	defer resq.Body.Close()
+	defer resp.Body.Close()
 
-	if err := json.NewDecoder(resq.Body).Decode(&createdUser); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&createdUser); err != nil {
 		return nil, &ErrorResponse{
 			Message:    fmt.Sprintf("failed to decode resp body: %s", err),
 			StatusCode: http.StatusInternalServerError,
