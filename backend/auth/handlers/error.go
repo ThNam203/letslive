@@ -19,20 +19,20 @@ func (h *ErrorHandler) SetError(w http.ResponseWriter, err error) {
 }
 
 type HTTPErrorResponse struct {
-	Code    int    `json:"code" example:"500"`
-	Message string `json:"message" example:"internal server error"`
+	StatusCode int    `json:"statusCode" example:"500"`
+	Message    string `json:"message" example:"internal server error"`
 }
 
 // Set error to the custom header and write the error to the request
 // After calling, the request will end and no other write should be done
-func (h *ErrorHandler) WriteErrorResponse(w http.ResponseWriter, status int, err error) {
+func (h *ErrorHandler) WriteErrorResponse(w http.ResponseWriter, statusCode int, err error) {
 	w.Header().Add("X-LetsLive-Error", err.Error())
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.WriteHeader(status)
+	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(HTTPErrorResponse{
-		Message: err.Error(),
-		Code:    status,
+		Message:    err.Error(),
+		StatusCode: statusCode,
 	})
 }
 
