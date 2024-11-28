@@ -79,13 +79,13 @@ func (t *Transcoder) Start(publishName string) {
 
 	err := t.commandExec.Wait()
 	if err != nil {
-		logger.Debugf("ffmpeg failed: %s", err)
+		logger.Errorf("ffmpeg failed: %s", err)
 	}
 }
 
 func (t *Transcoder) Stop() {
 	err := t.commandExec.Process.Kill()
 	if err != nil {
-		logger.Debugf("transcoder is killed: %s", err)
+		logger.Errorf("transcoder error while being killed: %s", err)
 	}
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type RefreshTokenRepository interface {
@@ -19,10 +20,10 @@ type RefreshTokenRepository interface {
 }
 
 type postgresRefreshTokenRepo struct {
-	dbConn *pgx.Conn
+	dbConn *pgxpool.Pool
 }
 
-func NewRefreshTokenRepository(conn *pgx.Conn) RefreshTokenRepository {
+func NewRefreshTokenRepository(conn *pgxpool.Pool) RefreshTokenRepository {
 	return &postgresRefreshTokenRepo{
 		dbConn: conn,
 	}

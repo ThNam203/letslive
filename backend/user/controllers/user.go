@@ -46,9 +46,30 @@ func (c *UserController) GetByEmail(email string) (*dto.GetUserResponseDTO, erro
 	return mapper.UserToGetUserResponseDTO(*user), nil
 }
 
+func (c *UserController) GetByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseDTO, error) {
+	user, err := c.repo.GetByAPIKey(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapper.UserToGetUserResponseDTO(*user), nil
+}
+
 func (c *UserController) Update(updateDTO dto.UpdateUserRequestDTO) (*dto.UpdateUserResponseDTO, error) {
-	user := mapper.UpdateUserRequestDTOToUser(updateDTO)
-	updatedUser, err := c.repo.Update(*user)
+	updateUser, err := c.repo.GetByID(updateDTO.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if updateDTO.Username != nil {
+		updateUser.Username = updateUser.Username
+	}
+
+	if updateDTO.Username != nil {
+		updateUser.IsOnline = updateUser.IsOnline
+	}
+
+	updatedUser, err := c.repo.Update(*updateUser)
 
 	if err != nil {
 		return nil, err

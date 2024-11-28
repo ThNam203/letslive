@@ -12,7 +12,7 @@ import (
 	"sen1or/lets-live/auth/controllers"
 	"sen1or/lets-live/auth/domains"
 	"sen1or/lets-live/auth/dto"
-	usergateway "sen1or/lets-live/auth/gateway/user/http"
+	gateway "sen1or/lets-live/auth/gateway/user/http"
 	"sen1or/lets-live/auth/utils"
 	"sen1or/lets-live/pkg/logger"
 	userdto "sen1or/lets-live/user/dto"
@@ -28,7 +28,7 @@ type AuthHandler struct {
 	tokenCtrl       *controllers.TokenController
 	authCtrl        *controllers.AuthController
 	verifyTokenCtrl *controllers.VerifyTokenController
-	gateway         *usergateway.UserGateway
+	userGateway     *gateway.UserGateway
 	authServerURL   string
 }
 
@@ -37,14 +37,14 @@ func NewAuthHandler(
 	authCtrl *controllers.AuthController,
 	verifyTokenCtrl *controllers.VerifyTokenController,
 	authServerURL string,
-	gateway *usergateway.UserGateway,
+	userGateway *gateway.UserGateway,
 ) *AuthHandler {
 	return &AuthHandler{
 		authCtrl:        authCtrl,
 		verifyTokenCtrl: verifyTokenCtrl,
 		tokenCtrl:       tokenCtrl,
 		authServerURL:   authServerURL,
-		gateway:         gateway,
+		userGateway:     userGateway,
 	}
 }
 
@@ -147,7 +147,7 @@ func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		Email:    userForm.Email,
 	}
 
-	createdUser, errRes := h.gateway.CreateNewUser(context.Background(), *dto)
+	createdUser, errRes := h.userGateway.CreateNewUser(context.Background(), *dto)
 	if errRes != nil {
 		h.WriteErrorResponse(w, errRes.StatusCode, errors.New(errRes.Message))
 		return

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type AuthRepository interface {
@@ -21,10 +22,10 @@ type AuthRepository interface {
 }
 
 type postgresAuthRepo struct {
-	dbConn *pgx.Conn
+	dbConn *pgxpool.Pool
 }
 
-func NewAuthRepository(conn *pgx.Conn) AuthRepository {
+func NewAuthRepository(conn *pgxpool.Pool) AuthRepository {
 	return &postgresAuthRepo{
 		dbConn: conn,
 	}

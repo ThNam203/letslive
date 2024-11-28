@@ -31,9 +31,21 @@ type GetUserResponseDTO struct {
 	StreamAPIKey uuid.UUID `json:"streamAPIKey"`
 }
 
+type GetUserByStreamAPIKeyRequestDTO struct{}
+
+type GetUserByStreamAPIKeyResponseDTO struct {
+	ID           uuid.UUID `json:"id"`
+	Username     string    `json:"username"`
+	Email        string    `json:"email"`
+	IsOnline     bool      `json:"isOnline"`
+	CreatedAt    time.Time `json:"createdAt"`
+	StreamAPIKey uuid.UUID `json:"streamAPIKey"`
+}
+
 type UpdateUserRequestDTO struct {
 	ID       uuid.UUID `json:"user" validate:"required,uuid"`
-	Username string    `json:"username" validate:"required,gte=6,lte=20"`
+	Username *string   `json:"username" validate:"gte=6,lte=20"`
+	IsOnline *bool     `json:"isOnline" validate:""`
 }
 
 type UpdateUserResponseDTO struct {
@@ -41,6 +53,6 @@ type UpdateUserResponseDTO struct {
 	Username     string    `json:"username"`
 	Email        string    `json:"email"`
 	IsOnline     bool      `json:"isOnline"`
-	CreatedAt    time.Time `json:"createdAt"`
 	StreamAPIKey uuid.UUID `json:"streamAPIKey"`
+	CreatedAt    time.Time `json:"createdAt"`
 }

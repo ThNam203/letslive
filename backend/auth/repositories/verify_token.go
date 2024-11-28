@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type VerifyTokenRepository interface {
@@ -16,10 +17,10 @@ type VerifyTokenRepository interface {
 }
 
 type postgresVerifyTokenRepo struct {
-	dbConn *pgx.Conn
+	dbConn *pgxpool.Pool
 }
 
-func NewVerifyTokenRepo(conn *pgx.Conn) VerifyTokenRepository {
+func NewVerifyTokenRepo(conn *pgxpool.Pool) VerifyTokenRepository {
 	return &postgresVerifyTokenRepo{
 		dbConn: conn,
 	}
