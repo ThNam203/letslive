@@ -310,6 +310,7 @@ func (h *AuthHandler) setRefreshTokenCookie(w http.ResponseWriter, refreshToken 
 		Name:  "REFRESH_TOKEN",
 		Value: refreshToken,
 
+		Path:     "/",
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   true,
@@ -322,6 +323,7 @@ func (h *AuthHandler) setAccessTokenCookie(w http.ResponseWriter, accessToken st
 		Name:  "ACCESS_TOKEN",
 		Value: accessToken,
 
+		Path:     "/",
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   true,

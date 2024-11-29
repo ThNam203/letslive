@@ -16,7 +16,7 @@ func UserToCreateUserResponseDTO(user domains.User) *dto.CreateUserResponseDTO {
 	return &dto.CreateUserResponseDTO{
 		ID:           user.ID,
 		Username:     user.Username,
-		Email:        user.Username,
+		Email:        user.Email,
 		IsOnline:     user.IsOnline,
 		CreatedAt:    user.CreatedAt,
 		StreamAPIKey: user.StreamAPIKey,
@@ -27,7 +27,7 @@ func UserToGetUserResponseDTO(user domains.User) *dto.GetUserResponseDTO {
 	return &dto.GetUserResponseDTO{
 		ID:           user.ID,
 		Username:     user.Username,
-		Email:        user.Username,
+		Email:        user.Email,
 		IsOnline:     user.IsOnline,
 		CreatedAt:    user.CreatedAt,
 		StreamAPIKey: user.StreamAPIKey,
@@ -38,7 +38,7 @@ func UserToUpdateUserResponseDTO(user domains.User) *dto.UpdateUserResponseDTO {
 	return &dto.UpdateUserResponseDTO{
 		ID:           user.ID,
 		Username:     user.Username,
-		Email:        user.Username,
+		Email:        user.Email,
 		IsOnline:     user.IsOnline,
 		CreatedAt:    user.CreatedAt,
 		StreamAPIKey: user.StreamAPIKey,

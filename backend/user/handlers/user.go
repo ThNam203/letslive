@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/user/controllers"
 	"sen1or/lets-live/user/dto"
 	"sen1or/lets-live/user/repositories"
@@ -65,9 +68,9 @@ func (h *UserHandler) GetUserByQueries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.ctrl.GetByID(streamAPIKey)
+	user, err := h.ctrl.GetByStreamAPIKey(streamAPIKey)
 	if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
-		h.WriteErrorResponse(w, http.StatusNotFound, errors.New("user not found for key"))
+		h.WriteErrorResponse(w, http.StatusNotFound, fmt.Errorf("user not found for stream key - %s", streamAPIKey))
 		return
 	} else if err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
@@ -81,7 +84,7 @@ func (h *UserHandler) GetUserByQueries(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) GetCurrentUserInfo(w http.ResponseWriter, r *http.Request) {
 	accessTokenCookie, err := r.Cookie("ACCESS_TOKEN")
-	if len(accessTokenCookie.Value) == 0 || err != nil {
+	if err != nil || len(accessTokenCookie.Value) == 0 {
 		h.WriteErrorResponse(w, http.StatusForbidden, errors.New("missing credentials"))
 		return
 	}
@@ -92,8 +95,8 @@ func (h *UserHandler) GetCurrentUserInfo(w http.ResponseWriter, r *http.Request)
 	}{}
 
 	// the signature should be checked first from the api gateway
-	token, _, err := jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
-	if !token.Valid || err != nil {
+	_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
+	if err != nil {
 		h.WriteErrorResponse(w, http.StatusForbidden, fmt.Errorf("invalid access token: %s", err))
 		return
 	}
@@ -142,6 +145,19 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userID := r.PathValue("id")
+	defer r.Body.Close()
+
+	// Read and buffer the request body
+	bytedata, err := io.ReadAll(r.Body)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error reading request body: %s", err.Error()))
+		return
+	}
+	reqBodyString := string(bytedata)
+	logger.Infof("UPDATE USER REQUEST BODY: %s", reqBodyString)
+
+	// Restore the body for decoding
+	r.Body = io.NopCloser(bytes.NewBuffer(bytedata))
 	if len(userID) == 0 {
 		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing user id"))
 		return
@@ -152,6 +168,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error decoding request body: %s", err.Error()))
 		return
 	}
+	requestBody.ID = uuid.FromStringOrNil(userID)
 
 	if err := utils.Validator.Struct(&requestBody); err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error validating payload: %s", err))

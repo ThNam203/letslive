@@ -62,11 +62,11 @@ func (c *UserController) Update(updateDTO dto.UpdateUserRequestDTO) (*dto.Update
 	}
 
 	if updateDTO.Username != nil {
-		updateUser.Username = updateUser.Username
+		updateUser.Username = *updateDTO.Username
 	}
 
 	if updateDTO.Username != nil {
-		updateUser.IsOnline = updateUser.IsOnline
+		updateUser.IsOnline = *updateDTO.IsOnline
 	}
 
 	updatedUser, err := c.repo.Update(*updateUser)
