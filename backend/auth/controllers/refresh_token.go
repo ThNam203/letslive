@@ -75,10 +75,12 @@ func (c *TokenController) RefreshToken(refreshToken string) (
 	}, error) {
 	myClaims := MyCustomClaims{}
 	parsedToken, err := jwt.NewParser().ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (interface{}, error) {
-		return os.Getenv("REFRESH_TOKEN_SECRET"), nil
+		return []byte(os.Getenv("REFRESH_TOKEN_SECRET")), nil
 	})
-	if err != nil && !parsedToken.Valid {
-		return nil, errors.New("token parsing failed")
+	if err != nil {
+		return nil, fmt.Errorf("token parsing failed: %s", err)
+	} else if !parsedToken.Valid {
+		return nil, errors.New("token not valid")
 	}
 
 	accessToken, err := c.generateAccessToken(myClaims.UserId)

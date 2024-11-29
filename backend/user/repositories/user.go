@@ -111,7 +111,7 @@ func (r *postgresUserRepo) GetByFacebookID(facebookID string) (*domains.User, er
 
 func (r *postgresUserRepo) GetByAPIKey(apiKey uuid.UUID) (*domains.User, error) {
 	var user domains.User
-	rows, err := r.dbConn.Query(context.Background(), "select * from users where stream_api_key = ?", apiKey)
+	rows, err := r.dbConn.Query(context.Background(), "select * from users where stream_api_key = $1", apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (r *postgresUserRepo) Create(newUser domains.User) (*domains.User, error) {
 }
 
 func (r *postgresUserRepo) Update(user domains.User) (*domains.User, error) {
-	rows, err := r.dbConn.Query(context.Background(), "UPDATE users SET username = $1, is_online = $2  WHERE id = $3 RETURNING *", user.Username, user.IsOnline, user.ID)
+	rows, err := r.dbConn.Query(context.Background(), "UPDATE users SET username = $1, is_online = $2 WHERE id = $3 RETURNING *", user.Username, user.IsOnline, user.ID)
 	if err != nil {
 		return nil, err
 	}
