@@ -44,8 +44,8 @@ type GetUserByStreamAPIKeyResponseDTO struct {
 
 type UpdateUserRequestDTO struct {
 	ID       uuid.UUID `json:"id" validate:"uuid"`
-	Username *string   `json:"username" validate:"gte=6,lte=20"`
-	IsOnline *bool     `json:"isOnline" validate:""`
+	Username *string   `json:"username,omitempty" validate:"omitempty,gte=6,lte=20"`
+	IsOnline *bool     `json:"isOnline,omitempty" validate:""`
 }
 
 type UpdateUserResponseDTO struct {

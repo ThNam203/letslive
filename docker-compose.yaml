@@ -104,8 +104,8 @@ services:
       configserver:
         condition: service_healthy
     volumes:
-      - ./backend/transcode/dockervolume/private:/usr/src/app/transcode/private
-      - ./backend/transcode/dockervolume/public:/usr/src/app/transcode/public
+      - ./backend/transcode/dockervolume/private:/usr/src/app/private
+      - ./backend/transcode/dockervolume/public:/usr/src/app/public
 
   #letslive_ui:
   #  build:

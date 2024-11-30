@@ -81,7 +81,7 @@ func (s *RTMPServer) Start() {
 func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	c.LogTagEvent = func(isRead bool, t flvio.Tag) {
 		if t.Type == flvio.TAG_AMF0 {
-			logger.Infof("RTMP log tag", t.DebugFields())
+			logger.Infof("RTMP log tag: %+v", t.DebugFields())
 		}
 	}
 
@@ -107,13 +107,13 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	for {
 		pkt, err := c.ReadPacket()
 		if err == io.EOF {
-			s.onDisconnect(streamingKey)
+			s.onDisconnect(userId)
 			return
 		}
 
 		if err := w.WritePacket(pkt); err != nil {
 			logger.Errorf("failed to write rtmp package: %s", err)
-			s.onDisconnect(streamingKey)
+			s.onDisconnect(userId)
 			return
 		}
 	}
@@ -146,7 +146,7 @@ func (s *RTMPServer) onDisconnect(userId string) {
 	userIdUUID, _ := uuid.FromString(userId)
 	updateUserDTO := &dto.UpdateUserRequestDTO{
 		ID:       userIdUUID,
-		IsOnline: func(b bool) *bool { return &b }(true), // wtf
+		IsOnline: func(b bool) *bool { return &b }(false), // wtf
 	}
 
 	errRes := s.userGateway.UpdateUserLiveStatus(context.Background(), *updateUserDTO)

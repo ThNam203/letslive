@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -86,7 +87,15 @@ func (g *UserGateway) UpdateUserLiveStatus(ctx context.Context, userDTO dto.Upda
 	}
 
 	url := fmt.Sprintf("http://%s/v1/user/%s", addr, userDTO.ID)
-	req, err := http.NewRequest(http.MethodPut, url, nil)
+	payloadBuf := new(bytes.Buffer)
+	if err := json.NewEncoder(payloadBuf).Encode(userDTO); err != nil {
+		return &ErrorResponse{
+			Message:    fmt.Sprintf("failed to encode user body: %s", err),
+			StatusCode: 500,
+		}
+	}
+
+	req, err := http.NewRequest(http.MethodPut, url, payloadBuf)
 	if err != nil {
 		return &ErrorResponse{
 			Message:    fmt.Sprintf("failed to create request: %s", err),

@@ -25,6 +25,7 @@ func NewTranscoder(pipeOut *io.PipeReader, config config.Config) *Transcoder {
 
 func (t *Transcoder) Start(publishName string) {
 	var outputDir = filepath.Join(t.config.Transcode.PrivateHLSPath, publishName)
+	logger.Infof("OUTPUT DIRRRRRRRRRRRRRRr", outputDir)
 
 	var videoMaps = make([]string, 0)
 	var audioMaps = make([]string, 0)
