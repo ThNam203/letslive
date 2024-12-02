@@ -55,6 +55,20 @@ func (c *UserController) GetByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseD
 	return mapper.UserToGetUserResponseDTO(*user), nil
 }
 
+func (c *UserController) GetStreamingUsers() ([]*dto.GetUserResponseDTO, error) {
+	onlineUsers, err := c.repo.GetStreamingUsers()
+	if err != nil {
+		return nil, err
+	}
+
+	var result = []*dto.GetUserResponseDTO{}
+	for _, user := range onlineUsers {
+		result = append(result, mapper.UserToGetUserResponseDTO(user))
+	}
+
+	return result, nil
+}
+
 func (c *UserController) Update(updateDTO dto.UpdateUserRequestDTO) (*dto.UpdateUserResponseDTO, error) {
 	updateUser, err := c.repo.GetByID(updateDTO.ID)
 	if err != nil {
@@ -65,7 +79,7 @@ func (c *UserController) Update(updateDTO dto.UpdateUserRequestDTO) (*dto.Update
 		updateUser.Username = *updateDTO.Username
 	}
 
-	if updateDTO.Username != nil {
+	if updateDTO.IsOnline != nil {
 		updateUser.IsOnline = *updateDTO.IsOnline
 	}
 

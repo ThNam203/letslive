@@ -28,7 +28,7 @@ export default function HomePage() {
 
     useEffect(() => {
         const getOnlineStreams = async () => {
-            fetch("http://localhost:8000/v1/streams")
+            fetch("http://localhost:8000/user?isOnline=true")
                 .then((res) => res.json())
                 .then((data) => {
                     setStreams(data);
