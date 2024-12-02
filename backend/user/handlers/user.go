@@ -1,13 +1,10 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/user/controllers"
 	"sen1or/lets-live/user/dto"
 	"sen1or/lets-live/user/repositories"
@@ -55,31 +52,47 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 }
 
 // get user by using path query '/user?streamAPIKey=123123123'
+// TODO: dynamic query:
+// https://www.postgresql.org/docs/current/functions-json.html
+// https://github.com/jackc/pgx/discussions/1785
 func (h *UserHandler) GetUserByQueries(w http.ResponseWriter, r *http.Request) {
 	streamAPIKeyString := r.URL.Query().Get("streamAPIKey")
-	if len(streamAPIKeyString) == 0 {
+	isOnline := r.URL.Query().Get("isOnline")
+
+	if len(streamAPIKeyString) == 0 && len(isOnline) == 0 {
 		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing query parameters, at least has one"))
 		return
 	}
 
-	streamAPIKey, err := uuid.FromString(streamAPIKeyString)
-	if err != nil {
-		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("stream api key not valid"))
-		return
-	}
+	if len(streamAPIKeyString) > 0 {
+		streamAPIKey, err := uuid.FromString(streamAPIKeyString)
+		if err != nil {
+			h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("stream api key not valid"))
+			return
+		}
 
-	user, err := h.ctrl.GetByStreamAPIKey(streamAPIKey)
-	if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
-		h.WriteErrorResponse(w, http.StatusNotFound, fmt.Errorf("user not found for stream key - %s", streamAPIKey))
-		return
-	} else if err != nil {
-		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
-		return
-	}
+		user, err := h.ctrl.GetByStreamAPIKey(streamAPIKey)
+		if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
+			h.WriteErrorResponse(w, http.StatusNotFound, fmt.Errorf("user not found for stream key - %s", streamAPIKey))
+			return
+		} else if err != nil {
+			h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(user)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	} else {
+		users, err := h.ctrl.GetStreamingUsers()
+		if err != nil {
+			h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(users)
+	}
 }
 
 func (h *UserHandler) GetCurrentUserInfo(w http.ResponseWriter, r *http.Request) {
@@ -147,17 +160,6 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userID := r.PathValue("id")
 	defer r.Body.Close()
 
-	// Read and buffer the request body
-	bytedata, err := io.ReadAll(r.Body)
-	if err != nil {
-		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error reading request body: %s", err.Error()))
-		return
-	}
-	reqBodyString := string(bytedata)
-	logger.Infof("UPDATE USER REQUEST BODY: %s", reqBodyString)
-
-	// Restore the body for decoding
-	r.Body = io.NopCloser(bytes.NewBuffer(bytedata))
 	if len(userID) == 0 {
 		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing user id"))
 		return
