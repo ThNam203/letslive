@@ -8,6 +8,8 @@ import (
 	cfg "sen1or/lets-live/transcode/config"
 	usergateway "sen1or/lets-live/transcode/gateway/user/http"
 	"sen1or/lets-live/transcode/rtmp"
+	"sen1or/lets-live/transcode/storage/ipfs"
+	"sen1or/lets-live/transcode/watcher"
 	"sen1or/lets-live/transcode/webserver"
 
 	"sen1or/lets-live/pkg/discovery"
@@ -38,11 +40,11 @@ func main() {
 	MyWebServer := webserver.NewWebServer(config.Webserver.Port, allowedSuffixes[:], config.Transcode.PublicHLSPath)
 	MyWebServer.ListenAndServe()
 
-	//ipfsStorage := ipfs.NewKuboStorage(cfg.PrivateHLSPath, cfg.IPFS.Gateway)
-	//ipfsStorage := ipfs.NewCustomStorage(ctx, config.IPFS.Gateway, config.IPFS.BootstrapNodeAddr)
-	//ipfsStorage := ipfs.NewCustomStorage(ctx, config.IPFS.Gateway, nil)
-	//monitor := watcher.NewStreamWatcher(config.Transcode.PrivateHLSPath, ipfsStorage, *config)
-	//go monitor.MonitorHLSStreamContent()
+	if config.IPFS.Enabled {
+		ipfsStorage := ipfs.NewIPFSStorage(context.Background(), config.IPFS.Gateway, &config.IPFS.BootstrapNodeAddr)
+		monitor := watcher.NewIPFSWatcher(config.Transcode.PrivateHLSPath, ipfsStorage, *config)
+		go monitor.Watch()
+	}
 
 	userGateway := usergateway.NewUserGateway(registry)
 

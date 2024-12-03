@@ -19,7 +19,7 @@ type CustomStorage struct {
 }
 
 // If we don't want to connect to bootstrap node, enter a nil value for bootstrapNodeAddr
-func NewCustomStorage(ctx context.Context, gateway string, bootstrapNodeAddr *string) storage.Storage {
+func NewIPFSStorage(ctx context.Context, gateway string, bootstrapNodeAddr *string) storage.Storage {
 	if bootstrapNodeAddr != nil && len(*bootstrapNodeAddr) == 0 {
 		logger.Panicw("missing bootstrap node address")
 	}
