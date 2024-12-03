@@ -8,7 +8,7 @@ import (
 	"sen1or/lets-live/transcode/domains"
 )
 
-// rewrite the playlist to point to remote resources
+// rewrite the local playlist to point to remote resources
 func generateRemotePlaylist(playlistPath string, variant domains.HLSVariant) (string, error) {
 	file, err := os.Open(playlistPath)
 	if err != nil {
@@ -34,4 +34,40 @@ func generateRemotePlaylist(playlistPath string, variant domains.HLSVariant) (st
 	}
 
 	return newPlaylist, nil
+}
+
+func copy(src, dst string) error {
+	input, err := os.ReadFile(src)
+	if err != nil {
+		return fmt.Errorf("error reading file: %s", err)
+	}
+
+	err = os.WriteFile(dst, input, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("error copying file: %s", err)
+	}
+
+	return nil
+}
+
+// write the playlist (memory) into file destination
+func writePlaylist(data string, filePath string) error {
+	parentDir := filepath.Dir(filePath)
+	if err := os.MkdirAll(parentDir, os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create parent folder %s: %s", parentDir, err)
+	}
+
+	f, err := os.Create(filePath)
+	defer f.Close()
+
+	if err != nil {
+		return fmt.Errorf("failed to create file %s: %s", filePath, err)
+
+	}
+	_, err = f.WriteString(data)
+	if err != nil {
+		return fmt.Errorf("failed to write data into %s: %s", filePath, err)
+	}
+
+	return nil
 }

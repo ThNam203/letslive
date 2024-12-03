@@ -2,7 +2,6 @@ package watcher
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"sen1or/lets-live/pkg/logger"
@@ -17,12 +16,11 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
-func getSegmentFromPath(segmentFullPath string) *domains.HLSSegment {
+func getSegmentFromPath(segmentFullPath string) (*domains.HLSSegment, error) {
 	pathComponents := strings.Split(segmentFullPath, "/")
 	index, err := strconv.Atoi(pathComponents[len(pathComponents)-2])
 	if err != nil {
-		log.Println("invalid segment path")
-		return nil
+		return nil, fmt.Errorf("invalid segment path %s", segmentFullPath)
 	}
 
 	name := pathComponents[len(pathComponents)-1]
@@ -33,7 +31,7 @@ func getSegmentFromPath(segmentFullPath string) *domains.HLSSegment {
 		FullLocalPath:      segmentFullPath,
 		RelativeRemotePath: filepath.Join(string(index), name),
 		PublishName:        publishName,
-	}
+	}, nil
 }
 
 var streams = make(map[string]domains.HLSStream)
@@ -42,21 +40,21 @@ var streams = make(map[string]domains.HLSStream)
 // but it has so many features and my custom storage can not implement the Storage interface right now
 // so for now I will use the CustomStorage directly (not using the Storage Interface)
 // TODO: hope to be able to implement the Storage interface to the CustomStorage
-type StreamWatcher struct {
+type IPFSStreamWatcher struct {
 	monitorPath string
 	storage     storage.Storage
 	config      config.Config
 }
 
-func NewStreamWatcher(monitorPath string, storage storage.Storage, config config.Config) *StreamWatcher {
-	return &StreamWatcher{
+func NewIPFSWatcher(monitorPath string, ipfsStorage storage.Storage, config config.Config) Watcher {
+	return &IPFSStreamWatcher{
 		monitorPath: monitorPath,
-		storage:     storage,
+		storage:     ipfsStorage,
 		config:      config,
 	}
 }
 
-func (w *StreamWatcher) MonitorHLSStreamContent() {
+func (w *IPFSStreamWatcher) Watch() {
 	myWatcher := watcher.New()
 
 	go func() {
@@ -67,21 +65,13 @@ func (w *StreamWatcher) MonitorHLSStreamContent() {
 					continue
 				}
 
-				// NOT SURE WHAT IS CREATED FIRST
-				// handle creating the publish name folder
 				if event.IsDir() && event.Op == watcher.Create {
 					components := strings.Split(event.Path, "/")
 					publishName := components[len(components)-1]
 
-					// TODO: properly handle
-					if utf8.RuneCountInString(publishName) < 10 {
-						continue
-					}
-
 					if err := os.MkdirAll(filepath.Join(w.config.Transcode.PublicHLSPath, publishName), os.ModePerm); err != nil {
-						logger.Errorw("failed to create publish folder", "path", filepath.Join(w.config.Transcode.PublicHLSPath, publishName))
-					} else {
-						logger.Infof("created publish folder: %s", filepath.Join(w.config.Transcode.PublicHLSPath, publishName))
+						logger.Errorw(PACKAGE_NAME_TAG, "failed to create publish folder", err, "path", filepath.Join(w.config.Transcode.PublicHLSPath, publishName))
+						continue
 					}
 
 					variants := make([]domains.HLSVariant, len(w.config.Transcode.FFMpegSetting.Qualities))
@@ -97,31 +87,30 @@ func (w *StreamWatcher) MonitorHLSStreamContent() {
 						Variants:    variants,
 					}
 
-					log.Printf("created hls stream %+v\n", streams[publishName])
+					logger.Infof(PACKAGE_NAME_TAG, "created hls stream with path", streams[publishName])
 
 					continue
 				}
 
-				fileType := getEventFileType(event.Path)
+				fileType := w.getEventFileType(event.Path)
 				if fileType == "Master" {
 					components := strings.Split(event.Path, "/")
 					pushlishName := components[len(components)-2]
 
 					if err := copy(event.Path, filepath.Join(w.config.Transcode.PublicHLSPath, pushlishName, w.config.Transcode.FFMpegSetting.MasterFileName)); err != nil {
-						log.Panicf("failed to copy file: %s", err)
+						logger.Errorw(PACKAGE_NAME_TAG, "failed to copy master file", err)
 					}
 				} else if fileType == "Variant" {
-					info, err := getInfoFromPath(event.Path)
+					info, err := w.getInfoFromPath(event.Path)
 					if err != nil {
-						fmt.Println(err)
+						logger.Errorw(PACKAGE_NAME_TAG, "failed to get variant info", err)
 						continue
 					}
-					logger.Infow("WATCHER", "streams", streams)
-					logger.Infow("WATCHER", "stream info", info)
+
 					variant := streams[info.PublishName].Variants[info.VariantIndex]
 					newPlaylist, err := generateRemotePlaylist(event.Path, variant)
 					if err != nil {
-						fmt.Println("error generating remote playlist")
+						logger.Errorw(PACKAGE_NAME_TAG, "error generating remote playlist", err)
 						continue
 					}
 
@@ -129,15 +118,15 @@ func (w *StreamWatcher) MonitorHLSStreamContent() {
 
 					writePlaylist(newPlaylist, filepath.Join(w.config.Transcode.PublicHLSPath, info.PublishName, variantIndexStr, info.Filename))
 				} else if fileType == "Segment" {
-					segment := getSegmentFromPath(event.Path)
+					segment, err := getSegmentFromPath(event.Path)
 					if segment == nil {
-						log.Printf("error creating segment")
+						logger.Errorw(PACKAGE_NAME_TAG, "error getting segment", err)
 						continue
 					}
 
 					stream, ok := streams[segment.PublishName]
 					if !ok {
-						logger.Errorw("failed to get stream from publish name", "streams", streams, "publish name", segment.PublishName)
+						logger.Errorw(PACKAGE_NAME_TAG, "missing entry for publish name", segment.PublishName)
 						return
 					}
 
@@ -153,7 +142,7 @@ func (w *StreamWatcher) MonitorHLSStreamContent() {
 							newObjectPath, err = w.storage.AddFile(event.Path)
 
 							if err != nil {
-								fmt.Printf("error while saving segments into storage: %s\n", err)
+								logger.Errorf(PACKAGE_NAME_TAG, "error while saving segments into storage", err)
 							}
 						}
 
@@ -165,7 +154,7 @@ func (w *StreamWatcher) MonitorHLSStreamContent() {
 					variant.Segments = append(variant.Segments, *segment)
 				}
 			case err := <-myWatcher.Error:
-				log.Panicf("something failed while running watcher: %s", err)
+				logger.Errorf(PACKAGE_NAME_TAG, "something failed while running watcher", err)
 			case <-myWatcher.Closed:
 				return
 			}
@@ -174,11 +163,11 @@ func (w *StreamWatcher) MonitorHLSStreamContent() {
 
 	// Watch the hls segment storage folder recursively for changes.
 	if err := myWatcher.AddRecursive(w.monitorPath); err != nil {
-		log.Fatalln(err)
+		logger.Panicw(PACKAGE_NAME_TAG, "error while setting up", err)
 	}
 
 	if err := myWatcher.Start(time.Millisecond * 100); err != nil {
-		log.Fatalln(err)
+		logger.Panicw(PACKAGE_NAME_TAG, "error starting watcher", err)
 	}
 }
 
@@ -189,7 +178,7 @@ type pathInfo struct {
 }
 
 // MUST NOT USE FOR INDEX FILE
-func getInfoFromPath(filePath string) (*pathInfo, error) {
+func (_ *IPFSStreamWatcher) getInfoFromPath(filePath string) (*pathInfo, error) {
 	components := strings.Split(filePath, "/")
 	filename := components[len(components)-1]
 	variantIndex, err := strconv.Atoi(components[len(components)-2])
@@ -207,11 +196,12 @@ func getInfoFromPath(filePath string) (*pathInfo, error) {
 	return info, nil
 }
 
-// getFileType return one of the three: Master, Variant, Segment
-func getEventFileType(filePath string) string {
+// getFileType should return one of the three: Master, Variant, Segment
+func (_ *IPFSStreamWatcher) getEventFileType(filePath string) string {
 	pathComponents := strings.Split(filePath, "/")
+	fileExtension := filepath.Ext(filePath)
 
-	if filepath.Ext(filePath) == ".m3u8" {
+	if fileExtension == ".m3u8" {
 		// the parent folder of Variant type is an index (1, 2, 3,...)
 		if utf8.RuneCountInString(pathComponents[len(pathComponents)-2]) == 1 {
 			return "Variant"
@@ -222,40 +212,6 @@ func getEventFileType(filePath string) string {
 		return "Segment"
 	}
 
-	return ""
-}
-
-func copy(src, dst string) error {
-	input, err := os.ReadFile(src)
-	if err != nil {
-		return fmt.Errorf("error reading file: %s", err)
-	}
-
-	err = os.WriteFile(dst, input, os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("error copying file: %s", err)
-	}
-
-	return nil
-}
-
-func writePlaylist(data string, filePath string) {
-	parentDir := filepath.Dir(filePath)
-	if err := os.MkdirAll(parentDir, os.ModePerm); err != nil {
-		fmt.Printf("failed to create parent folder %s: %s", parentDir, err)
-		return
-	}
-
-	f, err := os.Create(filePath)
-	defer f.Close()
-
-	if err != nil {
-		fmt.Printf("failed to create file %s: %s", filePath, err)
-		return
-	}
-	_, err = f.WriteString(data)
-	if err != nil {
-		fmt.Printf("failed to write data into %s: %s", filePath, err)
-		return
-	}
+	logger.Errorw(PACKAGE_NAME_TAG, "unexpected file type", fileExtension)
+	return filepath.Ext(filePath)
 }
