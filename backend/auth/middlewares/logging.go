@@ -9,10 +9,10 @@ import (
 )
 
 type LoggingMiddleware struct {
-	logger *zap.Logger
+	logger *zap.SugaredLogger
 }
 
-func NewLoggingMiddleware(logger *zap.Logger) *LoggingMiddleware {
+func NewLoggingMiddleware(logger *zap.SugaredLogger) *LoggingMiddleware {
 	return &LoggingMiddleware{
 		logger: logger,
 	}
@@ -55,24 +55,23 @@ func (m *LoggingMiddleware) GetMiddleware(next http.Handler) http.Handler {
 			}
 		}
 
-		fields := []zap.Field{
-			zap.Int64("duration", duration),
-			zap.String("method", r.Method),
-			zap.String("remote#addr", remoteAddr),
-			zap.Int("response#bytes", lrw.bytes),
-			zap.Int("response#status", lrw.statusCode),
-			zap.String("uri", r.RequestURI),
+		fields := []interface{}{
+			"duration", duration,
+			"method", r.Method,
+			"remote#addr", remoteAddr,
+			"response#bytes", lrw.bytes,
+			"response#status", lrw.statusCode,
+			"uri", r.RequestURI,
 		}
 
 		if lrw.statusCode/100 == 2 {
-			m.logger.Info("success api call", fields...)
+			m.logger.Infow("success api call", fields...)
 		} else {
 			err := lrw.w.Header().Get("X-LetsLive-Error")
 			if len(err) == 0 {
-				m.logger.Info("failed api call", fields...)
+				m.logger.Infow("failed api call", fields...)
 			} else {
-				m.logger.Error("failed api call: "+err, fields...)
-
+				m.logger.Errorw("failed api call: "+err, fields...)
 			}
 		}
 

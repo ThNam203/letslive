@@ -1,0 +1,4 @@
+2024-12-05T21:30:57Z	info	currently executing path: /usr/local/bin
+2024-12-05T21:31:00Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.20.0.5", "response#bytes": 0, "response#status": 200, "uri": "/v1/auth/health"}
+2024-12-05T21:31:15Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.20.0.5", "response#bytes": 0, "response#status": 200, "uri": "/v1/auth/health"}
+2024-12-05T21:31:30Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.20.0.5", "response#bytes": 0, "response#status": 200, "uri": "/v1/auth/health"}

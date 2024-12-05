@@ -40,22 +40,22 @@ func (ws *WebServer) serveFile(rw http.ResponseWriter, rq *http.Request) {
 	fileDestination := filepath.Join(ws.BaseDirectory, requestPath)
 
 	if !strings.HasPrefix(fileDestination, ws.BaseDirectory) {
-		http.Error(rw, "The destination is not allowed!", http.StatusForbidden)
+		http.Error(rw, "the destination is not allowed!", http.StatusForbidden)
 		return
 	}
 	fileStat, err := os.Stat(fileDestination)
 	if err != nil {
 		if os.IsNotExist(err) {
-			logger.Errorf("Webserver: File not found (%s)", err.Error())
-			http.Error(rw, "File not found!", http.StatusNotFound)
+			logger.Errorf("webserver: File not found (%s)", err.Error())
+			http.Error(rw, "file not found!", http.StatusNotFound)
 		} else {
-			http.Error(rw, "Can't get the file information!", http.StatusInternalServerError)
+			http.Error(rw, "can't get the file information!", http.StatusInternalServerError)
 		}
 		return
 	}
 
 	if fileStat.IsDir() {
-		http.Error(rw, "Requested destination is not a file!", http.StatusForbidden)
+		http.Error(rw, "requested destination is not a file!", http.StatusForbidden)
 		return
 	}
 
@@ -63,13 +63,13 @@ func (ws *WebServer) serveFile(rw http.ResponseWriter, rq *http.Request) {
 	defer file.Close()
 
 	if err != nil {
-		http.Error(rw, "Can't open file!", http.StatusInternalServerError)
+		http.Error(rw, "can't open file!", http.StatusInternalServerError)
 		return
 	}
 
 	fileExtension := filepath.Ext(fileDestination)
 	if !slices.Contains(ws.AllowedSuffixes, fileExtension) {
-		http.Error(rw, "File not allowed!", http.StatusForbidden)
+		http.Error(rw, "file not allowed!", http.StatusForbidden)
 		return
 	}
 

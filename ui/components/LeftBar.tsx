@@ -1,10 +1,12 @@
-import { LuArrowLeftFromLine, LuArrowUpDown, LuHeart, LuVideo } from "react-icons/lu";
+import { LuArrowUpDown, LuHeart, LuVideo } from "react-icons/lu";
 import { ClassValue } from "clsx";
 import { cn } from "@/utils/cn";
 import { ReactNode } from "react";
+import user_avatar from "@/public/images/user_avatar.jpeg";
 import { Channel } from "@/models/Channel";
-import { channels, users } from "@/fakedata/leftbar";
+import { channels } from "@/fakedata/leftbar";
 import IconButton from "@/components/buttons/IconBtn";
+import RoundedImage from "@/components/images/RoundedImage";
 
 const ChannelViewItem = ({
   className,
@@ -23,7 +25,7 @@ const ChannelViewItem = ({
       )}
     >
       <div className="flex flex-row items-center justify-start">
-        <p>Rounded???</p>
+        <RoundedImage src={user_avatar} width={40} height={40} alt="channel owner image"/>
         <div className="flex flex-col gap-1 ml-2 max-xl:hidden">
           <span className="font-semibold text-sm">{name}</span>
           <span className="text-secondaryWord text-sm">{category}</span>

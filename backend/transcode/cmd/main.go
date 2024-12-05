@@ -18,7 +18,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	logger.Init()
+	logger.Init(logger.LogLevel(logger.Debug))
 	config := cfg.RetrieveConfig()
 
 	if err := resetWorkingSpace(*config); err != nil {

@@ -1,11 +1,10 @@
 "use client";
 
-import { users } from "@/fakedata/leftbar";
 import { cn } from "@/utils/cn";
 import { ClassValue } from "clsx";
 import { ReactNode } from "react";
 import stream_img from "@/public/images/stream_thumbnail_example.jpg";
-import user_img from "@/public/images/user.jpg";
+import user_avatar from "@/public/images/user_avatar.jpeg";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { LuMoreVertical } from "react-icons/lu";
@@ -33,7 +32,7 @@ const ContentView = ({
       className={cn(
         "h-8 w-8 rounded-full overflow-hidden cursor-pointer"
       )}
-      src={user_img}
+      src={user_avatar}
       alt="mrbeast"
     />
       <div className="flex-1 flex-col space-y-1">
@@ -141,7 +140,7 @@ const RecommendStreamView = ({
     <div className="flex flex-col gap-2 mt-8 pr-2">
       <div className="font-semibold text-lg">{title}</div>
       <LiveChannelListView limitView={limitView} streams={streams} />
-      {separate}
+      {streams.length > limitView ? separate : <p className="font-bold text-lg text-center">There is currently no one streaming</p>}
     </div>
   );
 };

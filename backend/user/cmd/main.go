@@ -16,7 +16,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	logger.Init()
+	logger.Init(logger.LogLevel(logger.Debug))
 	config := cfg.RetrieveConfig()
 	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
 
