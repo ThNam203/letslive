@@ -1,0 +1,4 @@
+2024-12-05T21:30:56Z	info	web server started	{"port": 8889}
+2024-12-05T21:30:56Z	info	rtmp server started
+2024-12-05T21:30:56Z	info	co cai con cac
+2024-12-05T21:30:56Z	info	rtmp server started 2

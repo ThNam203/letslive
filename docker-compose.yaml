@@ -1,5 +1,5 @@
 services:
-  letslive_auth:
+  auth:
     build:
       context: ./backend
       dockerfile: ./dockerfiles/auth.Dockerfile
@@ -11,14 +11,14 @@ services:
     networks:
       general_network:
     depends_on:
-      letslive_auth_db:
-        condition: service_healthy
       consul:
         condition: service_healthy
       configserver:
         condition: service_healthy
+    volumes:
+      - ./shared_log/auth.txt:/usr/local/bin/log.txt
 
-  letslive_auth_db:
+  auth_db:
     image: postgres:16.3
     container_name: letslive_auth_db
     shm_size: 64mb
@@ -27,7 +27,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: letslive_auth
     volumes:
-      - postgres_letslive_auth_data:/var/lib/postgresql/data
+      - postgres_auth_data:/var/lib/postgresql/data
     networks:
       general_network:
     ports:
@@ -40,7 +40,7 @@ services:
       timeout: 10s
       retries: 5
 
-  letslive_user:
+  user:
     build:
       context: ./backend
       dockerfile: ./dockerfiles/user.Dockerfile
@@ -52,14 +52,14 @@ services:
     networks:
       general_network:
     depends_on:
-      letslive_user_db:
-        condition: service_healthy
       consul:
         condition: service_healthy
       configserver:
         condition: service_healthy
+    volumes:
+      - ./shared_log/user.txt:/usr/local/bin/log.txt
 
-  letslive_user_db:
+  user_db:
     image: postgres:16.3
     container_name: letslive_user_db
     shm_size: 64mb
@@ -68,7 +68,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: letslive_user
     volumes:
-      - postgres_letslive_user_data:/var/lib/postgresql/data
+      - postgres_user_data:/var/lib/postgresql/data
     networks:
       general_network:
     ports:
@@ -81,7 +81,7 @@ services:
       timeout: 10s
       retries: 5
 
-  letslive_transcode:
+  transcode:
     build:
       context: ./backend
       dockerfile: ./dockerfiles/transcode.Dockerfile
@@ -97,8 +97,6 @@ services:
     networks:
       general_network:
     depends_on:
-      letslive_user_db:
-        condition: service_healthy
       consul:
         condition: service_healthy
       configserver:
@@ -106,8 +104,9 @@ services:
     volumes:
       - ./backend/transcode/dockervolume/private:/usr/src/app/private
       - ./backend/transcode/dockervolume/public:/usr/src/app/public
+      - ./shared_log/transcode.txt:/usr/local/bin/log.txt
 
-  #letslive_ui:
+  #ui:
   #  build:
   #    context: ./ui
   #    dockerfile: Dockerfile
@@ -167,24 +166,24 @@ services:
     restart: on-failure
     environment:
       KONG_DATABASE: postgres
-      KONG_PG_HOST: letslive_kong_db
+      KONG_PG_HOST: kong_db
       KONG_PG_USER: kong
       KONG_PG_PASSWORD: kongpass
     links:
-      - letslive_kong_db
+      - kong_db
     depends_on:
-      - letslive_kong_db
+      - kong_db
 
   kong:
     image: kong:latest
-    container_name: letslive_kong-gateway
+    container_name: letslive_kong
     networks:
       kong_network:
       general_network:
     restart: always
     environment:
       KONG_DATABASE: postgres
-      KONG_PG_HOST: letslive_kong_db
+      KONG_PG_HOST: kong_db
       KONG_PG_USER: kong
       KONG_PG_PASSWORD: kongpass
       KONG_DNS_RESOLVER: "192.168.1.10:8600,127.0.0.11"
@@ -204,16 +203,16 @@ services:
     #dns:
     #  - 192.168.1.10:8600
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://kong:8001"]
+      test: ["CMD", "kong", "health"]
       interval: 5s
       timeout: 2s
       retries: 15
     depends_on:
-      - letslive_kong_db
+      - kong_db
       - kong_migration
       - consul
 
-  letslive_kong_db:
+  kong_db:
     image: postgres:16.3
     container_name: letslive_kong_db
     shm_size: 64mb
@@ -222,14 +221,11 @@ services:
       POSTGRES_PASSWORD: kongpass
       POSTGRES_DB: kong
     volumes:
-      - postgres_letslive_kong_data:/var/lib/postgresql/data
+      - postgres_kong_data:/var/lib/postgresql/data
       - ./configs/kong_backup/kongdb_backup_20230816:/kongdb_backup
     networks:
       kong_network:
       general_network:
-    depends_on:
-      consul:
-        condition: service_healthy
     ports:
       - "9989:5432"
     healthcheck:
@@ -237,6 +233,85 @@ services:
       interval: 5s
       timeout: 10s
       retries: 5
+
+  #auth_filebeat:
+  #  image: docker.elastic.co/beats/filebeat:8.16.1
+  #  container_name: letslive_auth_filebeat
+  #  environment:
+  #    SERVER_NAME: Auth
+  #    ELASTICSEARCH_HOST: elasticsearch
+  #  volumes:
+  #    - ./shared_log/auth.txt:/usr/local/bin/app/log.txt
+  #    - ./configs/filebeat.yaml:/usr/share/filebeat/filebeat.yaml
+
+  #user_filebeat:
+  #  image: docker.elastic.co/beats/filebeat:8.16.1
+  #  container_name: letslive_user_filebeat
+  #  environment:
+  #    SERVER_NAME: User
+  #    ELASTICSEARCH_HOST: elasticsearch
+  #  volumes:
+  #    - ./shared_log/user.txt:/usr/local/bin/app/log.txt
+  #    - ./configs/filebeat.yaml:/usr/share/filebeat/filebeat.yaml
+
+  #transcode_filebeat:
+  #  image: docker.elastic.co/beats/filebeat:8.16.1
+  #  container_name: letslive_transcode_filebeat
+  #  environment:
+  #    SERVER_NAME: Transcode
+  #    ELASTICSEARCH_HOST: elasticsearch
+  #  volumes:
+  #    - ./shared_log/transcode.txt:/usr/local/bin/app/log.txt
+  #    - ./configs/filebeat.yaml:/usr/share/filebeat/filebeat.yaml
+
+  #logstash:
+  #  image: logstash:8.16.1
+  #  container_name: letslive_logstash
+  #  environment:
+  #    discovery.seed_hosts: logstash
+  #    #LS_JAVA_OPTS: "-Xms512m -Xmx512m"
+  #  volumes:
+  #    - ./configs/logstash/pipeline/logstash-nginx.config:/usr/share/logstash/pipeline/logstash-nginx.config
+  #  ports:
+  #    - "5000:5000/tcp"
+  #    - "5000:5000/udp"
+  #    - "5044:5044"
+  #    - "9600:9600"
+  #  depends_on:
+  #    - elasticsearch
+  #  networks:
+  #    - elk_network
+  #  command: logstash -f /usr/share/logstash/pipeline/logstash-nginx.config
+
+  #elasticsearch:
+  #  container_name: letslive_elasticsearch
+  #  image: docker.elastic.co/elasticsearch/elasticsearch:8.16.1
+  #  environment:
+  #    - xpack.security.enabled=false
+  #    - "discovery.type=single-node"
+  #  healthcheck:
+  #    test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+  #    interval: 10s
+  #    timeout: 10s
+  #    retries: 3
+  #  networks:
+  #    - elk_network
+  #  volumes:
+  #    - elastic_data:/usr/share/elasticsearch/data
+  #  ports:
+  #    - "9200:9200"
+  #    - "9300:9300"
+  #kibana:
+  #  container_name: letslive_kibana
+  #  image: docker.elastic.co/kibana/kibana:8.16.1
+  #  environment:
+  #    - ELASTICSEARCH_HOSTS=0.0.0.0:9200
+  #  networks:
+  #    - elk_network
+  #  depends_on:
+  #    - elasticsearch
+  #  ports:
+  #    - "5601:5601"
 
   # TODO: remove (or load balancing)? using kong instead for api gateway
   #traefik:
@@ -366,13 +441,10 @@ networks:
       config:
         - subnet: 10.5.0.0/16
 
-  auth_network:
-    driver: bridge
-
-  user_network:
-    driver: bridge
-
   general_network:
+    driver: bridge
+
+  elk_network:
     driver: bridge
 
   kong_network:
@@ -382,6 +454,7 @@ networks:
         - subnet: 192.168.1.0/24
 
 volumes:
-  postgres_letslive_auth_data:
-  postgres_letslive_user_data:
-  postgres_letslive_kong_data:
+  postgres_auth_data:
+  postgres_user_data:
+  postgres_kong_data:
+  elastic_data:

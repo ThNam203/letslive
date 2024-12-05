@@ -25,7 +25,7 @@ import (
 )
 
 type APIServer struct {
-	logger *zap.Logger
+	logger *zap.SugaredLogger
 	dbConn *pgxpool.Pool
 	config config.Config
 
@@ -51,10 +51,8 @@ func NewAPIServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg config.
 	userGateway := usergateway.NewUserGateway(registry)
 	var authHandler = handlers.NewAuthHandler(tokenCtrl, authCtrl, verifyTokenCtrl, authServerURL, userGateway)
 
-	var logger, _ = zap.NewProduction()
-
 	return &APIServer{
-		logger: logger,
+		logger: logger.Logger,
 		dbConn: dbConn,
 		config: cfg,
 
@@ -62,7 +60,7 @@ func NewAPIServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg config.
 		errorHandler:  handlers.NewErrorHandler(),
 		healthHandler: handlers.NewHeathHandler(),
 
-		loggingMiddleware: middlewares.NewLoggingMiddleware(logger),
+		loggingMiddleware: middlewares.NewLoggingMiddleware(logger.Logger),
 		corsMiddleware:    middlewares.NewCORSMiddleware(),
 	}
 }

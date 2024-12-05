@@ -1,0 +1,3 @@
+2024-12-05T21:31:05Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.20.0.5", "response#bytes": 0, "response#status": 200, "uri": "/v1/user/health"}
+2024-12-05T21:31:20Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.20.0.5", "response#bytes": 0, "response#status": 200, "uri": "/v1/user/health"}
+2024-12-05T21:31:35Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.20.0.5", "response#bytes": 0, "response#status": 200, "uri": "/v1/user/health"}
