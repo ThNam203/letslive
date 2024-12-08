@@ -37,7 +37,7 @@ func Init(level LogLevel) {
 	if err != nil {
 		panic("failed to get the execute path")
 	}
-	logFile, err := os.OpenFile(filepath.Join(filepath.Dir(e), LOG_FILE), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile(filepath.Join(filepath.Dir(e), LOG_FILE), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		defer logFile.Close()
 		log.Panicf("failed to open log file: %s", err)

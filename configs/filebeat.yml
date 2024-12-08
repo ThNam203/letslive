@@ -1,0 +1,27 @@
+filebeat.inputs:
+  - type: filestream
+    enabled: true
+    id: "${SERVICE_NAME}_Service_Id"
+    paths:
+      - /usr/local/bin/app/log.txt
+    tags: ["auth", "service"]
+
+output.elasticsearch:
+  hosts: ["https://${ELASTICSEARCH_HOST}:9200"]
+  index: "${SERVICE_NAME}-%{[agent.version]}-%{+yyyy.MM.dd}"
+  username: "elastic"
+  password: "elasticsearch"
+  ssl.verification_mode: none
+
+setup.dashboards:
+  enabled: true
+
+setup.kibana:
+  host: "http://${KIBANA_HOST}:5601"
+  username: "elastic"
+  password: "elasticsearch"
+
+setup.template:
+  name: "${SERVICE_NAME}"
+  pattern: '${SERVICE_NAME}-*'
+  enabled: false
