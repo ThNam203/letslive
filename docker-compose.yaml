@@ -237,53 +237,50 @@ services:
   auth_filebeat:
     image: docker.elastic.co/beats/filebeat:8.16.1
     container_name: letslive_auth_filebeat
+    networks:
+      elk_network:
     environment:
-      SERVER_NAME: Auth
+      SERVICE_NAME: Auth
       ELASTICSEARCH_HOST: elastic
       KIBANA_HOST: kibana
     volumes:
       - ./shared_log/auth.txt:/usr/local/bin/app/log.txt
-      - ./configs/filebeat.yaml:/usr/share/filebeat/filebeat.yaml
+      - ./configs/filebeat.yml:/usr/share/filebeat/filebeat.yml
+    depends_on:
+      kibana:
+        condition: service_healthy
 
   user_filebeat:
     image: docker.elastic.co/beats/filebeat:8.16.1
     container_name: letslive_user_filebeat
+    networks:
+      elk_network:
     environment:
-      SERVER_NAME: User
+      SERVICE_NAME: User
       ELASTICSEARCH_HOST: elastic
+      KIBANA_HOST: kibana
     volumes:
       - ./shared_log/user.txt:/usr/local/bin/app/log.txt
-      - ./configs/filebeat.yaml:/usr/share/filebeat/filebeat.yaml
+      - ./configs/filebeat.yml:/usr/share/filebeat/filebeat.yml
+    depends_on:
+      kibana:
+        condition: service_healthy
 
   transcode_filebeat:
     image: docker.elastic.co/beats/filebeat:8.16.1
     container_name: letslive_transcode_filebeat
+    networks:
+      elk_network:
     environment:
-      SERVER_NAME: Transcode
+      SERVICE_NAME: Transcode
       ELASTICSEARCH_HOST: elastic
+      KIBANA_HOST: kibana
     volumes:
       - ./shared_log/transcode.txt:/usr/local/bin/app/log.txt
-      - ./configs/filebeat.yaml:/usr/share/filebeat/filebeat.yaml
-
-  #logstash:
-  #  image: logstash:8.16.1
-  #  container_name: letslive_logstash
-  #  environment:
-  #    discovery.seed_hosts: logstash
-  #    LS_JAVA_OPTS: "-Xms512m -Xmx512m"
-  #  volumes:
-  #    - ./configs/logstash/pipeline/logstash-nginx.config:/usr/share/logstash/pipeline/logstash-nginx.config
-  #  ports:
-  #    - "5000:5000/tcp"
-  #    - "5000:5000/udp"
-  #    - "5044:5044"
-  #    - "9600:9600"
-  #  depends_on:
-  #    - elasticsearch
-  #  networks:
-  #    - elk_network
-  #  command: logstash -f /usr/share/logstash/pipeline/logstash-nginx.config
-  #
+      - ./configs/filebeat.yml:/usr/share/filebeat/filebeat.yml
+    depends_on:
+      kibana:
+        condition: service_healthy
 
   elastic_setup:
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_STACK_VERSION}
@@ -327,6 +324,8 @@ services:
         until curl -s --cacert config/certs/ca/ca.crt https://elastic:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
         echo "Setting kibana_system password";
         until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://elastic:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
+        echo "Setting logstash_system password";
+        until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://elastic:9200/_security/user/logstash_system/_password -d "{\"password\":\"${LOGSTASH_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
         echo "All done!";
       '
     healthcheck:
@@ -380,6 +379,26 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
+
+  #logstash:
+  #  image: logstash:${ELK_STACK_VERSION}
+  #  container_name: letslive_logstash
+  #  environment:
+  #    discovery.seed_hosts: logstash
+  #    LS_JAVA_OPTS: "-Xms512m -Xmx512m"
+  #  volumes:
+  #    - ./configs/logstash/pipeline/logstash-nginx.config:/usr/share/logstash/pipeline/logstash-nginx.config
+  #  ports:
+  #    - "5000:5000/tcp"
+  #    - "5000:5000/udp"
+  #    - "5044:5044"
+  #    - "9600:9600"
+  #  depends_on:
+  #    elastic:
+  #      condition: service_healthy
+  #  networks:
+  #    - elk_network
+  #  command: logstash -f /usr/share/logstash/pipeline/logstash-nginx.config
 
   kibana:
     container_name: letslive_kibana
