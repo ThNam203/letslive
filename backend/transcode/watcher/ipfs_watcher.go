@@ -70,7 +70,7 @@ func (w *IPFSStreamWatcher) Watch() {
 					publishName := components[len(components)-1]
 
 					if err := os.MkdirAll(filepath.Join(w.config.Transcode.PublicHLSPath, publishName), os.ModePerm); err != nil {
-						logger.Errorw(PACKAGE_NAME_TAG, "failed to create publish folder", err, "path", filepath.Join(w.config.Transcode.PublicHLSPath, publishName))
+						logger.Errorw("failed to create publish folder", err, "path", filepath.Join(w.config.Transcode.PublicHLSPath, publishName))
 						continue
 					}
 
@@ -87,7 +87,7 @@ func (w *IPFSStreamWatcher) Watch() {
 						Variants:    variants,
 					}
 
-					logger.Infof(PACKAGE_NAME_TAG, "created hls stream with path", streams[publishName])
+					logger.Infof("created hls stream with path: %s", streams[publishName])
 
 					continue
 				}
@@ -98,19 +98,19 @@ func (w *IPFSStreamWatcher) Watch() {
 					pushlishName := components[len(components)-2]
 
 					if err := copy(event.Path, filepath.Join(w.config.Transcode.PublicHLSPath, pushlishName, w.config.Transcode.FFMpegSetting.MasterFileName)); err != nil {
-						logger.Errorw(PACKAGE_NAME_TAG, "failed to copy master file", err)
+						logger.Errorw("failed to copy master file", err)
 					}
 				} else if fileType == "Variant" {
 					info, err := w.getInfoFromPath(event.Path)
 					if err != nil {
-						logger.Errorw(PACKAGE_NAME_TAG, "failed to get variant info", err)
+						logger.Errorw("failed to get variant info", err)
 						continue
 					}
 
 					variant := streams[info.PublishName].Variants[info.VariantIndex]
 					newPlaylist, err := generateRemotePlaylist(event.Path, variant)
 					if err != nil {
-						logger.Errorw(PACKAGE_NAME_TAG, "error generating remote playlist", err)
+						logger.Errorw("error generating remote playlist", err)
 						continue
 					}
 
@@ -120,13 +120,13 @@ func (w *IPFSStreamWatcher) Watch() {
 				} else if fileType == "Segment" {
 					segment, err := getSegmentFromPath(event.Path)
 					if segment == nil {
-						logger.Errorw(PACKAGE_NAME_TAG, "error getting segment", err)
+						logger.Errorw("error getting segment", err)
 						continue
 					}
 
 					stream, ok := streams[segment.PublishName]
 					if !ok {
-						logger.Errorw(PACKAGE_NAME_TAG, "missing entry for publish name", segment.PublishName)
+						logger.Errorw("missing entry for publish name", segment.PublishName)
 						return
 					}
 
@@ -142,7 +142,9 @@ func (w *IPFSStreamWatcher) Watch() {
 							newObjectPath, err = w.storage.AddFile(event.Path)
 
 							if err != nil {
-								logger.Errorf(PACKAGE_NAME_TAG, "error while saving segments into storage", err)
+								logger.Errorf("error while saving segments into storage", err)
+							} else {
+								logger.Infof("saved segment with ipfs id: %s", newObjectPath)
 							}
 						}
 
@@ -154,7 +156,7 @@ func (w *IPFSStreamWatcher) Watch() {
 					variant.Segments = append(variant.Segments, *segment)
 				}
 			case err := <-myWatcher.Error:
-				logger.Errorf(PACKAGE_NAME_TAG, "something failed while running watcher", err)
+				logger.Errorf("something failed while running watcher", err)
 			case <-myWatcher.Closed:
 				return
 			}
@@ -163,11 +165,11 @@ func (w *IPFSStreamWatcher) Watch() {
 
 	// Watch the hls segment storage folder recursively for changes.
 	if err := myWatcher.AddRecursive(w.monitorPath); err != nil {
-		logger.Panicw(PACKAGE_NAME_TAG, "error while setting up", err)
+		logger.Panicw("error while setting up", err)
 	}
 
 	if err := myWatcher.Start(time.Millisecond * 100); err != nil {
-		logger.Panicw(PACKAGE_NAME_TAG, "error starting watcher", err)
+		logger.Panicw("error starting watcher", err)
 	}
 }
 
@@ -212,6 +214,5 @@ func (_ *IPFSStreamWatcher) getEventFileType(filePath string) string {
 		return "Segment"
 	}
 
-	logger.Errorw(PACKAGE_NAME_TAG, "unexpected file type", fileExtension)
 	return filepath.Ext(filePath)
 }

@@ -96,6 +96,7 @@ services:
       - "8889"
     networks:
       general_network:
+      ipfs_network:
     depends_on:
       consul:
         condition: service_healthy
@@ -430,86 +431,74 @@ services:
       timeout: 10s
       retries: 3
 
-  # TODO: remove (or load balancing)? using kong instead for api gateway
-  #traefik:
-  #  image: traefik:v3.1.7
-  #  volumes:
-  #    - "./configs/traefik.yaml:/etc/traefik/traefik.yml"
-  #  ports:
-  #    - "80:80"
-  #    - "8999:8080" # traefik dashboard
-  #  networks:
-  #    general_network:
-  #  depends_on:
-  #    consul: 
-  #      condition: service_healthy
-
   # serve the ipfs content using the bootstrap node (node has an http route to get files)
-  #nginx:
-  #  image: nginx:latest
-  #  container_name: nginx
-  #  ports:
-  #    - "8888:80"  # Expose Nginx on port 80 to access externally
-  #  volumes:
-  #    - ./ipfs-impl/nginx.conf:/etc/nginx/nginx.conf  # nginx config
-  #  networks:
-  #    ipfs_network:
-  #      ipv4_address: 10.5.0.10
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8888:80"  # Expose Nginx on port 80 to access externally
+    volumes:
+      - ./ipfs-impl/nginx.conf:/etc/nginx/nginx.conf  # nginx config
+    networks:
+      ipfs_network:
+        ipv4_address: 10.5.0.10
 
-  #ipfs_bootstrap:
-  #  build:
-  #    context: ./ipfs-impl
-  #    dockerfile: Dockerfile
-  #  container_name: ipfs_bootstrap
-  #  command: ["/usr/local/bin/app", "-b"] # run as bootstrap node
-  #  ports:
-  #    - "4001:4001"
-  #    - "8080:8080"
-  #  expose:
-  #    - "4001"
-  #    - "8080"
-  #  networks:
-  #    ipfs_network:
-  #      ipv4_address: 10.5.0.2
-  #      aliases:
-  #        - ipfs_bootstrap_node
+  ipfs_bootstrap:
+    build:
+      context: ./ipfs-impl
+      dockerfile: Dockerfile
+    container_name: ipfs_bootstrap
+    command: ["/usr/local/bin/app", "-b"] # run as bootstrap node
+    ports:
+      - "4001:4001"
+      - "8080:8080"
+    expose:
+      - "4001"
+      - "8080"
+    networks:
+      ipfs_network:
+        ipv4_address: 10.5.0.2
+        aliases:
+          - ipfs_bootstrap_node
 
   ##### Use the command below to get the bootstrap ip on host, then replace it with "127.0.0.1" or just set it static like me
   ##### docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
-  #
-  #ipfs_node_1:
-  #  build:
-  #    context: ./ipfs-impl
-  #    dockerfile: Dockerfile
-  #  container_name: ipfs_node_1
-  #  # change the address to reflex to yours
-  #  command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
-  #  networks:
-  #    ipfs_network:
-  #      #ipv4_address: 10.5.0.3
-  #      aliases:
-  #        - ipfs_bootstrap_node
-  #  expose:
-  #    - "4001"
-  #  depends_on:
-  #    - ipfs_bootstrap
+  
+  ipfs_node_1:
+    build:
+      context: ./ipfs-impl
+      dockerfile: Dockerfile
+    container_name: ipfs_node_1
+    # change the address to reflex to yours
+    command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
+    networks:
+      ipfs_network:
+        #ipv4_address: 10.5.0.3
+        aliases:
+          - ipfs_bootstrap_node
+    expose:
+      - "4001"
+    ports:
+      - "4321:4001/tcp"
+    depends_on:
+      - ipfs_bootstrap
 
-  #ipfs_node_2:
-  #  build:
-  #    context: ./ipfs-impl
-  #    dockerfile: Dockerfile
-  #  container_name: ipfs_node_2
-  #  # change the address to reflex to yours
-  #  command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
-  #  networks:
-  #    ipfs_network:
-  #      #ipv4_address: 10.5.0.4
-  #      aliases:
-  #        - ipfs_bootstrap_node
-  #  expose:
-  #    - "4001"
-  #  depends_on:
-  #    - ipfs_bootstrap
+  ipfs_node_2:
+    build:
+      context: ./ipfs-impl
+      dockerfile: Dockerfile
+    container_name: ipfs_node_2
+    # change the address to reflex to yours
+    command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
+    networks:
+      ipfs_network:
+        #ipv4_address: 10.5.0.4
+        aliases:
+          - ipfs_bootstrap_node
+    expose:
+      - "4001"
+    depends_on:
+      - ipfs_bootstrap
 
   ## showing bootstrap node metrics
   #prometheus:

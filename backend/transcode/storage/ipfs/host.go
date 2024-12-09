@@ -50,9 +50,9 @@ func NewLibp2pHost(
 		return nil, nil, err
 	}
 
-	swarmKeyFile, err := os.ReadFile("./storage/ipfs/swarm.key")
+	swarmKeyFile, err := os.ReadFile("./transcode/storage/ipfs/swarm.key")
 	if err != nil && errors.Is(err, os.ErrNotExist) {
-		return nil, nil, errors.New("swarm.key file not found")
+		return nil, nil, fmt.Errorf("swarm.key file not found (%s)", err)
 	} else if err != nil {
 		return nil, nil, err
 	}

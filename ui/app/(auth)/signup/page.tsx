@@ -15,10 +15,10 @@ export default function SignUpPage() {
                 </h1>
                 <p className="text-md">Choose a method below to begin</p>
                 <div className="flex gap-2 mb-2 mt-4">
-                    <OAuthLoginBtn url={GLOBAL.API_URL + "/v1/auth/google"}>
+                    <OAuthLoginBtn url={GLOBAL.API_URL + "/auth/google"}>
                         <IconGoogle/> Google
                     </OAuthLoginBtn>
-                    <OAuthLoginBtn url={GLOBAL.API_URL + "/v1/auth/google"}>
+                    <OAuthLoginBtn url={GLOBAL.API_URL + "/auth/google"}>
                         <IconFacebook/> Facebook
                     </OAuthLoginBtn>
                 </div>

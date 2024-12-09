@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"sen1or/lets-live/pkg/logger"
-	"sen1or/lets-live/transcode/storage"
 
+	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 )
@@ -19,7 +19,7 @@ type CustomStorage struct {
 }
 
 // If we don't want to connect to bootstrap node, enter a nil value for bootstrapNodeAddr
-func NewIPFSStorage(ctx context.Context, gateway string, bootstrapNodeAddr *string) storage.Storage {
+func NewIPFSStorage(ctx context.Context, gateway string, bootstrapNodeAddr *string) *CustomStorage {
 	if bootstrapNodeAddr != nil && len(*bootstrapNodeAddr) == 0 {
 		logger.Panicw("missing bootstrap node address")
 	}
@@ -50,6 +50,11 @@ func (s *CustomStorage) AddFile(filePath string) (string, error) {
 	}
 
 	return fmt.Sprintf("%s/ipfs/%s", s.gateway, fileCid.String()), nil
+}
+
+func (s *CustomStorage) HasBlock(cidString string) (bool, error) {
+	c, _ := cid.Decode(cidString)
+	return s.ipfsNode.HasBlock(context.Background(), c)
 }
 
 func (s *CustomStorage) SetupNode() error {
