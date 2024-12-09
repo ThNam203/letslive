@@ -76,7 +76,7 @@ export default function SignUpForm() {
 
         if (validate()) {
             // TODO: create a universal function to call api
-            const url = GLOBAL.API_URL + "/v1/auth/signup";
+            const url = GLOBAL.API_URL + "/auth/signup";
             try {
                 const response = await fetch(url, {
                     method: "POST",

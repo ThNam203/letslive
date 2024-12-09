@@ -7,12 +7,10 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p/core/peer"
 	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
-	"github.com/libp2p/go-libp2p/p2p/protocol/ping"
 	"github.com/multiformats/go-multiaddr"
 	prom "github.com/prometheus/client_golang/prometheus"
 	httpprom "github.com/prometheus/client_golang/prometheus/promhttp"
@@ -37,8 +35,6 @@ func main() {
 		if err := RunBootstrapNode(ctx); err != nil {
 			panic(err)
 		}
-
-		//fmt.Println("cai con cac")
 	} else {
 		if len(bootstrapNodeAddr) == 0 {
 			log.Panic("missing bootstrap node address")
@@ -119,12 +115,14 @@ func getFileHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Printf("getting file for cid: %s\n", fileCidString)
 
 	if err != nil {
+		fmt.Errorf("failed getting file for cid %s: %s", fileCidString, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	file, err := ipfsNode.GetFile(req.Context(), fileCid)
 	if err != nil {
+		fmt.Errorf("failed getting file for cid %s: %s", fileCidString, err)
 		http.Error(w, "failed to retrieve file: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -175,19 +173,19 @@ func RunNormalNode(ctx context.Context, bootstrapNodeAddr string) error {
 	log.Printf("connected to bootstrap node (%s)\n", bootstrapNodeAddr)
 
 	// ping allows to test for measurements between nodes (in this app it is from nodes to bootstrap node)
-	p := ping.Ping(ctx, host, targetInfo.ID)
+	//p := ping.Ping(ctx, host, targetInfo.ID)
 
-	go func() {
-		for {
-			res := <-p
-			if res.Error != nil {
-				log.Printf("failed to ping to bootstrap node: %s\n", res.Error.Error())
-				panic(res)
-			}
+	//go func() {
+	//	for {
+	//		res := <-p
+	//		if res.Error != nil {
+	//			log.Printf("failed to ping to bootstrap node: %s\n", res.Error.Error())
+	//			panic(res)
+	//		}
 
-			time.Sleep(5 * time.Second)
-		}
-	}()
+	//		time.Sleep(5 * time.Second)
+	//	}
+	//}()
 
 	return nil
 }
