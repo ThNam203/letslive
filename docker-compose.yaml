@@ -501,44 +501,44 @@ services:
       - ipfs_bootstrap
 
   ## showing bootstrap node metrics
-  #prometheus:
-  #  image: prom/prometheus:latest
-  #  ports:
-  #    - "9090:9090"
-  #  volumes:
-  #    - ./ipfs-impl/prometheus.yml:/etc/prometheus/prometheus.yml
-  #  networks:
-  #    ipfs_network:
-  #  depends_on:
-  #    ipfs_bootstrap:
-  #      condition: service_started
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./ipfs-impl/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      ipfs_network:
+    depends_on:
+      ipfs_bootstrap:
+        condition: service_started
 
-  #grafana:
-  #  image: grafana/grafana:latest
-  #  depends_on:
-  #    - prometheus
-  #  ports:
-  #    - "3000:3000"
-  #  logging:        # does not work?
-  #    driver: none
-  #  attach: false
-  #  environment:
-  #    - GF_AUTH_DISABLE_LOGIN_FORM=true
-  #    - GF_AUTH_ANONYMOUS_ENABLED=true
-  #    - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-  #  volumes:
-  #    - ./ipfs-impl/dashboards/dashboard.yml:/etc/grafana/provisioning/dashboards/main.yml
-  #    - ./ipfs-impl/dashboards/datasources.yml:/etc/grafana/provisioning/datasources/prom.yml
-  #    - ./ipfs-impl/dashboards/autonat/autonat.json:/var/lib/grafana/dashboards/autonat.json
-  #    - ./ipfs-impl/dashboards/autorelay/autorelay.json:/var/lib/grafana/dashboards/autorelay.json
-  #    - ./ipfs-impl/dashboards/eventbus/eventbus.json:/var/lib/grafana/dashboards/eventbus.json
-  #    - ./ipfs-impl/dashboards/holepunch/holepunch.json:/var/lib/grafana/dashboards/holepunch.json
-  #    - ./ipfs-impl/dashboards/identify/identify.json:/var/lib/grafana/dashboards/identify.json
-  #    - ./ipfs-impl/dashboards/relaysvc/relaysvc.json:/var/lib/grafana/dashboards/relaysvc.json
-  #    - ./ipfs-impl/dashboards/swarm/swarm.json:/var/lib/grafana/dashboards/swarm.json
-  #    - ./ipfs-impl/dashboards/resource-manager/resource-manager.json:/var/lib/grafana/dashboards/resource-manager.json
-  #  networks:
-  #    ipfs_network:
+  grafana:
+    image: grafana/grafana:latest
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+    logging:        # does not work?
+      driver: none
+    attach: false
+    environment:
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ./ipfs-impl/dashboards/dashboard.yml:/etc/grafana/provisioning/dashboards/main.yml
+      - ./ipfs-impl/dashboards/datasources.yml:/etc/grafana/provisioning/datasources/prom.yml
+      - ./ipfs-impl/dashboards/autonat/autonat.json:/var/lib/grafana/dashboards/autonat.json
+      - ./ipfs-impl/dashboards/autorelay/autorelay.json:/var/lib/grafana/dashboards/autorelay.json
+      - ./ipfs-impl/dashboards/eventbus/eventbus.json:/var/lib/grafana/dashboards/eventbus.json
+      - ./ipfs-impl/dashboards/holepunch/holepunch.json:/var/lib/grafana/dashboards/holepunch.json
+      - ./ipfs-impl/dashboards/identify/identify.json:/var/lib/grafana/dashboards/identify.json
+      - ./ipfs-impl/dashboards/relaysvc/relaysvc.json:/var/lib/grafana/dashboards/relaysvc.json
+      - ./ipfs-impl/dashboards/swarm/swarm.json:/var/lib/grafana/dashboards/swarm.json
+      - ./ipfs-impl/dashboards/resource-manager/resource-manager.json:/var/lib/grafana/dashboards/resource-manager.json
+    networks:
+      ipfs_network:
 
 networks:
   ipfs_network:
