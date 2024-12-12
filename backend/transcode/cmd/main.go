@@ -12,6 +12,7 @@ import (
 	"sen1or/lets-live/transcode/watcher"
 	"sen1or/lets-live/transcode/webserver"
 
+	_ "github.com/joho/godotenv/autoload"
 	"sen1or/lets-live/pkg/discovery"
 )
 

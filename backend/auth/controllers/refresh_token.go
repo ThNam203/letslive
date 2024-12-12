@@ -6,11 +6,14 @@ import (
 	"os"
 	"sen1or/lets-live/auth/domains"
 	"sen1or/lets-live/auth/repositories"
+	"sen1or/lets-live/pkg/logger"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/golang-jwt/jwt/v5"
 )
+
+var CONSUMER = "authenticated users"
 
 type TokenControllerConfig struct {
 	RefreshTokenMaxAge int
@@ -18,7 +21,8 @@ type TokenControllerConfig struct {
 }
 
 type MyCustomClaims struct {
-	UserId string `json:"userId"`
+	UserId   string `json:"userId"`
+	Consumer string `json:"consumer"`
 	jwt.RegisteredClaims
 }
 
@@ -102,6 +106,7 @@ func (c *TokenController) generateRefreshToken(userId string) (string, error) {
 	refreshTokenExpiresAt := time.Now().Add(refreshTokenExpiresDuration)
 	myClaims := MyCustomClaims{
 		userId,
+		CONSUMER,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(refreshTokenExpiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -136,6 +141,7 @@ func (c *TokenController) generateAccessToken(userId string) (string, error) {
 	accessTokenExpiresAt := time.Now().Add(accessTokenDuration)
 	myClaims := MyCustomClaims{
 		userId,
+		CONSUMER,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(accessTokenExpiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
