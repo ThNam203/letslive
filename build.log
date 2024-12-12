@@ -1,0 +1,1551 @@
+ Service ipfs_bootstrap  Building
+ Service configserver  Building
+#0 building with "default" instance using docker driver
+
+#1 [configserver internal] load build definition from Dockerfile
+#1 transferring dockerfile: 199B done
+#1 DONE 0.0s
+
+#2 [ipfs_bootstrap internal] load build definition from Dockerfile
+#2 transferring dockerfile: 314B done
+#2 DONE 0.0s
+
+#3 [ipfs_bootstrap internal] load metadata for docker.io/library/golang:1.23
+#3 ...
+
+#4 [configserver internal] load metadata for docker.io/library/eclipse-temurin:17.0.13_11-jdk-alpine
+#4 DONE 0.9s
+
+#5 [configserver internal] load .dockerignore
+#5 transferring context: 2B done
+#5 DONE 0.0s
+
+#3 [ipfs_bootstrap internal] load metadata for docker.io/library/golang:1.23
+#3 DONE 0.9s
+
+#6 [configserver 1/3] FROM docker.io/library/eclipse-temurin:17.0.13_11-jdk-alpine@sha256:4708e1a2c3baa0855eb9b3e6ae6285c8640d574c25ba74fddf6b8a17ccc3673f
+#6 DONE 0.0s
+
+#7 [ipfs_bootstrap internal] load .dockerignore
+#7 transferring context: 2B done
+#7 DONE 0.0s
+
+#8 [configserver internal] load build context
+#8 transferring context: 88B done
+#8 DONE 0.0s
+
+#9 [configserver 2/3] COPY target/*.jar app.jar
+#9 CACHED
+
+#10 [configserver 3/3] RUN apk --no-cache add curl
+#10 CACHED
+
+#11 [ipfs_bootstrap 1/6] FROM docker.io/library/golang:1.23@sha256:70031844b8c225351d0bb63e2c383f80db85d92ba894e3da7e13bcf80efa9a37
+#11 resolve docker.io/library/golang:1.23@sha256:70031844b8c225351d0bb63e2c383f80db85d92ba894e3da7e13bcf80efa9a37 0.0s done
+#11 DONE 0.0s
+
+#12 [configserver] exporting to image
+#12 exporting layers done
+#12 writing image sha256:76692205ea2af82a19b012dfaa1addee0b8595fe1eab18909f6b2ee2d926f4cc done
+#12 naming to docker.io/library/letslive-configserver done
+#12 DONE 0.0s
+
+#13 [ipfs_bootstrap internal] load build context
+#13 transferring context: 1.55kB done
+#13 DONE 0.0s
+
+#14 [ipfs_bootstrap 3/6] COPY go.mod go.sum ./
+#14 CACHED
+
+#15 [ipfs_bootstrap 5/6] COPY . .
+#15 CACHED
+
+#16 [ipfs_bootstrap 4/6] RUN go mod download && go mod verify
+#16 CACHED
+
+#17 [ipfs_bootstrap 2/6] WORKDIR /usr/src/ipfs
+#17 CACHED
+
+#18 [ipfs_bootstrap 6/6] RUN go build -v -o /usr/local/bin/app ./...
+ Service configserver  Built
+ Service user  Building
+ Service transcode  Building
+ Service auth  Building
+ Service ipfs_bootstrap  Built
+#18 CACHED
+
+#19 [ipfs_bootstrap] exporting to image
+#19 exporting layers done
+#19 writing image sha256:e244445ea1787a984a6839e767599ccdf92e1aa52dba4c2dac48af5360fd1784 done
+#19 naming to docker.io/library/letslive-ipfs_bootstrap done
+#19 DONE 0.0s
+
+#20 [configserver] resolving provenance for metadata file
+#20 DONE 0.0s
+
+#21 [ipfs_bootstrap] resolving provenance for metadata file
+#21 DONE 0.0s
+
+#22 [auth internal] load build definition from auth.Dockerfile
+ Service ipfs_node_2  Building
+#22 transferring dockerfile: 225B done
+ Service ipfs_node_1  Building
+#22 DONE 0.0s
+
+#23 [user internal] load build definition from user.Dockerfile
+#23 transferring dockerfile: 225B done
+#23 DONE 0.0s
+
+#24 [transcode internal] load build definition from transcode.Dockerfile
+#24 transferring dockerfile: 289B done
+#24 DONE 0.0s
+
+#25 [ipfs_node_2 internal] load build definition from Dockerfile
+#25 transferring dockerfile: 314B done
+#25 DONE 0.0s
+
+#26 [ipfs_node_1 internal] load build definition from Dockerfile
+#26 transferring dockerfile: 314B done
+#26 DONE 0.0s
+
+#3 [ipfs_node_1 internal] load metadata for docker.io/library/golang:1.23
+#3 DONE 1.3s
+
+#27 [ipfs_node_2 internal] load .dockerignore
+#27 transferring context: 2B done
+#27 DONE 0.0s
+
+#28 [auth internal] load .dockerignore
+#28 transferring context: 2B done
+#28 DONE 0.0s
+
+#29 [ipfs_node_1 internal] load .dockerignore
+#29 transferring context: 2B done
+#29 DONE 0.0s
+
+#30 [transcode internal] load .dockerignore
+#30 transferring context: 2B done
+#30 DONE 0.0s
+
+#31 [user internal] load .dockerignore
+#31 transferring context: 2B done
+#31 DONE 0.1s
+
+#11 [user 1/6] FROM docker.io/library/golang:1.23@sha256:70031844b8c225351d0bb63e2c383f80db85d92ba894e3da7e13bcf80efa9a37
+#11 resolve docker.io/library/golang:1.23@sha256:70031844b8c225351d0bb63e2c383f80db85d92ba894e3da7e13bcf80efa9a37 0.0s done
+#11 DONE 0.0s
+
+#32 [ipfs_node_2 internal] load build context
+#32 transferring context: 1.55kB done
+#32 DONE 0.0s
+
+#33 [user internal] load build context
+#33 transferring context: 10.28kB 0.0s done
+#33 DONE 0.1s
+
+#34 [ipfs_node_1 internal] load build context
+#34 transferring context: 1.55kB done
+#34 DONE 0.0s
+
+#35 [auth internal] load build context
+#35 transferring context: 10.28kB 0.0s done
+#35 DONE 0.1s
+
+#36 [transcode internal] load build context
+#36 transferring context: 10.28kB 0.0s done
+#36 DONE 0.1s
+
+#37 [ipfs_node_2 3/6] COPY go.mod go.sum ./
+#37 CACHED
+
+#38 [ipfs_node_2 5/6] COPY . .
+#38 CACHED
+
+#17 [ipfs_node_2 2/6] WORKDIR /usr/src/ipfs
+#17 CACHED
+
+#39 [ipfs_node_2 4/6] RUN go mod download && go mod verify
+#39 CACHED
+
+#40 [ipfs_node_1 6/6] RUN go build -v -o /usr/local/bin/app ./...
+#40 CACHED
+
+#41 [auth 3/6] COPY ../go.mod ../go.sum ./
+#41 CACHED
+
+#42 [auth 4/6] RUN go mod download && go mod verify
+#42 CACHED
+
+#43 [transcode 5/7] RUN go mod download && go mod verify
+#43 CACHED
+
+#44 [transcode 3/7] RUN apt-get update && apt-get install -y ffmpeg curl
+#44 CACHED
+
+#45 [transcode 4/7] COPY ../go.mod ../go.sum ./
+#45 CACHED
+
+#46 [transcode 6/7] COPY ../ .
+#46 CACHED
+
+#47 [auth 5/6] COPY ../ .
+#47 CACHED
+
+#48 [user 4/6] RUN go mod download && go mod verify
+#48 CACHED
+
+#49 [user 2/6] WORKDIR /usr/src/app
+#49 CACHED
+
+#50 [user 3/6] COPY ../go.mod ../go.sum ./
+#50 CACHED
+
+#51 [user 5/6] COPY ../ .
+#51 CACHED
+
+#52 [ipfs_node_2] exporting to image
+#52 exporting layers done
+#52 writing image sha256:b04212d070ed4c40d81d9f4907f63893969bc258467c4053943f4796afa6fb41 done
+#52 naming to docker.io/library/letslive-ipfs_node_2 0.0s done
+#52 DONE 0.0s
+
+#53 [ipfs_node_1] exporting to image
+#53 exporting layers done
+#53 writing image sha256:cc94a71805462f5cd4b58ed7dd7b184df4f117432bb14051e6a5b7496ce4e449 0.0s done
+#53 naming to docker.io/library/letslive-ipfs_node_1 done
+#53 DONE 0.0s
+
+#54 [ipfs_node_2] resolving provenance for metadata file
+ Service ipfs_node_2  Built
+ Service ipfs_node_1  Built
+#54 DONE 0.0s
+
+#55 [ipfs_node_1] resolving provenance for metadata file
+#55 DONE 0.0s
+
+#56 [user 6/6] RUN go build -v -o /usr/local/bin/app ./user/cmd/
+#56 0.604 internal/byteorder
+#56 0.604 internal/unsafeheader
+#56 0.604 internal/godebugs
+#56 0.605 internal/goexperiment
+#56 0.606 internal/profilerecord
+#56 0.606 internal/coverage/rtcov
+#56 0.608 internal/cpu
+#56 0.608 internal/runtime/atomic
+#56 0.614 cmp
+#56 0.616 internal/race
+#56 0.618 math/bits
+#56 0.618 internal/itoa
+#56 0.618 internal/goarch
+#56 0.626 sync/atomic
+#56 0.626 unicode/utf8
+#56 0.627 internal/msan
+#56 0.628 internal/runtime/syscall
+#56 0.631 internal/goos
+#56 0.631 internal/asan
+#56 0.631 crypto/internal/alias
+#56 0.631 unicode
+#56 0.634 runtime/internal/math
+#56 0.644 crypto/subtle
+#56 0.649 internal/chacha8rand
+#56 0.652 internal/abi
+#56 0.657 crypto/internal/boring/sig
+#56 0.659 container/list
+#56 0.684 unicode/utf16
+#56 0.684 runtime/internal/sys
+#56 0.689 vendor/golang.org/x/crypto/cryptobyte/asn1
+#56 0.692 vendor/golang.org/x/crypto/internal/alias
+#56 0.710 internal/nettrace
+#56 0.717 encoding
+#56 0.723 log/internal
+#56 0.724 github.com/jackc/puddle/v2/internal/genstack
+#56 0.729 internal/goversion
+#56 0.744 internal/platform
+#56 0.750 internal/gover
+#56 0.767 golang.org/x/exp/constraints
+#56 0.784 golang.org/x/net/html/atom
+#56 0.791 github.com/go-playground/locales/currency
+#56 0.791 github.com/leodido/go-urn/scim/schema
+#56 0.794 internal/bytealg
+#56 0.813 math
+#56 0.847 golang.org/x/exp/slices
+#56 0.897 internal/runtime/exithook
+#56 0.995 internal/stringslite
+#56 1.236 runtime
+#56 3.578 internal/reflectlite
+#56 3.578 iter
+#56 3.578 internal/weak
+#56 3.578 sync
+#56 3.591 slices
+#56 3.591 maps
+#56 3.658 internal/bisect
+#56 3.658 internal/singleflight
+#56 3.658 github.com/jackc/pgx/v5/internal/iobufpool
+#56 3.658 internal/testlog
+#56 3.658 github.com/josharian/intern
+#56 3.658 go.uber.org/zap/internal/pool
+#56 3.665 runtime/cgo
+#56 3.710 errors
+#56 3.755 internal/godebug
+#56 3.755 sort
+#56 3.794 internal/oserror
+#56 3.794 github.com/hashicorp/golang-lru/simplelru
+#56 3.795 path
+#56 3.796 io
+#56 3.800 strconv
+#56 3.801 crypto/internal/edwards25519/field
+#56 3.801 vendor/golang.org/x/net/dns/dnsmessage
+#56 3.801 math/rand/v2
+#56 3.801 crypto/internal/nistec/fiat
+#56 3.817 math/rand
+#56 3.821 syscall
+#56 3.950 crypto/internal/edwards25519
+#56 3.997 internal/concurrent
+#56 4.004 github.com/jackc/pgx/chunkreader
+#56 4.006 hash
+#56 4.008 strings
+#56 4.010 crypto/internal/randutil
+#56 4.011 github.com/jackc/pgx/v5/pgconn/internal/bgreader
+#56 4.014 internal/saferio
+#56 4.019 bytes
+#56 4.025 unique
+#56 4.076 hash/crc32
+#56 4.077 hash/adler32
+#56 4.133 container/heap
+#56 4.134 golang.org/x/text/internal/tag
+#56 4.290 crypto
+#56 4.291 crypto/rc4
+#56 4.294 reflect
+#56 4.295 net/netip
+#56 4.295 internal/types/errors
+#56 4.308 golang.org/x/text/transform
+#56 4.309 crypto/cipher
+#56 4.313 vendor/golang.org/x/text/transform
+#56 4.450 crypto/md5
+#56 4.477 crypto/internal/boring
+#56 4.480 crypto/des
+#56 4.484 golang.org/x/text/runes
+#56 4.486 golang.org/x/text/width
+#56 4.556 crypto/sha256
+#56 4.563 crypto/hmac
+#56 4.563 crypto/aes
+#56 4.563 crypto/sha512
+#56 4.563 crypto/sha1
+#56 4.647 bufio
+#56 4.649 regexp/syntax
+#56 4.649 go/build/constraint
+#56 4.650 net/http/internal/ascii
+#56 4.657 vendor/golang.org/x/crypto/hkdf
+#56 4.702 golang.org/x/crypto/pbkdf2
+#56 4.718 go/version
+#56 4.731 html
+#56 4.751 github.com/hashicorp/go-immutable-radix
+#56 4.828 internal/syscall/unix
+#56 4.830 internal/syscall/execenv
+#56 4.832 time
+#56 5.579 regexp
+#56 5.753 io/fs
+#56 5.758 internal/poll
+#56 5.758 go.uber.org/zap/buffer
+#56 5.758 context
+#56 5.760 github.com/go-playground/locales
+#56 5.905 go.uber.org/zap/internal/bufferpool
+#56 5.949 internal/filepathlite
+#56 5.952 embed
+#56 5.952 github.com/jackc/pgx/v5/pgconn/internal/ctxwatch
+#56 5.957 golang.org/x/sync/semaphore
+#56 5.975 go.uber.org/zap/internal/stacktrace
+#56 6.059 github.com/jackc/puddle/v2
+#56 6.070 crypto/internal/nistec
+#56 6.088 github.com/swaggo/files/v2
+#56 6.127 os
+#56 6.388 crypto/ecdh
+#56 6.533 internal/fmtsort
+#56 6.533 github.com/jackc/pgx/v5/internal/anynil
+#56 6.536 encoding/binary
+#56 6.536 github.com/hashicorp/errwrap
+#56 6.694 fmt
+#56 6.697 vendor/golang.org/x/sys/cpu
+#56 6.698 path/filepath
+#56 6.698 github.com/jackc/pgpassfile
+#56 6.698 internal/lazyregexp
+#56 6.698 go.uber.org/zap/internal/exit
+#56 6.701 os/signal
+#56 6.702 golang.org/x/sys/cpu
+#56 6.702 io/ioutil
+#56 6.717 net
+#56 6.742 vendor/golang.org/x/crypto/chacha20
+#56 6.746 encoding/base64
+#56 6.748 github.com/jackc/pgx/pgio
+#56 6.749 vendor/golang.org/x/crypto/internal/poly1305
+#56 6.749 golang.org/x/sys/unix
+#56 6.754 github.com/jackc/pgx/v5/internal/pgio
+#56 6.879 vendor/golang.org/x/crypto/sha3
+#56 6.885 os/exec
+#56 6.892 vendor/golang.org/x/crypto/chacha20poly1305
+#56 6.896 golang.org/x/crypto/sha3
+#56 6.921 encoding/pem
+#56 7.091 internal/goroot
+#56 ...
+
+#57 [transcode 7/7] RUN go build -v -o /usr/local/bin/app ./transcode/cmd/
+#57 0.839 internal/byteorder
+#57 0.852 internal/goos
+#57 0.856 internal/race
+#57 0.856 internal/godebugs
+#57 0.857 internal/coverage/rtcov
+#57 0.858 internal/runtime/atomic
+#57 0.869 internal/itoa
+#57 0.872 internal/goarch
+#57 0.872 internal/msan
+#57 0.879 sync/atomic
+#57 0.883 internal/profilerecord
+#57 0.883 internal/asan
+#57 0.886 internal/runtime/syscall
+#57 0.887 internal/unsafeheader
+#57 0.891 internal/cpu
+#57 0.891 cmp
+#57 0.897 internal/goexperiment
+#57 0.903 math/bits
+#57 0.906 unicode/utf8
+#57 0.918 unicode
+#57 0.924 container/list
+#57 0.924 crypto/internal/alias
+#57 0.925 internal/abi
+#57 0.930 internal/chacha8rand
+#57 0.939 runtime/internal/sys
+#57 0.940 runtime/internal/math
+#57 0.944 crypto/subtle
+#57 0.948 crypto/internal/boring/sig
+#57 0.966 unicode/utf16
+#57 0.966 vendor/golang.org/x/crypto/cryptobyte/asn1
+#57 0.974 vendor/golang.org/x/crypto/internal/alias
+#57 0.997 internal/nettrace
+#57 1.002 encoding
+#57 1.006 log/internal
+#57 1.014 golang.org/x/exp/constraints
+#57 1.016 google.golang.org/protobuf/internal/flags
+#57 1.021 log/slog/internal
+#57 1.028 go.opentelemetry.io/otel/metric/embedded
+#57 1.031 github.com/cskr/pubsub
+#57 1.032 github.com/libp2p/go-libp2p/core/control
+#57 1.034 go.opentelemetry.io/otel/trace/embedded
+#57 1.035 github.com/ipfs/boxo/ipld/unixfs/internal
+#57 1.038 golang.org/x/net/internal/iana
+#57 1.039 internal/runtime/exithook
+#57 1.040 golang.org/x/crypto/internal/alias
+#57 1.044 golang.org/x/exp/slices
+#57 1.052 google.golang.org/protobuf/internal/set
+#57 1.067 golang.org/x/crypto/salsa20/salsa
+#57 1.068 github.com/klauspost/compress/internal/cpuinfo
+#57 1.069 github.com/quic-go/quic-go/internal/utils/ringbuffer
+#57 1.075 github.com/pion/dtls/v2/internal/ciphersuite/types
+#57 1.089 github.com/pion/dtls/v2/pkg/crypto/clientcertificate
+#57 1.089 github.com/pion/dtls/v2/pkg/crypto/signature
+#57 1.102 golang.org/x/crypto/cryptobyte/asn1
+#57 1.103 github.com/pion/transport/v2/utils/xor
+#57 1.105 github.com/pion/interceptor/internal/sequencenumber
+#57 1.115 go.uber.org/dig/internal/graph
+#57 1.118 internal/bytealg
+#57 1.123 math
+#57 1.123 go.opencensus.io/internal/tagencoding
+#57 1.127 sen1or/lets-live/transcode/storage
+#57 1.156 github.com/pion/ice/v2/internal/atomic
+#57 1.256 internal/stringslite
+#57 1.379 runtime
+#57 1.390 go.opentelemetry.io/otel/internal
+#57 1.390 github.com/klauspost/compress
+#57 1.390 gonum.org/v1/gonum/mathext/internal/gonum
+#57 1.390 math/cmplx
+#57 1.401 gonum.org/v1/gonum/mathext/internal/cephes
+#57 1.431 gonum.org/v1/gonum/mathext/internal/amos
+#57 1.506 gonum.org/v1/gonum/mathext
+#57 3.768 internal/reflectlite
+#57 3.768 internal/weak
+#57 3.768 iter
+#57 3.768 sync
+#57 3.768 runtime/metrics
+#57 3.781 maps
+#57 3.781 slices
+#57 3.909 internal/bisect
+#57 3.910 internal/testlog
+#57 3.911 internal/singleflight
+#57 3.911 go.uber.org/zap/internal/pool
+#57 3.911 google.golang.org/protobuf/internal/pragma
+#57 3.911 log/slog/internal/buffer
+#57 3.913 github.com/quic-go/quic-go/internal/utils/linkedlist
+#57 3.915 github.com/Jorropo/jsync
+#57 3.947 runtime/cgo
+#57 4.147 internal/godebug
+#57 4.147 errors
+#57 4.147 sort
+#57 4.263 internal/oserror
+#57 4.264 io
+#57 4.264 path
+#57 4.266 crypto/internal/edwards25519/field
+#57 4.267 crypto/internal/nistec/fiat
+#57 4.268 vendor/golang.org/x/net/dns/dnsmessage
+#57 4.269 github.com/hashicorp/golang-lru/simplelru
+#57 4.273 math/rand/v2
+#57 4.273 golang.org/x/net/dns/dnsmessage
+#57 4.274 github.com/pion/rtp/codecs/av1/obu
+#57 4.274 github.com/pion/rtp/codecs/vp9
+#57 4.276 strconv
+#57 4.276 math/rand
+#57 4.333 syscall
+#57 4.587 internal/concurrent
+#57 4.629 unique
+#57 4.652 crypto/internal/edwards25519
+#57 4.679 bytes
+#57 4.684 internal/saferio
+#57 4.684 crypto/internal/randutil
+#57 4.684 hash
+#57 4.686 strings
+#57 4.691 container/heap
+#57 4.711 github.com/beorn7/perks/quantile
+#57 4.734 github.com/multiformats/go-base32
+#57 4.735 crypto/rc4
+#57 4.736 crypto
+#57 4.739 reflect
+#57 4.786 hash/crc32
+#57 4.791 github.com/spaolacci/murmur3
+#57 4.821 crypto/md5
+#57 4.826 hash/adler32
+#57 4.836 hash/fnv
+#57 4.858 net/netip
+#57 4.903 encoding/base32
+#57 4.928 github.com/ipfs/go-ipfs-pq
+#57 5.315 vendor/golang.org/x/text/transform
+#57 5.316 golang.org/x/text/transform
+#57 5.319 crypto/cipher
+#57 5.460 crypto/internal/boring
+#57 5.462 crypto/des
+#57 5.528 crypto/aes
+#57 5.529 crypto/sha1
+#57 5.529 crypto/sha512
+#57 5.529 crypto/hmac
+#57 5.532 crypto/sha256
+#57 5.555 regexp/syntax
+#57 5.557 bufio
+#57 5.558 net/http/internal/ascii
+#57 5.558 github.com/hashicorp/go-immutable-radix
+#57 5.559 go/build/constraint
+#57 5.560 github.com/munnerz/goautoneg
+#57 5.594 vendor/golang.org/x/crypto/hkdf
+#57 5.620 golang.org/x/crypto/hkdf
+#57 5.631 net/http/internal/testcert
+#57 5.697 github.com/pion/stun/internal/hmac
+#57 5.706 github.com/pion/dtls/v2/pkg/crypto/hash
+#57 5.763 internal/syscall/unix
+#57 5.764 time
+#57 5.765 internal/syscall/execenv
+#57 5.773 github.com/pbnjay/memory
+#57 5.806 github.com/libp2p/go-buffer-pool
+#57 6.103 regexp
+#57 6.320 context
+#57 6.321 io/fs
+#57 6.321 internal/poll
+#57 6.321 go.uber.org/zap/buffer
+#57 6.321 github.com/ipfs/go-ipfs-delay
+#57 6.324 github.com/hashicorp/golang-lru/v2/internal
+#57 6.326 github.com/libp2p/go-libp2p/p2p/host/basic/internal/backoff
+#57 6.327 github.com/jbenet/go-temp-err-catcher
+#57 6.327 github.com/pion/interceptor/internal/ntp
+#57 6.328 go.uber.org/dig/internal/digclock
+#57 6.355 github.com/hashicorp/golang-lru/v2/simplelru
+#57 6.438 github.com/hashicorp/golang-lru/v2
+#57 6.440 go.uber.org/zap/internal/bufferpool
+#57 6.487 go.uber.org/zap/internal/stacktrace
+#57 6.500 embed
+#57 6.501 internal/filepathlite
+#57 6.542 go.opentelemetry.io/otel/internal/baggage
+#57 6.548 go.uber.org/fx/internal/fxclock
+#57 6.550 github.com/pion/transport/v2/deadline
+#57 6.554 github.com/ipfs/go-metrics-interface
+#57 6.557 github.com/pion/dtls/v2/internal/closer
+#57 6.606 google.golang.org/protobuf/internal/editiondefaults
+#57 6.607 crypto/internal/nistec
+#57 6.621 os
+#57 6.631 github.com/ipfs/boxo/bitswap/metrics
+#57 6.631 github.com/pion/transport/v2/packetio
+#57 6.639 internal/fmtsort
+#57 6.640 go.opentelemetry.io/otel/internal/attribute
+#57 6.640 encoding/binary
+#57 6.640 github.com/hashicorp/errwrap
+#57 6.847 vendor/golang.org/x/crypto/internal/poly1305
+#57 6.847 encoding/base64
+#57 6.847 github.com/multiformats/go-varint
+#57 6.847 github.com/ipfs/boxo/bitswap/internal/defaults
+#57 6.847 github.com/cespare/xxhash/v2
+#57 6.848 golang.org/x/exp/rand
+#57 6.848 golang.org/x/crypto/internal/poly1305
+#57 6.848 vendor/golang.org/x/crypto/chacha20
+#57 6.848 github.com/davidlazar/go-crypto/salsa20
+#57 6.848 github.com/klauspost/compress/internal/snapref
+#57 6.848 golang.org/x/crypto/chacha20
+#57 6.849 github.com/pion/dtls/v2/internal/util
+#57 6.850 golang.org/x/sys/unix
+#57 6.851 github.com/klauspost/compress/zstd/internal/xxhash
+#57 6.885 github.com/pion/dtls/v2/pkg/crypto/ccm
+#57 6.918 github.com/libp2p/go-msgio
+#57 6.999 crypto/ecdh
+#57 7.064 encoding/pem
+#57 7.094 golang.org/x/crypto/curve25519
+#57 7.238 fmt
+#57 7.242 path/filepath
+#57 7.242 go.uber.org/zap/internal/exit
+#57 7.243 golang.org/x/sys/cpu
+#57 7.243 google.golang.org/protobuf/internal/detrand
+#57 7.243 os/signal
+#57 7.244 vendor/golang.org/x/sys/cpu
+#57 7.245 github.com/crackcomm/go-gitignore
+#57 7.247 net
+#57 7.247 github.com/prometheus/procfs/internal/util
+#57 7.248 io/ioutil
+#57 7.250 internal/sysinfo
+#57 ...
+
+#56 [user 6/6] RUN go build -v -o /usr/local/bin/app ./user/cmd/
+#56 7.215 database/sql/driver
+#56 7.220 log
+#56 7.221 os/user
+#56 7.222 github.com/joho/godotenv
+#56 7.229 net/url
+#56 7.230 golang.org/x/text/unicode/norm
+#56 7.231 go/doc/comment
+#56 7.231 encoding/hex
+#56 7.231 github.com/jackc/pgservicefile
+#56 7.232 encoding/json
+#56 7.232 internal/buildcfg
+#56 7.233 go/token
+#56 7.233 math/big
+#56 7.243 golang.org/x/text/internal/language
+#56 7.360 compress/flate
+#56 7.364 github.com/jackc/pgx/v5/internal/sanitize
+#56 7.433 github.com/joho/godotenv/autoload
+#56 7.463 encoding/gob
+#56 7.470 gopkg.in/yaml.v2
+#56 7.479 database/sql
+#56 7.504 golang.org/x/text/unicode/bidi
+#56 7.555 vendor/golang.org/x/text/unicode/bidi
+#56 7.566 go/scanner
+#56 7.711 vendor/golang.org/x/text/unicode/norm
+#56 7.793 vendor/golang.org/x/net/http2/hpack
+#56 7.880 compress/gzip
+#56 7.902 go/ast
+#56 7.988 golang.org/x/text/internal/language/compact
+#56 8.070 mime
+#56 8.080 mime/quotedprintable
+#56 8.121 vendor/golang.org/x/text/secure/bidirule
+#56 8.143 net/http/internal
+#56 8.144 golang.org/x/text/secure/bidirule
+#56 8.259 github.com/go-openapi/jsonreference/internal
+#56 8.280 golang.org/x/text/language
+#56 8.290 text/tabwriter
+#56 8.297 text/template/parse
+#56 8.437 flag
+#56 8.509 go.uber.org/multierr
+#56 8.632 go.uber.org/zap/internal/color
+#56 8.665 github.com/hashicorp/go-multierror
+#56 8.762 gopkg.in/yaml.v3
+#56 8.772 encoding/xml
+#56 8.971 golang.org/x/text/internal
+#56 8.978 golang.org/x/net/html
+#56 9.068 golang.org/x/text/cases
+#56 9.475 compress/zlib
+#56 9.688 debug/dwarf
+#56 9.727 golang.org/x/text/secure/precis
+#56 9.820 encoding/csv
+#56 9.873 github.com/jackc/pgx/v5/pgproto3
+#56 ...
+
+#58 [auth 6/6] RUN go build -v -o /usr/local/bin/app ./auth/cmd/
+#58 0.623 internal/unsafeheader
+#58 0.624 internal/goarch
+#58 0.626 internal/byteorder
+#58 0.634 internal/cpu
+#58 0.635 cmp
+#58 0.643 internal/godebugs
+#58 0.643 internal/goexperiment
+#58 0.645 internal/coverage/rtcov
+#58 0.645 internal/runtime/syscall
+#58 0.646 internal/runtime/atomic
+#58 0.649 internal/itoa
+#58 0.650 internal/msan
+#58 0.652 internal/asan
+#58 0.652 internal/profilerecord
+#58 0.655 internal/goos
+#58 0.655 internal/race
+#58 0.656 sync/atomic
+#58 0.670 math/bits
+#58 0.679 unicode/utf8
+#58 0.686 unicode
+#58 0.690 internal/abi
+#58 0.693 runtime/internal/math
+#58 0.709 internal/chacha8rand
+#58 0.710 crypto/internal/alias
+#58 0.710 crypto/subtle
+#58 0.719 runtime/internal/sys
+#58 0.719 container/list
+#58 0.720 crypto/internal/boring/sig
+#58 0.728 unicode/utf16
+#58 0.729 vendor/golang.org/x/crypto/cryptobyte/asn1
+#58 0.738 vendor/golang.org/x/crypto/internal/alias
+#58 0.747 internal/nettrace
+#58 0.747 encoding
+#58 0.768 internal/runtime/exithook
+#58 0.806 log/internal
+#58 0.811 github.com/jackc/puddle/v2/internal/genstack
+#58 0.814 internal/goversion
+#58 0.815 internal/platform
+#58 0.817 internal/gover
+#58 0.818 golang.org/x/exp/constraints
+#58 0.819 golang.org/x/net/html/atom
+#58 0.830 github.com/go-playground/locales/currency
+#58 0.833 github.com/leodido/go-urn/scim/schema
+#58 0.882 golang.org/x/exp/slices
+#58 0.931 internal/bytealg
+#58 0.941 math
+#58 1.044 internal/stringslite
+#58 1.348 runtime
+#58 3.581 iter
+#58 3.581 internal/weak
+#58 3.581 internal/reflectlite
+#58 3.582 sync
+#58 3.592 maps
+#58 3.592 slices
+#58 3.664 internal/bisect
+#58 3.671 internal/testlog
+#58 3.671 internal/singleflight
+#58 3.671 go.uber.org/zap/internal/pool
+#58 3.672 github.com/josharian/intern
+#58 3.672 github.com/jackc/pgx/v5/internal/iobufpool
+#58 3.684 runtime/cgo
+#58 3.700 errors
+#58 3.700 sort
+#58 3.771 internal/godebug
+#58 3.772 internal/oserror
+#58 3.772 io
+#58 3.773 strconv
+#58 3.815 crypto/internal/nistec/fiat
+#58 3.815 github.com/hashicorp/golang-lru/simplelru
+#58 3.817 vendor/golang.org/x/net/dns/dnsmessage
+#58 3.817 math/rand/v2
+#58 3.818 crypto/internal/edwards25519/field
+#58 3.819 path
+#58 3.882 math/rand
+#58 3.888 golang.org/x/text/internal/tag
+#58 3.896 container/heap
+#58 3.901 syscall
+#58 3.946 hash
+#58 3.950 bytes
+#58 3.950 strings
+#58 3.950 crypto/internal/randutil
+#58 3.951 github.com/jackc/pgx/v5/pgconn/internal/bgreader
+#58 3.951 internal/saferio
+#58 3.963 github.com/jackc/pgx/chunkreader
+#58 3.971 crypto/internal/edwards25519
+#58 4.012 internal/concurrent
+#58 4.061 unique
+#58 4.063 hash/adler32
+#58 4.065 hash/crc32
+#58 4.302 crypto/rc4
+#58 4.303 internal/types/errors
+#58 4.304 golang.org/x/crypto/blowfish
+#58 4.304 crypto
+#58 4.317 reflect
+#58 4.338 regexp/syntax
+#58 4.339 go/build/constraint
+#58 4.343 net/http/internal/ascii
+#58 4.344 go/version
+#58 4.359 html
+#58 4.393 crypto/md5
+#58 4.401 net/netip
+#58 4.431 crypto/cipher
+#58 4.432 bufio
+#58 4.436 golang.org/x/text/transform
+#58 4.437 vendor/golang.org/x/text/transform
+#58 4.441 github.com/hashicorp/go-immutable-radix
+#58 4.647 golang.org/x/text/runes
+#58 4.654 golang.org/x/text/width
+#58 4.814 crypto/internal/boring
+#58 4.814 crypto/des
+#58 4.948 crypto/hmac
+#58 4.948 crypto/sha256
+#58 4.949 crypto/sha512
+#58 4.949 crypto/sha1
+#58 4.950 crypto/aes
+#58 4.996 golang.org/x/crypto/pbkdf2
+#58 5.000 vendor/golang.org/x/crypto/hkdf
+#58 5.407 internal/syscall/execenv
+#58 5.407 internal/syscall/unix
+#58 5.408 time
+#58 5.448 regexp
+#58 5.810 github.com/jinzhu/inflection
+#58 5.988 io/fs
+#58 5.990 github.com/go-playground/locales
+#58 5.992 go.uber.org/zap/buffer
+#58 5.997 github.com/jinzhu/now
+#58 5.998 internal/poll
+#58 5.999 context
+#58 6.111 go.uber.org/zap/internal/bufferpool
+#58 6.170 go.uber.org/zap/internal/stacktrace
+#58 6.206 internal/filepathlite
+#58 6.206 embed
+#58 6.260 github.com/jackc/pgx/v5/pgconn/internal/ctxwatch
+#58 6.262 golang.org/x/sync/semaphore
+#58 6.310 crypto/internal/nistec
+#58 6.318 github.com/swaggo/files/v2
+#58 6.327 github.com/jackc/puddle/v2
+#58 6.442 os
+#58 6.534 internal/fmtsort
+#58 6.536 github.com/jackc/pgx/v5/internal/anynil
+#58 6.536 github.com/hashicorp/errwrap
+#58 6.537 encoding/binary
+#58 6.640 crypto/ecdh
+#58 6.783 github.com/jackc/pgx/v5/internal/pgio
+#58 6.783 vendor/golang.org/x/crypto/internal/poly1305
+#58 6.791 encoding/base64
+#58 6.791 github.com/jackc/pgx/pgio
+#58 6.793 vendor/golang.org/x/crypto/chacha20
+#58 6.804 golang.org/x/sys/unix
+#58 6.886 encoding/pem
+#58 7.071 fmt
+#58 7.074 net
+#58 7.076 path/filepath
+#58 7.076 github.com/jackc/pgpassfile
+#58 7.076 io/ioutil
+#58 7.076 vendor/golang.org/x/sys/cpu
+#58 7.079 go.uber.org/zap/internal/exit
+#58 7.079 os/signal
+#58 7.080 internal/lazyregexp
+#58 7.081 golang.org/x/sys/cpu
+#58 7.175 vendor/golang.org/x/crypto/chacha20poly1305
+#58 7.177 vendor/golang.org/x/crypto/sha3
+#58 7.187 golang.org/x/crypto/sha3
+#58 7.194 os/exec
+#58 7.418 internal/goroot
+#58 7.651 database/sql/driver
+#58 7.654 encoding/hex
+#58 7.655 math/big
+#58 7.656 net/url
+#58 7.657 github.com/jackc/pgservicefile
+#58 7.657 encoding/json
+#58 7.659 golang.org/x/text/unicode/norm
+#58 7.660 os/user
+#58 7.664 github.com/joho/godotenv
+#58 7.664 log
+#58 7.665 internal/buildcfg
+#58 7.665 go/doc/comment
+#58 7.665 golang.org/x/text/internal/language
+#58 7.665 go/token
+#58 7.824 compress/flate
+#58 7.847 github.com/jackc/pgx/v5/internal/sanitize
+#58 7.937 encoding/gob
+#58 7.960 gopkg.in/yaml.v2
+#58 7.998 vendor/golang.org/x/text/unicode/norm
+#58 8.130 golang.org/x/text/unicode/bidi
+#58 8.140 github.com/joho/godotenv/autoload
+#58 8.176 vendor/golang.org/x/text/unicode/bidi
+#58 8.234 go/scanner
+#58 8.274 database/sql
+#58 8.528 compress/gzip
+#58 8.643 go/ast
+#58 8.741 vendor/golang.org/x/net/http2/hpack
+#58 8.782 mime
+#58 8.859 vendor/golang.org/x/text/secure/bidirule
+#58 9.074 golang.org/x/text/secure/bidirule
+#58 9.104 mime/quotedprintable
+#58 9.168 net/http/internal
+#58 9.229 github.com/go-openapi/jsonreference/internal
+#58 9.235 text/tabwriter
+#58 9.256 text/template/parse
+#58 9.273 flag
+#58 9.298 go.uber.org/zap/internal/color
+#58 9.299 go.uber.org/multierr
+#58 9.347 github.com/mattn/go-isatty
+#58 9.347 gopkg.in/yaml.v3
+#58 9.388 github.com/hashicorp/go-multierror
+#58 9.487 golang.org/x/text/internal/language/compact
+#58 9.500 encoding/xml
+#58 9.537 github.com/mattn/go-colorable
+#58 9.677 github.com/fatih/color
+#58 9.684 golang.org/x/net/html
+#58 9.719 vendor/golang.org/x/net/idna
+#58 9.986 github.com/jackc/pgx/v5/pgproto3
+#58 10.01 github.com/mailru/easyjson/jlexer
+#58 10.09 crypto/elliptic
+#58 10.10 crypto/rand
+#58 10.17 crypto/internal/bigmod
+#58 ...
+
+#57 [transcode 7/7] RUN go build -v -o /usr/local/bin/app ./transcode/cmd/
+#57 7.411 vendor/golang.org/x/crypto/sha3
+#57 7.413 vendor/golang.org/x/crypto/chacha20poly1305
+#57 7.414 golang.org/x/crypto/blake2s
+#57 7.415 golang.org/x/crypto/sha3
+#57 7.416 golang.org/x/crypto/chacha20poly1305
+#57 7.417 golang.org/x/crypto/blake2b
+#57 7.455 github.com/jbenet/goprocess
+#57 7.477 sen1or/lets-live/transcode/domains
+#57 7.477 os/exec
+#57 7.631 github.com/jbenet/goprocess/context
+#57 7.927 github.com/joho/godotenv
+#57 7.927 math/big
+#57 7.927 encoding/hex
+#57 7.928 net/url
+#57 7.929 encoding/json
+#57 7.934 compress/flate
+#57 7.934 log
+#57 7.934 net/http/internal
+#57 7.934 mime/quotedprintable
+#57 7.934 mime
+#57 7.934 flag
+#57 7.935 vendor/golang.org/x/text/unicode/norm
+#57 7.935 vendor/golang.org/x/net/http2/hpack
+#57 7.961 github.com/hashicorp/go-multierror
+#57 8.014 go.uber.org/multierr
+#57 8.020 go.uber.org/zap/internal/color
+#57 8.051 gopkg.in/yaml.v3
+#57 8.068 database/sql/driver
+#57 8.093 github.com/nareix/joy5/utils/bits
+#57 8.191 github.com/nareix/joy5/utils/bits/pio
+#57 8.200 github.com/joho/godotenv/autoload
+#57 8.258 github.com/multiformats/go-base36
+#57 8.270 github.com/nareix/joy5/codec/aac
+#57 8.367 github.com/multiformats/go-multihash/core
+#57 8.402 github.com/nareix/joy5/codec/h264
+#57 8.525 vendor/golang.org/x/text/unicode/bidi
+#57 8.629 google.golang.org/protobuf/internal/errors
+#57 8.659 go/token
+#57 8.685 google.golang.org/protobuf/internal/version
+#57 8.695 github.com/klauspost/cpuid/v2
+#57 8.725 google.golang.org/protobuf/encoding/protowire
+#57 8.732 database/sql
+#57 8.744 runtime/debug
+#57 8.756 github.com/nareix/joy5/av
+#57 8.787 github.com/multiformats/go-multihash/register/blake2
+#57 8.797 github.com/multiformats/go-multihash/register/murmur3
+#57 8.803 compress/gzip
+#57 8.814 github.com/multiformats/go-multihash/register/sha3
+#57 8.841 github.com/multiformats/go-multihash/register/sha256
+#57 8.857 compress/zlib
+#57 8.877 github.com/multiformats/go-multihash/register/miniosha256
+#57 8.885 github.com/multiformats/go-multicodec
+#57 8.905 google.golang.org/protobuf/reflect/protoreflect
+#57 8.909 go.opentelemetry.io/otel/baggage
+#57 8.924 github.com/benbjohnson/clock
+#57 8.928 github.com/ipfs/go-datastore/query
+#57 8.966 github.com/libp2p/go-libp2p/core/internal/catch
+#57 8.987 github.com/multiformats/go-multistream
+#57 9.047 os/user
+#57 9.117 github.com/ipld/go-ipld-prime/datamodel
+#57 9.166 github.com/libp2p/go-libp2p/core/protocol
+#57 9.223 github.com/ipfs/boxo/bitswap/network/internal
+#57 9.233 github.com/ipld/go-ipld-prime/storage
+#57 9.301 go/scanner
+#57 9.403 go/doc/comment
+#57 9.456 text/tabwriter
+#57 9.494 vendor/golang.org/x/text/secure/bidirule
+#57 9.695 go/ast
+#57 9.705 github.com/polydawn/refmt/obj/atlas
+#57 9.730 github.com/polydawn/refmt/tok
+#57 9.873 github.com/polydawn/refmt/shared
+#57 9.953 github.com/ipld/go-ipld-prime/adl
+#57 9.974 google.golang.org/protobuf/internal/descfmt
+#57 9.991 google.golang.org/protobuf/internal/descopts
+#57 10.01 google.golang.org/protobuf/internal/strs
+#57 10.03 google.golang.org/protobuf/internal/encoding/messageset
+#57 10.11 github.com/mattn/go-isatty
+#57 10.16 google.golang.org/protobuf/internal/genid
+#57 10.19 github.com/mattn/go-colorable
+#57 10.26 google.golang.org/protobuf/internal/order
+#57 10.28 google.golang.org/protobuf/internal/encoding/text
+#57 10.29 google.golang.org/protobuf/reflect/protoregistry
+#57 10.30 github.com/fatih/color
+#57 10.39 google.golang.org/protobuf/runtime/protoiface
+#57 10.40 github.com/ipld/go-ipld-prime/codec
+#57 10.43 github.com/ipld/go-ipld-prime/linking
+#57 10.45 github.com/ipld/go-ipld-prime/node/mixins
+#57 10.51 github.com/ipld/go-ipld-prime/multicodec
+#57 10.61 github.com/ipld/go-ipld-prime/schema
+#57 10.63 github.com/polydawn/refmt/obj
+#57 10.64 google.golang.org/protobuf/proto
+#57 10.77 github.com/nareix/joy5/format/flv/flvio
+#57 10.77 vendor/golang.org/x/net/idna
+#57 10.79 go.uber.org/zap/zapcore
+#57 10.90 github.com/hashicorp/go-hclog
+#57 11.10 google.golang.org/protobuf/internal/encoding/defval
+#57 11.22 log/slog
+#57 11.26 go.opentelemetry.io/otel/attribute
+#57 11.50 go.opentelemetry.io/otel/codes
+#57 11.61 github.com/gogo/protobuf/proto
+#57 11.74 github.com/ipfs/bbloom
+#57 11.74 github.com/ipld/go-ipld-prime/node/basicnode
+#57 11.76 lukechampine.com/blake3/guts
+#57 11.80 google.golang.org/protobuf/internal/filedesc
+#57 11.82 github.com/nareix/joy5/format/flv
+#57 11.87 google.golang.org/protobuf/encoding/prototext
+#57 11.92 github.com/polydawn/refmt/json
+#57 11.93 github.com/ipld/go-ipld-prime/linking/preload
+#57 12.00 github.com/ipld/go-ipld-prime/codec/raw
+#57 12.00 github.com/ipld/go-ipld-prime/fluent/qp
+#57 12.01 go.opentelemetry.io/otel/metric
+#57 12.06 go.opentelemetry.io/otel/trace
+#57 12.09 lukechampine.com/blake3/bao
+#57 12.22 crypto/elliptic
+#57 12.25 crypto/internal/bigmod
+#57 12.26 crypto/internal/boring/bbig
+#57 12.30 encoding/asn1
+#57 12.35 crypto/rand
+#57 12.35 crypto/dsa
+#57 12.53 github.com/mr-tron/base58/base58
+#57 12.54 lukechampine.com/blake3
+#57 12.57 go/internal/typeparams
+#57 12.59 crypto/ed25519
+#57 12.60 crypto/internal/hpke
+#57 12.71 crypto/internal/mlkem768
+#57 12.74 crypto/rsa
+#57 12.83 github.com/multiformats/go-multibase
+#57 12.84 github.com/multiformats/go-multihash/register/blake3
+#57 12.89 github.com/go-logr/logr
+#57 12.91 github.com/whyrusleeping/chunker
+#57 13.00 archive/tar
+#57 13.02 github.com/multiformats/go-multihash/register/all
+#57 13.02 go/parser
+#57 13.05 github.com/multiformats/go-multihash
+#57 13.13 go/printer
+#57 13.14 vendor/golang.org/x/crypto/cryptobyte
+#57 13.19 crypto/x509/pkix
+#57 13.20 github.com/go-logr/logr/funcr
+#57 13.21 go.uber.org/zap/internal
+#57 13.22 github.com/alecthomas/units
+#57 13.22 github.com/ipfs/go-bitfield
+#57 13.23 github.com/ipfs/go-cid
+#57 13.24 github.com/ipfs/go-ipfs-util
+#57 13.27 github.com/ipfs/boxo/util
+#57 13.29 golang.org/x/sync/errgroup
+#57 13.30 github.com/polydawn/refmt/cbor
+#57 13.37 github.com/ipld/go-ipld-prime/fluent
+#57 13.39 github.com/libp2p/go-flow-metrics
+#57 13.40 github.com/libp2p/go-libp2p/core/pnet
+#57 13.42 google.golang.org/protobuf/encoding/protodelim
+#57 13.47 github.com/prometheus/procfs/internal/fs
+#57 13.47 github.com/libp2p/go-msgio/pbio
+#57 13.51 encoding/xml
+#57 13.52 github.com/koron/go-ssdp/internal/ssdplog
+#57 13.58 golang.org/x/net/bpf
+#57 13.62 crypto/ecdsa
+#57 13.66 github.com/flynn/noise
+#57 13.72 github.com/ipfs/go-block-format
+#57 13.76 github.com/ipfs/boxo/verifcid
+#57 13.77 github.com/go-logr/stdr
+#57 13.78 github.com/ipfs/go-ipld-format
+#57 13.87 github.com/ipfs/boxo/bitswap/client/internal/sessioninterestmanager
+#57 13.91 github.com/ipfs/boxo/exchange
+#57 13.95 github.com/ipld/go-ipld-prime/linking/cid
+#57 14.02 github.com/ipfs/boxo/ipld/unixfs/private/linksize
+#57 14.03 google.golang.org/protobuf/internal/encoding/tag
+#57 14.08 github.com/ipfs/boxo/path
+#57 14.09 github.com/ipld/go-ipld-prime/node/basic
+#57 14.14 github.com/ipfs/go-cidutil
+#57 14.16 github.com/klauspost/compress/fse
+#57 14.21 github.com/quic-go/quic-go/internal/protocol
+#57 14.23 github.com/quic-go/quic-go/quicvarint
+#57 14.24 github.com/ipfs/boxo/filestore/posinfo
+#57 14.24 github.com/ipfs/boxo/pinning/pinner
+#57 14.26 github.com/francoispqt/gojay
+#57 14.30 github.com/ipld/go-ipld-prime/codec/dagjson
+#57 14.32 github.com/ipld/go-ipld-prime/traversal/selector
+#57 14.34 github.com/ipld/go-ipld-prime/codec/dagcbor
+#57 14.34 encoding/gob
+#57 14.36 github.com/klauspost/compress/huff0
+#57 14.39 github.com/decred/dcrd/dcrec/secp256k1/v4
+#57 14.43 github.com/pion/dtls/v2/pkg/crypto/elliptic
+#57 14.45 google.golang.org/protobuf/internal/impl
+#57 14.46 golang.org/x/crypto/cryptobyte
+#57 14.47 github.com/quic-go/quic-go/internal/utils
+#57 14.47 github.com/pion/logging
+#57 14.53 github.com/pion/transport/v2/replaydetector
+#57 14.55 github.com/pion/randutil
+#57 14.56 github.com/davecgh/go-spew/spew
+#57 14.60 github.com/pmezard/go-difflib/difflib
+#57 14.60 runtime/trace
+#57 14.65 github.com/pion/rtcp
+#57 14.77 testing
+#57 14.78 go/format
+#57 14.78 github.com/pion/rtp
+#57 14.82 github.com/ipld/go-ipld-prime/traversal
+#57 14.87 github.com/ipld/go-ipld-prime/traversal/selector/builder
+#57 14.95 github.com/pion/rtp/codecs
+#57 14.96 github.com/ipld/go-ipld-prime/node/bindnode
+#57 15.02 github.com/pion/sdp/v3
+#57 15.08 github.com/klauspost/compress/zstd
+#57 15.25 github.com/pion/webrtc/v3/internal/fmtp
+#57 15.29 github.com/huin/goupnp/scpd
+#57 15.31 github.com/pion/webrtc/v3/internal/util
+#57 15.35 github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa
+#57 15.43 github.com/pion/webrtc/v3/pkg/rtcerr
+#57 15.44 golang.org/x/net/http2/hpack
+#57 15.57 github.com/pion/webrtc/v3/pkg/media
+#57 15.58 golang.org/x/text/unicode/bidi
+#57 15.61 golang.org/x/text/unicode/norm
+#57 15.65 go.uber.org/dig/internal/digerror
+#57 15.71 github.com/pion/interceptor
+#57 15.72 go.uber.org/dig/internal/digreflect
+#57 15.74 go.uber.org/dig/internal/dot
+#57 15.80 text/template/parse
+#57 15.94 go.uber.org/fx/internal/fxreflect
+#57 15.94 github.com/docker/go-units
+#57 16.03 github.com/opencontainers/runtime-spec/specs-go
+#57 16.11 golang.org/x/text/secure/bidirule
+#57 16.24 github.com/elastic/gosigar
+#57 16.26 runtime/pprof
+#57 16.29 github.com/pion/interceptor/pkg/nack
+#57 16.35 github.com/pion/interceptor/pkg/report
+#57 16.40 github.com/pion/interceptor/pkg/twcc
+#57 17.03 github.com/quic-go/qpack
+#57 17.04 github.com/mikioh/tcpopt
+#57 17.06 golang.org/x/net/idna
+#57 17.26 go.opencensus.io/resource
+#57 17.29 github.com/minio/sha256-simd
+#57 17.30 github.com/whyrusleeping/go-keyspace
+#57 17.36 github.com/mikioh/tcpinfo
+#57 17.46 github.com/ipfs/go-log/writer
+#57 17.48 go.opencensus.io/metric/metricdata
+#57 17.51 github.com/opentracing/opentracing-go/log
+#57 17.55 go.opencensus.io/metric/metricproducer
+#57 17.67 github.com/radovskyb/watcher
+#57 18.04 github.com/libp2p/go-libp2p-kbucket/keyspace
+#57 18.34 text/template
+#57 18.59 github.com/ipld/go-ipld-prime/schema/dmt
+#57 19.11 google.golang.org/protobuf/internal/filetype
+#57 19.25 go.opencensus.io/tag
+#57 19.27 vendor/golang.org/x/net/http/httpproxy
+#57 19.28 crypto/x509
+#57 19.28 github.com/mitchellh/mapstructure
+#57 19.28 github.com/gofrs/uuid/v5
+#57 19.29 github.com/google/uuid
+#57 19.29 net/textproto
+#57 19.31 github.com/libp2p/go-libp2p-asn-util
+#57 19.32 github.com/prometheus/procfs
+#57 19.33 github.com/multiformats/go-multiaddr
+#57 19.34 github.com/ipld/go-ipld-prime/schema/dsl
+#57 19.35 google.golang.org/protobuf/runtime/protoimpl
+#57 19.45 github.com/libp2p/go-libp2p/core/crypto/pb
+#57 19.50 github.com/libp2p/go-libp2p/core/peer/pb
+#57 19.51 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
+#57 19.53 github.com/ipfs/boxo/ipld/unixfs/pb
+#57 19.59 github.com/ipfs/boxo/ipns/pb
+#57 19.60 github.com/libp2p/go-libp2p-record/pb
+#57 19.60 github.com/ipld/go-ipld-prime
+#57 19.68 github.com/libp2p/go-libp2p/core/record/pb
+#57 19.78 github.com/ipfs/go-ipld-legacy
+#57 19.79 github.com/ipld/go-codec-dagpb
+#57 19.85 github.com/ipfs/boxo/fetcher
+#57 19.87 github.com/libp2p/go-libp2p/core/sec/insecure/pb
+#57 19.93 github.com/ipfs/boxo/fetcher/helpers
+#57 19.94 sen1or/lets-live/user/dto
+#57 20.00 github.com/libp2p/go-libp2p/p2p/host/autonat/pb
+#57 20.03 google.golang.org/protobuf/types/known/timestamppb
+#57 20.04 github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/pb
+#57 20.05 github.com/multiformats/go-multiaddr/net
+#57 20.07 github.com/jackpal/go-nat-pmp
+#57 20.14 golang.org/x/net/internal/socket
+#57 20.16 vendor/golang.org/x/net/http/httpguts
+#57 ...
+
+#56 [user 6/6] RUN go build -v -o /usr/local/bin/app ./user/cmd/
+#56 10.10 github.com/mailru/easyjson/jlexer
+#56 10.20 crypto/elliptic
+#56 10.22 crypto/rand
+#56 10.27 crypto/internal/bigmod
+#56 10.31 crypto/internal/boring/bbig
+#56 10.43 encoding/asn1
+#56 10.44 crypto/dsa
+#56 10.46 crypto/ed25519
+#56 10.56 crypto/internal/hpke
+#56 10.66 crypto/internal/mlkem768
+#56 10.74 vendor/golang.org/x/net/idna
+#56 10.74 crypto/rsa
+#56 10.76 go/doc
+#56 10.91 go/internal/typeparams
+#56 10.98 go/constant
+#56 10.98 golang.org/x/tools/go/ast/astutil
+#56 10.99 go/parser
+#56 11.08 text/template
+#56 11.19 go.uber.org/zap/zapcore
+#56 11.26 github.com/mattn/go-isatty
+#56 11.26 github.com/gabriel-vasile/mimetype/internal/json
+#56 11.27 debug/macho
+#56 11.33 github.com/go-playground/universal-translator
+#56 11.41 github.com/mattn/go-colorable
+#56 11.43 github.com/leodido/go-urn
+#56 11.47 github.com/pkg/errors
+#56 11.59 github.com/fatih/color
+#56 11.71 vendor/golang.org/x/crypto/cryptobyte
+#56 11.73 crypto/x509/pkix
+#56 11.80 github.com/hashicorp/go-hclog
+#56 11.84 github.com/jackc/pgx/internal/sanitize
+#56 12.02 github.com/jackc/pgx/pgproto3
+#56 12.21 github.com/gabriel-vasile/mimetype/internal/charset
+#56 12.31 github.com/gabriel-vasile/mimetype/internal/magic
+#56 12.64 crypto/ecdsa
+#56 12.65 github.com/pressly/goose
+#56 12.65 html/template
+#56 12.92 go/build
+#56 12.97 go/types
+#56 13.09 go.uber.org/zap/internal
+#56 13.48 github.com/gabriel-vasile/mimetype
+#56 14.01 github.com/KyleBanks/depth
+#56 14.01 golang.org/x/tools/go/buildutil
+#56 14.01 golang.org/x/tools/go/internal/cgo
+#56 14.60 github.com/jackc/pgx/v5/pgtype
+#56 14.60 github.com/mailru/easyjson/buffer
+#56 14.60 vendor/golang.org/x/net/http/httpproxy
+#56 14.60 net/textproto
+#56 14.60 github.com/mitchellh/mapstructure
+#56 14.60 github.com/gofrs/uuid/v5
+#56 14.60 crypto/x509
+#56 14.61 github.com/go-playground/validator/v10
+#56 14.62 github.com/jackc/pgx/pgtype
+#56 14.77 github.com/mailru/easyjson/jwriter
+#56 14.83 vendor/golang.org/x/net/http/httpguts
+#56 14.83 mime/multipart
+#56 14.97 sen1or/lets-live/user/dto
+#56 14.97 sen1or/lets-live/user/domains
+#56 15.01 sen1or/lets-live/user/mapper
+#56 16.10 github.com/golang-jwt/jwt/v5
+#56 16.10 crypto/tls
+#56 16.77 golang.org/x/tools/internal/versions
+#56 16.88 golang.org/x/tools/go/loader
+#56 19.22 net/http/httptrace
+#56 19.22 github.com/hashicorp/go-rootcerts
+#56 19.22 github.com/jackc/pgx
+#56 19.23 github.com/jackc/pgx/v5/pgconn
+#56 19.37 net/http
+#56 20.17 github.com/jackc/pgx/v5/internal/stmtcache
+#56 ...
+
+#57 [transcode 7/7] RUN go build -v -o /usr/local/bin/app ./transcode/cmd/
+#57 20.19 mime/multipart
+#57 20.19 github.com/google/gopacket/routing
+#57 20.20 github.com/prometheus/client_model/go
+#57 20.22 github.com/ipfs/go-datastore
+#57 20.32 github.com/libp2p/go-libp2p/p2p/protocol/autonatv2/pb
+#57 20.32 github.com/libp2p/go-libp2p/p2p/protocol/holepunch/pb
+#57 20.33 github.com/libp2p/go-libp2p/p2p/protocol/identify/pb
+#57 20.39 github.com/libp2p/go-netroute
+#57 20.47 github.com/libp2p/go-libp2p/p2p/net/pnet
+#57 ...
+
+#58 [auth 6/6] RUN go build -v -o /usr/local/bin/app ./auth/cmd/
+#58 10.38 crypto/internal/boring/bbig
+#58 10.50 encoding/asn1
+#58 10.56 crypto/ed25519
+#58 10.57 crypto/internal/hpke
+#58 10.62 crypto/internal/mlkem768
+#58 10.91 crypto/rsa
+#58 10.96 crypto/dsa
+#58 11.06 golang.org/x/text/language
+#58 11.13 go/constant
+#58 11.18 text/template
+#58 11.29 go.uber.org/zap/zapcore
+#58 11.31 github.com/hashicorp/go-hclog
+#58 11.31 go/doc
+#58 11.33 go/internal/typeparams
+#58 11.43 golang.org/x/tools/go/ast/astutil
+#58 11.50 go/parser
+#58 11.67 golang.org/x/text/internal
+#58 11.69 vendor/golang.org/x/crypto/cryptobyte
+#58 11.74 crypto/x509/pkix
+#58 11.74 compress/zlib
+#58 11.77 golang.org/x/text/cases
+#58 11.92 debug/dwarf
+#58 11.94 encoding/csv
+#58 11.96 github.com/gabriel-vasile/mimetype/internal/charset
+#58 12.05 github.com/gabriel-vasile/mimetype/internal/json
+#58 12.20 github.com/go-playground/universal-translator
+#58 12.30 github.com/leodido/go-urn
+#58 12.40 golang.org/x/crypto/bcrypt
+#58 12.40 golang.org/x/oauth2/jws
+#58 12.50 golang.org/x/text/secure/precis
+#58 12.56 gorm.io/gorm/clause
+#58 12.58 gorm.io/gorm/utils
+#58 12.64 html/template
+#58 12.68 crypto/ecdsa
+#58 12.73 github.com/pkg/errors
+#58 12.94 gorm.io/gorm/logger
+#58 13.06 github.com/jackc/pgx/internal/sanitize
+#58 13.06 github.com/pressly/goose
+#58 13.06 github.com/jackc/pgx/pgproto3
+#58 13.13 go/build
+#58 13.14 go/types
+#58 13.56 gorm.io/gorm/schema
+#58 13.71 golang.org/x/tools/go/buildutil
+#58 13.71 github.com/KyleBanks/depth
+#58 13.71 golang.org/x/tools/go/internal/cgo
+#58 13.73 go.uber.org/zap/internal
+#58 13.97 debug/macho
+#58 14.32 gorm.io/gorm
+#58 14.35 github.com/gabriel-vasile/mimetype/internal/magic
+#58 14.96 github.com/gabriel-vasile/mimetype
+#58 16.26 github.com/mailru/easyjson/buffer
+#58 16.26 vendor/golang.org/x/net/http/httpproxy
+#58 16.26 net/textproto
+#58 16.26 crypto/x509
+#58 16.27 github.com/gofrs/uuid/v5
+#58 16.27 github.com/mitchellh/mapstructure
+#58 16.27 github.com/go-playground/validator/v10
+#58 16.27 github.com/jackc/pgx/v5/pgtype
+#58 16.30 github.com/jackc/pgx/pgtype
+#58 16.47 github.com/mailru/easyjson/jwriter
+#58 16.72 sen1or/lets-live/auth/dto
+#58 16.72 sen1or/lets-live/user/dto
+#58 16.72 sen1or/lets-live/auth/domains
+#58 16.77 mime/multipart
+#58 16.77 vendor/golang.org/x/net/http/httpguts
+#58 16.79 sen1or/lets-live/auth/mapper
+#58 17.75 crypto/tls
+#58 17.76 github.com/golang-jwt/jwt/v5
+#58 17.81 golang.org/x/tools/internal/versions
+#58 17.86 golang.org/x/tools/go/loader
+#58 20.56 github.com/jackc/pgx/v5/pgconn
+#58 20.56 github.com/jackc/pgx
+#58 20.56 net/http/httptrace
+#58 20.57 github.com/hashicorp/go-rootcerts
+#58 20.57 net/smtp
+#58 ...
+
+#57 [transcode 7/7] RUN go build -v -o /usr/local/bin/app ./transcode/cmd/
+#57 20.52 github.com/libp2p/go-libp2p/p2p/security/noise/pb
+#57 20.53 github.com/multiformats/go-multiaddr-fmt
+#57 20.55 github.com/libp2p/go-libp2p/p2p/transport/webrtc/pb
+#57 20.61 github.com/pion/dtls/v2/pkg/protocol
+#57 20.62 github.com/pion/transport/v2/connctx
+#57 20.66 github.com/pion/ice/v2/internal/fakenet
+#57 20.71 github.com/pion/transport/v2
+#57 20.78 github.com/wlynxg/anet
+#57 20.79 github.com/pion/turn/v2/internal/ipnet
+#57 20.80 github.com/pion/dtls/v2/pkg/crypto/prf
+#57 20.81 github.com/pion/transport/v2/vnet
+#57 20.82 github.com/prometheus/common/model
+#57 20.83 github.com/pion/dtls/v2/pkg/protocol/alert
+#57 20.85 golang.org/x/net/internal/socks
+#57 20.88 github.com/pion/transport/v2/stdnet
+#57 20.92 github.com/pion/srtp/v2
+#57 20.95 github.com/pion/sctp
+#57 20.96 golang.org/x/net/http/httpguts
+#57 20.97 golang.org/x/net/ipv4
+#57 20.98 go.uber.org/dig
+#57 21.03 golang.org/x/net/ipv6
+#57 21.09 github.com/libp2p/go-yamux/v4
+#57 21.13 golang.org/x/net/proxy
+#57 21.19 github.com/godbus/dbus/v5
+#57 21.32 crypto/tls
+#57 21.39 github.com/libp2p/go-libp2p/core/crypto
+#57 21.46 github.com/ipfs/boxo/datastore/dshelp
+#57 21.55 github.com/ipfs/go-datastore/keytransform
+#57 21.58 github.com/ipfs/go-datastore/sync
+#57 21.74 github.com/gogo/protobuf/gogoproto
+#57 21.75 github.com/prometheus/client_golang/prometheus/internal
+#57 21.76 github.com/ipfs/go-datastore/namespace
+#57 21.80 github.com/pion/dtls/v2/pkg/crypto/fingerprint
+#57 21.82 github.com/libp2p/go-reuseport
+#57 21.86 github.com/ipfs/boxo/bitswap/message/pb
+#57 21.93 github.com/ipfs/boxo/ipld/merkledag/pb
+#57 21.95 github.com/containerd/cgroups/stats/v1
+#57 22.00 github.com/marten-seemann/tcp
+#57 22.07 go.opencensus.io/stats/internal
+#57 22.13 go.opencensus.io/stats
+#57 22.16 github.com/libp2p/go-msgio/protoio
+#57 22.25 github.com/ipfs/boxo/bitswap/client/wantlist
+#57 22.27 github.com/ipfs/go-datastore/autobatch
+#57 22.28 go.opencensus.io/stats/view
+#57 22.30 github.com/libp2p/go-cidranger/net
+#57 22.48 github.com/ipfs/go-log/tracer/wire
+#57 22.54 github.com/libp2p/go-libp2p/core/record
+#57 22.60 github.com/libp2p/go-cidranger
+#57 23.02 github.com/libp2p/go-libp2p/core/peer
+#57 23.04 github.com/pion/transport/v2/udp
+#57 23.04 github.com/pion/mdns
+#57 23.04 github.com/koron/go-ssdp/internal/multicast
+#57 23.37 github.com/libp2p/go-libp2p/core/peerstore
+#57 23.37 github.com/libp2p/go-libp2p/core/routing
+#57 23.37 github.com/ipfs/go-peertaskqueue/peertask
+#57 23.37 github.com/libp2p/go-libp2p-record
+#57 23.38 github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/proto
+#57 23.38 github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/util
+#57 23.38 github.com/libp2p/go-libp2p/core/metrics
+#57 23.38 github.com/ipfs/boxo/bitswap/client/traceability
+#57 23.38 github.com/ipfs/boxo/bitswap/client/internal/blockpresencemanager
+#57 23.38 github.com/libp2p/go-libp2p-kad-dht/qpeerset
+#57 23.43 github.com/ipfs/boxo/bitswap/client/internal/notifications
+#57 23.51 github.com/pion/datachannel
+#57 23.55 github.com/ipfs/go-peertaskqueue/peertracker
+#57 23.62 github.com/libp2p/go-libp2p/p2p/host/peerstore
+#57 23.62 github.com/libp2p/go-libp2p/core/network
+#57 23.71 github.com/ipfs/go-peertaskqueue
+#57 23.84 github.com/ipfs/boxo/bitswap/message
+#57 23.85 github.com/libp2p/go-libp2p/core/connmgr
+#57 23.85 github.com/libp2p/go-libp2p/core/event
+#57 23.85 github.com/libp2p/go-libp2p/core/sec
+#57 23.85 github.com/libp2p/go-libp2p/core/transport
+#57 23.85 github.com/libp2p/go-libp2p/p2p/muxer/yamux
+#57 23.97 github.com/libp2p/go-libp2p/core/sec/insecure
+#57 24.03 github.com/libp2p/go-libp2p/core/host
+#57 24.04 github.com/ipfs/boxo/bitswap/tracer
+#57 24.10 net/http/httptrace
+#57 24.10 github.com/quic-go/quic-go/internal/qtls
+#57 24.11 github.com/pion/dtls/v2/pkg/crypto/signaturehash
+#57 24.11 github.com/hashicorp/go-rootcerts
+#57 24.11 github.com/nareix/joy5/format/rtmp
+#57 24.11 github.com/quic-go/quic-go/internal/qerr
+#57 24.12 github.com/miekg/dns
+#57 24.19 net/http
+#57 24.22 github.com/quic-go/quic-go/internal/wire
+#57 24.23 github.com/quic-go/quic-go/internal/flowcontrol
+#57 24.24 github.com/pion/dtls/v2/pkg/protocol/extension
+#57 24.40 github.com/pion/dtls/v2/pkg/protocol/handshake
+#57 24.40 github.com/coreos/go-systemd/v22/dbus
+#57 24.58 github.com/pion/dtls/v2/pkg/protocol/recordlayer
+#57 24.66 github.com/pion/dtls/v2/pkg/crypto/ciphersuite
+#57 24.71 github.com/quic-go/quic-go/logging
+#57 24.81 github.com/quic-go/quic-go/internal/congestion
+#57 24.81 github.com/quic-go/quic-go/internal/handshake
+#57 24.81 github.com/pion/dtls/v2/internal/ciphersuite
+#57 24.83 github.com/containerd/cgroups
+#57 24.93 github.com/quic-go/quic-go/internal/ackhandler
+#57 24.97 github.com/pion/dtls/v2
+#57 25.21 github.com/quic-go/quic-go
+#57 25.56 github.com/raulk/go-watchdog
+#57 25.74 github.com/pion/stun
+#57 26.39 github.com/pion/ice/v2/internal/stun
+#57 26.40 github.com/pion/turn/v2/internal/proto
+#57 26.61 github.com/pion/turn/v2/internal/client
+#57 26.62 github.com/pion/turn/v2/internal/allocation
+#57 26.88 github.com/pion/turn/v2/internal/server
+#57 27.07 github.com/pion/turn/v2
+#57 27.33 github.com/multiformats/go-multiaddr-dns
+#57 27.51 github.com/quic-go/quic-go/qlog
+#57 27.94 github.com/hashicorp/go-cleanhttp
+#57 27.94 expvar
+#57 27.94 go.opentelemetry.io/otel/propagation
+#57 27.94 github.com/armon/go-metrics
+#57 27.94 github.com/huin/goupnp/soap
+#57 27.94 github.com/prometheus/common/expfmt
+#57 27.94 github.com/huin/goupnp/httpu
+#57 27.94 go.uber.org/zap
+#57 27.94 github.com/ipfs/boxo/files
+#57 27.94 github.com/koron/go-ssdp
+#57 27.94 github.com/opentracing/opentracing-go
+#57 27.94 github.com/gorilla/websocket
+#57 27.94 net/http/httptest
+#57 27.94 github.com/gorilla/mux
+#57 27.94 github.com/quic-go/quic-go/http3
+#57 28.05 go.opentelemetry.io/otel/internal/global
+#57 28.22 github.com/opentracing/opentracing-go/ext
+#57 28.25 github.com/huin/goupnp/ssdp
+#57 28.31 github.com/ipfs/go-log/tracer
+#57 28.38 github.com/stretchr/testify/assert
+#57 28.45 github.com/huin/goupnp
+#57 28.47 github.com/hashicorp/serf/coordinate
+#57 28.49 github.com/prometheus/client_golang/prometheus
+#57 28.50 go.opentelemetry.io/otel
+#57 28.60 github.com/huin/goupnp/dcps/internetgateway1
+#57 ...
+
+#58 [auth 6/6] RUN go build -v -o /usr/local/bin/app ./auth/cmd/
+#58 20.71 net/http
+#58 21.37 github.com/jackc/pgx/v5/internal/stmtcache
+#58 22.22 github.com/jackc/pgx/stdlib
+#58 25.18 github.com/go-openapi/swag
+#58 25.18 golang.org/x/oauth2/internal
+#58 25.18 go.uber.org/zap
+#58 25.18 cloud.google.com/go/compute/metadata
+#58 25.18 github.com/hashicorp/go-cleanhttp
+#58 25.18 github.com/armon/go-metrics
+#58 25.33 golang.org/x/oauth2
+#58 25.52 github.com/hashicorp/serf/coordinate
+#58 25.53 golang.org/x/oauth2/google/internal/impersonate
+#58 25.53 golang.org/x/oauth2/google/internal/stsexchange
+#58 25.53 golang.org/x/oauth2/jwt
+#58 25.53 golang.org/x/oauth2/authhandler
+#58 25.66 golang.org/x/oauth2/google/internal/externalaccountauthorizeduser
+#58 25.69 golang.org/x/oauth2/google/externalaccount
+#58 25.72 github.com/hashicorp/consul/api
+#58 25.74 github.com/jackc/pgx/v5
+#58 25.78 github.com/go-openapi/jsonpointer
+#58 25.89 github.com/go-openapi/jsonreference
+#58 25.96 github.com/go-openapi/spec
+#58 26.11 sen1or/lets-live/pkg/logger
+#58 26.11 sen1or/lets-live/auth/middlewares
+#58 26.17 golang.org/x/oauth2/google
+#58 26.22 sen1or/lets-live/auth/config
+#58 26.22 sen1or/lets-live/auth/utils
+#58 26.36 github.com/jackc/pgx/v5/pgxpool
+#58 26.83 sen1or/lets-live/auth/repositories
+#58 27.03 github.com/swaggo/swag
+#58 27.15 sen1or/lets-live/auth/controllers
+#58 27.20 # sen1or/lets-live/auth/controllers
+#58 27.20 auth/controllers/refresh_token.go:9:2: "sen1or/lets-live/pkg/logger" imported and not used
+#58 27.43 sen1or/lets-live/pkg/discovery
+#58 27.51 sen1or/lets-live/auth/gateway/user/http
+#58 27.87 github.com/swaggo/http-swagger/v2
+#58 ERROR: process "/bin/sh -c go build -v -o /usr/local/bin/app ./auth/cmd/" did not complete successfully: exit code: 1
+
+#57 [transcode 7/7] RUN go build -v -o /usr/local/bin/app ./transcode/cmd/
+#57 28.60 github.com/huin/goupnp/dcps/internetgateway2
+#57 28.60 github.com/hashicorp/consul/api
+#57 28.62 github.com/ipfs/boxo/bitswap/internal
+#57 28.62 github.com/ipfs/boxo/blockservice/internal
+#57 28.62 github.com/ipfs/boxo/bitswap/client/internal
+#57 28.62 github.com/libp2p/go-libp2p-kad-dht/internal
+#57 28.62 github.com/libp2p/go-libp2p-routing-helpers/tracing
+#57 ...
+
+#56 [user 6/6] RUN go build -v -o /usr/local/bin/app ./user/cmd/
+#56 21.04 github.com/jackc/pgx/stdlib
+#56 24.43 github.com/hashicorp/go-cleanhttp
+#56 24.43 go.uber.org/zap
+#56 24.43 github.com/armon/go-metrics
+#56 24.43 github.com/go-openapi/swag
+#56 24.85 github.com/hashicorp/serf/coordinate
+#56 24.87 github.com/go-openapi/jsonpointer
+#56 24.95 github.com/hashicorp/consul/api
+#56 24.96 github.com/go-openapi/jsonreference
+#56 25.05 github.com/go-openapi/spec
+#56 25.24 sen1or/lets-live/pkg/logger
+#56 25.24 sen1or/lets-live/user/middlewares
+#56 25.38 sen1or/lets-live/user/config
+#56 25.38 sen1or/lets-live/user/utils
+#56 25.62 github.com/jackc/pgx/v5
+#56 26.08 github.com/swaggo/swag
+#56 26.16 github.com/jackc/pgx/v5/pgxpool
+#56 26.46 sen1or/lets-live/user/repositories
+#56 26.53 sen1or/lets-live/pkg/discovery
+#56 26.70 sen1or/lets-live/user/controllers
+#56 26.74 sen1or/lets-live/user/handlers
+#56 27.37 github.com/swaggo/http-swagger/v2
+#56 27.44 sen1or/lets-live/user/cmd
+#56 ...
+
+#57 [transcode 7/7] RUN go build -v -o /usr/local/bin/app ./transcode/cmd/
+#57 CANCELED
+
+#56 [user 6/6] RUN go build -v -o /usr/local/bin/app ./user/cmd/
+#56 CANCELED
+------
+ > [auth 6/6] RUN go build -v -o /usr/local/bin/app ./auth/cmd/:
+26.22 sen1or/lets-live/auth/utils
+26.36 github.com/jackc/pgx/v5/pgxpool
+26.83 sen1or/lets-live/auth/repositories
+27.03 github.com/swaggo/swag
+27.15 sen1or/lets-live/auth/controllers
+27.20 # sen1or/lets-live/auth/controllers
+27.20 auth/controllers/refresh_token.go:9:2: "sen1or/lets-live/pkg/logger" imported and not used
+27.43 sen1or/lets-live/pkg/discovery
+27.51 sen1or/lets-live/auth/gateway/user/http
+27.87 github.com/swaggo/http-swagger/v2
+------
+failed to solve: process "/bin/sh -c go build -v -o /usr/local/bin/app ./auth/cmd/" did not complete successfully: exit code: 1
