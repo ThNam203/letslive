@@ -14,7 +14,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
-import { User } from "@/models/User";
+import { User } from "@/types/User";
 import IconButton from "@/components/buttons/IconBtn";
 import { SearchInput } from "@/components/Input";
 import TextButton from "@/components/buttons/TextButton";

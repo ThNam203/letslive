@@ -1,5 +1,6 @@
 services:
   auth:
+    env_file: ./backend/auth/.env
     build:
       context: ./backend
       dockerfile: ./dockerfiles/auth.Dockerfile

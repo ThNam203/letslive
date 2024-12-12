@@ -1,4 +1,5 @@
-"use client"; // Error boundaries must be Client Components
+"use client";
+
 import GlobalErrorComponent from "@/components/errors/GlobalError";
 
 export default function GlobalError({
