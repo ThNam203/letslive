@@ -6,7 +6,6 @@ import (
 	"os"
 	"sen1or/lets-live/auth/domains"
 	"sen1or/lets-live/auth/repositories"
-	"sen1or/lets-live/pkg/logger"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
