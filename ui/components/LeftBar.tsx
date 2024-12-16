@@ -3,8 +3,6 @@ import { ClassValue } from "clsx";
 import { cn } from "@/utils/cn";
 import { ReactNode } from "react";
 import user_avatar from "@/public/images/user_avatar.jpeg";
-import { Channel } from "@/types/Channel";
-import { channels } from "@/fakedata/leftbar";
 import IconButton from "@/components/buttons/IconBtn";
 import RoundedImage from "@/components/images/RoundedImage";
 
@@ -56,22 +54,20 @@ const View = ({
   );
 };
 
-const recommendChannels: Channel[] = [channels[1], channels[2], channels[3]];
-
 export const LeftBar = () => {
   return (
-    <div className="fixed h-full xl:w-64 max-xl:w-fit bg-leftBarColor flex flex-col max-xl:items-center justify-start gap-2 py-2 text-primaryWord">
+    <div className="fixed mt-8 h-full xl:w-64 max-xl:w-fit bg-leftBarColor flex flex-col max-xl:items-center justify-start gap-2 text-primaryWord">
       <div className="flex flex-row justify-between items-center px-2">
         <span className="font-semibold text-lg max-xl:hidden">For you</span>
       </div>
       <div className="flex flex-row justify-between items-center px-2 mt-2">
         <Title icon={<LuHeart size={20} />}>FOLLOWED CHANNELS</Title>
 
-        <IconButton
+        {/* <IconButton
           className="self-end max-xl:hidden"
           icon={<LuArrowUpDown size={18} />}
           disabled={true}
-        />
+        /> */}
       </div>
       {/* {followingChannels.map((channel, idx) => {
         // TODO: WRONG LOGIC
@@ -84,10 +80,10 @@ export const LeftBar = () => {
           />
         );
       })} */}
-      <div className="flex flex-row justify-between items-center px-2 mt-2">
+      {/* <div className="flex flex-row justify-between items-center px-2 mt-2">
         <Title icon={<LuVideo size={20} />}>RECOMMEND CHANNELS</Title>
-      </div>
-      {recommendChannels.map((channel, idx) => {
+      </div> */}
+      {/* {recommendChannels.map((channel, idx) => {
         return (
           <ChannelViewItem
             key={idx}
@@ -95,7 +91,7 @@ export const LeftBar = () => {
             category={"CATEGORY"}
           />
         );
-      })}
+      })} */}
     </div>
   );
 };

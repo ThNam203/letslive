@@ -5,7 +5,10 @@ import { IconEye } from "@/components/icons/eye";
 import { IconEyeOff } from "@/components/icons/eye-off";
 import { IconPasswordOutline } from "@/components/icons/password";
 import GLOBAL from "@/global";
+import { LogIn } from "@/lib/auth";
 import { Spinner } from "@nextui-org/spinner";
+import { set } from "date-fns";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
@@ -14,6 +17,7 @@ export default function LogInForm() {
     const [password, setPassword] = useState("");
     const [hidingPassword, setHidingPassword] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
     const [errors, setErrors] = useState({
         email: "",
         password: "",
@@ -39,24 +43,20 @@ export default function LogInForm() {
         return !newErrors.email && !newErrors.password;
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         e.stopPropagation();
+        setIsLoading(true);
 
         if (validate()) {
-            setIsLoading(true);
-            fetch(GLOBAL.API_URL + "/v1/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email, password }),
-            })
-                .catch((err) => {
-                    toast.error(err.message);
-                })
-                .finally(() => setIsLoading(false));
+            const { fetchError } = await LogIn({ email, password });
+            if (fetchError) {
+                toast.error(fetchError.message);
+            } else {
+                router.push("/");
+            }
         }
+        setIsLoading(false);
     };
 
     return (

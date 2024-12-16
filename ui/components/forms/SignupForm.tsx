@@ -5,8 +5,10 @@ import { IconEye } from "@/components/icons/eye";
 import { IconEyeOff } from "@/components/icons/eye-off";
 import { IconPasswordOutline } from "@/components/icons/password";
 import { IconUserOutline } from "@/components/icons/user";
-import GLOBAL from "@/global";
+import { SignUp } from "@/lib/auth";
 import { Spinner } from "@nextui-org/spinner";
+import { set } from "date-fns";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
@@ -18,6 +20,7 @@ export default function SignUpForm() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [hidingConfirmPassword, setHidingConfirmPassword] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
     const [errors, setErrors] = useState({
         email: "",
         password: "",
@@ -61,7 +64,6 @@ export default function SignUpForm() {
 
         setErrors(newErrors);
 
-        // If there are no errors, return true, else false
         return (
             !newErrors.email &&
             !newErrors.password &&
@@ -75,29 +77,15 @@ export default function SignUpForm() {
         setIsLoading(true);
 
         if (validate()) {
-            // TODO: create a universal function to call api
-            const url = GLOBAL.API_URL + "/auth/signup";
-            try {
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ email, username, password }),
-                });
-                const resData = await response.text();
-
-                if (!response.ok) {
-                    toast.error(resData);
-                } else {
-                    toast.success("Account created successfully.");
-                }
-            } catch (err) {
-                toast.error("An error occurred. Please try again later." + err);
-            } finally {
-                setIsLoading(false);
+            const { fetchError } = await SignUp({email, username, password});
+            if (fetchError) {
+                toast.error(fetchError.message);
+            } else {
+                toast.success("Account created successfully");
+                router.push("/")
             }
         }
+        setIsLoading(false);
     };
 
     return (
