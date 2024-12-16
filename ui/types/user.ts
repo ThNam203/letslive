@@ -3,7 +3,7 @@ export type User = {
   username: string;
   email: string;
   isOnline: boolean;
-  // isVerified: boolean;
+  isVerified: boolean;
   createdAt: string;
   streamAPIKey: string;
 };
