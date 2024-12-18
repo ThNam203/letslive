@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"net"
 
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 	cfg "sen1or/lets-live/user/config"
+	"sen1or/lets-live/user/controllers"
+	"sen1or/lets-live/user/handlers"
+	"sen1or/lets-live/user/repositories"
 	"sen1or/lets-live/user/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -27,9 +29,7 @@ func main() {
 	dbConn := ConnectDB(ctx, config)
 	defer dbConn.Close()
 
-	listenAddr := net.JoinHostPort(config.Service.APIBindAddress, string(config.Service.APIPort))
-
-	server := NewAPIServer(dbConn, listenAddr, *config)
+	server := SetupServer(dbConn, *config)
 	go server.ListenAndServe(false)
 	select {}
 }
@@ -66,4 +66,11 @@ func StartDiscovery(ctx context.Context, config *cfg.Config) {
 	}
 
 	cancel()
+}
+
+func SetupServer(dbConn *pgxpool.Pool, cfg cfg.Config) *APIServer {
+	var userRepo = repositories.NewUserRepository(dbConn)
+	var userCtrl = controllers.NewUserController(userRepo)
+	var userHandler = handlers.NewUserHandler(userCtrl)
+	return NewAPIServer(userHandler, cfg)
 }

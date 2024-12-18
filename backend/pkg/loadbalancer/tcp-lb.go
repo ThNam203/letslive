@@ -6,17 +6,11 @@ import (
 	"log"
 	"net"
 	"net/url"
-	"sen1or/lets-live/core/config"
 	"sync"
 	"time"
 )
 
-type TCPLoadBalancer struct {
-	backendPool BackendPool
-	config      config.LBSetting
-}
-
-func NewTCPLoadBalancer(config config.LBSetting) *TCPLoadBalancer {
+func NewTCPLoadBalancer(config LBConfig) *TCPLoadBalancer {
 	backends := make([]Backend, 0)
 
 	for _, address := range config.To {

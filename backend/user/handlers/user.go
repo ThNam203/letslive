@@ -16,10 +16,10 @@ import (
 
 type UserHandler struct {
 	ErrorHandler
-	ctrl *controllers.UserController
+	ctrl controllers.UserController
 }
 
-func NewUserHandler(ctrl *controllers.UserController) *UserHandler {
+func NewUserHandler(ctrl controllers.UserController) *UserHandler {
 	return &UserHandler{
 		ctrl: ctrl,
 	}

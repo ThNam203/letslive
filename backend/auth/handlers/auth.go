@@ -25,17 +25,17 @@ import (
 
 type AuthHandler struct {
 	ErrorHandler
-	tokenCtrl       *controllers.TokenController
-	authCtrl        *controllers.AuthController
-	verifyTokenCtrl *controllers.VerifyTokenController
+	tokenCtrl       controllers.TokenController
+	authCtrl        controllers.AuthController
+	verifyTokenCtrl controllers.VerifyTokenController
 	userGateway     *gateway.UserGateway
 	authServerURL   string
 }
 
 func NewAuthHandler(
-	tokenCtrl *controllers.TokenController,
-	authCtrl *controllers.AuthController,
-	verifyTokenCtrl *controllers.VerifyTokenController,
+	tokenCtrl controllers.TokenController,
+	authCtrl controllers.AuthController,
+	verifyTokenCtrl controllers.VerifyTokenController,
 	authServerURL string,
 	userGateway *gateway.UserGateway,
 ) *AuthHandler {

@@ -12,7 +12,20 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// for kong api gateway
 var CONSUMER = "authenticated users"
+
+type AccessTokenInformation struct {
+	AccessToken       string
+	AccessTokenMaxAge int
+}
+
+type TokenPairInformation struct {
+	RefreshToken       string
+	RefreshTokenMaxAge int
+	AccessToken        string
+	AccessTokenMaxAge  int
+}
 
 type TokenControllerConfig struct {
 	RefreshTokenMaxAge int
@@ -25,26 +38,27 @@ type MyCustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-type TokenController struct {
+type TokenController interface {
+	GenerateTokenPair(userId string) (*TokenPairInformation, error)
+	RefreshToken(refreshToken string) (*AccessTokenInformation, error)
+	RevokeTokenByValue(tokenValue string) error
+	RevokeAllTokensOfUser(userID uuid.UUID) error
+}
+
+type tokenController struct {
 	repo   repositories.RefreshTokenRepository
 	config TokenControllerConfig
 }
 
-func NewTokenController(repo repositories.RefreshTokenRepository, cfg TokenControllerConfig) *TokenController {
-	return &TokenController{
+func NewTokenController(repo repositories.RefreshTokenRepository, cfg TokenControllerConfig) TokenController {
+	return &tokenController{
 		repo:   repo,
 		config: cfg,
 	}
 }
 
 // generate the refresh token with access token (for login and signup)
-func (c *TokenController) GenerateTokenPair(userId string) (
-	*struct {
-		RefreshToken       string
-		RefreshTokenMaxAge int
-		AccessToken        string
-		AccessTokenMaxAge  int
-	}, error) {
+func (c *tokenController) GenerateTokenPair(userId string) (*TokenPairInformation, error) {
 
 	refreshToken, err := c.generateRefreshToken(userId)
 	if err != nil {
@@ -56,12 +70,7 @@ func (c *TokenController) GenerateTokenPair(userId string) (
 		return nil, err
 	}
 
-	return &struct {
-		RefreshToken       string
-		RefreshTokenMaxAge int
-		AccessToken        string
-		AccessTokenMaxAge  int
-	}{
+	return &TokenPairInformation{
 		RefreshToken:       refreshToken,
 		RefreshTokenMaxAge: c.config.RefreshTokenMaxAge,
 		AccessToken:        accessToken,
@@ -71,11 +80,7 @@ func (c *TokenController) GenerateTokenPair(userId string) (
 
 // create a new access token for the refresh token
 // the process is called "refresh token"
-func (c *TokenController) RefreshToken(refreshToken string) (
-	*struct {
-		AccessToken       string
-		AccessTokenMaxAge int
-	}, error) {
+func (c *tokenController) RefreshToken(refreshToken string) (*AccessTokenInformation, error) {
 	myClaims := MyCustomClaims{}
 	parsedToken, err := jwt.NewParser().ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("REFRESH_TOKEN_SECRET")), nil
@@ -91,16 +96,13 @@ func (c *TokenController) RefreshToken(refreshToken string) (
 		return nil, fmt.Errorf("failed to refresh token: %s", err)
 	}
 
-	return &struct {
-		AccessToken       string
-		AccessTokenMaxAge int
-	}{
+	return &AccessTokenInformation{
 		AccessToken:       accessToken,
 		AccessTokenMaxAge: c.config.AccessTokenMaxAge,
 	}, nil
 }
 
-func (c *TokenController) generateRefreshToken(userId string) (string, error) {
+func (c *tokenController) generateRefreshToken(userId string) (string, error) {
 	refreshTokenExpiresDuration := time.Duration(c.config.RefreshTokenMaxAge) * time.Second
 	refreshTokenExpiresAt := time.Now().Add(refreshTokenExpiresDuration)
 	myClaims := MyCustomClaims{
@@ -135,7 +137,7 @@ func (c *TokenController) generateRefreshToken(userId string) (string, error) {
 	return refreshToken, nil
 }
 
-func (c *TokenController) generateAccessToken(userId string) (string, error) {
+func (c *tokenController) generateAccessToken(userId string) (string, error) {
 	accessTokenDuration := time.Duration(c.config.AccessTokenMaxAge) * time.Second
 	accessTokenExpiresAt := time.Now().Add(accessTokenDuration)
 	myClaims := MyCustomClaims{
@@ -159,7 +161,7 @@ func (c *TokenController) generateAccessToken(userId string) (string, error) {
 	return accessToken, nil
 }
 
-func (c *TokenController) RevokeTokenByValue(tokenValue string) error {
+func (c *tokenController) RevokeTokenByValue(tokenValue string) error {
 	token, err := c.repo.FindByValue(tokenValue)
 	if err != nil {
 		return err
@@ -172,6 +174,6 @@ func (c *TokenController) RevokeTokenByValue(tokenValue string) error {
 	return err
 }
 
-func (c *TokenController) RevokeAllTokensOfUser(userID uuid.UUID) error {
+func (c *tokenController) RevokeAllTokensOfUser(userID uuid.UUID) error {
 	return c.repo.RevokeAllTokensOfUser(userID)
 }

@@ -1,6 +1,5 @@
-import { FetchError } from "@/types/fetch-error";
+import { ErrorResponse, FetchError } from "@/types/fetch-error";
 import { FetchOptions } from "@/types/fetch-options";
-import { cache } from "react";
 
 let isRefreshing = false;
 let refreshSubscribers: Array<() => void> = [];
@@ -50,9 +49,12 @@ export const fetchClient = async <T>(
                             { method: "POST", credentials: "include" }
                         );
 
+                        const refreshRes = await refreshResponse.json() as ErrorResponse;
+
                         if (!refreshResponse.ok) {
                             refreshSubscribers = [];
                             throw new FetchError(
+                                refreshRes.id,
                                 "Session expired, please log in again",
                                 {
                                     status: 401,
@@ -77,11 +79,14 @@ export const fetchClient = async <T>(
                                     ...options,
                                     credentials: "include",
                                 });
+                                const retryRes = await retryResponse.json() as ErrorResponse;
+
                                 if (!retryResponse.ok) {
                                     const retryErrorData = await retryResponse
                                         .json()
                                         .catch(() => null);
                                     throw new FetchError(
+                                        retryRes.id,
                                         `HTTP error! Status: ${retryResponse.status}`,
                                         {
                                             status: retryResponse.status,
@@ -98,7 +103,8 @@ export const fetchClient = async <T>(
                 }
             }
 
-            const error: FetchError = new Error();
+            const resError = await response.json() as ErrorResponse;
+            const error = new FetchError(resError.id, resError.message);
             error.status = response.status;
             error.response = await response.json().catch(() => null); // Safely parse JSON
             error.isClientError =
@@ -111,8 +117,9 @@ export const fetchClient = async <T>(
         return (await response.json()) as T;
     } catch (error: any) {
         if (error instanceof TypeError) {
-            const networkError: FetchError = new Error(
-                error.message || "Network request failed"
+            const networkError = new FetchError(
+                error.message, // TODO: is it a good way?
+                "Network error occurred, please try again"
             );
             networkError.isNetworkError = true;
             throw networkError;
