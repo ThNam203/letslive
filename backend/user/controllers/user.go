@@ -8,17 +8,27 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-type UserController struct {
+type UserController interface {
+	Create(body dto.CreateUserRequestDTO) (*dto.CreateUserResponseDTO, error)
+	GetByID(id uuid.UUID) (*dto.GetUserResponseDTO, error)
+	GetByEmail(email string) (*dto.GetUserResponseDTO, error)
+	GetByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseDTO, error)
+	GetStreamingUsers() ([]*dto.GetUserResponseDTO, error)
+	Update(updateDTO dto.UpdateUserRequestDTO) (*dto.UpdateUserResponseDTO, error)
+	Delete(userID uuid.UUID) error
+}
+
+type userController struct {
 	repo repositories.UserRepository
 }
 
-func NewUserController(repo repositories.UserRepository) *UserController {
-	return &UserController{
+func NewUserController(repo repositories.UserRepository) UserController {
+	return &userController{
 		repo: repo,
 	}
 }
 
-func (c *UserController) Create(body dto.CreateUserRequestDTO) (*dto.CreateUserResponseDTO, error) {
+func (c *userController) Create(body dto.CreateUserRequestDTO) (*dto.CreateUserResponseDTO, error) {
 	user := mapper.CreateUserRequestDTOToUser(body)
 	createdUser, err := c.repo.Create(*user)
 	if err != nil {
@@ -28,7 +38,7 @@ func (c *UserController) Create(body dto.CreateUserRequestDTO) (*dto.CreateUserR
 	return mapper.UserToCreateUserResponseDTO(*createdUser), nil
 }
 
-func (c *UserController) GetByID(id uuid.UUID) (*dto.GetUserResponseDTO, error) {
+func (c *userController) GetByID(id uuid.UUID) (*dto.GetUserResponseDTO, error) {
 	user, err := c.repo.GetByID(id)
 	if err != nil {
 		return nil, err
@@ -37,7 +47,7 @@ func (c *UserController) GetByID(id uuid.UUID) (*dto.GetUserResponseDTO, error) 
 	return mapper.UserToGetUserResponseDTO(*user), nil
 }
 
-func (c *UserController) GetByEmail(email string) (*dto.GetUserResponseDTO, error) {
+func (c *userController) GetByEmail(email string) (*dto.GetUserResponseDTO, error) {
 	user, err := c.repo.GetByEmail(email)
 	if err != nil {
 		return nil, err
@@ -46,7 +56,7 @@ func (c *UserController) GetByEmail(email string) (*dto.GetUserResponseDTO, erro
 	return mapper.UserToGetUserResponseDTO(*user), nil
 }
 
-func (c *UserController) GetByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseDTO, error) {
+func (c *userController) GetByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseDTO, error) {
 	user, err := c.repo.GetByAPIKey(key)
 	if err != nil {
 		return nil, err
@@ -55,7 +65,7 @@ func (c *UserController) GetByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseD
 	return mapper.UserToGetUserResponseDTO(*user), nil
 }
 
-func (c *UserController) GetStreamingUsers() ([]*dto.GetUserResponseDTO, error) {
+func (c *userController) GetStreamingUsers() ([]*dto.GetUserResponseDTO, error) {
 	onlineUsers, err := c.repo.GetStreamingUsers()
 	if err != nil {
 		return nil, err
@@ -69,7 +79,7 @@ func (c *UserController) GetStreamingUsers() ([]*dto.GetUserResponseDTO, error) 
 	return result, nil
 }
 
-func (c *UserController) Update(updateDTO dto.UpdateUserRequestDTO) (*dto.UpdateUserResponseDTO, error) {
+func (c *userController) Update(updateDTO dto.UpdateUserRequestDTO) (*dto.UpdateUserResponseDTO, error) {
 	updateUser, err := c.repo.GetByID(updateDTO.ID)
 	if err != nil {
 		return nil, err
@@ -92,6 +102,6 @@ func (c *UserController) Update(updateDTO dto.UpdateUserRequestDTO) (*dto.Update
 	return mapper.UserToUpdateUserResponseDTO(*updatedUser), nil
 }
 
-func (c *UserController) Delete(userID uuid.UUID) error {
+func (c *userController) Delete(userID uuid.UUID) error {
 	return c.repo.Delete(userID)
 }

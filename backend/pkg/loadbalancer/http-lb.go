@@ -4,16 +4,9 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-
-	config "sen1or/lets-live/core/config"
 )
 
-type HTTPLoadBalancer struct {
-	backendPool BackendPool
-	config      config.LBSetting
-}
-
-func NewHTTPLoadBalancer(config config.LBSetting) *HTTPLoadBalancer {
+func NewHTTPLoadBalancer(config LBConfig) *HTTPLoadBalancer {
 	backends := make([]Backend, 0)
 
 	for _, address := range config.To {

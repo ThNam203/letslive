@@ -45,5 +45,5 @@ export default function ShowToast({
 
 function formatMessage(message?: string) {
     if (message === undefined || message.length === 0) return MISSING_MESSAGE;
-    return message[0].toLowerCase() + message.slice(1);
+    return message[0].toUpperCase() + message.slice(1);
 }

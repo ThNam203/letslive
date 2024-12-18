@@ -8,25 +8,20 @@ import (
 	"os"
 	"os/signal"
 	"sen1or/lets-live/auth/config"
-	"sen1or/lets-live/auth/controllers"
-	usergateway "sen1or/lets-live/auth/gateway/user/http"
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 
 	// TODO: add swagger _ "sen1or/lets-live/auth/docs"
 	"sen1or/lets-live/auth/handlers"
 	"sen1or/lets-live/auth/middlewares"
-	"sen1or/lets-live/auth/repositories"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
 )
 
 type APIServer struct {
 	logger *zap.SugaredLogger
-	dbConn *pgxpool.Pool
 	config config.Config
 
 	authHandler   *handlers.AuthHandler
@@ -38,22 +33,13 @@ type APIServer struct {
 }
 
 // TODO: make tls usable
-func NewAPIServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg config.Config) *APIServer {
-	var userRepo = repositories.NewAuthRepository(dbConn)
-	var refreshTokenRepo = repositories.NewRefreshTokenRepository(dbConn)
-	var verifyTokenRepo = repositories.NewVerifyTokenRepo(dbConn)
-
-	var authCtrl = controllers.NewAuthController(userRepo)
-	var tokenCtrl = controllers.NewTokenController(refreshTokenRepo, controllers.TokenControllerConfig(cfg.Tokens))
-	var verifyTokenCtrl = controllers.NewVerifyTokenController(verifyTokenRepo)
-
-	authServerURL := fmt.Sprintf("http://%s:%d", cfg.Service.Hostname, cfg.Service.APIPort)
-	userGateway := usergateway.NewUserGateway(registry)
-	var authHandler = handlers.NewAuthHandler(tokenCtrl, authCtrl, verifyTokenCtrl, authServerURL, userGateway)
-
+func NewAPIServer(
+	authHandler *handlers.AuthHandler,
+	registry discovery.Registry,
+	cfg config.Config,
+) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
-		dbConn: dbConn,
 		config: cfg,
 
 		authHandler:   authHandler,

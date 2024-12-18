@@ -9,17 +9,25 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-type AuthController struct {
+type AuthController interface {
+	Create(body domains.Auth) (*dto.SignUpResponseDTO, error)
+	GetByID(id uuid.UUID) (*domains.Auth, error)
+	GetByEmail(email string) (*domains.Auth, error)
+	UpdatePasswordHash(auth domains.Auth) (*domains.Auth, error)
+	UpdateUserVerify(auth domains.Auth) (*domains.Auth, error)
+}
+
+type authController struct {
 	repo repositories.AuthRepository
 }
 
-func NewAuthController(repo repositories.AuthRepository) *AuthController {
-	return &AuthController{
+func NewAuthController(repo repositories.AuthRepository) AuthController {
+	return &authController{
 		repo: repo,
 	}
 }
 
-func (c *AuthController) Create(body domains.Auth) (*dto.SignUpResponseDTO, error) {
+func (c *authController) Create(body domains.Auth) (*dto.SignUpResponseDTO, error) {
 	createdAuth, err := c.repo.Create(body)
 	if err != nil {
 		return nil, err
@@ -28,7 +36,7 @@ func (c *AuthController) Create(body domains.Auth) (*dto.SignUpResponseDTO, erro
 	return mapper.AuthToSignUpResponseDTO(*createdAuth), nil
 }
 
-func (c *AuthController) GetByID(id uuid.UUID) (*domains.Auth, error) {
+func (c *authController) GetByID(id uuid.UUID) (*domains.Auth, error) {
 	user, err := c.repo.GetByID(id)
 	if err != nil {
 		return nil, err
@@ -37,7 +45,7 @@ func (c *AuthController) GetByID(id uuid.UUID) (*domains.Auth, error) {
 	return user, nil
 }
 
-func (c *AuthController) GetByEmail(email string) (*domains.Auth, error) {
+func (c *authController) GetByEmail(email string) (*domains.Auth, error) {
 	user, err := c.repo.GetByEmail(email)
 	if err != nil {
 		return nil, err
@@ -46,12 +54,12 @@ func (c *AuthController) GetByEmail(email string) (*domains.Auth, error) {
 	return user, nil
 }
 
-func (c *AuthController) UpdatePasswordHash(auth domains.Auth) (*domains.Auth, error) {
+func (c *authController) UpdatePasswordHash(auth domains.Auth) (*domains.Auth, error) {
 	updatedAuth, err := c.repo.UpdatePasswordHash(auth)
 	return updatedAuth, err
 }
 
-func (c *AuthController) UpdateUserVerify(auth domains.Auth) (*domains.Auth, error) {
+func (c *authController) UpdateUserVerify(auth domains.Auth) (*domains.Auth, error) {
 	updatedAuth, err := c.repo.UpdateVerify(auth)
 	return updatedAuth, err
 }

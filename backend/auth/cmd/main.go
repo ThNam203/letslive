@@ -8,9 +8,14 @@ import (
 	//_ "sen1or/lets-live/auth/docs"
 
 	cfg "sen1or/lets-live/auth/config"
+	"sen1or/lets-live/auth/controllers"
+	"sen1or/lets-live/auth/handlers"
+	"sen1or/lets-live/auth/repositories"
 	"sen1or/lets-live/auth/utils"
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
+
+	usergateway "sen1or/lets-live/auth/gateway/user/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/joho/godotenv/autoload"
@@ -33,7 +38,7 @@ func main() {
 	dbConn := ConnectDB(ctx, config)
 	defer dbConn.Close()
 
-	server := NewAPIServer(dbConn, registry, *config)
+	server := SetupServer(dbConn, registry, *config)
 	go server.ListenAndServe(false)
 	select {}
 }
@@ -66,4 +71,18 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 	}
 
 	cancel()
+}
+
+func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *APIServer {
+	var userRepo = repositories.NewAuthRepository(dbConn)
+	var refreshTokenRepo = repositories.NewRefreshTokenRepository(dbConn)
+	var verifyTokenRepo = repositories.NewVerifyTokenRepo(dbConn)
+
+	var authCtrl = controllers.NewAuthController(userRepo)
+	var tokenCtrl = controllers.NewTokenController(refreshTokenRepo, controllers.TokenControllerConfig(cfg.Tokens))
+	var verifyTokenCtrl = controllers.NewVerifyTokenController(verifyTokenRepo)
+	authServerURL := fmt.Sprintf("http://%s:%d", cfg.Service.Hostname, cfg.Service.APIPort)
+	userGateway := usergateway.NewUserGateway(registry)
+	var authHandler = handlers.NewAuthHandler(tokenCtrl, authCtrl, verifyTokenCtrl, authServerURL, userGateway)
+	return NewAPIServer(authHandler, registry, cfg)
 }

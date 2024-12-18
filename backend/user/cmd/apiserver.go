@@ -9,21 +9,17 @@ import (
 	"os/signal"
 	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/user/config"
-	"sen1or/lets-live/user/controllers"
 	"sen1or/lets-live/user/handlers"
 	"sen1or/lets-live/user/middlewares"
-	"sen1or/lets-live/user/repositories"
 
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
 )
 
 type APIServer struct {
 	logger *zap.SugaredLogger
-	dbConn *pgxpool.Pool // For raw sql queries
 	config config.Config
 
 	errorHandler  *handlers.ErrorHandler
@@ -35,14 +31,9 @@ type APIServer struct {
 }
 
 // TODO: make tls usable
-func NewAPIServer(dbConn *pgxpool.Pool, serverURL string, cfg config.Config) *APIServer {
-	var userRepo = repositories.NewUserRepository(dbConn)
-	var userCtrl = controllers.NewUserController(userRepo)
-	var userHandler = handlers.NewUserHandler(userCtrl)
-
+func NewAPIServer(userHandler *handlers.UserHandler, cfg config.Config) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
-		dbConn: dbConn,
 		config: cfg,
 
 		errorHandler:  handlers.NewErrorHandler(),
