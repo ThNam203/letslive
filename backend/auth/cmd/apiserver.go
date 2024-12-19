@@ -108,6 +108,8 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("POST /v1/auth/signup", a.authHandler.SignUpHandler)
 	sm.HandleFunc("POST /v1/auth/login", a.authHandler.LogInHandler)
 	sm.HandleFunc("POST /v1/auth/refresh-token", a.authHandler.RefreshTokenHandler)
+	sm.HandleFunc("PATCH /v1/auth/password", a.authHandler.UpdatePasswordHandler)
+	sm.HandleFunc("DELETE /v1/auth/logout", a.authHandler.LogOutHandler)
 
 	sm.HandleFunc("GET /v1/auth/google", a.authHandler.OAuthGoogleLogin)
 	sm.HandleFunc("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBack)

@@ -108,7 +108,7 @@ func (r *postgresAuthRepo) Create(newAuth domains.Auth) (*domains.Auth, error) {
 }
 
 func (r *postgresAuthRepo) UpdatePasswordHash(user domains.Auth) (*domains.Auth, error) {
-	rows, err := r.dbConn.Query(context.Background(), "UPDATE auths SET password_hash = $1 WHERE id = $3 RETURNING *", user.PasswordHash, user.ID)
+	rows, err := r.dbConn.Query(context.Background(), "UPDATE auths SET password_hash = $1 WHERE id = $2 RETURNING *", user.PasswordHash, user.ID)
 	if err != nil {
 		return nil, err
 	}

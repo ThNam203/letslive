@@ -113,6 +113,12 @@ func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *AuthHandler) LogOutHandler(w http.ResponseWriter, r *http.Request) {
+	h.setAccessTokenCookie(w, "", 0)
+	h.setRefreshTokenCookie(w, "", 0)
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // SignUpHandler handles user registration.
 // @Summary Sign up a new user
 // @Description Register a new user with username, email, and password
