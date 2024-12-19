@@ -8,6 +8,7 @@ import (
 	"sen1or/lets-live/user/controllers"
 	"sen1or/lets-live/user/dto"
 	"sen1or/lets-live/user/repositories"
+	"sen1or/lets-live/user/types"
 	"sen1or/lets-live/user/utils"
 
 	"github.com/gofrs/uuid/v5"
@@ -102,12 +103,9 @@ func (h *UserHandler) GetCurrentUserInfo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	myClaims := struct {
-		UserId string `json:"userId"`
-		jwt.RegisteredClaims
-	}{}
+	myClaims := types.MyClaims{}
 
-	// the signature should be checked first from the api gateway
+	// the signature should already been checked from the api gateway before going to this
 	_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusForbidden, fmt.Errorf("invalid access token: %s", err))
@@ -117,6 +115,7 @@ func (h *UserHandler) GetCurrentUserInfo(w http.ResponseWriter, r *http.Request)
 	userUUID, err := uuid.FromString(myClaims.UserId)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("userId not valid"))
+		return
 	}
 
 	user, err := h.ctrl.GetByID(userUUID)

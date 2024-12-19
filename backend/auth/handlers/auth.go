@@ -12,7 +12,9 @@ import (
 	"sen1or/lets-live/auth/controllers"
 	"sen1or/lets-live/auth/domains"
 	"sen1or/lets-live/auth/dto"
-	gateway "sen1or/lets-live/auth/gateway/user/http"
+	usergateway "sen1or/lets-live/auth/gateway/user"
+	"sen1or/lets-live/auth/repositories"
+	"sen1or/lets-live/auth/types"
 	"sen1or/lets-live/auth/utils"
 	"sen1or/lets-live/pkg/logger"
 	userdto "sen1or/lets-live/user/dto"
@@ -20,6 +22,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid/v5"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -28,7 +31,7 @@ type AuthHandler struct {
 	tokenCtrl       controllers.TokenController
 	authCtrl        controllers.AuthController
 	verifyTokenCtrl controllers.VerifyTokenController
-	userGateway     *gateway.UserGateway
+	userGateway     usergateway.UserGateway
 	authServerURL   string
 }
 
@@ -37,7 +40,7 @@ func NewAuthHandler(
 	authCtrl controllers.AuthController,
 	verifyTokenCtrl controllers.VerifyTokenController,
 	authServerURL string,
-	userGateway *gateway.UserGateway,
+	userGateway usergateway.UserGateway,
 ) *AuthHandler {
 	return &AuthHandler{
 		authCtrl:        authCtrl,
@@ -292,6 +295,7 @@ func (h *AuthHandler) GetAuthByUserIDHandler(w http.ResponseWriter, r *http.Requ
 
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("user id not valid"))
+		return
 	}
 	user, err := h.authCtrl.GetByID(userUUID)
 
@@ -303,6 +307,71 @@ func (h *AuthHandler) GetAuthByUserIDHandler(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(user)
+}
+
+func (h *AuthHandler) UpdatePasswordHandler(w http.ResponseWriter, r *http.Request) {
+	accessTokenCookie, err := r.Cookie("ACCESS_TOKEN")
+	if err != nil || len(accessTokenCookie.Value) == 0 {
+		h.WriteErrorResponse(w, http.StatusForbidden, errors.New("missing credentials"))
+		return
+	}
+
+	myClaims := types.MyClaims{}
+	_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
+
+	userUUID, err := uuid.FromString(myClaims.UserId)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("user id not valid"))
+		return
+	}
+
+	reqDTO := dto.ChangePasswordRequestDTO{}
+	if err := json.NewDecoder(r.Body).Decode(&reqDTO); err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+	defer r.Body.Close()
+
+	if err := utils.Validator.Struct(&reqDTO); err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if reqDTO.NewPassword != reqDTO.ConfirmNewPassword {
+		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("the confirm password doesn't match"))
+		return
+	}
+
+	auth, err := h.authCtrl.GetByUserID(userUUID)
+	if err != nil {
+		if errors.Is(err, repositories.ErrRecordNotFound) {
+			h.WriteErrorResponse(w, http.StatusNotFound, err)
+		} else {
+			h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		}
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(auth.PasswordHash), []byte(reqDTO.OldPassword)); err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("old password does not match"))
+		return
+	}
+
+	updateHashedPassword, err := bcrypt.GenerateFromPassword([]byte(reqDTO.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// update the password
+	auth.PasswordHash = string(updateHashedPassword)
+	if _, err := h.authCtrl.UpdatePasswordHash(*auth); err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *AuthHandler) setRefreshTokenCookie(w http.ResponseWriter, refreshToken string, maxAge int) {

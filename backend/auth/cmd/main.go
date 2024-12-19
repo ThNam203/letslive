@@ -11,6 +11,7 @@ import (
 	"sen1or/lets-live/auth/controllers"
 	"sen1or/lets-live/auth/handlers"
 	"sen1or/lets-live/auth/repositories"
+	"sen1or/lets-live/auth/types"
 	"sen1or/lets-live/auth/utils"
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
@@ -79,7 +80,7 @@ func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Conf
 	var verifyTokenRepo = repositories.NewVerifyTokenRepo(dbConn)
 
 	var authCtrl = controllers.NewAuthController(userRepo)
-	var tokenCtrl = controllers.NewTokenController(refreshTokenRepo, controllers.TokenControllerConfig(cfg.Tokens))
+	var tokenCtrl = controllers.NewTokenController(refreshTokenRepo, types.TokenControllerConfig(cfg.Tokens))
 	var verifyTokenCtrl = controllers.NewVerifyTokenController(verifyTokenRepo)
 	authServerURL := fmt.Sprintf("http://%s:%d", cfg.Service.Hostname, cfg.Service.APIPort)
 	userGateway := usergateway.NewUserGateway(registry)

@@ -1,7 +1,7 @@
 import { CustomLink } from "@/components/Hover3DBox";
 import LivestreamsPreviewView from "@/components/LivesteamsPreviewView";
 import ShowToast from "@/components/ShowToast";
-import { GetOnlineUsers } from "@/lib/user";
+import { GetOnlineUsers } from "@/lib/api/user";
 
 export default async function HomePage() {
     const { users, fetchError } = await GetOnlineUsers();
