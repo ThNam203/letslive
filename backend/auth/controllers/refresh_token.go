@@ -6,6 +6,7 @@ import (
 	"os"
 	"sen1or/lets-live/auth/domains"
 	"sen1or/lets-live/auth/repositories"
+	"sen1or/lets-live/auth/types"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -15,42 +16,19 @@ import (
 // for kong api gateway
 var CONSUMER = "authenticated users"
 
-type AccessTokenInformation struct {
-	AccessToken       string
-	AccessTokenMaxAge int
-}
-
-type TokenPairInformation struct {
-	RefreshToken       string
-	RefreshTokenMaxAge int
-	AccessToken        string
-	AccessTokenMaxAge  int
-}
-
-type TokenControllerConfig struct {
-	RefreshTokenMaxAge int
-	AccessTokenMaxAge  int
-}
-
-type MyCustomClaims struct {
-	UserId   string `json:"userId"`
-	Consumer string `json:"consumer"`
-	jwt.RegisteredClaims
-}
-
 type TokenController interface {
-	GenerateTokenPair(userId string) (*TokenPairInformation, error)
-	RefreshToken(refreshToken string) (*AccessTokenInformation, error)
+	GenerateTokenPair(userId string) (*types.TokenPairInformation, error)
+	RefreshToken(refreshToken string) (*types.AccessTokenInformation, error)
 	RevokeTokenByValue(tokenValue string) error
 	RevokeAllTokensOfUser(userID uuid.UUID) error
 }
 
 type tokenController struct {
 	repo   repositories.RefreshTokenRepository
-	config TokenControllerConfig
+	config types.TokenControllerConfig
 }
 
-func NewTokenController(repo repositories.RefreshTokenRepository, cfg TokenControllerConfig) TokenController {
+func NewTokenController(repo repositories.RefreshTokenRepository, cfg types.TokenControllerConfig) TokenController {
 	return &tokenController{
 		repo:   repo,
 		config: cfg,
@@ -58,7 +36,7 @@ func NewTokenController(repo repositories.RefreshTokenRepository, cfg TokenContr
 }
 
 // generate the refresh token with access token (for login and signup)
-func (c *tokenController) GenerateTokenPair(userId string) (*TokenPairInformation, error) {
+func (c *tokenController) GenerateTokenPair(userId string) (*types.TokenPairInformation, error) {
 
 	refreshToken, err := c.generateRefreshToken(userId)
 	if err != nil {
@@ -70,7 +48,7 @@ func (c *tokenController) GenerateTokenPair(userId string) (*TokenPairInformatio
 		return nil, err
 	}
 
-	return &TokenPairInformation{
+	return &types.TokenPairInformation{
 		RefreshToken:       refreshToken,
 		RefreshTokenMaxAge: c.config.RefreshTokenMaxAge,
 		AccessToken:        accessToken,
@@ -80,8 +58,8 @@ func (c *tokenController) GenerateTokenPair(userId string) (*TokenPairInformatio
 
 // create a new access token for the refresh token
 // the process is called "refresh token"
-func (c *tokenController) RefreshToken(refreshToken string) (*AccessTokenInformation, error) {
-	myClaims := MyCustomClaims{}
+func (c *tokenController) RefreshToken(refreshToken string) (*types.AccessTokenInformation, error) {
+	myClaims := types.MyClaims{}
 	parsedToken, err := jwt.NewParser().ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("REFRESH_TOKEN_SECRET")), nil
 	})
@@ -96,7 +74,7 @@ func (c *tokenController) RefreshToken(refreshToken string) (*AccessTokenInforma
 		return nil, fmt.Errorf("failed to refresh token: %s", err)
 	}
 
-	return &AccessTokenInformation{
+	return &types.AccessTokenInformation{
 		AccessToken:       accessToken,
 		AccessTokenMaxAge: c.config.AccessTokenMaxAge,
 	}, nil
@@ -105,10 +83,10 @@ func (c *tokenController) RefreshToken(refreshToken string) (*AccessTokenInforma
 func (c *tokenController) generateRefreshToken(userId string) (string, error) {
 	refreshTokenExpiresDuration := time.Duration(c.config.RefreshTokenMaxAge) * time.Second
 	refreshTokenExpiresAt := time.Now().Add(refreshTokenExpiresDuration)
-	myClaims := MyCustomClaims{
-		userId,
-		CONSUMER,
-		jwt.RegisteredClaims{
+	myClaims := types.MyClaims{
+		UserId:   userId,
+		Consumer: CONSUMER,
+		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(refreshTokenExpiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
@@ -140,10 +118,10 @@ func (c *tokenController) generateRefreshToken(userId string) (string, error) {
 func (c *tokenController) generateAccessToken(userId string) (string, error) {
 	accessTokenDuration := time.Duration(c.config.AccessTokenMaxAge) * time.Second
 	accessTokenExpiresAt := time.Now().Add(accessTokenDuration)
-	myClaims := MyCustomClaims{
-		userId,
-		CONSUMER,
-		jwt.RegisteredClaims{
+	myClaims := types.MyClaims{
+		UserId:   userId,
+		Consumer: CONSUMER,
+		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(accessTokenExpiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),

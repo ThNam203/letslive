@@ -49,7 +49,7 @@ export const Header = () => {
       <div className="lg:w-[400px] max-lg:w mx-2">
         <SearchInput
           id="search-input"
-          placeholder="Search"
+          placeholder="Search (Not implemented)"
           className="text-base w-full"
         />
       </div>

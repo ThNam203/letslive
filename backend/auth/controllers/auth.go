@@ -12,6 +12,7 @@ import (
 type AuthController interface {
 	Create(body domains.Auth) (*dto.SignUpResponseDTO, error)
 	GetByID(id uuid.UUID) (*domains.Auth, error)
+	GetByUserID(id uuid.UUID) (*domains.Auth, error)
 	GetByEmail(email string) (*domains.Auth, error)
 	UpdatePasswordHash(auth domains.Auth) (*domains.Auth, error)
 	UpdateUserVerify(auth domains.Auth) (*domains.Auth, error)
@@ -38,6 +39,15 @@ func (c *authController) Create(body domains.Auth) (*dto.SignUpResponseDTO, erro
 
 func (c *authController) GetByID(id uuid.UUID) (*domains.Auth, error) {
 	user, err := c.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (c *authController) GetByUserID(id uuid.UUID) (*domains.Auth, error) {
+	user, err := c.repo.GetByUserID(id)
 	if err != nil {
 		return nil, err
 	}

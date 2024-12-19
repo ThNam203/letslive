@@ -1,11 +1,12 @@
 "use client";
 
+import FormErrorText from "@/components/forms/FormErrorText";
 import { IconEmail } from "@/components/icons/email";
 import { IconEye } from "@/components/icons/eye";
 import { IconEyeOff } from "@/components/icons/eye-off";
 import { IconPasswordOutline } from "@/components/icons/password";
 import GLOBAL from "@/global";
-import { LogIn } from "@/lib/auth";
+import { LogIn } from "@/lib/api/auth";
 import { Spinner } from "@nextui-org/spinner";
 import { set } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -75,11 +76,7 @@ export default function LogInForm() {
                     onChange={(e) => setEmail(e.target.value)}
                 />
             </div>
-            {errors.email && (
-                <p className="text-red-500 text-xs font-semibold">
-                    {errors.email}
-                </p>
-            )}
+            <FormErrorText textError={errors.email} />
             <div className="flex px-4 gap-4 items-center rounded-md border border-gray-200 mt-4">
                 <label htmlFor="password">
                     <IconPasswordOutline className="opacity-40 scale-125" />
@@ -105,11 +102,7 @@ export default function LogInForm() {
                     />
                 )}
             </div>
-            {errors.password && (
-                <p className="text-red-500 text-xs font-semibold">
-                    {errors.password}
-                </p>
-            )}
+            <FormErrorText textError={errors.password} />);
             <button
                 type="submit"
                 disabled={isLoading}

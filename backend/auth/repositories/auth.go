@@ -127,7 +127,7 @@ func (r *postgresAuthRepo) UpdatePasswordHash(user domains.Auth) (*domains.Auth,
 }
 
 func (r *postgresAuthRepo) UpdateVerify(user domains.Auth) (*domains.Auth, error) {
-	rows, err := r.dbConn.Query(context.Background(), "UPDATE auths SET is_verified = $2 WHERE id = $3 RETURNING *", user.IsVerified, user.ID)
+	rows, err := r.dbConn.Query(context.Background(), "UPDATE auths SET is_verified = $1 WHERE id = $2 RETURNING *", user.IsVerified, user.ID)
 	if err != nil {
 		return nil, err
 	}
