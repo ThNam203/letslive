@@ -102,7 +102,7 @@ export default function LogInForm() {
                     />
                 )}
             </div>
-            <FormErrorText textError={errors.password} />);
+            <FormErrorText textError={errors.password} />
             <button
                 type="submit"
                 disabled={isLoading}
