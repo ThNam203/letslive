@@ -1,0 +1,351 @@
+services:
+  auth:
+    env_file: ./backend/auth/.env
+    build:
+      context: ./backend
+      dockerfile: ./dockerfiles/auth.Dockerfile
+    container_name: letslive_auth
+    ports:
+      - "7777:7777"
+    expose:
+      - "7777"
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+    volumes:
+      - ./shared_log/auth.txt:/usr/local/bin/log.txt
+
+  auth_db:
+    image: postgres:16.3
+    container_name: letslive_auth_db
+    shm_size: 64mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: letslive_auth
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    networks:
+      general_network:
+    ports:
+      - "9990:5432"
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  user:
+    build:
+      context: ./backend
+      dockerfile: ./dockerfiles/user.Dockerfile
+    container_name: letslive_user
+    ports:
+      - "7778:7778"
+    expose:
+      - "7778"
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+    volumes:
+      - ./shared_log/user.txt:/usr/local/bin/log.txt
+
+  user_db:
+    image: postgres:16.3
+    container_name: letslive_user_db
+    shm_size: 64mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: letslive_user
+    volumes:
+      - postgres_user_data:/var/lib/postgresql/data
+    networks:
+      general_network:
+    ports:
+      - "9991:5432"
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  transcode:
+    build:
+      context: ./backend
+      dockerfile: ./dockerfiles/transcode.Dockerfile
+    container_name: letslive_transcode
+    ports:
+      - "1935:1935"
+      - "7779:7779" 
+      - "8889:8889" # expose the webserver
+    expose:
+      - "1935"
+      - "7779"
+      - "8889"
+    networks:
+      general_network:
+      ipfs_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+    volumes:
+      - ./backend/transcode/dockervolume/private:/usr/src/app/private
+      - ./backend/transcode/dockervolume/public:/usr/src/app/public
+      - ./shared_log/transcode.txt:/usr/local/bin/log.txt
+
+  #ui:
+  #  build:
+  #    context: ./ui
+  #    dockerfile: Dockerfile
+  #  container_name: letslive_ui
+  #  networks:
+  #    general_network:
+  #  ports:
+  #    - "5000:5000"
+
+  configserver:
+    build:
+      context: ./backend/configserver
+      dockerfile: Dockerfile
+    container_name: letslive_configserver
+    ports:
+      - "8181:8181"
+    networks:
+      general_network:
+    healthcheck:
+      test: "curl --fail --silent localhost:8181/actuator/health | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      consul:
+        condition: service_healthy
+
+  consul:
+    image: hashicorp/consul:latest
+    container_name: consul
+    ports:
+      - "8500:8500"  # Consul UI and API
+      - "8600:8600/udp"  # DNS
+    expose:
+      - "8500"
+      - "8600"
+    command: agent -dev -client=0.0.0.0 -log-level=error -enable-script-checks -bootstrap-expect=1 -config-dir=/consul/config
+    volumes:
+      - ./configs/consul.json:/consul/config/consul.json
+    networks:
+      kong_network:
+        ipv4_address: 192.168.1.10
+      general_network:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8500/v1/status/leader"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  #kong_migration:
+  #  image: kong:latest
+  #  command: "kong migrations bootstrap"
+  #  container_name: letslive_kong_migration
+  #  networks:
+  #    - kong_network
+  #  restart: on-failure
+  #  environment:
+  #    KONG_DATABASE: postgres
+  #    KONG_PG_HOST: kong_db
+  #    KONG_PG_USER: kong
+  #    KONG_PG_PASSWORD: kongpass
+  #  links:
+  #    - kong_db
+  #  depends_on:
+  #    - kong_db
+
+  kong:
+    image: kong:latest
+    container_name: letslive_kong
+    networks:
+      kong_network:
+      general_network:
+    restart: always
+    environment:
+      KONG_DATABASE: off
+      #KONG_DATABASE: postgres
+      #KONG_PG_HOST: kong_db
+      #KONG_PG_USER: kong
+      #KONG_PG_PASSWORD: kongpass
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+      KONG_DNS_RESOLVER: "192.168.1.10:8600,127.0.0.11"
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_ADMIN_LISTEN_SSL: "0.0.0.0:8444"
+      KONG_ADMIN_GUI_URL: http://localhost:8002
+    volumes:
+      - ./configs/kong.yml:/kong/declarative/kong.yml
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "8001:8001"
+      - "8002:8002"
+      - "8444:8444"
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 2s
+      retries: 15
+    depends_on:
+      consul:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8888:80"  # Expose Nginx on port 80 to access externally
+    volumes:
+      - ./ipfs-impl/nginx.conf:/etc/nginx/nginx.conf  # nginx config
+    networks:
+      ipfs_network:
+        ipv4_address: 10.5.0.10
+
+  ipfs_bootstrap:
+    build:
+      context: ./ipfs-impl
+      dockerfile: Dockerfile
+    container_name: ipfs_bootstrap
+    command: ["/usr/local/bin/app", "-b"] # run as bootstrap node
+    ports:
+      - "4001:4001"
+      - "8080:8080"
+    expose:
+      - "4001"
+      - "8080"
+    networks:
+      ipfs_network:
+        ipv4_address: 10.5.0.2
+        aliases:
+          - ipfs_bootstrap_node
+
+  ##### Use the command below to get the bootstrap ip on host, then replace it with "127.0.0.1" or just set it static like me
+  ##### docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
+  
+  ipfs_node_1:
+    build:
+      context: ./ipfs-impl
+      dockerfile: Dockerfile
+    container_name: ipfs_node_1
+    # change the address to reflex to yours
+    command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
+    networks:
+      ipfs_network:
+        #ipv4_address: 10.5.0.3
+        aliases:
+          - ipfs_bootstrap_node
+    expose:
+      - "4001"
+    ports:
+      - "4321:4001/tcp"
+    depends_on:
+      - ipfs_bootstrap
+
+  ipfs_node_2:
+    build:
+      context: ./ipfs-impl
+      dockerfile: Dockerfile
+    container_name: ipfs_node_2
+    # change the address to reflex to yours
+    command: ["/usr/local/bin/app", "-a", "/ip4/10.5.0.2/tcp/4001/p2p/QmSHeyuLfNPnfG5S1JfJcgxPsVQ23u3JYWnRyYm4vkLGJb"]
+    networks:
+      ipfs_network:
+        #ipv4_address: 10.5.0.4
+        aliases:
+          - ipfs_bootstrap_node
+    expose:
+      - "4001"
+    depends_on:
+      - ipfs_bootstrap
+
+  ## showing bootstrap node metrics
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./ipfs-impl/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      ipfs_network:
+    depends_on:
+      ipfs_bootstrap:
+        condition: service_started
+
+  grafana:
+    image: grafana/grafana:latest
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+    logging:        # does not work?
+      driver: none
+    attach: false
+    environment:
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ./ipfs-impl/dashboards/dashboard.yml:/etc/grafana/provisioning/dashboards/main.yml
+      - ./ipfs-impl/dashboards/datasources.yml:/etc/grafana/provisioning/datasources/prom.yml
+      - ./ipfs-impl/dashboards/autonat/autonat.json:/var/lib/grafana/dashboards/autonat.json
+      - ./ipfs-impl/dashboards/autorelay/autorelay.json:/var/lib/grafana/dashboards/autorelay.json
+      - ./ipfs-impl/dashboards/eventbus/eventbus.json:/var/lib/grafana/dashboards/eventbus.json
+      - ./ipfs-impl/dashboards/holepunch/holepunch.json:/var/lib/grafana/dashboards/holepunch.json
+      - ./ipfs-impl/dashboards/identify/identify.json:/var/lib/grafana/dashboards/identify.json
+      - ./ipfs-impl/dashboards/relaysvc/relaysvc.json:/var/lib/grafana/dashboards/relaysvc.json
+      - ./ipfs-impl/dashboards/swarm/swarm.json:/var/lib/grafana/dashboards/swarm.json
+      - ./ipfs-impl/dashboards/resource-manager/resource-manager.json:/var/lib/grafana/dashboards/resource-manager.json
+    networks:
+      ipfs_network:
+
+networks:
+  ipfs_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+
+  general_network:
+    driver: bridge
+
+  elk_network:
+    driver: bridge
+
+  kong_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+
+volumes:
+  postgres_auth_data:
+  postgres_user_data:
+  postgres_kong_data:
+  elastic_data:
+  elastic_certs:
+  kibana_data:

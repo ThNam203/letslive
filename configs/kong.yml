@@ -64,4 +64,11 @@ plugins:
       key_claim_name: consumer
       run_on_preflight: true
     service: User
-
+  - name: cors
+    enabled: true
+    config:
+      origins: ["http://localhost:5000"]
+      headers: ["Content-Type", "Authorization", "Cache"]
+      credentials: true
+      max_age: 3600
+      preflight_continue: false

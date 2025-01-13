@@ -57,7 +57,7 @@ export const fetchClient = async <T>(
                                 refreshRes.id,
                                 "Session expired, please log in again",
                                 {
-                                    status: 401,
+                                    status: refreshResponse.status,
                                     isClientError: true,
                                 }
                             );
@@ -113,8 +113,22 @@ export const fetchClient = async <T>(
 
             throw error;
         }
+        
+        const contentType = response.headers.get("content-type");
+        if (
+            response.status === 204 || 
+            !contentType || 
+            !contentType.includes("application/json")
+        ) {
+            return {} as T;
+        }
 
-        return (await response.json()) as T;
+        const data = await response.json();
+        if (!data) {
+            return {} as T;
+        }
+
+        return data as T;
     } catch (error: any) {
         if (error instanceof TypeError) {
             const networkError = new FetchError(

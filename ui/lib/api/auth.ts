@@ -8,7 +8,7 @@ export async function SignUp(body: {
     password: string;
 }): Promise<{ fetchError?: FetchError }> {
     try {
-        await fetchClient<User[]>("/auth/signup", {
+        await fetchClient<User>("/auth/signup", {
             method: "POST",
             body: JSON.stringify({
                 email: body.email,
@@ -27,7 +27,7 @@ export async function LogIn(body: {
     password: string
 }): Promise<{ fetchError?: FetchError }> {
     try {
-        await fetchClient<User[]>("/auth/login", {
+        await fetchClient<void>("/auth/login", {
             method: "POST",
             body: JSON.stringify({
                 email: body.email,
