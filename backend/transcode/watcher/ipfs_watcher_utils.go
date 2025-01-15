@@ -9,7 +9,7 @@ import (
 )
 
 // rewrite the local playlist to point to remote resources
-func generateRemotePlaylist(playlistPath string, variant domains.HLSVariant) (string, error) {
+func generateRemotePlaylist(ipfsVOD *IPFSVOD, playlistPath string, variant domains.HLSVariant) (string, error) {
 	file, err := os.Open(playlistPath)
 	if err != nil {
 		return "", fmt.Errorf("can't open playlist %s: %s", playlistPath, err)
@@ -31,6 +31,7 @@ func generateRemotePlaylist(playlistPath string, variant domains.HLSVariant) (st
 		}
 
 		newPlaylist = newPlaylist + line + "\n"
+		ipfsVOD.OnGeneratingNewLineForRemotePlaylist(line, variant)
 	}
 
 	return newPlaylist, nil

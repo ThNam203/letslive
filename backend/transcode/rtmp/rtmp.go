@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
+	"path/filepath"
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/transcode/config"
 	usergateway "sen1or/lets-live/transcode/gateway/user/http"
 	"sen1or/lets-live/transcode/transcoder"
+	"sen1or/lets-live/transcode/watcher"
 	"sen1or/lets-live/user/dto"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/nareix/joy5/format/flv"
@@ -24,6 +28,7 @@ type RTMPServerConfig struct {
 	Port     int
 	Registry *discovery.Registry
 	Config   config.Config
+	IPFSVOD  *watcher.IPFSVOD
 }
 
 type RTMPServer struct {
@@ -31,6 +36,7 @@ type RTMPServer struct {
 	Registry    *discovery.Registry
 	userGateway *usergateway.UserGateway
 	config      config.Config
+	ipfsVOD     *watcher.IPFSVOD
 }
 
 func NewRTMPServer(config RTMPServerConfig, userGateway *usergateway.UserGateway) *RTMPServer {
@@ -39,6 +45,7 @@ func NewRTMPServer(config RTMPServerConfig, userGateway *usergateway.UserGateway
 		Registry:    config.Registry,
 		config:      config.Config,
 		userGateway: userGateway,
+		ipfsVOD:     config.IPFSVOD,
 	}
 }
 
@@ -88,7 +95,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	streamingKeyComponents := strings.Split(c.URL.Path, "/")
 	streamingKey := streamingKeyComponents[len(streamingKeyComponents)-1]
 
-	userId, err := s.onConnect(streamingKey)
+	userId, err := s.onConnect(streamingKey) // userId is used as publishName
 	if err != nil {
 		logger.Errorf("stream connection failed: %s", err)
 		nc.Close()
@@ -138,6 +145,9 @@ func (s *RTMPServer) onConnect(streamingKey string) (string, error) {
 		return "", fmt.Errorf("failed to get service connection: %s", errRes.Message)
 	}
 
+	// setup the vod creation
+	s.ipfsVOD.OnStreamStart(userInfo.ID.String())
+
 	return userInfo.ID.String(), nil
 }
 
@@ -149,8 +159,27 @@ func (s *RTMPServer) onDisconnect(userId string) {
 		IsOnline: func(b bool) *bool { return &b }(false), // wtf
 	}
 
+	// create the VOD playlists and remove the entry
+	var basePath = filepath.Join(s.config.Transcode.PublicHLSPath, userId)
+	s.ipfsVOD.OnStreamEnd(userId, filepath.Join(basePath, "vods", time.Now().Format(time.RFC3339)))
+	copyFile(filepath.Join(basePath, s.config.Transcode.FFMpegSetting.MasterFileName), filepath.Join(basePath, "vods"))
+
 	errRes := s.userGateway.UpdateUserLiveStatus(context.Background(), *updateUserDTO)
 	if errRes != nil {
 		logger.Errorf("failed to get service connection: %s", errRes.Message)
 	}
+}
+
+func copyFile(src, dst string) error {
+	input, err := os.ReadFile(src)
+	if err != nil {
+		return fmt.Errorf("error reading file: %s", err)
+	}
+
+	err = os.WriteFile(dst, input, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("error copying file: %s", err)
+	}
+
+	return nil
 }

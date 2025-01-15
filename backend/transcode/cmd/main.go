@@ -41,15 +41,22 @@ func main() {
 	MyWebServer := webserver.NewWebServer(config.Webserver.Port, allowedSuffixes[:], config.Transcode.PublicHLSPath)
 	MyWebServer.ListenAndServe()
 
+	// TODO: find a way to remove the ipfsVOD from the rtmp, or change the design or config
+	ipfsVOD := watcher.GetIPFSVOD()
+
 	if config.IPFS.Enabled {
 		ipfsStorage := ipfs.NewIPFSStorage(context.Background(), config.IPFS.Gateway, &config.IPFS.BootstrapNodeAddr)
-		monitor := watcher.NewIPFSWatcher(config.Transcode.PrivateHLSPath, ipfsStorage, *config)
+		monitor := watcher.NewIPFSWatcher(config.Transcode.PrivateHLSPath, ipfsVOD, ipfsStorage, *config)
 		go monitor.Watch()
 	}
 
 	userGateway := usergateway.NewUserGateway(registry)
 
-	rtmpServer := rtmp.NewRTMPServer(rtmp.RTMPServerConfig{Port: config.RTMP.Port, Registry: &registry, Config: *config}, userGateway)
+	// TODO: find a way to remove the ipfsVOD from the rtmp, or change the design or config
+	rtmpServer := rtmp.NewRTMPServer(
+		rtmp.RTMPServerConfig{Port: config.RTMP.Port, Registry: &registry, Config: *config, IPFSVOD: ipfsVOD},
+		userGateway,
+	)
 	go rtmpServer.Start()
 	select {}
 }
