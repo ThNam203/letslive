@@ -44,13 +44,15 @@ type IPFSStreamWatcher struct {
 	monitorPath string
 	storage     storage.Storage
 	config      config.Config
+	ipfsVOD     *IPFSVOD
 }
 
-func NewIPFSWatcher(monitorPath string, ipfsStorage storage.Storage, config config.Config) Watcher {
+func NewIPFSWatcher(monitorPath string, ipfsVOD *IPFSVOD, ipfsStorage storage.Storage, config config.Config) Watcher {
 	return &IPFSStreamWatcher{
 		monitorPath: monitorPath,
 		storage:     ipfsStorage,
 		config:      config,
+		ipfsVOD:     ipfsVOD,
 	}
 }
 
@@ -68,6 +70,10 @@ func (w *IPFSStreamWatcher) Watch() {
 				if event.IsDir() && event.Op == watcher.Create {
 					components := strings.Split(event.Path, "/")
 					publishName := components[len(components)-1]
+
+					if len(publishName) < 10 {
+						continue
+					}
 
 					if err := os.MkdirAll(filepath.Join(w.config.Transcode.PublicHLSPath, publishName), os.ModePerm); err != nil {
 						logger.Errorw("failed to create publish folder", err, "path", filepath.Join(w.config.Transcode.PublicHLSPath, publishName))
@@ -108,7 +114,7 @@ func (w *IPFSStreamWatcher) Watch() {
 					}
 
 					variant := streams[info.PublishName].Variants[info.VariantIndex]
-					newPlaylist, err := generateRemotePlaylist(event.Path, variant)
+					newPlaylist, err := generateRemotePlaylist(w.ipfsVOD, event.Path, variant)
 					if err != nil {
 						logger.Errorw("error generating remote playlist", err)
 						continue
