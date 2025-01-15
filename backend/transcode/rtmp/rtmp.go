@@ -161,8 +161,9 @@ func (s *RTMPServer) onDisconnect(userId string) {
 
 	// create the VOD playlists and remove the entry
 	var basePath = filepath.Join(s.config.Transcode.PublicHLSPath, userId)
-	s.ipfsVOD.OnStreamEnd(userId, filepath.Join(basePath, "vods", time.Now().Format(time.RFC3339)))
-	copyFile(filepath.Join(basePath, s.config.Transcode.FFMpegSetting.MasterFileName), filepath.Join(basePath, "vods"))
+	var nowString = time.Now().Format(time.RFC3339)
+	s.ipfsVOD.OnStreamEnd(userId, filepath.Join(basePath, "vods", nowString))
+	copyFile(filepath.Join(basePath, s.config.Transcode.FFMpegSetting.MasterFileName), filepath.Join(basePath, "vods", nowString, s.config.Transcode.FFMpegSetting.MasterFileName))
 
 	errRes := s.userGateway.UpdateUserLiveStatus(context.Background(), *updateUserDTO)
 	if errRes != nil {
