@@ -14,6 +14,15 @@ export async function GetOnlineUsers(): Promise<{users: User[], fetchError?: Fet
     }
 }
 
+export async function GetUserById(userId: string): Promise<{user?: User, fetchError?: FetchError}> {
+    try {
+        const data = await fetchClient<User>("/user/" + userId);
+        return { user: data };
+    } catch (error) {
+        return { fetchError: error as FetchError };
+    }
+}
+
 export async function GetMeProfile(): Promise<{user?: User, fetchError?: FetchError}> {
     try {
         const data = await fetchClient<User>("/user/me");
