@@ -1,10 +1,10 @@
-import { LegacyRef } from "react";
+import { LegacyRef, RefObject } from "react";
 import ReactPlayer, { ReactPlayerProps } from "react-player";
 
 export default function ReactPlayerWrapper(
   props: ReactPlayerProps & {
-    playerRef: LegacyRef<ReactPlayer>;
+    playerRef: RefObject<ReactPlayer>;
   }
 ) {
-  return <ReactPlayer ref={props.playerref} {...props} />;
+  return <ReactPlayer ref={props.playerRef} {...props} />;
 }
