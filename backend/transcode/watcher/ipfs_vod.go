@@ -125,7 +125,10 @@ func (u *IPFSVOD) OnGeneratingNewLineForRemotePlaylist(line string, variant doma
 	variantIndex := sampleSegment.VariantIndex
 	publishName := sampleSegment.PublishName
 
-	vodData, _ := u.vodsData[publishName] // should always be there, created when watcher receives a 'create folder' event
+	vodData, ok := u.vodsData[publishName]
+	if !ok {
+		return
+	}
 
 	isDone := false
 	if strings.HasPrefix(line, "#EXT-X-VERSION") {
