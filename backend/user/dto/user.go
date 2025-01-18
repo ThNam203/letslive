@@ -29,6 +29,7 @@ type GetUserResponseDTO struct {
 	IsOnline     bool      `json:"isOnline"`
 	CreatedAt    time.Time `json:"createdAt"`
 	StreamAPIKey uuid.UUID `json:"streamAPIKey"`
+	VODs         []string  `json:"vods"`
 }
 
 type GetUserByStreamAPIKeyRequestDTO struct{}

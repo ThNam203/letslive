@@ -8,6 +8,7 @@ import (
 	"sen1or/lets-live/pkg/logger"
 	cfg "sen1or/lets-live/user/config"
 	"sen1or/lets-live/user/controllers"
+	gateway "sen1or/lets-live/user/gateway/transcode/http"
 	"sen1or/lets-live/user/handlers"
 	"sen1or/lets-live/user/repositories"
 	"sen1or/lets-live/user/utils"
@@ -24,12 +25,17 @@ func main() {
 	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
 
 	// for consul service discovery
-	go StartDiscovery(ctx, config)
+	registry, err := discovery.NewConsulRegistry(config.Registry.RegistryService.Address)
+	if err != nil {
+		logger.Panicf("failed to start discovery mechanism: %s", err)
+		panic(1)
+	}
+	go RegisterToDiscoveryService(ctx, registry, config)
 
 	dbConn := ConnectDB(ctx, config)
 	defer dbConn.Close()
 
-	server := SetupServer(dbConn, *config)
+	server := SetupServer(dbConn, registry, *config)
 	go server.ListenAndServe(false)
 	select {}
 }
@@ -43,12 +49,7 @@ func ConnectDB(ctx context.Context, config *cfg.Config) *pgxpool.Pool {
 	return dbConn
 }
 
-func StartDiscovery(ctx context.Context, config *cfg.Config) {
-	registry, err := discovery.NewConsulRegistry(config.Registry.RegistryService.Address)
-	if err != nil {
-		logger.Panicf("failed to start discovery mechanism: %s", err)
-	}
-
+func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry, config *cfg.Config) {
 	serviceName := config.Service.Name
 	serviceHostPort := fmt.Sprintf("%s:%d", config.Service.Hostname, config.Service.APIPort)
 	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/user/health", serviceHostPort)
@@ -57,20 +58,20 @@ func StartDiscovery(ctx context.Context, config *cfg.Config) {
 		logger.Panicf("failed to register server: %s", err)
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, _ = context.WithCancel(ctx)
 
 	<-ctx.Done()
 
 	if err := registry.Deregister(ctx, serviceName, instanceID); err != nil {
 		logger.Errorf("failed to deregister service: %s", err)
 	}
-
-	cancel()
 }
 
-func SetupServer(dbConn *pgxpool.Pool, cfg cfg.Config) *APIServer {
+func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *APIServer {
+	transcodeGateway := gateway.NewTranscodeGateway(registry)
+
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var userCtrl = controllers.NewUserController(userRepo)
-	var userHandler = handlers.NewUserHandler(userCtrl)
+	var userHandler = handlers.NewUserHandler(userCtrl, transcodeGateway)
 	return NewAPIServer(userHandler, cfg)
 }

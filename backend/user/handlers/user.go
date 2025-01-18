@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"sen1or/lets-live/user/controllers"
 	"sen1or/lets-live/user/dto"
+	transcodegateway "sen1or/lets-live/user/gateway/transcode"
 	"sen1or/lets-live/user/repositories"
 	"sen1or/lets-live/user/types"
 	"sen1or/lets-live/user/utils"
@@ -17,12 +19,14 @@ import (
 
 type UserHandler struct {
 	ErrorHandler
-	ctrl controllers.UserController
+	ctrl             controllers.UserController
+	transcodeGateway transcodegateway.TranscodeGateway
 }
 
-func NewUserHandler(ctrl controllers.UserController) *UserHandler {
+func NewUserHandler(ctrl controllers.UserController, transcodeGateway transcodegateway.TranscodeGateway) *UserHandler {
 	return &UserHandler{
-		ctrl: ctrl,
+		ctrl:             ctrl,
+		transcodeGateway: transcodeGateway,
 	}
 }
 
@@ -36,6 +40,7 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	userUUID, err := uuid.FromString(userId)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("userId not valid"))
+		return
 	}
 
 	user, err := h.ctrl.GetByID(userUUID)
@@ -46,6 +51,14 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
+
+	userVODs, errRes := h.transcodeGateway.GetUserVODs(context.Background(), userId)
+	if errRes != nil {
+		h.WriteErrorResponse(w, errRes.StatusCode, errors.New(errRes.Message))
+		return
+	}
+
+	user.VODs = userVODs.Data
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
