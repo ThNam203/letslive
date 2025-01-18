@@ -1,6 +1,7 @@
 package webserver
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -80,6 +81,8 @@ func (ws *WebServer) serveFile(rw http.ResponseWriter, rq *http.Request) {
 		rw.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
 	default:
 		log.Fatal("File extension not supported!")
+		http.Error(rw, "file extension not supported!", http.StatusForbidden)
+		return
 	}
 
 	rw.Header().Set("Content-Length", strconv.FormatInt(fileStat.Size(), 10))
@@ -89,6 +92,35 @@ func (ws *WebServer) serveFile(rw http.ResponseWriter, rq *http.Request) {
 func (ws *WebServer) ListenAndServe() {
 	router := mux.NewRouter()
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(ws.BaseDirectory))))
+	router.HandleFunc("/v1/vod/{userId}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		userId := vars["userId"]
+		vodFolder := filepath.Join(ws.BaseDirectory, userId, "vods")
+
+		if _, err := os.Stat(vodFolder); err != nil && os.IsNotExist(err) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode([]string{})
+			return
+		}
+
+		entries, err := os.ReadDir(vodFolder)
+		if err != nil {
+			http.Error(w, "failed to read dir entries", http.StatusInternalServerError)
+			return
+		}
+
+		var vodNames []string
+		for _, entry := range entries {
+			if entry.Type().IsDir() {
+				vodNames = append(vodNames, entry.Name())
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(vodNames)
+	})
 	router.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -115,7 +147,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Cache,Cache-Control,Authorization")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
