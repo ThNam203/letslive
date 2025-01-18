@@ -149,8 +149,6 @@ func (w *IPFSStreamWatcher) Watch() {
 
 							if err != nil {
 								logger.Errorf("error while saving segments into storage", err)
-							} else {
-								logger.Infof("saved segment with ipfs id: %s", newObjectPath)
 							}
 						}
 

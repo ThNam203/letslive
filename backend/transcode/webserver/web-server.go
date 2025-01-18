@@ -97,10 +97,19 @@ func (ws *WebServer) ListenAndServe() {
 		userId := vars["userId"]
 		vodFolder := filepath.Join(ws.BaseDirectory, userId, "vods")
 
+		//TODO: refactor please
+		data := &struct {
+			StatusCode int
+			Data       []string
+		}{
+			StatusCode: 200,
+			Data:       []string{},
+		}
+
 		if _, err := os.Stat(vodFolder); err != nil && os.IsNotExist(err) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode([]string{})
+			json.NewEncoder(w).Encode(data)
 			return
 		}
 
@@ -119,7 +128,8 @@ func (ws *WebServer) ListenAndServe() {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(vodNames)
+		data.Data = vodNames
+		json.NewEncoder(w).Encode(data)
 	})
 	router.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
