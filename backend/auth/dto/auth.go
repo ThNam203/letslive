@@ -14,8 +14,8 @@ type SignUpRequestDTO struct {
 }
 
 type SignUpResponseDTO struct {
-	ID         uuid.UUID `json:"id"`
-	UserID     uuid.UUID `json:"userID"`
+	Id         uuid.UUID `json:"id"`
+	UserId     uuid.UUID `json:"userID"`
 	Username   string    `json:"username"`
 	Email      string    `json:"email"`
 	IsVerified bool      `json:"isVerified"`

@@ -96,6 +96,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	streamingKey := streamingKeyComponents[len(streamingKeyComponents)-1]
 
 	userId, err := s.onConnect(streamingKey) // userId is used as publishName
+
 	if err != nil {
 		logger.Errorf("stream connection failed: %s", err)
 		nc.Close()
@@ -136,7 +137,7 @@ func (s *RTMPServer) onConnect(streamingKey string) (string, error) {
 	}
 
 	updateUserDTO := &dto.UpdateUserRequestDTO{
-		ID:       userInfo.ID,
+		Id:       userInfo.Id,
 		IsOnline: func(b bool) *bool { return &b }(true), // wtf
 	}
 
@@ -146,16 +147,21 @@ func (s *RTMPServer) onConnect(streamingKey string) (string, error) {
 	}
 
 	// setup the vod creation
-	s.ipfsVOD.OnStreamStart(userInfo.ID.String())
+	s.ipfsVOD.OnStreamStart(userInfo.Id.String())
 
-	return userInfo.ID.String(), nil
+	// make sure there is not any files from the privous streaming session
+	if err := removeLiveGeneratedFiles(userInfo.Id.String(), s.config.Transcode.PrivateHLSPath, s.config.Transcode.PublicHLSPath); err != nil {
+		return "", fmt.Errorf("failed to remove live generated files: %s", err)
+	}
+
+	return userInfo.Id.String(), nil
 }
 
 // change the status of user to be not online
 func (s *RTMPServer) onDisconnect(userId string) {
 	userIdUUID, _ := uuid.FromString(userId)
 	updateUserDTO := &dto.UpdateUserRequestDTO{
-		ID:       userIdUUID,
+		Id:       userIdUUID,
 		IsOnline: func(b bool) *bool { return &b }(false), // wtf
 	}
 
@@ -169,6 +175,8 @@ func (s *RTMPServer) onDisconnect(userId string) {
 	if errRes != nil {
 		logger.Errorf("failed to get service connection: %s", errRes.Message)
 	}
+
+	removeLiveGeneratedFiles(userId, s.config.Transcode.PrivateHLSPath, s.config.Transcode.PublicHLSPath)
 }
 
 func copyFile(src, dst string) error {
@@ -180,6 +188,34 @@ func copyFile(src, dst string) error {
 	err = os.WriteFile(dst, input, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("error copying file: %s", err)
+	}
+
+	return nil
+}
+
+// remove live-generated private files and public files after saving into vods
+// TODO: make it better
+func removeLiveGeneratedFiles(streamingKey, privatePath, publicPath string) error {
+	paths := []string{
+		filepath.Join(privatePath, streamingKey),
+		filepath.Join(publicPath, streamingKey, "index.m3u8"),
+		filepath.Join(publicPath, streamingKey, "0"),
+		filepath.Join(publicPath, streamingKey, "1"),
+		filepath.Join(publicPath, streamingKey, "2"),
+	}
+
+	var errList []error
+
+	for _, path := range paths {
+		logger.Infof("path is removed", path)
+		err := os.RemoveAll(path)
+		if err != nil {
+			errList = append(errList, fmt.Errorf("failed to remove %s: %w", path, err))
+		}
+	}
+
+	if len(errList) > 0 {
+		return fmt.Errorf("encountered errors: %v", errList)
 	}
 
 	return nil

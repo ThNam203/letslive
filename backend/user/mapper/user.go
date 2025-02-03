@@ -14,7 +14,7 @@ func CreateUserRequestDTOToUser(dto dto.CreateUserRequestDTO) *domains.User {
 
 func UserToCreateUserResponseDTO(user domains.User) *dto.CreateUserResponseDTO {
 	return &dto.CreateUserResponseDTO{
-		ID:           user.ID,
+		Id:           user.Id,
 		Username:     user.Username,
 		Email:        user.Email,
 		IsOnline:     user.IsOnline,
@@ -25,7 +25,7 @@ func UserToCreateUserResponseDTO(user domains.User) *dto.CreateUserResponseDTO {
 
 func UserToGetUserResponseDTO(user domains.User) *dto.GetUserResponseDTO {
 	return &dto.GetUserResponseDTO{
-		ID:           user.ID,
+		Id:           user.Id,
 		Username:     user.Username,
 		Email:        user.Email,
 		IsOnline:     user.IsOnline,
@@ -36,7 +36,7 @@ func UserToGetUserResponseDTO(user domains.User) *dto.GetUserResponseDTO {
 
 func UserToUpdateUserResponseDTO(user domains.User) *dto.UpdateUserResponseDTO {
 	return &dto.UpdateUserResponseDTO{
-		ID:           user.ID,
+		Id:           user.Id,
 		Username:     user.Username,
 		Email:        user.Email,
 		IsOnline:     user.IsOnline,

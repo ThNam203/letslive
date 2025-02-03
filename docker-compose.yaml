@@ -437,7 +437,7 @@ services:
 
   # serve the ipfs content using the bootstrap node (node has an http route to get files)
   nginx:
-    image: nginx:latest
+    image: openresty/openresty:latest
     container_name: nginx
     ports:
       - "8888:80"  # Expose Nginx on port 80 to access externally

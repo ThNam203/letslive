@@ -87,7 +87,7 @@ func (r *postgresAuthRepo) Create(newAuth domains.Auth) (*domains.Auth, error) {
 		"email":         newAuth.Email,
 		"password_hash": newAuth.PasswordHash,
 		"is_verified":   newAuth.IsVerified,
-		"user_id":       newAuth.UserID,
+		"user_id":       newAuth.UserId,
 	}
 
 	rows, err := r.dbConn.Query(context.Background(), "insert into auths (email, password_hash, is_verified, user_id) values (@email, @password_hash, @is_verified, @user_id) RETURNING *", params)
@@ -108,7 +108,7 @@ func (r *postgresAuthRepo) Create(newAuth domains.Auth) (*domains.Auth, error) {
 }
 
 func (r *postgresAuthRepo) UpdatePasswordHash(user domains.Auth) (*domains.Auth, error) {
-	rows, err := r.dbConn.Query(context.Background(), "UPDATE auths SET password_hash = $1 WHERE id = $2 RETURNING *", user.PasswordHash, user.ID)
+	rows, err := r.dbConn.Query(context.Background(), "UPDATE auths SET password_hash = $1 WHERE id = $2 RETURNING *", user.PasswordHash, user.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (r *postgresAuthRepo) UpdatePasswordHash(user domains.Auth) (*domains.Auth,
 }
 
 func (r *postgresAuthRepo) UpdateVerify(user domains.Auth) (*domains.Auth, error) {
-	rows, err := r.dbConn.Query(context.Background(), "UPDATE auths SET is_verified = $1 WHERE id = $2 RETURNING *", user.IsVerified, user.ID)
+	rows, err := r.dbConn.Query(context.Background(), "UPDATE auths SET is_verified = $1 WHERE id = $2 RETURNING *", user.IsVerified, user.Id)
 	if err != nil {
 		return nil, err
 	}

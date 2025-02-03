@@ -10,7 +10,7 @@ import (
 
 type UserController interface {
 	Create(body dto.CreateUserRequestDTO) (*dto.CreateUserResponseDTO, error)
-	GetByID(id uuid.UUID) (*dto.GetUserResponseDTO, error)
+	GetById(id uuid.UUID) (*dto.GetUserResponseDTO, error)
 	GetByEmail(email string) (*dto.GetUserResponseDTO, error)
 	GetByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseDTO, error)
 	GetStreamingUsers() ([]*dto.GetUserResponseDTO, error)
@@ -38,8 +38,8 @@ func (c *userController) Create(body dto.CreateUserRequestDTO) (*dto.CreateUserR
 	return mapper.UserToCreateUserResponseDTO(*createdUser), nil
 }
 
-func (c *userController) GetByID(id uuid.UUID) (*dto.GetUserResponseDTO, error) {
-	user, err := c.repo.GetByID(id)
+func (c *userController) GetById(id uuid.UUID) (*dto.GetUserResponseDTO, error) {
+	user, err := c.repo.GetById(id)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (c *userController) GetStreamingUsers() ([]*dto.GetUserResponseDTO, error) 
 }
 
 func (c *userController) Update(updateDTO dto.UpdateUserRequestDTO) (*dto.UpdateUserResponseDTO, error) {
-	updateUser, err := c.repo.GetByID(updateDTO.ID)
+	updateUser, err := c.repo.GetById(updateDTO.Id)
 	if err != nil {
 		return nil, err
 	}

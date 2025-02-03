@@ -76,7 +76,7 @@ func (w *IPFSStreamWatcher) Watch() {
 					}
 
 					if err := os.MkdirAll(filepath.Join(w.config.Transcode.PublicHLSPath, publishName), os.ModePerm); err != nil {
-						logger.Errorw("failed to create publish folder", err, "path", filepath.Join(w.config.Transcode.PublicHLSPath, publishName))
+						logger.Errorw("making dir failed", "failed to create publish folder", err, "path", filepath.Join(w.config.Transcode.PublicHLSPath, publishName))
 						continue
 					}
 
@@ -133,7 +133,7 @@ func (w *IPFSStreamWatcher) Watch() {
 					stream, ok := streams[segment.PublishName]
 					if !ok {
 						logger.Errorw("missing entry for publish name", segment.PublishName)
-						return
+						continue
 					}
 
 					variant := &(stream.Variants[segment.VariantIndex])

@@ -30,7 +30,7 @@ func (m *MockUserController) Create(mockBody dto.CreateUserRequestDTO) (*dto.Cre
 	userStreamAPIKey, _ := uuid.NewGen().NewV4()
 
 	return &dto.CreateUserResponseDTO{
-		ID:           userId,
+		Id:           userId,
 		Username:     mockBody.Username,
 		Email:        mockBody.Email,
 		IsOnline:     false,

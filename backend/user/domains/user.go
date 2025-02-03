@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	ID           uuid.UUID `json:"id" db:"id"`
+	Id           uuid.UUID `json:"id" db:"id"`
 	Username     string    `json:"username" db:"username"`
 	Email        string    `json:"email" db:"email"`
 	IsOnline     bool      `json:"isOnline" db:"is_online"`

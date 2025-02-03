@@ -41,7 +41,7 @@ func TestCreateUser_Success(t *testing.T) {
 	assert.Equal(t, validBody.Username, response.Username)
 	assert.Equal(t, validBody.Email, response.Email)
 	assert.False(t, response.IsOnline)
-	assert.NotEmpty(t, response.ID)
+	assert.NotEmpty(t, response.Id)
 	assert.NotEmpty(t, response.StreamAPIKey)
 }
 

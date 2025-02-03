@@ -88,7 +88,7 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.setAuthJWTsInCookie(auth.UserID.String(), w); err != nil {
+	if err := h.setAuthJWTsInCookie(auth.UserId.String(), w); err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
@@ -163,7 +163,7 @@ func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	auth := &domains.Auth{
-		UserID:       createdUser.ID,
+		UserId:       createdUser.Id,
 		Email:        userForm.Email,
 		PasswordHash: string(hashedPassword),
 		IsVerified:   false,
@@ -177,9 +177,9 @@ func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.sendConfirmEmail(auth.UserID, auth.Email, h.authServerURL)
+	h.sendConfirmEmail(auth.UserId, auth.Email, h.authServerURL)
 
-	if err := h.setAuthJWTsInCookie(auth.UserID.String(), w); err != nil {
+	if err := h.setAuthJWTsInCookie(auth.UserId.String(), w); err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
@@ -236,7 +236,7 @@ func (h *AuthHandler) VerifyEmailHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	updateVerifiedAuth := &domains.Auth{
-		ID:         user.ID,
+		Id:         user.Id,
 		IsVerified: true,
 	}
 
