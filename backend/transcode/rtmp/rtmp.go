@@ -16,7 +16,6 @@ import (
 	"sen1or/lets-live/user/dto"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/nareix/joy5/format/flv"
@@ -166,16 +165,14 @@ func (s *RTMPServer) onDisconnect(userId string) {
 	}
 
 	// create the VOD playlists and remove the entry
-	var basePath = filepath.Join(s.config.Transcode.PublicHLSPath, userId)
-	var nowString = time.Now().Format(time.RFC3339)
-	s.ipfsVOD.OnStreamEnd(userId, filepath.Join(basePath, "vods", nowString))
-	copyFile(filepath.Join(basePath, s.config.Transcode.FFMpegSetting.MasterFileName), filepath.Join(basePath, "vods", nowString, s.config.Transcode.FFMpegSetting.MasterFileName))
+	s.ipfsVOD.OnStreamEnd(userId, s.config.Transcode.PublicHLSPath, s.config.Transcode.FFMpegSetting.MasterFileName)
 
 	errRes := s.userGateway.UpdateUserLiveStatus(context.Background(), *updateUserDTO)
 	if errRes != nil {
 		logger.Errorf("failed to get service connection: %s", errRes.Message)
 	}
 
+	// should be put on the last line
 	removeLiveGeneratedFiles(userId, s.config.Transcode.PrivateHLSPath, s.config.Transcode.PublicHLSPath)
 }
 
@@ -196,9 +193,9 @@ func copyFile(src, dst string) error {
 // remove live-generated private files and public files after saving into vods
 // TODO: make it better
 func removeLiveGeneratedFiles(streamingKey, privatePath, publicPath string) error {
+	// remove all folders of public and remove all private content
 	paths := []string{
 		filepath.Join(privatePath, streamingKey),
-		filepath.Join(publicPath, streamingKey, "index.m3u8"),
 		filepath.Join(publicPath, streamingKey, "0"),
 		filepath.Join(publicPath, streamingKey, "1"),
 		filepath.Join(publicPath, streamingKey, "2"),
@@ -211,6 +208,18 @@ func removeLiveGeneratedFiles(streamingKey, privatePath, publicPath string) erro
 		err := os.RemoveAll(path)
 		if err != nil {
 			errList = append(errList, fmt.Errorf("failed to remove %s: %w", path, err))
+		}
+	}
+
+	// remove all m3u8 files
+	files, err := filepath.Glob(filepath.Join(publicPath, streamingKey) + "/*.m3u8")
+	if err != nil {
+		panic(err)
+	}
+
+	for _, f := range files {
+		if err := os.Remove(f); err != nil {
+			errList = append(errList, err)
 		}
 	}
 
