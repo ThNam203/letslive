@@ -86,7 +86,7 @@ func (g *UserGateway) UpdateUserLiveStatus(ctx context.Context, userDTO dto.Upda
 		}
 	}
 
-	url := fmt.Sprintf("http://%s/v1/user/%s", addr, userDTO.ID)
+	url := fmt.Sprintf("http://%s/v1/user/%s", addr, userDTO.Id)
 	payloadBuf := new(bytes.Buffer)
 	if err := json.NewEncoder(payloadBuf).Encode(userDTO); err != nil {
 		return &ErrorResponse{

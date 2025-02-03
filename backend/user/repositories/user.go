@@ -12,7 +12,7 @@ import (
 )
 
 type UserRepository interface {
-	GetByID(uuid.UUID) (*domains.User, error)
+	GetById(uuid.UUID) (*domains.User, error)
 	GetByName(string) (*domains.User, error)
 	GetByEmail(string) (*domains.User, error)
 	GetByAPIKey(uuid.UUID) (*domains.User, error)
@@ -34,7 +34,7 @@ func NewUserRepository(conn *pgxpool.Pool) UserRepository {
 	}
 }
 
-func (r *postgresUserRepo) GetByID(userId uuid.UUID) (*domains.User, error) {
+func (r *postgresUserRepo) GetById(userId uuid.UUID) (*domains.User, error) {
 	rows, err := r.dbConn.Query(context.Background(), "select * from users where id = $1", userId.String())
 	if err != nil {
 		return nil, err
@@ -71,7 +71,6 @@ func (r *postgresUserRepo) GetByName(username string) (*domains.User, error) {
 
 	return &user, nil
 }
-
 func (r *postgresUserRepo) GetByEmail(email string) (*domains.User, error) {
 	rows, err := r.dbConn.Query(context.Background(), "select * from users where email = $1", email)
 	if err != nil {
@@ -168,8 +167,8 @@ func (r *postgresUserRepo) Create(newUser domains.User) (*domains.User, error) {
 }
 
 func (r *postgresUserRepo) Update(user domains.User) (*domains.User, error) {
-	logger.Infof("UPDATE users SET username = %s, is_online = %v WHERE id = %s RETURNING *", user.Username, user.IsOnline, user.ID)
-	rows, err := r.dbConn.Query(context.Background(), "UPDATE users SET username = $1, is_online = $2 WHERE id = $3 RETURNING *", user.Username, user.IsOnline, user.ID)
+	logger.Infof("UPDATE users SET username = %s, is_online = %v WHERE id = %s RETURNING *", user.Username, user.IsOnline, user.Id)
+	rows, err := r.dbConn.Query(context.Background(), "UPDATE users SET username = $1, is_online = $2 WHERE id = $3 RETURNING *", user.Username, user.IsOnline, user.Id)
 	if err != nil {
 		return nil, err
 	}

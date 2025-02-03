@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/transcode/domains"
 )
 
@@ -27,6 +28,7 @@ func generateRemotePlaylist(ipfsVOD *IPFSVOD, playlistPath string, variant domai
 			} else {
 				// adding fileName allow players to know the file is .ts instead of just file cid
 				line = fmt.Sprintf("%s?fileName=%s", segment.IPFSRemoteId, filepath.Base(segment.FullLocalPath))
+				logger.Infow("remote playlist line", "line", line, "remote id", segment.IPFSRemoteId)
 			}
 		}
 

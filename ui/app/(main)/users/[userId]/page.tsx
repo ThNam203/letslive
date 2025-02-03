@@ -17,7 +17,7 @@ export default function Livestreaming() {
     const [playerInfo, setPlayerInfo] = useState<VideoInfo>({
         videoTitle: "Live Streaming",
         streamer: {
-            name: "Dr. Pedophile",
+            name: "Dr. Doppelgangers",
         },
         videoUrl: null,
     });

@@ -22,9 +22,9 @@ func main() {
 	logger.Init(logger.LogLevel(logger.Debug))
 	config := cfg.RetrieveConfig()
 
-	if err := resetWorkingSpace(*config); err != nil {
-		logger.Panicf("failed to reset working space: %s", err)
-	}
+	//if err := resetWorkingSpace(*config); err != nil {
+	//	logger.Panicf("failed to reset working space: %s", err)
+	//}
 
 	registry, err := discovery.NewConsulRegistry(config.Registry.Service.Address)
 	if err != nil {

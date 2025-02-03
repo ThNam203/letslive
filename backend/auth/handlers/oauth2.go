@@ -92,7 +92,7 @@ func (h *AuthHandler) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request
 	// username := "ll-" + usernameId.String()[:5]
 
 	newOAuthUserRecord := &domains.Auth{
-		ID:         userId,
+		Id:         userId,
 		Email:      returnedOAuthUser.Email,
 		IsVerified: returnedOAuthUser.VerifiedEmail,
 	}
@@ -112,9 +112,9 @@ func (h *AuthHandler) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request
 			return
 		}
 
-		finalUserId = newOAuthUserRecord.ID
+		finalUserId = newOAuthUserRecord.Id
 	} else {
-		finalUserId = existedRecord.ID
+		finalUserId = existedRecord.Id
 		h.tokenCtrl.RevokeAllTokensOfUser(finalUserId)
 	}
 

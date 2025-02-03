@@ -43,7 +43,7 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.ctrl.GetByID(userUUID)
+	user, err := h.ctrl.GetById(userUUID)
 	if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
 		h.WriteErrorResponse(w, http.StatusNotFound, errors.New("user not found"))
 		return
@@ -131,7 +131,7 @@ func (h *UserHandler) GetCurrentUserInfo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, err := h.ctrl.GetByID(userUUID)
+	user, err := h.ctrl.GetById(userUUID)
 	if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
 		h.WriteErrorResponse(w, http.StatusNotFound, errors.New("user not found"))
 		return
@@ -182,7 +182,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error decoding request body: %s", err.Error()))
 		return
 	}
-	requestBody.ID = uuid.FromStringOrNil(userID)
+	requestBody.Id = uuid.FromStringOrNil(userID)
 
 	if err := utils.Validator.Struct(&requestBody); err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error validating payload: %s", err))

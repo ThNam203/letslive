@@ -7,8 +7,8 @@ import (
 
 func AuthToSignUpResponseDTO(createdAuth domains.Auth) *dto.SignUpResponseDTO {
 	return &dto.SignUpResponseDTO{
-		ID:         createdAuth.ID,
-		UserID:     createdAuth.UserID,
+		Id:         createdAuth.Id,
+		UserId:     createdAuth.UserId,
 		Email:      createdAuth.Email,
 		IsVerified: createdAuth.IsVerified,
 	}
