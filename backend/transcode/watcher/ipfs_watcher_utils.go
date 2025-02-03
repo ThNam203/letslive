@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/transcode/domains"
+	"strings"
 )
 
 // rewrite the local playlist to point to remote resources
@@ -28,7 +28,6 @@ func generateRemotePlaylist(ipfsVOD *IPFSVOD, playlistPath string, variant domai
 			} else {
 				// adding fileName allow players to know the file is .ts instead of just file cid
 				line = fmt.Sprintf("%s?fileName=%s", segment.IPFSRemoteId, filepath.Base(segment.FullLocalPath))
-				logger.Infow("remote playlist line", "line", line, "remote id", segment.IPFSRemoteId)
 			}
 		}
 
@@ -70,6 +69,31 @@ func writePlaylist(data string, filePath string) error {
 	_, err = f.WriteString(data)
 	if err != nil {
 		return fmt.Errorf("failed to write data into %s: %s", filePath, err)
+	}
+
+	return nil
+}
+
+func writePlaylistForOtherGateway(data, originalGateway, alternativeGateway, alternativeGatewayFilename string) error {
+	newData := strings.ReplaceAll(data, originalGateway, alternativeGateway)
+	return writePlaylist(newData, alternativeGatewayFilename)
+}
+
+func copyMasterFileForOtherGateway(masterFilePath, otherGatewayURL, publicPath string) error {
+	gatewayServerName := otherGatewayURL[7:]
+	masterFile, err := os.ReadFile(masterFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to open master file (%s): %s", masterFilePath, err)
+	}
+
+	newData := strings.ReplaceAll(string(masterFile), "stream.m3u8", gatewayServerName+"_stream.m3u8")
+
+	f, err := os.Create(filepath.Join(publicPath, filepath.Base(filepath.Dir(masterFilePath)), gatewayServerName+"_index.m3u8"))
+	defer f.Close()
+
+	_, err = f.WriteString(newData)
+	if err != nil {
+		return fmt.Errorf("failed to copy master file for gateway (%s): %s", otherGatewayURL, err)
 	}
 
 	return nil

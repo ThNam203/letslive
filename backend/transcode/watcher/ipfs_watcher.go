@@ -16,6 +16,9 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
+// TODO: put it into config
+var otherGateways = []string{"http://localhost:8890", "http://localhost:8891", "http://localhost:8892"}
+
 func getSegmentFromPath(segmentFullPath string) (*domains.HLSSegment, error) {
 	pathComponents := strings.Split(segmentFullPath, "/")
 	index, err := strconv.Atoi(pathComponents[len(pathComponents)-2])
@@ -106,6 +109,10 @@ func (w *IPFSStreamWatcher) Watch() {
 					if err := copy(event.Path, filepath.Join(w.config.Transcode.PublicHLSPath, pushlishName, w.config.Transcode.FFMpegSetting.MasterFileName)); err != nil {
 						logger.Errorw("failed to copy master file", err)
 					}
+
+					for _, otherGateway := range otherGateways {
+						copyMasterFileForOtherGateway(event.Path, otherGateway, w.config.Transcode.PublicHLSPath)
+					}
 				} else if fileType == "Variant" {
 					info, err := w.getInfoFromPath(event.Path)
 					if err != nil {
@@ -123,6 +130,12 @@ func (w *IPFSStreamWatcher) Watch() {
 					variantIndexStr := strconv.Itoa(info.VariantIndex)
 
 					writePlaylist(newPlaylist, filepath.Join(w.config.Transcode.PublicHLSPath, info.PublishName, variantIndexStr, info.Filename))
+					for _, otherGateway := range otherGateways {
+						serverName := otherGateway[7:]
+						if err := writePlaylistForOtherGateway(newPlaylist, w.config.IPFS.Gateway, otherGateway, filepath.Join(w.config.Transcode.PublicHLSPath, info.PublishName, variantIndexStr, serverName+"_stream.m3u8")); err != nil {
+							logger.Errorf("failed to write playlist for other gateways: %s", err)
+						}
+					}
 				} else if fileType == "Segment" {
 					segment, err := getSegmentFromPath(event.Path)
 					if segment == nil {
