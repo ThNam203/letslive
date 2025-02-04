@@ -11,7 +11,9 @@ output.elasticsearch:
   index: "${SERVICE_NAME}-%{[agent.version]}-%{+yyyy.MM.dd}"
   username: "elastic"
   password: "elasticsearch"
-  ssl.verification_mode: none
+  ssl.certificate_authorities: ["${ELASTIC_CERTS_FOLDER}/ca/ca.crt"]
+  ssl.certificate: "${ELASTIC_CERTS_FOLDER}/elastic/elastic.crt"
+  ssl.key: "${ELASTIC_CERTS_FOLDER}/elastic/elastic.key"
 
 setup.dashboards:
   enabled: true
