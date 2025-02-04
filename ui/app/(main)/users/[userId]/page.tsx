@@ -80,6 +80,7 @@ export default function Livestreaming() {
                 <div className="w-full font-sans mt-4 overflow-x-auto whitespace-nowrap">
                     {servers.map((_, idx) => (
                         <Button
+                            key={idx}
                             onClick={() => setServerIndex(idx)}
                             className={cn(
                                 "mr-4",

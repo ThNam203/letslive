@@ -4,7 +4,9 @@ import {
     VideoInfo,
 } from "@/components/custom_react_player/streaming_frame";
 import { VODFrame } from "@/components/custom_react_player/vod_frame";
+import { Button } from "@/components/ui/button";
 import { GetUserById } from "@/lib/api/user";
+import { cn } from "@/lib/utils";
 import { User } from "@/types/user";
 import Image from "next/image";
 import Link from "next/link";
@@ -70,6 +72,20 @@ export default function VODPage() {
             <div className="w-[1200px] min-w-[1200px]">
                 <div className="w-full h-[675px] bg-black">
                     <VODFrame videoInfo={playerInfo} />
+                </div>
+                <div className="w-full font-sans mt-4 overflow-x-auto whitespace-nowrap">
+                    {servers.map((_, idx) => (
+                        <Button
+                            key={idx}
+                            onClick={() => setServerIndex(idx)}
+                            className={cn(
+                                "mr-4",
+                                serverIndex == idx ? "bg-green-700" : ""
+                            )}
+                        >
+                            Server {idx + 1}
+                        </Button>
+                    ))}
                 </div>
                 <div className="w-full font-sans my-8 gap-4 overflow-x-auto whitespace-nowrap">
                     <h2 className="text-3xl mb-4">OTHER SAVED STREAMS</h2>

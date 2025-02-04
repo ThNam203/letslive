@@ -45,6 +45,8 @@ func main() {
 		}
 	}
 
+	serveFilesOnNode()
+
 	select {}
 }
 
@@ -79,7 +81,11 @@ func RunBootstrapNode(ctx context.Context) error {
 	log.Println("running as bootstrap node, ignore -a flag if there is any")
 	log.Printf("** bootstrap node address: %s\n", addr.Encapsulate(hostAddr))
 
-	// serve files and metrics
+	return nil
+}
+
+// serve files and metrics
+func serveFilesOnNode() {
 	http.HandleFunc("/ipfs/{fileCid}", getFileHandler)
 	http.Handle("/metrics", httpprom.Handler())
 
@@ -88,9 +94,8 @@ func RunBootstrapNode(ctx context.Context) error {
 			log.Fatalf("ListenAndServe: %v", err)
 		}
 	}()
-	log.Println("start serving files on 8080")
 
-	return nil
+	log.Println("started serving files")
 }
 
 func getFileHandler(w http.ResponseWriter, req *http.Request) {
@@ -115,14 +120,14 @@ func getFileHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Printf("getting file for cid: %s\n", fileCidString)
 
 	if err != nil {
-		fmt.Errorf("failed getting file for cid %s: %s", fileCidString, err)
+		fmt.Printf("failed getting file for cid %s: %s", fileCidString, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	file, err := ipfsNode.GetFile(req.Context(), fileCid)
 	if err != nil {
-		fmt.Errorf("failed getting file for cid %s: %s", fileCidString, err)
+		fmt.Printf("failed getting file for cid %s: %s", fileCidString, err)
 		http.Error(w, "failed to retrieve file: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
