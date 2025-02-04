@@ -17,7 +17,7 @@ import (
 )
 
 // TODO: put it into config
-var otherGateways = []string{"http://localhost:8890", "http://localhost:8891", "http://localhost:8892"}
+var otherGateways = []string{"http://localhost:8890", "http://localhost:8891"}
 
 func getSegmentFromPath(segmentFullPath string) (*domains.HLSSegment, error) {
 	pathComponents := strings.Split(segmentFullPath, "/")
