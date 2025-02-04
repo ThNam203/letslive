@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sen1or/lets-live/auth/dto"
 	"sen1or/lets-live/auth/gateway"
 	usergateway "sen1or/lets-live/auth/gateway/user"
 	"sen1or/lets-live/pkg/discovery"
-	"sen1or/lets-live/user/dto"
 )
 
 type userGateway struct {

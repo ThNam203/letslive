@@ -17,7 +17,6 @@ import (
 	"sen1or/lets-live/auth/types"
 	"sen1or/lets-live/auth/utils"
 	"sen1or/lets-live/pkg/logger"
-	userdto "sen1or/lets-live/user/dto"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -151,7 +150,7 @@ func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto := &userdto.CreateUserRequestDTO{
+	dto := &dto.CreateUserRequestDTO{
 		Username: userForm.Username,
 		Email:    userForm.Email,
 	}

@@ -1,6 +1,8 @@
 package dto
 
-import "github.com/gofrs/uuid/v5"
+import (
+	"github.com/gofrs/uuid/v5"
+)
 
 type LogInRequestDTO struct {
 	Email    string `validate:"required,email" example:"hthnam203@gmail.com"`

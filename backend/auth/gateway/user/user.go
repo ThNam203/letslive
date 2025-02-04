@@ -2,8 +2,8 @@ package user
 
 import (
 	"context"
+	"sen1or/lets-live/auth/dto"
 	"sen1or/lets-live/auth/gateway"
-	"sen1or/lets-live/user/dto"
 )
 
 type UserGateway interface {
