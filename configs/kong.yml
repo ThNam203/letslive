@@ -4,19 +4,28 @@ services:
     protocol: http
     host: user.service.consul
     port: 7778
-    path: /v1/user
+    path: /v1
     retries: 5
     connect_timeout: 60000
     read_timeout: 60000
     write_timeout: 60000
     routes:
-      - name: User_Routes
+      - name: Users
         protocols:
           - http
-          - https
+        paths:
+          - /users
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+      - name: User
+        protocols:
+          - http
         paths:
           - /user
-        strip_path: true
+        strip_path: false
         preserve_host: false
         https_redirect_status_code: 426
         request_buffering: true
@@ -68,7 +77,7 @@ plugins:
     enabled: true
     config:
       origins: ["http://localhost:5000"]
-      headers: ["Content-Type", "Authorization", "Cache"]
+      headers: ["Content-Type", "Authorization", "Cache", "Accept", "Cache-Control", "X-Requested-With"]
       credentials: true
       max_age: 3600
       preflight_continue: false

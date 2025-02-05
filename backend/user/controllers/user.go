@@ -10,6 +10,7 @@ import (
 
 type UserController interface {
 	Create(body dto.CreateUserRequestDTO) (*dto.CreateUserResponseDTO, error)
+	GetAll() ([]*dto.GetUserResponseDTO, error)
 	GetById(id uuid.UUID) (*dto.GetUserResponseDTO, error)
 	GetByEmail(email string) (*dto.GetUserResponseDTO, error)
 	GetByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseDTO, error)
@@ -45,6 +46,19 @@ func (c *userController) GetById(id uuid.UUID) (*dto.GetUserResponseDTO, error) 
 	}
 
 	return mapper.UserToGetUserResponseDTO(*user), nil
+}
+
+func (c *userController) GetAll() ([]*dto.GetUserResponseDTO, error) {
+	users, err := c.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var res = []*dto.GetUserResponseDTO{}
+	for _, u := range users {
+		res = append(res, mapper.UserToGetUserResponseDTO(*u))
+	}
+	return res, nil
 }
 
 func (c *userController) GetByEmail(email string) (*dto.GetUserResponseDTO, error) {

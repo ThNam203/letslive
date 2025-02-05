@@ -13,6 +13,7 @@ import (
 
 type UserRepository interface {
 	GetById(uuid.UUID) (*domains.User, error)
+	GetAll() ([]*domains.User, error)
 	GetByName(string) (*domains.User, error)
 	GetByEmail(string) (*domains.User, error)
 	GetByAPIKey(uuid.UUID) (*domains.User, error)
@@ -51,6 +52,27 @@ func (r *postgresUserRepo) GetById(userId uuid.UUID) (*domains.User, error) {
 	}
 
 	return &user, nil
+}
+
+func (r *postgresUserRepo) GetAll() ([]*domains.User, error) {
+	// TODO: pagination
+	rows, err := r.dbConn.Query(context.Background(), "select * from users limit 100")
+	if err != nil {
+		return nil, err
+	}
+
+	users, err := pgx.CollectRows(rows, pgx.RowToStructByName[domains.User])
+
+	if err != nil {
+		return nil, err
+	}
+
+	var returnUsers = []*domains.User{}
+	for _, u := range users {
+		returnUsers = append(returnUsers, &u)
+	}
+
+	return returnUsers, nil
 }
 
 func (r *postgresUserRepo) GetByName(username string) (*domains.User, error) {

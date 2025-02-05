@@ -23,6 +23,15 @@ export async function GetUserById(userId: string): Promise<{user?: User, fetchEr
     }
 }
 
+export async function GetAllUsers(): Promise<{users?: User[], fetchError?: FetchError}> {
+    try {
+        const data = await fetchClient<User[]>("/users");
+        return { users: data };
+    } catch (error) {
+        return { fetchError: error as FetchError };
+    }
+}
+
 export async function GetMeProfile(): Promise<{user?: User, fetchError?: FetchError}> {
     try {
         const data = await fetchClient<User>("/user/me");

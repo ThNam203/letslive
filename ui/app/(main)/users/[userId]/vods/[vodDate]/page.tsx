@@ -68,54 +68,59 @@ export default function VODPage() {
     }, [serverIndex]);
 
     return (
-        <div className="overflow-y-auto h-full flex lg:flex-row max-lg:flex-col">
-            <div className="w-[1200px] min-w-[1200px]">
-                <div className="w-full h-[675px] bg-black">
-                    <VODFrame videoInfo={playerInfo} />
+        <div className="overflow-y-auto h-full">
+            <div className="flex lg:flex-row max-lg:flex-col">
+                <div className="w-[1200px] min-w-[1200px]">
+                    <div className="w-full h-[675px] bg-black">
+                        <VODFrame videoInfo={playerInfo} />
+                    </div>
+                    <div className="w-full font-sans mt-4 overflow-x-auto whitespace-nowrap">
+                        {servers.map((_, idx) => (
+                            <Button
+                                key={idx}
+                                onClick={() => setServerIndex(idx)}
+                                className={cn(
+                                    "mr-4",
+                                    serverIndex == idx ? "bg-green-700" : ""
+                                )}
+                            >
+                                Server {idx + 1}
+                            </Button>
+                        ))}
+                    </div>
+                    <div className="w-full font-sans mt-4 mb-8">
+                        <h2 className="text-3xl mb-4">OTHER SAVED STREAMS</h2>
+                        <div className="overflow-x-auto whitespace-nowrap pb-2">
+                            {user &&
+                                user.vods
+                                    .filter((v) => v !== params.vodDate)
+                                    .map((vod, idx) => (
+                                        <Link
+                                            key={vod}
+                                            className={`w-[300px] h-[180px] inline-block hover:cursor-pointer ${
+                                                idx !== 0 ? "ml-4" : ""
+                                            }`}
+                                            href={`/users/${params.userId}/vods/${vod}`}
+                                        >
+                                            <div className="flex flex-col items-center justify-center h-full bg-black bg-opacity-50 rounded-md">
+                                                <Image
+                                                    alt="vod icon"
+                                                    src={"/icons/video.svg"}
+                                                    width={100}
+                                                    height={100}
+                                                />
+                                                <p className="text-white">
+                                                    Streamed on {vod}
+                                                </p>
+                                            </div>
+                                        </Link>
+                                    ))}
+                        </div>
+                    </div>
                 </div>
-                <div className="w-full font-sans mt-4 overflow-x-auto whitespace-nowrap">
-                    {servers.map((_, idx) => (
-                        <Button
-                            key={idx}
-                            onClick={() => setServerIndex(idx)}
-                            className={cn(
-                                "mr-4",
-                                serverIndex == idx ? "bg-green-700" : ""
-                            )}
-                        >
-                            Server {idx + 1}
-                        </Button>
-                    ))}
-                </div>
-                <div className="w-full font-sans my-8 gap-4 overflow-x-auto whitespace-nowrap">
-                    <h2 className="text-3xl mb-4">OTHER SAVED STREAMS</h2>
-                    {user &&
-                        user.vods
-                            .filter((v) => v !== params.vodDate)
-                            .map((vod, idx) => (
-                                <Link
-                                    key={vod}
-                                    className={`w-[300px] h-[180px] inline-block hover:cursor-pointer ${
-                                        idx !== 0 ? "ml-4" : ""
-                                    }`}
-                                    href={`/users/${params.userId}/vods/${vod}`}
-                                >
-                                    <div className="flex flex-col items-center justify-center h-full bg-black bg-opacity-50 rounded-md">
-                                        <Image
-                                            alt="vod icon"
-                                            src={"/icons/video.svg"}
-                                            width={100}
-                                            height={100}
-                                        />
-                                        <p className="text-white">
-                                            Streamed on {vod}
-                                        </p>
-                                    </div>
-                                </Link>
-                            ))}
-                </div>
+                <div className="w-full mx-4 h-screen bg-black bg-opacity-50 sticky right-0 top-0 z-20"></div>
             </div>
-            <div className="w-full mx-4 h-screen bg-black bg-opacity-50"></div>
+            <h2>Copy right @Huynh Thanh Nam</h2>
         </div>
     );
 }
