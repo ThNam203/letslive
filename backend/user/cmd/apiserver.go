@@ -99,6 +99,7 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
+	sm.HandleFunc("GET /v1/users", a.userHandler.GetAllUsers)
 	sm.HandleFunc("GET /v1/user/{id}", a.userHandler.GetUserByID)
 	sm.HandleFunc("GET /v1/user", a.userHandler.GetUserByQueries)
 	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUser)

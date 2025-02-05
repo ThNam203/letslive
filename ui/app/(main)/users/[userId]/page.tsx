@@ -91,30 +91,32 @@ export default function Livestreaming() {
                         </Button>
                     ))}
                 </div>
-                <div className="w-full font-sans mt-4 gap-4 overflow-x-auto whitespace-nowrap">
+                <div className="w-full font-sans mt-4 gap-4">
                     <h2 className="text-3xl">SAVED STREAMS</h2>
-                    {user &&
-                        user.vods.map((vod, idx) => (
-                            <Link
-                                key={vod}
-                                className={`w-[300px] h-[180px] inline-block hover:cursor-pointer ${
-                                    idx !== 0 ? "ml-4" : ""
-                                }`}
-                                href={`/users/${params.userId}/vods/${vod}`}
-                            >
-                                <div className="flex flex-col items-center justify-center h-full bg-black bg-opacity-50 rounded-md">
-                                    <Image
-                                        alt="vod icon"
-                                        src={"/icons/video.svg"}
-                                        width={100}
-                                        height={100}
-                                    />
-                                    <p className="text-white">
-                                        Streamed on {vod}
-                                    </p>
-                                </div>
-                            </Link>
-                        ))}
+                    <div className=" overflow-x-auto whitespace-nowrap pb-2">
+                        {user &&
+                            user.vods.map((vod, idx) => (
+                                <Link
+                                    key={vod}
+                                    className={`w-[300px] h-[180px] inline-block hover:cursor-pointer ${
+                                        idx !== 0 ? "ml-4" : ""
+                                    }`}
+                                    href={`/users/${params.userId}/vods/${vod}`}
+                                >
+                                    <div className="flex flex-col items-center justify-center h-full bg-black bg-opacity-50 rounded-md">
+                                        <Image
+                                            alt="vod icon"
+                                            src={"/icons/video.svg"}
+                                            width={100}
+                                            height={100}
+                                        />
+                                        <p className="text-white">
+                                            Streamed on {vod}
+                                        </p>
+                                    </div>
+                                </Link>
+                            ))}
+                    </div>
                 </div>
             </div>
             <div className="w-full mx-4 h-screen bg-black bg-opacity-50"></div>

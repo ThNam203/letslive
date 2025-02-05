@@ -5,6 +5,7 @@ import { ReactNode } from "react";
 import user_avatar from "@/public/images/user_avatar.jpeg";
 import IconButton from "@/components/buttons/IconBtn";
 import RoundedImage from "@/components/images/RoundedImage";
+import AllChannelsView from "@/components/leftbar/AllChannelsView";
 
 const ChannelViewItem = ({
   className,
@@ -55,20 +56,21 @@ const View = ({
 };
 
 export const LeftBar = () => {
+    
   return (
-    <div className="fixed mt-8 h-full xl:w-64 max-xl:w-fit bg-leftBarColor flex flex-col max-xl:items-center justify-start gap-2 text-primaryWord">
+    <div className="fixed ml-2 mt-4 h-full xl:w-64 max-xl:w-fit bg-leftBarColor flex flex-col max-xl:items-center justify-start gap-2 text-primaryWord">
       <div className="flex flex-row justify-between items-center px-2">
-        <span className="font-semibold text-lg max-xl:hidden">For you</span>
+        <AllChannelsView/>
       </div>
-      <div className="flex flex-row justify-between items-center px-2 mt-2">
-        <Title icon={<LuHeart size={20} />}>FOLLOWED CHANNELS</Title>
+      {/* <div className="flex flex-row justify-between items-center px-2 mt-2"> */}
+        {/* <Title icon={<LuHeart size={20} />}>FOLLOWED CHANNELS</Title> */}
 
         {/* <IconButton
           className="self-end max-xl:hidden"
           icon={<LuArrowUpDown size={18} />}
           disabled={true}
         /> */}
-      </div>
+      {/* </div> */}
       {/* {followingChannels.map((channel, idx) => {
         // TODO: WRONG LOGIC
         const user = userData.find((user) => user.id === channel.id);

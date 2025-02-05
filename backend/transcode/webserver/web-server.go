@@ -77,8 +77,10 @@ func (ws *WebServer) serveFile(rw http.ResponseWriter, rq *http.Request) {
 	switch fileExtension {
 	case ".ts":
 		rw.Header().Set("Content-Type", "video/mp2t")
+		rw.Header().Set("Cache-Control", "public, max-age=1800")
 	case ".m3u8":
 		rw.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
+		rw.Header().Set("Cache-Control", "public, no-store, max-age=0")
 	default:
 		log.Fatal("File extension not supported!")
 		http.Error(rw, "file extension not supported!", http.StatusForbidden)

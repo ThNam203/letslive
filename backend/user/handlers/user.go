@@ -65,6 +65,27 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
+func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := h.ctrl.GetAll()
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	for _, user := range users {
+		userVODs, errRes := h.transcodeGateway.GetUserVODs(context.Background(), user.Id.String())
+		if errRes != nil {
+			continue // what should be done?
+		}
+
+		user.VODs = userVODs.Data
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(users)
+}
+
 // get user by using path query '/user?streamAPIKey=123123123'
 // TODO: dynamic query:
 // https://www.postgresql.org/docs/current/functions-json.html
