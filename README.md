@@ -30,3 +30,6 @@ know where to retrive files to play) pointing to the remote location.
 - Consul with Kong API Gateway for service discovery and api gateway.
 - Storage: IPFS.
 - Docker Compose
+
+## ARCHITECTURE
+![Architecture](docs/architecture.png)
