@@ -118,7 +118,7 @@ export default function VODPage() {
                         </div>
                     </div>
                 </div>
-                <div className="w-full mx-4 h-screen bg-black bg-opacity-50 sticky right-0 top-0 z-20"></div>
+                {/* <div className="w-full mx-4 h-screen bg-black bg-opacity-50 sticky right-0 top-0 z-20"></div> */}
             </div>
             <h2>Copy right @Huynh Thanh Nam</h2>
         </div>

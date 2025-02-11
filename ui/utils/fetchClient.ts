@@ -1,5 +1,6 @@
 import { ErrorResponse, FetchError } from "@/types/fetch-error";
 import { FetchOptions } from "@/types/fetch-options";
+import { cookies } from "next/headers";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -15,12 +16,11 @@ const refreshToken = async (): Promise<void> => {
                     { method: "POST", credentials: "include" }
                 );
 
-                
                 const refreshRes = await refreshResponse.json().catch(() => null);
                 if (!refreshResponse.ok) {
                     throw new FetchError(
                         refreshRes?.id || 'unknown',
-                        "Session expired, please log in again",
+                        refreshRes.message || `Failed to refresh token! Status: ${refreshResponse.status}`,
                         {
                             status: refreshResponse.status,
                             isClientError: true,
@@ -61,7 +61,7 @@ export const fetchClient = async <T>(
 
     const headers = {
         ...defaultHeaders,
-        ...(options.headers || {}),
+        ...(options.headers ?? {}),
     };
 
     try {

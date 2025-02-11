@@ -1,0 +1,240 @@
+services:
+  auth:
+    env_file: ./backend/auth/.env
+    build:
+      context: ./backend
+      dockerfile: ./dockerfiles/auth.Dockerfile
+    container_name: letslive_auth
+    ports:
+      - "7777:7777"
+    expose:
+      - "7777"
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+    volumes:
+      - ./shared_log/auth.txt:/usr/local/bin/log.txt
+
+  auth_db:
+    image: postgres:16.3
+    container_name: letslive_auth_db
+    restart: always
+    shm_size: 64mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: letslive_auth
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    networks:
+      general_network:
+    ports:
+      - "9990:5432"
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  user:
+    build:
+      context: ./backend
+      dockerfile: ./dockerfiles/user.Dockerfile
+    container_name: letslive_user
+    ports:
+      - "7778:7778"
+    expose:
+      - "7778"
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+    volumes:
+      - ./shared_log/user.txt:/usr/local/bin/log.txt
+
+  user_db:
+    image: postgres:16.3
+    container_name: letslive_user_db
+    restart: always
+    shm_size: 64mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: letslive_user
+    volumes:
+      - postgres_user_data:/var/lib/postgresql/data
+    networks:
+      general_network:
+    ports:
+      - "9991:5432"
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  transcode:
+    build:
+      context: ./backend
+      dockerfile: ./dockerfiles/transcode.Dockerfile
+    container_name: letslive_transcode
+    ports:
+      - "1935:1935"
+      - "7779:7779" 
+      - "8889:8889" # expose the webserver
+    expose:
+      - "1935"
+      - "7779"
+      - "8889"
+    networks:
+      general_network:
+      ipfs_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+    volumes:
+      - ./backend/transcode/dockervolume/private:/usr/src/app/private
+      - ./backend/transcode/dockervolume/public:/usr/src/app/public
+      - ./shared_log/transcode.txt:/usr/local/bin/log.txt
+
+  #ui:
+  #  build:
+  #    context: ./ui
+  #    dockerfile: Dockerfile
+  #  container_name: letslive_ui
+  #  networks:
+  #    general_network:
+  #  ports:
+  #    - "5000:5000"
+
+  configserver:
+    build:
+      context: ./backend/configserver
+      dockerfile: Dockerfile
+    container_name: letslive_configserver
+    ports:
+      - "8181:8181"
+    networks:
+      general_network:
+    healthcheck:
+      test: "curl --fail --silent localhost:8181/actuator/health | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      consul:
+        condition: service_healthy
+
+  consul:
+    image: hashicorp/consul:latest
+    container_name: consul
+    ports:
+      - "8500:8500"  # Consul UI and API
+      - "8600:8600/udp"  # DNS
+    expose:
+      - "8500"
+      - "8600"
+    command: agent -dev -client=0.0.0.0 -log-level=error -enable-script-checks -bootstrap-expect=1 -config-dir=/consul/config
+    volumes:
+      - ./configs/consul.json:/consul/config/consul.json
+    networks:
+      kong_network:
+        ipv4_address: 192.168.1.10
+      general_network:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8500/v1/status/leader"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  kong:
+    image: kong:latest
+    container_name: letslive_kong
+    networks:
+      kong_network:
+      general_network:
+    restart: always
+    environment:
+      KONG_DATABASE: off
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+      KONG_DNS_RESOLVER: "192.168.1.10:8600,127.0.0.11"
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_ADMIN_LISTEN_SSL: "0.0.0.0:8444"
+      KONG_ADMIN_GUI_URL: http://localhost:8002
+    volumes:
+      - ./configs/kong.yml:/kong/declarative/kong.yml
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "8001:8001"
+      - "8002:8002"
+      - "8444:8444"
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 2s
+      retries: 15
+    depends_on:
+      consul:
+        condition: service_healthy
+
+  chat_pubsub:
+    image: redis:7.4.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 60 1 --loglevel warning
+    volumes: 
+      - chat_pubsub_data:/data
+    network:
+      general_network:
+
+  chat_db:
+    image: mongo:latest
+    container_name: chat_db
+    restart: always
+    ports:
+      - 9992:27017
+    environment:
+      - MONGO_INITDB_DATABASE=chat
+      #- MONGO_INITDB_ROOT_USERNAME=
+      #- MONGO_INITDB_ROOT_PASSWORD=admin
+    volumes:
+      #- ./mongo-entrypoint:/docker-entrypoint-initdb.d
+      - mongodb_chat_data:/data/db
+    networks:
+      general_network:
+
+networks:
+  general_network:
+    driver: bridge
+
+  kong_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+
+volumes:
+  postgres_auth_data:
+  postgres_user_data:
+  postgres_kong_data:
+  mongodb_chat_data:
+  chat_pubsub_data:

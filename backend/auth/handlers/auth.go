@@ -98,7 +98,12 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 	refreshTokenCookie, err := r.Cookie("REFRESH_TOKEN")
 	if err != nil {
-		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing refresh token"))
+		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("refresh token cookie fails: %s", err))
+		return
+	}
+
+	if len(refreshTokenCookie.Value) == 0 {
+		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("missing refresh token"))
 		return
 	}
 
