@@ -197,7 +197,6 @@ const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
     const [length, setLength] = useState(0);
     useEffect(() => {
       if (value && typeof value === "string") setLength(value.length);
-      console.log("value textarea", value);
     }, [value]);
     return (
       <div className="relative flex flex-col mb-2">

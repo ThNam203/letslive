@@ -119,7 +119,7 @@ export default function Livestreaming() {
                     </div>
                 </div>
             </div>
-            <div className="w-full mx-4 h-screen bg-black bg-opacity-50"></div>
+            {/* <div className="w-full mx-4 h-screen bg-black bg-opacity-50"></div> */}
         </div>
     );
 }

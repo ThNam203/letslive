@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 export default function AllChannelsView() {
     const [users, setUsers] = useState<User[]>([]);
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchAllUsers = async () => {
             const { users, fetchError } = await GetAllUsers();
 
             if (fetchError != undefined) {
@@ -22,7 +22,7 @@ export default function AllChannelsView() {
             }
         };
 
-        fetchProfile();
+        fetchAllUsers();
     }, []);
 
     return (

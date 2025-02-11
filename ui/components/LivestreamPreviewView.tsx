@@ -4,7 +4,7 @@ import { cn } from "@/utils/cn";
 import { ClassValue } from "clsx";
 import stream_img from "@/public/images/stream_thumbnail_example.jpg";
 import { Hover3DBox } from "@/components/Hover3DBox";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { User } from "@/types/user";
 import LivestreamPreviewDetailView from "@/components/LivestreamPreviewDetailView";
 
