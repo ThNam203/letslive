@@ -1,6 +1,6 @@
 import Redis from 'ioredis'
-import { ChatEvent, ChatEventType } from '~/types/chat_event'
-import { ChatMessage } from '~/types/chat_message'
+import { ChatEvent, ChatEventType } from '../types/chat_event'
+import { ChatMessage } from '../types/chat_message'
 
 // src/services/RedisService.ts
 export class RedisService {

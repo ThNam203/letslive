@@ -99,7 +99,6 @@ services:
       - "8889"
     networks:
       general_network:
-      ipfs_network:
     depends_on:
       consul:
         condition: service_healthy
@@ -137,6 +136,57 @@ services:
     depends_on:
       consul:
         condition: service_healthy
+
+  chat:
+    build:
+      context: ./backend/chat/
+      dockerfile: Dockerfile
+    container_name: letslive_chat
+    command: npm run start
+    ports:
+      - "7780:8080"
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+      chat_pubsub:
+        condition: service_healthy
+      chat_db:
+        condition: service_healthy
+
+  chat_pubsub:
+    image: redis:7.4.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 60 1 --loglevel warning
+    volumes: 
+      - chat_pubsub_data:/data
+    networks:
+      general_network:
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+
+  chat_db:
+    image: mongo:latest
+    container_name: chat_db
+    restart: always
+    ports:
+      - 9992:27017
+    environment:
+      - MONGO_INITDB_DATABASE=chat
+      #- MONGO_INITDB_ROOT_USERNAME=
+      #- MONGO_INITDB_ROOT_PASSWORD=admin
+    volumes:
+      #- ./mongo-entrypoint:/docker-entrypoint-initdb.d
+      - mongodb_chat_data:/data/db
+    networks:
+      general_network:
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
 
   consul:
     image: hashicorp/consul:latest
@@ -195,32 +245,6 @@ services:
       consul:
         condition: service_healthy
 
-  chat_pubsub:
-    image: redis:7.4.2-alpine
-    restart: always
-    ports:
-      - '6379:6379'
-    command: redis-server --save 60 1 --loglevel warning
-    volumes: 
-      - chat_pubsub_data:/data
-    network:
-      general_network:
-
-  chat_db:
-    image: mongo:latest
-    container_name: chat_db
-    restart: always
-    ports:
-      - 9992:27017
-    environment:
-      - MONGO_INITDB_DATABASE=chat
-      #- MONGO_INITDB_ROOT_USERNAME=
-      #- MONGO_INITDB_ROOT_PASSWORD=admin
-    volumes:
-      #- ./mongo-entrypoint:/docker-entrypoint-initdb.d
-      - mongodb_chat_data:/data/db
-    networks:
-      general_network:
 
 networks:
   general_network:
