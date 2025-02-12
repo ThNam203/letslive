@@ -6,12 +6,11 @@ import (
 	"os"
 	"sen1or/lets-live/pkg/logger"
 
-	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 )
 
-type CustomStorage struct {
+type IPFSStorage struct {
 	ipfsNode          *Peer
 	bootstrapNodeAddr *string
 	gateway           string
@@ -19,12 +18,12 @@ type CustomStorage struct {
 }
 
 // If we don't want to connect to bootstrap node, enter a nil value for bootstrapNodeAddr
-func NewIPFSStorage(ctx context.Context, gateway string, bootstrapNodeAddr *string) *CustomStorage {
+func NewIPFSStorage(ctx context.Context, gateway string, bootstrapNodeAddr *string) *IPFSStorage {
 	if bootstrapNodeAddr != nil && len(*bootstrapNodeAddr) == 0 {
 		logger.Panicw("missing bootstrap node address")
 	}
 
-	storage := &CustomStorage{
+	storage := &IPFSStorage{
 		bootstrapNodeAddr: bootstrapNodeAddr,
 		ctx:               ctx,
 		gateway:           gateway,
@@ -37,7 +36,7 @@ func NewIPFSStorage(ctx context.Context, gateway string, bootstrapNodeAddr *stri
 	return storage
 }
 
-func (s *CustomStorage) AddFile(filePath string) (string, error) {
+func (s *IPFSStorage) AddFile(filePath string, _ string) (string, error) {
 	file, err := os.Open(filePath)
 
 	if err != nil {
@@ -52,12 +51,7 @@ func (s *CustomStorage) AddFile(filePath string) (string, error) {
 	return fmt.Sprintf("%s/ipfs/%s", s.gateway, fileCid.String()), nil
 }
 
-func (s *CustomStorage) HasBlock(cidString string) (bool, error) {
-	c, _ := cid.Decode(cidString)
-	return s.ipfsNode.HasBlock(context.Background(), c)
-}
-
-func (s *CustomStorage) SetupNode() error {
+func (s *IPFSStorage) SetupNode() error {
 	// create node
 	ds := NewInMemoryDatastore()
 	host, dht, err := NewLibp2pHost(s.ctx, ds)

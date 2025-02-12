@@ -10,7 +10,7 @@ import (
 )
 
 // rewrite the local playlist to point to remote resources
-func generateRemotePlaylist(ipfsVOD *IPFSVOD, playlistPath string, variant domains.HLSVariant) (string, error) {
+func GenerateRemotePlaylist(vodHandler VODHandler, playlistPath string, variant domains.HLSVariant) (string, error) {
 	file, err := os.Open(playlistPath)
 	if err != nil {
 		return "", fmt.Errorf("can't open playlist %s: %s", playlistPath, err)
@@ -27,18 +27,18 @@ func generateRemotePlaylist(ipfsVOD *IPFSVOD, playlistPath string, variant domai
 				line = ""
 			} else {
 				// adding fileName allow players to know the file is .ts instead of just file cid
-				line = fmt.Sprintf("%s?fileName=%s", segment.IPFSRemoteId, filepath.Base(segment.FullLocalPath))
+				line = fmt.Sprintf("%s?fileName=%s", segment.RemoteID, filepath.Base(segment.FullLocalPath))
 			}
 		}
 
 		newPlaylist = newPlaylist + line + "\n"
-		ipfsVOD.OnGeneratingNewLineForRemotePlaylist(line, variant)
+		vodHandler.OnGeneratingNewLineForRemotePlaylist(line, variant)
 	}
 
 	return newPlaylist, nil
 }
 
-func copy(src, dst string) error {
+func CopyFile(src, dst string) error {
 	input, err := os.ReadFile(src)
 	if err != nil {
 		return fmt.Errorf("error reading file: %s", err)
@@ -53,7 +53,7 @@ func copy(src, dst string) error {
 }
 
 // write the playlist (memory) into file destination
-func writePlaylist(data string, filePath string) error {
+func WritePlaylist(data string, filePath string) error {
 	parentDir := filepath.Dir(filePath)
 	if err := os.MkdirAll(parentDir, os.ModePerm); err != nil {
 		return fmt.Errorf("failed to create parent folder %s: %s", parentDir, err)
@@ -74,12 +74,12 @@ func writePlaylist(data string, filePath string) error {
 	return nil
 }
 
-func writePlaylistForOtherGateway(data, originalGateway, alternativeGateway, alternativeGatewayFilename string) error {
+func WritePlaylistForOtherGateway(data, originalGateway, alternativeGateway, alternativeGatewayFilename string) error {
 	newData := strings.ReplaceAll(data, originalGateway, alternativeGateway)
-	return writePlaylist(newData, alternativeGatewayFilename)
+	return WritePlaylist(newData, alternativeGatewayFilename)
 }
 
-func copyMasterFileForOtherGateway(masterFilePath, otherGatewayURL, publicPath string) error {
+func CopyMasterFileForOtherGateway(masterFilePath, otherGatewayURL, publicPath string) error {
 	gatewayServerName := otherGatewayURL[7:]
 	masterFile, err := os.ReadFile(masterFilePath)
 	if err != nil {

@@ -24,10 +24,10 @@ import (
 )
 
 type RTMPServerConfig struct {
-	Port     int
-	Registry *discovery.Registry
-	Config   config.Config
-	IPFSVOD  *watcher.IPFSVOD
+	Port       int
+	Registry   *discovery.Registry
+	Config     config.Config
+	VODHandler watcher.VODHandler
 }
 
 type RTMPServer struct {
@@ -35,7 +35,7 @@ type RTMPServer struct {
 	Registry    *discovery.Registry
 	userGateway *usergateway.UserGateway
 	config      config.Config
-	ipfsVOD     *watcher.IPFSVOD
+	vodHandler  watcher.VODHandler
 }
 
 func NewRTMPServer(config RTMPServerConfig, userGateway *usergateway.UserGateway) *RTMPServer {
@@ -44,7 +44,7 @@ func NewRTMPServer(config RTMPServerConfig, userGateway *usergateway.UserGateway
 		Registry:    config.Registry,
 		config:      config.Config,
 		userGateway: userGateway,
-		ipfsVOD:     config.IPFSVOD,
+		vodHandler:  config.VODHandler,
 	}
 }
 
@@ -146,7 +146,7 @@ func (s *RTMPServer) onConnect(streamingKey string) (string, error) {
 	}
 
 	// setup the vod creation
-	s.ipfsVOD.OnStreamStart(userInfo.Id.String())
+	s.vodHandler.OnStreamStart(userInfo.Id.String())
 
 	// make sure there is not any files from the privous streaming session
 	if err := removeLiveGeneratedFiles(userInfo.Id.String(), s.config.Transcode.PrivateHLSPath, s.config.Transcode.PublicHLSPath); err != nil {
@@ -165,7 +165,7 @@ func (s *RTMPServer) onDisconnect(userId string) {
 	}
 
 	// create the VOD playlists and remove the entry
-	s.ipfsVOD.OnStreamEnd(userId, s.config.Transcode.PublicHLSPath, s.config.Transcode.FFMpegSetting.MasterFileName)
+	s.vodHandler.OnStreamEnd(userId, s.config.Transcode.PublicHLSPath, s.config.Transcode.FFMpegSetting.MasterFileName)
 
 	errRes := s.userGateway.UpdateUserLiveStatus(context.Background(), *updateUserDTO)
 	if errRes != nil {

@@ -245,6 +245,30 @@ services:
       consul:
         condition: service_healthy
 
+  minio:
+    image: quay.io/minio/minio:latest
+    command: server --console-address ":9090" /mnt/data
+    container_name: letslive_minio
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    environment:
+      MINIO_ROOT_USER: "minioadmin"
+      MINIO_ROOT_PASSWORD: "minioadmin"
+    networks:
+      general_network:
+    volumes:
+      - type: bind
+        source: /mnt/data/compose
+        target: /mnt/data
+      - type: bind
+        source: ./configs/minio.env
+        target: /etc/config.env
 
 networks:
   general_network:

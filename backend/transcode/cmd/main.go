@@ -8,12 +8,16 @@ import (
 	cfg "sen1or/lets-live/transcode/config"
 	usergateway "sen1or/lets-live/transcode/gateway/user/http"
 	"sen1or/lets-live/transcode/rtmp"
-	"sen1or/lets-live/transcode/storage/ipfs"
+	ipfsstorage "sen1or/lets-live/transcode/storage/ipfs"
+	miniostorage "sen1or/lets-live/transcode/storage/minio"
 	"sen1or/lets-live/transcode/watcher"
+	ipfswatcher "sen1or/lets-live/transcode/watcher/ipfs"
+	miniowatcher "sen1or/lets-live/transcode/watcher/minio"
 	"sen1or/lets-live/transcode/webserver"
 
-	_ "github.com/joho/godotenv/autoload"
 	"sen1or/lets-live/pkg/discovery"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
@@ -42,19 +46,27 @@ func main() {
 	MyWebServer.ListenAndServe()
 
 	// TODO: find a way to remove the ipfsVOD from the rtmp, or change the design or config
-	ipfsVOD := watcher.GetIPFSVOD()
+	var vodHandler watcher.VODHandler
 
 	if config.IPFS.Enabled {
-		ipfsStorage := ipfs.NewIPFSStorage(context.Background(), config.IPFS.Gateway, &config.IPFS.BootstrapNodeAddr)
-		monitor := watcher.NewIPFSWatcher(config.Transcode.PrivateHLSPath, ipfsVOD, ipfsStorage, *config)
-		go monitor.Watch()
+		vodHandler = ipfswatcher.GetIPFSVODHandler()
+		ipfsStorage := ipfsstorage.NewIPFSStorage(context.Background(), config.IPFS.Gateway, &config.IPFS.BootstrapNodeAddr)
+		ipfsWatcherStrategy := ipfswatcher.NewIPFSStorageWatcherStrategy(vodHandler, ipfsStorage, *config)
+		watcher := watcher.NewFFMpegFileWatcher(config.Transcode.PrivateHLSPath, ipfsWatcherStrategy)
+		go watcher.Watch()
+	} else {
+		vodHandler = miniowatcher.GetMinIOVODStrategy()
+		minioStorage := miniostorage.NewMinIOStorage(context.Background())
+		minioWatcherStrategy := miniowatcher.NewMinIOFileWatcherStrategy(vodHandler, minioStorage, *config)
+		watcher := watcher.NewFFMpegFileWatcher(config.Transcode.PrivateHLSPath, minioWatcherStrategy)
+		go watcher.Watch()
 	}
 
 	userGateway := usergateway.NewUserGateway(registry)
 
 	// TODO: find a way to remove the ipfsVOD from the rtmp, or change the design or config
 	rtmpServer := rtmp.NewRTMPServer(
-		rtmp.RTMPServerConfig{Port: config.RTMP.Port, Registry: &registry, Config: *config, IPFSVOD: ipfsVOD},
+		rtmp.RTMPServerConfig{Port: config.RTMP.Port, Registry: &registry, Config: *config, VODHandler: vodHandler},
 		userGateway,
 	)
 	go rtmpServer.Start()

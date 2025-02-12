@@ -92,8 +92,7 @@ export default function VODPage() {
                         <h2 className="text-3xl mb-4">OTHER SAVED STREAMS</h2>
                         <div className="overflow-x-auto whitespace-nowrap pb-2">
                             {user &&
-                                user.vods
-                                    .filter((v) => v !== params.vodDate)
+                                user.vods?.filter((v) => v !== params.vodDate)
                                     .map((vod, idx) => (
                                         <Link
                                             key={vod}

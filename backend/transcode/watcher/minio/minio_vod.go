@@ -1,4 +1,4 @@
-package watcher
+package miniowatcher
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/transcode/domains"
+	"sen1or/lets-live/transcode/watcher"
 	"strings"
 	"sync"
 	"time"
@@ -18,7 +19,7 @@ type VODData struct {
 	Segments          [3][]string
 }
 
-func CreateNewVODData() *VODData {
+func createNewVODData() *VODData {
 	var newVOD = VODData{}
 
 	for i := range newVOD.Segments {
@@ -28,27 +29,27 @@ func CreateNewVODData() *VODData {
 	return &newVOD
 }
 
-type IPFSVOD struct {
+type MinIOVODStrategy struct {
 	vodsData map[string]*VODData
 	mu       sync.RWMutex
 }
 
-func GetIPFSVOD() *IPFSVOD {
-	return &IPFSVOD{
+func GetMinIOVODStrategy() watcher.VODHandler {
+	return &MinIOVODStrategy{
 		vodsData: make(map[string]*VODData),
 	}
 }
 
-func (u *IPFSVOD) OnStreamStart(publishName string) {
+func (u *MinIOVODStrategy) OnStreamStart(publishName string) {
 	u.mu.Lock()
 	_, exist := u.vodsData[publishName]
 	if !exist {
-		u.vodsData[publishName] = CreateNewVODData()
+		u.vodsData[publishName] = createNewVODData()
 	}
 	u.mu.Unlock()
 }
 
-func (u *IPFSVOD) OnStreamEnd(publishName string, publicHLSPath string, masterFileName string) {
+func (u *MinIOVODStrategy) OnStreamEnd(publishName string, publicHLSPath string, masterFileName string) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	defer delete(u.vodsData, publishName)
@@ -76,7 +77,7 @@ func (u *IPFSVOD) OnStreamEnd(publishName string, publicHLSPath string, masterFi
 
 	// copy the master file to vod folder
 	newMasterFilePath := filepath.Join(outputPath, masterFileName)
-	copyFile(filepath.Join(masterFileDirPath, masterFileName), newMasterFilePath)
+	watcher.CopyFile(filepath.Join(masterFileDirPath, masterFileName), newMasterFilePath)
 
 	// generate master files for other gateways
 	for _, otherGatewayURL := range otherGateways {
@@ -84,7 +85,7 @@ func (u *IPFSVOD) OnStreamEnd(publishName string, publicHLSPath string, masterFi
 	}
 }
 
-func (u *IPFSVOD) generateVariantVODPlaylist(data VODData, index int) string {
+func (u *MinIOVODStrategy) generateVariantVODPlaylist(data VODData, index int) string {
 	var playlist strings.Builder
 
 	// Write header
@@ -105,7 +106,7 @@ func (u *IPFSVOD) generateVariantVODPlaylist(data VODData, index int) string {
 	return playlist.String()
 }
 
-func (u *IPFSVOD) generateVariantVODPlaylists(vodData VODData, outputPath string) error {
+func (u *MinIOVODStrategy) generateVariantVODPlaylists(vodData VODData, outputPath string) error {
 	// Generate and save each variant playlist
 	for i := 0; i < 3; i++ {
 		// Create directory for this quality level
@@ -139,7 +140,7 @@ func (u *IPFSVOD) generateVariantVODPlaylists(vodData VODData, outputPath string
 }
 
 // save data for creating VOD
-func (u *IPFSVOD) OnGeneratingNewLineForRemotePlaylist(line string, variant domains.HLSVariant) {
+func (u *MinIOVODStrategy) OnGeneratingNewLineForRemotePlaylist(line string, variant domains.HLSVariant) {
 	if len(variant.Segments) == 0 || len(line) == 0 {
 		return
 	}
@@ -183,20 +184,6 @@ func (u *IPFSVOD) OnGeneratingNewLineForRemotePlaylist(line string, variant doma
 			vodData.Segments[variantIndex] = append(vodData.Segments[variantIndex], line)
 		}
 	}
-}
-
-func copyFile(src, dst string) error {
-	input, err := os.ReadFile(src)
-	if err != nil {
-		return fmt.Errorf("error reading file: %s", err)
-	}
-
-	err = os.WriteFile(dst, input, os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("error copying file: %s", err)
-	}
-
-	return nil
 }
 
 func generateMasterFileVODSForOtherGateway(masterFilePath, otherGatewayURL string) error {

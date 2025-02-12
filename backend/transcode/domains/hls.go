@@ -7,7 +7,7 @@ type HLSSegment struct {
 	VariantIndex       int
 	FullLocalPath      string // the full path to the file on disk
 	RelativeRemotePath string // for example "1/stream0.ts", without the first part "http://...."
-	IPFSRemoteId       string // hash id used with ipfs
+	RemoteID           string // the full remove id
 }
 
 // Multiple bitrates

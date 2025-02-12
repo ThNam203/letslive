@@ -95,7 +95,7 @@ export default function Livestreaming() {
                     <h2 className="text-3xl">SAVED STREAMS</h2>
                     <div className=" overflow-x-auto whitespace-nowrap pb-2">
                         {user &&
-                            user.vods.map((vod, idx) => (
+                            user.vods?.map((vod, idx) => (
                                 <Link
                                     key={vod}
                                     className={`w-[300px] h-[180px] inline-block hover:cursor-pointer ${
