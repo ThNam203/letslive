@@ -7,5 +7,5 @@ export type User = {
   isVerified: boolean;
   createdAt: string;
   streamAPIKey: string;
-  vods: string[];
+  vods: string[] | null;
 };

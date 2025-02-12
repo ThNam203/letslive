@@ -25,10 +25,7 @@ func NewTranscoder(pipeOut *io.PipeReader, config config.Config) *Transcoder {
 
 func (t *Transcoder) Start(publishName string) {
 	// if there is no remote (or external storage), just export files directly to public folder and serves
-	var outputDir = filepath.Join(t.config.Transcode.PublicHLSPath, publishName)
-	if t.config.IPFS.Enabled {
-		outputDir = filepath.Join(t.config.Transcode.PrivateHLSPath, publishName)
-	}
+	var outputDir = filepath.Join(t.config.Transcode.PrivateHLSPath, publishName)
 
 	var videoMaps = make([]string, 0)
 	var audioMaps = make([]string, 0)

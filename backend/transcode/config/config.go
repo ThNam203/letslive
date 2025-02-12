@@ -102,7 +102,6 @@ func retrieveConfig() (*Config, error) {
 		return nil, fmt.Errorf("error unmarshaling JSON: %v", err)
 	}
 
-	// -------------------
 	registryConfig, err := retrieveRegistryConfig()
 	if err != nil {
 		return nil, err
