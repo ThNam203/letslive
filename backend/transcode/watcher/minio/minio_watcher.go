@@ -15,9 +15,6 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
-// TODO: put it into config
-var otherGateways = []string{"http://localhost:8890", "http://localhost:8891"}
-
 func getSegmentFromPath(segmentFullPath string) (*domains.HLSSegment, error) {
 	pathComponents := strings.Split(segmentFullPath, "/")
 	index, err := strconv.Atoi(pathComponents[len(pathComponents)-2])
@@ -88,10 +85,6 @@ func (w *MinIOFileWatcherStrategy) OnMaster(event watcher.Event) {
 	if err := mywatcher.CopyFile(event.Path, filepath.Join(w.config.Transcode.PublicHLSPath, publishName, w.config.Transcode.FFMpegSetting.MasterFileName)); err != nil {
 		logger.Errorw("failed to copy master file", err)
 	}
-
-	for _, otherGateway := range otherGateways {
-		mywatcher.CopyMasterFileForOtherGateway(event.Path, otherGateway, w.config.Transcode.PublicHLSPath)
-	}
 }
 
 func (w *MinIOFileWatcherStrategy) OnVariant(event watcher.Event) {
@@ -111,12 +104,6 @@ func (w *MinIOFileWatcherStrategy) OnVariant(event watcher.Event) {
 	variantIndexStr := strconv.Itoa(info.VariantIndex)
 
 	mywatcher.WritePlaylist(newPlaylist, filepath.Join(w.config.Transcode.PublicHLSPath, info.PublishName, variantIndexStr, info.Filename))
-	for _, otherGateway := range otherGateways {
-		serverName := otherGateway[7:]
-		if err := mywatcher.WritePlaylistForOtherGateway(newPlaylist, w.config.IPFS.Gateway, otherGateway, filepath.Join(w.config.Transcode.PublicHLSPath, info.PublishName, variantIndexStr, serverName+"_stream.m3u8")); err != nil {
-			logger.Errorf("failed to write playlist for other gateways: %s", err)
-		}
-	}
 }
 func (w *MinIOFileWatcherStrategy) OnSegment(event watcher.Event) {
 	segment, err := getSegmentFromPath(event.Path)

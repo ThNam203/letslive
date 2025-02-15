@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sen1or/lets-live/pkg/logger"
+	"sen1or/lets-live/transcode/config"
 	"sen1or/lets-live/transcode/domains"
 	"sen1or/lets-live/transcode/watcher"
 	"strings"
@@ -32,11 +33,13 @@ func CreateNewVODData() *VODData {
 type IPFSVODStrategy struct {
 	vodsData map[string]*VODData
 	mu       sync.RWMutex
+	config   config.IPFS
 }
 
-func GetIPFSVODHandler() watcher.VODHandler {
+func GetIPFSVODHandler(config config.IPFS) watcher.VODHandler {
 	return &IPFSVODStrategy{
 		vodsData: make(map[string]*VODData),
+		config:   config,
 	}
 }
 
@@ -80,7 +83,7 @@ func (u *IPFSVODStrategy) OnStreamEnd(publishName string, publicHLSPath string, 
 	watcher.CopyFile(filepath.Join(masterFileDirPath, masterFileName), newMasterFilePath)
 
 	// generate master files for other gateways
-	for _, otherGatewayURL := range otherGateways {
+	for _, otherGatewayURL := range u.config.SubGateways {
 		generateMasterFileVODSForOtherGateway(newMasterFilePath, otherGatewayURL)
 	}
 }
@@ -126,12 +129,11 @@ func (u *IPFSVODStrategy) generateVariantVODPlaylists(vodData VODData, outputPat
 			return fmt.Errorf("failed to write playlist file %s: %w", playlistPath, err)
 		}
 
-		// generate for other gateways, TODO: refactor
-		for _, otherGateway := range otherGateways {
-			serverName := otherGateway[7:]
-			playlistNewData := strings.ReplaceAll(playlist, "localhost:8888", serverName)
-			if err := os.WriteFile(filepath.Join(filepath.Dir(playlistPath), serverName+"_stream.m3u8"), []byte(playlistNewData), 0644); err != nil {
-				logger.Errorf("failed to write playlist file for gateway %s: %w", otherGateway, err)
+		// generate for other gateways
+		for _, otherGatewayURL := range u.config.SubGateways {
+			playlistNewData := strings.ReplaceAll(playlist, u.config.Gateway, otherGatewayURL)
+			if err := os.WriteFile(filepath.Join(filepath.Dir(playlistPath), otherGatewayURL+"_stream.m3u8"), []byte(playlistNewData), 0644); err != nil {
+				logger.Errorf("failed to write playlist file for gateway %s: %w", otherGatewayURL, err)
 			}
 		}
 	}
@@ -187,15 +189,14 @@ func (u *IPFSVODStrategy) OnGeneratingNewLineForRemotePlaylist(line string, vari
 }
 
 func generateMasterFileVODSForOtherGateway(masterFilePath, otherGatewayURL string) error {
-	gatewayServerName := otherGatewayURL[7:]
 	masterFile, err := os.ReadFile(masterFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open master file (%s): %s", masterFilePath, err)
 	}
 
-	newData := strings.ReplaceAll(string(masterFile), "stream.m3u8", gatewayServerName+"_stream.m3u8")
+	newData := strings.ReplaceAll(string(masterFile), "stream.m3u8", otherGatewayURL+"_stream.m3u8")
 
-	path := filepath.Join(filepath.Dir(masterFilePath), gatewayServerName+"_index.m3u8")
+	path := filepath.Join(filepath.Dir(masterFilePath), otherGatewayURL+"_index.m3u8")
 
 	err = os.WriteFile(path, []byte(newData), 0644)
 	if err != nil {

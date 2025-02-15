@@ -31,5 +31,9 @@ know where to retrive files to play) pointing to the remote location.
 - Storage: IPFS.
 - Docker Compose
 
-## ARCHITECTURE
-![Architecture](docs/architecture.png)
+## ARCHITECTURE  
+### WITH IPFS  
+![IPFS ARCHITECTURE](docs/ipfs_architecture.png)
+
+### WITH IPFS  
+![MINIO ARCHITECTURE](docs/minio_architecture.png)

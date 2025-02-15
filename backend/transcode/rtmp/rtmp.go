@@ -16,6 +16,7 @@ import (
 	"sen1or/lets-live/user/dto"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/nareix/joy5/format/flv"
@@ -105,7 +106,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	pipeOut, pipeIn := io.Pipe()
 
 	go func() {
-		transcoder := transcoder.NewTranscoder(pipeOut, s.config)
+		transcoder := transcoder.NewTranscoder(pipeOut, s.config.Transcode)
 		transcoder.Start(userId)
 	}()
 
@@ -148,7 +149,7 @@ func (s *RTMPServer) onConnect(streamingKey string) (string, error) {
 	// setup the vod creation
 	s.vodHandler.OnStreamStart(userInfo.Id.String())
 
-	// make sure there is not any files from the privous streaming session
+	// make sure there is not any files from the previous streaming session
 	if err := removeLiveGeneratedFiles(userInfo.Id.String(), s.config.Transcode.PrivateHLSPath, s.config.Transcode.PublicHLSPath); err != nil {
 		return "", fmt.Errorf("failed to remove live generated files: %s", err)
 	}
@@ -173,7 +174,14 @@ func (s *RTMPServer) onDisconnect(userId string) {
 	}
 
 	// should be put on the last line
-	removeLiveGeneratedFiles(userId, s.config.Transcode.PrivateHLSPath, s.config.Transcode.PublicHLSPath)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	go func() {
+		select {
+		case <-ctx.Done():
+			removeLiveGeneratedFiles(userId, s.config.Transcode.PrivateHLSPath, s.config.Transcode.PublicHLSPath)
+		}
+	}()
 }
 
 func copyFile(src, dst string) error {
@@ -191,7 +199,6 @@ func copyFile(src, dst string) error {
 }
 
 // remove live-generated private files and public files after saving into vods
-// TODO: make it better
 func removeLiveGeneratedFiles(streamingKey, privatePath, publicPath string) error {
 	// remove all folders of public and remove all private content
 	paths := []string{

@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	// TODO: add swagger
-	//_ "sen1or/lets-live/auth/docs"
-
 	cfg "sen1or/lets-live/auth/config"
 	"sen1or/lets-live/auth/controllers"
 	"sen1or/lets-live/auth/handlers"

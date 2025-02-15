@@ -86,10 +86,8 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
+// TODO: refactor to use verifyStreamAPIKey
 // get user by using path query '/user?streamAPIKey=123123123'
-// TODO: dynamic query:
-// https://www.postgresql.org/docs/current/functions-json.html
-// https://github.com/jackc/pgx/discussions/1785
 func (h *UserHandler) GetUserByQueries(w http.ResponseWriter, r *http.Request) {
 	streamAPIKeyString := r.URL.Query().Get("streamAPIKey")
 	isOnline := r.URL.Query().Get("isOnline")
