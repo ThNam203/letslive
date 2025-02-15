@@ -16,24 +16,34 @@ The project aims to create a functioning livestreaming website from a to z like 
 - 3000: Grafana for IPFS.
 
 ## HOW IT WORKS
-- Ingestion: The RTMP is used to get the content of the livestream (through OBS, will work for a built-in in browser)  
-- Transcode: From the RTMP, use FFMpeg to generate the HLS files which also has adaptive bitrate streaming (ABS)  
-- When files are generated, we have few ideas:  
-  * Directly serving files, easy but will put a burden on transcode server and latency will not be fast.
-  * Push files into a remote storage (**AWS preferred - not yet**): (I'm using IPFS currently but only for "using IPFS" demo purpose), then rewrite the index.m3u8 file (video players use this files
-know where to retrive files to play) pointing to the remote location.
-- The storage is also a problem, but we will look into it at another time (CephFS) for distributed file storage?
+- Ingestion: The RTMP is used to get the content of the livestream through OBS  
+- Transcode: From the RTMP, use FFMpeg to generate the HLS files which also has adaptive bitrate streaming (ABS) for 360p, 720p and 1080p  
+- When files are generated, segments are stored:  
+  * Directly serving files, easy but will put a burden on transcode server.  
+  * Push files into a remote storage, which we are using MinIO.  
+  * Using a IPFS private network, I have implemented it but only for "using IPFS" demo purpose, otherwise there are no real usecases for using IPFS in livestreaming system, maybe except VOD  
 
 ## TECHNOLOGIES AND TOOLS
 - Golang, PostgresQL.
 - FFMpeg for transcoding from RTMP to HLS.
-- Consul with Kong API Gateway for service discovery and api gateway.
-- Storage: IPFS.
-- Docker Compose
+- Consul for service discovery and Kong for API Gateway.
+- Storage: IPFS or MinIO.
+- Docker and Docker Compose for up and running.
+- NextJS, ReactJS and TailwindCSS for UI.
 
 ## ARCHITECTURE  
 ### WITH IPFS  
 ![IPFS ARCHITECTURE](docs/ipfs_architecture.png)
 
-### WITH IPFS  
+### WITH MINIO  
 ![MINIO ARCHITECTURE](docs/minio_architecture.png)
+
+## ROADMAP
+
+* Support streaming from browser.
+* gRPC support.
+* Chat
+* Kafka
+
+Last editted: 15/02/2025  
+**[Editor: Nam Huynh](https://github.com/ThNam203)**
