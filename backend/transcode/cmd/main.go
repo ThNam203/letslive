@@ -45,18 +45,17 @@ func main() {
 	MyWebServer := webserver.NewWebServer(config.Webserver.Port, allowedSuffixes[:], config.Transcode.PublicHLSPath)
 	MyWebServer.ListenAndServe()
 
-	// TODO: find a way to remove the ipfsVOD from the rtmp, or change the design or config
 	var vodHandler watcher.VODHandler
 
 	if config.IPFS.Enabled {
-		vodHandler = ipfswatcher.GetIPFSVODHandler()
+		vodHandler = ipfswatcher.GetIPFSVODHandler(config.IPFS)
 		ipfsStorage := ipfsstorage.NewIPFSStorage(context.Background(), config.IPFS.Gateway, &config.IPFS.BootstrapNodeAddr)
 		ipfsWatcherStrategy := ipfswatcher.NewIPFSStorageWatcherStrategy(vodHandler, ipfsStorage, *config)
 		watcher := watcher.NewFFMpegFileWatcher(config.Transcode.PrivateHLSPath, ipfsWatcherStrategy)
 		go watcher.Watch()
 	} else {
 		vodHandler = miniowatcher.GetMinIOVODStrategy()
-		minioStorage := miniostorage.NewMinIOStorage(context.Background())
+		minioStorage := miniostorage.NewMinIOStorage(context.Background(), config.MinIO)
 		minioWatcherStrategy := miniowatcher.NewMinIOFileWatcherStrategy(vodHandler, minioStorage, *config)
 		watcher := watcher.NewFFMpegFileWatcher(config.Transcode.PrivateHLSPath, minioWatcherStrategy)
 		go watcher.Watch()
@@ -64,7 +63,8 @@ func main() {
 
 	userGateway := usergateway.NewUserGateway(registry)
 
-	// TODO: find a way to remove the ipfsVOD from the rtmp, or change the design or config
+	// TODO: find a way to remove the vodHandler from the rtmp, or change the design or config
+	//Use kafka
 	rtmpServer := rtmp.NewRTMPServer(
 		rtmp.RTMPServerConfig{Port: config.RTMP.Port, Registry: &registry, Config: *config, VODHandler: vodHandler},
 		userGateway,

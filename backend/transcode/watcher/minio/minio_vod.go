@@ -78,11 +78,6 @@ func (u *MinIOVODStrategy) OnStreamEnd(publishName string, publicHLSPath string,
 	// copy the master file to vod folder
 	newMasterFilePath := filepath.Join(outputPath, masterFileName)
 	watcher.CopyFile(filepath.Join(masterFileDirPath, masterFileName), newMasterFilePath)
-
-	// generate master files for other gateways
-	for _, otherGatewayURL := range otherGateways {
-		generateMasterFileVODSForOtherGateway(newMasterFilePath, otherGatewayURL)
-	}
 }
 
 func (u *MinIOVODStrategy) generateVariantVODPlaylist(data VODData, index int) string {
@@ -124,15 +119,6 @@ func (u *MinIOVODStrategy) generateVariantVODPlaylists(vodData VODData, outputPa
 		// Write playlist to file
 		if err := os.WriteFile(playlistPath, []byte(playlist), 0644); err != nil {
 			return fmt.Errorf("failed to write playlist file %s: %w", playlistPath, err)
-		}
-
-		// generate for other gateways, TODO: refactor
-		for _, otherGateway := range otherGateways {
-			serverName := otherGateway[7:]
-			playlistNewData := strings.ReplaceAll(playlist, "localhost:8888", serverName)
-			if err := os.WriteFile(filepath.Join(filepath.Dir(playlistPath), serverName+"_stream.m3u8"), []byte(playlistNewData), 0644); err != nil {
-				logger.Errorf("failed to write playlist file for gateway %s: %w", otherGateway, err)
-			}
 		}
 	}
 

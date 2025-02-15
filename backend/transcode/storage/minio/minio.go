@@ -5,43 +5,39 @@ import (
 	"fmt"
 	"path/filepath"
 	"sen1or/lets-live/pkg/logger"
+	"sen1or/lets-live/transcode/config"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-// TODO: make config
-const (
-	endpoint   = "minio:9000"
-	uiEndpoint = "http://localhost:9000"
-	bucketName = "livestreams"
-	useSSL     = false
-	accessKey  = "minioadmin"
-	secretKey  = "minioadmin"
-)
-
-var policy = `{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": ["s3:GetObject"],
-      "Resource": ["arn:aws:s3:::livestreams/*"]
-    }
-  ]
-}`
+func getPolicy(bucketName string) string {
+	return fmt.Sprintf(`{
+		"Version": "2012-10-17",
+  		"Statement": [
+  		  {
+  		    "Effect": "Allow",
+  		    "Principal": "*",
+  		    "Action": ["s3:GetObject"],
+  		    "Resource": ["arn:aws:s3:::%s/*"]
+  		  }
+  		]
+	}`, bucketName)
+}
 
 type MinIOStrorage struct {
 	minioClient *minio.Client
 	ctx         context.Context
+	config      config.MinIO
 }
 
 // If we don't want to connect to bootstrap node, enter a nil value for bootstrapNodeAddr
-func NewMinIOStorage(ctx context.Context) *MinIOStrorage {
+func NewMinIOStorage(ctx context.Context, config config.MinIO) *MinIOStrorage {
 	storage := &MinIOStrorage{
-		ctx: ctx,
+		ctx:    ctx,
+		config: config,
 	}
+
 	if err := storage.SetUp(); err != nil {
 		logger.Panicf("error setting up node: %s", err)
 	}
@@ -50,9 +46,9 @@ func NewMinIOStorage(ctx context.Context) *MinIOStrorage {
 }
 
 func (s *MinIOStrorage) SetUp() error {
-	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
-		Secure: useSSL,
+	minioClient, err := minio.New(fmt.Sprintf("%s:%d", s.config.Host, s.config.Port), &minio.Options{
+		Creds:  credentials.NewStaticV4(s.config.AccessKey, s.config.SecretKey, ""),
+		Secure: false,
 	})
 
 	if err != nil {
@@ -61,17 +57,17 @@ func (s *MinIOStrorage) SetUp() error {
 
 	s.minioClient = minioClient
 
-	exists, err := minioClient.BucketExists(s.ctx, bucketName)
+	exists, err := minioClient.BucketExists(s.ctx, s.config.BucketName)
 	if err != nil {
 		return fmt.Errorf("failed to check bucket: %v", err)
 	}
 	if !exists {
-		err = minioClient.MakeBucket(s.ctx, bucketName, minio.MakeBucketOptions{})
+		err = minioClient.MakeBucket(s.ctx, s.config.BucketName, minio.MakeBucketOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to create bucket: %v", err)
 		}
 
-		err = minioClient.SetBucketPolicy(s.ctx, bucketName, policy)
+		err = minioClient.SetBucketPolicy(s.ctx, s.config.BucketName, getPolicy(s.config.BucketName))
 		if err != nil {
 			return fmt.Errorf("failed to set bucket policy: %v", err)
 		}
@@ -86,8 +82,7 @@ func (s *MinIOStrorage) AddFile(filePath string, streamId string) (string, error
 	objectName := fmt.Sprintf("%s/%s", streamId, fileName)
 
 	// Upload the file
-	// TODO: write config please
-	_, err := s.minioClient.FPutObject(context.Background(), bucketName, objectName, filePath, minio.PutObjectOptions{
+	_, err := s.minioClient.FPutObject(context.Background(), s.config.BucketName, objectName, filePath, minio.PutObjectOptions{
 		ContentType:  "video/mp2t",
 		CacheControl: "max-age=3600",
 	})
@@ -96,7 +91,7 @@ func (s *MinIOStrorage) AddFile(filePath string, streamId string) (string, error
 	}
 
 	// Construct the final URL (public access)
-	finalURL := fmt.Sprintf("%s/%s/%s", uiEndpoint, bucketName, objectName)
+	finalURL := fmt.Sprintf("%s/%s/%s", s.config.ClientHost, s.config.BucketName, objectName)
 
 	return finalURL, nil
 }

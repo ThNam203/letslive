@@ -86,7 +86,6 @@ func (h *AuthHandler) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// TODO: MORE PROPER WAY TO HANDLE USERNAME
 	userId, _ := uuid.NewGen().NewV4()
 	// usernameId, _ := uuid.NewGen().NewV4()
 	// username := "ll-" + usernameId.String()[:5]
@@ -100,7 +99,6 @@ func (h *AuthHandler) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request
 	// The final UserId that will be used to generate token pair
 	var finalUserId uuid.UUID
 
-	// TODO: create user on user service
 	// Check if the user had already singed up before
 	existedRecord, err := h.authCtrl.GetByEmail(returnedOAuthUser.Email)
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {

@@ -11,7 +11,6 @@ import (
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 
-	// TODO: add swagger _ "sen1or/lets-live/auth/docs"
 	"sen1or/lets-live/auth/handlers"
 	"sen1or/lets-live/auth/middlewares"
 	"time"
@@ -32,7 +31,6 @@ type APIServer struct {
 	corsMiddleware    middlewares.Middleware
 }
 
-// TODO: make tls usable
 func NewAPIServer(
 	authHandler *handlers.AuthHandler,
 	registry discovery.Registry,

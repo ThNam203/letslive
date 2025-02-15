@@ -1,8 +1,8 @@
 module sen1or/lets-live
 
-go 1.23
+go 1.24
 
-toolchain go1.23.3
+toolchain go1.24.0
 
 require (
 	github.com/go-playground/validator/v10 v10.22.1
@@ -28,7 +28,6 @@ require (
 	github.com/radovskyb/watcher v1.0.7
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/http-swagger/v2 v2.0.2
-	github.com/swaggo/swag v1.16.4
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.31.0
 	golang.org/x/oauth2 v0.24.0
@@ -187,6 +186,7 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
+	github.com/swaggo/swag v1.16.4 // indirect
 	github.com/whyrusleeping/chunker v0.0.0-20181014151217-fe64bd25879f // indirect
 	github.com/whyrusleeping/go-keyspace v0.0.0-20160322163242-5b898ac5add1 // indirect
 	github.com/wlynxg/anet v0.0.5 // indirect

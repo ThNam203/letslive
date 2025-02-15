@@ -30,7 +30,6 @@ type APIServer struct {
 	corsMiddleware    middlewares.Middleware
 }
 
-// TODO: make tls usable
 func NewAPIServer(userHandler *handlers.UserHandler, cfg config.Config) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,

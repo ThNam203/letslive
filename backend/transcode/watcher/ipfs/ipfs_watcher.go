@@ -15,9 +15,6 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
-// TODO: put it into config
-var otherGateways = []string{"http://localhost:8890", "http://localhost:8891"}
-
 func getSegmentFromPath(segmentFullPath string) (*domains.HLSSegment, error) {
 	pathComponents := strings.Split(segmentFullPath, "/")
 	index, err := strconv.Atoi(pathComponents[len(pathComponents)-2])
@@ -38,10 +35,6 @@ func getSegmentFromPath(segmentFullPath string) (*domains.HLSSegment, error) {
 
 var streams = make(map[string]domains.HLSStream)
 
-// there is another type of Storage (KuboStorage which implements my Storage inteface)
-// but it has so many features and my custom storage can not implement the Storage interface right now
-// so for now I will use the CustomStorage directly (not using the Storage Interface)
-// TODO: hope to be able to implement the Storage interface to the CustomStorage
 type IPFSFileWatcherStrategy struct {
 	storage storage.Storage
 	config  config.Config
@@ -93,7 +86,7 @@ func (w *IPFSFileWatcherStrategy) OnMaster(event watcher.Event) {
 		logger.Errorw("failed to copy master file", err)
 	}
 
-	for _, otherGateway := range otherGateways {
+	for _, otherGateway := range w.config.SubGateways {
 		mywatcher.CopyMasterFileForOtherGateway(event.Path, otherGateway, w.config.Transcode.PublicHLSPath)
 	}
 }
@@ -115,7 +108,7 @@ func (w *IPFSFileWatcherStrategy) OnVariant(event watcher.Event) {
 	variantIndexStr := strconv.Itoa(info.VariantIndex)
 
 	mywatcher.WritePlaylist(newPlaylist, filepath.Join(w.config.Transcode.PublicHLSPath, info.PublishName, variantIndexStr, info.Filename))
-	for _, otherGateway := range otherGateways {
+	for _, otherGateway := range w.config.SubGateways {
 		serverName := otherGateway[7:]
 		if err := mywatcher.WritePlaylistForOtherGateway(newPlaylist, w.config.IPFS.Gateway, otherGateway, filepath.Join(w.config.Transcode.PublicHLSPath, info.PublishName, variantIndexStr, serverName+"_stream.m3u8")); err != nil {
 			logger.Errorf("failed to write playlist for other gateways: %s", err)

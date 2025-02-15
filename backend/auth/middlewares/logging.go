@@ -74,7 +74,5 @@ func (m *LoggingMiddleware) GetMiddleware(next http.Handler) http.Handler {
 				m.logger.Errorw("failed api call: "+err, fields...)
 			}
 		}
-
-		// TODO: prometheus
 	})
 }

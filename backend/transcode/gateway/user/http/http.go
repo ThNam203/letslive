@@ -25,7 +25,6 @@ func NewUserGateway(registry discovery.Registry) *UserGateway {
 	}
 }
 
-// TODO: make a config instead of passing everything
 func (g *UserGateway) GetUserInformation(ctx context.Context, streamAPIKey string) (*dto.GetUserResponseDTO, *ErrorResponse) {
 	addr, err := g.registry.ServiceAddress(ctx, "user")
 	if err != nil {
