@@ -53,6 +53,18 @@ services:
         request_buffering: true
         response_buffering: true
 
+  - name: Chat
+    host: chat.service.consul
+    port: 7780
+    routes:
+      - name: ChatRoute
+        paths:
+          - /ws
+        strip_path: false
+        protocols:
+          - http
+          - https
+
 consumers:
   - username: "authenticated users"
     keyauth_credentials:

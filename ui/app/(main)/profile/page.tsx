@@ -31,10 +31,10 @@ export default function ProfilePage() {
     }, []);
 
     return (
-        <div className="container mx-auto py-10">
+        <div className="container mx-auto">
             <Card>
                 <CardHeader>
-                    <CardTitle>Profile Settings</CardTitle>
+                    <CardTitle className="text-3xl">Settings</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Tabs value={activeTab} onValueChange={setActiveTab}>

@@ -17,7 +17,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "consul": "^2.0.1",
     "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "ioredis": "^5.5.0",
     "mongoose": "^8.10.0"
   },
@@ -25,6 +27,7 @@
     "@babel/preset-typescript": "^7.26.0",
     "@eslint/js": "^9.20.0",
     "@jest/globals": "^29.7.0",
+    "@types/express": "^5.0.0",
     "@types/ioredis": "^4.28.10",
     "@types/ioredis-mock": "^8.2.5",
     "@types/jest": "^29.5.14",
