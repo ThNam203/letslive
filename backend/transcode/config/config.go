@@ -4,19 +4,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"sen1or/lets-live/pkg/logger"
 
 	"gopkg.in/yaml.v3"
 )
 
-var (
-	CONFIG_SERVER_PROTOCOL             = os.Getenv("CONFIG_SERVER_PROTOCOL")
-	CONFIG_SERVER_ADDRESS              = os.Getenv("CONFIG_SERVER_ADDRESS")
-	CONFIG_SERVER_SERVICE_APPLICATION  = os.Getenv("CONFIG_SERVER_SERVICE_APPLICATION")
-	CONFIG_SERVER_SERVICE_PROFILE      = os.Getenv("CONFIG_SERVER_SERVICE_PROFILE")
-	CONFIG_SERVER_REGISTRY_APPLICATION = os.Getenv("CONFIG_SERVER_REGISTRY_APPLICATION")
-	CONFIG_SERVER_REGISTRY_PROFILE     = os.Getenv("CONFIG_SERVER_REGISTRY_PROFILE")
+const (
+	CONFIG_SERVER_PROTOCOL             = "http"
+	CONFIG_SERVER_ADDRESS              = "configserver:8181"
+	CONFIG_SERVER_SERVICE_APPLICATION  = "transcode_service"
+	CONFIG_SERVER_SERVICE_PROFILE      = "default"
+	CONFIG_SERVER_REGISTRY_APPLICATION = "registry_service"
+	CONFIG_SERVER_REGISTRY_PROFILE     = "default"
 )
 
 type Service struct {
