@@ -8,7 +8,7 @@ export default function RootLayout({
 }>) {
 
   return (
-    <div className="h-screen w-screen overflow-hidden">
+    <div className="h-screen w-screen">
       <Header />
       <div className="w-full h-[calc(100%-48px)] flex flex-row">
         <LeftBar />
