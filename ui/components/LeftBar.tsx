@@ -3,7 +3,6 @@ import { ClassValue } from "clsx";
 import { cn } from "@/utils/cn";
 import { ReactNode } from "react";
 import user_avatar from "@/public/images/user_avatar.jpeg";
-import IconButton from "@/components/buttons/IconBtn";
 import RoundedImage from "@/components/images/RoundedImage";
 import AllChannelsView from "@/components/leftbar/AllChannelsView";
 

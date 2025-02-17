@@ -2,8 +2,7 @@ import { cn } from "@/utils/cn";
 import user_avatar from "@/public/images/user_avatar.jpeg";
 import Image from "next/image";
 import { LuMoreVertical } from "react-icons/lu";
-import IconButton from "@/components/buttons/IconBtn";
-import TagButton from "@/components/buttons/TagBtn";
+import { Button } from "@/components/ui/button";
 
 const LivestreamPreviewDetailView = ({
     title,
@@ -33,7 +32,7 @@ const LivestreamPreviewDetailView = ({
                         {title}
                     </span>
 
-                    <IconButton icon={<LuMoreVertical className="w-4 h-4" />} />
+                    <Button><LuMoreVertical className="w-4 h-4" /></Button>
                 </div>
                 <div className="text-sm text-secondaryWord cursor-pointer">
                     {username}
@@ -43,7 +42,7 @@ const LivestreamPreviewDetailView = ({
                 </div>
                 <div className="flex flex-row gap-2 justify-self-end">
                     {tags.map((tag, idx) => {
-                        return <TagButton key={idx} content={tag} />;
+                        return <Button key={idx} content={tag} />;
                     })}
                 </div>
             </div>

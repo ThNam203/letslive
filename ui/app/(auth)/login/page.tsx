@@ -1,26 +1,31 @@
-import OAuthLoginBtn from "@/components/buttons/OAuthLoginBtn";
+import { Button } from "@/components/ui/button";
 import LogInForm from "@/components/forms/LoginForm";
 import { IconFacebook } from "@/components/icons/facebook";
 import { IconGoogle } from "@/components/icons/google";
 
 import GLOBAL from "@/global";
+import Link from "next/link";
 
 export default function LogInPage() {
     return (
         <section className="flex items-center justify-center h-screen w-screen">
-            <div className="flex flex-col justify-center rounded-xl p-12 bg-white">
+            <div className="flex flex-col justify-center rounded-xl p-12 bg-white w-full max-w-[600px]">
                 <h1 className="text-lg font-bold">LET&apos;S LIVE</h1>
-                <h1 className="text-2xl font-bold mb-1">
-                    Welcome back!
-                </h1>
+                <h1 className="text-2xl font-bold mb-1">Welcome back!</h1>
                 <p className="text-md">Gain access to the world right now.</p>
                 <div className="flex gap-2 mb-2 mt-4">
-                    <OAuthLoginBtn url={GLOBAL.API_URL + "/auth/google"}>
-                        <IconGoogle/> Google
-                    </OAuthLoginBtn>
-                    <OAuthLoginBtn url={GLOBAL.API_URL + "/auth/google"}>
-                        <IconFacebook/> Facebook
-                    </OAuthLoginBtn>
+                    <Link
+                        href={GLOBAL.API_URL + "/auth/google"}
+                        className="flex-1 flex flex-row items-center justify-center gap-4 border-1 py-2 rounded-lg hover:bg-gray-200"
+                    >
+                        <IconGoogle /> Google
+                    </Link>
+                    <Link
+                        href={GLOBAL.API_URL + "/auth/facebook"}
+                        className="flex-1 flex flex-row items-center justify-center gap-4 border-1 py-2 rounded-lg hover:bg-gray-200"
+                    >
+                        <IconFacebook /> Facebook
+                    </Link>
                 </div>
                 <div className="flex items-center justify-center w-full mt-2 mb-4">
                     <hr className="bg-gray-400 h-[2px] flex-1" />
