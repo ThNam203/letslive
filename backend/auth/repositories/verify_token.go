@@ -14,6 +14,7 @@ type VerifyTokenRepository interface {
 	GetByValue(token string) (*domains.VerifyToken, error)
 	DeleteByID(uuid.UUID) error
 	DeleteByValue(token string) error
+	DeleteAllOfUser(userId uuid.UUID) error
 }
 
 type postgresVerifyTokenRepo struct {
@@ -61,5 +62,10 @@ func (r *postgresVerifyTokenRepo) DeleteByID(tokenID uuid.UUID) error {
 
 func (r *postgresVerifyTokenRepo) DeleteByValue(token string) error {
 	_, err := r.dbConn.Exec(context.Background(), "DELETE FROM verify_tokens WHERE token = $1", token)
+	return err
+}
+
+func (r *postgresVerifyTokenRepo) DeleteAllOfUser(userId uuid.UUID) error {
+	_, err := r.dbConn.Exec(context.Background(), "DELETE FROM verify_tokens WHERE user_id = $1", userId)
 	return err
 }

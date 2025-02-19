@@ -10,6 +10,7 @@ import (
 	"sen1or/lets-live/user/dto"
 	transcodegateway "sen1or/lets-live/user/gateway/transcode"
 	"sen1or/lets-live/user/repositories"
+	minio "sen1or/lets-live/user/services"
 	"sen1or/lets-live/user/types"
 	"sen1or/lets-live/user/utils"
 
@@ -19,14 +20,16 @@ import (
 
 type UserHandler struct {
 	ErrorHandler
+	minioClient      *minio.MinIOStrorage
 	ctrl             controllers.UserController
 	transcodeGateway transcodegateway.TranscodeGateway
 }
 
-func NewUserHandler(ctrl controllers.UserController, transcodeGateway transcodegateway.TranscodeGateway) *UserHandler {
+func NewUserHandler(ctrl controllers.UserController, transcodeGateway transcodegateway.TranscodeGateway, minioClient *minio.MinIOStrorage) *UserHandler {
 	return &UserHandler{
 		ctrl:             ctrl,
 		transcodeGateway: transcodeGateway,
+		minioClient:      minioClient,
 	}
 }
 
@@ -129,28 +132,12 @@ func (h *UserHandler) GetUserByQueries(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) GetCurrentUserInfo(w http.ResponseWriter, r *http.Request) {
-	accessTokenCookie, err := r.Cookie("ACCESS_TOKEN")
-	if err != nil || len(accessTokenCookie.Value) == 0 {
-		h.WriteErrorResponse(w, http.StatusForbidden, errors.New("missing credentials"))
-		return
-	}
-
-	myClaims := types.MyClaims{}
-
-	// the signature should already been checked from the api gateway before going to this
-	_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
+	userUUID, err := h.getUserIdFromCookie(r)
 	if err != nil {
-		h.WriteErrorResponse(w, http.StatusForbidden, fmt.Errorf("invalid access token: %s", err))
+		h.WriteErrorResponse(w, http.StatusUnauthorized, err)
 		return
 	}
-
-	userUUID, err := uuid.FromString(myClaims.UserId)
-	if err != nil {
-		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("userId not valid"))
-		return
-	}
-
-	user, err := h.ctrl.GetById(userUUID)
+	user, err := h.ctrl.GetById(*userUUID)
 	if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
 		h.WriteErrorResponse(w, http.StatusNotFound, errors.New("user not found"))
 		return
@@ -176,7 +163,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedUser, err := h.ctrl.Create(body)
+	createdUser, err := h.ctrl.Create(body)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
@@ -184,24 +171,42 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(updatedUser)
+	json.NewEncoder(w).Encode(createdUser)
 }
 
-func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	userID := r.PathValue("id")
-	defer r.Body.Close()
-
-	if len(userID) == 0 {
+// INTERNAL
+func (h *UserHandler) SetUserVerified(w http.ResponseWriter, r *http.Request) {
+	userId := r.PathValue("userId")
+	if len(userId) == 0 {
 		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing user id"))
 		return
 	}
+
+	userUUID, err := uuid.FromString(userId)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("user id not valid"))
+		return
+	}
+
+	h.ctrl.UpdateUserVerified(userUUID)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) {
+	userUUID, err := h.getUserIdFromCookie(r)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusUnauthorized, err)
+		return
+	}
+	defer r.Body.Close()
 
 	var requestBody dto.UpdateUserRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error decoding request body: %s", err.Error()))
 		return
 	}
-	requestBody.Id = uuid.FromStringOrNil(userID)
+
+	requestBody.Id = uuid.FromStringOrNil(userUUID.String())
 
 	if err := utils.Validator.Struct(&requestBody); err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error validating payload: %s", err))
@@ -220,4 +225,146 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(updatedUser)
+}
+
+func (h *UserHandler) GenerateNewAPIStreamKey(w http.ResponseWriter, r *http.Request) {
+	userUUID, err := h.getUserIdFromCookie(r)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusUnauthorized, err)
+		return
+	}
+	defer r.Body.Close()
+
+	newKey, err := h.ctrl.UpdateStreamAPIKey(*userUUID)
+	if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
+		h.WriteErrorResponse(w, http.StatusNotFound, errors.New("user not found"))
+		return
+	} else if err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(newKey))
+}
+
+func (h *UserHandler) UpdateUserProfilePicture(w http.ResponseWriter, r *http.Request) {
+	const maxUploadSize = 10 * 1024 * 1024
+	userUUID, err := h.getUserIdFromCookie(r)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusUnauthorized, err)
+		return
+	}
+	defer r.Body.Close()
+
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+
+	if err := r.ParseMultipartForm(0); err != nil {
+		var maxByteError *http.MaxBytesError
+		if errors.As(err, &maxByteError) {
+			h.WriteErrorResponse(w, http.StatusRequestEntityTooLarge, err)
+			return
+		}
+
+		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error decoding request body: %s", err.Error()))
+		return
+	}
+
+	file, fileHeader, err := r.FormFile("profile-picture")
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	savedPath, err := h.minioClient.AddFile(file, fileHeader, "profile-pictures")
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("failed to save the picture: %s", savedPath))
+		return
+	}
+
+	err = h.ctrl.UpdateProfilePicture(*userUUID, savedPath)
+	if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
+		h.WriteErrorResponse(w, http.StatusNotFound, errors.New("user not found"))
+		return
+	} else if err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte(savedPath))
+}
+
+func (h *UserHandler) UpdateUserBackgroundPicture(w http.ResponseWriter, r *http.Request) {
+	const maxUploadSize = 10 * 1024 * 1024
+	userUUID, err := h.getUserIdFromCookie(r)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusUnauthorized, err)
+		return
+	}
+	defer r.Body.Close()
+
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+
+	if err := r.ParseMultipartForm(0); err != nil {
+		var maxByteError *http.MaxBytesError
+		if errors.As(err, &maxByteError) {
+			h.WriteErrorResponse(w, http.StatusRequestEntityTooLarge, err)
+			return
+		}
+
+		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error parsing request body: %s", err.Error()))
+		return
+	}
+
+	file, fileHeader, err := r.FormFile("background-picture")
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, err)
+		return
+	}
+
+	savedPath, err := h.minioClient.AddFile(file, fileHeader, "background-pictures")
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("failed to save the picture: %s", savedPath))
+		return
+
+	}
+
+	err = h.ctrl.UpdateBackgroundPicture(*userUUID, savedPath)
+	if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
+		h.WriteErrorResponse(w, http.StatusNotFound, errors.New("user not found"))
+		return
+	} else if err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte(savedPath))
+
+}
+
+func (u *UserHandler) getUserIdFromCookie(r *http.Request) (*uuid.UUID, error) {
+	accessTokenCookie, err := r.Cookie("ACCESS_TOKEN")
+	if err != nil || len(accessTokenCookie.Value) == 0 {
+		return nil, errors.New("missing credentials")
+	}
+
+	myClaims := types.MyClaims{}
+
+	// the signature should already been checked from the api gateway before going to this
+	_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
+	if err != nil {
+		return nil, fmt.Errorf("invalid access token: %s", err)
+	}
+
+	userUUID, err := uuid.FromString(myClaims.UserId)
+	if err != nil {
+		return nil, errors.New("userId not valid")
+	}
+
+	return &userUUID, nil
 }

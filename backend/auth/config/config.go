@@ -38,10 +38,6 @@ type Config struct {
 		RefreshTokenMaxAge int `yaml:"refresh-token-max-age"`
 		AccessTokenMaxAge  int `yaml:"access-token-max-age"`
 	} `yaml:"tokens"`
-	SSL struct {
-		ServerCrtFile string `yaml:"server-crt-file"`
-		ServerKeyFile string `yaml:"server-key-file"`
-	} `yaml:"ssl"`
 	Database struct {
 		MigrationPath    string   `yaml:"migration-path"`
 		User             string   `yaml:"user"`
@@ -52,6 +48,9 @@ type Config struct {
 		Params           []string `yaml:"params"`
 		ConnectionString string
 	} `yaml:"database"`
+	Verification struct {
+		Gateway string `yaml:"gateway"`
+	} `yaml:"verification"`
 }
 
 func RetrieveConfig() *Config {

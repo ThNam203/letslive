@@ -91,9 +91,8 @@ func (h *AuthHandler) OAuthGoogleCallBack(w http.ResponseWriter, r *http.Request
 	// username := "ll-" + usernameId.String()[:5]
 
 	newOAuthUserRecord := &domains.Auth{
-		Id:         userId,
-		Email:      returnedOAuthUser.Email,
-		IsVerified: returnedOAuthUser.VerifiedEmail,
+		Id:    userId,
+		Email: returnedOAuthUser.Email,
 	}
 
 	// The final UserId that will be used to generate token pair

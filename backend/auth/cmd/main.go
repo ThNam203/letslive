@@ -16,12 +16,13 @@ import (
 	usergateway "sen1or/lets-live/auth/gateway/user/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	_ "github.com/joho/godotenv/autoload"
+	"github.com/joho/godotenv"
 )
 
 func main() {
 	ctx := context.Background()
 
+	godotenv.Load("auth/.env")
 	logger.Init(logger.LogLevel(logger.Debug))
 	config := cfg.RetrieveConfig()
 	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
@@ -53,7 +54,7 @@ func ConnectDB(ctx context.Context, config *cfg.Config) *pgxpool.Pool {
 func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry, config *cfg.Config) {
 	serviceName := config.Service.Name
 	serviceHostPort := fmt.Sprintf("%s:%d", config.Service.Hostname, config.Service.APIPort)
-	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/auth/health", serviceHostPort)
+	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/health", serviceHostPort)
 	instanceID := discovery.GenerateInstanceID(serviceName)
 
 	if err := registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, serviceName, instanceID, config.Registry.RegistryService.Tags); err != nil {
@@ -79,8 +80,7 @@ func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Conf
 	var authCtrl = controllers.NewAuthController(userRepo)
 	var tokenCtrl = controllers.NewTokenController(refreshTokenRepo, types.TokenControllerConfig(cfg.Tokens))
 	var verifyTokenCtrl = controllers.NewVerifyTokenController(verifyTokenRepo)
-	authServerURL := fmt.Sprintf("http://%s:%d", cfg.Service.Hostname, cfg.Service.APIPort)
 	userGateway := usergateway.NewUserGateway(registry)
-	var authHandler = handlers.NewAuthHandler(tokenCtrl, authCtrl, verifyTokenCtrl, authServerURL, userGateway)
+	var authHandler = handlers.NewAuthHandler(tokenCtrl, authCtrl, verifyTokenCtrl, cfg.Verification.Gateway, userGateway)
 	return NewAPIServer(authHandler, registry, cfg)
 }

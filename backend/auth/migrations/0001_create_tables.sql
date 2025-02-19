@@ -5,7 +5,6 @@ CREATE TABLE "auths" (
   "id" uuid DEFAULT uuid_generate_v4(), 
   "email" text NOT NULL, 
   "password_hash" text, 
-  "is_verified" boolean NOT NULL DEFAULT false, 
   "created_at" timestamptz DEFAULT current_timestamp, 
   "user_id" uuid NOT NULL,
   PRIMARY KEY ("id"), 

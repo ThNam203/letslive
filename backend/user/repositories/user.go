@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"errors"
-	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/user/domains"
 
 	"github.com/gofrs/uuid/v5"
@@ -22,6 +21,10 @@ type UserRepository interface {
 
 	Create(domains.User) (*domains.User, error)
 	Update(domains.User) (*domains.User, error)
+	UpdateUserVerified(userId uuid.UUID) error
+	UpdateStreamAPIKey(userId uuid.UUID, newKey string) error
+	UpdateProfilePicture(uuid.UUID, string) error
+	UpdateBackgroundPicture(uuid.UUID, string) error
 	Delete(uuid.UUID) error
 }
 
@@ -189,8 +192,16 @@ func (r *postgresUserRepo) Create(newUser domains.User) (*domains.User, error) {
 }
 
 func (r *postgresUserRepo) Update(user domains.User) (*domains.User, error) {
-	logger.Infof("UPDATE users SET username = %s, is_online = %v WHERE id = %s RETURNING *", user.Username, user.IsOnline, user.Id)
-	rows, err := r.dbConn.Query(context.Background(), "UPDATE users SET username = $1, is_online = $2 WHERE id = $3 RETURNING *", user.Username, user.IsOnline, user.Id)
+	params := pgx.NamedArgs{
+		"id":           user.Id,
+		"is_online":    user.IsOnline,
+		"is_active":    user.IsActive,
+		"display_name": user.DisplayName,
+		"phone_number": user.PhoneNumber,
+		"bio":          user.Bio,
+	}
+
+	rows, err := r.dbConn.Query(context.Background(), "UPDATE users SET is_online = @is_online, is_active = @is_active, display_name = @display_name, phone_number = @phone_number, bio = @bio WHERE id = @id RETURNING *", params)
 	if err != nil {
 		return nil, err
 	}
@@ -208,6 +219,42 @@ func (r *postgresUserRepo) Update(user domains.User) (*domains.User, error) {
 	return &updatedUser, err
 }
 
+func (r *postgresUserRepo) UpdateStreamAPIKey(userId uuid.UUID, newKey string) error {
+	_, err := r.dbConn.Query(context.Background(), "UPDATE users SET stream_api_key = $1 WHERE id = $2", newKey, userId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrRecordNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (r *postgresUserRepo) UpdateProfilePicture(userId uuid.UUID, path string) error {
+	_, err := r.dbConn.Exec(context.Background(), "UPDATE users SET profile_picture = $1 WHERE id = $2", path, userId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrRecordNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (r *postgresUserRepo) UpdateBackgroundPicture(userId uuid.UUID, path string) error {
+	_, err := r.dbConn.Exec(context.Background(), "UPDATE users SET background_picture = $1 WHERE id = $2", path, userId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrRecordNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
 func (r *postgresUserRepo) Delete(userID uuid.UUID) error {
 	_, err := r.dbConn.Exec(context.Background(), "DELETE FROM users WHERE id = $1", userID.String())
 	if err != nil {
@@ -219,4 +266,18 @@ func (r *postgresUserRepo) Delete(userID uuid.UUID) error {
 	}
 
 	return err
+}
+
+func (r *postgresUserRepo) UpdateUserVerified(userId uuid.UUID) error {
+	_, err := r.dbConn.Exec(context.Background(), "UPDATE users SET is_verified = $1 WHERE id = $2", true, userId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrRecordNotFound
+		}
+
+		return err // lol
+	}
+
+	return err
+
 }

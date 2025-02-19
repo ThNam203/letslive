@@ -14,7 +14,6 @@ import (
 
 	"time"
 
-	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
 )
 
@@ -55,21 +54,7 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 
-	go func() {
-		if useTLS {
-			if _, err := os.Stat(a.config.SSL.ServerCrtFile); err != nil {
-				log.Panic("error cant get server cert file", err.Error())
-			}
-
-			if _, err := os.Stat(a.config.SSL.ServerKeyFile); err != nil {
-				log.Panic("error cant get server key file", err.Error())
-			}
-
-			log.Panic("server ends: ", server.ListenAndServeTLS(a.config.SSL.ServerCrtFile, a.config.SSL.ServerKeyFile))
-		} else {
-			log.Panic("server ends: ", server.ListenAndServe())
-		}
-	}()
+	go log.Panic("server ends: ", server.ListenAndServe())
 
 	log.Printf("server running on addr: %s", server.Addr)
 	<-quit
@@ -86,15 +71,6 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 	logger.Infow("server exited gracefully")
 }
 
-// @title           Let's Live API
-// @version         0.1
-// @description     The server API
-
-// @contact.name   Nam Huynh
-// @contact.email  hthnam203@gmail.com
-
-// @host      localhost:8000
-// @BasePath  /v1
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
@@ -102,17 +78,15 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("GET /v1/user/{id}", a.userHandler.GetUserByID)
 	sm.HandleFunc("GET /v1/user", a.userHandler.GetUserByQueries)
 	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUser)
-	sm.HandleFunc("PUT /v1/user/{id}", a.userHandler.UpdateUser)
+
 	sm.HandleFunc("GET /v1/user/me", a.userHandler.GetCurrentUserInfo)
+	sm.HandleFunc("PUT /v1/user/me", a.userHandler.UpdateCurrentUser)
+	sm.HandleFunc("PATCH /v1/user/{userId}/set-verified", a.userHandler.SetUserVerified)
+	sm.HandleFunc("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKey)
+	sm.HandleFunc("PATCH /v1/user/me/profile_picture", a.userHandler.UpdateUserProfilePicture)
+	sm.HandleFunc("PATCH /v1/user/me/background_picture", a.userHandler.UpdateUserBackgroundPicture)
 
-	sm.HandleFunc("GET /v1/user/health", a.healthHandler.GetHealthyState)
-
-	sm.HandleFunc("GET /v1/swagger", httpSwagger.Handler(
-		httpSwagger.URL(fmt.Sprintf("http://%s:%d/swagger/doc.json", a.config.Service.Hostname, a.config.Service.APIPort)),
-		httpSwagger.DeepLinking(true),
-		httpSwagger.DocExpansion("none"),
-		httpSwagger.DomID("swagger-ui"),
-	))
+	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 
 	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)
 

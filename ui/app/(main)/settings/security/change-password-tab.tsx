@@ -1,31 +1,67 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import FormErrorText from "@/components/forms/FormErrorText";
+import { ChangePassword } from "@/lib/api/auth";
+import { toast } from "react-toastify";
+import { FetchError } from "@/types/fetch-error";
+import { Loader } from "lucide-react";
+import { set } from "date-fns";
 
-export default function ChangePasswordTab({ userId }: { userId: string | undefined}) {
+export default function ChangePasswordTab() {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
     const [updatePasswordError, setUpdatePasswordError] = useState("");
     const [confirmPasswordError, setConfirmPasswordError] = useState("");
+    const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (userId == undefined || !validatePassword()) return;
+        if (!validatePassword()) return;
+
+        setIsUpdatingPassword(true);
+        const {fetchError} = await ChangePassword({
+            oldPassword: currentPassword,
+            newPassword: newPassword,
+        })
+        
+        setIsUpdatingPassword(false);
+
+        if (fetchError) {
+            setUpdatePasswordError(fetchError.message);
+            return;
+        }
+
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setUpdatePasswordError("");
+        
+        toast("Password updated successfully", { type: "success" });
     };
 
     const validatePassword = () => {
         if (newPassword !== confirmPassword) {
             setConfirmPasswordError("Passwords do not match");
             return false;
+        } else setConfirmPasswordError("");
+
+        if (newPassword.length < 8 || currentPassword.length < 8) {
+            setUpdatePasswordError("Password must be at least 8 characters");
+            return false;
         }
 
-        return true
+        if (newPassword === currentPassword) {
+            setUpdatePasswordError("New password must be different from current password");
+            return false;
+        }
+
+        return true;
     };
 
     return (
@@ -61,7 +97,15 @@ export default function ChangePasswordTab({ userId }: { userId: string | undefin
                 />
             </div>
             <FormErrorText textError={confirmPasswordError} />
-            <Button type="submit">Change Password</Button>
+            <FormErrorText textError={updatePasswordError} />
+            <Button
+                disabled={isUpdatingPassword}
+                className="disabled:bg-gray-300 float-right"
+                type="submit"
+            >
+                {isUpdatingPassword && <Loader className="animate-spin" />}
+                Confirm
+            </Button>
         </form>
     );
 }

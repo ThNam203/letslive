@@ -8,4 +8,5 @@ import (
 
 type UserGateway interface {
 	CreateNewUser(ctx context.Context, userRequestDTO dto.CreateUserRequestDTO) (*dto.CreateUserResponseDTO, *gateway.ErrorResponse)
+	UpdateUserVerified(ctx context.Context, userId string) *gateway.ErrorResponse
 }

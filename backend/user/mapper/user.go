@@ -7,40 +7,36 @@ import (
 
 func CreateUserRequestDTOToUser(dto dto.CreateUserRequestDTO) *domains.User {
 	return &domains.User{
-		Username: dto.Username,
-		Email:    dto.Email,
-	}
-}
-
-func UserToCreateUserResponseDTO(user domains.User) *dto.CreateUserResponseDTO {
-	return &dto.CreateUserResponseDTO{
-		Id:           user.Id,
-		Username:     user.Username,
-		Email:        user.Email,
-		IsOnline:     user.IsOnline,
-		CreatedAt:    user.CreatedAt,
-		StreamAPIKey: user.StreamAPIKey,
+		Username:   dto.Username,
+		Email:      dto.Email,
+		IsVerified: dto.IsVerified,
 	}
 }
 
 func UserToGetUserResponseDTO(user domains.User) *dto.GetUserResponseDTO {
 	return &dto.GetUserResponseDTO{
-		Id:           user.Id,
-		Username:     user.Username,
-		Email:        user.Email,
-		IsOnline:     user.IsOnline,
-		CreatedAt:    user.CreatedAt,
-		StreamAPIKey: user.StreamAPIKey,
+		Id:                user.Id,
+		Username:          user.Username,
+		Email:             user.Email,
+		IsOnline:          user.IsOnline,
+		IsVerified:        user.IsVerified,
+		CreatedAt:         user.CreatedAt,
+		StreamAPIKey:      user.StreamAPIKey,
+		PhoneNumber:       user.PhoneNumber,
+		Bio:               user.Bio,
+		DisplayName:       user.DisplayName,
+		ProfilePicture:    user.ProfilePicture,
+		BackgroundPicture: user.BackgroundPicture,
+		VODs:              []string{},
 	}
 }
 
-func UserToUpdateUserResponseDTO(user domains.User) *dto.UpdateUserResponseDTO {
-	return &dto.UpdateUserResponseDTO{
-		Id:           user.Id,
-		Username:     user.Username,
-		Email:        user.Email,
-		IsOnline:     user.IsOnline,
-		CreatedAt:    user.CreatedAt,
-		StreamAPIKey: user.StreamAPIKey,
+func UpdateUserRequestDTOToUser(dto dto.UpdateUserRequestDTO) domains.User {
+	return domains.User{
+		Id:          dto.Id,
+		IsOnline:    *dto.IsOnline,
+		PhoneNumber: dto.PhoneNumber,
+		DisplayName: dto.DisplayName,
+		Bio:         dto.Bio,
 	}
 }
