@@ -17,12 +17,13 @@ import (
 
 	"sen1or/lets-live/pkg/discovery"
 
-	_ "github.com/joho/godotenv/autoload"
+	"github.com/joho/godotenv"
 )
 
 func main() {
 	ctx := context.Background()
 
+	godotenv.Load("transcode/.env")
 	logger.Init(logger.LogLevel(logger.Debug))
 	config := cfg.RetrieveConfig()
 

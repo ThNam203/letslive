@@ -54,9 +54,6 @@ export const fetchClient = async <T>(
 
     const defaultHeaders: Record<string, string> = {
         'Cache-Control': 'no-store',
-        ...(options.method?.toUpperCase() !== "GET" && 
-            options.method?.toUpperCase() !== "HEAD" && 
-            { "Content-Type": "application/json" })
     };
 
     const headers = {
@@ -127,17 +124,19 @@ export const fetchClient = async <T>(
 async function validateAndParseResponse<T>(response: Response): Promise<T> {
     const contentType = response.headers.get("content-type");
 
-    if (response.status === 204 || !contentType || !contentType.includes("application/json")) {
+    if (response.status === 204 || !contentType) {
         return {} as T;
     }
 
     try {
+        if (contentType.includes("text/plain")) return (await response.text()) as T;
+
         const data = await response.json();
         return data as T;
     } catch (error) {
         throw new FetchError(
             'parse-error',
-            'Failed to parse response as JSON',
+            'Failed to parse response',
             { isClientError: true }
         );
     }

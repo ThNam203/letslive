@@ -17,7 +17,6 @@ type AuthRepository interface {
 
 	Create(domains.Auth) (*domains.Auth, error)
 	UpdatePasswordHash(domains.Auth) (*domains.Auth, error)
-	UpdateVerify(domains.Auth) (*domains.Auth, error)
 	Delete(uuid.UUID) error
 }
 
@@ -76,6 +75,9 @@ func (r *postgresAuthRepo) GetByEmail(email string) (*domains.Auth, error) {
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Auth])
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrRecordNotFound
+		}
 		return nil, err
 	}
 
@@ -86,11 +88,10 @@ func (r *postgresAuthRepo) Create(newAuth domains.Auth) (*domains.Auth, error) {
 	params := pgx.NamedArgs{
 		"email":         newAuth.Email,
 		"password_hash": newAuth.PasswordHash,
-		"is_verified":   newAuth.IsVerified,
 		"user_id":       newAuth.UserId,
 	}
 
-	rows, err := r.dbConn.Query(context.Background(), "insert into auths (email, password_hash, is_verified, user_id) values (@email, @password_hash, @is_verified, @user_id) RETURNING *", params)
+	rows, err := r.dbConn.Query(context.Background(), "insert into auths (email, password_hash, user_id) values (@email, @password_hash, @user_id) RETURNING *", params)
 	if err != nil {
 		return nil, err
 	}
@@ -109,25 +110,6 @@ func (r *postgresAuthRepo) Create(newAuth domains.Auth) (*domains.Auth, error) {
 
 func (r *postgresAuthRepo) UpdatePasswordHash(user domains.Auth) (*domains.Auth, error) {
 	rows, err := r.dbConn.Query(context.Background(), "UPDATE auths SET password_hash = $1 WHERE id = $2 RETURNING *", user.PasswordHash, user.Id)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	updatedAuth, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Auth])
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrRecordNotFound
-		}
-
-		return nil, err
-	}
-
-	return &updatedAuth, err
-}
-
-func (r *postgresAuthRepo) UpdateVerify(user domains.Auth) (*domains.Auth, error) {
-	rows, err := r.dbConn.Query(context.Background(), "UPDATE auths SET is_verified = $1 WHERE id = $2 RETURNING *", user.IsVerified, user.Id)
 	if err != nil {
 		return nil, err
 	}

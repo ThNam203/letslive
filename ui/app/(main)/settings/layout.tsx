@@ -4,27 +4,10 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 
-//     const [user, setUser] = useState<User | undefined>(undefined);
-
-//     useEffect(() => {
-//         const fetchProfile = async () => {
-//             const { user, fetchError } = await GetMeProfile();
-
-//             if (fetchError != undefined) {
-//                 toast.error(fetchError.message, {
-//                     toastId: "profile-fetch-error",
-//                 });
-//             } else {
-//                 setUser(user);
-//             }
-//         };
-
-//         fetchProfile();
-//     }, []);
-
 const navItems = [
     { name: "Profile", href: "/settings/profile" },
-    { name: "Security", href: "/settings/security" }
+    { name: "Security", href: "/settings/security" },
+    { name: "Stream", href: "/settings/stream" }
 ];
 
 export default function SettingsNav({

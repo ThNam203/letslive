@@ -15,7 +15,6 @@ import (
 	"sen1or/lets-live/auth/middlewares"
 	"time"
 
-	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
 )
 
@@ -61,19 +60,7 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 	signal.Notify(quit, os.Interrupt)
 
 	go func() {
-		if useTLS {
-			if _, err := os.Stat(a.config.SSL.ServerCrtFile); err != nil {
-				log.Panic("error cant get server cert file", err.Error())
-			}
-
-			if _, err := os.Stat(a.config.SSL.ServerKeyFile); err != nil {
-				log.Panic("error cant get server key file", err.Error())
-			}
-
-			log.Panic("server ends: ", server.ListenAndServeTLS(a.config.SSL.ServerCrtFile, a.config.SSL.ServerKeyFile))
-		} else {
-			log.Panic("server ends: ", server.ListenAndServe())
-		}
+		log.Panic("server ends: ", server.ListenAndServe())
 	}()
 
 	log.Printf("server running on addr: %s", server.Addr)
@@ -108,20 +95,13 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("POST /v1/auth/refresh-token", a.authHandler.RefreshTokenHandler)
 	sm.HandleFunc("PATCH /v1/auth/password", a.authHandler.UpdatePasswordHandler)
 	sm.HandleFunc("DELETE /v1/auth/logout", a.authHandler.LogOutHandler)
+	sm.HandleFunc("POST /v1/auth/send-verification", a.authHandler.SendVerificationHandler)
+	sm.HandleFunc("GET /v1/auth/email-verify", a.authHandler.VerifyEmailHandler)
 
 	sm.HandleFunc("GET /v1/auth/google", a.authHandler.OAuthGoogleLogin)
 	sm.HandleFunc("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBack)
-	sm.HandleFunc("GET /v1/auth/email-verify", a.authHandler.VerifyEmailHandler)
 
-	sm.HandleFunc("GET /v1/auth/health", a.healthHandler.GetHealthyState)
-
-	sm.HandleFunc("GET /v1/swagger", httpSwagger.Handler(
-		httpSwagger.URL(fmt.Sprintf("localhost:%d/swagger/doc.json", a.config.Service.APIPort)),
-		httpSwagger.DeepLinking(true),
-		httpSwagger.DocExpansion("none"),
-		httpSwagger.DomID("swagger-ui"),
-	))
-
+	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)
 
 	finalHandler := a.corsMiddleware.GetMiddleware(sm)

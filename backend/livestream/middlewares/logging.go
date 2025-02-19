@@ -1,0 +1,78 @@
+package middlewares
+
+import (
+	"net"
+	"net/http"
+	"time"
+
+	"go.uber.org/zap"
+)
+
+type LoggingMiddleware struct {
+	logger *zap.SugaredLogger
+}
+
+func NewLoggingMiddleware(logger *zap.SugaredLogger) *LoggingMiddleware {
+	return &LoggingMiddleware{
+		logger: logger,
+	}
+}
+
+type loggingResponseWriter struct {
+	w          http.ResponseWriter
+	statusCode int
+	bytes      int
+}
+
+func (lrw *loggingResponseWriter) Header() http.Header {
+	return lrw.w.Header()
+}
+
+func (lrw *loggingResponseWriter) Write(data []byte) (int, error) {
+	wb, err := lrw.w.Write(data)
+	lrw.bytes += wb
+	return wb, err
+}
+
+func (lrw *loggingResponseWriter) WriteHeader(statusCode int) {
+	lrw.w.WriteHeader(statusCode)
+	lrw.statusCode = statusCode
+}
+
+func (m *LoggingMiddleware) GetMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		timeStart := time.Now()
+		lrw := &loggingResponseWriter{w: w}
+		next.ServeHTTP(lrw, r)
+
+		duration := time.Since(timeStart).Milliseconds()
+		remoteAddr := r.Header.Get("X-Forwarded-For")
+		if remoteAddr == "" {
+			if ip, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
+				remoteAddr = "unknown address"
+			} else {
+				remoteAddr = ip
+			}
+		}
+
+		fields := []interface{}{
+			"duration", duration,
+			"method", r.Method,
+			"remote#addr", remoteAddr,
+			"response#bytes", lrw.bytes,
+			"response#status", lrw.statusCode,
+			"uri", r.RequestURI,
+		}
+
+		if lrw.statusCode/100 == 2 {
+			m.logger.Infow("success api call", fields...)
+		} else {
+			err := lrw.w.Header().Get("X-LetsLive-Error")
+			if len(err) == 0 {
+				m.logger.Infow("failed api call", fields...)
+			} else {
+				m.logger.Errorw("failed api call: "+err, fields...)
+			}
+		}
+	})
+}

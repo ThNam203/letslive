@@ -26,28 +26,37 @@ type RegistryConfig struct {
 	} `yaml:"registry"`
 }
 
+type MinIO struct {
+	Host       string `yaml:"host"`
+	Port       int    `yaml:"port"`
+	ClientHost string `yaml:"clientHost"` // it is used for development only, cause minio:9090 (Host) and ui outside of docker can't get files, in real scenario it should be equal to Host
+	AccessKey  string `yaml:"accessKey"`
+	SecretKey  string `yaml:"secretKey"`
+}
+
+type Service struct {
+	Name           string `yaml:"name"`
+	Hostname       string `yaml:"hostname"`
+	APIBindAddress string `yaml:"apiBindAddress"`
+	APIPort        int    `yaml:"apiPort"`
+}
+
+type Database struct {
+	MigrationPath    string   `yaml:"migration-path"`
+	User             string   `yaml:"user"`
+	Password         string   `yaml:"password"`
+	Host             string   `yaml:"host"`
+	Port             int      `yaml:"port"`
+	Name             string   `yaml:"name"`
+	Params           []string `yaml:"params"`
+	ConnectionString string
+}
+
 type Config struct {
-	Service struct {
-		Name           string `yaml:"name"`
-		Hostname       string `yaml:"hostname"`
-		APIBindAddress string `yaml:"apiBindAddress"`
-		APIPort        int    `yaml:"apiPort"`
-	} `yaml:"service"`
+	Service  `yaml:"service"`
 	Registry RegistryConfig
-	SSL      struct {
-		ServerCrtFile string `yaml:"server-crt-file"`
-		ServerKeyFile string `yaml:"server-key-file"`
-	} `yaml:"ssl"`
-	Database struct {
-		MigrationPath    string   `yaml:"migration-path"`
-		User             string   `yaml:"user"`
-		Password         string   `yaml:"password"`
-		Host             string   `yaml:"host"`
-		Port             int      `yaml:"port"`
-		Name             string   `yaml:"name"`
-		Params           []string `yaml:"params"`
-		ConnectionString string
-	} `yaml:"database"`
+	Database `yaml:"database"`
+	MinIO    `yaml:"minio"`
 }
 
 func RetrieveConfig() *Config {

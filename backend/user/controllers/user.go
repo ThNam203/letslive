@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"sen1or/lets-live/user/domains"
 	"sen1or/lets-live/user/dto"
 	"sen1or/lets-live/user/mapper"
 	"sen1or/lets-live/user/repositories"
@@ -8,14 +9,19 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
+// TODO: refactor the job of controller (i think the handler should handle parsing and validate data while the controller deal with logics, right now the handler is doing all the work)
 type UserController interface {
-	Create(body dto.CreateUserRequestDTO) (*dto.CreateUserResponseDTO, error)
+	Create(body dto.CreateUserRequestDTO) (*domains.User, error)
 	GetAll() ([]*dto.GetUserResponseDTO, error)
 	GetById(id uuid.UUID) (*dto.GetUserResponseDTO, error)
 	GetByEmail(email string) (*dto.GetUserResponseDTO, error)
 	GetByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseDTO, error)
 	GetStreamingUsers() ([]*dto.GetUserResponseDTO, error)
-	Update(updateDTO dto.UpdateUserRequestDTO) (*dto.UpdateUserResponseDTO, error)
+	Update(updateDTO dto.UpdateUserRequestDTO) (*domains.User, error)
+	UpdateStreamAPIKey(userId uuid.UUID) (string, error)
+	UpdateUserVerified(userId uuid.UUID) error
+	UpdateProfilePicture(id uuid.UUID, picturePath string) error
+	UpdateBackgroundPicture(id uuid.UUID, picturePath string) error
 	Delete(userID uuid.UUID) error
 }
 
@@ -29,14 +35,14 @@ func NewUserController(repo repositories.UserRepository) UserController {
 	}
 }
 
-func (c *userController) Create(body dto.CreateUserRequestDTO) (*dto.CreateUserResponseDTO, error) {
+func (c *userController) Create(body dto.CreateUserRequestDTO) (*domains.User, error) {
 	user := mapper.CreateUserRequestDTOToUser(body)
 	createdUser, err := c.repo.Create(*user)
 	if err != nil {
 		return nil, err
 	}
 
-	return mapper.UserToCreateUserResponseDTO(*createdUser), nil
+	return createdUser, nil
 }
 
 func (c *userController) GetById(id uuid.UUID) (*dto.GetUserResponseDTO, error) {
@@ -93,29 +99,43 @@ func (c *userController) GetStreamingUsers() ([]*dto.GetUserResponseDTO, error) 
 	return result, nil
 }
 
-func (c *userController) Update(updateDTO dto.UpdateUserRequestDTO) (*dto.UpdateUserResponseDTO, error) {
-	updateUser, err := c.repo.GetById(updateDTO.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	if updateDTO.Username != nil {
-		updateUser.Username = *updateDTO.Username
-	}
-
-	if updateDTO.IsOnline != nil {
-		updateUser.IsOnline = *updateDTO.IsOnline
-	}
-
-	updatedUser, err := c.repo.Update(*updateUser)
+func (c *userController) Update(updateDTO dto.UpdateUserRequestDTO) (*domains.User, error) {
+	updateUser := mapper.UpdateUserRequestDTOToUser(updateDTO)
+	updatedUser, err := c.repo.Update(updateUser)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return mapper.UserToUpdateUserResponseDTO(*updatedUser), nil
+	return updatedUser, nil
+}
+
+func (c *userController) UpdateStreamAPIKey(userId uuid.UUID) (string, error) {
+	newStreamKey, err := uuid.NewGen().NewV4()
+	if err != nil {
+		return "", err
+	}
+
+	err = c.repo.UpdateStreamAPIKey(userId, newStreamKey.String())
+	if err != nil {
+		return "", err
+	}
+
+	return newStreamKey.String(), nil
 }
 
 func (c *userController) Delete(userID uuid.UUID) error {
 	return c.repo.Delete(userID)
+}
+
+func (c *userController) UpdateProfilePicture(id uuid.UUID, picturePath string) error {
+	return c.repo.UpdateProfilePicture(id, picturePath)
+}
+
+func (c *userController) UpdateBackgroundPicture(id uuid.UUID, picturePath string) error {
+	return c.repo.UpdateBackgroundPicture(id, picturePath)
+}
+
+func (c *userController) UpdateUserVerified(userId uuid.UUID) error {
+	return c.repo.UpdateUserVerified(userId)
 }

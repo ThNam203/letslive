@@ -91,7 +91,7 @@ func (s *MinIOStrorage) AddFile(filePath string, streamId string) (string, error
 	}
 
 	// Construct the final URL (public access)
-	finalURL := fmt.Sprintf("%s/%s/%s", s.config.ClientHost, s.config.BucketName, objectName)
+	finalURL := fmt.Sprintf("%s:%d/%s/%s", s.config.ClientHost, s.config.Port, s.config.BucketName, objectName)
 
 	return finalURL, nil
 }

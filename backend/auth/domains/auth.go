@@ -11,6 +11,5 @@ type Auth struct {
 	UserId       uuid.UUID `json:"userID" db:"user_id"`
 	Email        string    `json:"email" db:"email"`
 	PasswordHash string    `json:"-" db:"password_hash"`
-	IsVerified   bool      `json:"isVerified" db:"is_verified"`
 	CreatedAt    time.Time `json:"createdAt" db:"created_at"`
 }

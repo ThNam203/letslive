@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/smtp"
 	"os"
@@ -27,26 +26,26 @@ import (
 
 type AuthHandler struct {
 	ErrorHandler
-	tokenCtrl       controllers.TokenController
-	authCtrl        controllers.AuthController
-	verifyTokenCtrl controllers.VerifyTokenController
-	userGateway     usergateway.UserGateway
-	authServerURL   string
+	tokenCtrl           controllers.TokenController
+	authCtrl            controllers.AuthController
+	verifyTokenCtrl     controllers.VerifyTokenController
+	userGateway         usergateway.UserGateway
+	verificationGateway string
 }
 
 func NewAuthHandler(
 	tokenCtrl controllers.TokenController,
 	authCtrl controllers.AuthController,
 	verifyTokenCtrl controllers.VerifyTokenController,
-	authServerURL string,
+	verficationGateway string,
 	userGateway usergateway.UserGateway,
 ) *AuthHandler {
 	return &AuthHandler{
-		authCtrl:        authCtrl,
-		verifyTokenCtrl: verifyTokenCtrl,
-		tokenCtrl:       tokenCtrl,
-		authServerURL:   authServerURL,
-		userGateway:     userGateway,
+		authCtrl:            authCtrl,
+		verifyTokenCtrl:     verifyTokenCtrl,
+		tokenCtrl:           tokenCtrl,
+		verificationGateway: verficationGateway,
+		userGateway:         userGateway,
 	}
 }
 
@@ -156,8 +155,9 @@ func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dto := &dto.CreateUserRequestDTO{
-		Username: userForm.Username,
-		Email:    userForm.Email,
+		Username:   userForm.Username,
+		Email:      userForm.Email,
+		IsVerified: false,
 	}
 
 	createdUser, errRes := h.userGateway.CreateNewUser(context.Background(), *dto)
@@ -170,18 +170,13 @@ func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		UserId:       createdUser.Id,
 		Email:        userForm.Email,
 		PasswordHash: string(hashedPassword),
-		IsVerified:   false,
 	}
 
 	createdAuthDTO, err := h.authCtrl.Create(*auth)
-	createdAuthDTO.Username = createdUser.Username
-
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
 		return
 	}
-
-	h.sendConfirmEmail(auth.UserId, auth.Email, h.authServerURL)
 
 	if err := h.setAuthJWTsInCookie(auth.UserId.String(), w); err != nil {
 		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
@@ -224,29 +219,14 @@ func (h *AuthHandler) VerifyEmailHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, err := h.authCtrl.GetByID(verifyToken.UserID)
-	if err != nil {
-		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
-		return
-	} else if user.IsVerified {
-		w.Write([]byte("Your email has already been verified!"))
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
 	if verifyToken.ExpiresAt.Before(time.Now()) {
 		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("verify token expired: %s", verifyToken.ExpiresAt.Local().String()))
 		return
 	}
 
-	updateVerifiedAuth := &domains.Auth{
-		Id:         user.Id,
-		IsVerified: true,
-	}
-
-	_, err = h.authCtrl.UpdateUserVerify(*updateVerifiedAuth)
-	if err != nil {
-		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+	errRes := h.userGateway.UpdateUserVerified(context.Background(), verifyToken.UserID.String())
+	if errRes != nil {
+		h.WriteErrorResponse(w, errRes.StatusCode, errors.New(errRes.Message))
 		return
 	}
 
@@ -255,7 +235,25 @@ func (h *AuthHandler) VerifyEmailHandler(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *AuthHandler) sendConfirmEmail(userId uuid.UUID, userEmail string, authServerURL string) {
+// TODO: check if has been verified ?
+func (h *AuthHandler) SendVerificationHandler(w http.ResponseWriter, r *http.Request) {
+	userUUID, err := h.getUserIDFromCookie(r)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	auth, err := h.authCtrl.GetByUserID(*userUUID)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	h.sendConfirmEmail(auth.UserId, auth.Email)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *AuthHandler) sendConfirmEmail(userId uuid.UUID, userEmail string) {
 	verifyToken, err := h.verifyTokenCtrl.Create(userId)
 	if err != nil {
 		logger.Errorf("error while trying to create verify token: %s", err.Error())
@@ -275,8 +273,11 @@ func (h *AuthHandler) sendConfirmEmail(userId uuid.UUID, userEmail string, authS
     <title>` + subject + `</title>
 </head>
 <body>
-    <p>This is a test email with a clickable link.</p>
-	<p>Click <a href="` + authServerURL + `/v1/auth/email-verify?token=` + verifyToken.Token + `">here</a> to confirm your email.</p>
+    <p>Please confirm your email address, if you did not request any verification from Let's Live, please let us know.</p>
+	<p>Click <a href="` + h.verificationGateway + `/auth/email-verify?token=` + verifyToken.Token + `">here</a> to confirm your email.</p>
+
+	<p>Best Regards</p>
+	<p>Let's Live Global</p>
 </body>
 </html>`
 
@@ -290,7 +291,7 @@ func (h *AuthHandler) sendConfirmEmail(userId uuid.UUID, userEmail string, authS
 
 	err = smtp.SendMail(smtpServer, auth, from, to, []byte(msg))
 	if err != nil {
-		log.Printf("failed trying to send confirmation email: %s", err.Error())
+		logger.Errorf("failed trying to send confirmation email: %s", err.Error())
 	}
 }
 
@@ -320,18 +321,9 @@ func (h *AuthHandler) GetAuthByUserIDHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *AuthHandler) UpdatePasswordHandler(w http.ResponseWriter, r *http.Request) {
-	accessTokenCookie, err := r.Cookie("ACCESS_TOKEN")
-	if err != nil || len(accessTokenCookie.Value) == 0 {
-		h.WriteErrorResponse(w, http.StatusForbidden, errors.New("missing credentials"))
-		return
-	}
-
-	myClaims := types.MyClaims{}
-	_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
-
-	userUUID, err := uuid.FromString(myClaims.UserId)
+	userUUID, err := h.getUserIDFromCookie(r)
 	if err != nil {
-		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("user id not valid"))
+		h.WriteErrorResponse(w, http.StatusUnauthorized, err)
 		return
 	}
 
@@ -347,12 +339,7 @@ func (h *AuthHandler) UpdatePasswordHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if reqDTO.NewPassword != reqDTO.ConfirmNewPassword {
-		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("the confirm password doesn't match"))
-		return
-	}
-
-	auth, err := h.authCtrl.GetByUserID(userUUID)
+	auth, err := h.authCtrl.GetByUserID(*userUUID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrRecordNotFound) {
 			h.WriteErrorResponse(w, http.StatusNotFound, err)
@@ -409,4 +396,21 @@ func (h *AuthHandler) setAccessTokenCookie(w http.ResponseWriter, accessToken st
 		SameSite: http.SameSiteDefaultMode,
 	})
 
+}
+
+func (h *AuthHandler) getUserIDFromCookie(r *http.Request) (*uuid.UUID, error) {
+	accessTokenCookie, err := r.Cookie("ACCESS_TOKEN")
+	if err != nil || len(accessTokenCookie.Value) == 0 {
+		return nil, errors.New("missing credentials")
+	}
+
+	myClaims := types.MyClaims{}
+	_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
+
+	userUUID, err := uuid.FromString(myClaims.UserId)
+	if err != nil {
+		return nil, errors.New("user id not valid")
+	}
+
+	return &userUUID, nil
 }

@@ -5,21 +5,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Copy, RefreshCw } from "lucide-react";
-import { User } from "@/types/user";
 import { toast } from "react-toastify";
+import { RequestToGenerateNewAPIKey } from "@/lib/api/user";
+import useUser from "@/hooks/user";
 
-export default function ApiKeyTab({ user }: { user: User | undefined }) {
-    const [apiKey, setApiKey] = useState(user ? user.streamAPIKey : "");
+export default function ApiKeyTab() {
+    const user = useUser((state) => state.user);
+    const updateUser = useUser((state) => state.updateUser);
+    const [isGenerating, setIsGenerating] = useState(false);
 
-    const generateNewApiKey = () => {
+    const generateNewApiKey = async () => {
         if (!user) return;
 
-        const newApiKey = "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy";
-        setApiKey(newApiKey);
+        setIsGenerating(true);
+        const {newKey, fetchError} = await RequestToGenerateNewAPIKey()
+        
+        if (fetchError) toast(fetchError.message, { type: "error" });
+        else 
+        updateUser({
+            ...user,
+            streamAPIKey: newKey!,
+        });
+                setIsGenerating(false);
     };
 
     const copyApiKey = () => {
-        navigator.clipboard.writeText(apiKey);
+        if (!user) return;
+        navigator.clipboard.writeText(user?.streamAPIKey);
         toast.success("API Key copied to clipboard");
     };
 
@@ -31,9 +43,9 @@ export default function ApiKeyTab({ user }: { user: User | undefined }) {
                 </Label>
                 <Input
                     id="api-key"
-                    value={apiKey}
+                    value={user?.streamAPIKey}
                     readOnly={true}
-                    className="flex-grow"
+                    className="flex-grow text-right"
                 />
             </div>
             <div className="flex gap-4">
@@ -42,11 +54,11 @@ export default function ApiKeyTab({ user }: { user: User | undefined }) {
                     className="bg-purple-600 hover:bg-purple-700"
                     onClick={copyApiKey}
                 >
-                    <Copy className="h-4 w-4" />
+                    <Copy className="h-4 w-4" color="white" />
                 </Button>
 
                 <Button
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
                     onClick={generateNewApiKey}
                 >
                     <RefreshCw className="mr-2 h-4 w-4" /> Generate New API Key

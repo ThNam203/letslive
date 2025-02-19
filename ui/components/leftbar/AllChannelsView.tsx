@@ -36,7 +36,7 @@ export default function AllChannelsView() {
                 >
                     <Image
                         alt="channel avatar"
-                        src={"https://github.com/shadcn.png"}
+                        src={user.profilePicture ?? "https://github.com/shadcn.png"}
                         width={40}
                         height={40}
                         className="bg-black rounded-full max-h-[40px] max-w-[40px]"

@@ -81,3 +81,46 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO dto.Crea
 
 	return &createdUser, nil
 }
+
+func (g *userGateway) UpdateUserVerified(ctx context.Context, userId string) *gateway.ErrorResponse {
+	addr, err := g.registry.ServiceAddress(ctx, "user")
+	if err != nil {
+		return &gateway.ErrorResponse{
+			Message:    err.Error(),
+			StatusCode: http.StatusBadGateway,
+		}
+	}
+
+	url := fmt.Sprintf("http://%s/v1/user/%s/set-verified", addr, userId)
+
+	req, err := http.NewRequest(http.MethodPatch, url, nil)
+	if err != nil {
+		return &gateway.ErrorResponse{
+			Message:    fmt.Sprintf("failed to create the request: %s", err),
+			StatusCode: http.StatusInternalServerError,
+		}
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return &gateway.ErrorResponse{
+			Message:    fmt.Sprintf("failed to call request: %s", err),
+			StatusCode: http.StatusInternalServerError,
+		}
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 != 2 {
+		resInfo := gateway.ErrorResponse{}
+		if err := json.NewDecoder(resp.Body).Decode(&resInfo); err != nil {
+			return &gateway.ErrorResponse{
+				Message:    fmt.Sprintf("failed to decode error response from user service: %s", err),
+				StatusCode: http.StatusInternalServerError,
+			}
+		}
+
+		return &resInfo
+	}
+
+	return nil
+}

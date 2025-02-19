@@ -25,12 +25,18 @@ func NewVerifyTokenController(repo repositories.VerifyTokenRepository) VerifyTok
 	}
 }
 
-func (c *verifyTokenController) Create(userID uuid.UUID) (*domains.VerifyToken, error) {
+// revoke all tokens of user before creating new one
+func (c *verifyTokenController) Create(userId uuid.UUID) (*domains.VerifyToken, error) {
+	//err := c.repo.DeleteAllOfUser(userId)
+	//if err != nil {
+	//	return nil, err
+	//}
+
 	token, _ := uuid.NewGen().NewV4()
 	newToken := &domains.VerifyToken{
 		Token:     token.String(),
 		ExpiresAt: time.Now().Add(1 * time.Hour),
-		UserID:    userID,
+		UserID:    userId,
 	}
 
 	err := c.repo.Create(*newToken)
@@ -61,4 +67,8 @@ func (c *verifyTokenController) DeleteByID(tokenID uuid.UUID) error {
 
 func (c *verifyTokenController) DeleteByValue(tokenID uuid.UUID) error {
 	return c.repo.DeleteByID(tokenID)
+}
+
+func (c *verifyTokenController) DeleteAllOfUser(userId uuid.UUID) error {
+	return c.repo.DeleteAllOfUser(userId)
 }
