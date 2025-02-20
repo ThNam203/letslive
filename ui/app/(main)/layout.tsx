@@ -1,19 +1,11 @@
-"use client"
 import { Header } from "@/components/header/header";
 import { LeftBar } from "@/components/LeftBar";
-import { usePathname } from "next/navigation";
-import { useEffect } from "react";
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-    const path = usePathname();
-    useEffect(() => {
-        
-    }, [path])
-
   return (
     <div className="h-screen w-screen">
       <Header />

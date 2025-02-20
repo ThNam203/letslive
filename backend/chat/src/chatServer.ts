@@ -38,9 +38,9 @@ export class ChatServer {
             try {
                 data = JSON.parse(rawMessage.toString())
                 userInfo = {
-                    currentRoom: data.room,
-                    id: data.senderId,
-                    name: data.senderName
+                    currentRoom: data.roomId,
+                    id: data.userId,
+                    name: data.username
                 }
                 this.connections.set(userInfo.id!, ws)
             } catch (err) {
@@ -81,45 +81,50 @@ export class ChatServer {
     }
 
     private async handleJoin(data: ChatMessage, userInfo: UserInfo) {
-        if (userInfo.currentRoom === data.room && (await this.redisService.checkIfUserInRoom(data.senderId, data.room)))
+        if (
+            userInfo.currentRoom === data.roomId &&
+            (await this.redisService.checkIfUserInRoom(data.userId, data.roomId))
+        ) {
             return
-
-        if (userInfo.currentRoom && (await this.redisService.checkIfUserInRoom(data.senderId, userInfo.currentRoom))) {
-            await this.redisService.removeUserFromRoom(data.senderId, userInfo.currentRoom)
         }
 
-        userInfo.currentRoom = data.room
-        await this.redisService.addUserToRoom(data.senderId, data.room)
-        await this.redisService.publishEvent(data.room, ChatEventType.JOIN, data.senderId, data.senderName)
+        if (userInfo.currentRoom && (await this.redisService.checkIfUserInRoom(data.userId, userInfo.currentRoom))) {
+            await this.redisService.removeUserFromRoom(data.userId, userInfo.currentRoom)
+        }
+
+        userInfo.currentRoom = data.roomId
+        console.log("on joining", userInfo.currentRoom)
+        await this.redisService.addUserToRoom(data.userId, data.roomId)
+        await this.redisService.publishEvent(data.roomId, ChatEventType.JOIN, data.userId, data.username)
     }
 
     private async handleLeave(data: ChatMessage, userInfo: UserInfo) {
         if (
             !userInfo.currentRoom ||
-            userInfo.currentRoom !== data.room ||
-            !this.redisService.checkIfUserInRoom(data.senderId, userInfo.currentRoom)
+            userInfo.currentRoom !== data.roomId ||
+            !this.redisService.checkIfUserInRoom(data.userId, userInfo.currentRoom)
         ) {
             console.error('Something went wrong')
             return
         }
 
-        await this.redisService.removeUserFromRoom(data.senderId, userInfo.currentRoom)
-        await this.redisService.publishEvent(data.room, ChatEventType.LEAVE, data.senderId, data.senderName)
+        await this.redisService.removeUserFromRoom(data.userId, userInfo.currentRoom)
+        await this.redisService.publishEvent(data.roomId, ChatEventType.LEAVE, data.userId, data.username)
         userInfo.currentRoom = null
-        this.connections.delete(data.senderId)
+        this.connections.delete(data.userId)
     }
 
     private async handleMessage(data: ChatMessage, userInfo: UserInfo) {
         if (
             !userInfo.currentRoom ||
-            userInfo.currentRoom !== data.room ||
-            !this.redisService.checkIfUserInRoom(data.senderId, userInfo.currentRoom)
+            userInfo.currentRoom !== data.roomId ||
+            !this.redisService.checkIfUserInRoom(data.userId, userInfo.currentRoom)
         ) {
             console.error('Something went wrong')
             return
         }
 
-        await this.redisService.publishMessage(data.room, data)
+        await this.redisService.publishMessage(data.roomId, data)
         await new this.messageModel(data).save()
     }
 

@@ -1,24 +1,26 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose'
 
 const Message = mongoose.model(
     'Message',
     new mongoose.Schema({
-        room: {
+        roomId: {
             type: String,
             required: true,
-            index: true,
+            index: true
         },
-        senderName: {
+        username: {
             type: String,
             required: true
         },
-        senderId: {
+        userId: {
             type: String,
             required: true
         },
-        text: String,
-        timestamp: { type: Date, default: Date.now },
+        text: {
+            type: String
+        },
+        timestamp: { type: Date, default: Date.now }
     })
-);
+)
 
-export { Message };
+export { Message }

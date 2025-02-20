@@ -16,6 +16,17 @@ function CreateExpressServer() {
         res.json({ status: 'ok' })
     })
 
+    app.get('/v1/messages', async (req, res) => {
+        const roomId = req.query.roomId as string
+        if (!roomId) {
+            res.status(400).json({ error: 'roomId is required' })
+            return
+        }
+
+        const messages = await Message.find({ roomId }).sort({ timestamp: -1 }).limit(50)
+        res.json(messages)
+    })
+
     return createServer(app)
 }
 

@@ -40,8 +40,8 @@ export class RedisService {
         await this.pub.publish(
             `room:${room}:messages`,
             JSON.stringify({
-                senderId: data.senderId,
-                senderName: data.senderName,
+                userId: data.userId,
+                username: data.username,
                 text: data.text,
                 timestamp
             })

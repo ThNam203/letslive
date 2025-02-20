@@ -1,12 +1,10 @@
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { CalendarDays, Users, Heart } from "lucide-react";
 import Link from "next/link";
 import { User } from "@/types/user";
 import ProfileHeader from "@/app/(main)/users/[userId]/profile_header";
-import { GetUserById } from "@/lib/api/user";
 
-export default async function ProfileView({ user }: { user: User }) {
+export default function ProfileView({ user }: { user: User }) { 
     return (
         <div>
             {/* Profile Header */}

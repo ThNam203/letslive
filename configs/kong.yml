@@ -85,6 +85,17 @@ plugins:
       key_claim_name: consumer
       run_on_preflight: true
     service: User
+  - name: jwt
+    enabled: true
+    config:
+      claims_to_verify:
+        - exp
+      uri_param_names:
+        - token
+      key_claim_name: consumer
+      run_on_preflight: true
+    service: Chat
+
   - name: cors
     enabled: true
     config:

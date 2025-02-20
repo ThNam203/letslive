@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import useUser from "@/hooks/user";
 import { User } from "@/types/user";
 
-export default function ProfileHeader({user}: {user: User}) {
+export default function ProfileHeader({user} : {user: User}) {
     const me = useUser((state) => state.user);
     return (
         <div className="flex items-start gap-8">
