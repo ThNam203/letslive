@@ -391,7 +391,7 @@ func (h *AuthHandler) setAccessTokenCookie(w http.ResponseWriter, accessToken st
 
 		Path:     "/",
 		MaxAge:   maxAge,
-		HttpOnly: true,
+		HttpOnly: false,
 		Secure:   true,
 		SameSite: http.SameSiteDefaultMode,
 	})

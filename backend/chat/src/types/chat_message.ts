@@ -1,8 +1,8 @@
 export type ChatMessage = {
     type: ChatMessageType // type of the message "join", "leave", "message"
-    room: string // room id
-    senderName: string
-    senderId: string
+    roomId: string // room id
+    userId: string
+    username: string
     text: string // message text
 }
 
