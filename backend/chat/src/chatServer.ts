@@ -64,6 +64,12 @@ export class ChatServer {
                 name: null
             }
         })
+
+        // if the proxy doesn't get an upstream response in 60s (kong default), it will close the connection
+        // the ws.send() does not count as an upstream response
+        setInterval(() => {
+            ws.ping()
+        }, 30000)
     }
 
     private async handleWebSocketMessage(data: ChatMessage, userInfo: UserInfo) {
@@ -93,7 +99,6 @@ export class ChatServer {
         }
 
         userInfo.currentRoom = data.roomId
-        console.log("on joining", userInfo.currentRoom)
         await this.redisService.addUserToRoom(data.userId, data.roomId)
         await this.redisService.publishEvent(data.roomId, ChatEventType.JOIN, data.userId, data.username)
     }

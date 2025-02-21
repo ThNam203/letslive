@@ -35,7 +35,7 @@ async function SetupWebSocketServer(server: Server) {
     const sub = new Redis(6379, 'chat_pubsub')
     const roomManager = new Redis(6379, 'chat_pubsub')
 
-    await mongoose.connect('mongodb://chat_db:27017/chat')
+    await mongoose.connect('mongodb://chat_db:9993/chat')
 
     const redisService = new RedisService(pub, sub, roomManager)
     const wss = new WebSocketServer({ server })
@@ -68,8 +68,8 @@ if (esMain(import.meta)) {
         console.log(`Server started on port ${'8080'}`)
     })
 
-    process.on('SIGINT', () => {
-        consul.deregister()
+    process.on('SIGINT', async () => {
+        await consul.deregister()
         process.exit(0)
     })
 }
