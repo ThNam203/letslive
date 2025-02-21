@@ -1,8 +1,7 @@
+import GLOBAL from "@/global";
 import { ErrorResponse, FetchError } from "@/types/fetch-error";
 import { FetchOptions } from "@/types/fetch-options";
 import { cookies } from "next/headers";
-
-const BASE_URL = "http://localhost:8000";
 
 // Singleton promise for token refresh
 let refreshTokenPromise: Promise<void> | null = null;
@@ -12,7 +11,7 @@ const refreshToken = async (): Promise<void> => {
         refreshTokenPromise = (async () => {
             try {
                 const refreshResponse = await fetch(
-                    `${BASE_URL}/auth/refresh-token`,
+                    `${GLOBAL.API_URL}/auth/refresh-token`,
                     { method: "POST", credentials: "include" }
                 );
 
@@ -49,7 +48,7 @@ export const fetchClient = async <T>(
     options: FetchOptions = {}
 ): Promise<T> => {
     if (!url.startsWith("http")) {
-        url = BASE_URL + url;
+        url = GLOBAL.API_URL + url;
     }
 
     const defaultHeaders: Record<string, string> = {

@@ -56,6 +56,9 @@ services:
   - name: Chat
     host: chat.service.consul
     port: 7780
+    connect_timeout: 60000
+    read_timeout: 60000
+    write_timeout: 60000
     routes:
       - name: ChatRoute
         paths:
@@ -63,7 +66,6 @@ services:
         strip_path: false
         protocols:
           - http
-          - https
 
 consumers:
   - username: "authenticated users"
@@ -101,6 +103,7 @@ plugins:
     config:
       origins: ["http://localhost:5000"]
       headers: ["Content-Type", "Authorization", "Cache", "Accept", "Cache-Control", "X-Requested-With"]
+      exposed_headers: ["Sec-WebSocket-Accept", "Upgrade", "Connection"]
       credentials: true
       max_age: 3600
       preflight_continue: false
