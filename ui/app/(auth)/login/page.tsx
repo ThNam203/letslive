@@ -20,12 +20,12 @@ export default function LogInPage() {
                     >
                         <IconGoogle /> Google
                     </Link>
-                    <Link
+                    {/* <Link
                         href={GLOBAL.API_URL + "/auth/facebook"}
                         className="flex-1 flex flex-row items-center justify-center gap-4 border-1 py-2 rounded-lg hover:bg-gray-200"
                     >
                         <IconFacebook /> Facebook
-                    </Link>
+                    </Link> */}
                 </div>
                 <div className="flex items-center justify-center w-full mt-2 mb-4">
                     <hr className="bg-gray-400 h-[2px] flex-1" />
