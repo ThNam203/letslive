@@ -213,7 +213,7 @@ services:
 
   chat_db:
     image: mongo:latest
-    container_name: chat_db
+    container_name: letslive_chat_db
     restart: always
     command: mongod --quiet --logpath /dev/null
     ports:

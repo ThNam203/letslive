@@ -35,7 +35,7 @@ async function SetupWebSocketServer(server: Server) {
     const sub = new Redis(6379, 'chat_pubsub')
     const roomManager = new Redis(6379, 'chat_pubsub')
 
-    await mongoose.connect('mongodb://chat_db:9993/chat')
+    await mongoose.connect('mongodb://chat_db:27017/chat')
 
     const redisService = new RedisService(pub, sub, roomManager)
     const wss = new WebSocketServer({ server })
