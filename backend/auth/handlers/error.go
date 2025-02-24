@@ -13,7 +13,7 @@ func NewErrorHandler() *ErrorHandler {
 }
 
 // Set the error message to the custom "X-LetsLive-Error" header
-// The function doesn't end the request, if so call errorResponse
+// The function doesn't end the request, otherwise use errorResponse
 func (h *ErrorHandler) SetError(w http.ResponseWriter, err error) {
 	w.Header().Add("X-LetsLive-Error", err.Error())
 }

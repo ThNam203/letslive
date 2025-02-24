@@ -11,7 +11,7 @@ import { SendMessage } from "@/types/send_message";
 import useUser from "@/hooks/user";
 
 // TODO: config please
-const WS_SERVER_URL = "ws://kong:8000/ws";
+const WS_SERVER_URL = "ws://localhost:8000/ws";
 
 export default function ChatUI({ roomId }: {roomId: string}) {
     const user = useUser((state) => state.user);
