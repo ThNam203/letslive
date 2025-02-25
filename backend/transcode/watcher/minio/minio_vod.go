@@ -9,7 +9,6 @@ import (
 	"sen1or/lets-live/transcode/watcher"
 	"strings"
 	"sync"
-	"time"
 )
 
 type VODData struct {
@@ -55,8 +54,7 @@ func (u *MinIOVODStrategy) OnStreamEnd(publishName string, publicHLSPath string,
 	defer delete(u.vodsData, publishName)
 
 	var masterFileDirPath = filepath.Join(publicHLSPath, publishName)
-	var nowString = time.Now().Format(time.RFC3339)
-	var outputPath = filepath.Join(masterFileDirPath, "vods", nowString)
+	var outputPath = filepath.Join(publicHLSPath, "vods", publishName)
 
 	vodData, exist := u.vodsData[publishName]
 	if !exist {

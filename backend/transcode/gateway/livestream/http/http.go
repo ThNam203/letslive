@@ -8,10 +8,9 @@ import (
 	"net/http"
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/transcode/dto"
-	userdto "sen1or/lets-live/user/dto" // TODO: remove this
 )
 
-type UserGateway struct {
+type LivestreamGateway struct {
 	registry discovery.Registry
 }
 
@@ -20,14 +19,14 @@ type ErrorResponse struct {
 	StatusCode int    `json:"statusCode"`
 }
 
-func NewUserGateway(registry discovery.Registry) *UserGateway {
-	return &UserGateway{
+func NewLivestreamGateway(registry discovery.Registry) *LivestreamGateway {
+	return &LivestreamGateway{
 		registry: registry,
 	}
 }
 
-func (g *UserGateway) GetUserInformation(ctx context.Context, streamAPIKey string) (*dto.GetUserResponseDTO, *ErrorResponse) {
-	addr, err := g.registry.ServiceAddress(ctx, "user")
+func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestreamRequestDTO) (*dto.LivestreamResponseDTO, *ErrorResponse) {
+	addr, err := g.registry.ServiceAddress(ctx, "livestream")
 	if err != nil {
 		return nil, &ErrorResponse{
 			Message:    err.Error(),
@@ -35,8 +34,16 @@ func (g *UserGateway) GetUserInformation(ctx context.Context, streamAPIKey strin
 		}
 	}
 
-	url := fmt.Sprintf("http://%s/v1/verify-stream-key?streamAPIKey=%s", addr, streamAPIKey)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	url := fmt.Sprintf("http://%s/v1/livestream", addr)
+	payloadBuf := new(bytes.Buffer)
+	if err := json.NewEncoder(payloadBuf).Encode(data); err != nil {
+		return nil, &ErrorResponse{
+			Message:    err.Error(),
+			StatusCode: http.StatusInternalServerError,
+		}
+
+	}
+	req, err := http.NewRequest(http.MethodPost, url, payloadBuf)
 	if err != nil {
 		return nil, &ErrorResponse{
 			Message:    fmt.Sprintf("failed to create request: %s", err),
@@ -65,20 +72,20 @@ func (g *UserGateway) GetUserInformation(ctx context.Context, streamAPIKey strin
 		return nil, &resInfo
 	}
 
-	var userInfo dto.GetUserResponseDTO
+	var livestreamResponse dto.LivestreamResponseDTO
 
-	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&livestreamResponse); err != nil {
 		return nil, &ErrorResponse{
 			Message:    fmt.Sprintf("failed to decode resp body: %s", err),
 			StatusCode: http.StatusInternalServerError,
 		}
 	}
 
-	return &userInfo, nil
+	return &livestreamResponse, nil
 }
 
-func (g *UserGateway) UpdateUserLiveStatus(ctx context.Context, userDTO userdto.UpdateUserRequestDTO) *ErrorResponse {
-	addr, err := g.registry.ServiceAddress(ctx, "user")
+func (g *LivestreamGateway) Update(ctx context.Context, updateDTO dto.UpdateLivestreamRequestDTO) *ErrorResponse {
+	addr, err := g.registry.ServiceAddress(ctx, "livestream")
 	if err != nil {
 		return &ErrorResponse{
 			Message:    err.Error(),
@@ -86,11 +93,11 @@ func (g *UserGateway) UpdateUserLiveStatus(ctx context.Context, userDTO userdto.
 		}
 	}
 
-	url := fmt.Sprintf("http://%s/v1/user/%s", addr, userDTO.Id)
+	url := fmt.Sprintf("http://%s/v1/livestream/%s", addr, updateDTO.Id)
 	payloadBuf := new(bytes.Buffer)
-	if err := json.NewEncoder(payloadBuf).Encode(userDTO); err != nil {
+	if err := json.NewEncoder(payloadBuf).Encode(updateDTO); err != nil {
 		return &ErrorResponse{
-			Message:    fmt.Sprintf("failed to encode user body: %s", err),
+			Message:    fmt.Sprintf("failed to encode livestream body: %s", err),
 			StatusCode: 500,
 		}
 	}
@@ -114,7 +121,7 @@ func (g *UserGateway) UpdateUserLiveStatus(ctx context.Context, userDTO userdto.
 
 	if resp.StatusCode/100 != 2 {
 		return &ErrorResponse{
-			Message:    fmt.Sprintf("failed to update user from user service: %s", err),
+			Message:    fmt.Sprintf("failed to update livestream from livestream service: %s", err),
 			StatusCode: resp.StatusCode,
 		}
 	}

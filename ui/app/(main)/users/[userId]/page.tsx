@@ -5,21 +5,18 @@ import {
     StreamingFrame,
     VideoInfo,
 } from "@/components/custom_react_player/streaming_frame";
-import { Button } from "@/components/ui/button";
 import useUser from "@/hooks/user";
-import { cn } from "@/lib/utils";
-import { FetchError } from "@/types/fetch-error";
+import { GetUserById } from "@/lib/api/user";
+import { User } from "@/types/user";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-const servers = ["", "localhost:8890", "localhost:8891"];
-
 export default function Livestreaming() {
-    const user = useUser((state) => state.user);
-    const fetchUser = useUser((state) => state.fetchUser);
+    const self = useUser((state) => state.user);
+    const [user, setUser] = useState<User | null>(null);
+
     const params = useParams<{ userId: string }>();
-    const [serverIndex, setServerIndex] = useState(0);
     const [playerInfo, setPlayerInfo] = useState<VideoInfo>({
         videoTitle: "Live Streaming",
         streamer: {
@@ -31,38 +28,21 @@ export default function Livestreaming() {
     const [timeVideoStart, setTimeVideoStart] = useState<Date>(new Date());
 
     useEffect(() => {
-        fetchUser().then(() => {
-            if (user?.isOnline == false) return;
-            const newUrl =
-                serverIndex == 0
-                    ? `http://localhost:8889/static/${params.userId}/index.m3u8`
-                    : `http://localhost:8889/static/${params.userId}/${servers[serverIndex]}_index.m3u8`;
+        const fetchUser = async () => {
+            const { user, fetchError } = await GetUserById(params.userId);
+            if (fetchError) {
+                toast(fetchError.message, {
+                    toastId: "user-fetch-error",
+                    type: "error"
+                });
+                return;
+            }
+            
+            if (user) setUser(user);
+        };
 
-            setPlayerInfo((prev) => ({
-                ...prev,
-                videoUrl: newUrl,
-            }));
-        }).catch((e: FetchError) => {
-            toast(e.message, {
-                toastId: "user-fetch-error",
-                type: "error"
-            });
-        })
+        fetchUser();
     }, [params.userId]);
-
-    useEffect(() => {
-        if (user?.isOnline == false) return;
-
-        const newUrl =
-            serverIndex == 0
-                ? `http://localhost:8889/static/${params.userId}/index.m3u8`
-                : `http://localhost:8889/static/${params.userId}/${servers[serverIndex]}_index.m3u8`;
-
-        setPlayerInfo((prev) => ({
-            ...prev,
-            videoUrl: newUrl,
-        }));
-    }, [serverIndex]);
 
     return (
         <div className="overflow-y-auto h-full flex lg:flex-row max-lg:flex-col">
@@ -77,7 +57,7 @@ export default function Livestreaming() {
                                 }}
                             />
                         </div>
-                        <div className="w-full font-sans my-4 overflow-x-auto whitespace-nowrap">
+                        {/* <div className="w-full font-sans my-4 overflow-x-auto whitespace-nowrap">
                             {servers.map((_, idx) => (
                                 <Button
                                     key={idx}
@@ -90,7 +70,7 @@ export default function Livestreaming() {
                                     Server {idx + 1}
                                 </Button>
                             ))}
-                        </div>
+                        </div> */}
                     </>
                 ) : (
                         <div className="w-full h-[675px] mb-4 bg-black flex items-center justify-center bg-opacity-9 0">

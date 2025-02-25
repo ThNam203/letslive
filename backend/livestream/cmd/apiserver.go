@@ -75,9 +75,9 @@ func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
 	sm.HandleFunc("POST /v1/livestream", a.livestreamHandler.CreateLivestream)
-	sm.HandleFunc("PUT /v1/livestream", a.livestreamHandler.UpdateLivestream)
-	sm.HandleFunc("GET /v1/livestream/{livestreamId}", a.livestreamHandler.GetLivestreamsById)
-	sm.HandleFunc("GET /v1/livestream", a.livestreamHandler.GetLivestreamsOfUser)
+	sm.HandleFunc("PUT /v1/livestream/{livestreamId}", a.livestreamHandler.UpdateLivestream)
+	sm.HandleFunc("GET /v1/livestream/{livestreamId}", a.livestreamHandler.GetLivestreamById)
+	sm.HandleFunc("GET /v1/livestreams", a.livestreamHandler.GetLivestreamsOfUser)
 
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 

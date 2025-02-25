@@ -8,7 +8,7 @@ import (
 	"sen1or/lets-live/pkg/logger"
 	cfg "sen1or/lets-live/user/config"
 	"sen1or/lets-live/user/controllers"
-	gateway "sen1or/lets-live/user/gateway/transcode/http"
+	livestreamgateway "sen1or/lets-live/user/gateway/livestream/http"
 	"sen1or/lets-live/user/handlers"
 	"sen1or/lets-live/user/repositories"
 	minio "sen1or/lets-live/user/services"
@@ -23,7 +23,6 @@ func main() {
 
 	logger.Init(logger.LogLevel(logger.Debug))
 	config := cfg.RetrieveConfig()
-	logger.Debugf("connection string: %s", config.Database.ConnectionString)
 	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
 
 	// for consul service discovery
@@ -70,11 +69,16 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 }
 
 func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *APIServer {
-	transcodeGateway := gateway.NewTranscodeGateway(registry)
+	livestreamGateway := livestreamgateway.NewLivestreamGateway(registry)
 
 	minioClient := minio.NewMinIOStorage(context.Background(), cfg.MinIO)
 	var userRepo = repositories.NewUserRepository(dbConn)
-	var userCtrl = controllers.NewUserController(userRepo)
-	var userHandler = handlers.NewUserHandler(userCtrl, transcodeGateway, minioClient)
-	return NewAPIServer(userHandler, cfg)
+	var livestreamInfoRepo = repositories.NewLivestreamInformationRepository(dbConn)
+
+	var userCtrl = controllers.NewUserController(userRepo, livestreamInfoRepo)
+	var livestreamInfoCtrl = controllers.NewLivestreamInformationController(livestreamInfoRepo)
+
+	var userHandler = handlers.NewUserHandler(userCtrl, livestreamGateway, minioClient)
+	var livestreamInfoHandler = handlers.NewLivestreamInformationHandler(livestreamInfoCtrl, minioClient)
+	return NewAPIServer(userHandler, livestreamInfoHandler, cfg)
 }

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"sen1or/lets-live/user/controllers"
 	"sen1or/lets-live/user/dto"
-	transcodegateway "sen1or/lets-live/user/gateway/transcode"
+	livestreamgateway "sen1or/lets-live/user/gateway/livestream"
 	"sen1or/lets-live/user/repositories"
 	minio "sen1or/lets-live/user/services"
 	"sen1or/lets-live/user/types"
@@ -20,16 +20,16 @@ import (
 
 type UserHandler struct {
 	ErrorHandler
-	minioClient      *minio.MinIOStrorage
-	ctrl             controllers.UserController
-	transcodeGateway transcodegateway.TranscodeGateway
+	minioClient       *minio.MinIOStrorage
+	ctrl              controllers.UserController
+	livestreamGateway livestreamgateway.LivestreamGateway
 }
 
-func NewUserHandler(ctrl controllers.UserController, transcodeGateway transcodegateway.TranscodeGateway, minioClient *minio.MinIOStrorage) *UserHandler {
+func NewUserHandler(ctrl controllers.UserController, livestreamGateway livestreamgateway.LivestreamGateway, minioClient *minio.MinIOStrorage) *UserHandler {
 	return &UserHandler{
-		ctrl:             ctrl,
-		transcodeGateway: transcodeGateway,
-		minioClient:      minioClient,
+		ctrl:              ctrl,
+		livestreamGateway: livestreamGateway,
+		minioClient:       minioClient,
 	}
 }
 
@@ -55,13 +55,13 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userVODs, errRes := h.transcodeGateway.GetUserVODs(context.Background(), userId)
+	userVODs, errRes := h.livestreamGateway.GetUserLivestreams(context.Background(), userId)
 	if errRes != nil {
 		h.WriteErrorResponse(w, errRes.StatusCode, errors.New(errRes.Message))
 		return
 	}
 
-	user.VODs = userVODs.Data
+	user.VODs = userVODs
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -76,12 +76,12 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, user := range users {
-		userVODs, errRes := h.transcodeGateway.GetUserVODs(context.Background(), user.Id.String())
+		userVODs, errRes := h.livestreamGateway.GetUserLivestreams(context.Background(), user.Id.String())
 		if errRes != nil {
 			continue // what should be done?
 		}
 
-		user.VODs = userVODs.Data
+		user.VODs = userVODs
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -89,55 +89,59 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
-// TODO: refactor to use verifyStreamAPIKey
-// get user by using path query '/user?streamAPIKey=123123123'
 func (h *UserHandler) GetUserByQueries(w http.ResponseWriter, r *http.Request) {
-	streamAPIKeyString := r.URL.Query().Get("streamAPIKey")
 	isOnline := r.URL.Query().Get("isOnline")
 
-	if len(streamAPIKeyString) == 0 && len(isOnline) == 0 {
-		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing query parameters, at least has one"))
+	if len(isOnline) == 0 {
+		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing query parameters"))
 		return
 	}
 
-	if len(streamAPIKeyString) > 0 {
-		streamAPIKey, err := uuid.FromString(streamAPIKeyString)
-		if err != nil {
-			h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("stream api key not valid"))
-			return
-		}
-
-		user, err := h.ctrl.GetByStreamAPIKey(streamAPIKey)
-		if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
-			h.WriteErrorResponse(w, http.StatusNotFound, fmt.Errorf("user not found for stream key - %s", streamAPIKey))
-			return
-		} else if err != nil {
-			h.WriteErrorResponse(w, http.StatusInternalServerError, err)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(user)
-
-	} else {
-		users, err := h.ctrl.GetStreamingUsers()
-		if err != nil {
-			h.WriteErrorResponse(w, http.StatusInternalServerError, err)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(users)
+	users, err := h.ctrl.GetStreamingUsers()
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(users)
+}
+
+// internal
+func (h *UserHandler) GetUserByStreamAPIKey(w http.ResponseWriter, r *http.Request) {
+	streamAPIKeyString := r.URL.Query().Get("streamAPIKey")
+
+	if len(streamAPIKeyString) == 0 {
+		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing stream api key"))
+		return
+	}
+
+	streamAPIKey, err := uuid.FromString(streamAPIKeyString)
+	if err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("stream api key not valid"))
+		return
+	}
+
+	user, err := h.ctrl.GetByStreamAPIKey(streamAPIKey)
+	if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
+		h.WriteErrorResponse(w, http.StatusNotFound, fmt.Errorf("user not found for stream key - %s", streamAPIKey))
+		return
+	} else if err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(user)
 }
 
 func (h *UserHandler) GetCurrentUserInfo(w http.ResponseWriter, r *http.Request) {
-	userUUID, err := h.getUserIdFromCookie(r)
+	userUUID, err := getUserIdFromCookie(r)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusUnauthorized, err)
 		return
 	}
-	user, err := h.ctrl.GetById(*userUUID)
+	user, err := h.ctrl.GetUserFullProfile(*userUUID)
 	if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
 		h.WriteErrorResponse(w, http.StatusNotFound, errors.New("user not found"))
 		return
@@ -193,7 +197,7 @@ func (h *UserHandler) SetUserVerified(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) {
-	userUUID, err := h.getUserIdFromCookie(r)
+	userUUID, err := getUserIdFromCookie(r)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusUnauthorized, err)
 		return
@@ -228,7 +232,7 @@ func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *UserHandler) GenerateNewAPIStreamKey(w http.ResponseWriter, r *http.Request) {
-	userUUID, err := h.getUserIdFromCookie(r)
+	userUUID, err := getUserIdFromCookie(r)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusUnauthorized, err)
 		return
@@ -251,7 +255,7 @@ func (h *UserHandler) GenerateNewAPIStreamKey(w http.ResponseWriter, r *http.Req
 
 func (h *UserHandler) UpdateUserProfilePicture(w http.ResponseWriter, r *http.Request) {
 	const maxUploadSize = 10 * 1024 * 1024
-	userUUID, err := h.getUserIdFromCookie(r)
+	userUUID, err := getUserIdFromCookie(r)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusUnauthorized, err)
 		return
@@ -299,7 +303,7 @@ func (h *UserHandler) UpdateUserProfilePicture(w http.ResponseWriter, r *http.Re
 
 func (h *UserHandler) UpdateUserBackgroundPicture(w http.ResponseWriter, r *http.Request) {
 	const maxUploadSize = 10 * 1024 * 1024
-	userUUID, err := h.getUserIdFromCookie(r)
+	userUUID, err := getUserIdFromCookie(r)
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusUnauthorized, err)
 		return
@@ -344,10 +348,9 @@ func (h *UserHandler) UpdateUserBackgroundPicture(w http.ResponseWriter, r *http
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte(savedPath))
-
 }
 
-func (u *UserHandler) getUserIdFromCookie(r *http.Request) (*uuid.UUID, error) {
+func getUserIdFromCookie(r *http.Request) (*uuid.UUID, error) {
 	accessTokenCookie, err := r.Cookie("ACCESS_TOKEN")
 	if err != nil || len(accessTokenCookie.Value) == 0 {
 		return nil, errors.New("missing credentials")
@@ -367,4 +370,39 @@ func (u *UserHandler) getUserIdFromCookie(r *http.Request) (*uuid.UUID, error) {
 	}
 
 	return &userUUID, nil
+}
+
+func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	userID := r.PathValue("id")
+	defer r.Body.Close()
+
+	if len(userID) == 0 {
+		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing user id"))
+		return
+	}
+
+	var requestBody dto.UpdateUserRequestDTO
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error decoding request body: %s", err.Error()))
+		return
+	}
+	requestBody.Id = uuid.FromStringOrNil(userID)
+
+	if err := utils.Validator.Struct(&requestBody); err != nil {
+		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error validating payload: %s", err))
+		return
+	}
+
+	updatedUser, err := h.ctrl.Update(requestBody)
+	if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
+		h.WriteErrorResponse(w, http.StatusNotFound, errors.New("user not found"))
+		return
+	} else if err != nil {
+		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(updatedUser)
 }

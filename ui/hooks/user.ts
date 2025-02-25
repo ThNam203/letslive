@@ -31,7 +31,7 @@ const useUser = create<UserState>((set) => ({
         
         set({ user: updatedUser });
     },
-    updateUser: (user: User) => set({ user }),
+    updateUser: (user: User) => set((prev) => ({ ...prev, ...user })),
 }));
 
 export default useUser;
