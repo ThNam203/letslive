@@ -49,7 +49,12 @@ func (r *postgresLivestreamRepo) GetById(userId uuid.UUID) (*domains.Livestream,
 }
 
 func (r *postgresLivestreamRepo) GetByUser(userId uuid.UUID) ([]domains.Livestream, error) {
-	rows, err := r.dbConn.Query(context.Background(), "select * from livestreams where user_id = $1", userId)
+	rows, err := r.dbConn.Query(context.Background(), `
+		SELECT * 
+		FROM livestreams 
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+	`, userId)
 	if err != nil {
 		return nil, err
 	}

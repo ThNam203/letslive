@@ -37,6 +37,7 @@
     "react-redux": "^9.1.2",
     "react-toastify": "^10.0.5",
     "screenfull": "^6.0.2",
+    "sharp": "^0.33.5",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7"
   },

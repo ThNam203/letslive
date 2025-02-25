@@ -9,9 +9,7 @@ import { toast } from "react-toastify";
 import { ReceivedMessage } from "@/types/received_message";
 import { SendMessage } from "@/types/send_message";
 import useUser from "@/hooks/user";
-
-// TODO: config please
-const WS_SERVER_URL = "ws://localhost:8000/ws";
+import GLOBAL from "@/global";
 
 export default function ChatUI({ roomId }: {roomId: string}) {
     const user = useUser((state) => state.user);
@@ -45,7 +43,7 @@ export default function ChatUI({ roomId }: {roomId: string}) {
                 return;
             }
 
-            const ws = new WebSocket(WS_SERVER_URL + "?token=" + accessToken);
+            const ws = new WebSocket(GLOBAL.WS_SERVER_URL + "?token=" + accessToken);
 
             ws.onopen = () => {
                 toast("WebSocket connection established", { type: "info" });
@@ -77,7 +75,7 @@ export default function ChatUI({ roomId }: {roomId: string}) {
     }, [user, roomId]);
 
     return (
-        <div className="w-full h-full    flex flex-col my-2">
+        <div className="w-full h-full flex flex-col my-2">
             <div className="flex-1 overflow-y-auto mb-4 border border-gray-200 rounded-md p-4 bg-gray-50">
                 {messages.map((message, idx) => (
                     <div key={idx} className="mb-3">
