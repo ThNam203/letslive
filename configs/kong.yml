@@ -53,6 +53,28 @@ services:
         request_buffering: true
         response_buffering: true
 
+  - name: Livestream
+    protocol: http
+    host: livestream.service.consul
+    port: 7781
+    path: /v1/livestream
+    retries: 5
+    connect_timeout: 60000
+    read_timeout: 60000
+    write_timeout: 60000
+    routes:
+      - name: Livestream_Routes
+        protocols:
+          - http
+          - https
+        paths:
+          - /livestream
+        strip_path: true
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+
   - name: Chat
     host: chat.service.consul
     port: 7780
@@ -101,7 +123,7 @@ plugins:
   - name: cors
     enabled: true
     config:
-      origins: ["http://localhost:5000"]
+      origins: ["*"]
       headers: ["Content-Type", "Authorization", "Cache", "Accept", "Cache-Control", "X-Requested-With"]
       exposed_headers: ["Sec-WebSocket-Accept", "Upgrade", "Connection"]
       credentials: true

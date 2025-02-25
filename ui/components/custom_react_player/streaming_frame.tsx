@@ -286,7 +286,7 @@ function FrontOfVideo({
     return (
         <div
             className={cn(
-                "absolute top-0 w-full h-full flex flex-col items-center justify-end",
+                "absolute top-0 w-full h-full flex flex-col items-center justify-end  border border-gray-300",
                 className
             )}
         >

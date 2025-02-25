@@ -13,7 +13,6 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 export default function Livestreaming() {
-    const self = useUser((state) => state.user);
     const [user, setUser] = useState<User | null>(null);
 
     const params = useParams<{ userId: string }>();
@@ -38,7 +37,18 @@ export default function Livestreaming() {
                 return;
             }
             
-            if (user) setUser(user);
+            if (user) {
+                setUser(user);
+                if (user.isOnline && user.vods && user.vods.length > 0) {
+                    setPlayerInfo({
+                        videoTitle: user.vods[0].title,
+                        streamer: {
+                            name: user.displayName ?? user.username,
+                        },
+                        videoUrl: `http://localhost:8889/static/${user.vods[0].id}/index.m3u8`,
+                    });
+                }
+            }
         };
 
         fetchUser();
@@ -49,7 +59,7 @@ export default function Livestreaming() {
             <div className="w-[1200px] min-w-[1200px]">
                 {user && user.isOnline ? (
                     <>
-                        <div className="w-full h-[675px] bg-black">
+                        <div className="w-full h-[675px] bg-black mb-4">
                             <StreamingFrame
                                 videoInfo={playerInfo}
                                 onVideoStart={() => {

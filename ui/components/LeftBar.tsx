@@ -57,8 +57,8 @@ const View = ({
 export const LeftBar = () => {
     
   return (
-    <div className="fixed ml-2 mt-4 h-full xl:w-64 max-xl:w-fit bg-leftBarColor flex flex-col max-xl:items-center justify-start gap-2 text-primaryWord">
-      <div className="flex flex-row justify-between items-center px-2">
+    <div className="fixed ml-2 h-full xl:w-64 max-xl:w-fit bg-leftBarColor flex flex-col max-xl:items-center justify-start gap-2 text-primaryWord border-r-1">
+      <div className="flex flex-row justify-between items-center px-2 pt-4">
         <AllChannelsView/>
       </div>
       {/* <div className="flex flex-row justify-between items-center px-2 mt-2"> */}
@@ -94,24 +94,5 @@ export const LeftBar = () => {
         );
       })} */}
     </div>
-  );
-};
-
-const Title = ({
-  children,
-  icon,
-}: {
-  children: ReactNode;
-  icon: ReactNode;
-}) => {
-  return (
-    <>
-      <span className="font-semibold text-sm text-secondaryWord max-xl:hidden">
-        {children}
-      </span>
-      <span className="font-semibold text-sm text-secondaryWord xl:hidden">
-        {icon}
-      </span>
-    </>
   );
 };

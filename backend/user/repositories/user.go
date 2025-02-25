@@ -164,7 +164,7 @@ func (r *postgresUserRepo) GetStreamingUsers() ([]domains.User, error) {
 	rows, err := r.dbConn.Query(context.Background(), "select * from users where is_online = $1", true)
 	defer rows.Close()
 
-	streamingUsers, err := pgx.CollectRows(rows, pgx.RowToStructByName[domains.User])
+	streamingUsers, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[domains.User])
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

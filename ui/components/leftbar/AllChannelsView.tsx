@@ -27,7 +27,7 @@ export default function AllChannelsView() {
 
     return (
         <div className="flex flex-col gap-2 w-full">
-            <h2 className="font-semibold text-xl max-xl:hidden">Channels</h2>
+            <h2 className="font-semibold text-xl max-xl:hidden mb-2">Channels</h2>
             {users.map((user, idx) => (
                 <Link
                     key={user.id}
