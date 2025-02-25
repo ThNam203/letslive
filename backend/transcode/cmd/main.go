@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"sen1or/lets-live/pkg/logger"
 	cfg "sen1or/lets-live/transcode/config"
+	livestreamgateway "sen1or/lets-live/transcode/gateway/livestream/http"
 	usergateway "sen1or/lets-live/transcode/gateway/user/http"
 	"sen1or/lets-live/transcode/rtmp"
 	ipfsstorage "sen1or/lets-live/transcode/storage/ipfs"
@@ -63,33 +63,15 @@ func main() {
 	}
 
 	userGateway := usergateway.NewUserGateway(registry)
+	livestreamGateway := livestreamgateway.NewLivestreamGateway(registry)
 
 	// TODO: find a way to remove the vodHandler from the rtmp, or change the design or config
 	//Use kafka
 	rtmpServer := rtmp.NewRTMPServer(
 		rtmp.RTMPServerConfig{Port: config.RTMP.Port, Registry: &registry, Config: *config, VODHandler: vodHandler},
 		userGateway,
+		livestreamGateway,
 	)
 	go rtmpServer.Start()
 	select {}
-}
-
-func resetWorkingSpace(config cfg.Config) error {
-	if err := os.RemoveAll(config.Transcode.PublicHLSPath); err != nil {
-		return err
-	}
-
-	if err := os.RemoveAll(config.Transcode.PrivateHLSPath); err != nil {
-		return err
-	}
-
-	if err := os.MkdirAll(config.Transcode.PublicHLSPath, 0777); err != nil {
-		return err
-	}
-
-	if err := os.MkdirAll(config.Transcode.PrivateHLSPath, 0777); err != nil {
-		return err
-	}
-
-	return nil
 }

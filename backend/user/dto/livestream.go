@@ -1,4 +1,4 @@
-package domains
+package dto
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-type Livestream struct {
+type GetLivestreamResponseDTO struct {
 	Id           uuid.UUID  `json:"id" db:"id"`
 	UserId       uuid.UUID  `json:"userId" db:"user_id"`
 	Title        *string    `json:"title" db:"title"`

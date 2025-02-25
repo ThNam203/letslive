@@ -21,13 +21,12 @@ func UserToGetUserResponseDTO(user domains.User) *dto.GetUserResponseDTO {
 		IsOnline:          user.IsOnline,
 		IsVerified:        user.IsVerified,
 		CreatedAt:         user.CreatedAt,
-		StreamAPIKey:      user.StreamAPIKey,
 		PhoneNumber:       user.PhoneNumber,
 		Bio:               user.Bio,
 		DisplayName:       user.DisplayName,
 		ProfilePicture:    user.ProfilePicture,
 		BackgroundPicture: user.BackgroundPicture,
-		VODs:              []string{},
+		VODs:              []dto.GetLivestreamResponseDTO{},
 	}
 }
 

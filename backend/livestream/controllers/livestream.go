@@ -47,8 +47,35 @@ func (c *livestreamController) Create(dto dto.CreateLivestreamRequestDTO) (*doma
 }
 
 func (c *livestreamController) Update(dto dto.UpdateLivestreamRequestDTO) (*domains.Livestream, error) {
-	livestreamData := mapper.UpdateLivestreamRequestDTOToLivestream(dto)
-	updatedLivestream, err := c.repo.Update(livestreamData)
+	currentLivestream, err := c.repo.GetById(dto.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: is this the best way?
+	if dto.Title != nil {
+		currentLivestream.Title = dto.Title
+	}
+	if dto.Description != nil {
+		currentLivestream.Description = dto.Description
+	}
+	if dto.ThumbnailURL != nil {
+		currentLivestream.ThumbnailURL = dto.ThumbnailURL
+	}
+	if dto.Status != nil {
+		currentLivestream.Status = *dto.Status
+	}
+	if dto.PlaybackURL != nil {
+		currentLivestream.PlaybackURL = dto.PlaybackURL
+	}
+	if dto.ViewCount != nil {
+		currentLivestream.ViewCount = *dto.ViewCount
+	}
+	if dto.EndedAt != nil {
+		currentLivestream.EndedAt = dto.EndedAt
+	}
+
+	updatedLivestream, err := c.repo.Update(*currentLivestream)
 	if err != nil {
 		return nil, err
 	}

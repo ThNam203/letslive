@@ -21,14 +21,13 @@ type GetUserResponseDTO struct {
 	IsOnline          bool      `json:"isOnline"`
 	IsVerified        bool      `json:"isVerified"`
 	CreatedAt         time.Time `json:"createdAt"`
-	StreamAPIKey      uuid.UUID `json:"streamAPIKey"`
 	PhoneNumber       *string   `json:"phoneNumber,omitempty"`
 	Bio               *string   `json:"bio,omitempty"`
 	DisplayName       *string   `json:"displayName,omitempty"`
 	ProfilePicture    *string   `json:"profilePicture,omitempty"`
 	BackgroundPicture *string   `json:"backgroundPicture,omitempty"`
 
-	VODs []string `json:"vods"`
+	VODs []GetLivestreamResponseDTO `json:"vods"`
 }
 
 type GetUserByStreamAPIKeyRequestDTO struct{}

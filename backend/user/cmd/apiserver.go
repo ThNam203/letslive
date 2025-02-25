@@ -21,22 +21,24 @@ type APIServer struct {
 	logger *zap.SugaredLogger
 	config config.Config
 
-	errorHandler  *handlers.ErrorHandler
-	healthHandler *handlers.HealthHandler
-	userHandler   *handlers.UserHandler
+	errorHandler                 *handlers.ErrorHandler
+	healthHandler                *handlers.HealthHandler
+	userHandler                  *handlers.UserHandler
+	livestreamInformationHandler *handlers.LivestreamInformationHandler
 
 	loggingMiddleware middlewares.Middleware
 	corsMiddleware    middlewares.Middleware
 }
 
-func NewAPIServer(userHandler *handlers.UserHandler, cfg config.Config) *APIServer {
+func NewAPIServer(userHandler *handlers.UserHandler, livestreamInfoHandler *handlers.LivestreamInformationHandler, cfg config.Config) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
 
-		errorHandler:  handlers.NewErrorHandler(),
-		healthHandler: handlers.NewHeathHandler(),
-		userHandler:   userHandler,
+		errorHandler:                 handlers.NewErrorHandler(),
+		healthHandler:                handlers.NewHeathHandler(),
+		userHandler:                  userHandler,
+		livestreamInformationHandler: livestreamInfoHandler,
 
 		loggingMiddleware: middlewares.NewLoggingMiddleware(logger.Logger),
 		corsMiddleware:    middlewares.NewCORSMiddleware(),
@@ -77,11 +79,15 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("GET /v1/users", a.userHandler.GetAllUsers)
 	sm.HandleFunc("GET /v1/user/{id}", a.userHandler.GetUserByID)
 	sm.HandleFunc("GET /v1/user", a.userHandler.GetUserByQueries)
-	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUser)
+	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUser)     // internal
+	sm.HandleFunc("PUT /v1/user/{id}", a.userHandler.UpdateUser) // internal
+
+	sm.HandleFunc("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKey)
 
 	sm.HandleFunc("GET /v1/user/me", a.userHandler.GetCurrentUserInfo)
 	sm.HandleFunc("PUT /v1/user/me", a.userHandler.UpdateCurrentUser)
-	sm.HandleFunc("PATCH /v1/user/{userId}/set-verified", a.userHandler.SetUserVerified)
+	sm.HandleFunc("PATCH /v1/user/{userId}/set-verified", a.userHandler.SetUserVerified) // internal
+	sm.HandleFunc("PATCH /v1/user/me/livestream-information", a.livestreamInformationHandler.Update)
 	sm.HandleFunc("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKey)
 	sm.HandleFunc("PATCH /v1/user/me/profile_picture", a.userHandler.UpdateUserProfilePicture)
 	sm.HandleFunc("PATCH /v1/user/me/background_picture", a.userHandler.UpdateUserBackgroundPicture)

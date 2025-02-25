@@ -61,6 +61,9 @@ func (s *MinIOStrorage) SetUp() error {
 	if err := s.createIfNotExists("profile-pictures"); err != nil {
 		return err
 	}
+	if err := s.createIfNotExists("thumbnails"); err != nil {
+		return err
+	}
 	if err := s.createIfNotExists("background-pictures"); err != nil {
 		return err
 	}

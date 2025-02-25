@@ -9,6 +9,7 @@ import (
 	"sen1or/lets-live/livestream/dto"
 	"sen1or/lets-live/livestream/repositories"
 	"sen1or/lets-live/livestream/utils"
+	"time"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -24,7 +25,7 @@ func NewLivestreamHandler(ctrl controllers.LivestreamController) *LivestreamHand
 	}
 }
 
-func (h *LivestreamHandler) GetLivestreamsById(w http.ResponseWriter, r *http.Request) {
+func (h *LivestreamHandler) GetLivestreamById(w http.ResponseWriter, r *http.Request) {
 	streamId := r.PathValue("livestreamId")
 	if len(streamId) == 0 {
 		h.WriteErrorResponse(w, http.StatusBadRequest, errors.New("missing livestream id"))
@@ -88,6 +89,11 @@ func (h *LivestreamHandler) CreateLivestream(w http.ResponseWriter, r *http.Requ
 	if err := utils.Validator.Struct(&body); err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error validating payload: %s", err))
 		return
+	}
+
+	if body.Title == nil {
+		newTitle := "Livestream - " + time.Now().Format(time.RFC3339)
+		body.Title = &newTitle
 	}
 
 	createdLivestream, err := h.ctrl.Create(body)

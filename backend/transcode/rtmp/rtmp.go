@@ -10,10 +10,12 @@ import (
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/transcode/config"
+	dto "sen1or/lets-live/transcode/dto"
+	livestreamgateway "sen1or/lets-live/transcode/gateway/livestream/http"
 	usergateway "sen1or/lets-live/transcode/gateway/user/http"
 	"sen1or/lets-live/transcode/transcoder"
 	"sen1or/lets-live/transcode/watcher"
-	"sen1or/lets-live/user/dto"
+	userdto "sen1or/lets-live/user/dto"
 	"strconv"
 	"strings"
 	"time"
@@ -32,20 +34,22 @@ type RTMPServerConfig struct {
 }
 
 type RTMPServer struct {
-	Port        int
-	Registry    *discovery.Registry
-	userGateway *usergateway.UserGateway
-	config      config.Config
-	vodHandler  watcher.VODHandler
+	Port              int
+	Registry          *discovery.Registry
+	userGateway       *usergateway.UserGateway
+	livestreamGateway *livestreamgateway.LivestreamGateway
+	config            config.Config
+	vodHandler        watcher.VODHandler
 }
 
-func NewRTMPServer(config RTMPServerConfig, userGateway *usergateway.UserGateway) *RTMPServer {
+func NewRTMPServer(config RTMPServerConfig, userGateway *usergateway.UserGateway, livestreamgateway *livestreamgateway.LivestreamGateway) *RTMPServer {
 	return &RTMPServer{
-		Port:        config.Port,
-		Registry:    config.Registry,
-		config:      config.Config,
-		userGateway: userGateway,
-		vodHandler:  config.VODHandler,
+		Port:              config.Port,
+		Registry:          config.Registry,
+		config:            config.Config,
+		userGateway:       userGateway,
+		livestreamGateway: livestreamgateway,
+		vodHandler:        config.VODHandler,
 	}
 }
 
@@ -95,7 +99,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	streamingKeyComponents := strings.Split(c.URL.Path, "/")
 	streamingKey := streamingKeyComponents[len(streamingKeyComponents)-1]
 
-	userId, err := s.onConnect(streamingKey) // userId is used as publishName
+	streamId, userId, err := s.onConnect(streamingKey) // get stream id
 
 	if err != nil {
 		logger.Errorf("stream connection failed: %s", err)
@@ -107,7 +111,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 
 	go func() {
 		transcoder := transcoder.NewTranscoder(pipeOut, s.config.Transcode)
-		transcoder.Start(userId)
+		transcoder.Start(streamId)
 	}()
 
 	w := flv.NewMuxer(pipeIn)
@@ -115,13 +119,13 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	for {
 		pkt, err := c.ReadPacket()
 		if err == io.EOF {
-			s.onDisconnect(userId)
+			s.onDisconnect(userId, streamId)
 			return
 		}
 
 		if err := w.WritePacket(pkt); err != nil {
 			logger.Errorf("failed to write rtmp package: %s", err)
-			s.onDisconnect(userId)
+			s.onDisconnect(userId, streamId)
 			return
 		}
 	}
@@ -129,73 +133,86 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 
 // check if stream api key exists
 // then update the user status to online
-// return the user id to be used as publishName
-func (s *RTMPServer) onConnect(streamingKey string) (string, error) {
+// return the stream id to be used as publishName
+func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId string, err error) {
 	userInfo, errRes := s.userGateway.GetUserInformation(context.Background(), streamingKey)
 	if errRes != nil {
-		return "", fmt.Errorf("failed to get user information: %s", errRes.Message)
+		return "", "", fmt.Errorf("failed to get user information: %s", errRes.Message)
 	}
 
-	updateUserDTO := &dto.UpdateUserRequestDTO{
+	updateUserDTO := &userdto.UpdateUserRequestDTO{
 		Id:       userInfo.Id,
 		IsOnline: func(b bool) *bool { return &b }(true), // wtf
 	}
 
 	errRes = s.userGateway.UpdateUserLiveStatus(context.Background(), *updateUserDTO)
 	if errRes != nil {
-		return "", fmt.Errorf("failed to get service connection: %s", errRes.Message)
+		return "", "", fmt.Errorf("failed to update user live status: %s", errRes.Message)
 	}
+
+	streamDTO := &dto.CreateLivestreamRequestDTO{
+		Title:        userInfo.LivestreamInformationResponseDTO.Title,
+		UserId:       userInfo.Id,
+		Description:  userInfo.LivestreamInformationResponseDTO.Description,
+		ThumbnailURL: userInfo.LivestreamInformationResponseDTO.ThumbnailURL,
+		Status:       "live",
+	}
+
+	createdLivestream, createErrRes := s.livestreamGateway.Create(context.Background(), *streamDTO)
+	if createErrRes != nil {
+		return "", "", fmt.Errorf("failed to create livestream: %s", createErrRes.Message)
+	}
+
+	livestreamId := createdLivestream.Id.String()
 
 	// setup the vod creation
-	s.vodHandler.OnStreamStart(userInfo.Id.String())
-
-	// make sure there is not any files from the previous streaming session
-	if err := removeLiveGeneratedFiles(userInfo.Id.String(), s.config.Transcode.PrivateHLSPath, s.config.Transcode.PublicHLSPath); err != nil {
-		return "", fmt.Errorf("failed to remove live generated files: %s", err)
-	}
-
-	return userInfo.Id.String(), nil
+	s.vodHandler.OnStreamStart(livestreamId)
+	return livestreamId, userInfo.Id.String(), nil
 }
 
 // change the status of user to be not online
-func (s *RTMPServer) onDisconnect(userId string) {
+func (s *RTMPServer) onDisconnect(userId string, streamId string) {
 	userIdUUID, _ := uuid.FromString(userId)
-	updateUserDTO := &dto.UpdateUserRequestDTO{
+	updateUserDTO := &userdto.UpdateUserRequestDTO{
 		Id:       userIdUUID,
 		IsOnline: func(b bool) *bool { return &b }(false), // wtf
 	}
 
 	// create the VOD playlists and remove the entry
-	s.vodHandler.OnStreamEnd(userId, s.config.Transcode.PublicHLSPath, s.config.Transcode.FFMpegSetting.MasterFileName)
+	s.vodHandler.OnStreamEnd(streamId, s.config.Transcode.PublicHLSPath, s.config.Transcode.FFMpegSetting.MasterFileName)
 
 	errRes := s.userGateway.UpdateUserLiveStatus(context.Background(), *updateUserDTO)
 	if errRes != nil {
 		logger.Errorf("failed to get service connection: %s", errRes.Message)
 	}
 
+	endedStatus := "ended"
+	playbackURL := fmt.Sprintf("http://%s:%d/vods/%s/index.m3u8", s.config.Service.Hostname, s.config.Webserver.Port, streamId)
+	endedAt := time.Now()
+
+	updateDTO := &dto.UpdateLivestreamRequestDTO{
+		Id:           uuid.FromStringOrNil(streamId),
+		Title:        nil,
+		Description:  nil,
+		ThumbnailURL: nil,
+		Status:       &endedStatus,
+		PlaybackURL:  &playbackURL,
+		ViewCount:    nil,
+		EndedAt:      &endedAt,
+	}
+
+	createErrRes := s.livestreamGateway.Update(context.Background(), *updateDTO)
+	if createErrRes != nil {
+		logger.Errorf("failed to update livestream: %s", createErrRes.Message)
+	}
+
 	// should be put on the last line
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	go func() {
-		select {
-		case <-ctx.Done():
-			removeLiveGeneratedFiles(userId, s.config.Transcode.PrivateHLSPath, s.config.Transcode.PublicHLSPath)
-		}
+		<-ctx.Done()
+		removeLiveGeneratedFiles(streamId, s.config.Transcode.PrivateHLSPath, s.config.Transcode.PublicHLSPath)
 	}()
-}
-
-func copyFile(src, dst string) error {
-	input, err := os.ReadFile(src)
-	if err != nil {
-		return fmt.Errorf("error reading file: %s", err)
-	}
-
-	err = os.WriteFile(dst, input, os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("error copying file: %s", err)
-	}
-
-	return nil
 }
 
 // remove live-generated private files and public files after saving into vods
@@ -203,9 +220,7 @@ func removeLiveGeneratedFiles(streamingKey, privatePath, publicPath string) erro
 	// remove all folders of public and remove all private content
 	paths := []string{
 		filepath.Join(privatePath, streamingKey),
-		filepath.Join(publicPath, streamingKey, "0"),
-		filepath.Join(publicPath, streamingKey, "1"),
-		filepath.Join(publicPath, streamingKey, "2"),
+		filepath.Join(publicPath, streamingKey),
 	}
 
 	var errList []error
@@ -216,22 +231,6 @@ func removeLiveGeneratedFiles(streamingKey, privatePath, publicPath string) erro
 		if err != nil {
 			errList = append(errList, fmt.Errorf("failed to remove %s: %w", path, err))
 		}
-	}
-
-	// remove all m3u8 files
-	files, err := filepath.Glob(filepath.Join(publicPath, streamingKey) + "/*.m3u8")
-	if err != nil {
-		panic(err)
-	}
-
-	for _, f := range files {
-		if err := os.Remove(f); err != nil {
-			errList = append(errList, err)
-		}
-	}
-
-	if len(errList) > 0 {
-		return fmt.Errorf("encountered errors: %v", errList)
 	}
 
 	return nil

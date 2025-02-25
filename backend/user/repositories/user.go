@@ -39,12 +39,17 @@ func NewUserRepository(conn *pgxpool.Pool) UserRepository {
 }
 
 func (r *postgresUserRepo) GetById(userId uuid.UUID) (*domains.User, error) {
-	rows, err := r.dbConn.Query(context.Background(), "select * from users where id = $1", userId.String())
+	rows, err := r.dbConn.Query(context.Background(), `
+		SELECT u.id, u.username, u.email, u.is_verified, u.is_online, u.is_active, u.created_at, u.stream_api_key, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url 
+		FROM users u
+		LEFT JOIN livestream_information l ON u.id = l.user_id
+		where u.id = $1
+	`, userId.String())
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
+	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.User])
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -64,7 +69,7 @@ func (r *postgresUserRepo) GetAll() ([]*domains.User, error) {
 		return nil, err
 	}
 
-	users, err := pgx.CollectRows(rows, pgx.RowToStructByName[domains.User])
+	users, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[domains.User])
 
 	if err != nil {
 		return nil, err
@@ -136,13 +141,18 @@ func (r *postgresUserRepo) GetByFacebookID(facebookID string) (*domains.User, er
 
 func (r *postgresUserRepo) GetByAPIKey(apiKey uuid.UUID) (*domains.User, error) {
 	var user domains.User
-	rows, err := r.dbConn.Query(context.Background(), "select * from users where stream_api_key = $1", apiKey)
+	rows, err := r.dbConn.Query(context.Background(), `
+		SELECT u.id, u.username, u.email, u.is_verified, u.is_online, u.is_active, u.created_at, u.stream_api_key, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url 
+		FROM users u
+		LEFT JOIN livestream_information l ON u.id = l.user_id
+		where u.stream_api_key = $1
+	`, apiKey)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	user, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
+	user, err = pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.User])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrRecordNotFound
 	}
@@ -169,17 +179,18 @@ func (r *postgresUserRepo) GetStreamingUsers() ([]domains.User, error) {
 
 func (r *postgresUserRepo) Create(newUser domains.User) (*domains.User, error) {
 	params := pgx.NamedArgs{
-		"username": newUser.Username,
-		"email":    newUser.Email,
+		"username":    newUser.Username,
+		"email":       newUser.Email,
+		"is_verified": newUser.IsVerified,
 	}
 
-	rows, err := r.dbConn.Query(context.Background(), "insert into users (username, email) values (@username, @email) returning *", params)
+	rows, err := r.dbConn.Query(context.Background(), "insert into users (username, email, is_verified) values (@username, @email, @is_verified) returning *", params)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
+	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.User])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrRecordNotFound
@@ -207,7 +218,7 @@ func (r *postgresUserRepo) Update(user domains.User) (*domains.User, error) {
 	}
 	defer rows.Close()
 
-	updatedUser, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
+	updatedUser, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.User])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrRecordNotFound

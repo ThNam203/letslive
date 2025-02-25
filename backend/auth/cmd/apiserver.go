@@ -101,9 +101,6 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("GET /v1/auth/google", a.authHandler.OAuthGoogleLogin)
 	sm.HandleFunc("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBack)
 
-	sm.HandleFunc("GET /v1/auth/facebook", a.authHandler.OAuthFacebookLogin)
-	sm.HandleFunc("GET /v1/auth/facebook/callback", a.authHandler.OAuthFacebookCallBack)
-
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)
 

@@ -14,8 +14,9 @@ type UserController interface {
 	Create(body dto.CreateUserRequestDTO) (*domains.User, error)
 	GetAll() ([]*dto.GetUserResponseDTO, error)
 	GetById(id uuid.UUID) (*dto.GetUserResponseDTO, error)
+	GetUserFullProfile(id uuid.UUID) (*domains.User, error)
 	GetByEmail(email string) (*dto.GetUserResponseDTO, error)
-	GetByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseDTO, error)
+	GetByStreamAPIKey(key uuid.UUID) (*domains.User, error)
 	GetStreamingUsers() ([]*dto.GetUserResponseDTO, error)
 	Update(updateDTO dto.UpdateUserRequestDTO) (*domains.User, error)
 	UpdateStreamAPIKey(userId uuid.UUID) (string, error)
@@ -26,21 +27,26 @@ type UserController interface {
 }
 
 type userController struct {
-	repo repositories.UserRepository
+	repo                      repositories.UserRepository
+	livestreamInformationRepo repositories.LivestreamInformationRepository
 }
 
-func NewUserController(repo repositories.UserRepository) UserController {
+func NewUserController(repo repositories.UserRepository, livestreamInformationController repositories.LivestreamInformationRepository) UserController {
 	return &userController{
-		repo: repo,
+		repo:                      repo,
+		livestreamInformationRepo: livestreamInformationController,
 	}
 }
 
+// TODO: transaction please
 func (c *userController) Create(body dto.CreateUserRequestDTO) (*domains.User, error) {
 	user := mapper.CreateUserRequestDTOToUser(body)
 	createdUser, err := c.repo.Create(*user)
 	if err != nil {
 		return nil, err
 	}
+
+	_ = c.livestreamInformationRepo.Create(createdUser.Id)
 
 	return createdUser, nil
 }
@@ -52,6 +58,15 @@ func (c *userController) GetById(id uuid.UUID) (*dto.GetUserResponseDTO, error) 
 	}
 
 	return mapper.UserToGetUserResponseDTO(*user), nil
+}
+
+func (c *userController) GetUserFullProfile(id uuid.UUID) (*domains.User, error) {
+	user, err := c.repo.GetById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (c *userController) GetAll() ([]*dto.GetUserResponseDTO, error) {
@@ -76,13 +91,13 @@ func (c *userController) GetByEmail(email string) (*dto.GetUserResponseDTO, erro
 	return mapper.UserToGetUserResponseDTO(*user), nil
 }
 
-func (c *userController) GetByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseDTO, error) {
+func (c *userController) GetByStreamAPIKey(key uuid.UUID) (*domains.User, error) {
 	user, err := c.repo.GetByAPIKey(key)
 	if err != nil {
 		return nil, err
 	}
 
-	return mapper.UserToGetUserResponseDTO(*user), nil
+	return user, nil
 }
 
 func (c *userController) GetStreamingUsers() ([]*dto.GetUserResponseDTO, error) {

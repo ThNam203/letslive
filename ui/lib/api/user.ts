@@ -1,5 +1,5 @@
 import { FetchError } from "@/types/fetch-error";
-import { User } from "@/types/user";
+import { LivestreamInformation, User } from "@/types/user";
 import { fetchClient } from "@/utils/fetchClient";
 
 /**
@@ -96,6 +96,32 @@ export async function UpdateBackgroundPicture(
         });
 
         return { newPath: data };
+    } catch (error) {
+        return { fetchError: error as FetchError };
+    }
+}
+
+// if there is not file, thumbnailUrl will be used
+export async function UpdateLivestreamInformation(
+    file: File | null,
+    thumbnailUrl: string | null,
+    title: string,
+    description: string
+): Promise<{ updatedInfo?: LivestreamInformation, fetchError?: FetchError }> {
+    try {
+        const formData = new FormData();
+        if (file) formData.append("thumbnail", file);
+        else if (thumbnailUrl) formData.append("thumbnailUrl", thumbnailUrl);
+
+        formData.append("title", title);
+        formData.append("description", description);
+
+        const data = await fetchClient<LivestreamInformation>(`/user/me/livestream-information`, {
+            method: "PATCH",
+            body: formData,
+        });
+
+        return { updatedInfo: data };
     } catch (error) {
         return { fetchError: error as FetchError };
     }

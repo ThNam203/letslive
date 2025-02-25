@@ -49,7 +49,7 @@ func (r *postgresLivestreamRepo) GetById(userId uuid.UUID) (*domains.Livestream,
 }
 
 func (r *postgresLivestreamRepo) GetByUser(userId uuid.UUID) ([]domains.Livestream, error) {
-	rows, err := r.dbConn.Query(context.Background(), "select * from livestreams where email = $1", userId)
+	rows, err := r.dbConn.Query(context.Background(), "select * from livestreams where user_id = $1", userId)
 	if err != nil {
 		return nil, err
 	}
@@ -74,12 +74,11 @@ func (r *postgresLivestreamRepo) Create(newLivestream domains.Livestream) (*doma
 		"thumbnail_url": newLivestream.ThumbnailURL,
 		"status":        newLivestream.Status,
 		"view_count":    0,
-		"started_at":    newLivestream.StartedAt,
 		//"ended_at": nil,
 		"playback_url": newLivestream.PlaybackURL,
 	}
 
-	rows, err := r.dbConn.Query(context.Background(), "insert into livestreams (title, user_id, description, thumbnail_url, status, view_count, started_at, playback_url) values (@title, @user_id, @description, @thumbnail_url, @status, @view_count, @started_at, @playback_url) returning *", params)
+	rows, err := r.dbConn.Query(context.Background(), "insert into livestreams (title, user_id, description, thumbnail_url, status, view_count, playback_url) values (@title, @user_id, @description, @thumbnail_url, @status, @view_count, @playback_url) returning *", params)
 	if err != nil {
 		return nil, err
 	}
