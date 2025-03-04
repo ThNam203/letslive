@@ -15,12 +15,13 @@ import (
 	"sen1or/lets-live/user/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	_ "github.com/joho/godotenv/autoload"
+	"github.com/joho/godotenv"
 )
 
 func main() {
 	ctx := context.Background()
 
+	godotenv.Load("user/.env")
 	logger.Init(logger.LogLevel(logger.Debug))
 	config := cfg.RetrieveConfig()
 	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)

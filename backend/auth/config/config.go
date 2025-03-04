@@ -4,53 +4,53 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"sen1or/lets-live/pkg/logger"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	CONFIG_SERVER_PROTOCOL             = "http"
-	CONFIG_SERVER_ADDRESS              = "configserver:8181"
-	CONFIG_SERVER_SERVICE_APPLICATION  = "auth_service"
-	CONFIG_SERVER_SERVICE_PROFILE      = "default"
-	CONFIG_SERVER_REGISTRY_APPLICATION = "registry_service"
-	CONFIG_SERVER_REGISTRY_PROFILE     = "default"
-)
+type Registry struct {
+	Address string `yaml:"address"`
+}
 
-type RegistryConfig struct {
-	RegistryService struct {
-		Address string   `yaml:"address"`
-		Tags    []string `yaml:"tags"`
-	} `yaml:"registry"`
+type JWT struct {
+	RefreshTokenMaxAge int    `yaml:"refresh-token-max-age"`
+	AccessTokenMaxAge  int    `yaml:"access-token-max-age"`
+	Consumer           string `yaml:"consumer"`
+	Issuer             string `yaml:"issuer"`
+	Subject            string `yaml:"subject"`
+}
+
+type Service struct {
+	Name           string `yaml:"name"`
+	Hostname       string `yaml:"hostname"`
+	APIBindAddress string `yaml:"apiBindAddress"`
+	APIPort        int    `yaml:"apiPort"`
+}
+
+type Database struct {
+	MigrationPath    string   `yaml:"migration-path"`
+	User             string   `yaml:"user"`
+	Password         string   `yaml:"password"`
+	Host             string   `yaml:"host"`
+	Port             int      `yaml:"port"`
+	Name             string   `yaml:"name"`
+	Params           []string `yaml:"params"`
+	ConnectionString string
+}
+
+type Verification struct {
+	Gateway string `yaml:"gateway"`
 }
 
 type Config struct {
-	Service struct {
-		Name           string `yaml:"name"`
-		Hostname       string `yaml:"hostname"`
-		APIBindAddress string `yaml:"apiBindAddress"`
-		APIPort        int    `yaml:"apiPort"`
-	} `yaml:"service"`
-	Registry RegistryConfig
-	Tokens   struct {
-		RefreshTokenMaxAge int `yaml:"refresh-token-max-age"`
-		AccessTokenMaxAge  int `yaml:"access-token-max-age"`
-	} `yaml:"tokens"`
-	Database struct {
-		MigrationPath    string   `yaml:"migration-path"`
-		User             string   `yaml:"user"`
-		Password         string   `yaml:"password"`
-		Host             string   `yaml:"host"`
-		Port             int      `yaml:"port"`
-		Name             string   `yaml:"name"`
-		Params           []string `yaml:"params"`
-		ConnectionString string
-	} `yaml:"database"`
-	Verification struct {
-		Gateway string `yaml:"gateway"`
-	} `yaml:"verification"`
+	Service      `yaml:"service"`
+	Registry     `yaml:"registry"`
+	JWT          `yaml:"jwt"`
+	Database     `yaml:"database"`
+	Verification `yaml:"verification"`
 }
 
 func RetrieveConfig() *Config {
@@ -71,7 +71,13 @@ func RetrieveConfig() *Config {
 }
 
 func retrieveServiceConfig() (*Config, error) {
-	url := fmt.Sprintf("%s://%s/%s-%s.yml", CONFIG_SERVER_PROTOCOL, CONFIG_SERVER_ADDRESS, CONFIG_SERVER_SERVICE_APPLICATION, CONFIG_SERVER_SERVICE_PROFILE)
+	url := fmt.Sprintf(
+		"%s://%s/%s-%s.yml",
+		os.Getenv("CONFIG_SERVER_PROTOCOL"),
+		os.Getenv("CONFIG_SERVER_ADDRESS"),
+		os.Getenv("CONFIG_SERVER_SERVICE_APPLICATION"),
+		os.Getenv("CONFIG_SERVER_SERVICE_PROFILE"),
+	)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 
@@ -99,8 +105,14 @@ func retrieveServiceConfig() (*Config, error) {
 	return &config, nil
 }
 
-func retrieveRegistryConfig() (*RegistryConfig, error) {
-	url := fmt.Sprintf("%s://%s/%s-%s.yml", CONFIG_SERVER_PROTOCOL, CONFIG_SERVER_ADDRESS, CONFIG_SERVER_REGISTRY_APPLICATION, CONFIG_SERVER_REGISTRY_PROFILE)
+func retrieveRegistryConfig() (*Registry, error) {
+	url := fmt.Sprintf(
+		"%s://%s/%s-%s.yml",
+		os.Getenv("CONFIG_SERVER_PROTOCOL"),
+		os.Getenv("CONFIG_SERVER_ADDRESS"),
+		os.Getenv("CONFIG_SERVER_REGISTRY_APPLICATION"),
+		os.Getenv("CONFIG_SERVER_REGISTRY_PROFILE"),
+	)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 
@@ -119,11 +131,11 @@ func retrieveRegistryConfig() (*RegistryConfig, error) {
 		return nil, fmt.Errorf("error reading response body: %v", err)
 	}
 
-	var config RegistryConfig
+	var config Config
 	err = yaml.Unmarshal(body, &config)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshaling JSON: %v", err)
 	}
 
-	return &config, nil
+	return &config.Registry, nil
 }
