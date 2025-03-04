@@ -8,7 +8,6 @@ import (
 	"sen1or/lets-live/auth/controllers"
 	"sen1or/lets-live/auth/handlers"
 	"sen1or/lets-live/auth/repositories"
-	"sen1or/lets-live/auth/types"
 	"sen1or/lets-live/auth/utils"
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
@@ -28,7 +27,7 @@ func main() {
 	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
 
 	// for consul service discovery
-	registry, err := discovery.NewConsulRegistry(config.Registry.RegistryService.Address)
+	registry, err := discovery.NewConsulRegistry(config.Registry.Address)
 	if err != nil {
 		logger.Panicf("failed to start discovery mechanism: %s", err)
 	}
@@ -57,7 +56,7 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/health", serviceHostPort)
 	instanceID := discovery.GenerateInstanceID(serviceName)
 
-	if err := registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, serviceName, instanceID, config.Registry.RegistryService.Tags); err != nil {
+	if err := registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, serviceName, instanceID, nil); err != nil {
 		logger.Panicf("failed to register server: %s", err)
 	}
 
@@ -78,7 +77,7 @@ func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Conf
 	var verifyTokenRepo = repositories.NewVerifyTokenRepo(dbConn)
 
 	var authCtrl = controllers.NewAuthController(userRepo)
-	var tokenCtrl = controllers.NewTokenController(refreshTokenRepo, types.TokenControllerConfig(cfg.Tokens))
+	var tokenCtrl = controllers.NewTokenController(refreshTokenRepo, cfg.JWT)
 	var verifyTokenCtrl = controllers.NewVerifyTokenController(verifyTokenRepo)
 	userGateway := usergateway.NewUserGateway(registry)
 	var authHandler = handlers.NewAuthHandler(tokenCtrl, authCtrl, verifyTokenCtrl, cfg.Verification.Gateway, userGateway)

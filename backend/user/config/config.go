@@ -4,19 +4,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"sen1or/lets-live/pkg/logger"
 	"strings"
 
 	"gopkg.in/yaml.v3"
-)
-
-const (
-	CONFIG_SERVER_PROTOCOL             = "http"
-	CONFIG_SERVER_ADDRESS              = "configserver:8181"
-	CONFIG_SERVER_APPLICATION          = "user_service"
-	CONFIG_SERVER_PROFILE              = "default"
-	CONFIG_SERVER_REGISTRY_APPLICATION = "registry_service"
-	CONFIG_SERVER_REGISTRY_PROFILE     = "default"
 )
 
 type RegistryConfig struct {
@@ -77,7 +69,13 @@ func RetrieveConfig() *Config {
 }
 
 func retrieveConfig() (*Config, error) {
-	url := fmt.Sprintf("%s://%s/%s-%s.yml", CONFIG_SERVER_PROTOCOL, CONFIG_SERVER_ADDRESS, CONFIG_SERVER_APPLICATION, CONFIG_SERVER_PROFILE)
+	url := fmt.Sprintf(
+		"%s://%s/%s-%s.yml",
+		os.Getenv("CONFIG_SERVER_PROTOCOL"),
+		os.Getenv("CONFIG_SERVER_ADDRESS"),
+		os.Getenv("CONFIG_SERVER_SERVICE_APPLICATION"),
+		os.Getenv("CONFIG_SERVER_SERVICE_PROFILE"),
+	)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 
@@ -106,7 +104,13 @@ func retrieveConfig() (*Config, error) {
 }
 
 func retrieveRegistryConfig() (*RegistryConfig, error) {
-	url := fmt.Sprintf("%s://%s/%s-%s.yml", CONFIG_SERVER_PROTOCOL, CONFIG_SERVER_ADDRESS, CONFIG_SERVER_REGISTRY_APPLICATION, CONFIG_SERVER_REGISTRY_PROFILE)
+	url := fmt.Sprintf(
+		"%s://%s/%s-%s.yml",
+		os.Getenv("CONFIG_SERVER_PROTOCOL"),
+		os.Getenv("CONFIG_SERVER_ADDRESS"),
+		os.Getenv("CONFIG_SERVER_REGISTRY_APPLICATION"),
+		os.Getenv("CONFIG_SERVER_REGISTRY_PROFILE"),
+	)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 

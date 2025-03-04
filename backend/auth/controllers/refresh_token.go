@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sen1or/lets-live/auth/config"
 	"sen1or/lets-live/auth/domains"
 	"sen1or/lets-live/auth/repositories"
 	"sen1or/lets-live/auth/types"
@@ -12,9 +13,6 @@ import (
 	"github.com/gofrs/uuid/v5"
 	"github.com/golang-jwt/jwt/v5"
 )
-
-// for kong api gateway
-var CONSUMER = "authenticated users"
 
 type TokenController interface {
 	GenerateTokenPair(userId string) (*types.TokenPairInformation, error)
@@ -25,10 +23,10 @@ type TokenController interface {
 
 type tokenController struct {
 	repo   repositories.RefreshTokenRepository
-	config types.TokenControllerConfig
+	config config.JWT
 }
 
-func NewTokenController(repo repositories.RefreshTokenRepository, cfg types.TokenControllerConfig) TokenController {
+func NewTokenController(repo repositories.RefreshTokenRepository, cfg config.JWT) TokenController {
 	return &tokenController{
 		repo:   repo,
 		config: cfg,
@@ -60,9 +58,10 @@ func (c *tokenController) GenerateTokenPair(userId string) (*types.TokenPairInfo
 // the process is called "refresh token"
 func (c *tokenController) RefreshToken(refreshToken string) (*types.AccessTokenInformation, error) {
 	myClaims := types.MyClaims{}
-	parsedToken, err := jwt.NewParser().ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (interface{}, error) {
+	parsedToken, err := jwt.NewParser().ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (any, error) {
 		return []byte(os.Getenv("REFRESH_TOKEN_SECRET")), nil
 	})
+
 	if err != nil {
 		return nil, fmt.Errorf("token parsing failed: %s", err)
 	} else if !parsedToken.Valid {
@@ -85,13 +84,13 @@ func (c *tokenController) generateRefreshToken(userId string) (string, error) {
 	refreshTokenExpiresAt := time.Now().Add(refreshTokenExpiresDuration)
 	myClaims := types.MyClaims{
 		UserId:   userId,
-		Consumer: CONSUMER,
+		Consumer: c.config.Consumer,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(refreshTokenExpiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "letslive",
-			Subject:   "auth",
+			Issuer:    c.config.Issuer,
+			Subject:   c.config.Subject,
 		},
 	}
 	unsignedRefreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, myClaims)
@@ -120,13 +119,13 @@ func (c *tokenController) generateAccessToken(userId string) (string, error) {
 	accessTokenExpiresAt := time.Now().Add(accessTokenDuration)
 	myClaims := types.MyClaims{
 		UserId:   userId,
-		Consumer: CONSUMER,
+		Consumer: c.config.Consumer,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(accessTokenExpiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "letslive",
-			Subject:   "auth",
+			Issuer:    c.config.Issuer,
+			Subject:   c.config.Subject,
 		},
 	}
 	unsignedAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, myClaims)
