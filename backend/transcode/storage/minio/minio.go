@@ -76,13 +76,14 @@ func (s *MinIOStrorage) SetUp() error {
 	return nil
 }
 
-// uploads a file to MinIO and returns the permanent URL
+// uploads segment to MinIO and returns the permanent URL
 func (s *MinIOStrorage) AddFile(filePath string, streamId string) (string, error) {
-	fileName := filepath.Base(filePath)
-	objectName := fmt.Sprintf("%s/%s", streamId, fileName)
+	filename := filepath.Base(filePath)
+	qualityIndex := filepath.Base(filepath.Dir(filePath))
+	savePath := fmt.Sprintf("%s/%s/%s", streamId, qualityIndex, filename)
 
 	// Upload the file
-	_, err := s.minioClient.FPutObject(context.Background(), s.config.BucketName, objectName, filePath, minio.PutObjectOptions{
+	_, err := s.minioClient.FPutObject(context.Background(), s.config.BucketName, savePath, filePath, minio.PutObjectOptions{
 		ContentType:  "video/mp2t",
 		CacheControl: "max-age=3600",
 	})
@@ -91,7 +92,7 @@ func (s *MinIOStrorage) AddFile(filePath string, streamId string) (string, error
 	}
 
 	// Construct the final URL (public access)
-	finalURL := fmt.Sprintf("%s:%d/%s/%s", s.config.ClientHost, s.config.Port, s.config.BucketName, objectName)
+	finalURL := fmt.Sprintf("%s:%d/%s/%s", s.config.ClientHost, s.config.Port, s.config.BucketName, savePath)
 
 	return finalURL, nil
 }
