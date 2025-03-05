@@ -19,11 +19,11 @@ function CreateExpressServer() {
     app.get('/v1/messages', async (req, res) => {
         const roomId = req.query.roomId as string
         if (!roomId) {
-            res.status(400).json({ error: 'roomId is required' })
+            res.status(400).json({ statusCode: 400, message: 'roomId is required' })
             return
         }
 
-        const messages = await Message.find({ roomId }).sort({ timestamp: -1 }).limit(50)
+        const messages = await Message.find({ roomId }).sort({ timestamp: 1 }).limit(50)
         res.json(messages)
     })
 
@@ -38,7 +38,7 @@ async function SetupWebSocketServer(server: Server) {
     await mongoose.connect('mongodb://chat_db:27017/chat')
 
     const redisService = new RedisService(pub, sub, roomManager)
-    const wss = new WebSocketServer({ server })
+    const wss = new WebSocketServer({ server, path: '/v1/ws' })
 
     return new ChatServer(redisService, Message, wss)
 }

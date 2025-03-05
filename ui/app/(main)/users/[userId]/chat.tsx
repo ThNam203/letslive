@@ -10,8 +10,9 @@ import { ReceivedMessage } from "@/types/received_message";
 import { SendMessage } from "@/types/send_message";
 import useUser from "@/hooks/user";
 import GLOBAL from "@/global";
+import { GetMessages } from "@/lib/api/chat";
 
-export default function ChatUI({ roomId }: {roomId: string}) {
+export default function ChatUI({ roomId }: { roomId: string }) {
     const user = useUser((state) => state.user);
     const [messages, setMessages] = useState<ReceivedMessage[]>([]);
     const [inputMessage, setInputMessage] = useState("");
@@ -34,42 +35,83 @@ export default function ChatUI({ roomId }: {roomId: string}) {
     };
 
     useEffect(() => {
+        const fetchMessages = async () => {
+            const { messages, fetchError } = await GetMessages(roomId);
+            if (fetchError) {
+                toast.error(fetchError.message, {
+                    toastId: "message-fetch-error",
+                });
+            } else {
+                setMessages(messages);
+            }
+        };
+
+        fetchMessages();
+    }, []);
+
+    useEffect(() => {
         const connectWebSocket = async () => {
             if (user == null) return;
 
-            const accessToken = getCookie("ACCESS_TOKEN")
+            const accessToken = getCookie("ACCESS_TOKEN");
             if (!accessToken) {
-                toast("failed to get access token", {type: "error"})
+                toast("failed to get access token", { type: "error" });
                 return;
             }
 
-            const ws = new WebSocket(GLOBAL.WS_SERVER_URL + "?token=" + accessToken);
+            const ws = new WebSocket(
+                GLOBAL.WS_SERVER_URL + "?token=" + accessToken
+            );
 
             ws.onopen = () => {
                 toast("WebSocket connection established", { type: "info" });
                 wsRef.current = ws;
-                ws.send(JSON.stringify({ type: "join", roomId: roomId, userId: user.id, username: user.displayName ?? user.username }));
+                ws.send(
+                    JSON.stringify({
+                        type: "join",
+                        roomId: roomId,
+                        userId: user.id,
+                        username: user.displayName ?? user.username,
+                    })
+                );
             };
 
             ws.onmessage = (event) => {
                 const data: ReceivedMessage = JSON.parse(event.data);
-                console.log('received message', data)
-                setMessages((prev) => [...prev, data]);
+                if (messages.length >= 100) setMessages((prev) => [...prev.slice(1), data]);
+                else setMessages((prev) => [...prev, data]);
             };
 
             ws.onclose = (ev) => {
-                toast("WebSocket connection closed: " + ev.code + ", " + ev.wasClean + ", " + ev.reason, { type: "info" });
+                toast(
+                    "WebSocket connection closed: " +
+                        ev.code +
+                        ", " +
+                        ev.wasClean +
+                        ", " +
+                        ev.reason,
+                    { type: "info" }
+                );
             };
 
             ws.onerror = (error) => {
-                toast("WebSocket connection closed: " + error, { type: "info" });
+                toast("WebSocket connection closed: " + error, {
+                    type: "info",
+                });
             };
         };
 
         connectWebSocket();
         return () => {
             if (wsRef.current) {
-                wsRef.current.send(JSON.stringify({ type: "leave", roomId: roomId, userId: user!.id, username: user!.displayName ?? user!.username }));
+                wsRef.current.send(
+                    JSON.stringify({
+                        type: "leave",
+                        roomId: roomId,
+                        userId: user!.id,
+                        username: user!.displayName ?? user!.username,
+                    })
+                );
             }
         };
     }, [user, roomId]);
@@ -223,12 +265,12 @@ function hue2rgb(p: number, q: number, t: number): number {
 
 function getCookie(name: string) {
     var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    console.log(document.cookie)
+    var ca = document.cookie.split(";");
+    console.log(document.cookie);
     for (var i = 0; i < ca.length; i++) {
-      var c = ca[i];
-      while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-      if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        var c = ca[i];
+        while (c.charAt(0) == " ") c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
     }
     return null;
-  }
+}

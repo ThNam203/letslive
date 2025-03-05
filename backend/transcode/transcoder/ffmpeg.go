@@ -84,7 +84,7 @@ func (t *Transcoder) Start(publishName string) {
 	go func() {
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
-			logger.Warnf("FFMPEG error in pipe: %v", scanner.Text())
+			logger.Warnf("ffmpeg error pipe: %v", scanner.Text())
 		}
 
 		if err := scanner.Err(); err != nil {

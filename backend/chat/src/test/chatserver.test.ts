@@ -6,7 +6,6 @@ import { Message } from '../models/Message'
 import { ChatMessage, ChatMessageType } from '../types/chat_message'
 import { ChatServer } from '../chatServer'
 import { RedisService } from '../services/redis'
-import { log } from 'console'
 import { ChatEvent } from '../types/chat_event'
 
 describe('test join and leave events', () => {
@@ -51,9 +50,9 @@ describe('test join and leave events', () => {
 
         const message = {
             type: ChatMessageType.JOIN,
-            room: 'test-room',
-            senderId: 'user1',
-            senderName: 'Test User'
+            roomId: 'test-room',
+            userId: 'user1',
+            username: 'Test User'
         }
 
         ws.send(JSON.stringify(message))
@@ -78,16 +77,16 @@ describe('test join and leave events', () => {
 
         const joinMessage1 = {
             type: ChatMessageType.JOIN,
-            room: 'test-room',
-            senderId: 'user1',
-            senderName: 'Test User'
+            roomId: 'test-room',
+            userId: 'user1',
+            username: 'Test User'
         }
 
         const joinMessage2 = {
             type: ChatMessageType.JOIN,
-            room: 'test-room',
-            senderId: 'user2',
-            senderName: 'Test User 2'
+            roomId: 'test-room',
+            userId: 'user2',
+            username: 'Test User 2'
         }
 
         ws.send(JSON.stringify(joinMessage1))
@@ -105,16 +104,16 @@ describe('test join and leave events', () => {
 
         const leaveMessage1 = {
             type: ChatMessageType.LEAVE,
-            room: 'test-room',
-            senderId: 'user1',
-            senderName: 'Test User'
+            roomId: 'test-room',
+            userId: 'user1',
+            username: 'Test User'
         }
 
         const leaveMessage2 = {
             type: ChatMessageType.LEAVE,
-            room: 'test-room',
-            senderId: 'user2',
-            senderName: 'Test User 2'
+            roomId: 'test-room',
+            userId: 'user2',
+            username: 'Test User 2'
         }
 
         ws.send(JSON.stringify(leaveMessage1))
@@ -163,9 +162,9 @@ describe('test join and leave events', () => {
         // First join the room
         const joinMessage = {
             type: ChatMessageType.JOIN,
-            room: 'test-room',
-            senderId: 'user1',
-            senderName: 'Test User'
+            roomId: 'test-room',
+            userId: 'user1',
+            username: 'Test User'
         }
 
         ws.send(JSON.stringify(joinMessage))
@@ -174,9 +173,9 @@ describe('test join and leave events', () => {
 
         const leaveMessage = {
             type: ChatMessageType.LEAVE,
-            room: 'test-room',
-            senderId: 'user1',
-            senderName: 'Test User'
+            roomId: 'test-room',
+            userId: 'user1',
+            username: 'Test User'
         }
 
         ws.send(JSON.stringify(leaveMessage))
@@ -196,16 +195,16 @@ describe('test join and leave events', () => {
 
         const joinMessage1 = {
             type: ChatMessageType.JOIN,
-            room: 'test-room',
-            senderId: 'user1',
-            senderName: 'Test User'
+            roomId: 'test-room',
+            userId: 'user1',
+            username: 'Test User'
         }
 
         const joinMessage2 = {
             type: ChatMessageType.JOIN,
-            room: 'test-room',
-            senderId: 'user2',
-            senderName: 'Test User 2'
+            roomId: 'test-room',
+            userId: 'user2',
+            username: 'Test User 2'
         }
 
         ws.send(JSON.stringify(joinMessage1))
@@ -241,9 +240,9 @@ describe('test join and leave events', () => {
 
         const joinMessage = {
             type: ChatMessageType.JOIN,
-            room: 'test-room',
-            senderId: 'user1',
-            senderName: 'Test User'
+            roomId: 'test-room',
+            userId: 'user1',
+            username: 'Test User'
         }
 
         ws.send(JSON.stringify(joinMessage))
@@ -269,9 +268,9 @@ describe('test join and leave events', () => {
 
         const joinMessage = {
             type: ChatMessageType.JOIN,
-            room: 'test-room',
-            senderId: 'user1',
-            senderName: 'Test User'
+            roomId: 'test-room',
+            userId: 'user1',
+            username: 'Test User'
         }
 
         ws.send(JSON.stringify(joinMessage))
@@ -280,9 +279,9 @@ describe('test join and leave events', () => {
 
         const leaveMessage = {
             type: ChatMessageType.LEAVE,
-            room: 'test-room',
-            senderId: 'user1',
-            senderName: 'Test User'
+            roomId: 'test-room',
+            userId: 'user1',
+            username: 'Test User'
         }
 
         ws.send(JSON.stringify(leaveMessage))
@@ -351,17 +350,17 @@ describe('test messaging', () => {
                 throw new Error('user cant receive its own leave message cause it left lol')
             if (data.type === ChatMessageType.MESSAGE) {
                 expect(data.text).toBe('Hello World')
-                expect(data.senderId).toBe('user1')
-                expect(data.senderName).toBe('Test User')
-                expect(data.room).toBeUndefined()
+                expect(data.userId).toBe('user1')
+                expect(data.username).toBe('Test User')
+                expect(data.roomId).toBeUndefined()
             }
         })
 
         const joinMessage = {
             type: ChatMessageType.JOIN,
-            room: 'test-room',
-            senderId: 'user1',
-            senderName: 'Test User'
+            roomId: 'test-room',
+            userId: 'user1',
+            username: 'Test User'
         }
 
         ws.send(JSON.stringify(joinMessage))
@@ -370,9 +369,9 @@ describe('test messaging', () => {
 
         const message = {
             type: ChatMessageType.MESSAGE,
-            room: 'test-room',
-            senderId: 'user1',
-            senderName: 'Test User',
+            roomId: 'test-room',
+            userId: 'user1',
+            username: 'Test User',
             text: 'Hello World'
         }
 
@@ -381,9 +380,9 @@ describe('test messaging', () => {
 
         const leaveMessage = {
             type: ChatMessageType.LEAVE,
-            room: 'test-room',
-            senderId: 'user1',
-            senderName: 'Test User'
+            roomId: 'test-room',
+            userId: 'user1',
+            username: 'Test User'
         }
 
         ws.send(JSON.stringify(leaveMessage))
@@ -424,24 +423,24 @@ describe('test messaging', () => {
                 const data: ChatMessage = JSON.parse(rawData.toString())
 
                 expect(data.text).toBe('Hello World')
-                expect(data.senderId).toBe('user2')
-                expect(data.senderName).toBe('Test User 2')
-                expect(data.room).toBeUndefined()
+                expect(data.userId).toBe('user2')
+                expect(data.username).toBe('Test User 2')
+                expect(data.roomId).toBeUndefined()
             }
         })
 
         const joinMessage = {
             type: ChatMessageType.JOIN,
-            room: 'test-room',
-            senderId: 'user1',
-            senderName: 'Test User 1'
+            roomId: 'test-room',
+            userId: 'user1',
+            username: 'Test User 1'
         }
 
         const joinMessage2 = {
             type: ChatMessageType.JOIN,
-            room: 'test-room',
-            senderId: 'user2',
-            senderName: 'Test User 2'
+            roomId: 'test-room',
+            userId: 'user2',
+            username: 'Test User 2'
         }
 
         ws.send(JSON.stringify(joinMessage))
@@ -451,9 +450,9 @@ describe('test messaging', () => {
 
         const message = {
             type: ChatMessageType.MESSAGE,
-            room: 'test-room',
-            senderId: 'user2',
-            senderName: 'Test User 2',
+            roomId: 'test-room',
+            userId: 'user2',
+            username: 'Test User 2',
             text: 'Hello World'
         }
 
@@ -462,9 +461,9 @@ describe('test messaging', () => {
 
         const leaveMessage = {
             type: ChatMessageType.LEAVE,
-            room: 'test-room',
-            senderId: 'user2',
-            senderName: 'Test User 2'
+            roomId: 'test-room',
+            userId: 'user2',
+            username: 'Test User 2'
         }
 
         ws2.send(JSON.stringify(leaveMessage))

@@ -78,16 +78,29 @@ services:
   - name: Chat
     host: chat.service.consul
     port: 7780
+    path: /v1
     connect_timeout: 60000
     read_timeout: 60000
     write_timeout: 60000
     routes:
-      - name: ChatRoute
+      - name: Chat_Socket
         paths:
           - /ws
         strip_path: false
         protocols:
           - http
+      - name: Chat_Messages
+        protocols:
+          - http
+          - https
+        paths:
+          - /messages
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+
 
 consumers:
   - username: "authenticated users"
@@ -116,6 +129,8 @@ plugins:
         - exp
       uri_param_names:
         - token
+      cookie_names:
+        - ACCESS_TOKEN
       key_claim_name: consumer
       run_on_preflight: true
     service: Chat
