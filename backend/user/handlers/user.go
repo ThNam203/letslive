@@ -6,11 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sen1or/lets-live/user/controllers"
 	"sen1or/lets-live/user/dto"
 	livestreamgateway "sen1or/lets-live/user/gateway/livestream"
 	"sen1or/lets-live/user/repositories"
-	minio "sen1or/lets-live/user/services"
+	"sen1or/lets-live/user/services"
 	"sen1or/lets-live/user/types"
 	"sen1or/lets-live/user/utils"
 
@@ -20,16 +19,16 @@ import (
 
 type UserHandler struct {
 	ErrorHandler
-	minioClient       *minio.MinIOStrorage
-	ctrl              controllers.UserController
+	minioService      *services.MinIOService
+	ctrl              services.UserController
 	livestreamGateway livestreamgateway.LivestreamGateway
 }
 
-func NewUserHandler(ctrl controllers.UserController, livestreamGateway livestreamgateway.LivestreamGateway, minioClient *minio.MinIOStrorage) *UserHandler {
+func NewUserHandler(ctrl services.UserController, livestreamGateway livestreamgateway.LivestreamGateway, minioService *services.MinIOService) *UserHandler {
 	return &UserHandler{
 		ctrl:              ctrl,
 		livestreamGateway: livestreamGateway,
-		minioClient:       minioClient,
+		minioService:      minioService,
 	}
 }
 
@@ -281,7 +280,7 @@ func (h *UserHandler) UpdateUserProfilePicture(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	savedPath, err := h.minioClient.AddFile(file, fileHeader, "profile-pictures")
+	savedPath, err := h.minioService.AddFile(file, fileHeader, "profile-pictures")
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("failed to save the picture: %s", savedPath))
 		return
@@ -329,7 +328,7 @@ func (h *UserHandler) UpdateUserBackgroundPicture(w http.ResponseWriter, r *http
 		return
 	}
 
-	savedPath, err := h.minioClient.AddFile(file, fileHeader, "background-pictures")
+	savedPath, err := h.minioService.AddFile(file, fileHeader, "background-pictures")
 	if err != nil {
 		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("failed to save the picture: %s", savedPath))
 		return

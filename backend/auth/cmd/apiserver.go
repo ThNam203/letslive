@@ -98,8 +98,8 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("POST /v1/auth/send-verification", a.authHandler.SendVerificationHandler)
 	sm.HandleFunc("GET /v1/auth/email-verify", a.authHandler.VerifyEmailHandler)
 
-	sm.HandleFunc("GET /v1/auth/google", a.authHandler.OAuthGoogleLogin)
-	sm.HandleFunc("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBack)
+	sm.HandleFunc("GET /v1/auth/google", a.authHandler.OAuthGoogleLoginHandler)
+	sm.HandleFunc("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBackHandler)
 
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)

@@ -7,11 +7,10 @@ import (
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 	cfg "sen1or/lets-live/user/config"
-	"sen1or/lets-live/user/controllers"
 	livestreamgateway "sen1or/lets-live/user/gateway/livestream/http"
 	"sen1or/lets-live/user/handlers"
 	"sen1or/lets-live/user/repositories"
-	minio "sen1or/lets-live/user/services"
+	"sen1or/lets-live/user/services"
 	"sen1or/lets-live/user/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -72,12 +71,12 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *APIServer {
 	livestreamGateway := livestreamgateway.NewLivestreamGateway(registry)
 
-	minioClient := minio.NewMinIOStorage(context.Background(), cfg.MinIO)
+	minioClient := services.NewMinIOService(context.Background(), cfg.MinIO)
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var livestreamInfoRepo = repositories.NewLivestreamInformationRepository(dbConn)
 
-	var userCtrl = controllers.NewUserController(userRepo, livestreamInfoRepo)
-	var livestreamInfoCtrl = controllers.NewLivestreamInformationController(livestreamInfoRepo)
+	var userCtrl = services.NewUserController(userRepo, livestreamInfoRepo)
+	var livestreamInfoCtrl = services.NewLivestreamInformationController(livestreamInfoRepo)
 
 	var userHandler = handlers.NewUserHandler(userCtrl, livestreamGateway, minioClient)
 	var livestreamInfoHandler = handlers.NewLivestreamInformationHandler(livestreamInfoCtrl, minioClient)

@@ -1,4 +1,4 @@
-package minio
+package services
 
 import (
 	"context"
@@ -26,15 +26,15 @@ func getPolicy(bucketName string) string {
 	}`, bucketName)
 }
 
-type MinIOStrorage struct {
+type MinIOService struct {
 	minioClient *minio.Client
 	ctx         context.Context
 	config      config.MinIO
 }
 
 // If we don't want to connect to bootstrap node, enter a nil value for bootstrapNodeAddr
-func NewMinIOStorage(ctx context.Context, config config.MinIO) *MinIOStrorage {
-	storage := &MinIOStrorage{
+func NewMinIOService(ctx context.Context, config config.MinIO) *MinIOService {
+	storage := &MinIOService{
 		ctx:    ctx,
 		config: config,
 	}
@@ -46,7 +46,7 @@ func NewMinIOStorage(ctx context.Context, config config.MinIO) *MinIOStrorage {
 	return storage
 }
 
-func (s *MinIOStrorage) SetUp() error {
+func (s *MinIOService) SetUp() error {
 	minioClient, err := minio.New(fmt.Sprintf("%s:%d", s.config.Host, s.config.Port), &minio.Options{
 		Creds:  credentials.NewStaticV4(s.config.AccessKey, s.config.SecretKey, ""),
 		Secure: false,
@@ -71,7 +71,7 @@ func (s *MinIOStrorage) SetUp() error {
 	return nil
 }
 
-func (s *MinIOStrorage) createIfNotExists(bucketName string) error {
+func (s *MinIOService) createIfNotExists(bucketName string) error {
 	exists, err := s.minioClient.BucketExists(s.ctx, bucketName)
 	if err != nil {
 		return fmt.Errorf("failed to check bucket: %v", err)
@@ -92,7 +92,7 @@ func (s *MinIOStrorage) createIfNotExists(bucketName string) error {
 }
 
 // uploads a file to MinIO and returns the permanent URL
-func (s *MinIOStrorage) AddFile(file multipart.File, fileHeader *multipart.FileHeader, bucketName string) (string, error) {
+func (s *MinIOService) AddFile(file multipart.File, fileHeader *multipart.FileHeader, bucketName string) (string, error) {
 	fileName := fmt.Sprintf("%s-%s", uuid.New().String(), fileHeader.Filename)
 
 	// Upload the file

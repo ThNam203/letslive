@@ -5,22 +5,21 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sen1or/lets-live/user/controllers"
 	"sen1or/lets-live/user/domains"
 	"sen1or/lets-live/user/repositories"
-	minio "sen1or/lets-live/user/services"
+	"sen1or/lets-live/user/services"
 )
 
 type LivestreamInformationHandler struct {
 	ErrorHandler
-	minioClient *minio.MinIOStrorage
-	ctrl        controllers.LivestreamInformationController
+	minioService *services.MinIOService
+	ctrl         services.LivestreamInformationController
 }
 
-func NewLivestreamInformationHandler(ctrl controllers.LivestreamInformationController, minioClient *minio.MinIOStrorage) *LivestreamInformationHandler {
+func NewLivestreamInformationHandler(ctrl services.LivestreamInformationController, minioService *services.MinIOService) *LivestreamInformationHandler {
 	return &LivestreamInformationHandler{
-		ctrl:        ctrl,
-		minioClient: minioClient,
+		ctrl:         ctrl,
+		minioService: minioService,
 	}
 }
 
@@ -54,7 +53,7 @@ func (h *LivestreamInformationHandler) Update(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		thumbnailUrl = r.FormValue("thumbnailUrl")
 	} else {
-		savedPath, err := h.minioClient.AddFile(file, fileHeader, "thumbnails")
+		savedPath, err := h.minioService.AddFile(file, fileHeader, "thumbnails")
 		if err != nil {
 			h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("failed to save the picture: %s", savedPath))
 			return
