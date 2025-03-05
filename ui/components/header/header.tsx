@@ -19,10 +19,10 @@ export async function Header() {
                     <span className="max-md:hidden">Following</span>
                     <LuHeart size={20} className="md:hidden" />
                 </Link>
-                <Link href="/browse" className="hover:text-primary">
+                {/* <Link href="/browse" className="hover:text-primary">
                     <span className="max-md:hidden">Browse</span>
                     <LuCopy size={20} className="md:hidden" />
-                </Link>
+                </Link> */}
             </div>
 
             <div className="lg:w-[400px] max-lg:w mx-2">
