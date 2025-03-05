@@ -1,4 +1,4 @@
-package controllers
+package services
 
 import (
 	"sen1or/lets-live/user/domains"
