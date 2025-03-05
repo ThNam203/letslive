@@ -42,7 +42,13 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.authService.CheckLogInCredentials(userCredentials); err != nil {
+	auth, err := h.authService.GetUserFromCredentials(userCredentials)
+	if err != nil {
+		h.WriteErrorResponse(w, err)
+		return
+	}
+
+	if err := h.setAuthJWTsInCookie(auth.UserId.String(), w); err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}

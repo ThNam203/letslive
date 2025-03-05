@@ -37,28 +37,28 @@ func (s AuthService) GetUserById(userId uuid.UUID) (*domains.Auth, *servererrors
 	return auth, nil
 }
 
-func (s AuthService) CheckLogInCredentials(credentials dto.LogInRequestDTO) *servererrors.ServerError {
+func (s AuthService) GetUserFromCredentials(credentials dto.LogInRequestDTO) (*domains.Auth, *servererrors.ServerError) {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	validateErr := validate.Struct(&credentials)
 
 	if validateErr != nil {
-		return servererrors.ErrInvalidInput
+		return nil, servererrors.ErrInvalidInput
 	}
 
 	auth, err := s.repo.GetByEmail(credentials.Email)
 	if err != nil {
 		if errors.Is(err, servererrors.ErrAuthNotFound) {
-			return servererrors.ErrEmailOrPasswordIncorrect
+			return nil, servererrors.ErrEmailOrPasswordIncorrect
 		}
 
-		return err
+		return nil, err
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(auth.PasswordHash), []byte(credentials.Password)); err != nil {
-		return servererrors.ErrEmailOrPasswordIncorrect
+		return nil, servererrors.ErrEmailOrPasswordIncorrect
 	}
 
-	return nil
+	return auth, nil
 }
 
 func (s AuthService) CreateNewAuth(userForm dto.SignUpRequestDTO) (*domains.Auth, *servererrors.ServerError) {
