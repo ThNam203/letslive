@@ -74,10 +74,10 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
-	sm.HandleFunc("POST /v1/livestream", a.livestreamHandler.CreateLivestream)
-	sm.HandleFunc("PUT /v1/livestream/{livestreamId}", a.livestreamHandler.UpdateLivestream)
-	sm.HandleFunc("GET /v1/livestream/{livestreamId}", a.livestreamHandler.GetLivestreamById)
-	sm.HandleFunc("GET /v1/livestreams", a.livestreamHandler.GetLivestreamsOfUser)
+	sm.HandleFunc("POST /v1/livestream", a.livestreamHandler.CreateLivestreamHandler)
+	sm.HandleFunc("PUT /v1/livestream/{livestreamId}", a.livestreamHandler.UpdateLivestreamHandler)
+	sm.HandleFunc("GET /v1/livestream/{livestreamId}", a.livestreamHandler.GetLivestreamByIdHandler)
+	sm.HandleFunc("GET /v1/livestreams", a.livestreamHandler.GetLivestreamsOfUserHandler)
 
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sen1or/lets-live/livestream/domains"
+	servererrors "sen1or/lets-live/livestream/errors"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
@@ -11,12 +12,12 @@ import (
 )
 
 type LivestreamRepository interface {
-	GetById(uuid.UUID) (*domains.Livestream, error)
-	GetByUser(uuid.UUID) ([]domains.Livestream, error)
+	GetById(uuid.UUID) (*domains.Livestream, *servererrors.ServerError)
+	GetByUser(uuid.UUID) ([]domains.Livestream, *servererrors.ServerError)
 
-	Create(domains.Livestream) (*domains.Livestream, error)
-	Update(domains.Livestream) (*domains.Livestream, error)
-	Delete(uuid.UUID) error
+	Create(domains.Livestream) (*domains.Livestream, *servererrors.ServerError)
+	Update(domains.Livestream) (*domains.Livestream, *servererrors.ServerError)
+	Delete(uuid.UUID) *servererrors.ServerError
 }
 
 type postgresLivestreamRepo struct {
@@ -29,26 +30,26 @@ func NewLivestreamRepository(conn *pgxpool.Pool) LivestreamRepository {
 	}
 }
 
-func (r *postgresLivestreamRepo) GetById(userId uuid.UUID) (*domains.Livestream, error) {
+func (r *postgresLivestreamRepo) GetById(userId uuid.UUID) (*domains.Livestream, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(context.Background(), "select * from livestreams where id = $1", userId.String())
 	if err != nil {
-		return nil, err
+		return nil, servererrors.ErrDatabaseQuery
 	}
 
 	livestream, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Livestream])
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrRecordNotFound
+			return nil, servererrors.ErrLivestreamNotFound
 		}
 
-		return nil, err
+		return nil, servererrors.ErrDatabaseIssue
 	}
 
 	return &livestream, nil
 }
 
-func (r *postgresLivestreamRepo) GetByUser(userId uuid.UUID) ([]domains.Livestream, error) {
+func (r *postgresLivestreamRepo) GetByUser(userId uuid.UUID) ([]domains.Livestream, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(context.Background(), `
 		SELECT * 
 		FROM livestreams 
@@ -56,22 +57,22 @@ func (r *postgresLivestreamRepo) GetByUser(userId uuid.UUID) ([]domains.Livestre
 		ORDER BY created_at DESC
 	`, userId)
 	if err != nil {
-		return nil, err
+		return nil, servererrors.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	livestreams, err := pgx.CollectRows(rows, pgx.RowToStructByName[domains.Livestream])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrRecordNotFound
+			return nil, servererrors.ErrLivestreamNotFound
 		}
-		return nil, err
+		return nil, servererrors.ErrDatabaseIssue
 	}
 
 	return livestreams, nil
 }
 
-func (r *postgresLivestreamRepo) Create(newLivestream domains.Livestream) (*domains.Livestream, error) {
+func (r *postgresLivestreamRepo) Create(newLivestream domains.Livestream) (*domains.Livestream, *servererrors.ServerError) {
 	params := pgx.NamedArgs{
 		"title":         newLivestream.Title,
 		"user_id":       newLivestream.UserId,
@@ -85,23 +86,19 @@ func (r *postgresLivestreamRepo) Create(newLivestream domains.Livestream) (*doma
 
 	rows, err := r.dbConn.Query(context.Background(), "insert into livestreams (title, user_id, description, thumbnail_url, status, view_count, playback_url) values (@title, @user_id, @description, @thumbnail_url, @status, @view_count, @playback_url) returning *", params)
 	if err != nil {
-		return nil, err
+		return nil, servererrors.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Livestream])
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrRecordNotFound
-		}
-
-		return nil, err
+		return nil, servererrors.ErrDatabaseIssue
 	}
 
-	return &user, err
+	return &user, nil
 }
 
-func (r *postgresLivestreamRepo) Update(livestream domains.Livestream) (*domains.Livestream, error) {
+func (r *postgresLivestreamRepo) Update(livestream domains.Livestream) (*domains.Livestream, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(
 		context.Background(),
 		`UPDATE livestreams 
@@ -111,31 +108,35 @@ func (r *postgresLivestreamRepo) Update(livestream domains.Livestream) (*domains
 		livestream.Title, livestream.Description, livestream.Status, livestream.ViewCount, livestream.ThumbnailURL, livestream.PlaybackURL, livestream.EndedAt, livestream.Id,
 	)
 	if err != nil {
-		return nil, err
+		return nil, servererrors.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	updatedLivestream, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Livestream])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrRecordNotFound
+			return nil, servererrors.ErrLivestreamNotFound
 		}
 
-		return nil, err
+		return nil, servererrors.ErrDatabaseIssue
 	}
 
-	return &updatedLivestream, err
+	return &updatedLivestream, nil
 }
 
-func (r *postgresLivestreamRepo) Delete(livestreamId uuid.UUID) error {
-	_, err := r.dbConn.Exec(context.Background(), "DELETE FROM livestreams WHERE id = $1", livestreamId)
+func (r *postgresLivestreamRepo) Delete(livestreamId uuid.UUID) *servererrors.ServerError {
+	result, err := r.dbConn.Exec(context.Background(), "DELETE FROM livestreams WHERE id = $1", livestreamId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return ErrRecordNotFound
+			return servererrors.ErrLivestreamNotFound
 		}
 
-		return err // ?
+		return servererrors.ErrDatabaseIssue
 	}
 
-	return err
+	if result.RowsAffected() == 0 {
+		return servererrors.ErrLivestreamNotFound
+	}
+
+	return nil
 }
