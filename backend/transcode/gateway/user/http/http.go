@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"sen1or/lets-live/pkg/discovery"
-	"sen1or/lets-live/transcode/dto"
-	userdto "sen1or/lets-live/user/dto" // TODO: remove this
+	dto "sen1or/lets-live/transcode/gateway/user"
 )
 
 type UserGateway struct {
@@ -77,7 +76,7 @@ func (g *UserGateway) GetUserInformation(ctx context.Context, streamAPIKey strin
 	return &userInfo, nil
 }
 
-func (g *UserGateway) UpdateUserLiveStatus(ctx context.Context, userDTO userdto.UpdateUserRequestDTO) *ErrorResponse {
+func (g *UserGateway) UpdateUserLiveStatus(ctx context.Context, dto dto.UpdateUserIsOnlineDTO) *ErrorResponse {
 	addr, err := g.registry.ServiceAddress(ctx, "user")
 	if err != nil {
 		return &ErrorResponse{
@@ -86,9 +85,9 @@ func (g *UserGateway) UpdateUserLiveStatus(ctx context.Context, userDTO userdto.
 		}
 	}
 
-	url := fmt.Sprintf("http://%s/v1/user/%s", addr, userDTO.Id)
+	url := fmt.Sprintf("http://%s/v1/user/%s", addr, dto.Id)
 	payloadBuf := new(bytes.Buffer)
-	if err := json.NewEncoder(payloadBuf).Encode(userDTO); err != nil {
+	if err := json.NewEncoder(payloadBuf).Encode(dto); err != nil {
 		return &ErrorResponse{
 			Message:    fmt.Sprintf("failed to encode user body: %s", err),
 			StatusCode: 500,

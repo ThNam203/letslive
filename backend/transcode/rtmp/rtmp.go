@@ -10,12 +10,12 @@ import (
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/transcode/config"
-	dto "sen1or/lets-live/transcode/dto"
+	livestreamdto "sen1or/lets-live/transcode/gateway/livestream"
 	livestreamgateway "sen1or/lets-live/transcode/gateway/livestream/http"
+	userdto "sen1or/lets-live/transcode/gateway/user"
 	usergateway "sen1or/lets-live/transcode/gateway/user/http"
 	"sen1or/lets-live/transcode/transcoder"
 	"sen1or/lets-live/transcode/watcher"
-	userdto "sen1or/lets-live/user/dto"
 	"strconv"
 	"strings"
 	"time"
@@ -140,9 +140,9 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 		return "", "", fmt.Errorf("failed to get user information: %s", errRes.Message)
 	}
 
-	updateUserDTO := &userdto.UpdateUserRequestDTO{
+	updateUserDTO := &userdto.UpdateUserIsOnlineDTO{
 		Id:       userInfo.Id,
-		IsOnline: func(b bool) *bool { return &b }(true), // wtf
+		IsOnline: true,
 	}
 
 	errRes = s.userGateway.UpdateUserLiveStatus(context.Background(), *updateUserDTO)
@@ -150,7 +150,7 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 		return "", "", fmt.Errorf("failed to update user live status: %s", errRes.Message)
 	}
 
-	streamDTO := &dto.CreateLivestreamRequestDTO{
+	streamDTO := &livestreamdto.CreateLivestreamRequestDTO{
 		Title:        userInfo.LivestreamInformationResponseDTO.Title,
 		UserId:       userInfo.Id,
 		Description:  userInfo.LivestreamInformationResponseDTO.Description,
@@ -173,9 +173,9 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 // change the status of user to be not online
 func (s *RTMPServer) onDisconnect(userId string, streamId string) {
 	userIdUUID, _ := uuid.FromString(userId)
-	updateUserDTO := &userdto.UpdateUserRequestDTO{
+	updateUserDTO := &userdto.UpdateUserIsOnlineDTO{
 		Id:       userIdUUID,
-		IsOnline: func(b bool) *bool { return &b }(false), // wtf
+		IsOnline: false,
 	}
 
 	// create the VOD playlists and remove the entry
@@ -190,7 +190,7 @@ func (s *RTMPServer) onDisconnect(userId string, streamId string) {
 	playbackURL := fmt.Sprintf("http://%s:%d/vods/%s/index.m3u8", s.config.Service.Hostname, s.config.Webserver.Port, streamId)
 	endedAt := time.Now()
 
-	updateDTO := &dto.UpdateLivestreamRequestDTO{
+	updateDTO := &livestreamdto.UpdateLivestreamRequestDTO{
 		Id:           uuid.FromStringOrNil(streamId),
 		Title:        nil,
 		Description:  nil,

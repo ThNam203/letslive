@@ -30,3 +30,8 @@ type LivestreamInformationResponseDTO struct {
 	Description  *string   `json:"description"`
 	ThumbnailURL *string   `json:"thumbnailUrl"`
 }
+
+type UpdateUserIsOnlineDTO struct {
+	Id       uuid.UUID `json:"id"`
+	IsOnline bool      `json:"isOnline"`
+}
