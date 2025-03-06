@@ -1,7 +1,6 @@
 package webserver
 
 import (
-	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -34,6 +33,46 @@ func sanitizeRequestPath(requestPath string) string {
 	trimmedPath := strings.TrimSpace(requestPath)
 	cleanedRequestPath := filepath.Clean(trimmedPath)
 	return cleanedRequestPath
+}
+
+func (ws *WebServer) ListenAndServe() {
+	router := mux.NewRouter()
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(ws.BaseDirectory))))
+	router.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	router.Use(corsMiddleware)
+
+	server := &http.Server{
+		Addr:         ":" + strconv.Itoa(ws.ListenPort),
+		Handler:      router,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	go (func() {
+		if err := server.ListenAndServe(); err != nil {
+			logger.Errorf("failed to start web server: %s", err.Error())
+		}
+	})()
+
+	logger.Infow("web server started", "port", ws.ListenPort)
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Cache,Cache-Control,Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (ws *WebServer) serveFile(rw http.ResponseWriter, rq *http.Request) {
@@ -89,83 +128,4 @@ func (ws *WebServer) serveFile(rw http.ResponseWriter, rq *http.Request) {
 
 	rw.Header().Set("Content-Length", strconv.FormatInt(fileStat.Size(), 10))
 	io.Copy(rw, file)
-}
-
-func (ws *WebServer) ListenAndServe() {
-	router := mux.NewRouter()
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(ws.BaseDirectory))))
-	router.HandleFunc("/v1/vod/{userId}", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		userId := vars["userId"]
-		vodFolder := filepath.Join(ws.BaseDirectory, userId, "vods")
-
-		//TODO: refactor please
-		data := &struct {
-			StatusCode int
-			Data       []string
-		}{
-			StatusCode: 200,
-			Data:       []string{},
-		}
-
-		if _, err := os.Stat(vodFolder); err != nil && os.IsNotExist(err) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(data)
-			return
-		}
-
-		entries, err := os.ReadDir(vodFolder)
-		if err != nil {
-			http.Error(w, "failed to read dir entries", http.StatusInternalServerError)
-			return
-		}
-
-		var vodNames []string
-		for _, entry := range entries {
-			if entry.Type().IsDir() {
-				vodNames = append(vodNames, entry.Name())
-			}
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		data.Data = vodNames
-		json.NewEncoder(w).Encode(data)
-	})
-	router.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-
-	router.Use(corsMiddleware)
-
-	server := &http.Server{
-		Addr:         ":" + strconv.Itoa(ws.ListenPort),
-		Handler:      router,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
-
-	go (func() {
-		if err := server.ListenAndServe(); err != nil {
-			logger.Errorf("failed to start web server: %s", err.Error())
-		}
-	})()
-
-	logger.Infow("web server started", "port", ws.ListenPort)
-}
-
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Cache,Cache-Control,Authorization")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
 }

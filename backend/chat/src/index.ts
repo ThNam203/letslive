@@ -5,9 +5,16 @@ import { ChatServer } from './chatServer'
 import { Message } from './models/Message'
 import { RedisService } from './services/redis'
 import esMain from 'es-main'
-import express from 'express'
 import { createServer, Server } from 'http'
 import ConsulRegistry from 'services/discovery'
+import { ApiErrors } from 'types/api_error'
+import express, { NextFunction, Request, Response } from 'express'
+
+function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) {
+    return (req: Request, res: Response, next: NextFunction) => {
+        fn(req, res, next).catch(next) // Pass errors to the error-handling middleware
+    }
+}
 
 function CreateExpressServer() {
     const app = express()
@@ -16,15 +23,27 @@ function CreateExpressServer() {
         res.json({ status: 'ok' })
     })
 
-    app.get('/v1/messages', async (req, res) => {
-        const roomId = req.query.roomId as string
-        if (!roomId) {
-            res.status(400).json({ statusCode: 400, message: 'roomId is required' })
-            return
-        }
+    app.get(
+        '/v1/messages',
+        asyncHandler(async (req, res) => {
+            const roomId = req.query.roomId as string
+            if (!roomId) {
+                res.status(400).json(ApiErrors.INVALID_PATH)
+                return
+            }
 
-        const messages = await Message.find({ roomId }).sort({ timestamp: 1 }).limit(50)
-        res.json(messages)
+            const messages = await Message.find({ roomId }).sort({ timestamp: 1 }).limit(50)
+            res.json(messages)
+        })
+    )
+
+    app.get('*', (_, res: Response) => {
+        res.status(404).json(ApiErrors.ROUTE_NOT_FOUND)
+    })
+
+    app.use((err: any, req: Request, res: Response, next: NextFunction): void => {
+        console.error(err) // Log the error for debugging
+        res.status(500).json(ApiErrors.INTERNAL_SERVER_ERROR)
     })
 
     return createServer(app)

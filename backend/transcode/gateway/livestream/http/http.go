@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"sen1or/lets-live/pkg/discovery"
-	"sen1or/lets-live/transcode/dto"
+	dto "sen1or/lets-live/transcode/gateway/livestream"
 )
 
 type LivestreamGateway struct {
