@@ -71,14 +71,14 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *APIServer {
 	livestreamGateway := livestreamgateway.NewLivestreamGateway(registry)
 
-	minioClient := services.NewMinIOService(context.Background(), cfg.MinIO)
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var livestreamInfoRepo = repositories.NewLivestreamInformationRepository(dbConn)
 
-	var userCtrl = services.NewUserController(userRepo, livestreamInfoRepo)
-	var livestreamInfoCtrl = services.NewLivestreamInformationController(livestreamInfoRepo)
+	minioService := services.NewMinIOService(context.Background(), cfg.MinIO)
+	var userService = services.NewUserService(userRepo, livestreamInfoRepo, livestreamGateway, *minioService)
+	var livestreamInfoService = services.NewLivestreamInformationService(livestreamInfoRepo)
 
-	var userHandler = handlers.NewUserHandler(userCtrl, livestreamGateway, minioClient)
-	var livestreamInfoHandler = handlers.NewLivestreamInformationHandler(livestreamInfoCtrl, minioClient)
+	var userHandler = handlers.NewUserHandler(*userService)
+	var livestreamInfoHandler = handlers.NewLivestreamInformationHandler(*livestreamInfoService, *minioService)
 	return NewAPIServer(userHandler, livestreamInfoHandler, cfg)
 }

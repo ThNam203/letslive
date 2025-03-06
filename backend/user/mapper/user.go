@@ -13,7 +13,7 @@ func CreateUserRequestDTOToUser(dto dto.CreateUserRequestDTO) *domains.User {
 	}
 }
 
-func UserToGetUserResponseDTO(user domains.User) *dto.GetUserResponseDTO {
+func UserToGetUserResponseDTO(user domains.User, vods []dto.GetLivestreamResponseDTO) *dto.GetUserResponseDTO {
 	return &dto.GetUserResponseDTO{
 		Id:                user.Id,
 		Username:          user.Username,
@@ -26,7 +26,7 @@ func UserToGetUserResponseDTO(user domains.User) *dto.GetUserResponseDTO {
 		DisplayName:       user.DisplayName,
 		ProfilePicture:    user.ProfilePicture,
 		BackgroundPicture: user.BackgroundPicture,
-		VODs:              []dto.GetLivestreamResponseDTO{},
+		VODs:              vods,
 	}
 }
 

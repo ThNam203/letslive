@@ -3,20 +3,19 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"sen1or/lets-live/user/domains"
-	"sen1or/lets-live/user/repositories"
+	servererrors "sen1or/lets-live/user/errors"
 	"sen1or/lets-live/user/services"
 )
 
 type LivestreamInformationHandler struct {
 	ErrorHandler
-	minioService *services.MinIOService
-	ctrl         services.LivestreamInformationController
+	ctrl         services.LivestreamInformationService
+	minioService services.MinIOService
 }
 
-func NewLivestreamInformationHandler(ctrl services.LivestreamInformationController, minioService *services.MinIOService) *LivestreamInformationHandler {
+func NewLivestreamInformationHandler(ctrl services.LivestreamInformationService, minioService services.MinIOService) *LivestreamInformationHandler {
 	return &LivestreamInformationHandler{
 		ctrl:         ctrl,
 		minioService: minioService,
@@ -27,7 +26,7 @@ func (h *LivestreamInformationHandler) Update(w http.ResponseWriter, r *http.Req
 	const maxUploadSize = 11 * 1024 * 1024 // for other information outside of image
 	userUUID, err := getUserIdFromCookie(r)
 	if err != nil {
-		h.WriteErrorResponse(w, http.StatusUnauthorized, err)
+		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
 		return
 	}
 	defer r.Body.Close()
@@ -37,11 +36,11 @@ func (h *LivestreamInformationHandler) Update(w http.ResponseWriter, r *http.Req
 	if err := r.ParseMultipartForm(0); err != nil {
 		var maxByteError *http.MaxBytesError
 		if errors.As(err, &maxByteError) {
-			h.WriteErrorResponse(w, http.StatusRequestEntityTooLarge, err)
+			h.WriteErrorResponse(w, servererrors.ErrImageTooLarge)
 			return
 		}
 
-		h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("error parsing request body: %s", err.Error()))
+		h.WriteErrorResponse(w, servererrors.ErrInternalServer)
 		return
 	}
 
@@ -55,7 +54,7 @@ func (h *LivestreamInformationHandler) Update(w http.ResponseWriter, r *http.Req
 	} else {
 		savedPath, err := h.minioService.AddFile(file, fileHeader, "thumbnails")
 		if err != nil {
-			h.WriteErrorResponse(w, http.StatusBadRequest, fmt.Errorf("failed to save the picture: %s", savedPath))
+			h.WriteErrorResponse(w, servererrors.ErrInternalServer)
 			return
 		}
 
@@ -69,12 +68,9 @@ func (h *LivestreamInformationHandler) Update(w http.ResponseWriter, r *http.Req
 		ThumbnailURL: &thumbnailUrl,
 	}
 
-	updatedData, err := h.ctrl.Update(updateData)
-	if err != nil && errors.Is(err, repositories.ErrRecordNotFound) {
-		h.WriteErrorResponse(w, http.StatusNotFound, errors.New("information of user not found"))
-		return
-	} else if err != nil {
-		h.WriteErrorResponse(w, http.StatusInternalServerError, err)
+	updatedData, updateErr := h.ctrl.Update(updateData)
+	if updateErr != nil {
+		h.WriteErrorResponse(w, updateErr)
 		return
 	}
 

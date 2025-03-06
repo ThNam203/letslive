@@ -3,7 +3,10 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sen1or/lets-live/user/domains"
+	servererrors "sen1or/lets-live/user/errors"
+	"strings"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
@@ -11,21 +14,19 @@ import (
 )
 
 type UserRepository interface {
-	GetById(uuid.UUID) (*domains.User, error)
-	GetAll() ([]*domains.User, error)
-	GetByName(string) (*domains.User, error)
-	GetByEmail(string) (*domains.User, error)
-	GetByAPIKey(uuid.UUID) (*domains.User, error)
-	GetByFacebookID(string) (*domains.User, error)
-	GetStreamingUsers() ([]domains.User, error)
+	GetById(uuid.UUID) (*domains.User, *servererrors.ServerError)
+	Query(isOnline, username string, page int) ([]*domains.User, *servererrors.ServerError)
+	GetByName(string) (*domains.User, *servererrors.ServerError)
+	GetByEmail(string) (*domains.User, *servererrors.ServerError)
+	GetByAPIKey(uuid.UUID) (*domains.User, *servererrors.ServerError)
 
-	Create(domains.User) (*domains.User, error)
-	Update(domains.User) (*domains.User, error)
-	UpdateUserVerified(userId uuid.UUID) error
-	UpdateStreamAPIKey(userId uuid.UUID, newKey string) error
-	UpdateProfilePicture(uuid.UUID, string) error
-	UpdateBackgroundPicture(uuid.UUID, string) error
-	Delete(uuid.UUID) error
+	Create(username, email string, isVerified bool) *servererrors.ServerError
+	Update(domains.User) (*domains.User, *servererrors.ServerError)
+	UpdateUserVerified(userId uuid.UUID) *servererrors.ServerError
+	UpdateStreamAPIKey(userId uuid.UUID, newKey string) *servererrors.ServerError
+	UpdateProfilePicture(uuid.UUID, string) *servererrors.ServerError
+	UpdateBackgroundPicture(uuid.UUID, string) *servererrors.ServerError
+	Delete(uuid.UUID) *servererrors.ServerError
 }
 
 type postgresUserRepo struct {
@@ -38,44 +39,66 @@ func NewUserRepository(conn *pgxpool.Pool) UserRepository {
 	}
 }
 
-func (r *postgresUserRepo) GetById(userId uuid.UUID) (*domains.User, error) {
+func (r *postgresUserRepo) GetById(userId uuid.UUID) (*domains.User, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(context.Background(), `
 		SELECT u.id, u.username, u.email, u.is_verified, u.is_online, u.is_active, u.created_at, u.stream_api_key, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url 
 		FROM users u
-		LEFT JOIN livestream_information l ON u.id = l.user_id
-		where u.id = $1
+		JOIN livestream_information l ON u.id = l.user_id
+		WHERE u.id = $1
 	`, userId.String())
 	if err != nil {
-		return nil, err
+		return nil, servererrors.ErrDatabaseQuery
 	}
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.User])
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrRecordNotFound
+			return nil, servererrors.ErrUserNotFound
 		}
 
-		return nil, err
+		return nil, servererrors.ErrDatabaseIssue
 	}
 
 	return &user, nil
 }
 
-func (r *postgresUserRepo) GetAll() ([]*domains.User, error) {
-	// TODO: pagination
-	rows, err := r.dbConn.Query(context.Background(), "select * from users limit 100")
+func (r *postgresUserRepo) Query(onlineStatus string, username string, page int) ([]*domains.User, *servererrors.ServerError) {
+	whereConditions := []string{}
+	args := []any{}
+	argIndex := 1
+
+	if len(onlineStatus) > 0 {
+		whereConditions = append(whereConditions, fmt.Sprintf("is_online = $%d", argIndex))
+		args = append(args, onlineStatus)
+		argIndex++
+	}
+
+	if len(username) > 0 {
+		whereConditions = append(whereConditions, fmt.Sprintf("SOUNDEX(username) = SOUNDEX($%d)", argIndex))
+		args = append(args, username)
+		argIndex++
+	}
+
+	whereClause := ""
+	if len(whereConditions) > 0 {
+		whereClause = " WHERE " + strings.Join(whereConditions, " AND ")
+	}
+
+	args = append(args, page*20, 20)
+	query := fmt.Sprintf("SELECT * FROM users %s OFFSET $%d LIMIT $%d", whereClause, argIndex, argIndex+1)
+
+	rows, err := r.dbConn.Query(context.Background(), query, args...)
 	if err != nil {
-		return nil, err
+		return nil, servererrors.ErrDatabaseQuery
 	}
 
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[domains.User])
-
 	if err != nil {
-		return nil, err
+		return nil, servererrors.ErrDatabaseIssue
 	}
 
-	var returnUsers = []*domains.User{}
+	var returnUsers []*domains.User
 	for _, u := range users {
 		returnUsers = append(returnUsers, &u)
 	}
@@ -83,126 +106,88 @@ func (r *postgresUserRepo) GetAll() ([]*domains.User, error) {
 	return returnUsers, nil
 }
 
-func (r *postgresUserRepo) GetByName(username string) (*domains.User, error) {
+func (r *postgresUserRepo) GetByName(username string) (*domains.User, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(context.Background(), "select * from users where username = $1", username)
 	if err != nil {
-		return nil, err
+		return nil, servererrors.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrRecordNotFound
+			return nil, servererrors.ErrUserNotFound
 		}
 
-		return nil, err
+		return nil, servererrors.ErrDatabaseIssue
 	}
 
 	return &user, nil
 }
-func (r *postgresUserRepo) GetByEmail(email string) (*domains.User, error) {
+
+func (r *postgresUserRepo) GetByEmail(email string) (*domains.User, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(context.Background(), "select * from users where email = $1", email)
 	if err != nil {
-		return nil, err
+		return nil, servererrors.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrRecordNotFound
+			return nil, servererrors.ErrUserNotFound
 		}
-		return nil, err
+		return nil, servererrors.ErrDatabaseIssue
 	}
 
 	return &user, nil
 }
 
-// TODO: revise the oauth2 login
-func (r *postgresUserRepo) GetByFacebookID(facebookID string) (*domains.User, error) {
-	rows, err := r.dbConn.Query(context.Background(), "select * from users where facebook_id = $1", facebookID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrRecordNotFound
-		}
-		return nil, err
-	}
-
-	return &user, nil
-
-}
-
-func (r *postgresUserRepo) GetByAPIKey(apiKey uuid.UUID) (*domains.User, error) {
+func (r *postgresUserRepo) GetByAPIKey(apiKey uuid.UUID) (*domains.User, *servererrors.ServerError) {
 	var user domains.User
 	rows, err := r.dbConn.Query(context.Background(), `
 		SELECT u.id, u.username, u.email, u.is_verified, u.is_online, u.is_active, u.created_at, u.stream_api_key, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url 
 		FROM users u
-		LEFT JOIN livestream_information l ON u.id = l.user_id
-		where u.stream_api_key = $1
+		JOIN livestream_information l ON u.id = l.user_id
+		WHERE u.stream_api_key = $1
 	`, apiKey)
 	if err != nil {
-		return nil, err
+		return nil, servererrors.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	user, err = pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.User])
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, ErrRecordNotFound
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, servererrors.ErrUserNotFound
+		}
+
+		return nil, servererrors.ErrDatabaseIssue
 	}
 
 	return &user, nil
 }
 
-func (r *postgresUserRepo) GetStreamingUsers() ([]domains.User, error) {
-	rows, err := r.dbConn.Query(context.Background(), "select * from users where is_online = $1", true)
-	defer rows.Close()
-
-	streamingUsers, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[domains.User])
-
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return []domains.User{}, nil
-		}
-
-		return nil, err
-	}
-
-	return streamingUsers, nil
-}
-
-func (r *postgresUserRepo) Create(newUser domains.User) (*domains.User, error) {
+func (r *postgresUserRepo) Create(username, email string, isVerified bool) *servererrors.ServerError {
 	params := pgx.NamedArgs{
-		"username":    newUser.Username,
-		"email":       newUser.Email,
-		"is_verified": newUser.IsVerified,
+		"username":    username,
+		"email":       email,
+		"is_verified": isVerified,
 	}
 
-	rows, err := r.dbConn.Query(context.Background(), "insert into users (username, email, is_verified) values (@username, @email, @is_verified) returning *", params)
+	result, err := r.dbConn.Exec(context.Background(), "insert into users (username, email, is_verified) values (@username, @email, @is_verified) returning *", params)
 	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.User])
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrRecordNotFound
-		}
-
-		return nil, err
+		return servererrors.ErrDatabaseQuery
 	}
 
-	return &user, err
+	if result.RowsAffected() == 0 {
+		return servererrors.ErrDatabaseIssue
+	}
+
+	return nil
 }
 
-func (r *postgresUserRepo) Update(user domains.User) (*domains.User, error) {
+func (r *postgresUserRepo) Update(user domains.User) (*domains.User, *servererrors.ServerError) {
 	params := pgx.NamedArgs{
 		"id":           user.Id,
 		"is_online":    user.IsOnline,
@@ -212,83 +197,102 @@ func (r *postgresUserRepo) Update(user domains.User) (*domains.User, error) {
 		"bio":          user.Bio,
 	}
 
-	rows, err := r.dbConn.Query(context.Background(), "UPDATE users SET is_online = @is_online, is_active = @is_active, display_name = @display_name, phone_number = @phone_number, bio = @bio WHERE id = @id RETURNING *", params)
+	rows, err := r.dbConn.Query(
+		context.Background(), `
+		UPDATE users 
+		SET is_online = @is_online, is_active = @is_active, display_name = @display_name, phone_number = @phone_number, bio = @bio 
+		WHERE id = @id 
+		RETURNING *
+	`, params)
+
 	if err != nil {
-		return nil, err
+		return nil, servererrors.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	updatedUser, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.User])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrRecordNotFound
+			return nil, servererrors.ErrUserNotFound
 		}
 
-		return nil, err
+		return nil, servererrors.ErrDatabaseIssue
 	}
 
-	return &updatedUser, err
+	return &updatedUser, nil
 }
 
-func (r *postgresUserRepo) UpdateStreamAPIKey(userId uuid.UUID, newKey string) error {
-	_, err := r.dbConn.Query(context.Background(), "UPDATE users SET stream_api_key = $1 WHERE id = $2", newKey, userId)
+func (r *postgresUserRepo) UpdateStreamAPIKey(userId uuid.UUID, newKey string) *servererrors.ServerError {
+	result, err := r.dbConn.Exec(context.Background(), "UPDATE users SET stream_api_key = $1 WHERE id = $2", newKey, userId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return ErrRecordNotFound
+			return servererrors.ErrUserNotFound
 		}
-		return err
+
+		return servererrors.ErrDatabaseQuery
+	} else if result.RowsAffected() == 0 {
+		return servererrors.ErrUserNotFound
 	}
 
 	return nil
 }
 
-func (r *postgresUserRepo) UpdateProfilePicture(userId uuid.UUID, path string) error {
-	_, err := r.dbConn.Exec(context.Background(), "UPDATE users SET profile_picture = $1 WHERE id = $2", path, userId)
+func (r *postgresUserRepo) UpdateProfilePicture(userId uuid.UUID, path string) *servererrors.ServerError {
+	result, err := r.dbConn.Exec(context.Background(), "UPDATE users SET profile_picture = $1 WHERE id = $2", path, userId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return ErrRecordNotFound
+			return servererrors.ErrUserNotFound
 		}
-		return err
+
+		return servererrors.ErrDatabaseQuery
+	} else if result.RowsAffected() == 0 {
+		return servererrors.ErrUserNotFound
 	}
 
 	return nil
 }
 
-func (r *postgresUserRepo) UpdateBackgroundPicture(userId uuid.UUID, path string) error {
-	_, err := r.dbConn.Exec(context.Background(), "UPDATE users SET background_picture = $1 WHERE id = $2", path, userId)
+func (r *postgresUserRepo) UpdateBackgroundPicture(userId uuid.UUID, path string) *servererrors.ServerError {
+	result, err := r.dbConn.Exec(context.Background(), "UPDATE users SET background_picture = $1 WHERE id = $2", path, userId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return ErrRecordNotFound
+			return servererrors.ErrUserNotFound
 		}
-		return err
+
+		return servererrors.ErrDatabaseQuery
+	} else if result.RowsAffected() == 0 {
+		return servererrors.ErrUserNotFound
 	}
 
 	return nil
 }
 
-func (r *postgresUserRepo) Delete(userID uuid.UUID) error {
-	_, err := r.dbConn.Exec(context.Background(), "DELETE FROM users WHERE id = $1", userID.String())
+func (r *postgresUserRepo) Delete(userID uuid.UUID) *servererrors.ServerError {
+	result, err := r.dbConn.Exec(context.Background(), "DELETE FROM users WHERE id = $1", userID.String())
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return ErrRecordNotFound
+			return servererrors.ErrUserNotFound
 		}
 
-		return err // lol
+		return servererrors.ErrDatabaseQuery
+	} else if result.RowsAffected() == 0 {
+		return servererrors.ErrUserNotFound
 	}
 
-	return err
+	return nil
 }
 
-func (r *postgresUserRepo) UpdateUserVerified(userId uuid.UUID) error {
-	_, err := r.dbConn.Exec(context.Background(), "UPDATE users SET is_verified = $1 WHERE id = $2", true, userId)
+func (r *postgresUserRepo) UpdateUserVerified(userId uuid.UUID) *servererrors.ServerError {
+	result, err := r.dbConn.Exec(context.Background(), "UPDATE users SET is_verified = $1 WHERE id = $2", true, userId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return ErrRecordNotFound
+			return servererrors.ErrUserNotFound
 		}
 
-		return err // lol
+		return servererrors.ErrDatabaseQuery
+	} else if result.RowsAffected() == 0 {
+		return servererrors.ErrUserNotFound
 	}
 
-	return err
-
+	return nil
 }

@@ -2,32 +2,27 @@ package services
 
 import (
 	"sen1or/lets-live/user/domains"
+	servererrors "sen1or/lets-live/user/errors"
 	"sen1or/lets-live/user/repositories"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-// TODO: refactor the job of controller (i think the handler should handle parsing and validate data while the controller deal with logics, right now the handler is doing all the work)
-type LivestreamInformationController interface {
-	Create(userId uuid.UUID) error
-	Update(data domains.LivestreamInformation) (*domains.LivestreamInformation, error)
-}
-
-type livestreamInformationController struct {
+type LivestreamInformationService struct {
 	repo repositories.LivestreamInformationRepository
 }
 
-func NewLivestreamInformationController(repo repositories.LivestreamInformationRepository) LivestreamInformationController {
-	return &livestreamInformationController{
+func NewLivestreamInformationService(repo repositories.LivestreamInformationRepository) *LivestreamInformationService {
+	return &LivestreamInformationService{
 		repo: repo,
 	}
 }
 
-func (c *livestreamInformationController) Create(userId uuid.UUID) error {
+func (c *LivestreamInformationService) Create(userId uuid.UUID) error {
 	return c.repo.Create(userId)
 }
 
-func (c *livestreamInformationController) Update(data domains.LivestreamInformation) (*domains.LivestreamInformation, error) {
+func (c *LivestreamInformationService) Update(data domains.LivestreamInformation) (*domains.LivestreamInformation, *servererrors.ServerError) {
 	updatedInformation, err := c.repo.Update(data)
 
 	if err != nil {

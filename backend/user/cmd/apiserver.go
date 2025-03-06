@@ -76,21 +76,20 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
-	sm.HandleFunc("GET /v1/users", a.userHandler.GetAllUsers)
-	sm.HandleFunc("GET /v1/user/{id}", a.userHandler.GetUserByID)
-	sm.HandleFunc("GET /v1/user", a.userHandler.GetUserByQueries)
-	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUser)     // internal
-	sm.HandleFunc("PUT /v1/user/{id}", a.userHandler.UpdateUser) // internal
+	sm.HandleFunc("GET /v1/users", a.userHandler.QueryUserHandler)
+	sm.HandleFunc("GET /v1/user/{id}", a.userHandler.GetUserByIdHandler)
+	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUserHandler)             // internal
+	sm.HandleFunc("PUT /v1/user/{id}", a.userHandler.UpdateUserInternalHandler) // internal
 
-	sm.HandleFunc("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKey)
+	sm.HandleFunc("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyHandler)
 
-	sm.HandleFunc("GET /v1/user/me", a.userHandler.GetCurrentUserInfo)
-	sm.HandleFunc("PUT /v1/user/me", a.userHandler.UpdateCurrentUser)
-	sm.HandleFunc("PATCH /v1/user/{userId}/set-verified", a.userHandler.SetUserVerified) // internal
+	sm.HandleFunc("GET /v1/user/me", a.userHandler.GetCurrentUserHandler)
+	sm.HandleFunc("PUT /v1/user/me", a.userHandler.UpdateCurrentUserHandler)
+	sm.HandleFunc("PATCH /v1/user/{userId}/set-verified", a.userHandler.SetUserVerifiedHandler) // internal
 	sm.HandleFunc("PATCH /v1/user/me/livestream-information", a.livestreamInformationHandler.Update)
-	sm.HandleFunc("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKey)
-	sm.HandleFunc("PATCH /v1/user/me/profile_picture", a.userHandler.UpdateUserProfilePicture)
-	sm.HandleFunc("PATCH /v1/user/me/background_picture", a.userHandler.UpdateUserBackgroundPicture)
+	sm.HandleFunc("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKeyHandler)
+	sm.HandleFunc("PATCH /v1/user/me/profile-picture", a.userHandler.UpdateUserProfilePictureHandler)
+	sm.HandleFunc("PATCH /v1/user/me/background-picture", a.userHandler.UpdateUserBackgroundPictureHandler)
 
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 

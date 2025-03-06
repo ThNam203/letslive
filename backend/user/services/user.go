@@ -1,98 +1,73 @@
 package services
 
 import (
+	"context"
+	"mime/multipart"
 	"sen1or/lets-live/user/domains"
 	"sen1or/lets-live/user/dto"
+	servererrors "sen1or/lets-live/user/errors"
+	livestreamgateway "sen1or/lets-live/user/gateway/livestream"
 	"sen1or/lets-live/user/mapper"
 	"sen1or/lets-live/user/repositories"
+	"sen1or/lets-live/user/utils"
+	"strconv"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-// TODO: refactor the job of controller (i think the handler should handle parsing and validate data while the controller deal with logics, right now the handler is doing all the work)
-type UserController interface {
-	Create(body dto.CreateUserRequestDTO) (*domains.User, error)
-	GetAll() ([]*dto.GetUserResponseDTO, error)
-	GetById(id uuid.UUID) (*dto.GetUserResponseDTO, error)
-	GetUserFullProfile(id uuid.UUID) (*domains.User, error)
-	GetByEmail(email string) (*dto.GetUserResponseDTO, error)
-	GetByStreamAPIKey(key uuid.UUID) (*domains.User, error)
-	GetStreamingUsers() ([]*dto.GetUserResponseDTO, error)
-	Update(updateDTO dto.UpdateUserRequestDTO) (*domains.User, error)
-	UpdateStreamAPIKey(userId uuid.UUID) (string, error)
-	UpdateUserVerified(userId uuid.UUID) error
-	UpdateProfilePicture(id uuid.UUID, picturePath string) error
-	UpdateBackgroundPicture(id uuid.UUID, picturePath string) error
-	Delete(userID uuid.UUID) error
-}
-
-type userController struct {
+type UserService struct {
 	repo                      repositories.UserRepository
 	livestreamInformationRepo repositories.LivestreamInformationRepository
+	livestreamGateway         livestreamgateway.LivestreamGateway
+	minioService              MinIOService
 }
 
-func NewUserController(repo repositories.UserRepository, livestreamInformationController repositories.LivestreamInformationRepository) UserController {
-	return &userController{
+func NewUserService(
+	repo repositories.UserRepository,
+	livestreamInformationRepo repositories.LivestreamInformationRepository,
+	livestreamGateway livestreamgateway.LivestreamGateway,
+	minioService MinIOService,
+) *UserService {
+	return &UserService{
 		repo:                      repo,
-		livestreamInformationRepo: livestreamInformationController,
+		livestreamInformationRepo: livestreamInformationRepo,
+		livestreamGateway:         livestreamGateway,
+		minioService:              minioService,
 	}
 }
 
-// TODO: transaction please
-func (c *userController) Create(body dto.CreateUserRequestDTO) (*domains.User, error) {
-	user := mapper.CreateUserRequestDTOToUser(body)
-	createdUser, err := c.repo.Create(*user)
+func (s *UserService) GetUserById(userUUID uuid.UUID) (*dto.GetUserResponseDTO, *servererrors.ServerError) {
+	user, err := s.repo.GetById(userUUID)
 	if err != nil {
 		return nil, err
 	}
 
-	_ = c.livestreamInformationRepo.Create(createdUser.Id)
-
-	return createdUser, nil
-}
-
-func (c *userController) GetById(id uuid.UUID) (*dto.GetUserResponseDTO, error) {
-	user, err := c.repo.GetById(id)
-	if err != nil {
-		return nil, err
+	userVODs, errRes := s.livestreamGateway.GetUserLivestreams(context.Background(), userUUID.String())
+	if errRes != nil {
+		return nil, servererrors.NewServerError(errRes.StatusCode, errRes.Message)
 	}
 
-	return mapper.UserToGetUserResponseDTO(*user), nil
-}
-
-func (c *userController) GetUserFullProfile(id uuid.UUID) (*domains.User, error) {
-	user, err := c.repo.GetById(id)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
-}
-
-func (c *userController) GetAll() ([]*dto.GetUserResponseDTO, error) {
-	users, err := c.repo.GetAll()
-	if err != nil {
-		return nil, err
-	}
-
-	var res = []*dto.GetUserResponseDTO{}
-	for _, u := range users {
-		res = append(res, mapper.UserToGetUserResponseDTO(*u))
-	}
+	res := mapper.UserToGetUserResponseDTO(*user, userVODs)
 	return res, nil
 }
 
-func (c *userController) GetByEmail(email string) (*dto.GetUserResponseDTO, error) {
-	user, err := c.repo.GetByEmail(email)
+func (s *UserService) GetUserByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseDTO, *servererrors.ServerError) {
+	user, err := s.repo.GetByAPIKey(key)
 	if err != nil {
 		return nil, err
 	}
 
-	return mapper.UserToGetUserResponseDTO(*user), nil
+	userVODs, errRes := s.livestreamGateway.GetUserLivestreams(context.Background(), user.Id.String())
+	if errRes != nil {
+		return nil, servererrors.NewServerError(errRes.StatusCode, errRes.Message)
+	}
+
+	res := mapper.UserToGetUserResponseDTO(*user, userVODs)
+	return res, nil
 }
 
-func (c *userController) GetByStreamAPIKey(key uuid.UUID) (*domains.User, error) {
-	user, err := c.repo.GetByAPIKey(key)
+func (s *UserService) GetUserFullInformation(userUUID uuid.UUID) (*domains.User, *servererrors.ServerError) {
+	user, err := s.repo.GetById(userUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -100,24 +75,66 @@ func (c *userController) GetByStreamAPIKey(key uuid.UUID) (*domains.User, error)
 	return user, nil
 }
 
-func (c *userController) GetStreamingUsers() ([]*dto.GetUserResponseDTO, error) {
-	onlineUsers, err := c.repo.GetStreamingUsers()
+func (s *UserService) QueryUsers(isOnline, username, page string) ([]dto.GetUserResponseDTO, *servererrors.ServerError) {
+	var pageNumber int
+	if len(page) == 0 {
+		pageNumber = 0
+	} else {
+		atoiNum, atoiErr := strconv.Atoi(page)
+		if atoiErr != nil {
+			return nil, servererrors.ErrInvalidInput
+		}
+		pageNumber = atoiNum
+	}
+
+	users, err := s.repo.Query(isOnline, username, pageNumber)
 	if err != nil {
 		return nil, err
 	}
 
-	var result = []*dto.GetUserResponseDTO{}
-	for _, user := range onlineUsers {
-		result = append(result, mapper.UserToGetUserResponseDTO(user))
+	var resUsers []dto.GetUserResponseDTO
+
+	for _, user := range users {
+		userVODs, errRes := s.livestreamGateway.GetUserLivestreams(context.Background(), user.Id.String())
+		if errRes != nil {
+			continue // what should be done?
+		}
+
+		resUsers = append(resUsers, *mapper.UserToGetUserResponseDTO(*user, userVODs))
 	}
 
-	return result, nil
+	return resUsers, nil
 }
 
-func (c *userController) Update(updateDTO dto.UpdateUserRequestDTO) (*domains.User, error) {
-	updateUser := mapper.UpdateUserRequestDTOToUser(updateDTO)
-	updatedUser, err := c.repo.Update(updateUser)
+func (s *UserService) CreateNewUser(data dto.CreateUserRequestDTO) *servererrors.ServerError {
+	if err := utils.Validator.Struct(&data); err != nil {
+		return servererrors.ErrInvalidInput
+	}
 
+	err := s.repo.Create(data.Username, data.Email, data.IsVerified)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *UserService) UpdateUserVerified(userId uuid.UUID) *servererrors.ServerError {
+	err := s.repo.UpdateUserVerified(userId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *UserService) UpdateUser(data dto.UpdateUserRequestDTO) (*domains.User, *servererrors.ServerError) {
+	if err := utils.Validator.Struct(&data); err != nil {
+		return nil, servererrors.ErrInvalidInput
+	}
+
+	updateData := mapper.UpdateUserRequestDTOToUser(data)
+	updatedUser, err := s.repo.Update(updateData)
 	if err != nil {
 		return nil, err
 	}
@@ -125,13 +142,13 @@ func (c *userController) Update(updateDTO dto.UpdateUserRequestDTO) (*domains.Us
 	return updatedUser, nil
 }
 
-func (c *userController) UpdateStreamAPIKey(userId uuid.UUID) (string, error) {
-	newStreamKey, err := uuid.NewGen().NewV4()
-	if err != nil {
-		return "", err
+func (s *UserService) UpdateUserAPIKey(userId uuid.UUID) (string, *servererrors.ServerError) {
+	newStreamKey, genErr := uuid.NewGen().NewV4()
+	if genErr != nil {
+		return "", servererrors.ErrInternalServer
 	}
 
-	err = c.repo.UpdateStreamAPIKey(userId, newStreamKey.String())
+	err := s.repo.UpdateStreamAPIKey(userId, newStreamKey.String())
 	if err != nil {
 		return "", err
 	}
@@ -139,18 +156,46 @@ func (c *userController) UpdateStreamAPIKey(userId uuid.UUID) (string, error) {
 	return newStreamKey.String(), nil
 }
 
-func (c *userController) Delete(userID uuid.UUID) error {
-	return c.repo.Delete(userID)
+func (s UserService) UpdateUserProfilePicture(file multipart.File, fileHeader *multipart.FileHeader, userId uuid.UUID) (string, *servererrors.ServerError) {
+	savedPath, err := s.minioService.AddFile(file, fileHeader, "profile-pictures")
+	if err != nil {
+		return "", servererrors.ErrInternalServer
+	}
+
+	updateErr := s.repo.UpdateProfilePicture(userId, savedPath)
+	if updateErr != nil {
+		return "", updateErr
+	}
+
+	return savedPath, nil
 }
 
-func (c *userController) UpdateProfilePicture(id uuid.UUID, picturePath string) error {
-	return c.repo.UpdateProfilePicture(id, picturePath)
+func (s UserService) UpdateUserBackgroundPicture(file multipart.File, fileHeader *multipart.FileHeader, userId uuid.UUID) (string, *servererrors.ServerError) {
+	savedPath, err := s.minioService.AddFile(file, fileHeader, "background-pictures")
+	if err != nil {
+		return "", servererrors.ErrInternalServer
+	}
+
+	updateErr := s.repo.UpdateBackgroundPicture(userId, savedPath)
+	if updateErr != nil {
+		return "", updateErr
+	}
+
+	return savedPath, nil
 }
 
-func (c *userController) UpdateBackgroundPicture(id uuid.UUID, picturePath string) error {
-	return c.repo.UpdateBackgroundPicture(id, picturePath)
-}
+// INTERNAL USE
+func (s UserService) UpdateUserInternal(data dto.UpdateUserRequestDTO) (*domains.User, *servererrors.ServerError) {
+	if err := utils.Validator.Struct(&data); err != nil {
+		return nil, servererrors.ErrInvalidInput
+	}
 
-func (c *userController) UpdateUserVerified(userId uuid.UUID) error {
-	return c.repo.UpdateUserVerified(userId)
+	updateUser := mapper.UpdateUserRequestDTOToUser(data)
+
+	updatedUser, err := s.repo.Update(updateUser)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedUser, nil
 }
