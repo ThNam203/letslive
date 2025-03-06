@@ -38,9 +38,9 @@ func (h *UserHandler) GetUserByIdHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, err := h.userService.GetUserById(userUUID)
-	if err != nil {
-		h.WriteErrorResponse(w, servererrors.ErrInvalidInput)
+	user, serviceErr := h.userService.GetUserById(userUUID)
+	if serviceErr != nil {
+		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h *UserHandler) GetUserByStreamAPIKeyHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	user, err := h.userService.GetUserById(streamAPIKey)
+	user, err := h.userService.GetUserByStreamAPIKey(streamAPIKey)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

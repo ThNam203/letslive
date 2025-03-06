@@ -125,7 +125,7 @@ func (s AuthService) UpdatePassword(dto dto.ChangePasswordRequestDTO, userUUID u
 	}
 
 	auth.PasswordHash = string(updateHashedPassword)
-	if err := s.repo.UpdatePasswordHash(userUUID.String(), auth.PasswordHash); err != nil {
+	if err := s.repo.UpdatePasswordHash(auth.Id.String(), auth.PasswordHash); err != nil {
 		return err
 	}
 
