@@ -18,7 +18,7 @@ type AuthRepository interface {
 	GetByEmail(string) (*domains.Auth, *servererrors.ServerError)
 
 	Create(domains.Auth) (*domains.Auth, *servererrors.ServerError)
-	UpdatePasswordHash(userId, newPasswordHash string) *servererrors.ServerError
+	UpdatePasswordHash(authId, newPasswordHash string) *servererrors.ServerError
 	Delete(uuid.UUID) *servererrors.ServerError
 }
 
@@ -122,8 +122,8 @@ func (r *postgresAuthRepo) Create(newAuth domains.Auth) (*domains.Auth, *servere
 	return &user, nil
 }
 
-func (r *postgresAuthRepo) UpdatePasswordHash(userId, newPasswordHash string) *servererrors.ServerError {
-	result, err := r.dbConn.Exec(context.Background(), "UPDATE auths SET password_hash = $1 WHERE id = $2 RETURNING *", newPasswordHash, userId)
+func (r *postgresAuthRepo) UpdatePasswordHash(authId, newPasswordHash string) *servererrors.ServerError {
+	result, err := r.dbConn.Exec(context.Background(), "UPDATE auths SET password_hash = $1 WHERE id = $2 RETURNING *", newPasswordHash, authId)
 	if err != nil {
 		logger.Errorf("failed to update password hash: %s", err)
 		return servererrors.ErrDatabaseQuery

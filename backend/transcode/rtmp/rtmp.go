@@ -140,6 +140,8 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 		return "", "", fmt.Errorf("failed to get user information: %s", errRes.Message)
 	}
 
+	logger.Debugf("user id on updating user lives status is: %v", userInfo)
+
 	updateUserDTO := &userdto.UpdateUserIsOnlineDTO{
 		Id:       userInfo.Id,
 		IsOnline: true,

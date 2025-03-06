@@ -169,6 +169,5 @@ func (h *AuthHandler) UpdatePasswordHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNoContent)
 }

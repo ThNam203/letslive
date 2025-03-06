@@ -10,7 +10,7 @@ export async function GetOnlineUsers(): Promise<{
     fetchError?: FetchError;
 }> {
     try {
-        const data = await fetchClient<User[]>("/user?isOnline=true");
+        const data = await fetchClient<User[]>("/users?isOnline=true");
         return { users: data };
     } catch (error) {
         return { users: [], fetchError: error as FetchError };

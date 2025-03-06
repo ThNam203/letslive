@@ -57,12 +57,7 @@ func (s *UserService) GetUserByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponse
 		return nil, err
 	}
 
-	userVODs, errRes := s.livestreamGateway.GetUserLivestreams(context.Background(), user.Id.String())
-	if errRes != nil {
-		return nil, servererrors.NewServerError(errRes.StatusCode, errRes.Message)
-	}
-
-	res := mapper.UserToGetUserResponseDTO(*user, userVODs)
+	res := mapper.UserToGetUserResponseDTO(*user, nil)
 	return res, nil
 }
 
