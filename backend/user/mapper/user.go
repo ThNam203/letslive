@@ -18,7 +18,7 @@ func UserToGetUserResponseDTO(user domains.User, vods []dto.GetLivestreamRespons
 		Id:                user.Id,
 		Username:          user.Username,
 		Email:             user.Email,
-		IsOnline:          user.IsOnline,
+		LiveStatus:        user.LiveStatus,
 		IsVerified:        user.IsVerified,
 		CreatedAt:         user.CreatedAt,
 		PhoneNumber:       user.PhoneNumber,
@@ -33,7 +33,7 @@ func UserToGetUserResponseDTO(user domains.User, vods []dto.GetLivestreamRespons
 func UpdateUserRequestDTOToUser(dto dto.UpdateUserRequestDTO) domains.User {
 	return domains.User{
 		Id:          dto.Id,
-		IsOnline:    *dto.IsOnline,
+		LiveStatus:  *dto.LiveStatus,
 		PhoneNumber: dto.PhoneNumber,
 		DisplayName: dto.DisplayName,
 		Bio:         dto.Bio,

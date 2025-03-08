@@ -10,7 +10,19 @@ export async function GetOnlineUsers(): Promise<{
     fetchError?: FetchError;
 }> {
     try {
-        const data = await fetchClient<User[]>("/users?isOnline=true");
+        const data = await fetchClient<User[]>("/users?liveStatus=on");
+        return { users: data };
+    } catch (error) {
+        return { users: [], fetchError: error as FetchError };
+    }
+}
+
+export async function SearchUsersByUsername(query: string): Promise<{
+    users: User[];
+    fetchError?: FetchError;
+}> {
+    try {
+        const data = await fetchClient<User[]>(`/users/search?username=${encodeURIComponent(query)}`);
         return { users: data };
     } catch (error) {
         return { users: [], fetchError: error as FetchError };
@@ -72,7 +84,7 @@ export async function UpdateProfilePicture(
         const formData = new FormData();
         formData.append("profile-picture", file);
 
-        const data = await fetchClient<string>(`/user/me/profile_picture`, {
+        const data = await fetchClient<string>(`/user/me/profile-picture`, {
             method: "PATCH",
             body: formData
         });
@@ -90,7 +102,7 @@ export async function UpdateBackgroundPicture(
         const formData = new FormData();
         formData.append("background-picture", file);
 
-        const data = await fetchClient<string>(`/user/me/background_picture`, {
+        const data = await fetchClient<string>(`/user/me/background-picture`, {
             method: "PATCH",
             body: formData,
         });
@@ -133,6 +145,31 @@ export async function RequestToGenerateNewAPIKey(): Promise<{ newKey?: string, f
             method: "PATCH"
         });
         return { newKey };
+    } catch (error) {
+        return { fetchError: error as FetchError };
+    }
+}
+
+export async function FollowOtherUser(followedId: string): Promise<{ fetchError?: FetchError }> {
+    try {
+        await fetchClient<string>(`/user/${followedId}/follow`, {
+            method: "POST"
+        });
+
+        return {};
+    } catch (error) {
+        return { fetchError: error as FetchError };
+    }
+}
+
+
+export async function UnfollowOtherUser(followedId: string): Promise<{ fetchError?: FetchError }> {
+    try {
+        await fetchClient<string>(`/user/${followedId}/unfollow`, {
+            method: "DELETE"
+        });
+        
+        return {};
     } catch (error) {
         return { fetchError: error as FetchError };
     }

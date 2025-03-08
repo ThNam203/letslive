@@ -3,12 +3,11 @@ import { User } from "@/types/user";
 import { create } from "zustand";
 
 export type UserState = {
-    user: User | null,
-    fetchUser: () => Promise<void>,
-    clearUser: () => void,
-    fetchUpdateUser: (user: User) => Promise<void>,
-    updateUser: (user: User) => void,
-}
+    user: User | null;
+    fetchUser: () => Promise<void>;
+    clearUser: () => void;
+    updateUser: (user: User) => void;
+};
 
 const useUser = create<UserState>((set) => ({
     user: null,
@@ -23,15 +22,16 @@ const useUser = create<UserState>((set) => ({
     clearUser: () => {
         set({ user: null });
     },
-    fetchUpdateUser: async (updatedUser: User) => {
-        const response = await UpdateProfile(updatedUser);
-        if (response.fetchError) {
-            throw response.fetchError;
-        }
-        
-        set({ user: updatedUser });
-    },
-    updateUser: (user: User) => set((prev) => ({ ...prev, ...user })),
+    updateUser: (updateUser: User) =>
+        set((prev) => {
+            console.log("THE DATA AFTER UPDATE", updateUser);
+            return {
+                user: {
+                    ...prev.user,
+                    ...updateUser,
+                },
+            };
+        }),
 }));
 
 export default useUser;

@@ -24,13 +24,14 @@ type APIServer struct {
 	errorHandler                 *handlers.ErrorHandler
 	healthHandler                *handlers.HealthHandler
 	userHandler                  *handlers.UserHandler
+	followHandler                *handlers.FollowHandler
 	livestreamInformationHandler *handlers.LivestreamInformationHandler
 
 	loggingMiddleware middlewares.Middleware
 	corsMiddleware    middlewares.Middleware
 }
 
-func NewAPIServer(userHandler *handlers.UserHandler, livestreamInfoHandler *handlers.LivestreamInformationHandler, cfg config.Config) *APIServer {
+func NewAPIServer(userHandler *handlers.UserHandler, livestreamInfoHandler *handlers.LivestreamInformationHandler, followHandler *handlers.FollowHandler, cfg config.Config) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
@@ -38,6 +39,7 @@ func NewAPIServer(userHandler *handlers.UserHandler, livestreamInfoHandler *hand
 		errorHandler:                 handlers.NewErrorHandler(),
 		healthHandler:                handlers.NewHeathHandler(),
 		userHandler:                  userHandler,
+		followHandler:                followHandler,
 		livestreamInformationHandler: livestreamInfoHandler,
 
 		loggingMiddleware: middlewares.NewLoggingMiddleware(logger.Logger),
@@ -77,11 +79,15 @@ func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
 	sm.HandleFunc("GET /v1/users", a.userHandler.QueryUserHandler)
-	sm.HandleFunc("GET /v1/user/{id}", a.userHandler.GetUserByIdHandler)
-	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUserHandler)             // internal
-	sm.HandleFunc("PUT /v1/user/{id}", a.userHandler.UpdateUserInternalHandler) // internal
+	sm.HandleFunc("GET /v1/users/search", a.userHandler.SearchUserHandler)
 
-	sm.HandleFunc("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyHandler)
+	sm.HandleFunc("POST /v1/user/{userId}/follow", a.followHandler.FollowHandler)
+	sm.HandleFunc("DELETE /v1/user/{userId}/unfollow", a.followHandler.UnfollowHandler)
+	sm.HandleFunc("GET /v1/user/{userId}", a.userHandler.GetUserByIdHandler)
+	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUserHandler)                 // internal
+	sm.HandleFunc("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler) // internal
+
+	sm.HandleFunc("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyHandler) // internal
 
 	sm.HandleFunc("GET /v1/user/me", a.userHandler.GetCurrentUserHandler)
 	sm.HandleFunc("PUT /v1/user/me", a.userHandler.UpdateCurrentUserHandler)

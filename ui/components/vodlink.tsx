@@ -28,7 +28,7 @@ export default function VODLink({ item }: { item: UserVOD }) {
             {item.title}
         </h3>
         <p className="text-sm text-gray-500 mt-1">
-            {item.description.length > 50 ? `${item.description.substring(0, 47)}...` : item.description} • {datediffFromNow(item.endedAt)} ago
+            {item.description && item.description.length > 50 ? `${item.description.substring(0, 47)}...` : item.description} • {datediffFromNow(item.endedAt)} ago
         </p>
         <div className="flex items-center mt-2 text-sm text-gray-500">
             <Heart className="w-4 h-4 mr-1" />

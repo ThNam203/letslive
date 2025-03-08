@@ -24,7 +24,7 @@ func (h *AuthHandler) OAuthGoogleLoginHandler(w http.ResponseWriter, r *http.Req
 func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.Request) {
 	GetRedirectURLOnFail := func(errMsg string) string {
 		clientAddr := os.Getenv("CLIENT_URL")
-		return fmt.Sprintf("%s/auth/login?errorMessage=%s", clientAddr, errMsg)
+		return fmt.Sprintf("%s/login?errorMessage=%s", clientAddr, errMsg)
 	}
 
 	oauthStateCookie, err := r.Cookie("oauthstate")
@@ -39,7 +39,11 @@ func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	createdAuth, err := h.googleAuthService.CallbackHandler(r.FormValue("code"))
+	createdAuth, handleErr := h.googleAuthService.CallbackHandler(r.FormValue("code"))
+	if handleErr != nil {
+		http.Redirect(w, r, GetRedirectURLOnFail(handleErr.Message), http.StatusTemporaryRedirect)
+		return
+	}
 
 	if err := h.setAuthJWTsInCookie(createdAuth.UserId.String(), w); err != nil {
 		http.Redirect(w, r, GetRedirectURLOnFail(err.Message), http.StatusTemporaryRedirect)

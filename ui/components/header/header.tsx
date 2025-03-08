@@ -6,10 +6,11 @@ import {
 import Link from "next/link";
 import { SearchInput } from "@/components/Input";
 import UserInfo from "@/components/header/userinfo";
+import SearchBar from "@/components/header/search";
 
 export async function Header() {
     return (
-        <nav className="w-full h-12 flex flex-row items-center justify-between text-xl font-semibold text-primaryWord bg-white px-4 py-2 shadow z-[49]">
+        <nav className="w-full h-12 flex flex-row items-center justify-between text-xl font-semibold text-primaryWord bg-white sticky px-4 py-2 shadow z-[49]">
             <div className="flex flex-row md:gap-10 max-md:gap-4 items-center">
                 <Link href="/" className="hover:text-primary">
                     <span className="max-md:hidden">Home</span>
@@ -26,11 +27,12 @@ export async function Header() {
             </div>
 
             <div className="lg:w-[400px] max-lg:w mx-2">
-                <SearchInput
+                <SearchBar/>
+                {/* <SearchInput
                     id="search-input"
                     placeholder="Search (Not implemented)"
                     className="text-base w-full"
-                />
+                /> */}
             </div>
 
             <UserInfo/>

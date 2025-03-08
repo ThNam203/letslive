@@ -1,0 +1,7 @@
+-- +goose Up
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+
+-- +goose Down
+DROP EXTENSION IF EXISTS pg_trgm;
+DROP EXTENSION IF EXISTS fuzzystrmatch;

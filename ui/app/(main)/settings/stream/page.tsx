@@ -30,6 +30,7 @@ export default function StreamEdit() {
     };
 
     useEffect(() => {
+        console.log("BUON CUOI NHO:", user)
         if (user) {
             setTitle(user.livestreamInformation.title || "");
             setDescription(user.livestreamInformation.description || "");
@@ -68,12 +69,6 @@ export default function StreamEdit() {
 
             setSelectedImage(null);
             setImage(null);
-            if (user.livestreamInformation.title)
-                setTitle(user.livestreamInformation.title);
-            if (user.livestreamInformation.description)
-                setDescription(user.livestreamInformation.description);
-            if (user.livestreamInformation.thumbnailUrl)
-                setThumbnailUrl(user.livestreamInformation.thumbnailUrl);
         }
     };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 import { usePathname } from "next/navigation";
 
 const navItems = [
@@ -16,8 +16,7 @@ export default function SettingsNav({
     const pathname = usePathname();
 
     return (
-        <>
-            <div className="bg-white text-gray-900">
+            <div className="overflow-y-auto h-full bg-white text-gray-900">
                 <div className="max-w-7xl px-6">
                     <h1 className="text-4xl font-bold py-6">Settings</h1>
                     <nav className="border-b border-gray-200">
@@ -43,8 +42,7 @@ export default function SettingsNav({
                         </ul>
                     </nav>
                 </div>
+                <div>{children}</div>
             </div>
-            <div>{children}</div>
-        </>
     );
 }

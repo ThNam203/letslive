@@ -3,16 +3,20 @@ export type User = {
     username: string;
     bio?: string;
     email: string;
-    isOnline: boolean;
+    liveStatus: UserLiveStatus;
+    status: UserStatus;
+    authProvider: AuthProvider;
     isVerified: boolean;
-    isActive: boolean;
     createdAt: string;
     streamAPIKey: string;
     vods: UserVOD[] | null;
     displayName?: string;
     backgroundPicture?: string;
     profilePicture?: string;
+    followerCount: number;
     livestreamInformation: LivestreamInformation;
+
+    isFollowing?: boolean; // for checking if the current user is following this user
 };
 
 export type LivestreamInformation = {
@@ -26,7 +30,7 @@ export type UserVOD = {
     id: string;
     userId: string;
     title: string;
-    description: string;
+    description: string | null;
     thumbnailUrl: string;
     status: string;
     viewCount: number;
@@ -36,3 +40,18 @@ export type UserVOD = {
     createdAt: string;
     updatedAt: string;
 };
+
+export enum UserLiveStatus {
+    LIVE = 'on',
+    OFFLIVE = 'off',
+}
+
+export enum AuthProvider {
+    GOOGLE = 'google',
+    LOCAL = 'local',
+}
+
+export enum UserStatus {
+    NORMAL = 'normal',
+    DISABLED = 'disabled',
+}
