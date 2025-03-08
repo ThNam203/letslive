@@ -26,7 +26,7 @@ var (
 
 	ErrForbidden = NewServerError(http.StatusForbidden, "Forbidden.")
 
-	ErrUserNotFound  = NewServerError(http.StatusNotFound, "Authentication credentials not found.")
+	ErrUserNotFound  = NewServerError(http.StatusNotFound, "User not found.")
 	ErrRouteNotFound = NewServerError(http.StatusNotFound, "Requested endpoint not found.")
 
 	ErrImageTooLarge = NewServerError(http.StatusRequestEntityTooLarge, "Image exceeds 10mb limit.")

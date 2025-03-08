@@ -26,7 +26,8 @@ func NewUserHandler(userService services.UserService) *UserHandler {
 }
 
 func (h *UserHandler) GetUserByIdHandler(w http.ResponseWriter, r *http.Request) {
-	userId := r.PathValue("id")
+	authenticatedUserId, _ := getUserIdFromCookie(r)
+	userId := r.PathValue("userId")
 	if len(userId) == 0 {
 		h.WriteErrorResponse(w, servererrors.ErrInvalidPath)
 		return
@@ -38,7 +39,7 @@ func (h *UserHandler) GetUserByIdHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, serviceErr := h.userService.GetUserById(userUUID)
+	user, serviceErr := h.userService.GetUserById(userUUID, authenticatedUserId)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
@@ -50,11 +51,25 @@ func (h *UserHandler) GetUserByIdHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *UserHandler) QueryUserHandler(w http.ResponseWriter, r *http.Request) {
-	isOnline := r.URL.Query().Get("isOnline")
+	liveStatus := r.URL.Query().Get("liveStatus")
 	username := r.URL.Query().Get("username")
 	page := r.URL.Query().Get("page")
 
-	users, err := h.userService.QueryUsers(isOnline, username, page)
+	users, err := h.userService.QueryUsers(liveStatus, username, page)
+	if err != nil {
+		h.WriteErrorResponse(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(users)
+}
+
+func (h *UserHandler) SearchUserHandler(w http.ResponseWriter, r *http.Request) {
+	username := r.URL.Query().Get("username")
+
+	users, err := h.userService.SearchUserByUsername(username)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
@@ -110,12 +125,15 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := h.userService.CreateNewUser(body); err != nil {
+	createdUser, err := h.userService.CreateNewUser(body)
+	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(&createdUser)
 }
 
 // INTERNAL
@@ -264,7 +282,7 @@ func (h *UserHandler) UpdateUserBackgroundPictureHandler(w http.ResponseWriter, 
 }
 
 func (h *UserHandler) UpdateUserInternalHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.PathValue("id")
+	userID := r.PathValue("userId")
 	defer r.Body.Close()
 
 	if len(userID) == 0 {

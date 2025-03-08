@@ -80,9 +80,10 @@ func (s AuthService) CreateNewAuth(userForm dto.SignUpRequestDTO) (*domains.Auth
 	}
 
 	dto := &usergateway.CreateUserRequestDTO{
-		Username:   userForm.Username,
-		Email:      userForm.Email,
-		IsVerified: false,
+		Username:     userForm.Username,
+		Email:        userForm.Email,
+		IsVerified:   false,
+		AuthProvider: usergateway.ProviderLocal,
 	}
 
 	createdUser, errRes := s.userGateway.CreateNewUser(context.Background(), *dto)

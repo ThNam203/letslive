@@ -7,13 +7,16 @@ import { Loader } from "lucide-react";
 import useUser from "@/hooks/user";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { UpdateBackgroundPicture, UpdateProfilePicture } from "@/lib/api/user";
+import {
+    UpdateBackgroundPicture,
+    UpdateProfile,
+    UpdateProfilePicture,
+} from "@/lib/api/user";
 import { toast } from "react-toastify";
-import { FetchError } from "@/types/fetch-error";
 
 export default function ProfileSettings() {
     const user = useUser((state) => state.user);
-    const updateUser = useUser((state) => state.fetchUpdateUser);
+    const updateUser = useUser((state) => state.updateUser);
 
     const [displayName, setDisplayName] = useState(user?.displayName || "");
     const [bio, setBio] = useState(user?.bio || "");
@@ -42,11 +45,16 @@ export default function ProfileSettings() {
             const file = event.target.files[0];
 
             setIsUpdatingProfilePicture(true);
-            const { fetchError } = await UpdateProfilePicture(file);
+            const { newPath, fetchError } = await UpdateProfilePicture(file);
             setIsUpdatingProfilePicture(false);
             if (fetchError) {
                 toast(fetchError.message, { type: "error" });
             } else {
+                updateUser({
+                    ...user!,
+                    profilePicture: newPath!,
+                });
+
                 toast("Profile picture updated successfully!", {
                     type: "success",
                 });
@@ -61,11 +69,16 @@ export default function ProfileSettings() {
             const file = event.target.files[0];
 
             setIsUpdatingBackgroundPicture(true);
-            const { fetchError } = await UpdateBackgroundPicture(file);
+            const { newPath, fetchError } = await UpdateBackgroundPicture(file);
             setIsUpdatingBackgroundPicture(false);
             if (fetchError) {
                 toast(fetchError.message, { type: "error" });
             } else {
+                updateUser({
+                    ...user!,
+                    backgroundPicture: newPath!,
+                });
+
                 toast("Background picture updated successfully!", {
                     type: "success",
                 });
@@ -78,27 +91,29 @@ export default function ProfileSettings() {
     ) => {
         event.preventDefault();
         setIsUpdatingProfile(true);
-        updateUser({
+
+        const { updatedUser, fetchError } = await UpdateProfile({
             ...user!,
             displayName,
             bio,
-        })
-            .then(() => {
-                toast("Profile information updated successfully!", {
-                    type: "success",
-                });
-            })
-            .catch((fetchError: FetchError) => {
-                toast(fetchError.message, { type: "error" });
+        });
+
+        if (fetchError) {
+            toast(fetchError.message, { type: "error" });
+        } else {
+            toast("Profile information updated successfully!", {
+                type: "success",
             });
+
+            updateUser(updatedUser!);
+        }
 
         setIsUpdatingProfile(false);
     };
 
     useEffect(() => {
-        if (!user) return; // Ensure user is fully defined before checking
+        if (!user) return; 
 
-        // Normalize null values to empty strings before comparison
         const normalizedDisplayName = user.displayName ?? "";
         const normalizedBio = user.bio ?? "";
 
@@ -107,7 +122,7 @@ export default function ProfileSettings() {
         } else {
             setIsButtonDisabled(true);
         }
-    }, [displayName, bio]); // Runs when these values change
+    }, [displayName, bio]);
 
     useEffect(() => {
         setDisplayName(user?.displayName ?? "");

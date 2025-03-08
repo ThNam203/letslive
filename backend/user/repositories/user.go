@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/user/domains"
+	"sen1or/lets-live/user/dto"
 	servererrors "sen1or/lets-live/user/errors"
 	"strings"
 
@@ -14,13 +16,15 @@ import (
 )
 
 type UserRepository interface {
-	GetById(uuid.UUID) (*domains.User, *servererrors.ServerError)
-	Query(isOnline, username string, page int) ([]*domains.User, *servererrors.ServerError)
+	GetFullInfoById(uuid.UUID) (*domains.User, *servererrors.ServerError)
+	GetById(userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserResponseDTO, *servererrors.ServerError)
+	Query(liveStatus domains.UserLiveStatus, username string, page int) ([]*domains.User, *servererrors.ServerError)
+	SearchUserByUsername(username string) ([]*domains.User, *servererrors.ServerError)
 	GetByName(string) (*domains.User, *servererrors.ServerError)
 	GetByEmail(string) (*domains.User, *servererrors.ServerError)
 	GetByAPIKey(uuid.UUID) (*domains.User, *servererrors.ServerError)
 
-	Create(username, email string, isVerified bool) *servererrors.ServerError
+	Create(username, email string, isVerified bool, authProvider domains.AuthProvider) (*domains.User, *servererrors.ServerError)
 	Update(domains.User) (*domains.User, *servererrors.ServerError)
 	UpdateUserVerified(userId uuid.UUID) *servererrors.ServerError
 	UpdateStreamAPIKey(userId uuid.UUID, newKey string) *servererrors.ServerError
@@ -39,14 +43,57 @@ func NewUserRepository(conn *pgxpool.Pool) UserRepository {
 	}
 }
 
-func (r *postgresUserRepo) GetById(userId uuid.UUID) (*domains.User, *servererrors.ServerError) {
+// TODO: holy shesh i need to redo the whole database queries
+// the authenticatedUserId is used for checking if the caller is following the userId
+// the authenticatedUserId can be null if for INTERNAL USE
+func (r *postgresUserRepo) GetById(userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserResponseDTO, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(context.Background(), `
-		SELECT u.id, u.username, u.email, u.is_verified, u.is_online, u.is_active, u.created_at, u.stream_api_key, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url 
+		SELECT 
+			u.id, u.username, u.email, u.is_verified, u.live_status, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, 
+			l.user_id, l.title, l.description, l.thumbnail_url, 
+			COUNT(f.follower_id) AS follower_count,
+			CASE 
+    		    WHEN EXISTS (
+    		        SELECT 1 FROM followers f2 
+    		        WHERE f2.follower_id = $2 AND f2.user_id = u.id
+    		    ) THEN true 
+    		    ELSE false 
+    		END AS is_following
 		FROM users u
-		JOIN livestream_information l ON u.id = l.user_id
+		LEFT JOIN livestream_information l ON u.id = l.user_id
+		LEFT JOIN followers f ON u.id = f.user_id
+		WHERE u.id = $1
+		GROUP BY u.id, l.user_id, l.title, l.description, l.thumbnail_url;
+	`, userId.String(), authenticatedUserId)
+	if err != nil {
+		logger.Errorf("failed to query user full information: %s", err)
+		return nil, servererrors.ErrDatabaseQuery
+	}
+
+	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[dto.GetUserResponseDTO])
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, servererrors.ErrUserNotFound
+		}
+
+		logger.Errorf("failed to collect user full information: %s", err)
+		return nil, servererrors.ErrDatabaseIssue
+	}
+
+	return &user, nil
+}
+
+func (r *postgresUserRepo) GetFullInfoById(userId uuid.UUID) (*domains.User, *servererrors.ServerError) {
+	rows, err := r.dbConn.Query(context.Background(), `
+		SELECT 
+			u.id, u.username, u.email, u.is_verified, u.live_status, u.created_at, u.display_name, u.auth_provider, u.stream_api_key, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
+		FROM users u
+		LEFT JOIN livestream_information l ON u.id = l.user_id
 		WHERE u.id = $1
 	`, userId.String())
 	if err != nil {
+		logger.Errorf("failed to query user full information: %s", err)
 		return nil, servererrors.ErrDatabaseQuery
 	}
 
@@ -57,25 +104,26 @@ func (r *postgresUserRepo) GetById(userId uuid.UUID) (*domains.User, *servererro
 			return nil, servererrors.ErrUserNotFound
 		}
 
+		logger.Errorf("failed to collect user full information: %s", err)
 		return nil, servererrors.ErrDatabaseIssue
 	}
 
 	return &user, nil
 }
 
-func (r *postgresUserRepo) Query(onlineStatus string, username string, page int) ([]*domains.User, *servererrors.ServerError) {
+func (r *postgresUserRepo) Query(liveStatus domains.UserLiveStatus, username string, page int) ([]*domains.User, *servererrors.ServerError) {
 	whereConditions := []string{}
 	args := []any{}
 	argIndex := 1
 
-	if len(onlineStatus) > 0 {
-		whereConditions = append(whereConditions, fmt.Sprintf("is_online = $%d", argIndex))
-		args = append(args, onlineStatus)
+	if len(liveStatus) > 0 {
+		whereConditions = append(whereConditions, fmt.Sprintf("live_status = $%d", argIndex))
+		args = append(args, liveStatus)
 		argIndex++
 	}
 
 	if len(username) > 0 {
-		whereConditions = append(whereConditions, fmt.Sprintf("SOUNDEX(username) = SOUNDEX($%d)", argIndex))
+		whereConditions = append(whereConditions, fmt.Sprintf("to_tsvector('simple', username) @@ plainto_tsquery($%d)", argIndex))
 		args = append(args, username)
 		argIndex++
 	}
@@ -90,6 +138,33 @@ func (r *postgresUserRepo) Query(onlineStatus string, username string, page int)
 
 	rows, err := r.dbConn.Query(context.Background(), query, args...)
 	if err != nil {
+		logger.Errorf("failed to query users: %s", err)
+		return nil, servererrors.ErrDatabaseQuery
+	}
+
+	users, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[domains.User])
+	if err != nil {
+		return nil, servererrors.ErrDatabaseIssue
+	}
+
+	var returnUsers []*domains.User
+	for _, u := range users {
+		returnUsers = append(returnUsers, &u)
+	}
+
+	return returnUsers, nil
+}
+
+func (r *postgresUserRepo) SearchUserByUsername(query string) ([]*domains.User, *servererrors.ServerError) {
+	rows, err := r.dbConn.Query(context.Background(), `
+		SELECT *
+		FROM users
+		WHERE username % $1 OR levenshtein(username, $1) <= 5
+		ORDER BY similarity(username, $1) DESC, levenshtein(username, $1) ASC
+		LIMIT 10
+	`, query)
+	if err != nil {
+		logger.Errorf("failed to search for users: %s", err)
 		return nil, servererrors.ErrDatabaseQuery
 	}
 
@@ -146,7 +221,7 @@ func (r *postgresUserRepo) GetByEmail(email string) (*domains.User, *servererror
 func (r *postgresUserRepo) GetByAPIKey(apiKey uuid.UUID) (*domains.User, *servererrors.ServerError) {
 	var user domains.User
 	rows, err := r.dbConn.Query(context.Background(), `
-		SELECT u.id, u.username, u.email, u.is_verified, u.is_online, u.is_active, u.created_at, u.stream_api_key, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url 
+		SELECT u.id, u.username, u.email, u.is_verified, u.live_status, u.created_at, u.stream_api_key, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url 
 		FROM users u
 		JOIN livestream_information l ON u.id = l.user_id
 		WHERE u.stream_api_key = $1
@@ -168,30 +243,35 @@ func (r *postgresUserRepo) GetByAPIKey(apiKey uuid.UUID) (*domains.User, *server
 	return &user, nil
 }
 
-func (r *postgresUserRepo) Create(username, email string, isVerified bool) *servererrors.ServerError {
+func (r *postgresUserRepo) Create(username string, email string, isVerified bool, provider domains.AuthProvider) (*domains.User, *servererrors.ServerError) {
 	params := pgx.NamedArgs{
-		"username":    username,
-		"email":       email,
-		"is_verified": isVerified,
+		"username":      username,
+		"email":         email,
+		"is_verified":   isVerified,
+		"auth_provider": provider,
 	}
 
-	result, err := r.dbConn.Exec(context.Background(), "insert into users (username, email, is_verified) values (@username, @email, @is_verified) returning *", params)
+	row, err := r.dbConn.Query(context.Background(), "insert into users (username, email, is_verified, auth_provider) values (@username, @email, @is_verified, @auth_provider) returning *", params)
 	if err != nil {
-		return servererrors.ErrDatabaseQuery
+		return nil, servererrors.ErrDatabaseQuery
 	}
 
-	if result.RowsAffected() == 0 {
-		return servererrors.ErrDatabaseIssue
+	createdUser, err := pgx.CollectOneRow(row, pgx.RowToStructByNameLax[domains.User])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, servererrors.ErrUserNotFound
+		}
+
+		return nil, servererrors.ErrDatabaseIssue
 	}
 
-	return nil
+	return &createdUser, nil
 }
 
 func (r *postgresUserRepo) Update(user domains.User) (*domains.User, *servererrors.ServerError) {
 	params := pgx.NamedArgs{
 		"id":           user.Id,
-		"is_online":    user.IsOnline,
-		"is_active":    user.IsActive,
+		"live_status":  user.LiveStatus,
 		"display_name": user.DisplayName,
 		"phone_number": user.PhoneNumber,
 		"bio":          user.Bio,
@@ -200,7 +280,7 @@ func (r *postgresUserRepo) Update(user domains.User) (*domains.User, *servererro
 	rows, err := r.dbConn.Query(
 		context.Background(), `
 		UPDATE users 
-		SET is_online = @is_online, is_active = @is_active, display_name = @display_name, phone_number = @phone_number, bio = @bio 
+		SET live_status = @live_status, display_name = @display_name, phone_number = @phone_number, bio = @bio 
 		WHERE id = @id 
 		RETURNING *
 	`, params)

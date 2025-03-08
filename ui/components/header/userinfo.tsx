@@ -1,11 +1,6 @@
 "use client";
 
-import {
-    LuBell,
-    LuLogOut,
-    LuMessageSquare,
-    LuSettings
-} from "react-icons/lu";
+import { LuBell, LuLogOut, LuMessageSquare, LuSettings } from "react-icons/lu";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +9,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import useUser from "@/hooks/user";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FetchError } from "@/types/fetch-error";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
@@ -24,6 +19,7 @@ import { Logout } from "@/lib/api/auth";
 export default function UserInfo() {
     const userState = useUser();
     const router = useRouter();
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
     const logoutHandler = async () => {
         const { fetchError } = await Logout();
@@ -67,7 +63,7 @@ export default function UserInfo() {
                 <LuMessageSquare size={16} />
             </Button>
 
-            <Popover>
+            <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger>
                     <Image
                         src={
@@ -82,22 +78,30 @@ export default function UserInfo() {
                 </PopoverTrigger>
                 <PopoverContent className="w-60 mr-4">
                     <div className="pb-2 px-2 bg-white rounded-md shadow-primaryShadow flex flex-col gap-2">
-                        <Link href={`/users/${userState.user.id}`}>
-                            <span className="text-lg text-gray-900">
+                        <Link
+                            href={`/users/${userState.user.id}`}
+                            className="text-lg text-gray-900 w-fit mb-2"
+                            onMouseUp={() => setIsPopoverOpen(false)}
+                        >
+                            <p>
                                 {userState.user.displayName ??
                                     userState.user.username}
-                            </span>
+                            </p>
+                            <p className="text-sm">@{userState.user.username}</p>
                         </Link>
-                        <Button>
-                            <Link href="/settings/profile">
+                        <Button asChild>
+                            <Link href="/settings/profile" onMouseUp={() => setIsPopoverOpen(false)}>
                                 <div className="flex flex-row gap-2 items-center">
                                     <LuSettings />
                                     <span className="text-xs">Setting</span>
                                 </div>
                             </Link>
                         </Button>
-                        <Button onClick={logoutHandler}>
-                            <div className="flex flex-row gap-2 items-center text-red-500">
+                        <Button asChild>
+                            <div
+                                onClick={logoutHandler}
+                                className="flex flex-row gap-2 items-center text-red-500 hover:cursor-pointer"
+                            >
                                 <LuLogOut />
                                 <span className="text-xs">Log Out</span>
                             </div>

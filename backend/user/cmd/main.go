@@ -73,12 +73,15 @@ func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Conf
 
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var livestreamInfoRepo = repositories.NewLivestreamInformationRepository(dbConn)
+	var followRepo = repositories.NewFollowRepository(dbConn)
 
 	minioService := services.NewMinIOService(context.Background(), cfg.MinIO)
 	var userService = services.NewUserService(userRepo, livestreamInfoRepo, livestreamGateway, *minioService)
 	var livestreamInfoService = services.NewLivestreamInformationService(livestreamInfoRepo)
+	var followService = services.NewFollowService(followRepo)
 
 	var userHandler = handlers.NewUserHandler(*userService)
 	var livestreamInfoHandler = handlers.NewLivestreamInformationHandler(*livestreamInfoService, *minioService)
-	return NewAPIServer(userHandler, livestreamInfoHandler, cfg)
+	var followHandler = handlers.NewFollowHandler(*followService)
+	return NewAPIServer(userHandler, livestreamInfoHandler, followHandler, cfg)
 }

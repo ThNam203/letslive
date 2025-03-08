@@ -76,7 +76,7 @@ func (g *UserGateway) GetUserInformation(ctx context.Context, streamAPIKey strin
 	return &userInfo, nil
 }
 
-func (g *UserGateway) UpdateUserLiveStatus(ctx context.Context, dto dto.UpdateUserIsOnlineDTO) *ErrorResponse {
+func (g *UserGateway) UpdateUserLiveStatus(ctx context.Context, dto dto.UpdateUserLiveStatusDTO) *ErrorResponse {
 	addr, err := g.registry.ServiceAddress(ctx, "user")
 	if err != nil {
 		return &ErrorResponse{

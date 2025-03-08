@@ -9,7 +9,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { User } from "@/types/user";
+import { AuthProvider, User } from "@/types/user";
 import { ShieldCheck, ShieldOff } from "lucide-react";
 
 export default function ContactSettings({ user }: { user: User }) {
@@ -62,7 +62,9 @@ export default function ContactSettings({ user }: { user: User }) {
                                         <p className="text-gray-500 text-sm">
                                             Thank you for verifying your email.
                                         </p>
-                                    ) : <VerificationRequest/>}
+                                    ) : (
+                                        <VerificationRequest />
+                                    )}
                                 </div>
                             </div>
                             <div className="flex items-center justify-between border-t border-zinc-800 pt-4">
@@ -97,6 +99,10 @@ export default function ContactSettings({ user }: { user: User }) {
                                         <DialogTrigger asChild>
                                             <Button
                                                 variant="outline"
+                                                disabled={
+                                                    user?.authProvider !==
+                                                    AuthProvider.LOCAL
+                                                }
                                                 className="bg-purple-600 hover:bg-purple-700 text-white text-sm hover:text-white font-normal"
                                             >
                                                 Change password
@@ -108,12 +114,15 @@ export default function ContactSettings({ user }: { user: User }) {
                                                     Change Password
                                                 </DialogTitle>
                                             </DialogHeader>
-                                            <ChangePasswordTab/>
+                                            <ChangePasswordTab />
                                         </DialogContent>
                                     </Dialog>
                                     <span className="text-gray-400 text-sm">
-                                        Improve your security with a strong
-                                        password.
+                                        {user?.authProvider ===
+                                        AuthProvider.LOCAL
+                                            ? "Improve your security with a strong password"
+                                            : "Your account is secured with a password from a third-party provider."}
+                                        .
                                     </span>
                                 </div>
                             </div>

@@ -4,8 +4,6 @@ import (
 	"sen1or/lets-live/user/domains"
 	servererrors "sen1or/lets-live/user/errors"
 	"sen1or/lets-live/user/repositories"
-
-	"github.com/gofrs/uuid/v5"
 )
 
 type LivestreamInformationService struct {
@@ -16,10 +14,6 @@ func NewLivestreamInformationService(repo repositories.LivestreamInformationRepo
 	return &LivestreamInformationService{
 		repo: repo,
 	}
-}
-
-func (c *LivestreamInformationService) Create(userId uuid.UUID) error {
-	return c.repo.Create(userId)
 }
 
 func (c *LivestreamInformationService) Update(data domains.LivestreamInformation) (*domains.LivestreamInformation, *servererrors.ServerError) {

@@ -6,7 +6,7 @@ import stream_img from "@/public/images/stream_thumbnail_example.jpg";
 import { Hover3DBox } from "@/components/Hover3DBox";
 import { useRouter } from "next/navigation";
 import { User } from "@/types/user";
-import LivestreamPreviewDetailView from "@/components/LivestreamPreviewDetailView";
+import LivestreamPreviewDetailView from "@/components/main_page/LivestreamPreviewDetailView";
 
 const LivestreamPreviewView = ({
     className,
@@ -14,14 +14,14 @@ const LivestreamPreviewView = ({
     title,
     category,
     tags,
-    stream,
+    user,
 }: {
     className?: ClassValue;
     viewers: number;
     title: string;
     tags: string[];
     category?: string;
-    stream: User;
+    user: User;
 }) => {
     const router = useRouter();
 
@@ -33,10 +33,10 @@ const LivestreamPreviewView = ({
                 showStream={true}
                 imageSrc={stream_img}
                 className="h-[170px]"
-                onClick={() => router.push(`/users/${stream.id}`)}
+                onClick={() => router.push(`/users/${user.id}`)}
             />
             <LivestreamPreviewDetailView
-                username={stream.username}
+                username={user.username}
                 title={title}
                 category={category}
                 tags={tags}

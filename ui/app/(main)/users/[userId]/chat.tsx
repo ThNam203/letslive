@@ -55,7 +55,6 @@ export default function ChatUI({ roomId }: { roomId: string }) {
 
             const accessToken = getCookie("ACCESS_TOKEN");
             if (!accessToken) {
-                toast("failed to get access token", { type: "error" });
                 return;
             }
 
@@ -64,7 +63,6 @@ export default function ChatUI({ roomId }: { roomId: string }) {
             );
 
             ws.onopen = () => {
-                toast("WebSocket connection established", { type: "info" });
                 wsRef.current = ws;
                 ws.send(
                     JSON.stringify({
@@ -78,7 +76,8 @@ export default function ChatUI({ roomId }: { roomId: string }) {
 
             ws.onmessage = (event) => {
                 const data: ReceivedMessage = JSON.parse(event.data);
-                if (messages.length >= 100) setMessages((prev) => [...prev.slice(1), data]);
+                if (messages.length >= 100)
+                    setMessages((prev) => [...prev.slice(1), data]);
                 else setMessages((prev) => [...prev, data]);
             };
 
@@ -104,14 +103,16 @@ export default function ChatUI({ roomId }: { roomId: string }) {
         connectWebSocket();
         return () => {
             if (wsRef.current) {
-                wsRef.current.send(
-                    JSON.stringify({
-                        type: "leave",
-                        roomId: roomId,
-                        userId: user!.id,
-                        username: user!.displayName ?? user!.username,
-                    })
-                );
+                if (user) {
+                    wsRef.current.send(
+                        JSON.stringify({
+                            type: "leave",
+                            roomId: roomId,
+                            userId: user.id,
+                            username: user!.displayName ?? user!.username,
+                        })
+                    );
+                } else wsRef.current.close();
             }
         };
     }, [user, roomId]);

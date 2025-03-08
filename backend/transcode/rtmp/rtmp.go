@@ -142,9 +142,9 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 
 	logger.Debugf("user id on updating user lives status is: %v", userInfo)
 
-	updateUserDTO := &userdto.UpdateUserIsOnlineDTO{
-		Id:       userInfo.Id,
-		IsOnline: true,
+	updateUserDTO := &userdto.UpdateUserLiveStatusDTO{
+		Id:         userInfo.Id,
+		LiveStatus: userdto.Live,
 	}
 
 	errRes = s.userGateway.UpdateUserLiveStatus(context.Background(), *updateUserDTO)
@@ -175,9 +175,9 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 // change the status of user to be not online
 func (s *RTMPServer) onDisconnect(userId string, streamId string) {
 	userIdUUID, _ := uuid.FromString(userId)
-	updateUserDTO := &userdto.UpdateUserIsOnlineDTO{
-		Id:       userIdUUID,
-		IsOnline: false,
+	updateUserDTO := &userdto.UpdateUserLiveStatusDTO{
+		Id:         userIdUUID,
+		LiveStatus: userdto.OffLive,
 	}
 
 	// create the VOD playlists and remove the entry

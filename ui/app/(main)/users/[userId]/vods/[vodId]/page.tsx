@@ -9,16 +9,28 @@ import { Button } from "@/components/ui/button";
 import VODLink from "@/components/vodlink";
 import { GetUserById } from "@/lib/api/user";
 import { GetVODInformation } from "@/lib/api/vod";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 import { User } from "@/types/user";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import ProfileHeader from "@/app/(main)/users/[userId]/profile_header";
 
 export default function VODPage() {
     const [user, setUser] = useState<User | null>(null);
+    const updateUser = (newUserInfo: User) => {
+        setUser((prev) => {
+            if (prev)
+                return {
+                    ...prev,
+                    ...newUserInfo,
+                };
+
+            return newUserInfo;
+        });
+    };
     const params = useParams<{ userId: string; vodId: string }>();
 
     const [playerInfo, setPlayerInfo] = useState<VideoInfo>({
@@ -75,26 +87,20 @@ export default function VODPage() {
                     <div className="w-full h-[675px] bg-black mb-4">
                         <VODFrame videoInfo={playerInfo} />
                     </div>
-                    {/* <div className="w-full font-sans mt-4 overflow-x-auto whitespace-nowrap">
-                        {servers.map((_, idx) => (
-                            <Button
-                                key={idx}
-                                onClick={() => setServerIndex(idx)}
-                                className={cn(
-                                    "mr-4",
-                                    serverIndex == idx ? "bg-green-700" : ""
-                                )}
-                            >
-                                Server {idx + 1}
-                            </Button>
-                        ))}
-                    </div> */}
-                {user && <ProfileView user={user} showSavedStream={false}/>}
+                    {user && (
+                        <ProfileView
+                            user={user}
+                            showSavedStream={false}
+                            updateUser={updateUser}
+                        />
+                    )}
                 </div>
 
-                <div className="w-[350px] mx-4 fixed right-0 top-16  bottom-4">
+                <div className="w-[400px] mx-4 fixed right-0 top-14 bottom-4">
                     <div className="w-full h-full font-sans border border-gray-200 rounded-md bg-gray-50 p-4">
-                        <h2 className="text-xl mb-4 font-bold">OTHER STREAMS</h2>
+                        <h2 className="text-xl mb-4 font-semibold">
+                            Other streams
+                        </h2>
                         <div className="flex flex-col gap-4">
                             {user &&
                                 user.vods
@@ -113,3 +119,22 @@ export default function VODPage() {
         </div>
     );
 }
+
+// const ServersChooser = () => {
+//     return (
+//         <div className="w-full font-sans mt-4 overflow-x-auto whitespace-nowrap">
+//             {['1','2','3'].map((_, idx) => (
+//                 <Button
+//                     key={idx}
+//                     onClick={() => setServerIndex(idx)}
+//                     className={cn(
+//                         "mr-4",
+//                         serverIndex == idx ? "bg-green-700" : ""
+//                     )}
+//                 >
+//                     Server {idx + 1}
+//                 </Button>
+//             ))}
+//         </div>
+//     );
+// };

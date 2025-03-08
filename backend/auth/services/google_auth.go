@@ -78,9 +78,10 @@ func (s GoogleAuthService) CallbackHandler(googleCode string) (*domains.Auth, *s
 		return nil, servererrors.ErrInternalServer
 	} else if err != nil {
 		dto := &usergateway.CreateUserRequestDTO{
-			Username:   generateUsername(returnedOAuthUser.Email),
-			Email:      returnedOAuthUser.Email,
-			IsVerified: returnedOAuthUser.VerifiedEmail,
+			Username:     generateUsername(returnedOAuthUser.Email),
+			Email:        returnedOAuthUser.Email,
+			IsVerified:   returnedOAuthUser.VerifiedEmail,
+			AuthProvider: usergateway.ProviderGoogle,
 		}
 
 		createdUser, errRes := s.userGateway.CreateNewUser(context.Background(), *dto)

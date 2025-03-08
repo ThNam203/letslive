@@ -7,13 +7,24 @@ import {
 } from "@/components/custom_react_player/streaming_frame";
 import useUser from "@/hooks/user";
 import { GetUserById } from "@/lib/api/user";
-import { User } from "@/types/user";
+import { User, UserLiveStatus } from "@/types/user";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 export default function Livestreaming() {
     const [user, setUser] = useState<User | null>(null);
+    const updateUser = (newUserInfo: User) => {
+        setUser((prev) => {
+            if (prev) {
+                return {
+                    ...prev,
+                    ...newUserInfo,
+                };
+            }
+            return prev;
+        });
+    }
 
     const params = useParams<{ userId: string }>();
     const [playerInfo, setPlayerInfo] = useState<VideoInfo>({
@@ -39,7 +50,7 @@ export default function Livestreaming() {
             
             if (user) {
                 setUser(user);
-                if (user.isOnline && user.vods && user.vods.length > 0) {
+                if (user.liveStatus === UserLiveStatus.LIVE && user.vods && user.vods.length > 0) {
                     setPlayerInfo({
                         videoTitle: user.vods[0].title,
                         streamer: {
@@ -55,11 +66,11 @@ export default function Livestreaming() {
     }, [params.userId]);
 
     return (
-        <div className="overflow-y-auto h-full flex lg:flex-row max-lg:flex-col">
+        <div className="overflow-y-auto h-full flex lg:flex-row max-lg:flex-col mt-2">
             <div className="w-[1200px] min-w-[1200px]">
-                {user && user.isOnline ? (
+                {user && user.liveStatus === UserLiveStatus.LIVE ? (
                     <>
-                        <div className="w-full h-[675px] bg-black mb-4">
+                        <div className="w-full h-[675px] bg-black mb-4 rounded-sm">
                             <StreamingFrame
                                 videoInfo={playerInfo}
                                 onVideoStart={() => {
@@ -88,7 +99,7 @@ export default function Livestreaming() {
                         </div>
                 )}
 
-                {user && <ProfileView user={user}/>}
+                {user && <ProfileView user={user} updateUser={updateUser}/>}
             </div>
             <div className="w-[400px] mx-4 fixed right-0 top-12 bottom-4">
                 <ChatUI roomId={params.userId}/>

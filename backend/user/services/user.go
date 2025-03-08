@@ -16,28 +16,28 @@ import (
 )
 
 type UserService struct {
-	repo                      repositories.UserRepository
+	userRepo                  repositories.UserRepository
 	livestreamInformationRepo repositories.LivestreamInformationRepository
 	livestreamGateway         livestreamgateway.LivestreamGateway
 	minioService              MinIOService
 }
 
 func NewUserService(
-	repo repositories.UserRepository,
+	userRepo repositories.UserRepository,
 	livestreamInformationRepo repositories.LivestreamInformationRepository,
 	livestreamGateway livestreamgateway.LivestreamGateway,
 	minioService MinIOService,
 ) *UserService {
 	return &UserService{
-		repo:                      repo,
+		userRepo:                  userRepo,
 		livestreamInformationRepo: livestreamInformationRepo,
 		livestreamGateway:         livestreamGateway,
 		minioService:              minioService,
 	}
 }
 
-func (s *UserService) GetUserById(userUUID uuid.UUID) (*dto.GetUserResponseDTO, *servererrors.ServerError) {
-	user, err := s.repo.GetById(userUUID)
+func (s *UserService) GetUserById(userUUID uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserResponseDTO, *servererrors.ServerError) {
+	user, err := s.userRepo.GetById(userUUID, authenticatedUserId)
 	if err != nil {
 		return nil, err
 	}
@@ -47,12 +47,13 @@ func (s *UserService) GetUserById(userUUID uuid.UUID) (*dto.GetUserResponseDTO, 
 		return nil, servererrors.NewServerError(errRes.StatusCode, errRes.Message)
 	}
 
-	res := mapper.UserToGetUserResponseDTO(*user, userVODs)
-	return res, nil
+	user.VODs = userVODs
+
+	return user, nil
 }
 
 func (s *UserService) GetUserByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseDTO, *servererrors.ServerError) {
-	user, err := s.repo.GetByAPIKey(key)
+	user, err := s.userRepo.GetByAPIKey(key)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +63,7 @@ func (s *UserService) GetUserByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponse
 }
 
 func (s *UserService) GetUserFullInformation(userUUID uuid.UUID) (*domains.User, *servererrors.ServerError) {
-	user, err := s.repo.GetById(userUUID)
+	user, err := s.userRepo.GetFullInfoById(userUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +71,7 @@ func (s *UserService) GetUserFullInformation(userUUID uuid.UUID) (*domains.User,
 	return user, nil
 }
 
-func (s *UserService) QueryUsers(isOnline, username, page string) ([]dto.GetUserResponseDTO, *servererrors.ServerError) {
+func (s *UserService) QueryUsers(liveStatus, username, page string) ([]dto.GetUserResponseDTO, *servererrors.ServerError) {
 	var pageNumber int
 	if len(page) == 0 {
 		pageNumber = 0
@@ -82,7 +83,11 @@ func (s *UserService) QueryUsers(isOnline, username, page string) ([]dto.GetUser
 		pageNumber = atoiNum
 	}
 
-	users, err := s.repo.Query(isOnline, username, pageNumber)
+	if len(liveStatus) > 0 && (liveStatus != string(domains.OffLive) && liveStatus != string(domains.Live)) {
+		return nil, servererrors.ErrInvalidInput
+	}
+
+	users, err := s.userRepo.Query(domains.UserLiveStatus(liveStatus), username, pageNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -101,21 +106,45 @@ func (s *UserService) QueryUsers(isOnline, username, page string) ([]dto.GetUser
 	return resUsers, nil
 }
 
-func (s *UserService) CreateNewUser(data dto.CreateUserRequestDTO) *servererrors.ServerError {
-	if err := utils.Validator.Struct(&data); err != nil {
-		return servererrors.ErrInvalidInput
+func (s *UserService) SearchUserByUsername(username string) ([]dto.GetUserResponseDTO, *servererrors.ServerError) {
+	if len(username) == 0 {
+		return nil, servererrors.ErrInvalidInput
 	}
 
-	err := s.repo.Create(data.Username, data.Email, data.IsVerified)
+	users, err := s.userRepo.SearchUserByUsername(username)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	var resUsers []dto.GetUserResponseDTO
+
+	for _, user := range users {
+		resUsers = append(resUsers, *mapper.UserToGetUserResponseDTO(*user, nil))
+	}
+
+	return resUsers, nil
+}
+
+func (s *UserService) CreateNewUser(data dto.CreateUserRequestDTO) (*domains.User, *servererrors.ServerError) {
+	if err := utils.Validator.Struct(&data); err != nil {
+		return nil, servererrors.ErrInvalidInput
+	}
+
+	// TODO: transaction please
+	createdUser, err := s.userRepo.Create(data.Username, data.Email, data.IsVerified, domains.AuthProvider(data.AuthProvider))
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.livestreamInformationRepo.Create(createdUser.Id); err != nil {
+		return nil, err
+	}
+
+	return createdUser, nil
 }
 
 func (s *UserService) UpdateUserVerified(userId uuid.UUID) *servererrors.ServerError {
-	err := s.repo.UpdateUserVerified(userId)
+	err := s.userRepo.UpdateUserVerified(userId)
 	if err != nil {
 		return err
 	}
@@ -129,7 +158,7 @@ func (s *UserService) UpdateUser(data dto.UpdateUserRequestDTO) (*domains.User, 
 	}
 
 	updateData := mapper.UpdateUserRequestDTOToUser(data)
-	updatedUser, err := s.repo.Update(updateData)
+	updatedUser, err := s.userRepo.Update(updateData)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +172,7 @@ func (s *UserService) UpdateUserAPIKey(userId uuid.UUID) (string, *servererrors.
 		return "", servererrors.ErrInternalServer
 	}
 
-	err := s.repo.UpdateStreamAPIKey(userId, newStreamKey.String())
+	err := s.userRepo.UpdateStreamAPIKey(userId, newStreamKey.String())
 	if err != nil {
 		return "", err
 	}
@@ -157,7 +186,7 @@ func (s UserService) UpdateUserProfilePicture(file multipart.File, fileHeader *m
 		return "", servererrors.ErrInternalServer
 	}
 
-	updateErr := s.repo.UpdateProfilePicture(userId, savedPath)
+	updateErr := s.userRepo.UpdateProfilePicture(userId, savedPath)
 	if updateErr != nil {
 		return "", updateErr
 	}
@@ -171,7 +200,7 @@ func (s UserService) UpdateUserBackgroundPicture(file multipart.File, fileHeader
 		return "", servererrors.ErrInternalServer
 	}
 
-	updateErr := s.repo.UpdateBackgroundPicture(userId, savedPath)
+	updateErr := s.userRepo.UpdateBackgroundPicture(userId, savedPath)
 	if updateErr != nil {
 		return "", updateErr
 	}
@@ -187,7 +216,7 @@ func (s UserService) UpdateUserInternal(data dto.UpdateUserRequestDTO) (*domains
 
 	updateUser := mapper.UpdateUserRequestDTOToUser(data)
 
-	updatedUser, err := s.repo.Update(updateUser)
+	updatedUser, err := s.userRepo.Update(updateUser)
 	if err != nil {
 		return nil, err
 	}
