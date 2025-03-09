@@ -1,16 +1,18 @@
-import ApiKeyTab from "@/app/(main)/settings/security/api-key-tab";
-import ChangePasswordTab from "@/app/(main)/settings/security/change-password-tab";
-import VerificationRequest from "@/app/(main)/settings/security/send-verification";
-import { Button } from "@/components/ui/button";
+
+
+import { Button } from "../../../../components/ui/button";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "@/components/ui/dialog";
-import { AuthProvider, User } from "@/types/user";
+} from "../../../../components/ui/dialog";
 import { ShieldCheck, ShieldOff } from "lucide-react";
+import VerificationRequest from "./send-verification";
+import ApiKeyTab from "./api-key-tab";
+import ChangePasswordTab from "./change-password-tab";
+import { AuthProvider, User } from "../../../../types/user";
 
 export default function ContactSettings({ user }: { user: User }) {
     return (

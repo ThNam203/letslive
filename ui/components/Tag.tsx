@@ -1,7 +1,8 @@
-import { cn } from "@/utils/cn";
+
 import { ClassValue } from "clsx";
 import React, { ReactNode } from "react";
 import { LuX } from "react-icons/lu";
+import { cn } from "../utils/cn";
 
 const Tag = ({
   children,

@@ -1,15 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import FormErrorText from "@/components/forms/FormErrorText";
-import { ChangePassword } from "@/lib/api/auth";
 import { toast } from "react-toastify";
-import { FetchError } from "@/types/fetch-error";
 import { Loader } from "lucide-react";
-import { set } from "date-fns";
+import { ChangePassword } from "../../../../lib/api/auth";
+import { Label } from "../../../../components/ui/label";
+import { Input } from "../../../../components/ui/input";
+import FormErrorText from "../../../../components/forms/FormErrorText";
+import { Button } from "../../../../components/ui/button";
 
 export default function ChangePasswordTab() {
     const [currentPassword, setCurrentPassword] = useState("");

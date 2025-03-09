@@ -1,6 +1,7 @@
-import { FetchError } from "@/types/fetch-error";
-import { LivestreamInformation, User } from "@/types/user";
-import { fetchClient } from "@/utils/fetchClient";
+import { FetchError } from "../../types/fetch-error";
+import { LivestreamInformation, User } from "../../types/user";
+import { fetchClient } from "../../utils/fetchClient";
+
 
 /**
  * Fetches the list of online users.

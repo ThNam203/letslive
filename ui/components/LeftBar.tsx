@@ -1,38 +1,7 @@
-import { LuArrowUpDown, LuHeart, LuVideo } from "react-icons/lu";
-import { ClassValue } from "clsx";
-import { cn } from "@/utils/cn";
-import { ReactNode } from "react";
-import user_avatar from "@/public/images/user_avatar.jpeg";
-import RoundedImage from "@/components/images/RoundedImage";
-import AllChannelsView from "@/components/leftbar/AllChannelsView";
 
-const ChannelViewItem = ({
-  className,
-  name,
-  category,
-}: {
-  className?: ClassValue;
-  name: string;
-  category: string;
-}) => {
-  return (
-    <div
-      className={cn(
-        "w-full flex flex-row gap-2 items-center justify-between xl:hover:bg-hoverColor px-2",
-        className
-      )}
-    >
-      <div className="flex flex-row items-center justify-start">
-        <RoundedImage src={user_avatar} width={40} height={40} alt="channel owner image"/>
-        <div className="flex flex-col gap-1 ml-2 max-xl:hidden">
-          <span className="font-semibold text-sm">{name}</span>
-          <span className="text-secondaryWord text-sm">{category}</span>
-        </div>
-      </div>
-      <View viewers={1200} className="max-xl:hidden" />
-    </div>
-  );
-};
+import { ClassValue } from "clsx";
+import { cn } from "../utils/cn";
+import AllChannelsView from "./leftbar/AllChannelsView";
 
 const View = ({
   className,
@@ -61,38 +30,6 @@ export const LeftBar = () => {
       <div className="flex flex-row justify-between items-center px-2 pt-4">
         <AllChannelsView/>
       </div>
-      {/* <div className="flex flex-row justify-between items-center px-2 mt-2"> */}
-        {/* <Title icon={<LuHeart size={20} />}>FOLLOWED CHANNELS</Title> */}
-
-        {/* <IconButton
-          className="self-end max-xl:hidden"
-          icon={<LuArrowUpDown size={18} />}
-          disabled={true}
-        /> */}
-      {/* </div> */}
-      {/* {followingChannels.map((channel, idx) => {
-        // TODO: WRONG LOGIC
-        const user = userData.find((user) => user.id === channel.id);
-        return (
-          <ChannelViewItem
-            key={idx}
-            name={user ? user.username : ""}
-            category={"what is this"}
-          />
-        );
-      })} */}
-      {/* <div className="flex flex-row justify-between items-center px-2 mt-2">
-        <Title icon={<LuVideo size={20} />}>RECOMMEND CHANNELS</Title>
-      </div> */}
-      {/* {recommendChannels.map((channel, idx) => {
-        return (
-          <ChannelViewItem
-            key={idx}
-            name={"CHANNEL OWNER"}
-            category={"CATEGORY"}
-          />
-        );
-      })} */}
     </div>
   );
 };

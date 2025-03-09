@@ -11,15 +11,12 @@ import {
 } from "@mui/icons-material";
 import { Slider } from "@mui/material";
 import { ClassValue } from "clsx";
-import { LegacyRef, useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import screenfull from "screenfull";
 import { cn } from "../../utils/cn";
-import "react-loading-skeleton/dist/skeleton.css";
-import Skeleton from "react-loading-skeleton";
 
 import dynamic from "next/dynamic";
-import { format } from "date-fns";
 const ReactPlayerWrapper = dynamic(() => import("./react_player_wrapper"), {
     ssr: false,
 });

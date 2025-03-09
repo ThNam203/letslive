@@ -1,7 +1,7 @@
 "use client";
-import { cn } from "@/utils/cn";
 import { ClassValue } from "clsx";
 import { ReactNode, use, useEffect, useState } from "react";
+import { cn } from "../utils/cn";
 
 const Tab = ({
   className,

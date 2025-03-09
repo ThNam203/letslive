@@ -23,6 +23,13 @@ The project aims to create a functioning livestreaming website from a to z like 
   * Push files into a remote storage, which we are using MinIO.  
   * Using a IPFS private network, I have implemented it but only for "using IPFS" demo purpose, otherwise there are no real usecases for using IPFS in livestreaming system, maybe except VOD  
 
+## INSTALLATION
+1. Clone the repo
+2. Fill in the example env files in backend services
+3. Run "mvn clean install" in backend/configserver
+4. Run "docker compose up"
+5. Access UI at localhost:5000
+
 ## TECHNOLOGIES AND TOOLS
 - Golang, PostgresQL.
 - FFMpeg for transcoding from RTMP to HLS.
@@ -32,18 +39,20 @@ The project aims to create a functioning livestreaming website from a to z like 
 - NextJS, ReactJS and TailwindCSS for UI.
 
 ## ARCHITECTURE  
-### WITH IPFS  
-![IPFS ARCHITECTURE](docs/ipfs_architecture.png)
-
 ### WITH MINIO  
 ![MINIO ARCHITECTURE](docs/minio_architecture.png)
+
+### WITH IPFS (no longer support cause usability)
+![IPFS ARCHITECTURE](docs/ipfs_architecture.png)
+
 
 ## ROADMAP
 
 * Support streaming from browser.
 * gRPC support.
-* Chat
 * Kafka
+* Add unit tests
+* Add logging and tracing
 
-Last editted: 15/02/2025  
+Last editted: 09/03/2025  
 **[Editor: Nam Huynh](https://github.com/ThNam203)**

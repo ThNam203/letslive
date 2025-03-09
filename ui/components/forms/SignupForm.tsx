@@ -1,17 +1,16 @@
 "use client";
 
-import FormErrorText from "@/components/forms/FormErrorText";
-import { IconEmail } from "@/components/icons/email";
-import { IconEye } from "@/components/icons/eye";
-import { IconEyeOff } from "@/components/icons/eye-off";
-import { IconPasswordOutline } from "@/components/icons/password";
-import { IconUserOutline } from "@/components/icons/user";
-import { SignUp } from "@/lib/api/auth";
-import { Spinner } from "@nextui-org/spinner";
-import { set } from "date-fns";
+import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { SignUp } from "../../lib/api/auth";
+import { IconEmail } from "../icons/email";
+import FormErrorText from "./FormErrorText";
+import { IconUserOutline } from "../icons/user";
+import { IconPasswordOutline } from "../icons/password";
+import { IconEye } from "../icons/eye";
+import { IconEyeOff } from "../icons/eye-off";
 
 export default function SignUpForm() {
     const [email, setEmail] = useState("");
@@ -180,8 +179,8 @@ export default function SignUpForm() {
                 disabled={isLoading}
                 className="w-full rounded-md flex justify-center items-center bg-blue-400 hover:bg-blue-500 text-white h-[50px] border-transparent border mt-4 font-semibold"
             >
+                {isLoading && <Loader className="animate-spin ml-2" />}
                 SIGN UP
-                {isLoading && <Spinner className="ml-2" />}
             </button>
         </form>
     );

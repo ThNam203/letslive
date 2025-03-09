@@ -1,6 +1,7 @@
-import { GetMeProfile, UpdateProfile } from "@/lib/api/user";
-import { User } from "@/types/user";
+
 import { create } from "zustand";
+import { User } from "../types/user";
+import { GetMeProfile } from "../lib/api/user";
 
 export type UserState = {
     user: User | null;

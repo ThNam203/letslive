@@ -1,18 +1,18 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Loader } from "lucide-react";
-import useUser from "@/hooks/user";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import {
     UpdateBackgroundPicture,
     UpdateProfile,
     UpdateProfilePicture,
-} from "@/lib/api/user";
+} from "../../../../lib/api/user";
 import { toast } from "react-toastify";
+import useUser from "../../../../hooks/user";
+import { Button } from "../../../../components/ui/button";
+import { Input } from "../../../../components/ui/input";
+import { Textarea } from "../../../../components/ui/textarea";
 
 export default function ProfileSettings() {
     const user = useUser((state) => state.user);

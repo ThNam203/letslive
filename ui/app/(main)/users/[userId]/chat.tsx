@@ -2,15 +2,15 @@
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
 import { toast } from "react-toastify";
-import { ReceivedMessage } from "@/types/received_message";
-import { SendMessage } from "@/types/send_message";
-import useUser from "@/hooks/user";
-import GLOBAL from "@/global";
-import { GetMessages } from "@/lib/api/chat";
+import useUser from "../../../../hooks/user";
+import { ReceivedMessage } from "../../../../types/received_message";
+import { SendMessage } from "../../../../types/send_message";
+import { GetMessages } from "../../../../lib/api/chat";
+import GLOBAL from "../../../../global";
+import { Input } from "../../../../components/ui/input";
+import { Button } from "../../../../components/ui/button";
 
 export default function ChatUI({ roomId }: { roomId: string }) {
     const user = useUser((state) => state.user);

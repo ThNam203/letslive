@@ -4,9 +4,8 @@ import {
     LuHome
 } from "react-icons/lu";
 import Link from "next/link";
-import { SearchInput } from "@/components/Input";
-import UserInfo from "@/components/header/userinfo";
-import SearchBar from "@/components/header/search";
+import SearchBar from "./search";
+import UserInfo from "./userinfo";
 
 export async function Header() {
     return (

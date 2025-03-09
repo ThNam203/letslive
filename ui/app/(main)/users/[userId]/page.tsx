@@ -1,16 +1,13 @@
 "use client";
-import ChatUI from "@/app/(main)/users/[userId]/chat";
-import ProfileView from "@/app/(main)/users/[userId]/profile";
-import {
-    StreamingFrame,
-    VideoInfo,
-} from "@/components/custom_react_player/streaming_frame";
-import useUser from "@/hooks/user";
-import { GetUserById } from "@/lib/api/user";
-import { User, UserLiveStatus } from "@/types/user";
+
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { User, UserLiveStatus } from "../../../../types/user";
+import { StreamingFrame, VideoInfo } from "../../../../components/custom_react_player/streaming_frame";
+import { GetUserById } from "../../../../lib/api/user";
+import ProfileView from "./profile";
+import ChatUI from "./chat";
 
 export default function Livestreaming() {
     const [user, setUser] = useState<User | null>(null);

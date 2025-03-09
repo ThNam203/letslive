@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { Clock, Eye, Film } from "lucide-react";
-import { UserVOD } from "@/types/user";
 import Image from "next/image";
+import { UserVOD } from "../../types/user";
+import { Card, CardContent } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Skeleton } from "../ui/skeleton";
 
 export function PopularVODView() {
     const [isLoading, setIsLoading] = useState(false);

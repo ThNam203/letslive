@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button";
-import SignUpForm from "@/components/forms/SignupForm";
-import { IconFacebook } from "@/components/icons/facebook";
-import { IconGoogle } from "@/components/icons/google";
 
-import GLOBAL from "@/global";
+
+
 import Link from "next/link";
+import { IconGoogle } from "../../../components/icons/google";
+import SignUpForm from "../../../components/forms/SignupForm";
+import GLOBAL from "../../../global";
 
 export default function SignUpPage() {
     return (
@@ -20,7 +20,7 @@ export default function SignUpPage() {
                         className="flex-1 flex flex-row items-center justify-center gap-4 border-1 py-2 rounded-lg hover:bg-gray-200"
                         href={GLOBAL.API_URL + "/auth/google"}
                     >
-                        <IconGoogle /> Google
+                        <IconGoogle/> Google
                     </Link>
                     {/* <Link
                         className="flex-1 flex flex-row items-center justify-center gap-4 border-1 py-2 rounded-lg hover:bg-gray-200"

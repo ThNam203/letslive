@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { LuChevronDown } from "react-icons/lu";
-import { User } from "@/types/user";
-import Separator from "@/components/Separator";
-import LivestreamPreviewView from "@/components/main_page/LivestreamPreviewView";
 import { Play } from "lucide-react";
-import { GetOnlineUsers } from "@/lib/api/user";
 import { toast } from "react-toastify";
+import { GetOnlineUsers } from "../../lib/api/user";
+import LivestreamPreviewView from "./LivestreamPreviewView";
+import { User } from "../../types/user";
+import Separator from "../Separator";
 
 const LivestreamsPreviewView = () => {
     const [limitView, setLimitView] = useState<number>(4);

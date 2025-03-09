@@ -1,5 +1,6 @@
-import LivestreamsPreviewView from "@/components/main_page/LivesteamsPreviewView";
-import { PopularVODView } from "@/components/main_page/popular-vod-view";
+import LivestreamsPreviewView from "../../components/main_page/LivesteamsPreviewView";
+import { PopularVODView } from "../../components/main_page/popular-vod-view";
+
 
 export default function HomePage() {
     return (

@@ -1,10 +1,10 @@
 "use client";
-import { cn } from "@/utils/cn";
 import { Popover, PopoverContent, PopoverTrigger } from "@nextui-org/popover";
 import { ClassValue } from "clsx";
 
 import { ReactNode, useState } from "react";
 import { LuCheck, LuChevronDown, LuChevronUp } from "react-icons/lu";
+import { cn } from "../utils/cn";
 
 const Option = ({
   className,
