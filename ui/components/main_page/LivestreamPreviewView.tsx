@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { User } from "../../types/user";
 import { Hover3DBox } from "../Hover3DBox";
 import { cn } from "../../utils/cn";
-import stream_img from "@/public/images/stream_thumbnail_example.jpg";
 import LivestreamPreviewDetailView from "./LivestreamPreviewDetailView";
 
 const LivestreamPreviewView = ({
@@ -27,14 +26,14 @@ const LivestreamPreviewView = ({
 
     return (
         <div className={cn("flex flex-col gap-2", className)}>
-            <Hover3DBox
+            {/* <Hover3DBox
                 viewers={viewers}
                 showViewer={true}
                 showStream={true}
-                imageSrc={stream_img}
+                imageSrc={}
                 className="h-[170px]"
                 onClick={() => router.push(`/users/${user.id}`)}
-            />
+            /> */}
             <LivestreamPreviewDetailView
                 user={user}
                 title={title}
