@@ -11,5 +11,5 @@ tests/.venv
 k8s
 k8s/secrets
 
-shared_log
+#shared_log
 elastic_certs
