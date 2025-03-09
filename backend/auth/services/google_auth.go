@@ -44,8 +44,7 @@ const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_
 
 func (s GoogleAuthService) getGoogleOauthConfig() *oauth2.Config {
 	return &oauth2.Config{
-		// TODO: put to env
-		RedirectURL:  "http://localhost:8000/auth/google/callback",
+		RedirectURL:  os.Getenv("GOOGLE_OAUTH_REDIRECT_URL"),
 		ClientID:     os.Getenv("GOOGLE_OAUTH_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_OAUTH_CLIENT_SECRET"),
 		Scopes: []string{

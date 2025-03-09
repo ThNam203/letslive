@@ -42,7 +42,7 @@ export default function ChatUI({ roomId }: { roomId: string }) {
                     toastId: "message-fetch-error",
                 });
             } else {
-                setMessages(messages);
+                setMessages(prev => [...messages, ...prev]);
             }
         };
 
@@ -82,21 +82,21 @@ export default function ChatUI({ roomId }: { roomId: string }) {
             };
 
             ws.onclose = (ev) => {
-                toast(
-                    "WebSocket connection closed: " +
-                        ev.code +
-                        ", " +
-                        ev.wasClean +
-                        ", " +
-                        ev.reason,
-                    { type: "info" }
-                );
+                // toast(
+                //     "WebSocket connection closed: " +
+                //         ev.code +
+                //         ", " +
+                //         ev.wasClean +
+                //         ", " +
+                //         ev.reason,
+                //     { type: "info" }
+                // );
             };
 
             ws.onerror = (error) => {
-                toast("WebSocket connection closed: " + error, {
-                    type: "info",
-                });
+                // toast("WebSocket connection closed: " + error, {
+                //     type: "info",
+                // });
             };
         };
 
