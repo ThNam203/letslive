@@ -67,11 +67,11 @@ func (w *FFMpegFileWatcher) Watch() {
 
 	// Watch the hls segment storage folder recursively for changes.
 	if err := myWatcher.AddRecursive(w.monitorPath); err != nil {
-		logger.Panicw("error while setting up", err)
+		logger.Panicf("error while setting up watcher path: %s", err)
 	}
 
 	if err := myWatcher.Start(time.Millisecond * 100); err != nil {
-		logger.Panicw("error starting watcher", err)
+		logger.Panicf("error starting watcher: %s", err)
 	}
 }
 

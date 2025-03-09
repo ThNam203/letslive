@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"sen1or/lets-live/pkg/logger"
 	cfg "sen1or/lets-live/transcode/config"
 	livestreamgateway "sen1or/lets-live/transcode/gateway/livestream/http"
@@ -27,9 +28,9 @@ func main() {
 	logger.Init(logger.LogLevel(logger.Debug))
 	config := cfg.RetrieveConfig()
 
-	//if err := resetWorkingSpace(*config); err != nil {
-	//	logger.Panicf("failed to reset working space: %s", err)
-	//}
+	if err := setupHLSFolders(*config); err != nil {
+		logger.Panicf("failed to reset working space: %s", err)
+	}
 
 	registry, err := discovery.NewConsulRegistry(config.Registry.Service.Address)
 	if err != nil {
@@ -74,4 +75,14 @@ func main() {
 	)
 	go rtmpServer.Start()
 	select {}
+}
+
+func setupHLSFolders(cfg cfg.Transcode) {
+	if err := os.MkdirAll(cfg.PublicHLSPath, 0777); err != nil {
+		logger.Panicf("failed to create public hls folder: %s", err)
+	}
+
+	if err := os.MkdirAll(cfg.PrivateHLSPath, 0777); err != nil {
+		logger.Panicf("failed to create private hls folder: %s", err)
+	}
 }
