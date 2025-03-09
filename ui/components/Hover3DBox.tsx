@@ -43,14 +43,14 @@ const Hover3DBox = ({
       >
         LIVE
       </span>
-      <span
+      {/* <span
         className={cn(
           "absolute px-1 rounded-sm text-white text-sm bg-black/60 bottom-2 left-2 z-20 group-hover:translate-x-2 group-hover:-translate-y-2 ease-linear duration-100",
           showViewer ? "" : "hidden"
         )}
       >
         {viewers} viewers
-      </span>
+      </span> */}
     </div>
   );
 };
