@@ -1,10 +1,8 @@
-import { Button } from "@/components/ui/button";
-import LogInForm from "@/components/forms/LoginForm";
-import { IconFacebook } from "@/components/icons/facebook";
-import { IconGoogle } from "@/components/icons/google";
 
-import GLOBAL from "@/global";
 import Link from "next/link";
+import { IconGoogle } from "../../../components/icons/google";
+import LogInForm from "../../../components/forms/LoginForm";
+import GLOBAL from "../../../global";
 
 export default function LogInPage() {
     return (

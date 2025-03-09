@@ -1,5 +1,6 @@
-import { cn } from "@/utils/cn";
+
 import { ClassValue } from "clsx";
+import { cn } from "../utils/cn";
 
 const Separator = ({
   color = "bg-gray-200",

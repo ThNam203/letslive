@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { cn } from "@/utils/cn";
 import { usePathname } from "next/navigation";
+import { cn } from "../../../utils/cn";
 
 const navItems = [
     { name: "Profile", href: "/settings/profile" },

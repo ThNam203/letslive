@@ -1,19 +1,19 @@
-import { cn } from "@/utils/cn";
-import user_avatar from "@/public/images/user_avatar.jpeg";
 import Image from "next/image";
 import { LuMoreVertical } from "react-icons/lu";
-import { Button } from "@/components/ui/button";
+import { cn } from "../../utils/cn";
+import { User } from "../../types/user";
+import { Button } from "../ui/button";
 
 const LivestreamPreviewDetailView = ({
     title,
-    username,
     category,
     tags,
+    user
 }: {
     title: string;
-    username: string;
     category: string | undefined;
     tags: string[];
+    user: User;
 }) => {
     return (
         <div className="flex flex-row gap-2">
@@ -23,7 +23,7 @@ const LivestreamPreviewDetailView = ({
                 className={cn(
                     "h-8 w-8 rounded-full overflow-hidden cursor-pointer"
                 )}
-                src={user_avatar}
+                src={user.profilePicture ?? "https://github.com/shadcn.png"}
                 alt="user avatar"
             />
             <div className="flex-1 flex-col space-y-1">
@@ -35,7 +35,7 @@ const LivestreamPreviewDetailView = ({
                     <Button><LuMoreVertical className="w-4 h-4" /></Button>
                 </div>
                 <div className="text-sm text-secondaryWord cursor-pointer">
-                    {username}
+                    {user.displayName ?? user.username}
                 </div>
                 <div className="text-sm text-secondaryWord hover:text-primary cursor-pointer">
                     {category ? category : null}

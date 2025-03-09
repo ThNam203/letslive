@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { User } from "@/types/user";
-import { cn } from "@/utils/cn";
 import Image from "next/image";
-import useUser from "@/hooks/user";
-import { FollowOtherUser, UnfollowOtherUser } from "@/lib/api/user";
-import { Loader, ShieldCheck } from "lucide-react";
+import { Loader } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { User } from "../../../../types/user";
+import useUser from "../../../../hooks/user";
+import { FollowOtherUser, UnfollowOtherUser } from "../../../../lib/api/user";
+import { Button } from "../../../../components/ui/button";
+import { cn } from "../../../../utils/cn";
 
 export default function ProfileHeader({
     user,

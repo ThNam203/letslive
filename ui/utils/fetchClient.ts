@@ -1,7 +1,6 @@
-import GLOBAL from "@/global";
-import { ErrorResponse, FetchError } from "@/types/fetch-error";
-import { FetchOptions } from "@/types/fetch-options";
-import { cookies } from "next/headers";
+import GLOBAL from "../global";
+import { ErrorResponse, FetchError } from "../types/fetch-error";
+import { FetchOptions } from "../types/fetch-options";
 
 // Singleton promise for token refresh
 let refreshTokenPromise: Promise<void> | null = null;

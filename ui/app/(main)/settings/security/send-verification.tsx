@@ -1,8 +1,8 @@
 "use client";
 
-import { RequestToSendVerification } from "@/lib/api/auth";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { RequestToSendVerification } from "../../../../lib/api/auth";
 
 const VerificationRequest = () => {
     const [isCooldown, setIsCooldown] = useState(false);

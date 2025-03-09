@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Copy, RefreshCw } from "lucide-react";
 import { toast } from "react-toastify";
-import { RequestToGenerateNewAPIKey } from "@/lib/api/user";
-import useUser from "@/hooks/user";
+import useUser from "../../../../hooks/user";
+import { RequestToGenerateNewAPIKey } from "../../../../lib/api/user";
+import { Label } from "../../../../components/ui/label";
+import { Input } from "../../../../components/ui/input";
+import { Button } from "../../../../components/ui/button";
 
 export default function ApiKeyTab() {
     const user = useUser((state) => state.user);

@@ -1,7 +1,6 @@
 spring:
   application:
     name: configserver
-  port: 8181
   cloud:
     config:
       server:
@@ -13,6 +12,9 @@ spring:
           force-pull: true
   main:
     show_banner: "off"
+
+server:
+  port: 8181
 
 logging:
   level:

@@ -1,11 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { CalendarDays, Users, Heart, ShieldCheck } from "lucide-react";
-import Link from "next/link";
-import { User } from "@/types/user";
-import VODLink from "@/components/vodlink";
-import ProfileHeader from "@/app/(main)/users/[userId]/profile_header";
+import { User } from "../../../../types/user";
+import ProfileHeader from "./profile_header";
+import VODLink from "../../../../components/vodlink";
 
 export default function ProfileView({
     user,

@@ -1,22 +1,14 @@
 "use client";
-import ProfileView from "@/app/(main)/users/[userId]/profile";
-import {
-    StreamingFrame,
-    VideoInfo,
-} from "@/components/custom_react_player/streaming_frame";
-import { VODFrame } from "@/components/custom_react_player/vod_frame";
-import { Button } from "@/components/ui/button";
-import VODLink from "@/components/vodlink";
-import { GetUserById } from "@/lib/api/user";
-import { GetVODInformation } from "@/lib/api/vod";
-import { cn } from "@/utils/cn";
-import { User } from "@/types/user";
-import Image from "next/image";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import ProfileHeader from "@/app/(main)/users/[userId]/profile_header";
+import { User } from "../../../../../../types/user";
+import { VideoInfo } from "../../../../../../components/custom_react_player/streaming_frame";
+import { GetVODInformation } from "../../../../../../lib/api/vod";
+import { GetUserById } from "../../../../../../lib/api/user";
+import { VODFrame } from "../../../../../../components/custom_react_player/vod_frame";
+import ProfileView from "../../profile";
+import VODLink from "../../../../../../components/vodlink";
 
 export default function VODPage() {
     const [user, setUser] = useState<User | null>(null);

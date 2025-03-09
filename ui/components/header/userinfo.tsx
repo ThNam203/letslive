@@ -2,19 +2,16 @@
 
 import { LuBell, LuLogOut, LuMessageSquare, LuSettings } from "react-icons/lu";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
-import useUser from "@/hooks/user";
+
 import { useEffect, useState } from "react";
-import { FetchError } from "@/types/fetch-error";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Logout } from "@/lib/api/auth";
+import useUser from "../../hooks/user";
+import { Logout } from "../../lib/api/auth";
+import { FetchError } from "../../types/fetch-error";
+import { Button } from "../ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 export default function UserInfo() {
     const userState = useUser();

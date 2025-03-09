@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { NextUIProvider } from "@nextui-org/system";
-import Toast from "@/components/Toaster";
 import React, { Suspense } from "react";
-import Loading from "@/app/loading";
+import Loading from "./loading";
+import Toast from "../components/Toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,10 +21,10 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={inter.className}>
-                    <Suspense fallback={<Loading />}>
-                        <NextUIProvider>{children}</NextUIProvider>
-                        <Toast />
-                    </Suspense>
+                <Suspense fallback={<Loading />}>
+                    <NextUIProvider>{children}</NextUIProvider>
+                    <Toast />
+                </Suspense>
             </body>
         </html>
     );

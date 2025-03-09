@@ -1,12 +1,12 @@
 "use client"
 
-import { cn } from "@/utils/cn";
 import { ClassValue } from "clsx";
-import stream_img from "@/public/images/stream_thumbnail_example.jpg";
-import { Hover3DBox } from "@/components/Hover3DBox";
 import { useRouter } from "next/navigation";
-import { User } from "@/types/user";
-import LivestreamPreviewDetailView from "@/components/main_page/LivestreamPreviewDetailView";
+import { User } from "../../types/user";
+import { Hover3DBox } from "../Hover3DBox";
+import { cn } from "../../utils/cn";
+import stream_img from "@/public/images/stream_thumbnail_example.jpg";
+import LivestreamPreviewDetailView from "./LivestreamPreviewDetailView";
 
 const LivestreamPreviewView = ({
     className,
@@ -36,7 +36,7 @@ const LivestreamPreviewView = ({
                 onClick={() => router.push(`/users/${user.id}`)}
             />
             <LivestreamPreviewDetailView
-                username={user.username}
+                user={user}
                 title={title}
                 category={category}
                 tags={tags}

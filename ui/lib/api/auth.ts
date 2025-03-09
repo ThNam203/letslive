@@ -1,6 +1,7 @@
-import { FetchError } from "@/types/fetch-error";
-import { User } from "@/types/user";
-import { fetchClient } from "@/utils/fetchClient";
+import { FetchError } from "../../types/fetch-error";
+import { User } from "../../types/user";
+import { fetchClient } from "../../utils/fetchClient";
+
 
 export async function SignUp(body: {
     email: string;

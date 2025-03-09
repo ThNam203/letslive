@@ -1,5 +1,6 @@
-import { Header } from "@/components/header/header";
-import { LeftBar } from "@/components/LeftBar";
+import { Header } from "../../components/header/header";
+import { LeftBar } from "../../components/LeftBar";
+
 
 export default function RootLayout({
   children,

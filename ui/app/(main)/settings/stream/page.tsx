@@ -1,13 +1,14 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import useUser from "@/hooks/user";
-import { UpdateLivestreamInformation } from "@/lib/api/user";
+
 import { Loader } from "lucide-react";
 import { ChangeEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import useUser from "../../../../hooks/user";
+import { UpdateLivestreamInformation } from "../../../../lib/api/user";
+import { Label } from "../../../../components/ui/label";
+import { Input } from "../../../../components/ui/input";
+import { Textarea } from "../../../../components/ui/textarea";
+import { Button } from "../../../../components/ui/button";
 
 export default function StreamEdit() {
     const user = useUser((state) => state.user);

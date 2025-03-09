@@ -1,12 +1,12 @@
 "use client";
 
-import useUser from "@/hooks/user";
-import { GetAllUsers } from "@/lib/api/user";
-import { User } from "@/types/user";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import useUser from "../../hooks/user";
+import { User } from "../../types/user";
+import { GetAllUsers } from "../../lib/api/user";
 
 export default function AllChannelsView() {
     const curUser = useUser(state => state.user);

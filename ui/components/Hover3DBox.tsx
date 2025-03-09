@@ -1,10 +1,10 @@
 "use client";
 
-import { cn } from "@/utils/cn";
 import Image from "next/image";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import { ClassValue } from "clsx";
 import Link from "next/link";
+import { cn } from "../utils/cn";
 
 const Hover3DBox = ({
   className,

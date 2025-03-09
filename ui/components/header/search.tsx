@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SearchUsersByUsername } from "@/lib/api/user";
 import { toast } from "react-toastify";
-import { User } from "@/types/user";
+import { User } from "../../types/user";
+import { SearchUsersByUsername } from "../../lib/api/user";
+import { Input } from "../ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export default function SearchBar({
     onSearch,
