@@ -28,9 +28,7 @@ func main() {
 	logger.Init(logger.LogLevel(logger.Debug))
 	config := cfg.RetrieveConfig()
 
-	if err := setupHLSFolders(*config); err != nil {
-		logger.Panicf("failed to reset working space: %s", err)
-	}
+	setupHLSFolders(config.Transcode)
 
 	registry, err := discovery.NewConsulRegistry(config.Registry.Service.Address)
 	if err != nil {
