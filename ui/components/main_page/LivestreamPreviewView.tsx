@@ -25,20 +25,19 @@ const LivestreamPreviewView = ({
     const router = useRouter();
 
     return (
-        <div className={cn("flex flex-col gap-2", className)}>
-            {/* <Hover3DBox
+        <div className={cn("flex flex-col gap-2 max-w-[300px]", className)}>
+            <Hover3DBox
                 viewers={viewers}
                 showViewer={true}
                 showStream={true}
-                imageSrc={}
-                className="h-[170px]"
+                imageSrc={"/images/streaming.jpg"}
+                className="h-[170px] cursor-pointer"
                 onClick={() => router.push(`/users/${user.id}`)}
-            /> */}
+            />
             <LivestreamPreviewDetailView
                 user={user}
                 title={title}
                 category={category}
-                tags={tags}
             />
         </div>
     );
