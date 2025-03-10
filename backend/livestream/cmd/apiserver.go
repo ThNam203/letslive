@@ -78,6 +78,8 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("PUT /v1/livestream/{livestreamId}", a.livestreamHandler.UpdateLivestreamHandler)
 	sm.HandleFunc("GET /v1/livestream/{livestreamId}", a.livestreamHandler.GetLivestreamByIdHandler)
 	sm.HandleFunc("GET /v1/livestreams", a.livestreamHandler.GetLivestreamsOfUserHandler)
+	sm.HandleFunc("GET /v1/livestreamings", a.livestreamHandler.GetLivestreamingsHandler)
+	sm.HandleFunc("GET /v1/is-streaming", a.livestreamHandler.CheckIsUserLivestreamingHandler)
 
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 

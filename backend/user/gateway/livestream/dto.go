@@ -1,4 +1,4 @@
-package dto
+package livestream
 
 import (
 	"time"
@@ -19,4 +19,5 @@ type GetLivestreamResponseDTO struct {
 	PlaybackURL  *string    `json:"playbackUrl" db:"playback_url"`
 	CreatedAt    time.Time  `json:"createdAt" db:"created_at"`
 	UpdatedAt    time.Time  `json:"updatedAt" db:"updated_at"`
+	Duration     *int64     `json:"duration"`
 }

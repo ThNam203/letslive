@@ -9,6 +9,7 @@ import (
 	servererrors "sen1or/lets-live/user/errors"
 	"sen1or/lets-live/user/services"
 	"sen1or/lets-live/user/types"
+	"strconv"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/golang-jwt/jwt/v5"
@@ -50,14 +51,17 @@ func (h *UserHandler) GetUserByIdHandler(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(user)
 }
 
-func (h *UserHandler) QueryUserHandler(w http.ResponseWriter, r *http.Request) {
-	liveStatus := r.URL.Query().Get("liveStatus")
-	username := r.URL.Query().Get("username")
-	page := r.URL.Query().Get("page")
+func (h *UserHandler) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
 
-	users, err := h.userService.QueryUsers(liveStatus, username, page)
-	if err != nil {
-		h.WriteErrorResponse(w, err)
+	if err != nil || page < 0 {
+		h.WriteErrorResponse(w, servererrors.ErrInvalidInput)
+		return
+	}
+
+	users, serviceErr := h.userService.GetAllUsers(page)
+	if serviceErr != nil {
+		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
 

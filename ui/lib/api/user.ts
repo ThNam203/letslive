@@ -2,21 +2,6 @@ import { FetchError } from "../../types/fetch-error";
 import { LivestreamInformation, User } from "../../types/user";
 import { fetchClient } from "../../utils/fetchClient";
 
-/**
- * Fetches the list of online users.
- */
-export async function GetOnlineUsers(): Promise<{
-    users: User[];
-    fetchError?: FetchError;
-}> {
-    try {
-        const data = await fetchClient<User[]>("/users?liveStatus=on");
-        return { users: data };
-    } catch (error) {
-        return { users: [], fetchError: error as FetchError };
-    }
-}
-
 export async function SearchUsersByUsername(query: string): Promise<{
     users: User[];
     fetchError?: FetchError;
@@ -40,12 +25,12 @@ export async function GetUserById(
     }
 }
 
-export async function GetAllUsers(): Promise<{
+export async function GetAllUsers(page: number = 0): Promise<{
     users?: User[];
     fetchError?: FetchError;
 }> {
     try {
-        const data = await fetchClient<User[]>("/users");
+        const data = await fetchClient<User[]>(`/users?page=${page}`);
         return { users: data };
     } catch (error) {
         return { fetchError: error as FetchError };

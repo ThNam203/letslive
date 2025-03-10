@@ -3,12 +3,10 @@ package repositories
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/user/domains"
 	"sen1or/lets-live/user/dto"
 	servererrors "sen1or/lets-live/user/errors"
-	"strings"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
@@ -18,7 +16,7 @@ import (
 type UserRepository interface {
 	GetFullInfoById(uuid.UUID) (*domains.User, *servererrors.ServerError)
 	GetById(userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserResponseDTO, *servererrors.ServerError)
-	Query(liveStatus domains.UserLiveStatus, username string, page int) ([]*domains.User, *servererrors.ServerError)
+	GetAll(page int) ([]domains.User, *servererrors.ServerError)
 	SearchUserByUsername(username string) ([]*domains.User, *servererrors.ServerError)
 	GetByName(string) (*domains.User, *servererrors.ServerError)
 	GetByEmail(string) (*domains.User, *servererrors.ServerError)
@@ -49,7 +47,7 @@ func NewUserRepository(conn *pgxpool.Pool) UserRepository {
 func (r *postgresUserRepo) GetById(userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserResponseDTO, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(context.Background(), `
 		SELECT 
-			u.id, u.username, u.email, u.is_verified, u.live_status, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, 
+			u.id, u.username, u.email, u.is_verified, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, 
 			l.user_id, l.title, l.description, l.thumbnail_url, 
 			COUNT(f.follower_id) AS follower_count,
 			CASE 
@@ -87,7 +85,7 @@ func (r *postgresUserRepo) GetById(userId uuid.UUID, authenticatedUserId *uuid.U
 func (r *postgresUserRepo) GetFullInfoById(userId uuid.UUID) (*domains.User, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(context.Background(), `
 		SELECT 
-			u.id, u.username, u.email, u.is_verified, u.live_status, u.created_at, u.display_name, u.auth_provider, u.stream_api_key, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
+			u.id, u.username, u.email, u.is_verified, u.created_at, u.display_name, u.auth_provider, u.stream_api_key, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
 		FROM users u
 		LEFT JOIN livestream_information l ON u.id = l.user_id
 		WHERE u.id = $1
@@ -111,34 +109,15 @@ func (r *postgresUserRepo) GetFullInfoById(userId uuid.UUID) (*domains.User, *se
 	return &user, nil
 }
 
-func (r *postgresUserRepo) Query(liveStatus domains.UserLiveStatus, username string, page int) ([]*domains.User, *servererrors.ServerError) {
-	whereConditions := []string{}
-	args := []any{}
-	argIndex := 1
+func (r postgresUserRepo) GetAll(page int) ([]domains.User, *servererrors.ServerError) {
+	rows, err := r.dbConn.Query(context.Background(), `
+		SELECT *
+		FROM users
+		OFFSET $1 LIMIT $2
+	`, page*10, 10)
 
-	if len(liveStatus) > 0 {
-		whereConditions = append(whereConditions, fmt.Sprintf("live_status = $%d", argIndex))
-		args = append(args, liveStatus)
-		argIndex++
-	}
-
-	if len(username) > 0 {
-		whereConditions = append(whereConditions, fmt.Sprintf("to_tsvector('simple', username) @@ plainto_tsquery($%d)", argIndex))
-		args = append(args, username)
-		argIndex++
-	}
-
-	whereClause := ""
-	if len(whereConditions) > 0 {
-		whereClause = " WHERE " + strings.Join(whereConditions, " AND ")
-	}
-
-	args = append(args, page*20, 20)
-	query := fmt.Sprintf("SELECT * FROM users %s OFFSET $%d LIMIT $%d", whereClause, argIndex, argIndex+1)
-
-	rows, err := r.dbConn.Query(context.Background(), query, args...)
 	if err != nil {
-		logger.Errorf("failed to query users: %s", err)
+		logger.Errorf("failed to get all users: %s", err)
 		return nil, servererrors.ErrDatabaseQuery
 	}
 
@@ -147,12 +126,7 @@ func (r *postgresUserRepo) Query(liveStatus domains.UserLiveStatus, username str
 		return nil, servererrors.ErrDatabaseIssue
 	}
 
-	var returnUsers []*domains.User
-	for _, u := range users {
-		returnUsers = append(returnUsers, &u)
-	}
-
-	return returnUsers, nil
+	return users, nil
 }
 
 func (r *postgresUserRepo) SearchUserByUsername(query string) ([]*domains.User, *servererrors.ServerError) {
@@ -221,7 +195,7 @@ func (r *postgresUserRepo) GetByEmail(email string) (*domains.User, *servererror
 func (r *postgresUserRepo) GetByAPIKey(apiKey uuid.UUID) (*domains.User, *servererrors.ServerError) {
 	var user domains.User
 	rows, err := r.dbConn.Query(context.Background(), `
-		SELECT u.id, u.username, u.email, u.is_verified, u.live_status, u.created_at, u.stream_api_key, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url 
+		SELECT u.id, u.username, u.email, u.is_verified, u.created_at, u.stream_api_key, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url 
 		FROM users u
 		JOIN livestream_information l ON u.id = l.user_id
 		WHERE u.stream_api_key = $1
@@ -271,7 +245,6 @@ func (r *postgresUserRepo) Create(username string, email string, isVerified bool
 func (r *postgresUserRepo) Update(user domains.User) (*domains.User, *servererrors.ServerError) {
 	params := pgx.NamedArgs{
 		"id":           user.Id,
-		"live_status":  user.LiveStatus,
 		"display_name": user.DisplayName,
 		"phone_number": user.PhoneNumber,
 		"bio":          user.Bio,
@@ -280,7 +253,7 @@ func (r *postgresUserRepo) Update(user domains.User) (*domains.User, *servererro
 	rows, err := r.dbConn.Query(
 		context.Background(), `
 		UPDATE users 
-		SET live_status = @live_status, display_name = @display_name, phone_number = @phone_number, bio = @bio 
+		SET display_name = @display_name, phone_number = @phone_number, bio = @bio 
 		WHERE id = @id 
 		RETURNING *
 	`, params)

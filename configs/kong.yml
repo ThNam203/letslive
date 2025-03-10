@@ -57,7 +57,7 @@ services:
     protocol: http
     host: livestream.service.consul
     port: 7781
-    path: /v1/livestream
+    path: /v1
     retries: 5
     connect_timeout: 60000
     read_timeout: 60000
@@ -69,7 +69,9 @@ services:
           - https
         paths:
           - /livestream
-        strip_path: true
+          - /livestreams
+          - /livestreamings
+        strip_path: false
         preserve_host: false
         https_redirect_status_code: 426
         request_buffering: true

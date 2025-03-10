@@ -4,50 +4,46 @@ import { useEffect, useState } from "react";
 import { LuChevronDown } from "react-icons/lu";
 import { Play } from "lucide-react";
 import { toast } from "react-toastify";
-import { GetOnlineUsers } from "../../lib/api/user";
 import LivestreamPreviewView from "./LivestreamPreviewView";
 import { User } from "../../types/user";
 import Separator from "../Separator";
+import { GetLivestreamings } from "../../lib/api/livestream";
+import { LivestreamingPreview } from "../../types/livestreaming";
 
 const LivestreamsPreviewView = () => {
     const [limitView, setLimitView] = useState<number>(4);
+    const [livestreamings, setLivestreamings] = useState<LivestreamingPreview[]>([]);
 
     useEffect(() => {
-        const fetchOnlineUsers = async () => {
-            const { users, fetchError } = await GetOnlineUsers();
+        const fetchLivestreamings = async () => {
+            const { livestreamings, fetchError } = await GetLivestreamings();
             if (fetchError) {
                 toast(fetchError.message, {
-                    toastId: "online-users-fetch-error",
+                    toastId: "livestreamings-fetch-error",
                     type: "error",
                 });
             }
 
-            setUsers(users ?? []);
+            setLivestreamings(livestreamings ?? []);
         };
 
-        fetchOnlineUsers();
+        fetchLivestreamings();
     }, []);
-
-    const [users, setUsers] = useState<User[]>([]);
 
     return (
         <div className="flex flex-col gap-2 pr-2">
-            {users.slice(0, 4).map((user, idx) => (
+            {livestreamings.slice(0, limitView).map((livestream, idx) => (
                 <LivestreamPreviewView
                     key={idx}
-                    viewers={123}
-                    title={user.livestreamInformation.title!}
-                    tags={[]}
-                    category={""}
-                    user={user}
+                    livestream={livestream}
                 />
             ))}
-            {users.length > limitView && (
+            {livestreamings.length > limitView && (
                 <StreamsSeparator
                     onClick={() => setLimitView((prev) => prev + 8)}
                 />
             )}
-            {users.length == 0 && (
+            {livestreamings.length == 0 && (
                 <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                 <div className="bg-muted/30 p-6 rounded-full mb-6">
                   <Play className="h-12 w-12 text-muted-foreground" />

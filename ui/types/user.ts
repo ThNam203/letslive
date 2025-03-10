@@ -3,7 +3,6 @@ export type User = {
     username: string;
     bio?: string;
     email: string;
-    liveStatus: UserLiveStatus;
     status: UserStatus;
     authProvider: AuthProvider;
     isVerified: boolean;
@@ -15,6 +14,8 @@ export type User = {
     profilePicture?: string;
     followerCount: number;
     livestreamInformation: LivestreamInformation;
+
+    isLivestreaming?: boolean; // for checking if the user is currently livestreaming
 
     isFollowing?: boolean; // for checking if the current user is following this user
 };
@@ -40,11 +41,6 @@ export type UserVOD = {
     createdAt: string;
     updatedAt: string;
 };
-
-export enum UserLiveStatus {
-    LIVE = 'on',
-    OFFLIVE = 'off',
-}
 
 export enum AuthProvider {
     GOOGLE = 'google',

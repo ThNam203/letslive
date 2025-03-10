@@ -15,12 +15,14 @@ type Transcoder struct {
 	stdin       *io.PipeReader
 	commandExec *exec.Cmd
 	config      config.Transcode
+	onStart     func()
 }
 
-func NewTranscoder(pipeOut *io.PipeReader, config config.Transcode) *Transcoder {
+func NewTranscoder(pipeOut *io.PipeReader, config config.Transcode, onStart func()) *Transcoder {
 	return &Transcoder{
-		stdin:  pipeOut,
-		config: config,
+		stdin:   pipeOut,
+		config:  config,
+		onStart: onStart,
 	}
 }
 
@@ -64,6 +66,8 @@ func (t *Transcoder) Start(publishName string) {
 		fmt.Sprintf("-master_pl_name %s", t.config.FFMpegSetting.MasterFileName),
 		fmt.Sprintf(`-var_stream_map "%s"`, strings.Join(streamMaps, " ")),
 		filepath.Join(outputDir, "/%v/stream.m3u8"),
+		"-vf fps=1/60 -update 1",
+		filepath.Join(outputDir, "thumbnail.jpeg"),
 	}
 
 	ffmpegFlagsString := strings.Join(ffmpegFlags, " ")
@@ -81,14 +85,16 @@ func (t *Transcoder) Start(publishName string) {
 		logger.Errorf("error while starting ffmpeg command: %s", err)
 	}
 
+	t.onStart()
+
 	go func() {
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
-			logger.Warnf("ffmpeg error pipe: %v", scanner.Text())
+			//logger.Warnf("ffmpeg error pipe: %v", scanner.Text())
 		}
 
 		if err := scanner.Err(); err != nil {
-			logger.Warnf("error in reading stderr pipe: %v", err)
+			logger.Errorf("error in reading stderr pipe: %v", err)
 		}
 	}()
 

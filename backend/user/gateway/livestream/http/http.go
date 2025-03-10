@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"sen1or/lets-live/pkg/discovery"
-	"sen1or/lets-live/user/dto"
 	gateway "sen1or/lets-live/user/gateway"
 	livestreamgateway "sen1or/lets-live/user/gateway/livestream"
+	"strconv"
+	"strings"
 )
 
 type livestreamGateway struct {
@@ -21,7 +23,7 @@ func NewLivestreamGateway(registry discovery.Registry) livestreamgateway.Livestr
 	}
 }
 
-func (g *livestreamGateway) GetUserLivestreams(ctx context.Context, userId string) ([]dto.GetLivestreamResponseDTO, *gateway.ErrorResponse) {
+func (g *livestreamGateway) GetUserLivestreams(ctx context.Context, userId string) ([]livestreamgateway.GetLivestreamResponseDTO, *gateway.ErrorResponse) {
 	addr, err := g.registry.ServiceAddress(ctx, "livestream")
 	if err != nil {
 		return nil, &gateway.ErrorResponse{
@@ -60,7 +62,7 @@ func (g *livestreamGateway) GetUserLivestreams(ctx context.Context, userId strin
 		return nil, &resInfo
 	}
 
-	var userLivestreams []dto.GetLivestreamResponseDTO
+	var userLivestreams []livestreamgateway.GetLivestreamResponseDTO
 	defer resp.Body.Close()
 
 	if err := json.NewDecoder(resp.Body).Decode(&userLivestreams); err != nil {
@@ -71,4 +73,64 @@ func (g *livestreamGateway) GetUserLivestreams(ctx context.Context, userId strin
 	}
 
 	return userLivestreams, nil
+}
+
+func (g *livestreamGateway) CheckIsUserLivestreaming(ctx context.Context, userId string) (bool, *gateway.ErrorResponse) {
+	addr, err := g.registry.ServiceAddress(ctx, "livestream")
+	if err != nil {
+		return false, &gateway.ErrorResponse{
+			Message:    err.Error(),
+			StatusCode: http.StatusBadGateway,
+		}
+	}
+
+	url := fmt.Sprintf("http://%s/v1/is-streaming?userId=%s", addr, userId)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return false, &gateway.ErrorResponse{
+			Message:    fmt.Sprintf("failed to create the request: %s", err),
+			StatusCode: http.StatusInternalServerError,
+		}
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return false, &gateway.ErrorResponse{
+			Message:    fmt.Sprintf("failed to call request: %s", err),
+			StatusCode: http.StatusInternalServerError,
+		}
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 != 2 {
+		resInfo := gateway.ErrorResponse{}
+		if err := json.NewDecoder(resp.Body).Decode(&resInfo); err != nil {
+			return false, &gateway.ErrorResponse{
+				Message:    fmt.Sprintf("failed to decode error response: %s", err),
+				StatusCode: http.StatusInternalServerError,
+			}
+		}
+
+		return false, &resInfo
+	}
+
+	defer resp.Body.Close()
+	buf := new(strings.Builder)
+	_, err = io.Copy(buf, resp.Body)
+	if err != nil {
+		return false, &gateway.ErrorResponse{
+			Message:    fmt.Sprintf("failed to parse error response: %s", err),
+			StatusCode: http.StatusInternalServerError,
+		}
+	}
+
+	res, err := strconv.ParseBool(buf.String())
+	if err != nil {
+		return false, &gateway.ErrorResponse{
+			Message:    fmt.Sprintf("failed to parse error response: %s", err),
+			StatusCode: http.StatusInternalServerError,
+		}
+	}
+
+	return res, nil
 }
