@@ -36,7 +36,22 @@ func NewIPFSStorage(ctx context.Context, gateway string, bootstrapNodeAddr *stri
 	return storage
 }
 
-func (s *IPFSStorage) AddFile(filePath string, _ string) (string, error) {
+func (s *IPFSStorage) AddSegment(filePath string, _ string, _ int) (string, error) {
+	file, err := os.Open(filePath)
+
+	if err != nil {
+		return "", fmt.Errorf("failed to get file: %s", err)
+	}
+
+	fileCid, err := s.ipfsNode.AddFile(s.ctx, file)
+	if err != nil {
+		return "", fmt.Errorf("failed to add file into ipfs: %s", err)
+	}
+
+	return fmt.Sprintf("%s/ipfs/%s", s.gateway, fileCid.String()), nil
+}
+
+func (s *IPFSStorage) AddThumbnail(filePath string, _ string, _ string) (string, error) {
 	file, err := os.Open(filePath)
 
 	if err != nil {

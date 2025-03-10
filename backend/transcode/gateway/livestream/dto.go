@@ -28,6 +28,7 @@ type UpdateLivestreamRequestDTO struct {
 	PlaybackURL  *string    `json:"playbackUrl,omitempty" validate:"omitempty,url"`
 	ViewCount    *int64     `json:"viewCount" validate:"omitempty,gte=0"`
 	EndedAt      *time.Time `json:"endedAt" validate:"omitempty"`
+	Duration     int64      `json:"duration"`
 }
 
 type LivestreamResponseDTO struct {

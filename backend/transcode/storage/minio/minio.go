@@ -77,15 +77,34 @@ func (s *MinIOStrorage) SetUp() error {
 }
 
 // uploads segment to MinIO and returns the permanent URL
-func (s *MinIOStrorage) AddFile(filePath string, streamId string) (string, error) {
+func (s *MinIOStrorage) AddSegment(filePath string, streamId string, qualityIndex int) (string, error) {
 	filename := filepath.Base(filePath)
-	qualityIndex := filepath.Base(filepath.Dir(filePath))
-	savePath := fmt.Sprintf("%s/%s/%s", streamId, qualityIndex, filename)
+	savePath := fmt.Sprintf("%s/%d/%s", streamId, qualityIndex, filename)
 
 	// Upload the file
 	_, err := s.minioClient.FPutObject(context.Background(), s.config.BucketName, savePath, filePath, minio.PutObjectOptions{
 		ContentType:  "video/mp2t",
 		CacheControl: "max-age=3600",
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to upload file to minio: %v", err)
+	}
+
+	// Construct the final URL (public access)
+	finalURL := fmt.Sprintf("%s:%d/%s/%s", s.config.ClientHost, s.config.Port, s.config.BucketName, savePath)
+
+	return finalURL, nil
+}
+
+// uploads thumbnail to MinIO and returns the permanent URL
+func (s *MinIOStrorage) AddThumbnail(filePath string, streamId string, contentType string) (string, error) {
+	filename := filepath.Base(filePath)
+	savePath := fmt.Sprintf("%s/%s", streamId, filename)
+
+	// Upload the file
+	_, err := s.minioClient.FPutObject(context.Background(), s.config.BucketName, savePath, filePath, minio.PutObjectOptions{
+		ContentType:  contentType,
+		CacheControl: "max-age=600",
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to upload file to minio: %v", err)

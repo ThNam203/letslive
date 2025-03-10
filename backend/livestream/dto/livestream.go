@@ -16,7 +16,17 @@ type CreateLivestreamRequestDTO struct {
 }
 
 // GetLivestreamRequestDTO is used for retrieving a livestream (optional filters can be added)
-type GetLivestreamRequestDTO struct{}
+type GetAllLivestreamingsResponseDTO struct {
+	Id             uuid.UUID `json:"id"`
+	UserId         uuid.UUID `json:"userId"`
+	Username       string    `json:"username"`
+	DisplayName    *string   `json:"displayName"`
+	ProfilePicture *string   `json:"userProfilePicture"`
+	Title          *string   `json:"title" validate:""`
+	Description    *string   `json:"description,omitempty"`
+	ThumbnailURL   *string   `json:"thumbnailUrl,omitempty"`
+	Status         string    `json:"status"`
+}
 
 // UpdateLivestreamRequestDTO is used to modify an existing livestream
 type UpdateLivestreamRequestDTO struct {
@@ -25,6 +35,7 @@ type UpdateLivestreamRequestDTO struct {
 	ThumbnailURL *string    `json:"thumbnailUrl,omitempty" validate:"omitempty"`
 	Status       *string    `json:"status,omitempty" validate:"omitempty"`
 	PlaybackURL  *string    `json:"playbackUrl,omitempty" validate:"omitempty"`
-	ViewCount    *int64     `json:"viewCount" validate:"omitempty,gte=0"`
-	EndedAt      *time.Time `json:"endedAt" validate:"omitempty"`
+	ViewCount    *int64     `json:"viewCount,omitempty" validate:"omitempty,gte=0"`
+	EndedAt      *time.Time `json:"endedAt,omitempty" validate:"omitempty"`
+	Duration     *int64     `json:"duration,omitempty" validate:"omitempty"`
 }

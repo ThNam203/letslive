@@ -78,7 +78,7 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
-	sm.HandleFunc("GET /v1/users", a.userHandler.QueryUserHandler)
+	sm.HandleFunc("GET /v1/users", a.userHandler.GetAllUsersHandler) // TODO: remove
 	sm.HandleFunc("GET /v1/users/search", a.userHandler.SearchUserHandler)
 
 	sm.HandleFunc("POST /v1/user/{userId}/follow", a.followHandler.FollowHandler)

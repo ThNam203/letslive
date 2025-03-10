@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { User, UserLiveStatus } from "../../../../types/user";
+import { User } from "../../../../types/user";
 import { StreamingFrame, VideoInfo } from "../../../../components/custom_react_player/streaming_frame";
 import { GetUserById } from "../../../../lib/api/user";
 import ProfileView from "./profile";
@@ -47,7 +47,8 @@ export default function Livestreaming() {
             
             if (user) {
                 setUser(user);
-                if (user.liveStatus === UserLiveStatus.LIVE && user.vods && user.vods.length > 0) {
+                // the first vod is the current livestream
+                if (user.isLivestreaming && user.vods && user.vods.length > 0) {
                     setPlayerInfo({
                         videoTitle: user.vods[0].title,
                         streamer: {
@@ -65,7 +66,7 @@ export default function Livestreaming() {
     return (
         <div className="overflow-y-auto h-full flex lg:flex-row max-lg:flex-col mt-2">
             <div className="w-[1200px] min-w-[1200px]">
-                {user && user.liveStatus === UserLiveStatus.LIVE ? (
+                {user && user.isLivestreaming ? (
                     <>
                         <div className="w-full h-[675px] bg-black mb-4 rounded-sm">
                             <StreamingFrame

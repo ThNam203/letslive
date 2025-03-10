@@ -3,14 +3,12 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TYPE user_auth_provider_enum AS ENUM ('google', 'local');
 CREATE TYPE user_status_enum AS ENUM ('normal', 'disabled');
-CREATE TYPE user_live_status_enum AS ENUM ('on', 'off');
 
 CREATE TABLE "users" (
   "id" UUID DEFAULT uuid_generate_v4(), 
   "username" VARCHAR(20) NOT NULL, 
   "email" TEXT NOT NULL, 
   "is_verified" BOOLEAN NOT NULL DEFAULT false, 
-  "live_status" user_live_status_enum NOT NULL DEFAULT 'off', 
   "created_at" TIMESTAMPTZ  DEFAULT current_timestamp, 
   "stream_api_key" UUID NOT NULL DEFAULT uuid_generate_v4(), 
   "display_name" VARCHAR(50),
@@ -30,4 +28,3 @@ DROP TABLE IF EXISTS "users";
 DROP EXTENSION IF EXISTS "uuid-ossp";
 DROP TYPE IF EXISTS user_auth_provider_enum;
 DROP TYPE IF EXISTS user_status_enum;
-DROP TYPE IF EXISTS user_live_status_enum;

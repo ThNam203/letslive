@@ -3,15 +3,12 @@ import { LuMoreVertical } from "react-icons/lu";
 import { cn } from "../../utils/cn";
 import { User } from "../../types/user";
 import { Button } from "../ui/button";
+import { LivestreamingPreview } from "../../types/livestreaming";
 
 const LivestreamPreviewDetailView = ({
-    title,
-    category,
-    user,
+    livestream
 }: {
-    title: string;
-    category: string | undefined;
-    user: User;
+    livestream: LivestreamingPreview;
 }) => {
     return (
         <div className="flex flex-row gap-2">
@@ -19,16 +16,16 @@ const LivestreamPreviewDetailView = ({
                 width={50}
                 height={50}
                 className="h-12 w-12 rounded-full"
-                src={user.profilePicture ?? "https://github.com/shadcn.png"}
+                src={livestream.userProfilePicture ?? "https://github.com/shadcn.png"}
                 alt="user avatar"
             />
             <div className="w-full flex flex-row items-start justify-between">
                 <div className="w-full flex flex-col items-start justify-between">
                     <p className="text-lg hover:text-primary cursor-pointer font-semibold">
-                        {title}
+                        {livestream.title}
                     </p>
                     <p className="text-xs">
-                        {user.displayName ?? user.username}
+                        {livestream.displayName ?? livestream.username}
                     </p>
                     {/* <p className="text-sm text-secondaryWord hover:text-primary cursor-pointer">
                         Dep trai // FOR CATEGORY

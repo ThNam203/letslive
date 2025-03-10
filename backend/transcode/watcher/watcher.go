@@ -11,10 +11,11 @@ import (
 )
 
 type FileWatcherStrategy interface {
-	OnCreate(event watcher.Event)
-	OnMaster(event watcher.Event)
-	OnVariant(event watcher.Event)
-	OnSegment(event watcher.Event)
+	OnCreate(event watcher.Event) error
+	OnMaster(event watcher.Event) error
+	OnVariant(event watcher.Event) error
+	OnSegment(event watcher.Event) error
+	OnThumbnail(event watcher.Event) error
 }
 
 type FFMpegFileWatcher struct {
@@ -56,6 +57,12 @@ func (w *FFMpegFileWatcher) Watch() {
 					w.watcherStrategy.OnVariant(event)
 				} else if fileType == "Segment" {
 					w.watcherStrategy.OnSegment(event)
+				} else if fileType == "Thumbnail" {
+					w.watcherStrategy.OnThumbnail(event)
+				} else {
+					if fileType != "" {
+						logger.Errorf("unknown file appeared when watching: %s", fileType)
+					}
 				}
 			case err := <-myWatcher.Error:
 				logger.Errorf("something failed while running watcher", err)
@@ -80,16 +87,29 @@ func (_ *FFMpegFileWatcher) getEventFileType(filePath string) string {
 	pathComponents := strings.Split(filePath, "/")
 	fileExtension := filepath.Ext(filePath)
 
-	if fileExtension == ".m3u8" {
-		// the parent folder of Variant type is an index (1, 2, 3,...)
-		if utf8.RuneCountInString(pathComponents[len(pathComponents)-2]) == 1 {
-			return "Variant"
+	logger.Debugf("get event file type: %s", filePath)
+
+	switch fileExtension {
+	case ".m3u8":
+		{
+			// the parent folder of Variant type is an index (1, 2, 3,...)
+			if utf8.RuneCountInString(pathComponents[len(pathComponents)-2]) == 1 {
+				return "Variant"
+			}
+
+			return "Master"
 		}
-
-		return "Master"
-	} else if filepath.Ext(filePath) == ".ts" {
-		return "Segment"
+	case ".ts":
+		{
+			return "Segment"
+		}
+	case ".jpeg", ".jpg":
+		{
+			return "Thumbnail"
+		}
+	default:
+		{
+			return fileExtension
+		}
 	}
-
-	return filepath.Ext(filePath)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"net"
 	"os"
 	"path/filepath"
@@ -12,7 +13,6 @@ import (
 	"sen1or/lets-live/transcode/config"
 	livestreamdto "sen1or/lets-live/transcode/gateway/livestream"
 	livestreamgateway "sen1or/lets-live/transcode/gateway/livestream/http"
-	userdto "sen1or/lets-live/transcode/gateway/user"
 	usergateway "sen1or/lets-live/transcode/gateway/user/http"
 	"sen1or/lets-live/transcode/transcoder"
 	"sen1or/lets-live/transcode/watcher"
@@ -99,7 +99,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	streamingKeyComponents := strings.Split(c.URL.Path, "/")
 	streamingKey := streamingKeyComponents[len(streamingKeyComponents)-1]
 
-	streamId, userId, err := s.onConnect(streamingKey) // get stream id
+	streamId, _, err := s.onConnect(streamingKey) // get stream id
 
 	if err != nil {
 		logger.Errorf("stream connection failed: %s", err)
@@ -109,8 +109,13 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 
 	pipeOut, pipeIn := io.Pipe()
 
+	var startTime time.Time
+	var startTimer = func() {
+		startTime = time.Now()
+	}
+
 	go func() {
-		transcoder := transcoder.NewTranscoder(pipeOut, s.config.Transcode)
+		transcoder := transcoder.NewTranscoder(pipeOut, s.config.Transcode, startTimer)
 		transcoder.Start(streamId)
 	}()
 
@@ -119,13 +124,15 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	for {
 		pkt, err := c.ReadPacket()
 		if err == io.EOF {
-			s.onDisconnect(userId, streamId)
+			duration := int64(math.Ceil(time.Now().Sub(startTime).Seconds()) - 7) // TODO: proper duration calculation
+			s.onDisconnect(streamId, duration)
 			return
 		}
 
 		if err := w.WritePacket(pkt); err != nil {
 			logger.Errorf("failed to write rtmp package: %s", err)
-			s.onDisconnect(userId, streamId)
+			duration := int64(math.Ceil(time.Now().Sub(startTime).Seconds()) - 7)
+			s.onDisconnect(streamId, duration)
 			return
 		}
 	}
@@ -138,18 +145,6 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 	userInfo, errRes := s.userGateway.GetUserInformation(context.Background(), streamingKey)
 	if errRes != nil {
 		return "", "", fmt.Errorf("failed to get user information: %s", errRes.Message)
-	}
-
-	logger.Debugf("user id on updating user lives status is: %v", userInfo)
-
-	updateUserDTO := &userdto.UpdateUserLiveStatusDTO{
-		Id:         userInfo.Id,
-		LiveStatus: userdto.Live,
-	}
-
-	errRes = s.userGateway.UpdateUserLiveStatus(context.Background(), *updateUserDTO)
-	if errRes != nil {
-		return "", "", fmt.Errorf("failed to update user live status: %s", errRes.Message)
 	}
 
 	streamDTO := &livestreamdto.CreateLivestreamRequestDTO{
@@ -173,25 +168,13 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 }
 
 // change the status of user to be not online
-func (s *RTMPServer) onDisconnect(userId string, streamId string) {
-	userIdUUID, _ := uuid.FromString(userId)
-	updateUserDTO := &userdto.UpdateUserLiveStatusDTO{
-		Id:         userIdUUID,
-		LiveStatus: userdto.OffLive,
-	}
-
+func (s *RTMPServer) onDisconnect(streamId string, duration int64) {
+	endedAt := time.Now()
 	// create the VOD playlists and remove the entry
 	s.vodHandler.OnStreamEnd(streamId, s.config.Transcode.PublicHLSPath, s.config.Transcode.FFMpegSetting.MasterFileName)
 
-	errRes := s.userGateway.UpdateUserLiveStatus(context.Background(), *updateUserDTO)
-	if errRes != nil {
-		logger.Errorf("failed to get service connection: %s", errRes.Message)
-	}
-
 	endedStatus := "ended"
 	playbackURL := fmt.Sprintf("http://%s:%d/vods/%s/index.m3u8", s.config.Service.Hostname, s.config.Webserver.Port, streamId)
-	endedAt := time.Now()
-
 	updateDTO := &livestreamdto.UpdateLivestreamRequestDTO{
 		Id:           uuid.FromStringOrNil(streamId),
 		Title:        nil,
@@ -201,6 +184,7 @@ func (s *RTMPServer) onDisconnect(userId string, streamId string) {
 		PlaybackURL:  &playbackURL,
 		ViewCount:    nil,
 		EndedAt:      &endedAt,
+		Duration:     duration,
 	}
 
 	createErrRes := s.livestreamGateway.Update(context.Background(), *updateDTO)

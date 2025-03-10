@@ -10,7 +10,6 @@ import (
 	"sen1or/lets-live/user/mapper"
 	"sen1or/lets-live/user/repositories"
 	"sen1or/lets-live/user/utils"
-	"strconv"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -47,7 +46,13 @@ func (s *UserService) GetUserById(userUUID uuid.UUID, authenticatedUserId *uuid.
 		return nil, servererrors.NewServerError(errRes.StatusCode, errRes.Message)
 	}
 
+	isUserLivestreaming, errRes := s.livestreamGateway.CheckIsUserLivestreaming(context.Background(), userUUID.String())
+	if errRes != nil {
+		return nil, servererrors.NewServerError(errRes.StatusCode, errRes.Message)
+	}
+
 	user.VODs = userVODs
+	user.IsLivestreaming = isUserLivestreaming
 
 	return user, nil
 }
@@ -71,39 +76,13 @@ func (s *UserService) GetUserFullInformation(userUUID uuid.UUID) (*domains.User,
 	return user, nil
 }
 
-func (s *UserService) QueryUsers(liveStatus, username, page string) ([]dto.GetUserResponseDTO, *servererrors.ServerError) {
-	var pageNumber int
-	if len(page) == 0 {
-		pageNumber = 0
-	} else {
-		atoiNum, atoiErr := strconv.Atoi(page)
-		if atoiErr != nil {
-			return nil, servererrors.ErrInvalidInput
-		}
-		pageNumber = atoiNum
-	}
-
-	if len(liveStatus) > 0 && (liveStatus != string(domains.OffLive) && liveStatus != string(domains.Live)) {
-		return nil, servererrors.ErrInvalidInput
-	}
-
-	users, err := s.userRepo.Query(domains.UserLiveStatus(liveStatus), username, pageNumber)
+func (s *UserService) GetAllUsers(page int) ([]domains.User, *servererrors.ServerError) {
+	users, err := s.userRepo.GetAll(page)
 	if err != nil {
 		return nil, err
 	}
 
-	var resUsers []dto.GetUserResponseDTO
-
-	for _, user := range users {
-		userVODs, errRes := s.livestreamGateway.GetUserLivestreams(context.Background(), user.Id.String())
-		if errRes != nil {
-			continue // what should be done?
-		}
-
-		resUsers = append(resUsers, *mapper.UserToGetUserResponseDTO(*user, userVODs))
-	}
-
-	return resUsers, nil
+	return users, nil
 }
 
 func (s *UserService) SearchUserByUsername(username string) ([]dto.GetUserResponseDTO, *servererrors.ServerError) {

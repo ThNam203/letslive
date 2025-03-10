@@ -26,8 +26,20 @@ func (c LivestreamService) GetById(livestreamId uuid.UUID) (*domains.Livestream,
 	return c.repo.GetById(livestreamId)
 }
 
+func (c LivestreamService) GetAllLivestreaming(page int) ([]domains.Livestream, *servererrors.ServerError) {
+	if page < 0 {
+		return nil, servererrors.ErrInvalidInput
+	}
+
+	return c.repo.GetAllLivestreamings(page)
+}
+
 func (c LivestreamService) GetByUser(userId uuid.UUID) ([]domains.Livestream, *servererrors.ServerError) {
 	return c.repo.GetByUser(userId)
+}
+
+func (c LivestreamService) CheckIsUserLivestreaming(userId uuid.UUID) (bool, *servererrors.ServerError) {
+	return c.repo.CheckIsUserLivestreaming(userId)
 }
 
 func (c LivestreamService) Create(data dto.CreateLivestreamRequestDTO) (*domains.Livestream, *servererrors.ServerError) {
@@ -80,6 +92,9 @@ func (c LivestreamService) Update(data dto.UpdateLivestreamRequestDTO, streamId 
 	}
 	if data.EndedAt != nil {
 		currentLivestream.EndedAt = data.EndedAt
+	}
+	if data.Duration != nil {
+		currentLivestream.Duration = data.Duration
 	}
 
 	updatedLivestream, err := c.repo.Update(*currentLivestream)

@@ -10,8 +10,8 @@ spring:
           timeout: 10
           clone-on-start: true
           force-pull: true
-  main:
-    show_banner: "off"
+  #main:
+    #show_banner: "off"
 
 server:
   port: 8181

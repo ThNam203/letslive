@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	dto "sen1or/lets-live/livestream/gateway/user"
 	"sen1or/lets-live/pkg/discovery"
-	dto "sen1or/lets-live/transcode/gateway/user"
 )
 
 type UserGateway struct {
@@ -24,7 +24,7 @@ func NewUserGateway(registry discovery.Registry) *UserGateway {
 	}
 }
 
-func (g *UserGateway) GetUserInformation(ctx context.Context, streamAPIKey string) (*dto.GetUserResponseDTO, *ErrorResponse) {
+func (g *UserGateway) GetUserInformationById(ctx context.Context, userId string) (*dto.GetUserResponseDTO, *ErrorResponse) {
 	addr, err := g.registry.ServiceAddress(ctx, "user")
 	if err != nil {
 		return nil, &ErrorResponse{
@@ -33,7 +33,7 @@ func (g *UserGateway) GetUserInformation(ctx context.Context, streamAPIKey strin
 		}
 	}
 
-	url := fmt.Sprintf("http://%s/v1/verify-stream-key?streamAPIKey=%s", addr, streamAPIKey)
+	url := fmt.Sprintf("http://%s/v1/user/%s", addr, userId)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, &ErrorResponse{
