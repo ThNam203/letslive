@@ -314,9 +314,6 @@ services:
       - type: bind
         source: /mnt/data/compose
         target: /mnt/data
-      - type: bind
-        source: ./configs/minio.env
-        target: /etc/config.env
 
 networks:
   general_network:
