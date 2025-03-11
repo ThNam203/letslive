@@ -270,6 +270,12 @@ services:
       - KONG_ADMIN_GUI_URL=http://localhost:8002
       #- KONG_DNS_ORDER=CNAME, A, SRV
       - KONG_DECLARATIVE_CONFIG=/kong/declarative/kong.yml
+      - KONG_WORKER_PROCESSES= "4"
+      - KONG_MEM_CACHE_SIZE= "128m"
+      - KONG_PROXY_BUFFER_SIZE= "16k"
+      - KONG_PROXY_BUFFERS= "4 16k"
+      - KONG_PROXY_BUSY_BUFFERS_SIZE= "32k"
+      - KONG_LOG_LEVEL= notice
     volumes:
       - ./configs/kong.yml:/kong/declarative/kong.yml
     ports:

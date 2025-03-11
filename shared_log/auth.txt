@@ -1,0 +1,57 @@
+2025-03-11T05:11:13Z	info	currently executing path: /usr/local/bin
+2025-03-11T05:11:19Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:11:26Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:11:34Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:11:41Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:11:49Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:11:56Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:12:04Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:12:11Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:12:19Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:12:26Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:12:34Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:12:41Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:12:49Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:12:56Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:13:04Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:13:11Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:13:19Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:13:26Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:13:34Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:13:41Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:13:49Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:13:56Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:14:04Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:14:11Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:14:19Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:14:26Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:14:34Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:14:41Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:14:44Z	error	get refresh token from cookie failed: http: named cookie not present
+2025-03-11T05:14:44Z	error	failed api call: Unauthorized.	{"duration": 0, "method": "POST", "remote#addr": "172.18.0.1", "response#bytes": 45, "response#status": 401, "uri": "/v1/auth/refresh-token"}
+2025-03-11T05:14:49Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:14:55Z	info	failed api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.1", "response#bytes": 422, "response#status": 307, "uri": "/v1/auth/google"}
+2025-03-11T05:14:56Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:14:59Z	info	failed api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.1", "response#bytes": 103, "response#status": 307, "uri": "/v1/auth/google/callback?state=pCJQPNkQBPvYT68fyFDvmw%3D%3D&code=4%2F0AQSTgQEle6IQnB7GmRlc1cEUSfCBQTRxKC4_tXiZ138ZbiiOx2DMXdJKy4YNuglcKyhRrw&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&authuser=0&prompt=none"}
+2025-03-11T05:15:04Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:15:11Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:15:18Z	info	failed api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.1", "response#bytes": 422, "response#status": 307, "uri": "/v1/auth/google"}
+2025-03-11T05:15:19Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:15:20Z	info	failed api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.1", "response#bytes": 103, "response#status": 307, "uri": "/v1/auth/google/callback?state=HwRKNV7OekKtmFerlzRPOw%3D%3D&code=4%2F0AQSTgQFRQ4rm84NwZNxeP1NLss5ItKnrlIIyLk4rbyS1goqX1B8LHSM66JHU7phx75aMCQ&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&authuser=0&prompt=none"}
+2025-03-11T05:15:26Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:15:34Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:15:41Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:15:46Z	info	success api call	{"duration": 106, "method": "POST", "remote#addr": "172.18.0.1", "response#bytes": 0, "response#status": 201, "uri": "/v1/auth/signup"}
+2025-03-11T05:15:47Z	error	get refresh token from cookie failed: http: named cookie not present
+2025-03-11T05:15:47Z	error	failed api call: Unauthorized.	{"duration": 0, "method": "POST", "remote#addr": "172.18.0.1", "response#bytes": 45, "response#status": 401, "uri": "/v1/auth/refresh-token"}
+2025-03-11T05:15:49Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:15:56Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:16:04Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:16:11Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:16:17Z	info	failed api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.1", "response#bytes": 422, "response#status": 307, "uri": "/v1/auth/google"}
+2025-03-11T05:16:19Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:16:23Z	info	failed api call	{"duration": 3631, "method": "GET", "remote#addr": "172.18.0.1", "response#bytes": 56, "response#status": 301, "uri": "/v1/auth/google/callback?state=_k6ANgBYZ40Vx27i-CmIZQ%3D%3D&code=4%2F0AQSTgQGlH6OVGy9eFGBkXjOfBqJTl7KZhPJM3jTxym8L8N5WaGx0DAIse4oGeO0Frl3xow&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&authuser=0&prompt=none"}
+2025-03-11T05:16:26Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:16:34Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:16:41Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
+2025-03-11T05:16:49Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}

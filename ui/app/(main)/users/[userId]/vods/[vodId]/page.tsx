@@ -47,7 +47,7 @@ export default function VODPage() {
                 return;
             }
 
-            const newUrl = `http://localhost:8889/static/vods/${params.vodId}/index.m3u8`;
+            const newUrl = `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDRESS}:8889/static/vods/${params.vodId}/index.m3u8`;
             setPlayerInfo((prev) => ({
                 ...prev,
                 videoTitle: vodInfo!.title,

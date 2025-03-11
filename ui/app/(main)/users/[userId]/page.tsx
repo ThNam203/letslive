@@ -54,7 +54,7 @@ export default function Livestreaming() {
                         streamer: {
                             name: user.displayName ?? user.username,
                         },
-                        videoUrl: `http://localhost:8889/static/${user.vods[0].id}/index.m3u8`,
+                        videoUrl: `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDRESS}:8889/static/${user.vods[0].id}/index.m3u8`,
                     });
                 }
             }
