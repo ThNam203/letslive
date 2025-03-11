@@ -4,9 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { UserVOD } from "../types/user";
 
-export default function VODLink({ item }: { item: UserVOD }) {
+export default function VODLink({ item, classname }: { item: UserVOD, classname?: string }) {
     return <div
-    className="bg-gray-200 overflow-hidden shadow-sm rounded-sm"
+    className={`bg-gray-200 overflow-hidden shadow-sm rounded-sm ${classname}`}
 >
     <Link
         className={`w-full h-[180px] inline-block hover:cursor-pointer`}
@@ -28,6 +28,9 @@ export default function VODLink({ item }: { item: UserVOD }) {
         <h3 className="font-semibold text-gray-900">
             {item.title}
         </h3>
+        <p className="text-sm text-gray-500 mt-1">
+            {formatSeconds(item.duration)}
+        </p>
         <p className="text-sm text-gray-500 mt-1">
             {item.description && item.description.length > 50 ? `${item.description.substring(0, 47)}...` : item.description} • {datediffFromNow(item.endedAt)} ago
         </p>
@@ -76,4 +79,12 @@ function datediffFromNow(pastDate: string) {
 
     const years = Math.floor(days / 365);
     return `${years} year${years !== 1 ? 's' : ''}`;
+}
+
+function formatSeconds(duration: number): string {
+    const hours = Math.floor(duration / 3600);
+    const minutes = Math.floor((duration % 3600) / 60);
+    const seconds = duration % 60;
+
+    return `${hours ? `${hours}:` : ''}${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
 }
