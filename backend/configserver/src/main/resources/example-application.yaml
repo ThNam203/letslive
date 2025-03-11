@@ -10,6 +10,8 @@ spring:
           timeout: 10
           clone-on-start: true
           force-pull: true
+          username:
+          password: 
   #main:
     #show_banner: "off"
 

@@ -11,7 +11,7 @@ import (
 func StartMigration(connectionString string, migrationPath string) {
 	db, err := sql.Open("pgx", connectionString)
 	if err != nil {
-		panic(err)
+		logger.Panicf("failed to start migration: %s", err)
 	}
 
 	defer func() {
@@ -21,6 +21,6 @@ func StartMigration(connectionString string, migrationPath string) {
 	}()
 
 	if err := goose.Up(db, migrationPath); err != nil {
-		panic(err)
+		logger.Panicf("failed to migrate on path %s: %s", migrationPath, err)
 	}
 }

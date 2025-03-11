@@ -13,3 +13,5 @@ k8s/secrets
 
 #shared_log
 elastic_certs
+
+backend/configserver/src/main/resources/application.yml

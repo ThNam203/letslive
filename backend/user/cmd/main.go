@@ -23,6 +23,7 @@ func main() {
 	godotenv.Load("user/.env")
 	logger.Init(logger.LogLevel(logger.Debug))
 	config := cfg.RetrieveConfig()
+	logger.Debugf("config: %+v", config)
 	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
 
 	// for consul service discovery

@@ -1,3 +1,16 @@
 {
+	"service": {
+		"name": "minio",
+		"id": "letslive_minio",
+		"address": "minio",
+		"port": 9000,
+		"check": {
+			"id": "minio-check",
+			"name": "MinIO Health Check",
+			"tcp": "minio:9000",
+			"interval": "30s",
+			"timeout": "2s"
+		}
+	},
 	"recursors": ["127.0.0.11"]
 }

@@ -19,11 +19,11 @@ type RegistryConfig struct {
 }
 
 type MinIO struct {
-	Host       string `yaml:"host"`
-	Port       int    `yaml:"port"`
-	ClientHost string `yaml:"clientHost"` // it is used for development only, cause minio:9090 (Host) and ui outside of docker can't get files, in real scenario it should be equal to Host
-	AccessKey  string `yaml:"accessKey"`
-	SecretKey  string `yaml:"secretKey"`
+	Host      string `yaml:"host"`
+	Port      int    `yaml:"port"`
+	AccessKey string `yaml:"accessKey"`
+	SecretKey string `yaml:"secretKey"`
+	ReturnURL string `yaml:"returnURL"`
 }
 
 type Service struct {
@@ -74,7 +74,7 @@ func retrieveConfig() (*Config, error) {
 		os.Getenv("CONFIG_SERVER_PROTOCOL"),
 		os.Getenv("CONFIG_SERVER_ADDRESS"),
 		os.Getenv("CONFIG_SERVER_SERVICE_APPLICATION"),
-		os.Getenv("CONFIG_SERVER_SERVICE_PROFILE"),
+		os.Getenv("CONFIG_SERVER_PROFILE"),
 	)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -109,7 +109,7 @@ func retrieveRegistryConfig() (*RegistryConfig, error) {
 		os.Getenv("CONFIG_SERVER_PROTOCOL"),
 		os.Getenv("CONFIG_SERVER_ADDRESS"),
 		os.Getenv("CONFIG_SERVER_REGISTRY_APPLICATION"),
-		os.Getenv("CONFIG_SERVER_REGISTRY_PROFILE"),
+		os.Getenv("CONFIG_SERVER_PROFILE"),
 	)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)

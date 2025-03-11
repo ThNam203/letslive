@@ -65,7 +65,7 @@ func retrieveConfig() (*Config, error) {
 		os.Getenv("CONFIG_SERVER_PROTOCOL"),
 		os.Getenv("CONFIG_SERVER_ADDRESS"),
 		os.Getenv("CONFIG_SERVER_SERVICE_APPLICATION"),
-		os.Getenv("CONFIG_SERVER_SERVICE_PROFILE"),
+		os.Getenv("CONFIG_SERVER_PROFILE"),
 	)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -100,7 +100,7 @@ func retrieveRegistryConfig() (*RegistryConfig, error) {
 		os.Getenv("CONFIG_SERVER_PROTOCOL"),
 		os.Getenv("CONFIG_SERVER_ADDRESS"),
 		os.Getenv("CONFIG_SERVER_REGISTRY_APPLICATION"),
-		os.Getenv("CONFIG_SERVER_REGISTRY_PROFILE"),
+		os.Getenv("CONFIG_SERVER_PROFILE"),
 	)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
