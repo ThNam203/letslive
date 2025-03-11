@@ -40,6 +40,7 @@ export type UserVOD = {
     playbackUrl: string;
     createdAt: string;
     updatedAt: string;
+    duration: number;
 };
 
 export enum AuthProvider {

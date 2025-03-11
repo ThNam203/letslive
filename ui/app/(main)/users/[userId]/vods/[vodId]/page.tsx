@@ -9,6 +9,7 @@ import { GetUserById } from "../../../../../../lib/api/user";
 import { VODFrame } from "../../../../../../components/custom_react_player/vod_frame";
 import ProfileView from "../../profile";
 import VODLink from "../../../../../../components/vodlink";
+import { ScrollArea } from "../../../../../../components/ui/scroll-area";
 
 export default function VODPage() {
     const [user, setUser] = useState<User | null>(null);
@@ -28,7 +29,7 @@ export default function VODPage() {
     const [playerInfo, setPlayerInfo] = useState<VideoInfo>({
         videoTitle: "Live Streaming",
         streamer: {
-            name: "Dr. Pedophile",
+            name: "Streamer",
         },
         videoUrl: null,
     });
@@ -51,11 +52,14 @@ export default function VODPage() {
                 ...prev,
                 videoTitle: vodInfo!.title,
                 videoUrl: newUrl,
+                streamer: {
+                    name: user?.displayName ?? user?.username ?? "Streamer",
+                }
             }));
         };
 
         fetchVODInfo();
-    }, [params.userId, params.vodId]);
+    }, [params.userId, params.vodId, user]);
 
     useEffect(() => {
         const fetchUserInfo = async () => {
@@ -88,12 +92,12 @@ export default function VODPage() {
                     )}
                 </div>
 
-                <div className="w-[400px] mx-4 fixed right-0 top-14 bottom-4">
+                <div className="w-[400px] mx-4 fixed right-0 top-14 bottom-4 overflow-hidden">
                     <div className="w-full h-full font-sans border border-gray-200 rounded-md bg-gray-50 p-4">
                         <h2 className="text-xl mb-4 font-semibold">
                             Other streams
                         </h2>
-                        <div className="flex flex-col gap-4">
+                        <div className="overflow-y-auto h-full pr-1">
                             {user &&
                                 user.vods
                                     ?.filter(
@@ -102,7 +106,7 @@ export default function VODPage() {
                                             v.status !== "live"
                                     )
                                     .map((vod, idx) => (
-                                        <VODLink key={idx} item={vod} />
+                                        <VODLink key={idx} item={vod} classname="mb-2" />
                                     ))}
                         </div>
                     </div>
