@@ -7,6 +7,7 @@ import { Hover3DBox } from "../Hover3DBox";
 import { cn } from "../../utils/cn";
 import LivestreamPreviewDetailView from "./LivestreamPreviewDetailView";
 import { LivestreamingPreview } from "../../types/livestreaming";
+import GLOBAL from "../../global";
 
 const LivestreamPreviewView = ({
     className,
@@ -23,7 +24,7 @@ const LivestreamPreviewView = ({
                 viewers={0}
                 showViewer={true}
                 showStream={true}
-                imageSrc={`http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDRESS}:9090/livestreams/${livestream.id}/thumbnail.jpeg`}
+                imageSrc={`${GLOBAL.API_URL}/files/livestreams/${livestream.id}/thumbnail.jpeg`}
                 className="h-[170px] cursor-pointer"
                 onClick={() => router.push(`/users/${livestream.userId}`)}
             />

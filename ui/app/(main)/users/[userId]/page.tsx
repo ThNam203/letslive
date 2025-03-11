@@ -8,6 +8,7 @@ import { StreamingFrame, VideoInfo } from "../../../../components/custom_react_p
 import { GetUserById } from "../../../../lib/api/user";
 import ProfileView from "./profile";
 import ChatUI from "./chat";
+import GLOBAL from "../../../../global";
 
 export default function Livestreaming() {
     const [user, setUser] = useState<User | null>(null);
@@ -54,7 +55,7 @@ export default function Livestreaming() {
                         streamer: {
                             name: user.displayName ?? user.username,
                         },
-                        videoUrl: `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDRESS}:8889/static/${user.vods[0].id}/index.m3u8`,
+                        videoUrl: `${GLOBAL.API_URL}/transcode/${user.vods[0].id}/index.m3u8`,
                     });
                 }
             }

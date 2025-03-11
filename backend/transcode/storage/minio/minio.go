@@ -91,7 +91,7 @@ func (s *MinIOStrorage) AddSegment(filePath string, streamId string, qualityInde
 	}
 
 	// Construct the final URL (public access)
-	finalURL := fmt.Sprintf("%s:%d/%s/%s", s.config.ClientHost, s.config.Port, s.config.BucketName, savePath)
+	finalURL := fmt.Sprintf("%s/%s/%s", s.config.ReturnURL, s.config.BucketName, savePath)
 
 	return finalURL, nil
 }
@@ -111,7 +111,7 @@ func (s *MinIOStrorage) AddThumbnail(filePath string, streamId string, contentTy
 	}
 
 	// Construct the final URL (public access)
-	finalURL := fmt.Sprintf("%s:%d/%s/%s", s.config.ClientHost, s.config.Port, s.config.BucketName, savePath)
+	finalURL := fmt.Sprintf("%s/%s/%s", s.config.ReturnURL, s.config.BucketName, savePath)
 
 	return finalURL, nil
 }

@@ -106,7 +106,7 @@ func (s *MinIOService) AddFile(file multipart.File, fileHeader *multipart.FileHe
 	}
 
 	// Construct the final URL (public access)
-	finalURL := fmt.Sprintf("%s:%d/%s/%s", s.config.ClientHost, s.config.Port, bucketName, fileName)
+	finalURL := fmt.Sprintf("%s/%s/%s", s.config.ReturnURL, bucketName, fileName)
 
 	return finalURL, nil
 }

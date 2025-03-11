@@ -1,7 +1,6 @@
 _format_version: "3.0"
 services:
   - name: User
-    protocol: http
     host: user.service.consul
     port: 7778
     path: /v1
@@ -13,6 +12,7 @@ services:
       - name: Users
         protocols:
           - http
+          - https
         paths:
           - /users
         strip_path: false
@@ -23,6 +23,7 @@ services:
       - name: User
         protocols:
           - http
+          - https
         paths:
           - /user
         strip_path: false
@@ -32,7 +33,6 @@ services:
         response_buffering: true
 
   - name: Auth
-    protocol: http
     host: auth.service.consul
     port: 7777
     path: /v1/auth
@@ -54,7 +54,6 @@ services:
         response_buffering: true
 
   - name: Livestream
-    protocol: http
     host: livestream.service.consul
     port: 7781
     path: /v1
@@ -91,6 +90,7 @@ services:
         strip_path: false
         protocols:
           - http
+          - https
       - name: Chat_Messages
         protocols:
           - http
@@ -103,6 +103,37 @@ services:
         request_buffering: true
         response_buffering: true
 
+  - name: MinIO
+    host: minio.service.consul
+    port: 9000
+    path: /
+    connect_timeout: 10000
+    read_timeout: 10000
+    write_timeout: 10000
+    routes:
+      - name: MinIO_Get_File_Route
+        protocols:
+          - http
+          - https
+        paths:
+          - /files
+        strip_path: true
+
+  - name: Transcode_Service
+    host: transcode.service.consul
+    port: 8889
+    path: /static
+    connect_timeout: 10000
+    read_timeout: 10000
+    write_timeout: 10000
+    routes:
+      - name: Transcode_Get_File_Route
+        protocols:
+          - http
+          - https
+        paths:
+          - /transcode
+        strip_path: true
 
 consumers:
   - username: "authenticated users"

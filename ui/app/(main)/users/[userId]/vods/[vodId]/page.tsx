@@ -10,6 +10,7 @@ import { VODFrame } from "../../../../../../components/custom_react_player/vod_f
 import ProfileView from "../../profile";
 import VODLink from "../../../../../../components/vodlink";
 import { ScrollArea } from "../../../../../../components/ui/scroll-area";
+import GLOBAL from "../../../../../../global";
 
 export default function VODPage() {
     const [user, setUser] = useState<User | null>(null);
@@ -47,7 +48,7 @@ export default function VODPage() {
                 return;
             }
 
-            const newUrl = `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDRESS}:8889/static/vods/${params.vodId}/index.m3u8`;
+            const newUrl = `${GLOBAL.API_URL}/transcode/vods/${params.vodId}/index.m3u8`;
             setPlayerInfo((prev) => ({
                 ...prev,
                 videoTitle: vodInfo!.title,

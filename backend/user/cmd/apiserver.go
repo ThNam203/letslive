@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -58,9 +57,9 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 
-	go log.Panic("server ends: ", server.ListenAndServe())
+	go logger.Panicf("server ends: ", server.ListenAndServe())
 
-	log.Printf("server running on addr: %s", server.Addr)
+	logger.Infof("server running on addr: %s", server.Addr)
 	<-quit
 
 	// Shutdown gracefully
