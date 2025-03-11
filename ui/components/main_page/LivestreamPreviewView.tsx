@@ -23,7 +23,7 @@ const LivestreamPreviewView = ({
                 viewers={0}
                 showViewer={true}
                 showStream={true}
-                imageSrc={`http://localhost:9090/livestreams/${livestream.id}/thumbnail.jpeg`}
+                imageSrc={`http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDRESS}:9090/livestreams/${livestream.id}/thumbnail.jpeg`}
                 className="h-[170px] cursor-pointer"
                 onClick={() => router.push(`/users/${livestream.userId}`)}
             />
