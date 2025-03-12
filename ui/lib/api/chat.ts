@@ -1,5 +1,5 @@
 import { FetchError } from "../../types/fetch-error";
-import { ReceivedMessage } from "../../types/received_message";
+import { ReceivedMessage } from "../../types/message";
 import { fetchClient } from "../../utils/fetchClient";
 
 

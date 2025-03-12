@@ -82,7 +82,7 @@ export default function StreamEdit() {
                         information.
                     </p>
                     <p className="text-sm text-gray-400">
-                        It won't change even after livestream ends.
+                        It won&apos;t change even after livestream ends.
                     </p>
                 </div>
             </div>
