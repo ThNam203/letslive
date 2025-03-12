@@ -11,7 +11,7 @@ import (
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/transcode/config"
-	livestreamdto "sen1or/lets-live/transcode/gateway/livestream"
+	livestreamdto "sen1or/lets-live/transcode/gateway/livestream/dto"
 	livestreamgateway "sen1or/lets-live/transcode/gateway/livestream/http"
 	usergateway "sen1or/lets-live/transcode/gateway/user/http"
 	"sen1or/lets-live/transcode/transcoder"

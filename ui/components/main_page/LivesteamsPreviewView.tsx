@@ -8,11 +8,11 @@ import LivestreamPreviewView from "./LivestreamPreviewView";
 import { User } from "../../types/user";
 import Separator from "../Separator";
 import { GetLivestreamings } from "../../lib/api/livestream";
-import { LivestreamingPreview } from "../../types/livestreaming";
+import { Livestream } from "../../types/livestream";
 
 const LivestreamsPreviewView = () => {
     const [limitView, setLimitView] = useState<number>(4);
-    const [livestreamings, setLivestreamings] = useState<LivestreamingPreview[]>([]);
+    const [livestreamings, setLivestreamings] = useState<Livestream[]>([]);
 
     useEffect(() => {
         const fetchLivestreamings = async () => {

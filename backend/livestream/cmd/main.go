@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	cfg "sen1or/lets-live/livestream/config"
-	usergateway "sen1or/lets-live/livestream/gateway/user/http"
 	"sen1or/lets-live/livestream/handlers"
 	"sen1or/lets-live/livestream/repositories"
 	"sen1or/lets-live/livestream/services"
@@ -71,9 +70,8 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 }
 
 func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *APIServer {
-	var userGateway = usergateway.NewUserGateway(registry)
 	var livestreamRepo = repositories.NewLivestreamRepository(dbConn)
 	var livestreamService = services.NewLivestreamService(livestreamRepo)
-	var livestreamHandler = handlers.NewLivestreamHandler(*livestreamService, *userGateway)
+	var livestreamHandler = handlers.NewLivestreamHandler(*livestreamService)
 	return NewAPIServer(livestreamHandler, cfg)
 }

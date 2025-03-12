@@ -1,12 +1,11 @@
 package services
 
 import (
-	"context"
 	"mime/multipart"
+	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/user/domains"
 	"sen1or/lets-live/user/dto"
 	servererrors "sen1or/lets-live/user/errors"
-	livestreamgateway "sen1or/lets-live/user/gateway/livestream"
 	"sen1or/lets-live/user/mapper"
 	"sen1or/lets-live/user/repositories"
 	"sen1or/lets-live/user/utils"
@@ -17,54 +16,37 @@ import (
 type UserService struct {
 	userRepo                  repositories.UserRepository
 	livestreamInformationRepo repositories.LivestreamInformationRepository
-	livestreamGateway         livestreamgateway.LivestreamGateway
 	minioService              MinIOService
 }
 
 func NewUserService(
 	userRepo repositories.UserRepository,
 	livestreamInformationRepo repositories.LivestreamInformationRepository,
-	livestreamGateway livestreamgateway.LivestreamGateway,
 	minioService MinIOService,
 ) *UserService {
 	return &UserService{
 		userRepo:                  userRepo,
 		livestreamInformationRepo: livestreamInformationRepo,
-		livestreamGateway:         livestreamGateway,
 		minioService:              minioService,
 	}
 }
 
-func (s *UserService) GetUserById(userUUID uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserResponseDTO, *servererrors.ServerError) {
+func (s *UserService) GetUserById(userUUID uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
 	user, err := s.userRepo.GetById(userUUID, authenticatedUserId)
 	if err != nil {
 		return nil, err
 	}
 
-	userVODs, errRes := s.livestreamGateway.GetUserLivestreams(context.Background(), userUUID.String())
-	if errRes != nil {
-		return nil, servererrors.NewServerError(errRes.StatusCode, errRes.Message)
-	}
-
-	isUserLivestreaming, errRes := s.livestreamGateway.CheckIsUserLivestreaming(context.Background(), userUUID.String())
-	if errRes != nil {
-		return nil, servererrors.NewServerError(errRes.StatusCode, errRes.Message)
-	}
-
-	user.VODs = userVODs
-	user.IsLivestreaming = isUserLivestreaming
-
 	return user, nil
 }
 
-func (s *UserService) GetUserByStreamAPIKey(key uuid.UUID) (*dto.GetUserResponseDTO, *servererrors.ServerError) {
+func (s *UserService) GetUserByStreamAPIKey(key uuid.UUID) (*domains.User, *servererrors.ServerError) {
 	user, err := s.userRepo.GetByAPIKey(key)
 	if err != nil {
 		return nil, err
 	}
 
-	res := mapper.UserToGetUserResponseDTO(*user, nil)
-	return res, nil
+	return user, nil
 }
 
 func (s *UserService) GetUserFullInformation(userUUID uuid.UUID) (*domains.User, *servererrors.ServerError) {
@@ -85,7 +67,7 @@ func (s *UserService) GetAllUsers(page int) ([]domains.User, *servererrors.Serve
 	return users, nil
 }
 
-func (s *UserService) SearchUserByUsername(username string) ([]dto.GetUserResponseDTO, *servererrors.ServerError) {
+func (s *UserService) SearchUserByUsername(username string) ([]dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
 	if len(username) == 0 {
 		return nil, servererrors.ErrInvalidInput
 	}
@@ -95,10 +77,10 @@ func (s *UserService) SearchUserByUsername(username string) ([]dto.GetUserRespon
 		return nil, err
 	}
 
-	var resUsers []dto.GetUserResponseDTO
+	var resUsers []dto.GetUserPublicResponseDTO
 
 	for _, user := range users {
-		resUsers = append(resUsers, *mapper.UserToGetUserResponseDTO(*user, nil))
+		resUsers = append(resUsers, *mapper.UserToGetUserPublicResponseDTO(*user))
 	}
 
 	return resUsers, nil
@@ -106,6 +88,7 @@ func (s *UserService) SearchUserByUsername(username string) ([]dto.GetUserRespon
 
 func (s *UserService) CreateNewUser(data dto.CreateUserRequestDTO) (*domains.User, *servererrors.ServerError) {
 	if err := utils.Validator.Struct(&data); err != nil {
+		logger.Debugf("failed to validate user create resquest: %+v", data)
 		return nil, servererrors.ErrInvalidInput
 	}
 
@@ -201,4 +184,13 @@ func (s UserService) UpdateUserInternal(data dto.UpdateUserRequestDTO) (*domains
 	}
 
 	return updatedUser, nil
+}
+
+func (s UserService) UploadFileToMinIO(file multipart.File, fileHeader *multipart.FileHeader) (string, *servererrors.ServerError) {
+	savedPath, err := s.minioService.AddFile(file, fileHeader, "general-files")
+	if err != nil {
+		return "", servererrors.ErrInternalServer
+	}
+
+	return savedPath, nil
 }

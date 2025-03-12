@@ -77,6 +77,8 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
+	sm.HandleFunc("POST /v1/upload-file", a.userHandler.UploadSingleFileToMinIOHandler) // TODO: find another way to upload file
+
 	sm.HandleFunc("GET /v1/users", a.userHandler.GetAllUsersHandler) // TODO: remove
 	sm.HandleFunc("GET /v1/users/search", a.userHandler.SearchUserHandler)
 
@@ -93,6 +95,8 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("PATCH /v1/user/{userId}/set-verified", a.userHandler.SetUserVerifiedHandler) // internal
 	sm.HandleFunc("PATCH /v1/user/me/livestream-information", a.livestreamInformationHandler.Update)
 	sm.HandleFunc("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKeyHandler)
+
+	// TODO: change this to not include the FormData
 	sm.HandleFunc("PATCH /v1/user/me/profile-picture", a.userHandler.UpdateUserProfilePictureHandler)
 	sm.HandleFunc("PATCH /v1/user/me/background-picture", a.userHandler.UpdateUserBackgroundPictureHandler)
 

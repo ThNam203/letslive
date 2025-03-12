@@ -7,7 +7,8 @@ import { cn } from "../../../utils/cn";
 const navItems = [
     { name: "Profile", href: "/settings/profile" },
     { name: "Security", href: "/settings/security" },
-    { name: "Stream", href: "/settings/stream" }
+    { name: "Stream", href: "/settings/stream" },
+    { name: "VODs", href: "/settings/vods" }
 ];
 
 export default function SettingsNav({

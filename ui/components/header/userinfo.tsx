@@ -53,12 +53,12 @@ export default function UserInfo() {
     }, []);
     return userState.user ? (
         <div className="flex flex-row gap-4">
-            <Button>
+            {/* <Button>
                 <LuBell size={16} />
             </Button>
             <Button>
                 <LuMessageSquare size={16} />
-            </Button>
+            </Button> */}
 
             <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger>
@@ -111,15 +111,15 @@ export default function UserInfo() {
         <div className="flex flex-row gap-2">
             <Link
                 href="/login"
-                className="whitespace-nowrap bg-white border-1 rounded-md hover:bg-gray-200 text-gray-900 border-gray-700"
+                className="whitespace-nowrap bg-white border-1 rounded-md hover:bg-gray-200 text-gray-900 border-gray-700 text-sm py-1 px-4"
             >
-                Log In
+                Log in
             </Link>
             <Link
-                className="whitespace-nowrap bg-white border-1 rounded-md hover:bg-gray-200 text-gray-900 border-gray-700"
+                className="whitespace-nowrap bg-white border-1 rounded-md hover:bg-gray-200 text-gray-900 border-gray-700 text-sm py-1 px-4"
                 href="/signup"
             >
-                Sign Up
+                Sign up
             </Link>
         </div>
     );

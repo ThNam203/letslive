@@ -3,7 +3,6 @@ package mapper
 import (
 	"sen1or/lets-live/user/domains"
 	"sen1or/lets-live/user/dto"
-	livestreamgateway "sen1or/lets-live/user/gateway/livestream"
 )
 
 func CreateUserRequestDTOToUser(dto dto.CreateUserRequestDTO) *domains.User {
@@ -14,8 +13,8 @@ func CreateUserRequestDTOToUser(dto dto.CreateUserRequestDTO) *domains.User {
 	}
 }
 
-func UserToGetUserResponseDTO(user domains.User, vods []livestreamgateway.GetLivestreamResponseDTO) *dto.GetUserResponseDTO {
-	return &dto.GetUserResponseDTO{
+func UserToGetUserPublicResponseDTO(user domains.User) *dto.GetUserPublicResponseDTO {
+	return &dto.GetUserPublicResponseDTO{
 		Id:                user.Id,
 		Username:          user.Username,
 		Email:             user.Email,
@@ -26,7 +25,6 @@ func UserToGetUserResponseDTO(user domains.User, vods []livestreamgateway.GetLiv
 		DisplayName:       user.DisplayName,
 		ProfilePicture:    user.ProfilePicture,
 		BackgroundPicture: user.BackgroundPicture,
-		VODs:              vods,
 	}
 }
 

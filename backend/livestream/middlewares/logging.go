@@ -8,16 +8,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type LoggingMiddleware struct {
-	logger *zap.SugaredLogger
-}
-
-func NewLoggingMiddleware(logger *zap.SugaredLogger) *LoggingMiddleware {
-	return &LoggingMiddleware{
-		logger: logger,
-	}
-}
-
 type loggingResponseWriter struct {
 	w          http.ResponseWriter
 	statusCode int
@@ -39,7 +29,7 @@ func (lrw *loggingResponseWriter) WriteHeader(statusCode int) {
 	lrw.statusCode = statusCode
 }
 
-func (m *LoggingMiddleware) GetMiddleware(next http.Handler) http.Handler {
+func LoggingMiddleware(logger *zap.SugaredLogger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		timeStart := time.Now()
 		lrw := &loggingResponseWriter{w: w}
@@ -65,13 +55,13 @@ func (m *LoggingMiddleware) GetMiddleware(next http.Handler) http.Handler {
 		}
 
 		if lrw.statusCode/100 == 2 {
-			m.logger.Infow("success api call", fields...)
+			logger.Infow("success api call", fields...)
 		} else {
 			err := lrw.w.Header().Get("X-LetsLive-Error")
 			if len(err) == 0 {
-				m.logger.Infow("failed api call", fields...)
+				logger.Infow("failed api call", fields...)
 			} else {
-				m.logger.Errorw("failed api call: "+err, fields...)
+				logger.Errorw("failed api call: "+err, fields...)
 			}
 		}
 	})

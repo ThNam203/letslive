@@ -48,8 +48,8 @@ func (h *LivestreamInformationHandler) Update(w http.ResponseWriter, r *http.Req
 	description := r.FormValue("description")
 	var thumbnailUrl string
 
-	file, fileHeader, err := r.FormFile("thumbnail")
-	if err != nil {
+	file, fileHeader, formErr := r.FormFile("thumbnail")
+	if formErr != nil {
 		thumbnailUrl = r.FormValue("thumbnailUrl")
 	} else {
 		savedPath, err := h.minioService.AddFile(file, fileHeader, "thumbnails")

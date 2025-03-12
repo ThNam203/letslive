@@ -103,6 +103,8 @@ export default function SearchBar({
                                                 "https://github.com/shadcn.png"
                                             }
                                             alt={"user image"}
+                                            width={32}
+                                            height={32}
                                         />
                                         <AvatarFallback>
                                             {user.username.charAt(0)}

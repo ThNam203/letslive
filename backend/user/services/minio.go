@@ -58,6 +58,11 @@ func (s *MinIOService) SetUp() error {
 
 	s.minioClient = minioClient
 
+	if err := s.createIfNotExists("general-files"); err != nil {
+		return err
+	}
+
+	// TODO: remove all these, use general-files instead
 	if err := s.createIfNotExists("profile-pictures"); err != nil {
 		return err
 	}

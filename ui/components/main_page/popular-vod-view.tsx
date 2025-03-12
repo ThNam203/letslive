@@ -3,14 +3,36 @@
 import { useState, useEffect } from "react";
 import { Clock, Eye, Film } from "lucide-react";
 import Image from "next/image";
-import { UserVOD } from "../../types/user";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
+import { GetPopularVODs } from "../../lib/api/livestream";
+import { toast } from "react-toastify";
+import { Livestream } from "../../types/livestream";
+import { User } from "../../types/user";
+import { GetUserById } from "../../lib/api/user";
+import { datediffFromNow, formatSeconds } from "../../utils/timeFormats";
+import { useRouter } from "next/navigation";
+import { CardHeader } from "@mui/material";
 
 export function PopularVODView() {
     const [isLoading, setIsLoading] = useState(false);
-    const [vods, setVods] = useState<UserVOD[]>([]);
+    const [vods, setVods] = useState<Livestream[]>([]);
+
+    useEffect(() => {
+        setIsLoading(true);
+        const fetchData = async () => {
+            const { vods, fetchError } = await GetPopularVODs(0);
+            if (fetchError) {
+                toast("Failed to fetch popular videos", { type: "error" });
+                return;
+            } else {
+                setVods(vods);
+            }
+            setIsLoading(false);
+        };
+        fetchData();
+    }, []);
 
     if (isLoading) {
         return <VODSkeleton />;
@@ -35,7 +57,6 @@ export function PopularVODView() {
 
     return (
         <div>
-            <h2 className="text-2xl font-semibold mb-6">Popular Videos</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {vods.map((vod) => (
                     <VODCard key={vod.id} vod={vod} />
@@ -45,31 +66,62 @@ export function PopularVODView() {
     );
 }
 
-function VODCard({ vod }: { vod: any }) {
+function VODCard({ vod }: { vod: Livestream }) {
+    const [user, setUser] = useState<User | null>(null);
+    const router = useRouter();
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { user, fetchError } = await GetUserById(vod.userId);
+            if (user) setUser(user);
+        };
+
+        fetchUser();
+    }, [vod.userId]);
+
     return (
-        <Card className="overflow-hidden transition-all hover:shadow-md">
+        <Card className="overflow-hidden transition-all hover:shadow-md w-[370px] rounded-sm">
             <div className="relative aspect-video bg-muted">
                 <div className="absolute bottom-2 right-2">
                     <Badge
                         variant="secondary"
                         className="bg-black/70 text-white"
                     >
-                        {vod.duration}
+                        {formatSeconds(vod.duration)}
                     </Badge>
                 </div>
-                <Image
-                    src={vod.thumbnail || "/placeholder.svg"}
-                    alt={vod.title}
-                    className="w-full h-full object-cover"
-                />
+                {vod.thumbnailUrl ? (
+                    <Image
+                        src={vod.thumbnailUrl}
+                        alt={vod.title}
+                        className="w-full h-full hover:cursor-pointer"
+                        width={500}
+                        height={500}
+                        onClick={() =>
+                            router.push(`/users/${vod.userId}/vods/${vod.id}`)
+                        }
+                    />
+                ) : (
+                    <div
+                        className="w-full h-full bg-gray-300 hover:cursor-pointer"
+                        onClick={() =>
+                            router.push(`/users/${vod.userId}/vods/${vod.id}`)
+                        }
+                    />
+                )}
             </div>
             <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                     <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
                         <Image
-                            src={vod.avatar || "/placeholder.svg"}
-                            alt={`${vod.channel} avatar`}
+                            src={
+                                user?.profilePicture ||
+                                "https://github.com/shadcn.png"
+                            }
+                            alt={`${user?.username} avatar`}
                             className="w-full h-full object-cover"
+                            width={40}
+                            height={40}
                         />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -77,16 +129,18 @@ function VODCard({ vod }: { vod: any }) {
                             {vod.title}
                         </h3>
                         <p className="text-sm text-muted-foreground truncate">
-                            {vod.channel}
+                            {user
+                                ? user.displayName ?? user.username
+                                : "Unknown"}
                         </p>
                         <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
                                 <Eye className="h-3 w-3" />
-                                <span>{vod.views} views</span>
+                                <span>{vod.viewCount} views</span>
                             </div>
                             <div className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
-                                <span>{vod.date}</span>
+                                <span>{datediffFromNow(vod.endedAt)} ago</span>
                             </div>
                         </div>
                     </div>

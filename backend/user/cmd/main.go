@@ -7,7 +7,6 @@ import (
 	"sen1or/lets-live/pkg/discovery"
 	"sen1or/lets-live/pkg/logger"
 	cfg "sen1or/lets-live/user/config"
-	livestreamgateway "sen1or/lets-live/user/gateway/livestream/http"
 	"sen1or/lets-live/user/handlers"
 	"sen1or/lets-live/user/repositories"
 	"sen1or/lets-live/user/services"
@@ -70,14 +69,12 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 }
 
 func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *APIServer {
-	livestreamGateway := livestreamgateway.NewLivestreamGateway(registry)
-
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var livestreamInfoRepo = repositories.NewLivestreamInformationRepository(dbConn)
 	var followRepo = repositories.NewFollowRepository(dbConn)
 
 	minioService := services.NewMinIOService(context.Background(), cfg.MinIO)
-	var userService = services.NewUserService(userRepo, livestreamInfoRepo, livestreamGateway, *minioService)
+	var userService = services.NewUserService(userRepo, livestreamInfoRepo, *minioService)
 	var livestreamInfoService = services.NewLivestreamInformationService(livestreamInfoRepo)
 	var followService = services.NewFollowService(followRepo)
 

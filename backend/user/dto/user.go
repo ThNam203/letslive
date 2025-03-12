@@ -2,14 +2,13 @@ package dto
 
 import (
 	"sen1or/lets-live/user/domains"
-	livestreamgateway "sen1or/lets-live/user/gateway/livestream"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
 )
 
 type CreateUserRequestDTO struct {
-	Username     string `json:"username" validate:"required,gte=6,lte=20"`
+	Username     string `json:"username" validate:"required,gte=4,lte=50"`
 	Email        string `json:"email" validate:"required,email"`
 	IsVerified   bool   `json:"isVerified,omitempty" validate:"omitempty"`
 	AuthProvider string `json:"authProvider" validate:"oneof=google local"`
@@ -17,7 +16,7 @@ type CreateUserRequestDTO struct {
 
 type GetUserRequestDTO struct{}
 
-type GetUserResponseDTO struct {
+type GetUserPublicResponseDTO struct {
 	Id                uuid.UUID `json:"id"`
 	Username          string    `json:"username"`
 	Email             string    `json:"email"`
@@ -31,10 +30,7 @@ type GetUserResponseDTO struct {
 	FollowerCount     *int      `json:"followerCount,omitempty"`
 	IsFollowing       *bool     `json:"isFollowing,omitempty"`
 
-	IsLivestreaming bool `json:"isLivestreaming"`
-
 	domains.LivestreamInformation `json:"livestreamInformation"`
-	VODs                          []livestreamgateway.GetLivestreamResponseDTO `json:"vods,omitempty"`
 }
 
 type GetUserByStreamAPIKeyRequestDTO struct{}

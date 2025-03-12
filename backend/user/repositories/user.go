@@ -15,7 +15,7 @@ import (
 
 type UserRepository interface {
 	GetFullInfoById(uuid.UUID) (*domains.User, *servererrors.ServerError)
-	GetById(userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserResponseDTO, *servererrors.ServerError)
+	GetById(userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *servererrors.ServerError)
 	GetAll(page int) ([]domains.User, *servererrors.ServerError)
 	SearchUserByUsername(username string) ([]*domains.User, *servererrors.ServerError)
 	GetByName(string) (*domains.User, *servererrors.ServerError)
@@ -44,7 +44,7 @@ func NewUserRepository(conn *pgxpool.Pool) UserRepository {
 // TODO: holy shesh i need to redo the whole database queries
 // the authenticatedUserId is used for checking if the caller is following the userId
 // the authenticatedUserId can be null if for INTERNAL USE
-func (r *postgresUserRepo) GetById(userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserResponseDTO, *servererrors.ServerError) {
+func (r *postgresUserRepo) GetById(userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(context.Background(), `
 		SELECT 
 			u.id, u.username, u.email, u.is_verified, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, 
@@ -68,7 +68,7 @@ func (r *postgresUserRepo) GetById(userId uuid.UUID, authenticatedUserId *uuid.U
 		return nil, servererrors.ErrDatabaseQuery
 	}
 
-	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[dto.GetUserResponseDTO])
+	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[dto.GetUserPublicResponseDTO])
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
