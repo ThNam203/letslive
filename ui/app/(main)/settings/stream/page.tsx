@@ -31,7 +31,6 @@ export default function StreamEdit() {
     };
 
     useEffect(() => {
-        console.log("BUON CUOI NHO:", user)
         if (user) {
             setTitle(user.livestreamInformation.title || "");
             setDescription(user.livestreamInformation.description || "");
@@ -82,13 +81,20 @@ export default function StreamEdit() {
                         Your next livestream information will be based on the
                         information.
                     </p>
+                    <p className="text-sm text-gray-400">
+                        It won't change even after livestream ends.
+                    </p>
                 </div>
             </div>
 
             <div className="rounded-lg border-1 border-gray-900 p-4">
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="title">Title</Label>
+                    <div className="grid grid-cols-4 items-start gap-4">
+                        <Label htmlFor="title">Title
+                            <p className="text-xs text-gray-500 font-normal">
+                                If empty, the title will be generated
+                                automatically.
+                            </p></Label>
                         <Input
                             id="title"
                             value={title}
@@ -109,7 +115,13 @@ export default function StreamEdit() {
                     </div>
 
                     <div className="grid grid-cols-4 gap-4">
-                        <Label htmlFor="image-upload">Thumbnail</Label>
+                        <Label htmlFor="image-upload">
+                            Thumbnail
+                            <p className="text-xs text-gray-500 font-normal">
+                                If empty, the thumbnail will be generated
+                                automatically.
+                            </p>
+                        </Label>
                         <div className="col-span-3 w-full max-w-3xl">
                             <label
                                 htmlFor="image-upload"

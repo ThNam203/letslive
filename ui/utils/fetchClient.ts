@@ -42,6 +42,7 @@ const refreshToken = async (): Promise<void> => {
     return refreshTokenPromise;
 };
 
+// the T should be of type Object or string only
 export const fetchClient = async <T>(
     url: string,
     options: FetchOptions = {}
@@ -127,7 +128,9 @@ async function validateAndParseResponse<T>(response: Response): Promise<T> {
     }
 
     try {
-        if (contentType.includes("text/plain")) return (await response.text()) as T;
+        if (contentType.includes("text/plain")) {
+            return (await response.text()) as T;
+        }
 
         const data = await response.json();
         return data as T;

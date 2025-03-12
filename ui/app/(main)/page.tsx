@@ -8,7 +8,7 @@ export default function HomePage() {
             <h1 className="font-semibold text-xl mb-2">Livestreaming</h1>
             <LivestreamsPreviewView />
 
-            <h1 className="font-semibold text-xl mb-2">Popular VODs</h1>
+            <h1 className="font-semibold text-xl my-2">Popular VODs</h1>
             <PopularVODView />
         </div>
     );

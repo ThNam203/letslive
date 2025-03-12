@@ -1,39 +1,48 @@
 import Image from "next/image";
-import { LuMoreVertical } from "react-icons/lu";
-import { cn } from "../../utils/cn";
+import { Livestream } from "../../types/livestream";
 import { User } from "../../types/user";
-import { Button } from "../ui/button";
-import { LivestreamingPreview } from "../../types/livestreaming";
-
+import { Clock, Eye } from "lucide-react";
+import { datediffFromNow } from "../../utils/timeFormats";
 const LivestreamPreviewDetailView = ({
-    livestream
+    livestream,
+    user,
 }: {
-    livestream: LivestreamingPreview;
+    livestream: Livestream;
+    user: User | null;
 }) => {
     return (
-        <div className="flex flex-row gap-2">
-            <Image
-                width={50}
-                height={50}
-                className="h-12 w-12 rounded-full"
-                src={livestream.userProfilePicture ?? "https://github.com/shadcn.png"}
-                alt="user avatar"
-            />
-            <div className="w-full flex flex-row items-start justify-between">
-                <div className="w-full flex flex-col items-start justify-between">
-                    <p className="text-lg hover:text-primary cursor-pointer font-semibold">
-                        {livestream.title}
-                    </p>
-                    <p className="text-xs">
-                        {livestream.displayName ?? livestream.username}
-                    </p>
-                    {/* <p className="text-sm text-secondaryWord hover:text-primary cursor-pointer">
-                        Dep trai // FOR CATEGORY
-                    </p> */}
+        <div className="flex items-start gap-3">
+            <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                <Image
+                    src={
+                        user?.profilePicture || "https://github.com/shadcn.png"
+                    }
+                    alt={`${user?.username} avatar`}
+                    className="w-full h-full object-cover"
+                    width={40}
+                    height={40}
+                />
+            </div>
+            <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-base truncate">
+                    {livestream.title}
+                </h3>
+                <p className="text-sm text-muted-foreground truncate">
+                    {user ? user.displayName ?? user.username : "Unknown"}
+                </p>
+                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        <span>{livestream.viewCount} views</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>
+                            Started at {datediffFromNow(livestream.startedAt)}{" "}
+                            ago
+                        </span>
+                    </div>
                 </div>
-                {/* <Button>
-                    <LuMoreVertical className="w-4 h-4" />
-                </Button> */}
             </div>
         </div>
     );

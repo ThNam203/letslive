@@ -4,16 +4,18 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { User } from "../../../../../../types/user";
 import { VideoInfo } from "../../../../../../components/custom_react_player/streaming_frame";
-import { GetVODInformation } from "../../../../../../lib/api/vod";
+import { GetAllLivestreamOfUser, GetVODInformation } from "../../../../../../lib/api/livestream";
 import { GetUserById } from "../../../../../../lib/api/user";
 import { VODFrame } from "../../../../../../components/custom_react_player/vod_frame";
 import ProfileView from "../../profile";
 import VODLink from "../../../../../../components/vodlink";
-import { ScrollArea } from "../../../../../../components/ui/scroll-area";
 import GLOBAL from "../../../../../../global";
+import { Livestream } from "../../../../../../types/livestream";
 
 export default function VODPage() {
     const [user, setUser] = useState<User | null>(null);
+    const [vods, setVods] = useState<Livestream[]>([]);
+        
     const updateUser = (newUserInfo: User) => {
         setUser((prev) => {
             if (prev)
@@ -37,7 +39,7 @@ export default function VODPage() {
 
     useEffect(() => {
         const fetchVODInfo = async () => {
-            const { vodInfo, fetchError } = await GetVODInformation(
+            const { vod, fetchError } = await GetVODInformation(
                 params.vodId
             );
 
@@ -51,7 +53,7 @@ export default function VODPage() {
             const newUrl = `${GLOBAL.API_URL}/transcode/vods/${params.vodId}/index.m3u8`;
             setPlayerInfo((prev) => ({
                 ...prev,
-                videoTitle: vodInfo!.title,
+                videoTitle: vod!.title,
                 videoUrl: newUrl,
                 streamer: {
                     name: user?.displayName ?? user?.username ?? "Streamer",
@@ -61,6 +63,27 @@ export default function VODPage() {
 
         fetchVODInfo();
     }, [params.userId, params.vodId, user]);
+
+    useEffect(() => {
+        if (!user) {
+            return;
+        }
+
+        const fetchVODs = async () => {
+            const { livestreams, fetchError } = await GetAllLivestreamOfUser(user.id);
+
+            if (fetchError) {
+                toast(fetchError.message, {
+                    toastId: "vod-fetch-error",
+                    type: "error",
+                });
+            } else {
+                setVods(livestreams);
+            }
+        };
+
+        fetchVODs();
+    }, [user]);
 
     useEffect(() => {
         const fetchUserInfo = async () => {
@@ -87,8 +110,8 @@ export default function VODPage() {
                     {user && (
                         <ProfileView
                             user={user}
-                            showSavedStream={false}
                             updateUser={updateUser}
+                            vods={vods.filter((v) => v.id !== params.vodId)}
                         />
                     )}
                 </div>
@@ -99,15 +122,14 @@ export default function VODPage() {
                             Other streams
                         </h2>
                         <div className="overflow-y-auto h-full pr-1">
-                            {user &&
-                                user.vods
+                            {vods
                                     ?.filter(
                                         (v) =>
                                             v.id !== params.vodId &&
                                             v.status !== "live"
                                     )
                                     .map((vod, idx) => (
-                                        <VODLink key={idx} item={vod} classname="mb-2" />
+                                        <VODLink key={idx} vod={vod} classname="mb-2" />
                                     ))}
                         </div>
                     </div>

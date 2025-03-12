@@ -4,14 +4,18 @@ import { CalendarDays, Users, Heart, ShieldCheck } from "lucide-react";
 import { User } from "../../../../types/user";
 import ProfileHeader from "./profile_header";
 import VODLink from "../../../../components/vodlink";
+import { Livestream } from "../../../../types/livestream";
+import { useEffect, useState } from "react";
+import { GetAllLivestreamOfUser, GetAllVODsAsAuthor } from "../../../../lib/api/livestream";
+import { toast } from "react-toastify";
 
 export default function ProfileView({
     user,
-    showSavedStream = true,
+    vods,
     updateUser,
 }: {
     user: User;
-    showSavedStream?: boolean;
+    vods: Livestream[];
     updateUser: (newUserInfo: User) => void;
 }) {
     return (
@@ -67,15 +71,15 @@ export default function ProfileView({
                 </div>
 
                 {/* Recent Activity */}
-                {showSavedStream && (
+                {vods.length > 0 && (
                     <div className="mt-4">
                         <h2 className="text-xl font-semibold text-gray-900 mb-4">
                             Recent Streams
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {user.vods?.map((item, idx) => {
-                                if (item.status == "live") return;
-                                return <VODLink key={idx} item={item} />;
+                            {vods.map((vod, idx) => {
+                                if (vod.status == "live") return null;
+                                return <VODLink key={idx} vod={vod} />;
                             })}
                         </div>
                     </div>

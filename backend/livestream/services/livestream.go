@@ -34,8 +34,28 @@ func (c LivestreamService) GetAllLivestreaming(page int) ([]domains.Livestream, 
 	return c.repo.GetAllLivestreamings(page)
 }
 
-func (c LivestreamService) GetByUser(userId uuid.UUID) ([]domains.Livestream, *servererrors.ServerError) {
+func (c LivestreamService) GetByUserPublic(userId uuid.UUID) ([]domains.Livestream, *servererrors.ServerError) {
+	livestreams, err := c.repo.GetByUser(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	publicLivestreams := []domains.Livestream{}
+	for _, l := range livestreams {
+		if l.Visibility == domains.LivestreamPublicVisibility {
+			publicLivestreams = append(publicLivestreams, l)
+		}
+	}
+
+	return publicLivestreams, nil
+}
+
+func (c LivestreamService) GetByUserAuthor(userId uuid.UUID) ([]domains.Livestream, *servererrors.ServerError) {
 	return c.repo.GetByUser(userId)
+}
+
+func (c LivestreamService) GetPopularVODs(page int) ([]domains.Livestream, *servererrors.ServerError) {
+	return c.repo.GetPopularVODs(page)
 }
 
 func (c LivestreamService) CheckIsUserLivestreaming(userId uuid.UUID) (bool, *servererrors.ServerError) {
@@ -61,7 +81,8 @@ func (c LivestreamService) Create(data dto.CreateLivestreamRequestDTO) (*domains
 	return createdLivestream, nil
 }
 
-func (c LivestreamService) Update(data dto.UpdateLivestreamRequestDTO, streamId uuid.UUID) (*domains.Livestream, *servererrors.ServerError) {
+// if authorId is null, it means the transcode service is updating
+func (c LivestreamService) Update(data dto.UpdateLivestreamRequestDTO, streamId uuid.UUID, authorId *uuid.UUID) (*domains.Livestream, *servererrors.ServerError) {
 	if err := utils.Validator.Struct(&data); err != nil {
 		return nil, servererrors.ErrInvalidInput
 	}
@@ -69,6 +90,10 @@ func (c LivestreamService) Update(data dto.UpdateLivestreamRequestDTO, streamId 
 	currentLivestream, err := c.repo.GetById(streamId)
 	if err != nil {
 		return nil, err
+	}
+
+	if authorId != nil && *authorId != currentLivestream.UserId {
+		return nil, servererrors.ErrForbidden
 	}
 
 	// TODO: is this the best way?
@@ -83,6 +108,9 @@ func (c LivestreamService) Update(data dto.UpdateLivestreamRequestDTO, streamId 
 	}
 	if data.Status != nil {
 		currentLivestream.Status = *data.Status
+	}
+	if data.Visibility != nil {
+		currentLivestream.Visibility = domains.LivestreamVisibility(*data.Visibility)
 	}
 	if data.PlaybackURL != nil {
 		currentLivestream.PlaybackURL = data.PlaybackURL
@@ -105,6 +133,15 @@ func (c LivestreamService) Update(data dto.UpdateLivestreamRequestDTO, streamId 
 	return updatedLivestream, nil
 }
 
-func (c LivestreamService) Delete(livestreamId uuid.UUID) *servererrors.ServerError {
+func (c LivestreamService) Delete(livestreamId, userId uuid.UUID) *servererrors.ServerError {
+	livestream, err := c.repo.GetById(livestreamId)
+	if err != nil {
+		return err
+	}
+
+	if livestream.UserId != userId {
+		return servererrors.ErrForbidden
+	}
+
 	return c.repo.Delete(livestreamId)
 }

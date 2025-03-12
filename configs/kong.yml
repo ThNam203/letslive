@@ -31,6 +31,17 @@ services:
         https_redirect_status_code: 426
         request_buffering: true
         response_buffering: true
+      - name: Upload_File # TODO: change this to other services?
+        protocols:
+          - http
+          - https
+        paths:
+          - /upload-file
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
 
   - name: Auth
     host: auth.service.consul
@@ -70,6 +81,8 @@ services:
           - /livestream
           - /livestreams
           - /livestreamings
+          - /popular-vods
+          - /is-streaming
         strip_path: false
         preserve_host: false
         https_redirect_status_code: 426

@@ -24,9 +24,6 @@ type APIServer struct {
 	errorHandler      *handlers.ErrorHandler
 	healthHandler     *handlers.HealthHandler
 	livestreamHandler *handlers.LivestreamHandler
-
-	loggingMiddleware middlewares.Middleware
-	corsMiddleware    middlewares.Middleware
 }
 
 func NewAPIServer(livestreamHandler *handlers.LivestreamHandler, cfg config.Config) *APIServer {
@@ -37,9 +34,6 @@ func NewAPIServer(livestreamHandler *handlers.LivestreamHandler, cfg config.Conf
 		errorHandler:      handlers.NewErrorHandler(),
 		healthHandler:     handlers.NewHeathHandler(),
 		livestreamHandler: livestreamHandler,
-
-		loggingMiddleware: middlewares.NewLoggingMiddleware(logger.Logger),
-		corsMiddleware:    middlewares.NewCORSMiddleware(),
 	}
 }
 
@@ -73,20 +67,26 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
+	//TODO: change to query livestreams
+	sm.HandleFunc("GET /v1/livestreams", a.livestreamHandler.GetLivestreamsOfUserPublicHandler)
+	sm.HandleFunc("GET /v1/livestreams/author", a.livestreamHandler.GetLivestreamsOfUserAuthorHandler)
+	sm.HandleFunc("GET /v1/livestreams/{livestreamId}", a.livestreamHandler.GetLivestreamByIdPublicHandler)
+	sm.HandleFunc("PATCH /v1/livestreams/{livestreamId}", a.livestreamHandler.UpdateLivestreamHandler)
+	sm.HandleFunc("DELETE /v1/livestreams/{livestreamId}", a.livestreamHandler.DeleteLivestreamHandler)
 
-	sm.HandleFunc("POST /v1/livestream", a.livestreamHandler.CreateLivestreamHandler)
-	sm.HandleFunc("PUT /v1/livestream/{livestreamId}", a.livestreamHandler.UpdateLivestreamHandler)
-	sm.HandleFunc("GET /v1/livestream/{livestreamId}", a.livestreamHandler.GetLivestreamByIdHandler)
-	sm.HandleFunc("GET /v1/livestreams", a.livestreamHandler.GetLivestreamsOfUserHandler)
 	sm.HandleFunc("GET /v1/livestreamings", a.livestreamHandler.GetLivestreamingsHandler)
+	sm.HandleFunc("GET /v1/popular-vods", a.livestreamHandler.GetPopularVODs)
 	sm.HandleFunc("GET /v1/is-streaming", a.livestreamHandler.CheckIsUserLivestreamingHandler)
+
+	sm.HandleFunc("PUT /v1/internal/livestreams/{livestreamId}", a.livestreamHandler.UpdateLivestreamInternalHandler)
+	sm.HandleFunc("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)
 
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 
 	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)
 
-	finalHandler := a.corsMiddleware.GetMiddleware(sm)
-	finalHandler = a.loggingMiddleware.GetMiddleware(finalHandler)
+	finalHandler := middlewares.CORSMiddleware(sm)
+	finalHandler = middlewares.LoggingMiddleware(a.logger, finalHandler)
 
 	return finalHandler
 }

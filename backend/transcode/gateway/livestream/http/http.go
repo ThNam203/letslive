@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"sen1or/lets-live/pkg/discovery"
-	dto "sen1or/lets-live/transcode/gateway/livestream"
+	dto "sen1or/lets-live/transcode/gateway/livestream/dto"
 )
 
 type LivestreamGateway struct {
@@ -34,7 +34,7 @@ func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestrea
 		}
 	}
 
-	url := fmt.Sprintf("http://%s/v1/livestream", addr)
+	url := fmt.Sprintf("http://%s/v1/internal/livestreams", addr)
 	payloadBuf := new(bytes.Buffer)
 	if err := json.NewEncoder(payloadBuf).Encode(data); err != nil {
 		return nil, &ErrorResponse{
@@ -93,7 +93,7 @@ func (g *LivestreamGateway) Update(ctx context.Context, updateDTO dto.UpdateLive
 		}
 	}
 
-	url := fmt.Sprintf("http://%s/v1/livestream/%s", addr, updateDTO.Id)
+	url := fmt.Sprintf("http://%s/v1/internal/livestreams/%s", addr, updateDTO.Id)
 	payloadBuf := new(bytes.Buffer)
 	if err := json.NewEncoder(payloadBuf).Encode(updateDTO); err != nil {
 		return &ErrorResponse{

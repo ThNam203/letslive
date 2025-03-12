@@ -3,8 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
+	"sen1or/lets-live/pkg/logger"
 	"sen1or/lets-live/user/dto"
 	servererrors "sen1or/lets-live/user/errors"
 	"sen1or/lets-live/user/services"
@@ -312,10 +312,11 @@ func (h *UserHandler) UpdateUserInternalHandler(w http.ResponseWriter, r *http.R
 	json.NewEncoder(w).Encode(updatedUser)
 }
 
-func getUserIdFromCookie(r *http.Request) (*uuid.UUID, error) {
+func getUserIdFromCookie(r *http.Request) (*uuid.UUID, *servererrors.ServerError) {
 	accessTokenCookie, err := r.Cookie("ACCESS_TOKEN")
 	if err != nil || len(accessTokenCookie.Value) == 0 {
-		return nil, errors.New("missing credentials")
+		logger.Debugf("missing credentials")
+		return nil, servererrors.ErrUnauthorized
 	}
 
 	myClaims := types.MyClaims{}
@@ -323,13 +324,47 @@ func getUserIdFromCookie(r *http.Request) (*uuid.UUID, error) {
 	// the signature should already been checked from the api gateway before going to this
 	_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
 	if err != nil {
-		return nil, fmt.Errorf("invalid access token: %s", err)
+		logger.Debugf("invalid access token: %s", err)
+		return nil, servererrors.ErrUnauthorized
 	}
 
 	userUUID, err := uuid.FromString(myClaims.UserId)
 	if err != nil {
-		return nil, errors.New("userId not valid")
+		logger.Debugf("userId not valid")
+		return nil, servererrors.ErrUnauthorized
 	}
 
 	return &userUUID, nil
+}
+
+func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *http.Request) {
+	const maxUploadSize = 10 * 1024 * 1024
+	defer r.Body.Close()
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+	if err := r.ParseMultipartForm(0); err != nil {
+		var maxByteError *http.MaxBytesError
+		if errors.As(err, &maxByteError) {
+			h.WriteErrorResponse(w, servererrors.ErrImageTooLarge)
+			return
+		}
+
+		h.WriteErrorResponse(w, servererrors.ErrInvalidPayload)
+		return
+	}
+
+	file, fileHeader, formErr := r.FormFile("file")
+	if formErr != nil {
+		h.WriteErrorResponse(w, servererrors.ErrInvalidPayload)
+		return
+	}
+
+	savedPath, err := h.userService.UploadFileToMinIO(file, fileHeader)
+	if err != nil {
+		h.WriteErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte(savedPath))
 }
