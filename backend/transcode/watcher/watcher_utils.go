@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sen1or/lets-live/transcode/domains"
+	"sen1or/letslive/transcode/domains"
 	"strings"
 )
 

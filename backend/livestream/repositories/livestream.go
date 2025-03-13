@@ -3,8 +3,8 @@ package repositories
 import (
 	"context"
 	"errors"
-	"sen1or/lets-live/livestream/domains"
-	servererrors "sen1or/lets-live/livestream/errors"
+	"sen1or/letslive/livestream/domains"
+	servererrors "sen1or/letslive/livestream/errors"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"

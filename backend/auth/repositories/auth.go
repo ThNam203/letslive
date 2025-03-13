@@ -3,9 +3,9 @@ package repositories
 import (
 	"context"
 	"errors"
-	"sen1or/lets-live/auth/domains"
-	servererrors "sen1or/lets-live/auth/errors"
-	"sen1or/lets-live/pkg/logger"
+	"sen1or/letslive/auth/domains"
+	servererrors "sen1or/letslive/auth/errors"
+	"sen1or/letslive/auth/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sen1or/lets-live/pkg/discovery"
-	dto "sen1or/lets-live/transcode/gateway/user"
+	dto "sen1or/letslive/transcode/gateway/user"
+	"sen1or/letslive/transcode/pkg/discovery"
 )
 
 type UserGateway struct {

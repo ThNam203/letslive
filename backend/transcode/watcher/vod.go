@@ -1,6 +1,6 @@
 package watcher
 
-import "sen1or/lets-live/transcode/domains"
+import "sen1or/letslive/transcode/domains"
 
 type VODHandler interface {
 	OnStreamStart(publishName string)

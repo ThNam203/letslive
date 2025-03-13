@@ -2,13 +2,13 @@ package services
 
 import (
 	"mime/multipart"
-	"sen1or/lets-live/pkg/logger"
-	"sen1or/lets-live/user/domains"
-	"sen1or/lets-live/user/dto"
-	servererrors "sen1or/lets-live/user/errors"
-	"sen1or/lets-live/user/mapper"
-	"sen1or/lets-live/user/repositories"
-	"sen1or/lets-live/user/utils"
+	"sen1or/letslive/user/domains"
+	"sen1or/letslive/user/dto"
+	servererrors "sen1or/letslive/user/errors"
+	"sen1or/letslive/user/mapper"
+	"sen1or/letslive/user/pkg/logger"
+	"sen1or/letslive/user/repositories"
+	"sen1or/letslive/user/utils"
 
 	"github.com/gofrs/uuid/v5"
 )

@@ -2,7 +2,7 @@ package utils
 
 import (
 	"database/sql"
-	"sen1or/lets-live/pkg/logger"
+	"sen1or/letslive/user/pkg/logger"
 
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/pressly/goose"

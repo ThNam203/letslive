@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"sen1or/lets-live/user/domains"
+	"sen1or/letslive/user/domains"
 	"time"
 
 	"github.com/gofrs/uuid/v5"

@@ -12,5 +12,18 @@
 			"timeout": "2s"
 		}
 	},
+	"service": {
+		"name": "configserver",
+		"id": "letslive_configserver",
+		"address": "http://configserver",
+		"port": 8181,
+		"check": {
+			"id": "configserver-check",
+			"name": "Config Server Health Check",
+			"tcp": "configserver:8181",
+			"interval": "10s",
+			"timeout": "2s"
+		}
+	},
 	"recursors": ["127.0.0.11"]
 }

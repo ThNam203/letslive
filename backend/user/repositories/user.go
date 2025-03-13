@@ -3,10 +3,10 @@ package repositories
 import (
 	"context"
 	"errors"
-	"sen1or/lets-live/pkg/logger"
-	"sen1or/lets-live/user/domains"
-	"sen1or/lets-live/user/dto"
-	servererrors "sen1or/lets-live/user/errors"
+	"sen1or/letslive/user/domains"
+	"sen1or/letslive/user/dto"
+	servererrors "sen1or/letslive/user/errors"
+	"sen1or/letslive/user/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"

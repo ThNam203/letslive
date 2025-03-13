@@ -6,8 +6,8 @@ import (
 	"io"
 	"os/exec"
 	"path/filepath"
-	"sen1or/lets-live/pkg/logger"
-	"sen1or/lets-live/transcode/config"
+	"sen1or/letslive/transcode/config"
+	"sen1or/letslive/transcode/pkg/logger"
 	"strings"
 )
 

@@ -1,8 +1,8 @@
 package services
 
 import (
-	servererrors "sen1or/lets-live/user/errors"
-	"sen1or/lets-live/user/repositories"
+	servererrors "sen1or/letslive/user/errors"
+	"sen1or/letslive/user/repositories"
 
 	"github.com/gofrs/uuid/v5"
 )

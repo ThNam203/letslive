@@ -3,11 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"sen1or/lets-live/livestream/dto"
-	servererrors "sen1or/lets-live/livestream/errors"
-	"sen1or/lets-live/livestream/services"
-	"sen1or/lets-live/livestream/types"
-	"sen1or/lets-live/pkg/logger"
+	"sen1or/letslive/livestream/dto"
+	servererrors "sen1or/letslive/livestream/errors"
+	"sen1or/letslive/livestream/pkg/logger"
+	"sen1or/letslive/livestream/services"
+	"sen1or/letslive/livestream/types"
 	"strconv"
 
 	"github.com/gofrs/uuid/v5"

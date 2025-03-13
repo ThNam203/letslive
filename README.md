@@ -40,18 +40,17 @@ The project aims to create a functioning livestreaming website from a to z like 
 
 ## INSTALLATION (LOCAL)
 1. Clone the repo
-2. Fill in the example env files in backend services
-3. Run "mvn clean install" in backend/configserver
+2. Fill in the example.env file with your
+3. Change the jwt_secrets.secret as same as your access token secret
 4. Run "docker compose up"
 5. Access UI at localhost:5000
 
 ## ROADMAP
-
 * Support streaming from browser.
 * gRPC support.
 * Kafka
 * Add unit tests
 * Add logging and tracing
 
-Last editted: 11/03/2025  
+Last editted: 13/03/2025  
 **[Editor: Nam Huynh](https://github.com/ThNam203)**

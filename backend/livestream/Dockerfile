@@ -9,6 +9,6 @@ RUN go mod verify
 
 COPY ../ .
 
-RUN go build -v -o /usr/local/bin/app ./user/cmd/
+RUN go build -v -o /usr/local/bin/app ./cmd/
 
 CMD ["app"]

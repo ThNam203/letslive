@@ -3,10 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"sen1or/lets-live/auth/dto"
-	servererrors "sen1or/lets-live/auth/errors"
-	"sen1or/lets-live/auth/services"
-	"sen1or/lets-live/pkg/logger"
+	"sen1or/letslive/auth/dto"
+	servererrors "sen1or/letslive/auth/errors"
+	"sen1or/letslive/auth/pkg/logger"
+	"sen1or/letslive/auth/services"
 )
 
 // TODO: put verificationGateway into config

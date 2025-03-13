@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sen1or/lets-live/auth/config"
-	"sen1or/lets-live/pkg/discovery"
-	"sen1or/lets-live/pkg/logger"
+	"sen1or/letslive/auth/config"
+	"sen1or/letslive/auth/pkg/discovery"
+	"sen1or/letslive/auth/pkg/logger"
 
-	"sen1or/lets-live/auth/handlers"
-	"sen1or/lets-live/auth/middlewares"
+	"sen1or/letslive/auth/handlers"
+	"sen1or/letslive/auth/middlewares"
 	"time"
 
 	"go.uber.org/zap"

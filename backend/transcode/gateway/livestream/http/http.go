@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sen1or/lets-live/pkg/discovery"
-	dto "sen1or/lets-live/transcode/gateway/livestream/dto"
+	dto "sen1or/letslive/transcode/gateway/livestream/dto"
+	"sen1or/letslive/transcode/pkg/discovery"
 )
 
 type LivestreamGateway struct {

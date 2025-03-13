@@ -3,34 +3,33 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
-	"sen1or/lets-live/pkg/discovery"
-	"sen1or/lets-live/pkg/logger"
-	cfg "sen1or/lets-live/user/config"
-	"sen1or/lets-live/user/handlers"
-	"sen1or/lets-live/user/repositories"
-	"sen1or/lets-live/user/services"
-	"sen1or/lets-live/user/utils"
+	cfg "sen1or/letslive/user/config"
+	"sen1or/letslive/user/handlers"
+	"sen1or/letslive/user/pkg/discovery"
+	"sen1or/letslive/user/pkg/logger"
+	"sen1or/letslive/user/repositories"
+	"sen1or/letslive/user/services"
+	"sen1or/letslive/user/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 )
 
 func main() {
 	ctx := context.Background()
 
-	godotenv.Load("user/.env")
 	logger.Init(logger.LogLevel(logger.Debug))
-	config := cfg.RetrieveConfig()
-	logger.Debugf("config: %+v", config)
-	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
 
 	// for consul service discovery
-	registry, err := discovery.NewConsulRegistry(config.Registry.RegistryService.Address)
+	registry, err := discovery.NewConsulRegistry(os.Getenv("REGISTRY_SERVICE_ADDRESS"))
 	if err != nil {
 		logger.Panicf("failed to start discovery mechanism: %s", err)
 		panic(1)
 	}
+
+	config := cfg.RetrieveConfig(registry)
+	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
 	go RegisterToDiscoveryService(ctx, registry, config)
 
 	dbConn := ConnectDB(ctx, config)
@@ -55,12 +54,12 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 	serviceHostPort := fmt.Sprintf("%s:%d", config.Service.Hostname, config.Service.APIPort)
 	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/health", serviceHostPort)
 	instanceID := discovery.GenerateInstanceID(serviceName)
-	if err := registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, serviceName, instanceID, config.Registry.RegistryService.Tags); err != nil {
+	if err := registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, serviceName, instanceID, nil); err != nil {
 		logger.Panicf("failed to register server: %s", err)
 	}
 
-	ctx, _ = context.WithCancel(ctx)
-
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	<-ctx.Done()
 
 	if err := registry.Deregister(ctx, serviceName, instanceID); err != nil {

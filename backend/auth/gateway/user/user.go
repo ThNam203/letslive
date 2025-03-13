@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	"sen1or/lets-live/auth/gateway"
+	"sen1or/letslive/auth/gateway"
 )
 
 type UserGateway interface {

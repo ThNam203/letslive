@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"sen1or/lets-live/pkg/logger"
+	"sen1or/letslive/transcode/pkg/logger"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"

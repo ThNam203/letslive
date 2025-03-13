@@ -1,11 +1,13 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-	"sen1or/lets-live/pkg/logger"
+	"sen1or/letslive/transcode/pkg/discovery"
+	"sen1or/letslive/transcode/pkg/logger"
 
 	"gopkg.in/yaml.v3"
 )
@@ -22,13 +24,6 @@ type RTMP struct {
 	Port int `yaml:"port"`
 }
 
-type RegistryConfig struct {
-	Service struct {
-		Address string   `yaml:"address"`
-		Tags    []string `yaml:"tags"`
-	} `yaml:"registry"`
-}
-
 type IPFS struct {
 	Enabled           bool     `yaml:"enabled"`
 	Gateway           string   `yaml:"gateway"` // the gateway address, it is used to generate the final url to the ipfs file
@@ -41,8 +36,6 @@ type MinIO struct {
 	Host       string `yaml:"host"`
 	Port       int    `yaml:"port"`
 	BucketName string `yaml:"bucketName"`
-	AccessKey  string `yaml:"accessKey"`
-	SecretKey  string `yaml:"secretKey"`
 	ReturnURL  string `yaml:"returnURL"`
 }
 
@@ -68,7 +61,6 @@ type Transcode struct {
 
 type Config struct {
 	Service   `yaml:"service"`
-	Registry  RegistryConfig
 	RTMP      `yaml:"rtmp"`
 	Transcode `yaml:"transcode"`
 	IPFS      `yaml:"ipfs"`
@@ -78,8 +70,8 @@ type Config struct {
 	} `yaml:"webserver"`
 }
 
-func RetrieveConfig() *Config {
-	config, err := retrieveConfig()
+func RetrieveConfig(registry discovery.Registry) *Config {
+	config, err := retrieveConfig(registry)
 	if err != nil {
 		logger.Panicf("failed to get config: %s", err)
 	}
@@ -87,12 +79,15 @@ func RetrieveConfig() *Config {
 	return config
 }
 
-func retrieveConfig() (*Config, error) {
+func retrieveConfig(registry discovery.Registry) (*Config, error) {
+	configserverURL, err := registry.ServiceAddress(context.Background(), "configserver")
+	if err != nil {
+		return nil, err
+	}
 	url := fmt.Sprintf(
-		"%s://%s/%s-%s.yml",
-		os.Getenv("CONFIG_SERVER_PROTOCOL"),
-		os.Getenv("CONFIG_SERVER_ADDRESS"),
-		os.Getenv("CONFIG_SERVER_SERVICE_APPLICATION"),
+		"%s/%s-%s.yml",
+		configserverURL,
+		"transcode_service",
 		os.Getenv("CONFIG_SERVER_PROFILE"),
 	)
 
@@ -114,48 +109,6 @@ func retrieveConfig() (*Config, error) {
 	}
 
 	var config Config
-	err = yaml.Unmarshal(body, &config)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshaling JSON: %v", err)
-	}
-
-	registryConfig, err := retrieveRegistryConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	config.Registry = *registryConfig
-
-	return &config, nil
-}
-
-func retrieveRegistryConfig() (*RegistryConfig, error) {
-	url := fmt.Sprintf(
-		"%s://%s/%s-%s.yml",
-		os.Getenv("CONFIG_SERVER_PROTOCOL"),
-		os.Getenv("CONFIG_SERVER_ADDRESS"),
-		os.Getenv("CONFIG_SERVER_REGISTRY_APPLICATION"),
-		os.Getenv("CONFIG_SERVER_PROFILE"),
-	)
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-
-	if err != nil {
-		return nil, fmt.Errorf("error while creating request: %s", err)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error making request to config server: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response body: %v", err)
-	}
-
-	var config RegistryConfig
 	err = yaml.Unmarshal(body, &config)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshaling JSON: %v", err)

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	servererrors "sen1or/lets-live/auth/errors"
+	servererrors "sen1or/letslive/auth/errors"
 	"time"
 )
 

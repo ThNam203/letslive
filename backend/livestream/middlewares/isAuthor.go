@@ -2,9 +2,9 @@ package middlewares
 
 import (
 	"net/http"
-	servererrors "sen1or/lets-live/livestream/errors"
-	"sen1or/lets-live/livestream/types"
-	"sen1or/lets-live/pkg/logger"
+	servererrors "sen1or/letslive/livestream/errors"
+	"sen1or/letslive/livestream/pkg/logger"
+	"sen1or/letslive/livestream/types"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/golang-jwt/jwt/v5"

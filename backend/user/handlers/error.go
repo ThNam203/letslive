@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	servererrors "sen1or/lets-live/user/errors"
+	servererrors "sen1or/letslive/user/errors"
 )
 
 type ErrorHandler struct{}

@@ -1,12 +1,12 @@
 package services
 
 import (
-	"sen1or/lets-live/livestream/domains"
-	"sen1or/lets-live/livestream/dto"
-	servererrors "sen1or/lets-live/livestream/errors"
-	"sen1or/lets-live/livestream/mapper"
-	"sen1or/lets-live/livestream/repositories"
-	"sen1or/lets-live/livestream/utils"
+	"sen1or/letslive/livestream/domains"
+	"sen1or/letslive/livestream/dto"
+	servererrors "sen1or/letslive/livestream/errors"
+	"sen1or/letslive/livestream/mapper"
+	"sen1or/letslive/livestream/repositories"
+	"sen1or/letslive/livestream/utils"
 	"time"
 
 	"github.com/gofrs/uuid/v5"

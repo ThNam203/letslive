@@ -3,8 +3,8 @@ package handlers
 import (
 	"errors"
 	"net/http"
-	servererrors "sen1or/lets-live/auth/errors"
-	"sen1or/lets-live/auth/types"
+	servererrors "sen1or/letslive/auth/errors"
+	"sen1or/letslive/auth/types"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/golang-jwt/jwt/v5"

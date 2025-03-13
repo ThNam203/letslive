@@ -8,7 +8,7 @@ export default function HomePage() {
             <p>How to start your livestream: </p>
             <p>Open OBS &rarr; Settings &rarr; Stream </p>
             <p>
-                Enter: &quot;Server: rtmp://sen1or-huly.com:1935, StreamKey:
+                Enter: &quot;Server: rtmp://{process.env.ENVIRONMENT === "production" ? "sen1or-huly.com" : "localhost"}:1935, StreamKey:
                 Your key in Security Setting&quot;
             </p>
             <p className="mb-2">Start livestream</p>

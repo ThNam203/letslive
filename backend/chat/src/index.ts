@@ -54,7 +54,7 @@ async function SetupWebSocketServer(server: Server) {
     const sub = new Redis(6379, 'chat_pubsub')
     const roomManager = new Redis(6379, 'chat_pubsub')
 
-    await mongoose.connect('mongodb://chat_db:27017/chat')
+    await mongoose.connect(`mongodb://${process.env.CHAT_DB_USER}:${process.env.CHAT_DB_PASSWORD}@chat_db:27017/chat`)
 
     const redisService = new RedisService(pub, sub, roomManager)
     const wss = new WebSocketServer({ server, path: '/v1/ws' })
@@ -67,8 +67,8 @@ function CreateConsulRegistry() {
     return new ConsulRegistry('consul', 8500, {
         serviceName: 'chat',
         hostname: 'chat',
-        port: 8080,
-        healthCheckURL: 'http://chat:8080/v1/health'
+        port: 7780,
+        healthCheckURL: 'http://chat:7780/v1/health'
     })
 }
 
@@ -83,8 +83,8 @@ if (esMain(import.meta)) {
     const consul = CreateConsulRegistry()
     consul.register()
 
-    server.listen('8080', () => {
-        console.log(`Server started on port ${'8080'}`)
+    server.listen('7780', () => {
+        console.log(`Server started on port ${'7780'}`)
     })
 
     process.on('SIGINT', async () => {

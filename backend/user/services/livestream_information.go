@@ -1,9 +1,9 @@
 package services
 
 import (
-	"sen1or/lets-live/user/domains"
-	servererrors "sen1or/lets-live/user/errors"
-	"sen1or/lets-live/user/repositories"
+	"sen1or/letslive/user/domains"
+	servererrors "sen1or/letslive/user/errors"
+	"sen1or/letslive/user/repositories"
 )
 
 type LivestreamInformationService struct {

@@ -2,12 +2,12 @@ package services
 
 import (
 	"os"
-	"sen1or/lets-live/auth/config"
-	"sen1or/lets-live/auth/domains"
-	servererrors "sen1or/lets-live/auth/errors"
-	"sen1or/lets-live/auth/repositories"
-	"sen1or/lets-live/auth/types"
-	"sen1or/lets-live/pkg/logger"
+	"sen1or/letslive/auth/config"
+	"sen1or/letslive/auth/domains"
+	servererrors "sen1or/letslive/auth/errors"
+	"sen1or/letslive/auth/pkg/logger"
+	"sen1or/letslive/auth/repositories"
+	"sen1or/letslive/auth/types"
 	"time"
 
 	"github.com/gofrs/uuid/v5"

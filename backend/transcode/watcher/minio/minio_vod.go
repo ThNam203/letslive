@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sen1or/lets-live/pkg/logger"
-	"sen1or/lets-live/transcode/domains"
-	"sen1or/lets-live/transcode/watcher"
+	"sen1or/letslive/transcode/domains"
+	"sen1or/letslive/transcode/pkg/logger"
+	"sen1or/letslive/transcode/watcher"
 	"strings"
 	"sync"
 )

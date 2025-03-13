@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"net/http"
-	servererrors "sen1or/lets-live/user/errors"
-	"sen1or/lets-live/user/services"
+	servererrors "sen1or/letslive/user/errors"
+	"sen1or/letslive/user/services"
 )
 
 type FollowHandler struct {
