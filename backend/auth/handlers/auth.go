@@ -103,8 +103,8 @@ func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 
 // TODO: revoke refresh token
 func (h *AuthHandler) LogOutHandler(w http.ResponseWriter, r *http.Request) {
-	h.setAccessTokenCookie(w, "", 0)
-	h.setRefreshTokenCookie(w, "", 0)
+	h.setAccessTokenCookie(w, "", -1)
+	h.setRefreshTokenCookie(w, "", -1)
 	w.WriteHeader(http.StatusNoContent)
 }
 
