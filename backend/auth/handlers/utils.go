@@ -31,7 +31,7 @@ func (h *AuthHandler) setRefreshTokenCookie(w http.ResponseWriter, refreshToken 
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+		SameSite: http.SameSiteLaxMode,
 	})
 }
 
@@ -40,11 +40,12 @@ func (h *AuthHandler) setAccessTokenCookie(w http.ResponseWriter, accessToken st
 		Name:  "ACCESS_TOKEN",
 		Value: accessToken,
 
-		Path:     "/",
-		MaxAge:   maxAge,
-		HttpOnly: false,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+		Path:        "/",
+		MaxAge:      maxAge,
+		HttpOnly:    true,
+		Secure:      true,
+		SameSite:    http.SameSiteLaxMode,
+		Partitioned: true,
 	})
 
 }

@@ -6,7 +6,7 @@ CREATE TYPE user_status_enum AS ENUM ('normal', 'disabled');
 
 CREATE TABLE "users" (
   "id" UUID DEFAULT uuid_generate_v4(), 
-  "username" VARCHAR(20) NOT NULL, 
+  "username" VARCHAR(50) NOT NULL, 
   "email" TEXT NOT NULL, 
   "is_verified" BOOLEAN NOT NULL DEFAULT false, 
   "created_at" TIMESTAMPTZ  DEFAULT current_timestamp, 
