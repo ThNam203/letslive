@@ -11,15 +11,17 @@ export default function VODLink({ vod, classname }: { vod: Livestream, classname
     className={`bg-gray-200 overflow-hidden shadow-sm rounded-sm ${classname}`}
 >
     <Link
-        className={`w-full h-[180px] inline-block hover:cursor-pointer`}
+        className={`w-full inline-block hover:cursor-pointer`}
         href={`/users/${vod.userId}/vods/${vod.id}`}
     >
-        <div className="flex flex-col items-center justify-center h-full bg-black bg-opacity-50">
+        <div className="flex flex-col items-center justify-center h-full bg-black bg-opacity-50 aspect-video">
             <Image
                 alt="vod icon"
                 src={vod.thumbnailUrl ?? `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`}
-                width={100}
-                height={100}
+                width={0}
+                height={0}
+                sizes="100vw"
+                className="aspect-video w-full"
             />
             {/* <p className="text-white">
                 Streamed on {item}

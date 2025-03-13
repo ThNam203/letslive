@@ -1,0 +1,2 @@
+2025-03-13T05:39:34Z	info	web server started	{"port": 8889}
+2025-03-13T05:39:34Z	info	rtmp server started
