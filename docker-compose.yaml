@@ -171,23 +171,19 @@ services:
       - ./backend/transcode/dockervolume/public:/usr/src/app/public
       - ./shared_log/transcode.txt:/usr/local/bin/log.txt
 
-  ui:
-    build:
-      context: ./ui
-      dockerfile: Dockerfile
-    container_name: letslive_ui
-    network_mode: "host"
-    ports:
-      - "5000:5000"
+  #ui:
+  #  build:
+  #    context: ./ui
+  #    dockerfile: Dockerfile
+  #  container_name: letslive_ui
+  #  network_mode: "host"
+  #  ports:
+  #    - "5000:5000"
 
   configserver:
     build:
       context: ./backend/configserver
       dockerfile: Dockerfile
-      args:
-        CONFIGSERVER_GIT_URI: ${CONFIGSERVER_GIT_URI}
-        CONFIGSERVER_GIT_USERNAME: ${CONFIGSERVER_GIT_USERNAME}
-        CONFIGSERVER_GIT_PASSWORD: ${CONFIGSERVER_GIT_PASSWORD}
     container_name: letslive_configserver
     ports:
       - "8181:8181"

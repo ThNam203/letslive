@@ -9,5 +9,4 @@ class ConfigserverApplicationTests {
     @Test
     void contextLoads() {
     }
-
 }
