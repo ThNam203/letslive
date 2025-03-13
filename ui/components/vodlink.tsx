@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { datediffFromNow, formatSeconds } from "../utils/timeFormats";
 import { Livestream } from "../types/livestream";
+import GLOBAL from "../global";
 
 export default function VODLink({ vod, classname }: { vod: Livestream, classname?: string }) {
     return <div
@@ -16,7 +17,7 @@ export default function VODLink({ vod, classname }: { vod: Livestream, classname
         <div className="flex flex-col items-center justify-center h-full bg-black bg-opacity-50">
             <Image
                 alt="vod icon"
-                src={"/icons/video.svg"}
+                src={vod.thumbnailUrl ?? `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`}
                 width={100}
                 height={100}
             />
