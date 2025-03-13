@@ -11,7 +11,7 @@ export default function HomePage() {
                 Enter: &quot;Server: rtmp://sen1or-huly.com:1935, StreamKey:
                 Your key in Security Setting&quot;
             </p>
-            <p>Start livestream</p>
+            <p className="mb-2">Start livestream</p>
             <LivestreamsPreviewView />
 
             <h1 className="font-semibold text-xl my-2">Popular VODs</h1>

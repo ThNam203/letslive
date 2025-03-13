@@ -146,7 +146,8 @@ export default function ChatUI({ roomId }: { roomId: string }) {
             <form onSubmit={handleSendMessage} className="flex gap-2">
                 <Input
                     type="text"
-                    placeholder="Type a message..."
+                    placeholder={process.env.ENVIRONMENT === "development" ? "Type a message..." : "Chat is currently not usable in production"}
+                    disabled={process.env.ENVIRONMENT !== "development"}
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     className="flex-1"
