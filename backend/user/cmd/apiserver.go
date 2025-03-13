@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sen1or/lets-live/pkg/logger"
-	"sen1or/lets-live/user/config"
-	"sen1or/lets-live/user/handlers"
-	"sen1or/lets-live/user/middlewares"
+	"sen1or/letslive/user/config"
+	"sen1or/letslive/user/handlers"
+	"sen1or/letslive/user/middlewares"
+	"sen1or/letslive/user/pkg/logger"
 
 	"time"
 

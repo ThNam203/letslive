@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sen1or/lets-live/pkg/logger"
+	"sen1or/letslive/transcode/pkg/logger"
 	"slices"
 	"strconv"
 	"strings"

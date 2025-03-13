@@ -154,7 +154,7 @@ consumers:
       - key: "authenticated users"
     jwt_secrets:
       - key: "authenticated users"
-        secret: "abcxyz_lmao"
+        secret: "access_token_secret"
         algorithm: "HS256"
 
 plugins:

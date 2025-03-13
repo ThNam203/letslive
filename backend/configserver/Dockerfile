@@ -1,5 +1,20 @@
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
+ARG CONFIGSERVER_GIT_URI
+ARG CONFIGSERVER_GIT_USERNAME
+ARG CONFIGSERVER_GIT_PASSWORD
+
+ENV CONFIGSERVER_GIT_URI ${CONFIGSERVER_GIT_URI}
+ENV CONFIGSERVER_GIT_USERNAME ${CONFIGSERVER_GIT_USERNAME}
+ENV CONFIGSERVER_GIT_PASSWORD ${CONFIGSERVER_GIT_PASSWORD}
+
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean install
+
 FROM eclipse-temurin:17.0.13_11-jdk-alpine
-ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} app.jar
+WORKDIR /app
 RUN apk --no-cache add curl
-ENTRYPOINT ["java","-jar","/app.jar"]
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 8181
+ENTRYPOINT ["java", "-jar", "app.jar"]

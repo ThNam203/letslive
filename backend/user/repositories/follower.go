@@ -2,8 +2,8 @@ package repositories
 
 import (
 	"context"
-	"sen1or/lets-live/pkg/logger"
-	servererrors "sen1or/lets-live/user/errors"
+	servererrors "sen1or/letslive/user/errors"
+	"sen1or/letslive/user/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5/pgxpool"

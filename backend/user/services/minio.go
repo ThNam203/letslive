@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"mime/multipart"
-	"sen1or/lets-live/pkg/logger"
-	"sen1or/lets-live/user/config"
+	"os"
+	"sen1or/letslive/user/config"
+	"sen1or/letslive/user/pkg/logger"
 
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
@@ -48,7 +49,7 @@ func NewMinIOService(ctx context.Context, config config.MinIO) *MinIOService {
 
 func (s *MinIOService) SetUp() error {
 	minioClient, err := minio.New(fmt.Sprintf("%s:%d", s.config.Host, s.config.Port), &minio.Options{
-		Creds:  credentials.NewStaticV4(s.config.AccessKey, s.config.SecretKey, ""),
+		Creds:  credentials.NewStaticV4(os.Getenv("MINIO_ROOT_USER"), os.Getenv("MINIO_ROOT_PASSWORD"), ""),
 		Secure: false,
 	})
 

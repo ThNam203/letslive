@@ -3,9 +3,10 @@ package minio
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
-	"sen1or/lets-live/pkg/logger"
-	"sen1or/lets-live/transcode/config"
+	"sen1or/letslive/transcode/config"
+	"sen1or/letslive/transcode/pkg/logger"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -47,7 +48,7 @@ func NewMinIOStorage(ctx context.Context, config config.MinIO) *MinIOStrorage {
 
 func (s *MinIOStrorage) SetUp() error {
 	minioClient, err := minio.New(fmt.Sprintf("%s:%d", s.config.Host, s.config.Port), &minio.Options{
-		Creds:  credentials.NewStaticV4(s.config.AccessKey, s.config.SecretKey, ""),
+		Creds:  credentials.NewStaticV4(os.Getenv("MINIO_ROOT_USER"), os.Getenv("MINIO_ROOT_PASSWORD"), ""),
 		Secure: false,
 	})
 

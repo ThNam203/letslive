@@ -3,34 +3,34 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
-	cfg "sen1or/lets-live/auth/config"
-	"sen1or/lets-live/auth/handlers"
-	"sen1or/lets-live/auth/repositories"
-	"sen1or/lets-live/auth/services"
-	"sen1or/lets-live/auth/utils"
-	"sen1or/lets-live/pkg/discovery"
-	"sen1or/lets-live/pkg/logger"
+	cfg "sen1or/letslive/auth/config"
+	"sen1or/letslive/auth/handlers"
+	"sen1or/letslive/auth/pkg/discovery"
+	"sen1or/letslive/auth/pkg/logger"
+	"sen1or/letslive/auth/repositories"
+	"sen1or/letslive/auth/services"
+	"sen1or/letslive/auth/utils"
 
-	usergateway "sen1or/lets-live/auth/gateway/user/http"
+	usergateway "sen1or/letslive/auth/gateway/user/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 )
 
 func main() {
 	ctx := context.Background()
 
-	godotenv.Load("auth/.env")
 	logger.Init(logger.LogLevel(logger.Debug))
-	config := cfg.RetrieveConfig()
-	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
-
-	// for consul service discovery
-	registry, err := discovery.NewConsulRegistry(config.Registry.Address)
+	registry, err := discovery.NewConsulRegistry(os.Getenv("REGISTRY_SERVICE_ADDRESS"))
 	if err != nil {
 		logger.Panicf("failed to start discovery mechanism: %s", err)
 	}
+	config := cfg.RetrieveConfig(registry)
+	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
+
+	// for consul service discovery
+
 	go RegisterToDiscoveryService(ctx, registry, config)
 
 	dbConn := ConnectDB(ctx, config)
@@ -60,14 +60,12 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
-
+	defer cancel()
 	<-ctx.Done()
 
 	if err := registry.Deregister(ctx, serviceName, instanceID); err != nil {
 		logger.Errorf("failed to deregister service: %s", err)
 	}
-
-	cancel()
 }
 
 func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *APIServer {

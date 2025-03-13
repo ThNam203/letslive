@@ -3,7 +3,7 @@ package middlewares
 import (
 	"encoding/json"
 	"net/http"
-	servererrors "sen1or/lets-live/livestream/errors"
+	servererrors "sen1or/letslive/livestream/errors"
 )
 
 func writeErrorResponse(w http.ResponseWriter, err *servererrors.ServerError) {

@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sen1or/lets-live/livestream/config"
-	"sen1or/lets-live/livestream/handlers"
-	"sen1or/lets-live/livestream/middlewares"
-	"sen1or/lets-live/pkg/logger"
+	"sen1or/letslive/livestream/config"
+	"sen1or/letslive/livestream/handlers"
+	"sen1or/letslive/livestream/middlewares"
+	"sen1or/letslive/livestream/pkg/logger"
 
 	"time"
 

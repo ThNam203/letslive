@@ -4,42 +4,37 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"sen1or/lets-live/pkg/logger"
-	cfg "sen1or/lets-live/transcode/config"
-	livestreamgateway "sen1or/lets-live/transcode/gateway/livestream/http"
-	usergateway "sen1or/lets-live/transcode/gateway/user/http"
-	"sen1or/lets-live/transcode/rtmp"
-	ipfsstorage "sen1or/lets-live/transcode/storage/ipfs"
-	miniostorage "sen1or/lets-live/transcode/storage/minio"
-	"sen1or/lets-live/transcode/watcher"
-	ipfswatcher "sen1or/lets-live/transcode/watcher/ipfs"
-	miniowatcher "sen1or/lets-live/transcode/watcher/minio"
-	"sen1or/lets-live/transcode/webserver"
-
-	"sen1or/lets-live/pkg/discovery"
-
-	"github.com/joho/godotenv"
+	cfg "sen1or/letslive/transcode/config"
+	livestreamgateway "sen1or/letslive/transcode/gateway/livestream/http"
+	usergateway "sen1or/letslive/transcode/gateway/user/http"
+	"sen1or/letslive/transcode/pkg/discovery"
+	"sen1or/letslive/transcode/pkg/logger"
+	"sen1or/letslive/transcode/rtmp"
+	ipfsstorage "sen1or/letslive/transcode/storage/ipfs"
+	miniostorage "sen1or/letslive/transcode/storage/minio"
+	"sen1or/letslive/transcode/watcher"
+	ipfswatcher "sen1or/letslive/transcode/watcher/ipfs"
+	miniowatcher "sen1or/letslive/transcode/watcher/minio"
+	"sen1or/letslive/transcode/webserver"
 )
 
 func main() {
 	ctx := context.Background()
 
-	godotenv.Load("transcode/.env")
 	logger.Init(logger.LogLevel(logger.Debug))
-	config := cfg.RetrieveConfig()
-
-	setupHLSFolders(config.Transcode)
-
-	registry, err := discovery.NewConsulRegistry(config.Registry.Service.Address)
+	registry, err := discovery.NewConsulRegistry(os.Getenv("REGISTRY_SERVICE_ADDRESS"))
 	if err != nil {
 		logger.Panicf("failed to get a new registry")
 	}
+
+	config := cfg.RetrieveConfig(registry)
+	setupHLSFolders(config.Transcode)
 
 	// TODO: fix this, we need a webserver built into the transcode (not the pkg/webserver, use nginx instead)
 	serviceHostPort := fmt.Sprintf("%s:%d", config.Service.Hostname, config.Webserver.Port)
 	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/health", serviceHostPort)
 	instanceID := discovery.GenerateInstanceID(config.Service.Name)
-	registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, config.Service.Name, instanceID, config.Registry.Service.Tags)
+	registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, config.Service.Name, instanceID, nil)
 
 	allowedSuffixes := [2]string{".ts", ".m3u8"}
 	MyWebServer := webserver.NewWebServer(config.Webserver.Port, allowedSuffixes[:], config.Transcode.PublicHLSPath)

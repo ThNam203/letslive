@@ -1,8 +1,8 @@
 package mapper
 
 import (
-	"sen1or/lets-live/user/domains"
-	"sen1or/lets-live/user/dto"
+	"sen1or/letslive/user/domains"
+	"sen1or/letslive/user/dto"
 )
 
 func CreateUserRequestDTOToUser(dto dto.CreateUserRequestDTO) *domains.User {

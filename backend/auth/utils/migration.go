@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"os"
 	"path/filepath"
-	"sen1or/lets-live/pkg/logger"
+	"sen1or/letslive/auth/pkg/logger"
 
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/pressly/goose"

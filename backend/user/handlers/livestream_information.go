@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"sen1or/lets-live/user/domains"
-	servererrors "sen1or/lets-live/user/errors"
-	"sen1or/lets-live/user/services"
+	"sen1or/letslive/user/domains"
+	servererrors "sen1or/letslive/user/errors"
+	"sen1or/letslive/user/services"
 )
 
 type LivestreamInformationHandler struct {

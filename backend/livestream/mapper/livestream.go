@@ -1,8 +1,8 @@
 package mapper
 
 import (
-	"sen1or/lets-live/livestream/domains"
-	"sen1or/lets-live/livestream/dto"
+	"sen1or/letslive/livestream/domains"
+	"sen1or/letslive/livestream/dto"
 )
 
 func CreateLivestreamRequestDTOToLivestream(dto dto.CreateLivestreamRequestDTO) domains.Livestream {
