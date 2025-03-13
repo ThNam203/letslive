@@ -31,7 +31,7 @@ func (h *AuthHandler) setRefreshTokenCookie(w http.ResponseWriter, refreshToken 
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode, // use none for cross site cookie, im using different domains for fe and be
 	})
 }
 
@@ -44,7 +44,7 @@ func (h *AuthHandler) setAccessTokenCookie(w http.ResponseWriter, accessToken st
 		MaxAge:      maxAge,
 		HttpOnly:    true,
 		Secure:      true,
-		SameSite:    http.SameSiteLaxMode,
+		SameSite:    http.SameSiteNoneMode,
 		Partitioned: true,
 	})
 
