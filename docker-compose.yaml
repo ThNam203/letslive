@@ -1,12 +1,12 @@
 services:
-  #ui:
-  #  build:
-  #    context: ./ui
-  #    dockerfile: Dockerfile
-  #  container_name: letslive_ui
-  #  network_mode: "host"
-  #  ports:
-  #    - "5000:5000"
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    container_name: letslive_ui
+    network_mode: "host"
+    ports:
+      - "5000:5000"
 
   auth:
     image: sen1or/letslive-auth:latest

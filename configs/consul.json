@@ -1,5 +1,6 @@
 {
-	"service": {
+	"services": [
+	{
 		"name": "minio",
 		"id": "letslive_minio",
 		"address": "minio",
@@ -12,7 +13,7 @@
 			"timeout": "2s"
 		}
 	},
-	"service": {
+	{
 		"name": "configserver",
 		"id": "letslive_configserver",
 		"address": "http://configserver",
@@ -24,6 +25,6 @@
 			"interval": "10s",
 			"timeout": "2s"
 		}
-	},
+	}],
 	"recursors": ["127.0.0.11"]
 }
