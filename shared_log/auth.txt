@@ -1,3 +1,0 @@
-2025-03-14T04:20:55Z	info	currently executing path: /usr/local/bin
-2025-03-14T04:21:05Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
-2025-03-14T04:21:20Z	info	success api call	{"duration": 0, "method": "GET", "remote#addr": "172.18.0.9", "response#bytes": 0, "response#status": 200, "uri": "/v1/health"}
