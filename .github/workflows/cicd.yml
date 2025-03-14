@@ -55,6 +55,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Add access to remove old code # TODO: remove the generated folder dockervolume in transcode service
+        run: |
+          sudo chmod -R u+w /opt/actions-runner/_work/
+          sudo chown -R admin:docker /opt/actions-runner/_work/
+
       - name: Update Kong configuration
         run: |
           if [ -f "configs/kong.yml" ]; then
