@@ -65,6 +65,36 @@ services:
     volumes:
       - ./shared_log/user.txt:/usr/local/bin/log.txt
 
+  transcode:
+    image: sen1or/letslive-transcode:latest
+    #build:
+    #  context: ./backend/transcode/
+    #  dockerfile: Dockerfile
+    container_name: letslive_transcode
+    restart: always
+    ports:
+      - "1935:1935"
+      - "7779:7779" 
+      - "8889:8889" # expose the webserver
+    expose:
+      - "1935"
+      - "7779"
+      - "8889"
+    environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+    volumes:
+      - ./backend/transcode/dockervolume/private:/usr/src/app/private
+      - ./backend/transcode/dockervolume/public:/usr/src/app/public
+      - ./shared_log/transcode.txt:/usr/local/bin/log.txt
+
   livestream:
     image: sen1or/letslive-livestream:latest
     #build:
