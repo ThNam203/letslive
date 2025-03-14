@@ -22,7 +22,7 @@ func NewLivestreamInformationHandler(ctrl services.LivestreamInformationService,
 	}
 }
 
-func (h *LivestreamInformationHandler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWriter, r *http.Request) {
 	const maxUploadSize = 11 * 1024 * 1024 // for other information outside of image
 	userUUID, err := getUserIdFromCookie(r)
 	if err != nil {

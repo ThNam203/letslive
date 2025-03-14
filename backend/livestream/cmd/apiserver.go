@@ -69,24 +69,23 @@ func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 	//TODO: change to query livestreams
 	sm.HandleFunc("GET /v1/livestreams", a.livestreamHandler.GetLivestreamsOfUserPublicHandler)
-	sm.HandleFunc("GET /v1/livestreams/author", a.livestreamHandler.GetLivestreamsOfUserAuthorHandler)
+	sm.HandleFunc("GET /v1/livestreams/author", a.livestreamHandler.GetAllLivestreamsOfAuthorPrivateHandler)
 	sm.HandleFunc("GET /v1/livestreams/{livestreamId}", a.livestreamHandler.GetLivestreamByIdPublicHandler)
-	sm.HandleFunc("PATCH /v1/livestreams/{livestreamId}", a.livestreamHandler.UpdateLivestreamHandler)
-	sm.HandleFunc("DELETE /v1/livestreams/{livestreamId}", a.livestreamHandler.DeleteLivestreamHandler)
+	sm.HandleFunc("PATCH /v1/livestreams/{livestreamId}", a.livestreamHandler.UpdateLivestreamPrivateHandler)
+	sm.HandleFunc("DELETE /v1/livestreams/{livestreamId}", a.livestreamHandler.DeleteLivestreamPrivateHandler)
 
-	sm.HandleFunc("GET /v1/livestreamings", a.livestreamHandler.GetLivestreamingsHandler)
-	sm.HandleFunc("GET /v1/popular-vods", a.livestreamHandler.GetPopularVODs)
+	sm.HandleFunc("GET /v1/livestreamings", a.livestreamHandler.GetLivestreamingsPublicHandler)
+	sm.HandleFunc("GET /v1/popular-vods", a.livestreamHandler.GetPopularVODsPublicHandler)
 	sm.HandleFunc("GET /v1/is-streaming", a.livestreamHandler.CheckIsUserLivestreamingHandler)
 
 	sm.HandleFunc("PUT /v1/internal/livestreams/{livestreamId}", a.livestreamHandler.UpdateLivestreamInternalHandler)
 	sm.HandleFunc("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)
 
-	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
+	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyStateHandler)
 
 	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)
 
-	finalHandler := middlewares.CORSMiddleware(sm)
-	finalHandler = middlewares.LoggingMiddleware(a.logger, finalHandler)
+	finalHandler := middlewares.LoggingMiddleware(sm)
 
 	return finalHandler
 }

@@ -25,9 +25,6 @@ type APIServer struct {
 	userHandler                  *handlers.UserHandler
 	followHandler                *handlers.FollowHandler
 	livestreamInformationHandler *handlers.LivestreamInformationHandler
-
-	loggingMiddleware middlewares.Middleware
-	corsMiddleware    middlewares.Middleware
 }
 
 func NewAPIServer(userHandler *handlers.UserHandler, livestreamInfoHandler *handlers.LivestreamInformationHandler, followHandler *handlers.FollowHandler, cfg config.Config) *APIServer {
@@ -40,9 +37,6 @@ func NewAPIServer(userHandler *handlers.UserHandler, livestreamInfoHandler *hand
 		userHandler:                  userHandler,
 		followHandler:                followHandler,
 		livestreamInformationHandler: livestreamInfoHandler,
-
-		loggingMiddleware: middlewares.NewLoggingMiddleware(logger.Logger),
-		corsMiddleware:    middlewares.NewCORSMiddleware(),
 	}
 }
 
@@ -79,33 +73,31 @@ func (a *APIServer) getHandler() http.Handler {
 
 	sm.HandleFunc("POST /v1/upload-file", a.userHandler.UploadSingleFileToMinIOHandler) // TODO: find another way to upload file
 
-	sm.HandleFunc("GET /v1/users", a.userHandler.GetAllUsersHandler) // TODO: remove
-	sm.HandleFunc("GET /v1/users/search", a.userHandler.SearchUserHandler)
+	sm.HandleFunc("GET /v1/users", a.userHandler.GetAllUsersPublicHandler) // TODO: should change into get random users
+	sm.HandleFunc("GET /v1/users/search", a.userHandler.SearchUsersPublicHandler)
 
-	sm.HandleFunc("POST /v1/user/{userId}/follow", a.followHandler.FollowHandler)
-	sm.HandleFunc("DELETE /v1/user/{userId}/unfollow", a.followHandler.UnfollowHandler)
-	sm.HandleFunc("GET /v1/user/{userId}", a.userHandler.GetUserByIdHandler)
-	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUserHandler)                 // internal
+	sm.HandleFunc("POST /v1/user/{userId}/follow", a.followHandler.FollowPrivateHandler)
+	sm.HandleFunc("DELETE /v1/user/{userId}/unfollow", a.followHandler.UnfollowPrivateHandler)
+	sm.HandleFunc("GET /v1/user/{userId}", a.userHandler.GetUserByIdPublicHandler)
+	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUserInternalHandler)         // internal
 	sm.HandleFunc("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler) // internal
 
-	sm.HandleFunc("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyHandler) // internal
+	sm.HandleFunc("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler) // internal
 
-	sm.HandleFunc("GET /v1/user/me", a.userHandler.GetCurrentUserHandler)
-	sm.HandleFunc("PUT /v1/user/me", a.userHandler.UpdateCurrentUserHandler)
-	sm.HandleFunc("PATCH /v1/user/{userId}/set-verified", a.userHandler.SetUserVerifiedHandler) // internal
-	sm.HandleFunc("PATCH /v1/user/me/livestream-information", a.livestreamInformationHandler.Update)
-	sm.HandleFunc("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKeyHandler)
+	sm.HandleFunc("GET /v1/user/me", a.userHandler.GetCurrentUserPrivateHandler)
+	sm.HandleFunc("PUT /v1/user/me", a.userHandler.UpdateCurrentUserPrivateHandler)
+	sm.HandleFunc("PATCH /v1/user/{userId}/set-verified", a.userHandler.SetUserVerifiedInternalHandler) // internal
+	sm.HandleFunc("PATCH /v1/user/me/livestream-information", a.livestreamInformationHandler.UpdatePrivateHandler)
+	sm.HandleFunc("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKeyPrivateHandler)
 
 	// TODO: change this to not include the FormData
-	sm.HandleFunc("PATCH /v1/user/me/profile-picture", a.userHandler.UpdateUserProfilePictureHandler)
-	sm.HandleFunc("PATCH /v1/user/me/background-picture", a.userHandler.UpdateUserBackgroundPictureHandler)
+	sm.HandleFunc("PATCH /v1/user/me/profile-picture", a.userHandler.UpdateUserProfilePicturePrivateHandler)
+	sm.HandleFunc("PATCH /v1/user/me/background-picture", a.userHandler.UpdateUserBackgroundPicturePrivateHandler)
 
-	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
-
+	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyStateHandler)
 	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)
 
-	finalHandler := a.corsMiddleware.GetMiddleware(sm)
-	finalHandler = a.loggingMiddleware.GetMiddleware(finalHandler)
+	finalHandler := middlewares.LoggingMiddleware(sm)
 
 	return finalHandler
 }

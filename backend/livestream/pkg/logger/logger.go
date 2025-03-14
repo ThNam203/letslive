@@ -22,7 +22,8 @@ const (
 var Logger *zap.SugaredLogger
 
 // const dateTimeFormat = "[30/11/2024 17:30:24]"
-const LOG_FILE = "log.txt"
+const LOG_FOLDER = "logs"
+const LOG_FILE = "livestream_log.txt"
 
 func Init(level LogLevel) {
 	// configure log option
@@ -37,7 +38,8 @@ func Init(level LogLevel) {
 	if err != nil {
 		panic("failed to get the execute path")
 	}
-	logFile, err := os.OpenFile(filepath.Join(filepath.Dir(e), LOG_FILE), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+
+	logFile, err := os.OpenFile(filepath.Join(filepath.Dir(e), LOG_FOLDER, LOG_FILE), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		defer logFile.Close()
 		log.Panicf("failed to open log file: %s", err)
