@@ -57,8 +57,8 @@ jobs:
 
       - name: Add access to remove old code # TODO: remove the generated folder dockervolume in transcode service
         run: |
-          sudo chmod -R u+w /opt/actions-runner/_work/
-          sudo chown -R admin:docker /opt/actions-runner/_work/
+          sudo chmod -R u+w /home/admin/actions-runner/_work/
+          sudo chown -R admin:docker /home/admin/actions-runner/_work/
 
       - name: Update Kong configuration
         run: |
