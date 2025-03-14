@@ -42,42 +42,73 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.dockerfile.name }}:latest
 
-  #  deploy-to-ec2:
-  #    needs: build-and-push
-  #    runs-on: ubuntu-latest
-  #    steps:
-  #      - name: Checkout code
-  #        uses: actions/checkout@v3
-  #        
-  #      - name: Configure AWS credentials
-  #        uses: aws-actions/configure-aws-credentials@v1
-  #        with:
-  #          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #          aws-region: ${{ secrets.AWS_REGION }}
-  #          
-  #      - name: Copy docker-compose.yml to EC2
-  #        run: |
-  #          mkdir -p ~/.ssh
-  #          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key.pem
-  #          chmod 600 ~/.ssh/ec2_key.pem
-  #          scp -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no docker-compose.yml ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/docker-compose.yml
-  #          
-  #      - name: Deploy to EC2
-  #        run: |
-  #          ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} '
-  #            # Login to DockerHub
-  #            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-  #            
-  #            # Pull latest images
-  #            docker-compose pull
-  #            
-  #            # Stop and remove existing containers
-  #            docker-compose down
-  #            
-  #            # Start new containers
-  #            docker-compose up -d
-  #            
-  #            # Cleanup unused images
-  #            docker image prune -f
-  #          '
+deploy:
+    needs: build-and-push
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Update Kong configuration
+        run: |
+          if [ -f "configs/kong.yml" ]; then
+            sed -i 's/secret: "access_token_secret"/secret: "${{ secrets.ACCESS_TOKEN_SECRET }}"/g' configs/kong.yml
+            echo "Updated Kong configuration with access token secret"
+          else
+            echo "Warning: configs/kong.yml not found"
+          fi
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          # Environment and URLs
+          CLIENT_URL=${{ secrets.CLIENT_URL }}
+          GOOGLE_OAUTH_REDIRECT_URL=${{ secrets.GOOGLE_OAUTH_REDIRECT_URL }}
+
+          # OAuth credentials
+          GOOGLE_OAUTH_CLIENT_ID=${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+
+          # Authentication tokens
+          ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
+          REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
+
+          # Email service
+          GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}
+
+          # Service discovery and configuration
+          REGISTRY_SERVICE_ADDRESS=${{ secrets.REGISTRY_SERVICE_ADDRESS }}
+          CONFIG_SERVER_PROFILE=${{ secrets.CONFIG_SERVER_PROFILE }}
+
+          # Config server
+          CONFIGSERVER_GIT_URI=${{ secrets.CONFIGSERVER_GIT_URI }}
+          CONFIGSERVER_GIT_USERNAME=${{ secrets.CONFIGSERVER_GIT_USERNAME }}
+          CONFIGSERVER_GIT_PASSWORD=${{ secrets.CONFIGSERVER_GIT_PASSWORD }}
+
+          # Database credentials
+          CHAT_DB_USER=${{ secrets.CHAT_DB_USER }}
+          CHAT_DB_PASSWORD=${{ secrets.CHAT_DB_PASSWORD }}
+          LIVESTREAM_DB_USER=${{ secrets.LIVESTREAM_DB_USER }}
+          LIVESTREAM_DB_PASSWORD=${{ secrets.LIVESTREAM_DB_PASSWORD }}
+          USER_DB_USER=${{ secrets.USER_DB_USER }}
+          USER_DB_PASSWORD=${{ secrets.USER_DB_PASSWORD }}
+          AUTH_DB_USER=${{ secrets.AUTH_DB_USER }}
+          AUTH_DB_PASSWORD=${{ secrets.AUTH_DB_PASSWORD }}
+
+          # MinIO credentials
+          MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}
+          EOF
+
+      - name: Deploy with Docker Compose
+        run: |
+          docker compose pull
+          docker compose down
+          docker compose up -d
+          docker image prune -f

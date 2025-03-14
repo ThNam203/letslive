@@ -11,7 +11,7 @@ import (
 func StartMigration(connectionString string, migrationPath string) {
 	db, err := sql.Open("pgx", connectionString)
 	if err != nil {
-		panic(err)
+		logger.Panicf("failed to open connection to db (%s): %s", connectionString, err)
 	}
 
 	defer func() {

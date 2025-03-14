@@ -1,8 +1,18 @@
 services:
+  #ui:
+  #  build:
+  #    context: ./ui
+  #    dockerfile: Dockerfile
+  #  container_name: letslive_ui
+  #  network_mode: "host"
+  #  ports:
+  #    - "5000:5000"
+
   auth:
-    build:
-      context: ./backend/auth/
-      dockerfile: Dockerfile
+    image: sen1or/letslive-auth:latest
+    #build:
+    #  context: ./backend/auth/
+    #  dockerfile: Dockerfile
     container_name: letslive_auth
     ports:
       - "7777:7777"
@@ -28,6 +38,100 @@ services:
     volumes:
       - ./shared_log/auth.txt:/usr/local/bin/log.txt
 
+  user:
+    image: sen1or/letslive-user:latest
+    #build:
+    #  context: ./backend/user/
+    #  dockerfile: Dockerfile
+    container_name: letslive_user
+    ports:
+      - "7778:7778"
+    expose:
+      - "7778"
+    environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - USER_DB_USER=${USER_DB_USER}
+      - USER_DB_PASSWORD=${USER_DB_PASSWORD}
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+    volumes:
+      - ./shared_log/user.txt:/usr/local/bin/log.txt
+
+  livestream:
+    image: sen1or/letslive-livestream:latest
+    #build:
+    #  context: ./backend/livestream/
+    #  dockerfile: Dockerfile
+    container_name: letslive_livestream
+    ports:
+      - "7781:7781"
+    expose:
+      - "7781"
+    environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
+      - LIVESTREAM_DB_USER=${LIVESTREAM_DB_USER}
+      - LIVESTREAM_DB_PASSWORD=${LIVESTREAM_DB_PASSWORD}
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+    volumes:
+      - ./shared_log/livestream.txt:/usr/local/bin/log.txt
+
+  configserver:
+    image: sen1or/letslive-configserver:latest
+    #build:
+    #  context: ./backend/configserver
+    #  dockerfile: Dockerfile
+    container_name: letslive_configserver
+    ports:
+      - "8181:8181"
+    expose:
+      - "8181"
+    environment:
+      - CONFIGSERVER_GIT_URI=${CONFIGSERVER_GIT_URI}
+      - CONFIGSERVER_GIT_USERNAME=${CONFIGSERVER_GIT_USERNAME}
+      - CONFIGSERVER_GIT_PASSWORD=${CONFIGSERVER_GIT_PASSWORD}
+    networks:
+      general_network:
+    healthcheck:
+      test: "curl --fail --silent localhost:8181/actuator/health | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chat:
+    #image: sen1or/letslive-chat:latest
+    build:
+      context: ./backend/chat/
+      dockerfile: Dockerfile
+    container_name: letslive_chat
+    command: npm run start
+    ports:
+      - "7780:7780"
+    networks:
+      general_network:
+    environment:
+      - CHAT_DB_USER=${CHAT_DB_USER}
+      - CHAT_DB_PASSWORD=${CHAT_DB_PASSWORD}
+    depends_on:
+      consul:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+      chat_pubsub:
+        condition: service_healthy
+      chat_db:
+        condition: service_healthy
+
   auth_db:
     image: postgres:16.3
     container_name: letslive_auth_db
@@ -50,30 +154,6 @@ services:
       interval: 5s
       timeout: 10s
       retries: 5
-
-  user:
-    build:
-      context: ./backend/user/
-      dockerfile: Dockerfile
-    container_name: letslive_user
-    ports:
-      - "7778:7778"
-    expose:
-      - "7778"
-    environment:
-      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
-      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - USER_DB_USER=${USER_DB_USER}
-      - USER_DB_PASSWORD=${USER_DB_PASSWORD}
-    networks:
-      general_network:
-    depends_on:
-      consul:
-        condition: service_healthy
-    volumes:
-      - ./shared_log/user.txt:/usr/local/bin/log.txt
 
   user_db:
     image: postgres:16.3
@@ -98,28 +178,6 @@ services:
       timeout: 10s
       retries: 5
 
-  livestream:
-    build:
-      context: ./backend/livestream/
-      dockerfile: Dockerfile
-    container_name: letslive_livestream
-    ports:
-      - "7781:7781"
-    expose:
-      - "7781"
-    environment:
-      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
-      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
-      - LIVESTREAM_DB_USER=${LIVESTREAM_DB_USER}
-      - LIVESTREAM_DB_PASSWORD=${LIVESTREAM_DB_PASSWORD}
-    networks:
-      general_network:
-    depends_on:
-      consul:
-        condition: service_healthy
-    volumes:
-      - ./shared_log/livestream.txt:/usr/local/bin/log.txt
-
   livestream_db:
     image: postgres:16.3
     container_name: letslive_livestream_db
@@ -143,87 +201,6 @@ services:
       timeout: 10s
       retries: 5
 
-  transcode:
-    build:
-      context: ./backend/transcode/
-      dockerfile: Dockerfile
-    container_name: letslive_transcode
-    ports:
-      - "1935:1935"
-      - "7779:7779" 
-      - "8889:8889" # expose the webserver
-    expose:
-      - "1935"
-      - "7779"
-      - "8889"
-    environment:
-      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
-      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-    networks:
-      general_network:
-    depends_on:
-      consul:
-        condition: service_healthy
-    volumes:
-      - ./backend/transcode/dockervolume/private:/usr/src/app/private
-      - ./backend/transcode/dockervolume/public:/usr/src/app/public
-      - ./shared_log/transcode.txt:/usr/local/bin/log.txt
-
-  #ui:
-  #  build:
-  #    context: ./ui
-  #    dockerfile: Dockerfile
-  #  container_name: letslive_ui
-  #  network_mode: "host"
-  #  ports:
-  #    - "5000:5000"
-
-  configserver:
-    build:
-      context: ./backend/configserver
-      dockerfile: Dockerfile
-    container_name: letslive_configserver
-    ports:
-      - "8181:8181"
-    expose:
-      - "8181"
-    environment:
-      - CONFIGSERVER_GIT_URI=${CONFIGSERVER_GIT_URI}
-      - CONFIGSERVER_GIT_USERNAME=${CONFIGSERVER_GIT_USERNAME}
-      - CONFIGSERVER_GIT_PASSWORD=${CONFIGSERVER_GIT_PASSWORD}
-    networks:
-      general_network:
-    healthcheck:
-      test: "curl --fail --silent localhost:8181/actuator/health | grep UP || exit 1"
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  chat:
-    build:
-      context: ./backend/chat/
-      dockerfile: Dockerfile
-    container_name: letslive_chat
-    command: npm run start
-    ports:
-      - "7780:7780"
-    networks:
-      general_network:
-    environment:
-      - CHAT_DB_USER=${CHAT_DB_USER}
-      - CHAT_DB_PASSWORD=${CHAT_DB_PASSWORD}
-    depends_on:
-      consul:
-        condition: service_healthy
-      configserver:
-        condition: service_healthy
-      chat_pubsub:
-        condition: service_healthy
-      chat_db:
-        condition: service_healthy
-
   chat_pubsub:
     image: redis:7.4.2-alpine
     restart: always
@@ -244,6 +221,8 @@ services:
     command: mongod --quiet --logpath /dev/null
     ports:
       - 9993:27017
+    expose:
+      - "27017"
     environment:
       - MONGO_INITDB_DATABASE=chat
       - MONGO_INITDB_ROOT_USERNAME=${CHAT_DB_USER}
