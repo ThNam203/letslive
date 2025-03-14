@@ -154,7 +154,7 @@ consumers:
       - key: "authenticated users"
     jwt_secrets:
       - key: "authenticated users"
-        secret: "access_token_secret"
+        secret: "access_token_secret" ## note to myself: keep it access_token_secret, I use it to replace with real secret
         algorithm: "HS256"
 
 plugins:
@@ -185,7 +185,7 @@ plugins:
     enabled: true
     config:
       origins: ["*"]
-      headers: ["Content-Type", "Authorization", "Cache", "Accept", "Cache-Control", "X-Requested-With"]
+      headers: ["Content-Type", "Authorization", "Cache", "Accept", "Cache-Control", "X-Requested-With", "Set-Cookie"]
       exposed_headers: ["Sec-WebSocket-Accept", "Upgrade", "Connection"]
       credentials: true
       max_age: 3600

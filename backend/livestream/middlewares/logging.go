@@ -3,9 +3,8 @@ package middlewares
 import (
 	"net"
 	"net/http"
+	"sen1or/letslive/livestream/pkg/logger"
 	"time"
-
-	"go.uber.org/zap"
 )
 
 type loggingResponseWriter struct {
@@ -29,7 +28,7 @@ func (lrw *loggingResponseWriter) WriteHeader(statusCode int) {
 	lrw.statusCode = statusCode
 }
 
-func LoggingMiddleware(logger *zap.SugaredLogger, next http.Handler) http.Handler {
+func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		timeStart := time.Now()
 		lrw := &loggingResponseWriter{w: w}

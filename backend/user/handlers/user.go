@@ -26,7 +26,7 @@ func NewUserHandler(userService services.UserService) *UserHandler {
 	}
 }
 
-func (h *UserHandler) GetUserByIdHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) GetUserByIdPublicHandler(w http.ResponseWriter, r *http.Request) {
 	authenticatedUserId, _ := getUserIdFromCookie(r)
 	userId := r.PathValue("userId")
 	if len(userId) == 0 {
@@ -51,7 +51,7 @@ func (h *UserHandler) GetUserByIdHandler(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(user)
 }
 
-func (h *UserHandler) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) GetAllUsersPublicHandler(w http.ResponseWriter, r *http.Request) {
 	page, err := strconv.Atoi(r.URL.Query().Get("page"))
 
 	if err != nil || page < 0 {
@@ -70,7 +70,7 @@ func (h *UserHandler) GetAllUsersHandler(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(users)
 }
 
-func (h *UserHandler) SearchUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) SearchUsersPublicHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.URL.Query().Get("username")
 
 	users, err := h.userService.SearchUserByUsername(username)
@@ -84,7 +84,7 @@ func (h *UserHandler) SearchUserHandler(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(users)
 }
 
-func (h *UserHandler) GetUserByStreamAPIKeyHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) GetUserByStreamAPIKeyInternalHandler(w http.ResponseWriter, r *http.Request) {
 	streamAPIKeyString := r.URL.Query().Get("streamAPIKey")
 	if len(streamAPIKeyString) == 0 {
 		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
@@ -104,7 +104,7 @@ func (h *UserHandler) GetUserByStreamAPIKeyHandler(w http.ResponseWriter, r *htt
 	json.NewEncoder(w).Encode(user)
 }
 
-func (h *UserHandler) GetCurrentUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) GetCurrentUserPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
 		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
@@ -122,7 +122,7 @@ func (h *UserHandler) GetCurrentUserHandler(w http.ResponseWriter, r *http.Reque
 }
 
 // INTERNAL
-func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) CreateUserInternalHandler(w http.ResponseWriter, r *http.Request) {
 	var body dto.CreateUserRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		h.WriteErrorResponse(w, servererrors.ErrInvalidPayload)
@@ -141,7 +141,7 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 // INTERNAL
-func (h *UserHandler) SetUserVerifiedHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) SetUserVerifiedInternalHandler(w http.ResponseWriter, r *http.Request) {
 	userId := r.PathValue("userId")
 	if len(userId) == 0 {
 		h.WriteErrorResponse(w, servererrors.ErrInvalidInput)
@@ -162,7 +162,7 @@ func (h *UserHandler) SetUserVerifiedHandler(w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *UserHandler) UpdateCurrentUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) UpdateCurrentUserPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
 		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
@@ -188,7 +188,7 @@ func (h *UserHandler) UpdateCurrentUserHandler(w http.ResponseWriter, r *http.Re
 	json.NewEncoder(w).Encode(updatedUser)
 }
 
-func (h *UserHandler) GenerateNewAPIStreamKeyHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) GenerateNewAPIStreamKeyPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
 		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
@@ -207,7 +207,7 @@ func (h *UserHandler) GenerateNewAPIStreamKeyHandler(w http.ResponseWriter, r *h
 	w.Write([]byte(newKey))
 }
 
-func (h *UserHandler) UpdateUserProfilePictureHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWriter, r *http.Request) {
 	const maxUploadSize = 10 * 1024 * 1024
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
@@ -246,7 +246,7 @@ func (h *UserHandler) UpdateUserProfilePictureHandler(w http.ResponseWriter, r *
 	w.Write([]byte(savedPath))
 }
 
-func (h *UserHandler) UpdateUserBackgroundPictureHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseWriter, r *http.Request) {
 	const maxUploadSize = 10 * 1024 * 1024
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {

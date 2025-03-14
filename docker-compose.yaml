@@ -15,10 +15,10 @@ services:
   #    - NEXT_PUBLIC_ENVIRONMENT=${NEXT_PUBLIC_ENVIRONMENT}
 
   auth:
-    image: sen1or/letslive-auth:latest
-    #build:
-    #  context: ./backend/auth/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-auth:latest
+    build:
+      context: ./backend/auth/
+      dockerfile: Dockerfile
     restart: always
     container_name: letslive_auth
     ports:
@@ -43,13 +43,13 @@ services:
       consul:
         condition: service_healthy
     volumes:
-      - ./shared_log/auth.txt:/usr/local/bin/log.txt
+      - /var/log/letslive:/usr/local/bin/logs
 
   user:
-    image: sen1or/letslive-user:latest
-    #build:
-    #  context: ./backend/user/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-user:latest
+    build:
+      context: ./backend/user/
+      dockerfile: Dockerfile
     container_name: letslive_user
     restart: always
     ports:
@@ -69,13 +69,13 @@ services:
       consul:
         condition: service_healthy
     volumes:
-      - ./shared_log/user.txt:/usr/local/bin/log.txt
+      - /var/log/letslive:/usr/local/bin/logs
 
   transcode:
-    image: sen1or/letslive-transcode:latest
-    #build:
-    #  context: ./backend/transcode/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-transcode:latest
+    build:
+      context: ./backend/transcode/
+      dockerfile: Dockerfile
     container_name: letslive_transcode
     restart: always
     ports:
@@ -99,13 +99,13 @@ services:
     volumes:
       - ./backend/transcode/dockervolume/private:/usr/src/app/private
       - ./backend/transcode/dockervolume/public:/usr/src/app/public
-      - ./shared_log/transcode.txt:/usr/local/bin/log.txt
+      - /var/log/letslive:/usr/local/bin/logs
 
   livestream:
-    image: sen1or/letslive-livestream:latest
-    #build:
-    #  context: ./backend/livestream/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-livestream:latest
+    build:
+      context: ./backend/livestream/
+      dockerfile: Dockerfile
     container_name: letslive_livestream
     restart: always
     ports:
@@ -123,7 +123,7 @@ services:
       consul:
         condition: service_healthy
     volumes:
-      - ./shared_log/livestream.txt:/usr/local/bin/log.txt
+      - /var/log/letslive:/usr/local/bin/logs
 
   configserver:
     image: sen1or/letslive-configserver:latest
@@ -149,10 +149,10 @@ services:
       retries: 5
 
   chat:
-    image: sen1or/letslive-chat:latest
-    #build:
-    #  context: ./backend/chat/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-chat:latest
+    build:
+      context: ./backend/chat/
+      dockerfile: Dockerfile
     container_name: letslive_chat
     command: npm run start
     restart: always

@@ -8,6 +8,6 @@ func NewHeathHandler() *HealthHandler {
 	return &HealthHandler{}
 }
 
-func (h *HealthHandler) GetHealthyState(w http.ResponseWriter, r *http.Request) {
+func (h *HealthHandler) GetHealthyStateHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
