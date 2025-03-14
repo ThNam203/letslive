@@ -42,7 +42,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.dockerfile.name }}:latest
 
-deploy:
+  deploy:
     needs: build-and-push
     runs-on: self-hosted
     steps:
