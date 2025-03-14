@@ -13,6 +13,7 @@ services:
     #build:
     #  context: ./backend/auth/
     #  dockerfile: Dockerfile
+    restart: always
     container_name: letslive_auth
     ports:
       - "7777:7777"
@@ -44,6 +45,7 @@ services:
     #  context: ./backend/user/
     #  dockerfile: Dockerfile
     container_name: letslive_user
+    restart: always
     ports:
       - "7778:7778"
     expose:
@@ -69,6 +71,7 @@ services:
     #  context: ./backend/livestream/
     #  dockerfile: Dockerfile
     container_name: letslive_livestream
+    restart: always
     ports:
       - "7781:7781"
     expose:
@@ -92,6 +95,7 @@ services:
     #  context: ./backend/configserver
     #  dockerfile: Dockerfile
     container_name: letslive_configserver
+    restart: always
     ports:
       - "8181:8181"
     expose:
@@ -115,6 +119,7 @@ services:
     #  dockerfile: Dockerfile
     container_name: letslive_chat
     command: npm run start
+    restart: always
     ports:
       - "7780:7780"
     networks:
@@ -244,6 +249,7 @@ services:
     expose:
       - "8500"
       - "8600"
+    restart: always
     command: agent -dev -client=0.0.0.0 -log-level=warn -enable-script-checks -bootstrap-expect=1 -config-dir=/consul/config
     volumes:
       - ./configs/consul.json:/consul/config/consul.json
@@ -307,6 +313,7 @@ services:
     image: quay.io/minio/minio:latest
     command: server --console-address ":9090" /mnt/data
     container_name: letslive_minio
+    restart: always
     ports:
       - "9000:9000"
       - "9090:9090"
