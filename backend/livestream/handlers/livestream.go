@@ -67,7 +67,7 @@ func (h *LivestreamHandler) GetLivestreamByIdPublicHandler(w http.ResponseWriter
 	json.NewEncoder(w).Encode(livestream)
 }
 
-func (h *LivestreamHandler) CheckIsUserLivestreamingHandler(w http.ResponseWriter, r *http.Request) {
+func (h *LivestreamHandler) CheckIsUserLivestreamingPublicHandler(w http.ResponseWriter, r *http.Request) {
 	userId := r.URL.Query().Get("userId")
 	if len(userId) == 0 {
 		h.WriteErrorResponse(w, servererrors.ErrInvalidPath)

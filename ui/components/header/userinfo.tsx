@@ -12,6 +12,7 @@ import { Logout } from "../../lib/api/auth";
 import { FetchError } from "../../types/fetch-error";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export default function UserInfo() {
     const userState = useUser();
@@ -34,18 +35,18 @@ export default function UserInfo() {
     useEffect(() => {
         const fetchUser = async () => {
             userState.fetchUser().catch((e) => {
-                if (e instanceof FetchError && e.isClientError) {
-                    toast(e.message, {
-                        toastId: "fetch-user-error",
-                        type: "error",
-                    });
-                    router.push("/login");
-                } else {
-                    toast("An unknown error occurred", {
-                        toastId: "fetch-user-error",
-                        type: "error",
-                    });
-                }
+                // if (e instanceof FetchError && e.isClientError) {
+                //     toast(e.message, {
+                //         toastId: "fetch-user-error",
+                //         type: "error",
+                //     });
+                //     router.push("/login");
+                // } else {
+                //     toast("An unknown error occurred", {
+                //         toastId: "fetch-user-error",
+                //         type: "error",
+                //     });
+                // }
             });
         };
 
@@ -62,16 +63,15 @@ export default function UserInfo() {
 
             <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger>
-                    <Image
-                        src={
-                            userState.user.profilePicture ??
-                            "https://github.com/shadcn.png"
-                        }
-                        alt="avatar"
-                        width={32}
-                        height={32}
-                        className="rounded-full"
-                    />
+                    <Avatar>
+                        <AvatarImage
+                            src={userState.user.profilePicture ?? "https://github.com/shadcn.png"}
+                            alt="avatar"
+                        />
+                        <AvatarFallback>
+                            {userState.user.username.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
                 </PopoverTrigger>
                 <PopoverContent className="w-60 mr-4">
                     <div className="pb-2 px-2 bg-white rounded-md shadow-primaryShadow flex flex-col gap-2">

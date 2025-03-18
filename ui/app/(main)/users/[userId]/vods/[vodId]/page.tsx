@@ -112,6 +112,7 @@ export default function VODPage() {
                             user={user}
                             updateUser={updateUser}
                             vods={vods.filter((v) => v.id !== params.vodId)}
+                            showRecentActivity={false}
                         />
                     )}
                 </div>

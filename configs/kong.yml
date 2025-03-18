@@ -15,6 +15,8 @@ services:
           - https
         paths:
           - /users
+          - /users/search
+          - ~/user/[^/]+$ # same as /user/{userId}
         strip_path: false
         preserve_host: false
         https_redirect_status_code: 426
@@ -26,39 +28,39 @@ services:
           - https
         paths:
           - /user
+          - /upload-file # TODO: change this to other services?
         strip_path: false
         preserve_host: false
         https_redirect_status_code: 426
         request_buffering: true
         response_buffering: true
-      - name: Upload_File # TODO: change this to other services?
-        protocols:
-          - http
-          - https
-        paths:
-          - /upload-file
-        strip_path: false
-        preserve_host: false
-        https_redirect_status_code: 426
-        request_buffering: true
-        response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: true
 
   - name: Auth
     host: auth.service.consul
     port: 7777
-    path: /v1/auth
+    path: /v1
     retries: 5
     connect_timeout: 60000
     read_timeout: 60000
     write_timeout: 60000
     routes:
-      - name: Auth_Routes
+      - name: Auth_Public_Routes
         protocols:
           - http
           - https
         paths:
           - /auth
-        strip_path: true
+        strip_path: false
         preserve_host: false
         https_redirect_status_code: 426
         request_buffering: true
@@ -73,13 +75,34 @@ services:
     read_timeout: 60000
     write_timeout: 60000
     routes:
-      - name: Livestream_Routes
+      - name: Livestream_Private_Routes
+        paths:
+          - ~/livestreams/[^/]+$
+        methods:
+          - PUT
+          - DELETE
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: true
+      - name: Livestream_Public_Routes
         protocols:
           - http
           - https
         paths:
-          - /livestream
           - /livestreams
+          - ~/livestreams/[^/]+$
           - /livestreamings
           - /popular-vods
           - /is-streaming
@@ -104,6 +127,16 @@ services:
         protocols:
           - http
           - https
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: true
       - name: Chat_Messages
         protocols:
           - http
@@ -158,29 +191,6 @@ consumers:
         algorithm: "HS256"
 
 plugins:
-  - name: jwt
-    enabled: true
-    config:
-      claims_to_verify:
-        - exp
-      cookie_names:
-        - ACCESS_TOKEN
-      key_claim_name: consumer
-      run_on_preflight: true
-    service: User
-  - name: jwt
-    enabled: true
-    config:
-      claims_to_verify:
-        - exp
-      uri_param_names:
-        - token
-      cookie_names:
-        - ACCESS_TOKEN
-      key_claim_name: consumer
-      run_on_preflight: true
-    service: Chat
-
   - name: cors
     enabled: true
     config:

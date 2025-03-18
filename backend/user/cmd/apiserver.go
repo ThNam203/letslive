@@ -75,24 +75,22 @@ func (a *APIServer) getHandler() http.Handler {
 
 	sm.HandleFunc("GET /v1/users", a.userHandler.GetAllUsersPublicHandler) // TODO: should change into get random users
 	sm.HandleFunc("GET /v1/users/search", a.userHandler.SearchUsersPublicHandler)
+	sm.HandleFunc("GET /v1/user/{userId}", a.userHandler.GetUserByIdPublicHandler)
 
 	sm.HandleFunc("POST /v1/user/{userId}/follow", a.followHandler.FollowPrivateHandler)
 	sm.HandleFunc("DELETE /v1/user/{userId}/unfollow", a.followHandler.UnfollowPrivateHandler)
-	sm.HandleFunc("GET /v1/user/{userId}", a.userHandler.GetUserByIdPublicHandler)
-	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUserInternalHandler)         // internal
-	sm.HandleFunc("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler) // internal
-
-	sm.HandleFunc("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler) // internal
-
 	sm.HandleFunc("GET /v1/user/me", a.userHandler.GetCurrentUserPrivateHandler)
 	sm.HandleFunc("PUT /v1/user/me", a.userHandler.UpdateCurrentUserPrivateHandler)
-	sm.HandleFunc("PATCH /v1/user/{userId}/set-verified", a.userHandler.SetUserVerifiedInternalHandler) // internal
 	sm.HandleFunc("PATCH /v1/user/me/livestream-information", a.livestreamInformationHandler.UpdatePrivateHandler)
 	sm.HandleFunc("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKeyPrivateHandler)
-
 	// TODO: change this to not include the FormData
 	sm.HandleFunc("PATCH /v1/user/me/profile-picture", a.userHandler.UpdateUserProfilePicturePrivateHandler)
 	sm.HandleFunc("PATCH /v1/user/me/background-picture", a.userHandler.UpdateUserBackgroundPicturePrivateHandler)
+
+	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUserInternalHandler)                             // internal
+	sm.HandleFunc("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                     // internal
+	sm.HandleFunc("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler)      // internal
+	sm.HandleFunc("PATCH /v1/user/{userId}/set-verified", a.userHandler.SetUserVerifiedInternalHandler) // internal
 
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyStateHandler)
 	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)
