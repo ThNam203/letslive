@@ -105,10 +105,10 @@ export default function Livestreaming() {
 
     return (
         <div className="overflow-y-auto h-full flex lg:flex-row max-lg:flex-col mt-2">
-            <div className="w-[1200px] min-w-[1200px]">
+            <div className="w-[910px]">
                 {isStreaming ? (
                     <>
-                        <div className="w-full h-[675px] bg-black mb-4 rounded-sm">
+                        <div className="w-full aspect-video bg-black mb-4 rounded-sm">
                             <StreamingFrame
                                 videoInfo={playerInfo}
                                 onVideoStart={() => {
@@ -132,7 +132,7 @@ export default function Livestreaming() {
                         </div> */}
                     </>
                 ) : (
-                    <div className="w-full h-[675px] mb-4 bg-black flex items-center justify-center bg-opacity-9 0">
+                    <div className="w-full aspect-video mb-4 bg-black flex items-center justify-center bg-opacity-9 0">
                         <h2 className="text-gray-400 text-3xl font-mono ">
                             The user is currently offline.
                         </h2>
@@ -141,7 +141,7 @@ export default function Livestreaming() {
 
                 {user && <ProfileView user={user} updateUser={updateUser} vods={vods.filter(vod => vod.status !== "live")} />}
             </div>
-            <div className="w-[400px] mx-4 fixed right-0 top-12 bottom-4">
+            <div className="w-[300px] mx-4 fixed right-0 top-12 bottom-4">
                 <ChatUI roomId={params.userId} />
             </div>
         </div>

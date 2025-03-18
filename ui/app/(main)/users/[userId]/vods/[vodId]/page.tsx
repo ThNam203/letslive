@@ -101,10 +101,10 @@ export default function VODPage() {
     }, [params.userId]);
 
     return (
-        <div className="overflow-y-auto h-full">
+        <div className="overflow-y-auto h-full mt-2">
             <div className="flex lg:flex-row max-lg:flex-col">
-                <div className="w-[1200px] min-w-[1200px]">
-                    <div className="w-full h-[675px] bg-black mb-4">
+                <div className="w-[910px]">
+                    <div className="w-full aspect-video bg-black mb-4">
                         <VODFrame videoInfo={playerInfo} />
                     </div>
                     {user && (
@@ -117,7 +117,7 @@ export default function VODPage() {
                     )}
                 </div>
 
-                <div className="w-[400px] mx-4 fixed right-0 top-14 bottom-4 overflow-hidden">
+                <div className="w-[300px] mx-4 fixed right-0 top-14 bottom-4 overflow-hidden">
                     <div className="w-full h-full font-sans border border-gray-200 rounded-md bg-gray-50 p-4">
                         <h2 className="text-xl mb-4 font-semibold">
                             Other streams

@@ -32,12 +32,14 @@ const LivestreamsPreviewView = () => {
 
     return (
         <div className="flex flex-col gap-2 pr-2">
-            {livestreamings.slice(0, limitView).map((livestream, idx) => (
-                <LivestreamPreviewView
-                    key={idx}
-                    livestream={livestream}
-                />
-            ))}
+            <div className="flex flex-wrap gap-4">
+                {livestreamings.slice(0, limitView).map((livestream, idx) => (
+                    <LivestreamPreviewView
+                        key={idx}
+                        livestream={livestream}
+                    />
+                ))}
+            </div>
             {livestreamings.length > limitView && (
                 <StreamsSeparator
                     onClick={() => setLimitView((prev) => prev + 8)}
@@ -45,14 +47,14 @@ const LivestreamsPreviewView = () => {
             )}
             {livestreamings.length == 0 && (
                 <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                <div className="bg-muted/30 p-6 rounded-full mb-6">
-                  <Play className="h-12 w-12 text-muted-foreground" />
+                    <div className="bg-muted/30 p-6 rounded-full mb-6">
+                        <Play className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                    <h2 className="text-2xl font-semibold mb-2">No Live Streams</h2>
+                    <p className="text-muted-foreground max-w-md">
+                        There is currently no one streaming. Check back later or explore our video on demand content.
+                    </p>
                 </div>
-                <h2 className="text-2xl font-semibold mb-2">No Live Streams</h2>
-                <p className="text-muted-foreground max-w-md">
-                  There is currently no one streaming. Check back later or explore our video on demand content.
-                </p>
-              </div>
             )}
         </div>
     );
