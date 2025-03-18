@@ -1,6 +1,6 @@
 import { FetchError } from "../../types/fetch-error";
-import { User } from "../../types/user";
 import { fetchClient } from "../../utils/fetchClient";
+import jwt from "jsonwebtoken";
 
 
 export async function SignUp(body: {
@@ -9,7 +9,7 @@ export async function SignUp(body: {
     password: string;
 }): Promise<{ fetchError?: FetchError }> {
     try {
-        await fetchClient<User>("/auth/signup", {
+        await fetchClient<void>("/auth/signup", {
             method: "POST",
             body: JSON.stringify({
                 email: body.email,
@@ -17,7 +17,8 @@ export async function SignUp(body: {
                 password: body.password,
             }),
         });
-        return {};
+     
+        return {}
     } catch (error) {
         return { fetchError: error as FetchError };
     }
