@@ -7,6 +7,12 @@ services:
   #  network_mode: "host"
   #  ports:
   #    - "5000:5000"
+  #  environment:
+  #    - NEXT_PUBLIC_BACKEND_PROTOCOL=${NEXT_PUBLIC_BACKEND_PROTOCOL}
+  #    - NEXT_PUBLIC_BACKEND_IP_ADDRESS=${NEXT_PUBLIC_BACKEND_IP_ADDRESS}
+  #    - NEXT_PUBLIC_BACKEND_WS_PROTOCOL=${NEXT_PUBLIC_BACKEND_WS_PROTOCOL}
+  #    - NEXT_PUBLIC_BACKEND_PORT=${NEXT_PUBLIC_BACKEND_PORT}
+  #    - NEXT_PUBLIC_ENVIRONMENT=${NEXT_PUBLIC_ENVIRONMENT}
 
   auth:
     image: sen1or/letslive-auth:latest
@@ -37,7 +43,7 @@ services:
       consul:
         condition: service_healthy
     volumes:
-      - ./shared_log/auth.txt:/usr/local/bin/log.txt
+      - /var/log/letslive:/usr/local/bin/logs
 
   user:
     image: sen1or/letslive-user:latest
@@ -63,7 +69,37 @@ services:
       consul:
         condition: service_healthy
     volumes:
-      - ./shared_log/user.txt:/usr/local/bin/log.txt
+      - /var/log/letslive:/usr/local/bin/logs
+
+  transcode:
+    image: sen1or/letslive-transcode:latest
+    #build:
+    #  context: ./backend/transcode/
+    #  dockerfile: Dockerfile
+    container_name: letslive_transcode
+    restart: always
+    ports:
+      - "1935:1935"
+      - "7779:7779" 
+      - "8889:8889" # expose the webserver
+    expose:
+      - "1935"
+      - "7779"
+      - "8889"
+    environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+    volumes:
+      - /var/lib/letslive/private:/usr/src/app/private
+      - /var/lib/letslive/public:/usr/src/app/public
+      - /var/log/letslive:/usr/local/bin/logs
 
   livestream:
     image: sen1or/letslive-livestream:latest
@@ -87,7 +123,7 @@ services:
       consul:
         condition: service_healthy
     volumes:
-      - ./shared_log/livestream.txt:/usr/local/bin/log.txt
+      - /var/log/letslive:/usr/local/bin/logs
 
   configserver:
     image: sen1or/letslive-configserver:latest

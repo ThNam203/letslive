@@ -14,6 +14,7 @@ import { GetUserById } from "../../lib/api/user";
 import { datediffFromNow, formatSeconds } from "../../utils/timeFormats";
 import { useRouter } from "next/navigation";
 import { CardHeader } from "@mui/material";
+import GLOBAL from "../../global";
 
 export function PopularVODView() {
     const [isLoading, setIsLoading] = useState(false);
@@ -90,25 +91,16 @@ function VODCard({ vod }: { vod: Livestream }) {
                         {formatSeconds(vod.duration)}
                     </Badge>
                 </div>
-                {vod.thumbnailUrl ? (
-                    <Image
-                        src={vod.thumbnailUrl}
-                        alt={vod.title}
-                        className="w-full h-full hover:cursor-pointer"
-                        width={500}
-                        height={500}
-                        onClick={() =>
-                            router.push(`/users/${vod.userId}/vods/${vod.id}`)
-                        }
-                    />
-                ) : (
-                    <div
-                        className="w-full h-full bg-gray-300 hover:cursor-pointer"
-                        onClick={() =>
-                            router.push(`/users/${vod.userId}/vods/${vod.id}`)
-                        }
-                    />
-                )}
+                <Image
+                    src={vod.thumbnailUrl ?? `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`}
+                    alt={vod.title}
+                    className="w-full h-full hover:cursor-pointer"
+                    width={500}
+                    height={500}
+                    onClick={() =>
+                        router.push(`/users/${vod.userId}/vods/${vod.id}`)
+                    }
+                />
             </div>
             <CardContent className="p-4">
                 <div className="flex items-start gap-3">

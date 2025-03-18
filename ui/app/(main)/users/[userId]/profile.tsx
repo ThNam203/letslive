@@ -13,10 +13,12 @@ export default function ProfileView({
     user,
     vods,
     updateUser,
+    showRecentActivity = true
 }: {
     user: User;
     vods: Livestream[];
     updateUser: (newUserInfo: User) => void;
+    showRecentActivity?: boolean;
 }) {
     return (
         <div>
@@ -71,7 +73,8 @@ export default function ProfileView({
                 </div>
 
                 {/* Recent Activity */}
-                {vods.length > 0 && (
+                {showRecentActivity ? 
+                vods.length > 0 && (
                     <div className="mt-4">
                         <h2 className="text-xl font-semibold text-gray-900 mb-4">
                             Recent Streams
@@ -83,7 +86,8 @@ export default function ProfileView({
                             })}
                         </div>
                     </div>
-                )}
+                )
+            : null}
             </div>
         </div>
     );
