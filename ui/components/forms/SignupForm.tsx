@@ -82,7 +82,8 @@ export default function SignUpForm() {
                 toast.error(fetchError.message);
             } else {
                 toast.success("Account created successfully");
-                router.push("/")
+                // router.push("/")
+                window.location.href = '/'; // force a full page reload (which hopefully doing some magic on cookies)
             }
         }
         setIsLoading(false);
