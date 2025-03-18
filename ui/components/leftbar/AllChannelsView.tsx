@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import useUser from "../../hooks/user";
 import { User } from "../../types/user";
 import { GetAllUsers } from "../../lib/api/user";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export default function AllChannelsView() {
     const curUser = useUser(state => state.user);
@@ -16,9 +17,9 @@ export default function AllChannelsView() {
             const { users, fetchError } = await GetAllUsers();
 
             if (fetchError != undefined) {
-                toast.error(fetchError.message, {
-                    toastId: "all-channels-fetch-error",
-                });
+                // toast.error(fetchError.message, {
+                //     toastId: "all-channels-fetch-error",
+                // });
             } else {
                 setUsers(users ?? []);
             }
@@ -38,16 +39,19 @@ export default function AllChannelsView() {
                     href={`/users/${user.id}`}
                     className="flex flex-row items-center gap-2 hover:bg-gray-300 rounded-full w-full"
                 >
-                    <Image
-                        alt="channel avatar"
-                        src={user.profilePicture ?? "https://github.com/shadcn.png"}
-                        width={40}
-                        height={40}
-                        className="bg-black rounded-full max-h-[40px] max-w-[40px]"
-                    />
+                    <Avatar>
+                        <AvatarImage
+                            src={user.profilePicture ?? "https://github.com/shadcn.png"}
+                            alt="avatar"
+                            className="bg-black rounded-full max-h-[40px] max-w-[40px]"
+                        />
+                        <AvatarFallback>
+                            {user.username.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
                     <span className="text-sm font-semibold">{user.displayName ?? user.username}</span>
                 </Link>
-})}
+            })}
         </div>
     );
 }

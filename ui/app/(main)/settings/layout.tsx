@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "../../../utils/cn";
+import useUser from "@/hooks/user";
+import { useEffect } from "react";
 
 const navItems = [
     { name: "Profile", href: "/settings/profile" },
@@ -15,6 +17,15 @@ export default function SettingsNav({
     children,
 }: Readonly<{ children: React.ReactNode }>) {
     const pathname = usePathname();
+    const user = useUser((state) => state.user)
+    const fetchUser = useUser((state) => state.fetchUser)
+    const router = useRouter();
+
+    useEffect(() => {
+        fetchUser().catch(() => router.push("/login"))
+    }, [])
+
+    if (!user) return <p>Unauthenticated</p>
 
     return (
             <div className="overflow-y-auto h-full bg-white text-gray-900">

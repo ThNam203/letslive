@@ -9,6 +9,7 @@ import useUser from "../../../../hooks/user";
 import { FollowOtherUser, UnfollowOtherUser } from "../../../../lib/api/user";
 import { Button } from "../../../../components/ui/button";
 import { cn } from "../../../../utils/cn";
+import { Avatar, AvatarFallback, AvatarImage } from "../../../../components/ui/avatar";
 
 export default function ProfileHeader({
     user,
@@ -62,8 +63,7 @@ export default function ProfileHeader({
                 <Image
                     src={
                         user.backgroundPicture ??
-                        `https://placehold.co/1200x800/F3F4F6/374151/png?font=playfair-display&text=${
-                            user.displayName ?? user.username
+                        `https://placehold.co/1200x800/F3F4F6/374151/png?font=playfair-display&text=${user.displayName ?? user.username
                         }`
                     }
                     alt="Profile Banner"
@@ -76,16 +76,15 @@ export default function ProfileHeader({
                 <div className="relative -mt-16 sm:-mt-24">
                     <div className="absolute">
                         <div className="flex flex-row items-end gap-4">
-                            <Image
-                                src={
-                                    user.profilePicture ??
-                                    "https://github.com/shadcn.png"
-                                }
-                                alt="Profile Picture"
-                                width={128}
-                                height={128}
-                                className="rounded-full border-4 border-white"
-                            />
+                            <Avatar className="rounded-full border-4 border-white w-32 h-32">
+                                <AvatarImage>
+                                    {user.profilePicture ??
+                                        "https://github.com/shadcn.png"}
+                                </AvatarImage>
+                                <AvatarFallback>
+                                    {user.username[0].toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
 
                             {me?.id !== user.id && (
                                 <Button
