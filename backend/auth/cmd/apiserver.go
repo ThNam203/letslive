@@ -25,9 +25,6 @@ type APIServer struct {
 	authHandler   *handlers.AuthHandler
 	errorHandler  *handlers.ErrorHandler
 	healthHandler *handlers.HealthHandler
-
-	loggingMiddleware middlewares.Middleware
-	corsMiddleware    middlewares.Middleware
 }
 
 func NewAPIServer(
@@ -42,9 +39,6 @@ func NewAPIServer(
 		authHandler:   authHandler,
 		errorHandler:  handlers.NewErrorHandler(),
 		healthHandler: handlers.NewHeathHandler(),
-
-		loggingMiddleware: middlewares.NewLoggingMiddleware(logger.Logger),
-		corsMiddleware:    middlewares.NewCORSMiddleware(),
 	}
 }
 
@@ -104,8 +98,7 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)
 
-	finalHandler := a.corsMiddleware.GetMiddleware(sm)
-	finalHandler = a.loggingMiddleware.GetMiddleware(finalHandler)
+	finalHandler := middlewares.LoggingMiddleware(sm)
 
 	return finalHandler
 }

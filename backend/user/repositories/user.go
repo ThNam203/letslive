@@ -43,7 +43,6 @@ func NewUserRepository(conn *pgxpool.Pool) UserRepository {
 
 // TODO: holy shesh i need to redo the whole database queries
 // the authenticatedUserId is used for checking if the caller is following the userId
-// the authenticatedUserId can be null if for INTERNAL USE
 func (r *postgresUserRepo) GetById(userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(context.Background(), `
 		SELECT 

@@ -13,6 +13,7 @@ import useUser from "../../../../hooks/user";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
 import { Textarea } from "../../../../components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "../../../../components/ui/avatar";
 
 export default function ProfileSettings() {
     const user = useUser((state) => state.user);
@@ -112,7 +113,7 @@ export default function ProfileSettings() {
     };
 
     useEffect(() => {
-        if (!user) return; 
+        if (!user) return;
 
         const normalizedDisplayName = user.displayName ?? "";
         const normalizedBio = user.bio ?? "";
@@ -138,17 +139,15 @@ export default function ProfileSettings() {
                         Profile Picture
                     </h2>
                     <div className="flex gap-4 items-center">
-                        <div className="relative w-20 h-20 rounded-full overflow-hidden">
-                            <Image
-                                src={
-                                    user?.profilePicture ??
-                                    "https://github.com/shadcn.png"
-                                }
-                                alt="Profile Picture"
-                                layout="fill"
-                                objectFit="cover"
-                            />
-                        </div>
+                            <Avatar className="w-16 h-16">
+                                <AvatarImage
+                                    src={user?.profilePicture ?? "https://github.com/shadcn.png"}
+                                    alt="avatar"
+                                />
+                                <AvatarFallback>
+                                    {user?.username.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
                         <div className="space-y-2">
                             <div>
                                 <input

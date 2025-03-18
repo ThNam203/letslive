@@ -67,7 +67,7 @@ func (h *LivestreamHandler) GetLivestreamByIdPublicHandler(w http.ResponseWriter
 	json.NewEncoder(w).Encode(livestream)
 }
 
-func (h *LivestreamHandler) CheckIsUserLivestreamingHandler(w http.ResponseWriter, r *http.Request) {
+func (h *LivestreamHandler) CheckIsUserLivestreamingPublicHandler(w http.ResponseWriter, r *http.Request) {
 	userId := r.URL.Query().Get("userId")
 	if len(userId) == 0 {
 		h.WriteErrorResponse(w, servererrors.ErrInvalidPath)
@@ -116,7 +116,7 @@ func (h *LivestreamHandler) GetLivestreamsOfUserPublicHandler(w http.ResponseWri
 }
 
 // TODO: paging
-func (h *LivestreamHandler) GetLivestreamsOfUserAuthorHandler(w http.ResponseWriter, r *http.Request) {
+func (h *LivestreamHandler) GetAllLivestreamsOfAuthorPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	userUUID, err := getUserIdFromCookie(r)
 	if err != nil {
 		h.WriteErrorResponse(w, servererrors.ErrInvalidInput)
@@ -134,7 +134,7 @@ func (h *LivestreamHandler) GetLivestreamsOfUserAuthorHandler(w http.ResponseWri
 	json.NewEncoder(w).Encode(livestreams)
 }
 
-func (h *LivestreamHandler) GetPopularVODs(w http.ResponseWriter, r *http.Request) {
+func (h *LivestreamHandler) GetPopularVODsPublicHandler(w http.ResponseWriter, r *http.Request) {
 	page := r.URL.Query().Get("page")
 	if len(page) == 0 {
 		h.WriteErrorResponse(w, servererrors.ErrInvalidPath)
@@ -157,7 +157,7 @@ func (h *LivestreamHandler) GetPopularVODs(w http.ResponseWriter, r *http.Reques
 	json.NewEncoder(w).Encode(livestreams)
 }
 
-func (h *LivestreamHandler) GetLivestreamingsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *LivestreamHandler) GetLivestreamingsPublicHandler(w http.ResponseWriter, r *http.Request) {
 	page := r.URL.Query().Get("page")
 	var pageNum int
 	var err error
@@ -208,7 +208,7 @@ func (h *LivestreamHandler) UpdateLivestreamInternalHandler(w http.ResponseWrite
 	json.NewEncoder(w).Encode(updatedLivestream)
 }
 
-func (h *LivestreamHandler) UpdateLivestreamHandler(w http.ResponseWriter, r *http.Request) {
+func (h *LivestreamHandler) UpdateLivestreamPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	userUUID, e := getUserIdFromCookie(r)
 	if e != nil {
 		h.WriteErrorResponse(w, e)
@@ -240,7 +240,7 @@ func (h *LivestreamHandler) UpdateLivestreamHandler(w http.ResponseWriter, r *ht
 	json.NewEncoder(w).Encode(updatedLivestream)
 }
 
-func (h *LivestreamHandler) DeleteLivestreamHandler(w http.ResponseWriter, r *http.Request) {
+func (h *LivestreamHandler) DeleteLivestreamPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	rawStreamId := r.PathValue("livestreamId")
 	streamId, err := uuid.FromString(rawStreamId)
 

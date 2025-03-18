@@ -42,8 +42,9 @@ The project aims to create a functioning livestreaming website from a to z like 
 1. Clone the repo
 2. Fill in the example.env file with your
 3. Change the jwt_secrets.secret as same as your access token secret
-4. Run "docker compose up"
-5. Access UI at localhost:5000
+4. Uncomment the "ui" service in docker compose if I comment it out
+5. Run "docker compose up"
+6. Access UI at localhost:5000
 
 ## ROADMAP
 * Support streaming from browser.
@@ -52,5 +53,5 @@ The project aims to create a functioning livestreaming website from a to z like 
 * Add unit tests
 * Add logging and tracing
 
-Last editted: 13/03/2025  
+Last editted: 14/03/2025  
 **[Editor: Nam Huynh](https://github.com/ThNam203)**

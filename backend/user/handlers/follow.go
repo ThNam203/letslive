@@ -17,7 +17,7 @@ func NewFollowHandler(followService services.FollowService) *FollowHandler {
 	}
 }
 
-func (h *FollowHandler) FollowHandler(w http.ResponseWriter, r *http.Request) {
+func (h *FollowHandler) FollowPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	followedId := r.PathValue("userId")
 	followerId, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
@@ -33,7 +33,7 @@ func (h *FollowHandler) FollowHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (h *FollowHandler) UnfollowHandler(w http.ResponseWriter, r *http.Request) {
+func (h *FollowHandler) UnfollowPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	followedId := r.PathValue("userId")
 	followerId, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
