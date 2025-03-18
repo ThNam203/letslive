@@ -16,18 +16,15 @@ export default function SignUpPage() {
                 </h1>
                 <p className="text-md">Choose a method below to begin</p>
                 <div className="flex gap-2 mb-2 mt-4">
-                    <Link
-                        className="flex-1 flex flex-row items-center justify-center gap-4 border-1 py-2 rounded-lg hover:bg-gray-200"
-                        href={GLOBAL.API_URL + "/auth/google"}
-                    >
-                        <IconGoogle/> Google
-                    </Link>
-                    {/* <Link
-                        className="flex-1 flex flex-row items-center justify-center gap-4 border-1 py-2 rounded-lg hover:bg-gray-200"
-                        href={GLOBAL.API_URL + "/auth/facebook"}
-                    >
-                        <IconFacebook /> Facebook
-                    </Link> */}
+                    <div className="w-full">
+                        <Link
+                            className="flex-1 flex flex-row items-center justify-center gap-4 border-1 py-2 rounded-lg hover:bg-gray-200"
+                            href={GLOBAL.API_URL + "/auth/google"}
+                        >
+                            <IconGoogle /> Google
+                        </Link>
+                        {process.env.NEXT_PUBLIC_ENVIRONMENT === "production" && <p className="text-xs italic text-red-500 mt-1">Because the backend and frontend has different domains, please allows 3rd party cookies to use google authentication. I will fix it later.</p>}
+                    </div>
                 </div>
                 <div className="flex items-center justify-center w-full mt-2 mb-4">
                     <hr className="bg-gray-400 h-[2px] flex-1" />
