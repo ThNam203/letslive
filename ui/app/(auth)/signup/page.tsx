@@ -34,12 +34,12 @@ export default function SignUpPage() {
                 <SignUpForm />
                 <p className="text-end text-sm opacity-80 mt-4">
                     Already have an account?
-                    <a
+                    <Link
                         href="/login"
                         className="ml-2 text-blue-400 font-bold hover:text-blue-600"
                     >
                         Log in
-                    </a>
+                    </Link>
                 </p>
             </div>
         </section>
