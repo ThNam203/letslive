@@ -53,6 +53,7 @@ export default function LogInForm() {
                 toast.error(fetchError.message);
             } else {
                 window.location.href = '/'; // force a full page reload (which hopefully doing some magic on cookies)
+                window.location.reload()
             }
         }
         setIsLoading(false);
