@@ -77,10 +77,9 @@ export default function ProfileHeader({
                     <div className="absolute">
                         <div className="flex flex-row items-end gap-4">
                             <Avatar className="rounded-full border-4 border-white w-32 h-32">
-                                <AvatarImage>
-                                    {user.profilePicture ??
-                                        "https://github.com/shadcn.png"}
-                                </AvatarImage>
+                                <AvatarImage
+                                    src={user.profilePicture}
+                                    alt="user avatar"/>
                                 <AvatarFallback>
                                     {user.username[0].toUpperCase()}
                                 </AvatarFallback>

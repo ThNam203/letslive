@@ -3,6 +3,7 @@ import { Livestream } from "../../types/livestream";
 import { User } from "../../types/user";
 import { Clock, Eye } from "lucide-react";
 import { datediffFromNow } from "../../utils/timeFormats";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 const LivestreamPreviewDetailView = ({
     livestream,
     user,
@@ -13,15 +14,17 @@ const LivestreamPreviewDetailView = ({
     return (
         <div className="flex items-start gap-3">
             <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                <Image
+                <Avatar>
+                <AvatarImage
                     src={
-                        user?.profilePicture || "https://github.com/shadcn.png"
+                        user?.profilePicture
                     }
                     alt={`${user?.username} avatar`}
-                    className="w-full h-full object-cover"
-                    width={40}
-                    height={40}
                 />
+                <AvatarFallback>
+                    {user?.username.charAt(0).toUpperCase()}
+                </AvatarFallback>
+                </Avatar>
             </div>
             <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-base truncate">
