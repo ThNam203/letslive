@@ -15,6 +15,7 @@ import { datediffFromNow, formatSeconds } from "../../utils/timeFormats";
 import { useRouter } from "next/navigation";
 import { CardHeader } from "@mui/material";
 import GLOBAL from "../../global";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export function PopularVODView() {
     const [isLoading, setIsLoading] = useState(false);
@@ -105,16 +106,20 @@ function VODCard({ vod }: { vod: Livestream }) {
             <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                     <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                        <Image
-                            src={
-                                user?.profilePicture ||
-                                "https://github.com/shadcn.png"
-                            }
-                            alt={`${user?.username} avatar`}
-                            className="w-full h-full object-cover"
-                            width={40}
-                            height={40}
-                        />
+                        <Avatar>
+                            <AvatarImage
+                                src={
+                                    user?.profilePicture
+                                }
+                                alt={`${user?.username} avatar`}
+                                className="w-full h-full object-cover"
+                                width={40}
+                                height={40}
+                            />
+                            <AvatarFallback>
+                                {user?.username.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
                     </div>
                     <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-base truncate">
