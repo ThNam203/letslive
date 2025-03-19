@@ -15,6 +15,7 @@ import { Livestream } from "../../../../../../types/livestream";
 export default function VODPage() {
     const [user, setUser] = useState<User | null>(null);
     const [vods, setVods] = useState<Livestream[]>([]);
+    const [isExtraOpen, setIsExtraOpen] = useState(false)
 
     const updateUser = (newUserInfo: User) => {
         setUser((prev) => {
@@ -104,60 +105,42 @@ export default function VODPage() {
     }, [params.userId]);
 
     return (
-        <div className="overflow-y-auto h-full mt-2">
-            <div className="flex lg:flex-row max-lg:flex-col">
-                <div className="w-[910px]">
-                    <div className="w-full aspect-video bg-black mb-4">
-                        <VODFrame videoInfo={playerInfo} />
-                    </div>
-                    {user && (
-                        <ProfileView
-                            user={user}
-                            updateUser={updateUser}
-                            vods={vods.filter((v) => v.id !== params.vodId)}
-                            showRecentActivity={false}
-                        />
-                    )}
+        <div className="flex h-full overflow-hidden ml-4 gap-6">
+            {/* Main content area */}
+            <div className="flex-1 overflow-auto no-scrollbar">
+                <div className="w-full aspect-video bg-black mb-4">
+                    <VODFrame videoInfo={playerInfo} />
                 </div>
+                {user && (
+                    <ProfileView
+                        user={user}
+                        updateUser={updateUser}
+                        vods={vods.filter((v) => v.id !== params.vodId)}
+                        showRecentActivity={false}
+                    />
+                )}
+            </div>
 
-                <div className="w-[300px] mx-4 fixed right-0 top-14 bottom-4 overflow-hidden">
-                    <div className="w-full h-full font-sans border border-gray-200 rounded-md bg-gray-50 p-4">
-                        <h2 className="text-xl mb-4 font-semibold">
-                            Other streams
-                        </h2>
-                        <div className="overflow-y-auto h-full pr-1">
-                            {vods
-                                ?.filter(
-                                    (v) =>
-                                        v.id !== params.vodId &&
-                                        v.status !== "live"
-                                )
-                                .map((vod, idx) => (
-                                    <VODLink key={idx} vod={vod} classname="mb-2" />
-                                ))}
-                        </div>
+            <div
+                className={`w-full h-[100%-48px] md:w-80 lg:w-96 bg-background transition-all duration-300 fixed md:relative top-0 right-2 z-40 ${isExtraOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}
+            >
+                <div className="w-full h-full flex flex-col font-sans border-x border-gray-200 bg-gray-50">
+                    <h2 className="font-semibold p-4">
+                        Other streams
+                    </h2>
+                    <div className="overflow-y-auto h-full px-4 small-scrollbar">
+                        {[...vods, ...vods, ...vods, ...vods, ...vods]
+                            ?.filter(
+                                (v) =>
+                                    v.id !== params.vodId &&
+                                    v.status !== "live"
+                            )
+                            .map((vod, idx) => (
+                                <VODLink key={idx} vod={vod} classname="mb-2" />
+                            ))}
                     </div>
                 </div>
             </div>
         </div>
     );
 }
-
-// const ServersChooser = () => {
-//     return (
-//         <div className="w-full font-sans mt-4 overflow-x-auto whitespace-nowrap">
-//             {['1','2','3'].map((_, idx) => (
-//                 <Button
-//                     key={idx}
-//                     onClick={() => setServerIndex(idx)}
-//                     className={cn(
-//                         "mr-4",
-//                         serverIndex == idx ? "bg-green-700" : ""
-//                     )}
-//                 >
-//                     Server {idx + 1}
-//                 </Button>
-//             ))}
-//         </div>
-//     );
-// };

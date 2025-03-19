@@ -12,7 +12,7 @@ export default function RootLayout({
       <Header />
       <div className="w-full h-[calc(100%-48px)] flex flex-row">
         <LeftBar />
-        <div className="h-full w-full xl:ml-72 max-xl:ml-12">{children}</div>
+        <div className="h-full w-full ml-64">{children}</div>
       </div>
     </div>
   );

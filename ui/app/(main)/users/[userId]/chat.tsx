@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { Send } from "lucide-react";
+import { Send, X } from "lucide-react";
 import { toast } from "react-toastify";
 import useUser from "../../../../hooks/user";
 import { ReceivedMessage, SendMessage } from "../../../../types/message";
@@ -11,7 +11,7 @@ import GLOBAL from "../../../../global";
 import { Input } from "../../../../components/ui/input";
 import { Button } from "../../../../components/ui/button";
 
-export default function ChatUI({ roomId }: { roomId: string }) {
+export default function ChatPanel({ roomId, onClose }: { roomId: string, onClose: () => any }) {
     const user = useUser((state) => state.user);
     const [messages, setMessages] = useState<ReceivedMessage[]>([]);
     const [inputMessage, setInputMessage] = useState("");
@@ -117,8 +117,14 @@ export default function ChatUI({ roomId }: { roomId: string }) {
     }, [user, roomId]);
 
     return (
-        <div className="w-full h-full flex flex-col my-2">
-            <div className="flex-1 overflow-y-auto mb-4 border border-gray-200 rounded-md p-4 bg-gray-50">
+        <div className="w-full h-full flex flex-col">
+            <div className="border border-y-0 p-4 flex justify-between items-center">
+                <h2 className="font-semibold">Chat</h2>
+                <Button variant="ghost" size="icon" onClick={onClose} className="md:hidden">
+                    <X className="h-4 w-4" />
+                </Button>
+            </div>
+            <div className="flex-1 overflow-y-auto mb-4 border border-t-0 border-gray-200 rounded-md rounded-t-none p-4 bg-gray-50">
                 {messages.map((message, idx) => (
                     <div key={idx} className="mb-3">
                         <span
@@ -135,15 +141,15 @@ export default function ChatUI({ roomId }: { roomId: string }) {
                             {message.type === "join"
                                 ? "joined the chat"
                                 : message.type === "leave"
-                                ? "left the chat"
-                                : message.text}
+                                    ? "left the chat"
+                                    : message.text}
                         </span>
                     </div>
                 ))}
             </div>
 
             {/* Message input form */}
-            <form onSubmit={handleSendMessage} className="flex gap-2">
+            <form onSubmit={handleSendMessage} className="flex gap-2 mb-2">
                 <Input
                     type="text"
                     placeholder={!user ? "Login to start messaging" : process.env.NEXT_PUBLIC_ENVIRONMENT === "development" ? "Type a message..." : "Chat is currently not usable in production"}

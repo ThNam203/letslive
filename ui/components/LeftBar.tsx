@@ -26,10 +26,8 @@ const View = ({
 export const LeftBar = () => {
     
   return (
-    <div className="fixed ml-2 h-full xl:w-64 max-xl:w-fit bg-leftBarColor flex flex-col max-xl:items-center justify-start gap-2 text-primaryWord border-r-1">
-      <div className="flex flex-row justify-between items-center px-2 pt-4">
+    <div className="fixed p-4 h-full w-64 bg-leftBarColor flex flex-col items-center justify-start gap-2 text-primaryWord border-r-1">
         <AllChannelsView/>
-      </div>
     </div>
   );
 };

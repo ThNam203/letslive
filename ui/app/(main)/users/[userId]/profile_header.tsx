@@ -72,7 +72,7 @@ export default function ProfileHeader({
                     className="w-full h-full object-cover rounded-sm"
                 />
             </div>
-            <div className="max-w-5xl sm:px-6 px-4">
+            <div className="sm:px-6 px-4">
                 <div className="relative -mt-16 sm:-mt-24">
                     <div className="absolute">
                         <div className="flex flex-row items-end gap-4">

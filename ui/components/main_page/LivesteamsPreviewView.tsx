@@ -32,7 +32,7 @@ const LivestreamsPreviewView = () => {
 
     return (
         <div className="flex flex-col gap-2 pr-2">
-            <div className="flex flex-wrap gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {livestreamings.slice(0, limitView).map((livestream, idx) => (
                     <LivestreamPreviewView
                         key={idx}

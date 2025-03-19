@@ -34,7 +34,7 @@ const LivestreamPreviewView = ({
     }, [livestream]);
 
     return (
-        <Card className="transition-all hover:shadow-md w-[370px] rounded-sm">
+        <Card className="w-full transition-all hover:shadow-md rounded-sm">
             <Hover3DBox
                 viewers={0}
                 showViewer={true}
