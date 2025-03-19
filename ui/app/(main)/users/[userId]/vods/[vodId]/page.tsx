@@ -129,7 +129,7 @@ export default function VODPage() {
                         Other streams
                     </h2>
                     <div className="overflow-y-auto h-full px-4 small-scrollbar">
-                        {[...vods, ...vods, ...vods, ...vods, ...vods]
+                        {vods
                             ?.filter(
                                 (v) =>
                                     v.id !== params.vodId &&
