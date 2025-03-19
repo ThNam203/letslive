@@ -162,8 +162,6 @@ export default function VODEditCard({
         }));
     };
 
-    console.log("VODDDD", vod.thumbnailUrl)
-
     return (
         <>
             <div
@@ -201,7 +199,7 @@ export default function VODEditCard({
                     </p>
                     <div className="flex items-center mt-2 text-sm text-gray-500">
                         <Heart className="w-4 h-4 mr-1" />
-                        <span>{vod.viewCount} views</span>
+                        <span>{vod.viewCount} {vod.viewCount < 2 ? "view" : "views"}</span>
                         <div className="flex-1" />
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>

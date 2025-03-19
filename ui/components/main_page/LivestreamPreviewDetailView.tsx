@@ -33,7 +33,7 @@ const LivestreamPreviewDetailView = ({
                 <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
                         <Eye className="h-3 w-3" />
-                        <span>{livestream.viewCount} views</span>
+                        <span>{livestream.viewCount} {livestream.viewCount < 2 ? "view" : "views"}</span>
                     </div>
                     <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
