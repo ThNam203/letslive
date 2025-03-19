@@ -119,6 +119,7 @@ export default function Livestreaming() {
                             }}
                         />
                     </div>
+
                 ) : (
                     <div className="w-full aspect-video mb-4 bg-black flex items-center justify-center bg-opacity-9 0">
                         <h2 className="text-gray-400 text-3xl font-mono ">
@@ -144,6 +145,7 @@ export default function Livestreaming() {
                 className={`w-full h-full md:w-80 lg:w-96 bg-background transition-all duration-300 fixed md:relative top-0 right-2 z-40 ${isChatOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}
             >
                 <ChatUI roomId={params.userId} onClose={() => setIsChatOpen(false)} />
+
             </div>
         </div>
     );

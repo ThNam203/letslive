@@ -105,6 +105,7 @@ export default function VODPage() {
     }, [params.userId]);
 
     return (
+
         <div className="flex h-full overflow-hidden ml-4 gap-6">
             {/* Main content area */}
             <div className="flex-1 overflow-auto no-scrollbar">
@@ -120,7 +121,6 @@ export default function VODPage() {
                     />
                 )}
             </div>
-
             <div
                 className={`w-full h-[100%-48px] md:w-80 lg:w-96 bg-background transition-all duration-300 fixed md:relative top-0 right-2 z-40 ${isExtraOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}
             >
