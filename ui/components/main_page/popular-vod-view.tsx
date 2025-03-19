@@ -58,7 +58,7 @@ export function PopularVODView() {
 
     return (
         <div>
-            <div className="flex flex-wrap gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {vods.map((vod) => (
                     <VODCard key={vod.id} vod={vod} />
                 ))}
@@ -81,7 +81,7 @@ function VODCard({ vod }: { vod: Livestream }) {
     }, [vod.userId]);
 
     return (
-        <Card className="overflow-hidden transition-all hover:shadow-md w-[370px] rounded-sm">
+        <Card className="w-full overflow-hidden transition-all hover:shadow-md rounded-sm">
             <div className="relative aspect-video bg-muted">
                 <div className="absolute bottom-2 right-2">
                     <Badge
@@ -128,7 +128,7 @@ function VODCard({ vod }: { vod: Livestream }) {
                         <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
                                 <Eye className="h-3 w-3" />
-                                <span>{vod.viewCount} views</span>
+                                <span>{vod.viewCount} {vod.viewCount < 2 ? "view" : "views"}</span>
                             </div>
                             <div className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />

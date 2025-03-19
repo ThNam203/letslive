@@ -24,7 +24,6 @@ const useUser = create<UserState>((set) => ({
     },
     updateUser: (updateUser: User) =>
         set((prev) => {
-            console.log("THE DATA AFTER UPDATE", updateUser);
             return {
                 user: {
                     ...prev.user,

@@ -83,7 +83,7 @@ export const fetchClient = async <T>(
                     const retryRes = await retryResponse.json().catch(() => null) as ErrorResponse;
                     throw new FetchError(
                         retryRes?.id || 'unknown',
-                        `HTTP error! Status: ${retryResponse.status}`,
+                        retryRes.message,
                         {
                             status: retryResponse.status,
                             response: retryRes,
@@ -97,7 +97,7 @@ export const fetchClient = async <T>(
             const errorRes = await response.json().catch(() => null) as ErrorResponse;
             throw new FetchError(
                 errorRes?.id || 'unknown',
-                errorRes?.message || `HTTP error! Status: ${response.status}`,
+                errorRes?.message ?? `Something wrong happened!`,
                 {
                     status: response.status,
                     response: errorRes,

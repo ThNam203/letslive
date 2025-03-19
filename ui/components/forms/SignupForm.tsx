@@ -82,7 +82,8 @@ export default function SignUpForm() {
                 toast.error(fetchError.message);
             } else {
                 toast.success("Account created successfully");
-                router.push("/")
+                router.replace("/")
+                router.refresh()
             }
         }
         setIsLoading(false);

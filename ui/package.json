@@ -33,6 +33,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^11.3.28",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.446.0",
     "next": "14.2.5",
     "react": "^18",
@@ -49,6 +50,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20",
     "@types/npm": "^7.19.3",
     "@types/react": "^18",

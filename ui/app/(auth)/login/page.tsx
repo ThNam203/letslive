@@ -3,6 +3,7 @@ import Link from "next/link";
 import { IconGoogle } from "../../../components/icons/google";
 import LogInForm from "../../../components/forms/LoginForm";
 import GLOBAL from "../../../global";
+import { AlertCircle, AlertOctagonIcon } from "lucide-react";
 
 export default function LogInPage() {
     return (
@@ -12,18 +13,15 @@ export default function LogInPage() {
                 <h1 className="text-2xl font-bold mb-1">Welcome back!</h1>
                 <p className="text-md">Gain access to the world right now.</p>
                 <div className="flex gap-2 mb-2 mt-4">
-                    <Link
-                        href={GLOBAL.API_URL + "/auth/google"}
-                        className="flex-1 flex flex-row items-center justify-center gap-4 border-1 py-2 rounded-lg hover:bg-gray-200"
-                    >
-                        <IconGoogle /> Google
-                    </Link>
-                    {/* <Link
-                        href={GLOBAL.API_URL + "/auth/facebook"}
-                        className="flex-1 flex flex-row items-center justify-center gap-4 border-1 py-2 rounded-lg hover:bg-gray-200"
-                    >
-                        <IconFacebook /> Facebook
-                    </Link> */}
+                    <div className="w-full">
+                        <Link
+                            href={GLOBAL.API_URL + "/auth/google"}
+                            className="flex-1 flex flex-row items-center justify-center gap-4 border-1 py-2 rounded-lg hover:bg-gray-200"
+                        >
+                            <IconGoogle /> Google
+                        </Link>
+                        {process.env.NEXT_PUBLIC_ENVIRONMENT === "production" && <p className="text-xs italic text-red-500 mt-1">Because the backend and frontend has different domains, please allows 3rd party cookies to use google authentication. I will fix it later.</p>}
+                    </div>
                 </div>
                 <div className="flex items-center justify-center w-full mt-2 mb-4">
                     <hr className="bg-gray-400 h-[2px] flex-1" />
@@ -33,12 +31,12 @@ export default function LogInPage() {
                 <LogInForm />
                 <p className="text-end text-sm opacity-80 mt-4">
                     Dont&#39;t have an account?
-                    <a
+                    <Link
                         href="/signup"
                         className="ml-2 text-blue-400 font-bold hover:text-blue-600"
                     >
                         Sign up
-                    </a>
+                    </Link>
                 </p>
             </div>
         </section>

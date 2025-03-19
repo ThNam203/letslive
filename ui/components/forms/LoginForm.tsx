@@ -52,7 +52,8 @@ export default function LogInForm() {
             if (fetchError) {
                 toast.error(fetchError.message);
             } else {
-                router.push("/");
+                router.replace("/")
+                router.refresh()
             }
         }
         setIsLoading(false);
