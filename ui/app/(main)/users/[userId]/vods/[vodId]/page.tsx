@@ -15,7 +15,7 @@ import { Livestream } from "../../../../../../types/livestream";
 export default function VODPage() {
     const [user, setUser] = useState<User | null>(null);
     const [vods, setVods] = useState<Livestream[]>([]);
-        
+
     const updateUser = (newUserInfo: User) => {
         setUser((prev) => {
             if (prev)
@@ -55,14 +55,11 @@ export default function VODPage() {
                 ...prev,
                 videoTitle: vod!.title,
                 videoUrl: newUrl,
-                streamer: {
-                    name: user?.displayName ?? user?.username ?? "Streamer",
-                }
             }));
         };
 
         fetchVODInfo();
-    }, [params.userId, params.vodId, user]);
+    }, [params.vodId]);
 
     useEffect(() => {
         if (!user) {
@@ -94,6 +91,12 @@ export default function VODPage() {
                 });
             } else {
                 setUser(user!);
+                setPlayerInfo((prev) => ({
+                    ...prev,
+                    streamer: {
+                        name: user?.displayName ?? user?.username ?? "Streamer",
+                    }
+                }))
             }
         };
 
@@ -124,14 +127,14 @@ export default function VODPage() {
                         </h2>
                         <div className="overflow-y-auto h-full pr-1">
                             {vods
-                                    ?.filter(
-                                        (v) =>
-                                            v.id !== params.vodId &&
-                                            v.status !== "live"
-                                    )
-                                    .map((vod, idx) => (
-                                        <VODLink key={idx} vod={vod} classname="mb-2" />
-                                    ))}
+                                ?.filter(
+                                    (v) =>
+                                        v.id !== params.vodId &&
+                                        v.status !== "live"
+                                )
+                                .map((vod, idx) => (
+                                    <VODLink key={idx} vod={vod} classname="mb-2" />
+                                ))}
                         </div>
                     </div>
                 </div>

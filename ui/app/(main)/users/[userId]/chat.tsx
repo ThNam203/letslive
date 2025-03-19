@@ -268,7 +268,6 @@ function hue2rgb(p: number, q: number, t: number): number {
 function getCookie(name: string) {
     var nameEQ = name + "=";
     var ca = document.cookie.split(";");
-    console.log(document.cookie);
     for (var i = 0; i < ca.length; i++) {
         var c = ca[i];
         while (c.charAt(0) == " ") c = c.substring(1, c.length);

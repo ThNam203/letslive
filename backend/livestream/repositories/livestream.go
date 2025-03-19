@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sen1or/letslive/livestream/domains"
 	servererrors "sen1or/letslive/livestream/errors"
+	"sen1or/letslive/livestream/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
@@ -17,6 +18,7 @@ type LivestreamRepository interface {
 
 	GetAllLivestreamings(page int) ([]domains.Livestream, *servererrors.ServerError)
 	GetPopularVODs(page int) ([]domains.Livestream, *servererrors.ServerError)
+	AddOneToViewCount(uuid.UUID)
 
 	CheckIsUserLivestreaming(uuid.UUID) (bool, *servererrors.ServerError)
 
@@ -56,6 +58,19 @@ func (r postgresLivestreamRepo) GetById(userId uuid.UUID) (*domains.Livestream, 
 	}
 
 	return &livestream, nil
+}
+
+// we dont care if the result is good or not
+func (r postgresLivestreamRepo) AddOneToViewCount(livestreamId uuid.UUID) {
+	_, err := r.dbConn.Exec(context.Background(), `
+		UPDATE livestreams 
+		SET view_count = view_count + 1
+		WHERE id = $1
+	`, livestreamId)
+
+	if err != nil {
+		logger.Errorf("failed to add one to view count: %s", err)
+	}
 }
 
 func (r postgresLivestreamRepo) GetByUser(userId uuid.UUID) ([]domains.Livestream, *servererrors.ServerError) {

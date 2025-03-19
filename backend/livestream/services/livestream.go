@@ -23,7 +23,13 @@ func NewLivestreamService(repo repositories.LivestreamRepository) *LivestreamSer
 }
 
 func (c LivestreamService) GetById(livestreamId uuid.UUID) (*domains.Livestream, *servererrors.ServerError) {
-	return c.repo.GetById(livestreamId)
+	livestream, err := c.repo.GetById(livestreamId)
+	if err != nil {
+		return nil, err
+	}
+
+	c.repo.AddOneToViewCount(livestreamId)
+	return livestream, nil
 }
 
 func (c LivestreamService) GetAllLivestreaming(page int) ([]domains.Livestream, *servererrors.ServerError) {
