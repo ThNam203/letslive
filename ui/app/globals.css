@@ -20,6 +20,37 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .small-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .small-scrollbar::-webkit-scrollbar-track {
+    /* border-radius: 100vh; */
+    background: rgba(255, 255, 255, 0);
+  }
+
+  .small-scrollbar::-webkit-scrollbar-thumb {
+    background: gray;
+    border-radius: 100vh;
+  }
+
+  .small-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #5c5c5c;
+  }
 }
 
 @layer base {
@@ -50,6 +81,7 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
@@ -82,6 +114,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }

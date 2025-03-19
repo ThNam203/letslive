@@ -17,11 +17,14 @@ import {
     GetAllLivestreamOfUser,
     IsUserStreaming,
 } from "../../../../lib/api/livestream";
+import { Button } from "../../../../components/ui/button";
+import { Menu } from "lucide-react";
 
 export default function Livestreaming() {
     const [user, setUser] = useState<User | null>(null);
     const [isStreaming, setIsStreaming] = useState(false);
     const [vods, setVods] = useState<Livestream[]>([]); // TODO: change the way this is done, vods cant be livestream
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     const updateUser = (newUserInfo: User) => {
         setUser((prev) => {
@@ -104,33 +107,18 @@ export default function Livestreaming() {
     }, [params.userId]);
 
     return (
-        <div className="overflow-y-auto h-full flex lg:flex-row max-lg:flex-col mt-2">
-            <div className="w-[910px]">
+        <div className="flex h-full overflow-hidden ml-4 gap-6">
+            {/* Main content area */}
+            <div className="flex-1 overflow-auto no-scrollbar">
                 {isStreaming ? (
-                    <>
-                        <div className="w-full aspect-video bg-black mb-4 rounded-sm">
-                            <StreamingFrame
-                                videoInfo={playerInfo}
-                                onVideoStart={() => {
-                                    setTimeVideoStart(new Date());
-                                }}
-                            />
-                        </div>
-                        {/* <div className="w-full font-sans my-4 overflow-x-auto whitespace-nowrap">
-                            {servers.map((_, idx) => (
-                                <Button
-                                    key={idx}
-                                    onClick={() => setServerIndex(idx)}
-                                    className={cn(
-                                        "mr-4",
-                                        serverIndex == idx ? "bg-green-700" : ""
-                                    )}
-                                >
-                                    Server {idx + 1}
-                                </Button>
-                            ))}
-                        </div> */}
-                    </>
+                    <div className="w-full aspect-video bg-black mb-4 rounded-sm">
+                        <StreamingFrame
+                            videoInfo={playerInfo}
+                            onVideoStart={() => {
+                                setTimeVideoStart(new Date());
+                            }}
+                        />
+                    </div>
                 ) : (
                     <div className="w-full aspect-video mb-4 bg-black flex items-center justify-center bg-opacity-9 0">
                         <h2 className="text-gray-400 text-3xl font-mono ">
@@ -141,8 +129,21 @@ export default function Livestreaming() {
 
                 {user && <ProfileView user={user} updateUser={updateUser} vods={vods.filter(vod => vod.status !== "live")} />}
             </div>
-            <div className="w-[300px] mx-4 fixed right-0 top-12 bottom-4">
-                <ChatUI roomId={params.userId} />
+            {/* Mobile chat toggle button */}
+            <Button
+                variant="outline"
+                size="icon"
+                className="fixed bottom-4 right-4 z-50 md:hidden"
+                onClick={() => setIsChatOpen(!isChatOpen)}
+            >
+                <Menu className="h-5 w-5" />
+            </Button>
+
+            {/* Chat panel - hidden on mobile unless toggled */}
+            <div
+                className={`w-full h-full md:w-80 lg:w-96 bg-background transition-all duration-300 fixed md:relative top-0 right-2 z-40 ${isChatOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}
+            >
+                <ChatUI roomId={params.userId} onClose={() => setIsChatOpen(false)} />
             </div>
         </div>
     );

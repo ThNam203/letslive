@@ -25,7 +25,7 @@ export default function ProfileView({
             <ProfileHeader user={user} updateUser={updateUser} />
 
             {/* Profile Content */}
-            <div className="max-w-5xl px-4 sm:px-6 lg:px-8 pt-32 pb-16">
+            <div className="w-full px-4 sm:px-6 lg:px-8 pt-32 pb-16">
                 <div className="flex items-start gap-8">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">
@@ -58,9 +58,8 @@ export default function ProfileView({
                         <Users className="w-5 h-5 mr-2" />
                         <span>
                             {user.followerCount !== undefined
-                                ? `${user.followerCount} follower${
-                                      user.followerCount > 1 ? "s" : ""
-                                  }`
+                                ? `${user.followerCount} follower${user.followerCount > 1 ? "s" : ""
+                                }`
                                 : "0 follower"}
                         </span>
                     </div>
@@ -73,21 +72,22 @@ export default function ProfileView({
                 </div>
 
                 {/* Recent Activity */}
-                {showRecentActivity ? 
-                vods.length > 0 && (
-                    <div className="mt-4">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                            Recent Streams
-                        </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {vods.map((vod, idx) => {
-                                if (vod.status == "live") return null;
-                                return <VODLink key={idx} vod={vod} />;
-                            })}
+                {showRecentActivity ?
+                    vods.length > 0 && (
+                        <div className="mt-4">
+                            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                                Recent Streams
+                            </h2>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                {vods.map((vod, idx) => {
+                                    if (vod.status == "live") return null;
+                                    return <VODLink key={idx} vod={vod} />;
+                                })}
+                            </div>
                         </div>
-                    </div>
-                )
-            : null}
+                    )
+                    : null}
             </div>
         </div>
     );

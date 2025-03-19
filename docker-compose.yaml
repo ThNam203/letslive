@@ -102,10 +102,10 @@ services:
       - /var/log/letslive:/usr/local/bin/logs
 
   livestream:
-    #image: sen1or/letslive-livestream:latest
-    build:
-      context: ./backend/livestream/
-      dockerfile: Dockerfile
+    image: sen1or/letslive-livestream:latest
+    #build:
+    #  context: ./backend/livestream/
+    #  dockerfile: Dockerfile
     container_name: letslive_livestream
     restart: always
     ports:
