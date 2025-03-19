@@ -162,8 +162,6 @@ export default function VODEditCard({
         }));
     };
 
-    console.log("VODDDD", vod.thumbnailUrl)
-
     return (
         <>
             <div
