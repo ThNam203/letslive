@@ -8,6 +8,7 @@ import { User } from "../../types/user";
 import { SearchUsersByUsername } from "../../lib/api/user";
 import { Input } from "../ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import Link from "next/link";
 
 export default function SearchBar({
     onSearch,
@@ -89,39 +90,37 @@ export default function SearchBar({
 
             {showResults && results.length > 0 && !isLoading && (
                 <div className="absolute mt-1 w-full rounded-sm border bg-background shadow-md z-10">
-                    <ul>
-                        {results.map((user) => (
-                            <li
-                                key={user.id}
-                                className="px-4 py-2 hover:bg-muted cursor-pointer"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <Avatar className="h-8 w-8">
-                                        <AvatarImage
-                                            src={
-                                                user.profilePicture ??
-                                                "https://github.com/shadcn.png"
-                                            }
-                                            alt={"user image"}
-                                            width={32}
-                                            height={32}
-                                        />
-                                        <AvatarFallback>
-                                            {user.username.charAt(0)}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="text-sm font-medium">
-                                            {user.username}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {user.email}
-                                        </p>
-                                    </div>
+                    {results.map((user) => (
+                        <Link
+                            key={user.id}
+                            href={`/users/${user.id}`}
+                            className="px-4 py-2 hover:bg-muted cursor-pointer"
+                        >
+                            <div className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage
+                                        src={
+                                            user.profilePicture
+                                        }
+                                        alt={"user image"}
+                                        width={32}
+                                        height={32}
+                                    />
+                                    <AvatarFallback>
+                                        {user.username.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="text-sm font-medium">
+                                        {user.username}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {user.email}
+                                    </p>
                                 </div>
-                            </li>
-                        ))}
-                    </ul>
+                            </div>
+                        </Link>
+                    ))}
                 </div>
             )}
 

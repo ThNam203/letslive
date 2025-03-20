@@ -50,27 +50,20 @@ export default function ChatPanel({ roomId, onClose }: { roomId: string, onClose
 
     useEffect(() => {
         const connectWebSocket = async () => {
-            if (user == null) return;
-
-            const accessToken = getCookie("ACCESS_TOKEN");
-            if (!accessToken) {
-                return;
-            }
-
-            const ws = new WebSocket(
-                GLOBAL.WS_SERVER_URL + "?token=" + accessToken
-            );
+            const ws = new WebSocket(GLOBAL.WS_SERVER_URL);
 
             ws.onopen = () => {
                 wsRef.current = ws;
-                ws.send(
-                    JSON.stringify({
-                        type: "join",
-                        roomId: roomId,
-                        userId: user.id,
-                        username: user.displayName ?? user.username,
-                    })
-                );
+                if (user) {
+                    ws.send(
+                        JSON.stringify({
+                            type: "join",
+                            roomId: roomId,
+                            userId: user.id,
+                            username: user.displayName ?? user.username,
+                        })
+                    );
+                }
             };
 
             ws.onmessage = (event) => {
@@ -81,21 +74,11 @@ export default function ChatPanel({ roomId, onClose }: { roomId: string, onClose
             };
 
             ws.onclose = (ev) => {
-                // toast(
-                //     "WebSocket connection closed: " +
-                //         ev.code +
-                //         ", " +
-                //         ev.wasClean +
-                //         ", " +
-                //         ev.reason,
-                //     { type: "info" }
-                // );
+
             };
 
             ws.onerror = (error) => {
-                // toast("WebSocket connection closed: " + error, {
-                //     type: "info",
-                // });
+
             };
         };
 
@@ -114,17 +97,17 @@ export default function ChatPanel({ roomId, onClose }: { roomId: string, onClose
                 } else wsRef.current.close();
             }
         };
-    }, [user, roomId]);
+    }, [user]);
 
     return (
         <div className="w-full h-full flex flex-col">
-            <div className="border border-y-0 p-4 flex justify-between items-center">
+            <div className="border border-y-0 px-4 py-3 flex justify-between items-center">
                 <h2 className="font-semibold">Chat</h2>
                 <Button variant="ghost" size="icon" onClick={onClose} className="md:hidden">
                     <X className="h-4 w-4" />
                 </Button>
             </div>
-            <div className="flex-1 overflow-y-auto mb-4 border border-t-0 border-gray-200 rounded-md rounded-t-none p-4 bg-gray-50">
+            <div className="flex-1 overflow-y-auto mb-4 border border-t-0 border-gray-200 rounded-md rounded-t-none px-4 py-2 bg-gray-50">
                 {messages.map((message, idx) => (
                     <div key={idx} className="mb-3">
                         <span
@@ -152,7 +135,7 @@ export default function ChatPanel({ roomId, onClose }: { roomId: string, onClose
             <form onSubmit={handleSendMessage} className="flex gap-2 mb-2">
                 <Input
                     type="text"
-                    placeholder={!user ? "Login to start messaging" : process.env.NEXT_PUBLIC_ENVIRONMENT === "development" ? "Type a message..." : "Chat is currently not usable in production"}
+                    placeholder={!user ? "Login to start messaging" : "Type a message..."}
                     disabled={!user || (process.env.NEXT_PUBLIC_ENVIRONMENT !== "development")}
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}

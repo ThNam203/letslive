@@ -28,6 +28,7 @@ import { Switch } from "../../../../components/ui/switch";
 import { DeleteVOD, UpdateVOD } from "../../../../lib/api/livestream";
 import { toast } from "react-toastify";
 import { UploadFile } from "../../../../lib/api/utils";
+import GLOBAL from "../../../../global";
 
 export default function VODEditCard({
     vod,
@@ -48,7 +49,7 @@ export default function VODEditCard({
     }>({
         title: vod.title,
         description: vod.description || "",
-        thumbnailURL: vod.thumbnailUrl,
+        thumbnailURL: vod.thumbnailUrl ? vod.thumbnailUrl : `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`,
         image: undefined,
         selectedImage: undefined,
         isPublic: vod.visibility === "public",
@@ -71,7 +72,7 @@ export default function VODEditCard({
         setFormData({
             title: vod.title,
             description: vod.description || "",
-            thumbnailURL: vod.thumbnailUrl,
+            thumbnailURL: vod.thumbnailUrl ? vod.thumbnailUrl : `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`,
             image: undefined,
             selectedImage: undefined,
             isPublic: vod.visibility === "public",
@@ -125,16 +126,16 @@ export default function VODEditCard({
                 prev.map((v) =>
                     v.id === vod.id
                         ? {
-                              ...v,
-                              title: formData.title,
-                              description: formData.description,
-                              visibility: formData.isPublic
-                                  ? "public"
-                                  : "private",
-                              thumbnailUrl: newThumbnailPath.length > 0
-                                  ? newThumbnailPath
-                                  : v.thumbnailUrl,
-                          }
+                            ...v,
+                            title: formData.title,
+                            description: formData.description,
+                            visibility: formData.isPublic
+                                ? "public"
+                                : "private",
+                            thumbnailUrl: newThumbnailPath.length > 0
+                                ? newThumbnailPath
+                                : v.thumbnailUrl ? v.thumbnailUrl : `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`,
+                        }
                         : v
                 )
             );
@@ -174,7 +175,7 @@ export default function VODEditCard({
                     <div className="flex flex-col items-center justify-center h-full bg-black bg-opacity-50">
                         <Image
                             alt="vod icon"
-                            src={vod.thumbnailUrl ?? "/icons/video.svg"}
+                            src={vod.thumbnailUrl ?? `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`}
                             width={350}
                             height={180}
                             className="w-full h-full"
@@ -198,7 +199,6 @@ export default function VODEditCard({
                         • {datediffFromNow(vod.endedAt)} ago
                     </p>
                     <div className="flex items-center mt-2 text-sm text-gray-500">
-                        <Heart className="w-4 h-4 mr-1" />
                         <span>{vod.viewCount} {vod.viewCount < 2 ? "view" : "views"}</span>
                         <div className="flex-1" />
                         <DropdownMenu>
@@ -251,7 +251,7 @@ export default function VODEditCard({
                                     style={{
                                         backgroundImage: formData.selectedImage
                                             ? `url(${formData.selectedImage})`
-                                            : `url("${vod.thumbnailUrl}")`,
+                                            : `url("${vod.thumbnailUrl ? vod.thumbnailUrl : `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`}")`,
                                     }}
                                 >
                                     <input

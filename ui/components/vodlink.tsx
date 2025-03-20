@@ -39,7 +39,6 @@ export default function VODLink({ vod, classname }: { vod: Livestream, classname
             {vod.description && vod.description.length > 50 ? `${vod.description.substring(0, 47)}...` : vod.description} • {datediffFromNow(vod.endedAt)} ago
         </p>
         <div className="flex items-center mt-2 text-sm text-gray-500">
-            <Heart className="w-4 h-4 mr-1" />
             <span>{vod.viewCount} {vod.viewCount < 2 ? "view" : "views"}</span>
         </div>
     </div>

@@ -41,7 +41,7 @@ export default function AllChannelsView() {
                 >
                     <Avatar>
                         <AvatarImage
-                            src={user.profilePicture ?? "https://github.com/shadcn.png"}
+                            src={user.profilePicture}
                             alt="avatar"
                             className="bg-black rounded-full max-h-[40px] max-w-[40px]"
                         />
