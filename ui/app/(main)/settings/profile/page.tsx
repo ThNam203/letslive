@@ -141,7 +141,7 @@ export default function ProfileSettings() {
                     <div className="flex gap-4 items-center">
                             <Avatar className="w-16 h-16">
                                 <AvatarImage
-                                    src={user?.profilePicture ?? "https://github.com/shadcn.png"}
+                                    src={user?.profilePicture}
                                     alt="avatar"
                                 />
                                 <AvatarFallback>

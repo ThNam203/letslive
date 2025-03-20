@@ -65,7 +65,7 @@ export default function UserInfo() {
                 <PopoverTrigger>
                     <Avatar>
                         <AvatarImage
-                            src={userState.user.profilePicture ?? "https://github.com/shadcn.png"}
+                            src={userState.user.profilePicture}
                             alt="avatar"
                         />
                         <AvatarFallback>
