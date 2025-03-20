@@ -27,6 +27,11 @@ func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.
 		return fmt.Sprintf("%s/login?errorMessage=%s", clientAddr, errMsg)
 	}
 
+	GetRedirectURLOnSuccess := func(redirectUrl string) string {
+		clientAddr := os.Getenv("CLIENT_URL")
+		return fmt.Sprintf("%s/login?redirectUrl=%s", clientAddr, redirectUrl)
+	}
+
 	oauthStateCookie, err := r.Cookie("oauthstate")
 	if err != nil {
 		http.Redirect(w, r, GetRedirectURLOnFail("Missing OAuth state cookie"), http.StatusTemporaryRedirect)
@@ -50,7 +55,7 @@ func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	http.Redirect(w, r, os.Getenv("CLIENT_URL")+"/login", http.StatusMovedPermanently)
+	http.Redirect(w, r, GetRedirectURLOnSuccess(""), http.StatusMovedPermanently)
 }
 
 func generateOAuthCookieState(w http.ResponseWriter) (string, error) {
