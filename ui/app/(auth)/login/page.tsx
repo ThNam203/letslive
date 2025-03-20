@@ -1,11 +1,32 @@
+"use client"
 
 import Link from "next/link";
 import { IconGoogle } from "../../../components/icons/google";
 import LogInForm from "../../../components/forms/LoginForm";
 import GLOBAL from "../../../global";
-import { AlertCircle, AlertOctagonIcon } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { toast } from "react-toastify";
 
 export default function LogInPage() {
+    const params = useSearchParams()
+    const router = useRouter();
+
+    useEffect(() => {
+        const err = params.get("errorMessage")
+        if (err) {
+            toast(err, {
+                type: "error"
+            })
+            return
+        }
+        
+        const redirectURL = params.get("redirectUrl")
+        if (redirectURL === null) return
+        if (redirectURL.length === 0) router.push("/")
+        else router.push(redirectURL);
+    }, [params, router]);
+
     return (
         <section className="flex items-center justify-center h-screen w-screen">
             <div className="flex flex-col justify-center rounded-xl p-12 bg-white w-full max-w-[600px]">
