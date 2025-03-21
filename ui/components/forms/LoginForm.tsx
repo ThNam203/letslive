@@ -40,7 +40,7 @@ export default function LogInForm() {
         } else if (password.length < 8) {
             newErrors.password = "Password must be at least 8 characters";
         }
-        console.log("turnstileToken", turnstileToken)
+        
         if (!turnstileToken) {
             newErrors.turnstile = "Please complete the CAPTCHA."
         }
@@ -113,7 +113,7 @@ export default function LogInForm() {
             </div>
             <FormErrorText textError={errors.password} />
             <Turnstile
-                sitekey={process.env.ENVIRONMENT === 'development' ? '1x00000000000000000000AA' : process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!}
+                sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!}
                 onSuccess={(token) => {
                     setTurnstileToken(token);
                     setErrors(prev => ({
