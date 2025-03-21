@@ -2,7 +2,11 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"net/http"
+	"net/url"
+	"os"
 	"sen1or/letslive/auth/domains"
 	"sen1or/letslive/auth/dto"
 	servererrors "sen1or/letslive/auth/errors"
@@ -59,6 +63,38 @@ func (s AuthService) GetUserFromCredentials(credentials dto.LogInRequestDTO) (*d
 	}
 
 	return auth, nil
+}
+
+func (s AuthService) CheckCAPTCHA(token string, userIPAddress string) *servererrors.ServerError {
+	formData := url.Values{}
+	formData.Set("secret", os.Getenv("CLOUDFLARE_TURNSTILE_SECRET_KEY"))
+	formData.Set("response", token)
+	if len(userIPAddress) == 0 {
+		formData.Set("remoteip", userIPAddress)
+	}
+
+	// Send verification request to Cloudflare
+	resp, err := http.PostForm("https://challenges.cloudflare.com/turnstile/v0/siteverify", formData)
+	if err != nil {
+		return servererrors.ErrInternalServer
+	}
+	defer resp.Body.Close()
+
+	type TurnstileResponse struct {
+		Success bool `json:"success"`
+	}
+
+	// Parse response
+	var outcome TurnstileResponse
+	if err := json.NewDecoder(resp.Body).Decode(&outcome); err != nil {
+		return servererrors.ErrInternalServer
+	}
+
+	if outcome.Success {
+		return nil
+	}
+
+	return servererrors.ErrCaptchaFailed
 }
 
 func (s AuthService) CreateNewAuth(userForm dto.SignUpRequestDTO) (*domains.Auth, *servererrors.ServerError) {

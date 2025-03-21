@@ -21,6 +21,7 @@ var (
 	ErrInvalidInput      = NewServerError(http.StatusBadRequest, "Input invalid.")
 	ErrInvalidPayload    = NewServerError(http.StatusBadRequest, "Payload invalid.")
 	ErrAuthAlreadyExists = NewServerError(http.StatusBadRequest, "Email is already registered.")
+	ErrCaptchaFailed     = NewServerError(http.StatusBadRequest, "Failed to verify CAPTCHA, please try again.")
 	ErrPasswordNotMatch  = NewServerError(http.StatusBadRequest, "Old password does not match.")
 
 	ErrUnauthorized             = NewServerError(http.StatusUnauthorized, "Unauthorized.")
