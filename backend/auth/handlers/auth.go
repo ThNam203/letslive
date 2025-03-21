@@ -42,6 +42,12 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ip := r.Header.Get("CF-Connecting-IP")
+	if err := h.authService.CheckCAPTCHA(userCredentials.TurnstileToken, ip); err != nil {
+		h.WriteErrorResponse(w, err)
+		return
+	}
+
 	auth, err := h.authService.GetUserFromCredentials(userCredentials)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
@@ -60,6 +66,12 @@ func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	var userForm dto.SignUpRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&userForm); err != nil {
 		h.WriteErrorResponse(w, servererrors.ErrInvalidPayload)
+		return
+	}
+
+	ip := r.Header.Get("CF-Connecting-IP")
+	if err := h.authService.CheckCAPTCHA(userForm.TurnstileToken, ip); err != nil {
+		h.WriteErrorResponse(w, err)
 		return
 	}
 
