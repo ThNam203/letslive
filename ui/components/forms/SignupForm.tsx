@@ -186,7 +186,7 @@ export default function SignUpForm() {
             </div>
             <FormErrorText textError={errors.confirmPassword} />
             <Turnstile
-                sitekey={process.env.ENVIRONMENT === 'development' ? '1x00000000000000000000AA' : process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!}
+                sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!}
                 onSuccess={(token) => {
                     setTurnstileToken(token);
                     setErrors(prev => ({
