@@ -121,10 +121,12 @@ export default function LogInForm() {
                         turnstile: "",
                     }))
                 }}
-                onError={(err) => setErrors(prev => ({
+                onError={(err) => {
+                    setTurnstileToken("");
+                    setErrors(prev => ({
                     ...prev,
                     turnstile: err ?? ""
-                }))}
+                }))}}
                 className="mt-4 my-2 float-right"
             />
             <FormErrorText textError={errors.turnstile} />
