@@ -11,6 +11,7 @@ import { IconUserOutline } from "../icons/user";
 import { IconPasswordOutline } from "../icons/password";
 import { IconEye } from "../icons/eye";
 import { IconEyeOff } from "../icons/eye-off";
+import Turnstile, { useTurnstile } from "react-turnstile";
 
 export default function SignUpForm() {
     const [email, setEmail] = useState("");
@@ -18,6 +19,7 @@ export default function SignUpForm() {
     const [password, setPassword] = useState("");
     const [hidingPassword, setHidingPassword] = useState(true);
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [turnstileToken, setTurnstileToken] = useState("");
     const [hidingConfirmPassword, setHidingConfirmPassword] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
@@ -26,7 +28,9 @@ export default function SignUpForm() {
         password: "",
         confirmPassword: "",
         username: "",
+        turnstile: "",
     });
+    const turnstile = useTurnstile();
 
     const validate = () => {
         const newErrors = {
@@ -34,6 +38,7 @@ export default function SignUpForm() {
             password: "",
             confirmPassword: "",
             username: "",
+            turnstile: "",
         };
 
         if (!email) {
@@ -62,12 +67,17 @@ export default function SignUpForm() {
             newErrors.confirmPassword = "Passwords do not match";
         }
 
+        if (!turnstileToken) {
+            newErrors.turnstile = "Please complete the CAPTCHA."
+        }
+
         setErrors(newErrors);
 
         return (
             !newErrors.email &&
             !newErrors.password &&
-            !newErrors.confirmPassword
+            !newErrors.confirmPassword &&
+            !newErrors.turnstile
         );
     };
 
@@ -77,8 +87,9 @@ export default function SignUpForm() {
         setIsLoading(true);
 
         if (validate()) {
-            const { fetchError } = await SignUp({email, username, password});
+            const { fetchError } = await SignUp({ email, username, password, turnstileToken });
             if (fetchError) {
+                turnstile.reset();
                 toast.error(fetchError.message);
             } else {
                 toast.success("Account created successfully");
@@ -174,11 +185,26 @@ export default function SignUpForm() {
                 )}
             </div>
             <FormErrorText textError={errors.confirmPassword} />
-
+            <Turnstile
+                sitekey={process.env.ENVIRONMENT === 'development' ? '1x00000000000000000000AA' : process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!}
+                onSuccess={(token) => {
+                    setTurnstileToken(token);
+                    setErrors(prev => ({
+                        ...prev,
+                        turnstile: "",
+                    }))
+                }}
+                onError={(err) => setErrors(prev => ({
+                    ...prev,
+                    turnstile: err ?? ""
+                }))}
+                className="mt-4 my-2 float-right"
+            />
+            <FormErrorText textError={errors.turnstile} />
             <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full rounded-md flex justify-center items-center bg-blue-400 hover:bg-blue-500 text-white h-[50px] border-transparent border mt-4 font-semibold"
+                className="w-full rounded-md flex justify-center items-center bg-blue-400 hover:bg-blue-500 text-white h-[50px] border-transparent border font-semibold"
             >
                 {isLoading && <Loader className="animate-spin ml-2" />}
                 SIGN UP
