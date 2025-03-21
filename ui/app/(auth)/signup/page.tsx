@@ -1,14 +1,13 @@
-
-
-
 import Link from "next/link";
 import { IconGoogle } from "../../../components/icons/google";
 import SignUpForm from "../../../components/forms/SignupForm";
 import GLOBAL from "../../../global";
+import Script from "next/script";
 
 export default function SignUpPage() {
     return (
         <section className="flex items-center justify-center h-screen w-screen">
+            <Script src=""/>
             <div className="flex flex-col justify-center rounded-xl p-12 bg-white w-full max-w-[600px]">
                 <h1 className="text-lg font-bold">LET&apos;S LIVE</h1>
                 <h1 className="text-2xl font-bold mb-1">
