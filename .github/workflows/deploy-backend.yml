@@ -1,11 +1,11 @@
-name: deploy
+name: deploy-backend
 on:
   workflow_run:
     workflows: [build-and-publish-images]
     types: [completed]
     branches: [main]
 
-  deploy:
+  deploy-backend-to-selfhost:
     runs-on: self-hosted
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
