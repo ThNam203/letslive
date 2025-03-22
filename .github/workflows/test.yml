@@ -19,5 +19,8 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: cd ./backend/chat && npm ci
-    - run: cd ./backend/chat && npm test
+        cache-dependency-path: "./backend/chat"
+    - run: npm ci
+      working-directory: "./backend/chat"
+    - run: npm test
+      working-directory: "./backend/chat"
