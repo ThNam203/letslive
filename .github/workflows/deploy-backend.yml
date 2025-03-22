@@ -5,6 +5,7 @@ on:
     types: [completed]
     branches: [main]
 
+jobs:
   deploy-backend-to-selfhost:
     runs-on: self-hosted
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
