@@ -7,6 +7,7 @@ export async function SignUp(body: {
     email: string;
     username: string;
     password: string;
+    turnstileToken: string;
 }): Promise<{ fetchError?: FetchError }> {
     try {
         await fetchClient<void>("/auth/signup", {
@@ -15,6 +16,7 @@ export async function SignUp(body: {
                 email: body.email,
                 username: body.username,
                 password: body.password,
+                turnstileToken: body.turnstileToken,
             }),
         });
      
@@ -26,7 +28,8 @@ export async function SignUp(body: {
 
 export async function LogIn(body: {
     email: string,
-    password: string
+    password: string,
+    turnstileToken: string,
 }): Promise<{ fetchError?: FetchError }> {
     try {
         await fetchClient<void>("/auth/login", {
@@ -34,6 +37,7 @@ export async function LogIn(body: {
             body: JSON.stringify({
                 email: body.email,
                 password: body.password,
+                turnstileToken: body.turnstileToken,
             }),
         });
         return {};
@@ -41,7 +45,6 @@ export async function LogIn(body: {
         return { fetchError: error as FetchError };
     }
 }
-
 
 export async function Logout(): Promise<{ fetchError?: FetchError }> {
     try {

@@ -10,6 +10,7 @@ import { IconPasswordOutline } from "../icons/password";
 import { IconEye } from "../icons/eye";
 import { IconEyeOff } from "../icons/eye-off";
 import { Loader } from "lucide-react";
+import Turnstile, { useTurnstile } from "react-turnstile";
 
 export default function LogInForm() {
     const [email, setEmail] = useState("");
@@ -20,10 +21,13 @@ export default function LogInForm() {
     const [errors, setErrors] = useState({
         email: "",
         password: "",
+        turnstile: "",
     });
+    const [turnstileToken, setTurnstileToken] = useState("");
+    const turnstile = useTurnstile();
 
     const validate = () => {
-        const newErrors = { email: "", password: "" };
+        const newErrors = { email: "", password: "", turnstile: "" };
 
         if (!email) {
             newErrors.email = "Email is required";
@@ -36,10 +40,14 @@ export default function LogInForm() {
         } else if (password.length < 8) {
             newErrors.password = "Password must be at least 8 characters";
         }
+        
+        if (!turnstileToken) {
+            newErrors.turnstile = "Please complete the CAPTCHA."
+        }
 
         setErrors(newErrors);
 
-        return !newErrors.email && !newErrors.password;
+        return !newErrors.email && !newErrors.password && !newErrors.turnstile;
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -48,14 +56,16 @@ export default function LogInForm() {
         setIsLoading(true);
 
         if (validate()) {
-            const { fetchError } = await LogIn({ email, password });
+            const { fetchError } = await LogIn({ email, password, turnstileToken });
             if (fetchError) {
+                turnstile.reset();
                 toast.error(fetchError.message);
             } else {
                 router.replace("/")
                 router.refresh()
             }
         }
+
         setIsLoading(false);
     };
 
@@ -102,10 +112,28 @@ export default function LogInForm() {
                 )}
             </div>
             <FormErrorText textError={errors.password} />
+            <Turnstile
+                sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!}
+                onSuccess={(token) => {
+                    setTurnstileToken(token);
+                    setErrors(prev => ({
+                        ...prev,
+                        turnstile: "",
+                    }))
+                }}
+                onError={(err) => {
+                    setTurnstileToken("");
+                    setErrors(prev => ({
+                    ...prev,
+                    turnstile: err ?? ""
+                }))}}
+                className="mt-4 my-2 float-right"
+            />
+            <FormErrorText textError={errors.turnstile} />
             <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full rounded-md flex justify-center items-center bg-blue-400 hover:bg-blue-500 text-white h-[50px] border-transparent border mt-4 font-semibold"
+                className="w-full rounded-md flex justify-center items-center bg-blue-400 hover:bg-blue-500 text-white h-[50px] border-transparent border font-semibold"
             >
                 {isLoading && <Loader className="animate-spin ml-2" />}
                 LOG IN

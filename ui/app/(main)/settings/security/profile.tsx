@@ -121,7 +121,7 @@ export default function ContactSettings({ user }: { user: User }) {
                                     </Dialog>
                                     <span className="text-gray-400 text-sm">
                                         {user?.authProvider ===
-                                        AuthProvider.LOCAL
+                                            AuthProvider.LOCAL
                                             ? "Improve your security with a strong password"
                                             : "Your account is secured with a password from a third-party provider."}
                                         .
@@ -136,14 +136,20 @@ export default function ContactSettings({ user }: { user: User }) {
                                             Two-Factor Authentication
                                         </h2>
                                     </div>
-                                    <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm">
+                                    <button
+                                        // disabled={!user.isVerified || user.authProvider === AuthProvider.GOOGLE} 
+                                        disabled={true}
+                                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm"
+                                    >
                                         Set Up Two-Factor Authentication
                                     </button>
                                     <p className="text-sm text-gray-400">
-                                        Add an extra layer of security to your
-                                        Let&apos;s Live account by using your
-                                        password and a code on your mobile phone
-                                        to log in.
+                                        {user.authProvider !== AuthProvider.LOCAL ? `Your account is secured with third-party provider.`
+                                            : !user.isVerified
+                                                ? "Please verify your account before setting up 2FA."
+                                                : "Add an extra layer of security to your Let&apos;s Live account by enabling 2FA before logging in."
+                                        }
+
                                     </p>
                                 </div>
                             </div>

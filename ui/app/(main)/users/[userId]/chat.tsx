@@ -136,7 +136,7 @@ export default function ChatPanel({ roomId, onClose }: { roomId: string, onClose
                 <Input
                     type="text"
                     placeholder={!user ? "Login to start messaging" : "Type a message..."}
-                    disabled={!user || (process.env.NEXT_PUBLIC_ENVIRONMENT !== "development")}
+                    disabled={!user}
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     className="flex-1"
@@ -144,7 +144,7 @@ export default function ChatPanel({ roomId, onClose }: { roomId: string, onClose
                 <Button
                     type="submit"
                     className="bg-purple-600 hover:bg-purple-700 text-white"
-                    disabled={!user || (process.env.NEXT_PUBLIC_ENVIRONMENT !== "development")}
+                    disabled={!user}
                 >
                     <Send className="w-4 h-4" />
                 </Button>
