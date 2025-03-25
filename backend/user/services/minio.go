@@ -98,11 +98,11 @@ func (s *MinIOService) createIfNotExists(bucketName string) error {
 }
 
 // uploads a file to MinIO and returns the permanent URL
-func (s *MinIOService) AddFile(file multipart.File, fileHeader *multipart.FileHeader, bucketName string) (string, error) {
+func (s *MinIOService) AddFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader, bucketName string) (string, error) {
 	fileName := fmt.Sprintf("%s-%s", uuid.New().String(), fileHeader.Filename)
 
 	// Upload the file
-	_, err := s.minioClient.PutObject(context.Background(), bucketName, fileName, file, fileHeader.Size, minio.PutObjectOptions{
+	_, err := s.minioClient.PutObject(ctx, bucketName, fileName, file, fileHeader.Size, minio.PutObjectOptions{
 		ContentType:  fileHeader.Header.Get("Content-Type"),
 		CacheControl: "max-age=86400",
 	})

@@ -2,7 +2,7 @@
 CREATE TABLE "followers" (
   "user_id" UUID NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
   "follower_id" UUID NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
-  "followed_at" TIMESTAMPTZ DEFAULT current_timestamp,
+  "followed_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
   PRIMARY KEY ("user_id", "follower_id")
 );
 
@@ -10,5 +10,5 @@ CREATE TABLE "followers" (
 CREATE INDEX idx_followers_user ON followers(user_id);
 
 -- +goose Down
-DROP TABLE "followers";
-DROP INDEX idx_followers_user ON followers(user_id);
+DROP TABLE followers;
+DROP INDEX idx_followers_user;

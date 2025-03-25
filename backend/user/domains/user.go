@@ -27,13 +27,13 @@ type User struct {
 type UserStatus string
 
 const (
-	Normal   UserStatus = "normal"
-	Disabled            = "disabled"
+	UserStatusNormal   UserStatus = "normal"
+	UserStatusDisabled            = "disabled"
 )
 
 type AuthProvider string
 
 const (
-	Local  AuthProvider = "local"
-	Google              = "google"
+	AuthProviderLocal  AuthProvider = "local"
+	AuthProviderGoogle              = "google"
 )
