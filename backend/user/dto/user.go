@@ -28,7 +28,9 @@ type GetUserPublicResponseDTO struct {
 	ProfilePicture    *string   `json:"profilePicture,omitempty"`
 	BackgroundPicture *string   `json:"backgroundPicture,omitempty"`
 	FollowerCount     *int      `json:"followerCount,omitempty"`
-	IsFollowing       *bool     `json:"isFollowing,omitempty"`
+
+	// whether or not the current fetching user is following the fetched user
+	IsFollowing *bool `json:"isFollowing,omitempty"`
 
 	domains.LivestreamInformation `json:"livestreamInformation"`
 }

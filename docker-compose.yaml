@@ -366,9 +366,7 @@ services:
     networks:
       general_network:
     volumes:
-      - type: bind
-        source: /mnt/data/compose
-        target: /mnt/data
+      - minio_data:/mnt/data
 
 networks:
   general_network:
@@ -383,7 +381,7 @@ networks:
 volumes:
   postgres_auth_data:
   postgres_user_data:
-  postgres_kong_data:
   postgres_livestream_data:
   mongodb_chat_data:
   chat_pubsub_data:
+  minio_data:

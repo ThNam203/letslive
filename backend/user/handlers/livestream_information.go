@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -23,6 +24,8 @@ func NewLivestreamInformationHandler(ctrl services.LivestreamInformationService,
 }
 
 func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
 	const maxUploadSize = 11 * 1024 * 1024 // for other information outside of image
 	userUUID, err := getUserIdFromCookie(r)
 	if err != nil {
@@ -52,7 +55,7 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	if formErr != nil {
 		thumbnailUrl = r.FormValue("thumbnailUrl")
 	} else {
-		savedPath, err := h.minioService.AddFile(file, fileHeader, "thumbnails")
+		savedPath, err := h.minioService.AddFile(ctx, file, fileHeader, "thumbnails")
 		if err != nil {
 			h.WriteErrorResponse(w, servererrors.ErrInternalServer)
 			return
