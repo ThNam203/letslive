@@ -1,18 +1,18 @@
 package services
 
 import (
+	"sen1or/letslive/user/domains"
 	servererrors "sen1or/letslive/user/errors"
-	"sen1or/letslive/user/repositories"
 
 	"github.com/gofrs/uuid/v5"
 )
 
 type FollowService struct {
-	followRepo repositories.FollowRepository
+	followRepo domains.FollowRepository
 }
 
 func NewFollowService(
-	followRepo repositories.FollowRepository,
+	followRepo domains.FollowRepository,
 ) *FollowService {
 	return &FollowService{
 		followRepo: followRepo,

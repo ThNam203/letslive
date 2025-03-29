@@ -6,7 +6,6 @@ import (
 	"sen1or/letslive/auth/domains"
 	servererrors "sen1or/letslive/auth/errors"
 	"sen1or/letslive/auth/pkg/logger"
-	"sen1or/letslive/auth/repositories"
 	"sen1or/letslive/auth/types"
 	"time"
 
@@ -15,11 +14,11 @@ import (
 )
 
 type JWTService struct {
-	repo   repositories.RefreshTokenRepository
+	repo   domains.RefreshTokenRepository
 	config config.JWT
 }
 
-func NewJWTService(repo repositories.RefreshTokenRepository, cfg config.JWT) *JWTService {
+func NewJWTService(repo domains.RefreshTokenRepository, cfg config.JWT) *JWTService {
 	return &JWTService{
 		repo:   repo,
 		config: cfg,

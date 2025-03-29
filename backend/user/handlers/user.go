@@ -79,9 +79,11 @@ func (h *UserHandler) SearchUsersPublicHandler(w http.ResponseWriter, r *http.Re
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
+	authenticatedUserId, _ := getUserIdFromCookie(r)
+
 	username := r.URL.Query().Get("username")
 
-	users, err := h.userService.SearchUsersByUsername(ctx, username)
+	users, err := h.userService.SearchUsersByUsername(ctx, username, authenticatedUserId)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return

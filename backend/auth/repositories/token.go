@@ -13,19 +13,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type RefreshTokenRepository interface {
-	RevokeAllTokensOfUser(userId uuid.UUID) *servererrors.ServerError
-
-	Insert(*domains.RefreshToken) *servererrors.ServerError
-	FindByValue(string) (*domains.RefreshToken, *servererrors.ServerError)
-	Update(*domains.RefreshToken) *servererrors.ServerError
-}
-
 type postgresRefreshTokenRepo struct {
 	dbConn *pgxpool.Pool
 }
 
-func NewRefreshTokenRepository(conn *pgxpool.Pool) RefreshTokenRepository {
+func NewRefreshTokenRepository(conn *pgxpool.Pool) domains.RefreshTokenRepository {
 	return &postgresRefreshTokenRepo{
 		dbConn: conn,
 	}

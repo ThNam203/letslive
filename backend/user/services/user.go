@@ -7,21 +7,20 @@ import (
 	"sen1or/letslive/user/dto"
 	servererrors "sen1or/letslive/user/errors"
 	"sen1or/letslive/user/pkg/logger"
-	"sen1or/letslive/user/repositories"
 	"sen1or/letslive/user/utils"
 
 	"github.com/gofrs/uuid/v5"
 )
 
 type UserService struct {
-	userRepo                  repositories.UserRepository
-	livestreamInformationRepo repositories.LivestreamInformationRepository
+	userRepo                  domains.UserRepository
+	livestreamInformationRepo domains.LivestreamInformationRepository
 	minioService              MinIOService
 }
 
 func NewUserService(
-	userRepo repositories.UserRepository,
-	livestreamInformationRepo repositories.LivestreamInformationRepository,
+	userRepo domains.UserRepository,
+	livestreamInformationRepo domains.LivestreamInformationRepository,
 	minioService MinIOService,
 ) *UserService {
 	return &UserService{
@@ -67,12 +66,12 @@ func (s *UserService) GetAllUsers(ctx context.Context, page int) ([]domains.User
 	return users, nil
 }
 
-func (s *UserService) SearchUsersByUsername(ctx context.Context, username string) ([]dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
+func (s *UserService) SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
 	if len(username) == 0 {
 		return nil, servererrors.ErrInvalidInput
 	}
 
-	users, err := s.userRepo.SearchUsersByUsername(ctx, username)
+	users, err := s.userRepo.SearchUsersByUsername(ctx, username, authenticatedUserId)
 	if err != nil {
 		return nil, err
 	}

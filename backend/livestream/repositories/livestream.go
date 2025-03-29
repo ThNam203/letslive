@@ -12,26 +12,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type LivestreamRepository interface {
-	GetById(uuid.UUID) (*domains.Livestream, *servererrors.ServerError)
-	GetByUser(uuid.UUID) ([]domains.Livestream, *servererrors.ServerError)
-
-	GetAllLivestreamings(page int) ([]domains.Livestream, *servererrors.ServerError)
-	GetPopularVODs(page int) ([]domains.Livestream, *servererrors.ServerError)
-	AddOneToViewCount(uuid.UUID)
-
-	CheckIsUserLivestreaming(uuid.UUID) (bool, *servererrors.ServerError)
-
-	Create(domains.Livestream) (*domains.Livestream, *servererrors.ServerError)
-	Update(domains.Livestream) (*domains.Livestream, *servererrors.ServerError)
-	Delete(uuid.UUID) *servererrors.ServerError
-}
-
 type postgresLivestreamRepo struct {
 	dbConn *pgxpool.Pool
 }
 
-func NewLivestreamRepository(conn *pgxpool.Pool) LivestreamRepository {
+func NewLivestreamRepository(conn *pgxpool.Pool) domains.LivestreamRepository {
 	return &postgresLivestreamRepo{
 		dbConn: conn,
 	}

@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"sen1or/letslive/user/domains"
 	servererrors "sen1or/letslive/user/errors"
 	"sen1or/letslive/user/pkg/logger"
 
@@ -9,16 +10,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type FollowRepository interface {
-	FollowUser(followUser, followedUser uuid.UUID) *servererrors.ServerError
-	UnfollowUser(followUser, followedUser uuid.UUID) *servererrors.ServerError
-}
-
 type postgresFollowRepo struct {
 	dbConn *pgxpool.Pool
 }
 
-func NewFollowRepository(conn *pgxpool.Pool) FollowRepository {
+func NewFollowRepository(conn *pgxpool.Pool) domains.FollowRepository {
 	return &postgresFollowRepo{
 		dbConn: conn,
 	}

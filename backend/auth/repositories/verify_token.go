@@ -11,19 +11,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type VerifyTokenRepository interface {
-	Insert(newToken domains.VerifyToken) *servererrors.ServerError
-	GetByValue(token string) (*domains.VerifyToken, *servererrors.ServerError)
-	DeleteByID(uuid.UUID) *servererrors.ServerError
-	DeleteByValue(token string) *servererrors.ServerError
-	DeleteAllOfUser(userId uuid.UUID) *servererrors.ServerError
-}
-
 type postgresVerifyTokenRepo struct {
 	dbConn *pgxpool.Pool
 }
 
-func NewVerifyTokenRepo(conn *pgxpool.Pool) VerifyTokenRepository {
+func NewVerifyTokenRepo(conn *pgxpool.Pool) domains.VerifyTokenRepository {
 	return &postgresVerifyTokenRepo{
 		dbConn: conn,
 	}

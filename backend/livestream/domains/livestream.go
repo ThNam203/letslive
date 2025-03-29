@@ -1,6 +1,7 @@
 package domains
 
 import (
+	servererrors "sen1or/letslive/livestream/errors"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -29,3 +30,18 @@ const (
 	LivestreamPublicVisibility  LivestreamVisibility = "public"
 	LivestreamPrivateVisibility                      = "private"
 )
+
+type LivestreamRepository interface {
+	GetById(uuid.UUID) (*Livestream, *servererrors.ServerError)
+	GetByUser(uuid.UUID) ([]Livestream, *servererrors.ServerError)
+
+	GetAllLivestreamings(page int) ([]Livestream, *servererrors.ServerError)
+	GetPopularVODs(page int) ([]Livestream, *servererrors.ServerError)
+	AddOneToViewCount(uuid.UUID)
+
+	CheckIsUserLivestreaming(uuid.UUID) (bool, *servererrors.ServerError)
+
+	Create(Livestream) (*Livestream, *servererrors.ServerError)
+	Update(Livestream) (*Livestream, *servererrors.ServerError)
+	Delete(uuid.UUID) *servererrors.ServerError
+}

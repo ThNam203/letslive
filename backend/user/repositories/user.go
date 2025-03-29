@@ -13,35 +13,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type UserRepository interface {
-	GetById(ctx context.Context, userId uuid.UUID) (*domains.User, *servererrors.ServerError)
-	GetAll(ctx context.Context, page int) ([]domains.User, *servererrors.ServerError)
-	GetByUsername(ctx context.Context, username string) (*domains.User, *servererrors.ServerError)
-	GetByEmail(ctx context.Context, email string) (*domains.User, *servererrors.ServerError)
-	GetByAPIKey(ctx context.Context, apiKey uuid.UUID) (*domains.User, *servererrors.ServerError)
-
-	GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *servererrors.ServerError)
-	SearchUsersByUsername(ctx context.Context, username string) ([]dto.GetUserPublicResponseDTO, *servererrors.ServerError)
-
-	Create(ctx context.Context, username, email string, isVerified bool, authProvider domains.AuthProvider) (*domains.User, *servererrors.ServerError)
-	Update(ctx context.Context, user dto.UpdateUserRequestDTO) (*domains.User, *servererrors.ServerError)
-	UpdateUserVerified(ctx context.Context, userId uuid.UUID) *servererrors.ServerError
-	UpdateStreamAPIKey(ctx context.Context, userId uuid.UUID, newKey string) *servererrors.ServerError
-	UpdateProfilePicture(ctx context.Context, userId uuid.UUID, newProfilePictureURL string) *servererrors.ServerError
-	UpdateBackgroundPicture(ctx context.Context, userId uuid.UUID, newBackgroundPictureURL string) *servererrors.ServerError
-}
-
 type postgresUserRepo struct {
 	dbConn *pgxpool.Pool
 }
 
-func NewUserRepository(conn *pgxpool.Pool) UserRepository {
+func NewUserRepository(conn *pgxpool.Pool) domains.UserRepository {
 	return &postgresUserRepo{
 		dbConn: conn,
 	}
 }
 
-// the authenticatedUserId is used for checking if the caller is following the userId
 func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT 
@@ -51,7 +32,7 @@ func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UU
 			CASE 
     		    WHEN EXISTS (
     		        SELECT 1 FROM followers f2 
-
+					WHERE f2.follower_id = $2 AND f2.user_id = u.id
     		    ) THEN true 
     		    ELSE false 
     		END AS is_following
@@ -59,7 +40,7 @@ func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UU
 		LEFT JOIN livestream_information l ON u.id = l.user_id
 		LEFT JOIN followers f ON u.id = f.user_id
 		WHERE u.id = $1
-		GROUP BY u.id, l.user_id, l.title, l.description, l.thumbnail_url;
+		GROUP BY u.id, l.user_id, l.title, l.description, l.thumbnail_url
 	`, userId.String(), authenticatedUserId)
 	if err != nil {
 		logger.Errorf("failed to query user full information: %s", err)
@@ -127,24 +108,49 @@ func (r postgresUserRepo) GetAll(ctx context.Context, page int) ([]domains.User,
 	return users, nil
 }
 
-func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query string) ([]dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
+func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(ctx, `
-		SELECT u.id, u.username, u.email, u.is_verified, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture
-		COUNT(f.follower_id) AS follower_count,
-			CASE 
-    		    WHEN EXISTS (
-    		        SELECT 1 FROM followers f2 
-
-    		    ) THEN true 
-    		    ELSE false 
-    		END AS is_following
-		FROM users u
-		LEFT JOIN livestream_information l ON u.id = l.user_id
-		LEFT JOIN followers f ON u.id = f.user_id
-		WHERE username % $1 OR levenshtein(username, $1) <= 5
-		ORDER BY similarity(username, $1) DESC, levenshtein(username, $1) ASC
-		LIMIT 10
-	`, query)
+		SELECT
+		    u.id,
+		    u.username,
+		    u.email,
+		    u.is_verified,
+		    u.created_at,
+		    u.display_name,
+		    u.phone_number,
+		    u.bio,
+		    u.profile_picture,
+		    u.background_picture,
+			l.user_id,
+			l.title, 
+			l.description, 
+			l.thumbnail_url, 
+		    COUNT(f.follower_id) AS follower_count,
+		    CASE
+		        WHEN EXISTS (
+		            SELECT 1 FROM followers f2 WHERE f2.follower_id = $2 AND f2.user_id = u.id
+		        ) THEN true
+		        ELSE false
+		    END AS is_following
+		FROM
+		    users u
+		LEFT JOIN
+		    livestream_information l ON u.id = l.user_id
+		LEFT JOIN
+		    followers f ON u.id = f.user_id
+		WHERE 
+		    u.username % $1 OR levenshtein(u.username, $1) <= 5
+		GROUP BY 
+		    u.id,
+		    l.user_id,
+		    l.title,
+		    l.description,
+		    l.thumbnail_url
+		ORDER BY
+		    similarity(u.username, $1) DESC,
+		    levenshtein(u.username, $1) ASC
+		LIMIT 10;
+	`, query, authenticatedUserId)
 	if err != nil {
 		logger.Errorf("failed to search for users: %s", err)
 		return nil, servererrors.ErrDatabaseQuery
@@ -152,6 +158,7 @@ func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query stri
 
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByName[dto.GetUserPublicResponseDTO])
 	if err != nil {
+		logger.Errorf("failed to collect rows: %s", err)
 		return nil, servererrors.ErrDatabaseIssue
 	}
 

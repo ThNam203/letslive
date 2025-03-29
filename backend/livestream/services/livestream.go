@@ -5,7 +5,6 @@ import (
 	"sen1or/letslive/livestream/dto"
 	servererrors "sen1or/letslive/livestream/errors"
 	"sen1or/letslive/livestream/mapper"
-	"sen1or/letslive/livestream/repositories"
 	"sen1or/letslive/livestream/utils"
 	"time"
 
@@ -13,10 +12,10 @@ import (
 )
 
 type LivestreamService struct {
-	repo repositories.LivestreamRepository
+	repo domains.LivestreamRepository
 }
 
-func NewLivestreamService(repo repositories.LivestreamRepository) *LivestreamService {
+func NewLivestreamService(repo domains.LivestreamRepository) *LivestreamService {
 	return &LivestreamService{
 		repo: repo,
 	}
