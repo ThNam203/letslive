@@ -11,17 +11,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type LivestreamInformationRepository interface {
-	GetByUserId(uuid.UUID) (*domains.LivestreamInformation, *servererrors.ServerError)
-	Create(uuid.UUID) *servererrors.ServerError
-	Update(domains.LivestreamInformation) (*domains.LivestreamInformation, *servererrors.ServerError)
-}
-
 type postgresLivestreamInformationRepo struct {
 	dbConn *pgxpool.Pool
 }
 
-func NewLivestreamInformationRepository(conn *pgxpool.Pool) LivestreamInformationRepository {
+func NewLivestreamInformationRepository(conn *pgxpool.Pool) domains.LivestreamInformationRepository {
 	return &postgresLivestreamInformationRepo{
 		dbConn: conn,
 	}

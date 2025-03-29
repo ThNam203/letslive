@@ -89,14 +89,13 @@ export default function SearchBar({
             )}
 
             {showResults && results.length > 0 && !isLoading && (
-                <div className="absolute mt-1 w-full rounded-sm border bg-background shadow-md z-10">
+                <div className="absolute mt-1 w-full rounded-sm bg-background shadow-md z-10 overflow-auto max-h-60">
                     {results.map((user) => (
                         <Link
                             key={user.id}
                             href={`/users/${user.id}`}
-                            className="px-4 py-2 hover:bg-muted cursor-pointer"
+                            className="cursor-pointer hover:bg-gray-400 w-full flex flex-row items-center gap-3 p-2"
                         >
-                            <div className="flex items-center gap-3">
                                 <Avatar className="h-8 w-8">
                                     <AvatarImage
                                         src={
@@ -118,7 +117,6 @@ export default function SearchBar({
                                         {user.email}
                                     </p>
                                 </div>
-                            </div>
                         </Link>
                     ))}
                 </div>

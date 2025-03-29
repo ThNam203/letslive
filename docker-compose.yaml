@@ -48,10 +48,10 @@ services:
       - /var/log/letslive:/usr/local/bin/logs
 
   user:
-    image: sen1or/letslive-user:latest
-    #build:
-    #  context: ./backend/user/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-user:latest
+    build:
+      context: ./backend/user/
+      dockerfile: Dockerfile
     container_name: letslive_user
     restart: always
     ports:

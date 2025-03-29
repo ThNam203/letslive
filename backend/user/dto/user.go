@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"sen1or/letslive/user/domains"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -32,7 +31,14 @@ type GetUserPublicResponseDTO struct {
 	// whether or not the current fetching user is following the fetched user
 	IsFollowing *bool `json:"isFollowing,omitempty"`
 
-	domains.LivestreamInformation `json:"livestreamInformation"`
+	LivestreamInformation `json:"livestreamInformation"`
+}
+
+type LivestreamInformation struct {
+	UserID       uuid.UUID `db:"user_id,omitempty" json:"userId"`
+	Title        *string   `db:"title,omitempty" json:"title"`
+	Description  *string   `db:"description,omitempty" json:"description"`
+	ThumbnailURL *string   `db:"thumbnail_url,omitempty" json:"thumbnailUrl"`
 }
 
 type GetUserByStreamAPIKeyRequestDTO struct{}

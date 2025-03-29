@@ -12,21 +12,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type AuthRepository interface {
-	GetByID(uuid.UUID) (*domains.Auth, *servererrors.ServerError)
-	GetByUserID(uuid.UUID) (*domains.Auth, *servererrors.ServerError)
-	GetByEmail(string) (*domains.Auth, *servererrors.ServerError)
-
-	Create(domains.Auth) (*domains.Auth, *servererrors.ServerError)
-	UpdatePasswordHash(authId, newPasswordHash string) *servererrors.ServerError
-	Delete(uuid.UUID) *servererrors.ServerError
-}
-
 type postgresAuthRepo struct {
 	dbConn *pgxpool.Pool
 }
 
-func NewAuthRepository(conn *pgxpool.Pool) AuthRepository {
+func NewAuthRepository(conn *pgxpool.Pool) domains.AuthRepository {
 	return &postgresAuthRepo{
 		dbConn: conn,
 	}
