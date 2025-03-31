@@ -12,7 +12,6 @@ import (
 	servererrors "sen1or/letslive/auth/errors"
 	usergateway "sen1or/letslive/auth/gateway/user"
 	"sen1or/letslive/auth/pkg/logger"
-	"sen1or/letslive/auth/repositories"
 	"sen1or/letslive/auth/utils"
 
 	"github.com/go-playground/validator/v10"
@@ -21,11 +20,11 @@ import (
 )
 
 type AuthService struct {
-	repo        repositories.AuthRepository
+	repo        domains.AuthRepository
 	userGateway usergateway.UserGateway
 }
 
-func NewAuthService(repo repositories.AuthRepository, userGateway usergateway.UserGateway) *AuthService {
+func NewAuthService(repo domains.AuthRepository, userGateway usergateway.UserGateway) *AuthService {
 	return &AuthService{
 		repo:        repo,
 		userGateway: userGateway,

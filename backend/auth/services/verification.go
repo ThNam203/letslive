@@ -8,18 +8,17 @@ import (
 	servererrors "sen1or/letslive/auth/errors"
 	usergateway "sen1or/letslive/auth/gateway/user"
 	"sen1or/letslive/auth/pkg/logger"
-	"sen1or/letslive/auth/repositories"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
 )
 
 type VerificationService struct {
-	repo        repositories.VerifyTokenRepository
+	repo        domains.VerifyTokenRepository
 	userGateway usergateway.UserGateway
 }
 
-func NewVerificationService(repo repositories.VerifyTokenRepository, userGateway usergateway.UserGateway) *VerificationService {
+func NewVerificationService(repo domains.VerifyTokenRepository, userGateway usergateway.UserGateway) *VerificationService {
 	return &VerificationService{
 		repo:        repo,
 		userGateway: userGateway,
