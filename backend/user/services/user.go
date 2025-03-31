@@ -1,27 +1,26 @@
 package services
 
 import (
+	"context"
 	"mime/multipart"
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/dto"
 	servererrors "sen1or/letslive/user/errors"
-	"sen1or/letslive/user/mapper"
 	"sen1or/letslive/user/pkg/logger"
-	"sen1or/letslive/user/repositories"
 	"sen1or/letslive/user/utils"
 
 	"github.com/gofrs/uuid/v5"
 )
 
 type UserService struct {
-	userRepo                  repositories.UserRepository
-	livestreamInformationRepo repositories.LivestreamInformationRepository
+	userRepo                  domains.UserRepository
+	livestreamInformationRepo domains.LivestreamInformationRepository
 	minioService              MinIOService
 }
 
 func NewUserService(
-	userRepo repositories.UserRepository,
-	livestreamInformationRepo repositories.LivestreamInformationRepository,
+	userRepo domains.UserRepository,
+	livestreamInformationRepo domains.LivestreamInformationRepository,
 	minioService MinIOService,
 ) *UserService {
 	return &UserService{
@@ -31,8 +30,8 @@ func NewUserService(
 	}
 }
 
-func (s *UserService) GetUserById(userUUID uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
-	user, err := s.userRepo.GetById(userUUID, authenticatedUserId)
+func (s *UserService) GetUserPublicInfoById(ctx context.Context, userUUID uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
+	user, err := s.userRepo.GetPublicInfoById(ctx, userUUID, authenticatedUserId)
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +39,8 @@ func (s *UserService) GetUserById(userUUID uuid.UUID, authenticatedUserId *uuid.
 	return user, nil
 }
 
-func (s *UserService) GetUserByStreamAPIKey(key uuid.UUID) (*domains.User, *servererrors.ServerError) {
-	user, err := s.userRepo.GetByAPIKey(key)
+func (s *UserService) GetUserByStreamAPIKey(ctx context.Context, key uuid.UUID) (*domains.User, *servererrors.ServerError) {
+	user, err := s.userRepo.GetByAPIKey(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +48,8 @@ func (s *UserService) GetUserByStreamAPIKey(key uuid.UUID) (*domains.User, *serv
 	return user, nil
 }
 
-func (s *UserService) GetUserFullInformation(userUUID uuid.UUID) (*domains.User, *servererrors.ServerError) {
-	user, err := s.userRepo.GetFullInfoById(userUUID)
+func (s *UserService) GetUserById(ctx context.Context, userUUID uuid.UUID) (*domains.User, *servererrors.ServerError) {
+	user, err := s.userRepo.GetById(ctx, userUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +57,8 @@ func (s *UserService) GetUserFullInformation(userUUID uuid.UUID) (*domains.User,
 	return user, nil
 }
 
-func (s *UserService) GetAllUsers(page int) ([]domains.User, *servererrors.ServerError) {
-	users, err := s.userRepo.GetAll(page)
+func (s *UserService) GetAllUsers(ctx context.Context, page int) ([]domains.User, *servererrors.ServerError) {
+	users, err := s.userRepo.GetAll(ctx, page)
 	if err != nil {
 		return nil, err
 	}
@@ -67,33 +66,27 @@ func (s *UserService) GetAllUsers(page int) ([]domains.User, *servererrors.Serve
 	return users, nil
 }
 
-func (s *UserService) SearchUserByUsername(username string) ([]dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
+func (s *UserService) SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
 	if len(username) == 0 {
 		return nil, servererrors.ErrInvalidInput
 	}
 
-	users, err := s.userRepo.SearchUserByUsername(username)
+	users, err := s.userRepo.SearchUsersByUsername(ctx, username, authenticatedUserId)
 	if err != nil {
 		return nil, err
 	}
 
-	var resUsers []dto.GetUserPublicResponseDTO
-
-	for _, user := range users {
-		resUsers = append(resUsers, *mapper.UserToGetUserPublicResponseDTO(*user))
-	}
-
-	return resUsers, nil
+	return users, nil
 }
 
-func (s *UserService) CreateNewUser(data dto.CreateUserRequestDTO) (*domains.User, *servererrors.ServerError) {
+func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequestDTO) (*domains.User, *servererrors.ServerError) {
 	if err := utils.Validator.Struct(&data); err != nil {
 		logger.Debugf("failed to validate user create resquest: %+v", data)
 		return nil, servererrors.ErrInvalidInput
 	}
 
 	// TODO: transaction please
-	createdUser, err := s.userRepo.Create(data.Username, data.Email, data.IsVerified, domains.AuthProvider(data.AuthProvider))
+	createdUser, err := s.userRepo.Create(ctx, data.Username, data.Email, data.IsVerified, domains.AuthProvider(data.AuthProvider))
 	if err != nil {
 		return nil, err
 	}
@@ -105,8 +98,8 @@ func (s *UserService) CreateNewUser(data dto.CreateUserRequestDTO) (*domains.Use
 	return createdUser, nil
 }
 
-func (s *UserService) UpdateUserVerified(userId uuid.UUID) *servererrors.ServerError {
-	err := s.userRepo.UpdateUserVerified(userId)
+func (s *UserService) UpdateUserVerified(ctx context.Context, userId uuid.UUID) *servererrors.ServerError {
+	err := s.userRepo.UpdateUserVerified(ctx, userId)
 	if err != nil {
 		return err
 	}
@@ -114,13 +107,12 @@ func (s *UserService) UpdateUserVerified(userId uuid.UUID) *servererrors.ServerE
 	return nil
 }
 
-func (s *UserService) UpdateUser(data dto.UpdateUserRequestDTO) (*domains.User, *servererrors.ServerError) {
+func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequestDTO) (*domains.User, *servererrors.ServerError) {
 	if err := utils.Validator.Struct(&data); err != nil {
 		return nil, servererrors.ErrInvalidInput
 	}
 
-	updateData := mapper.UpdateUserRequestDTOToUser(data)
-	updatedUser, err := s.userRepo.Update(updateData)
+	updatedUser, err := s.userRepo.Update(ctx, data)
 	if err != nil {
 		return nil, err
 	}
@@ -128,13 +120,13 @@ func (s *UserService) UpdateUser(data dto.UpdateUserRequestDTO) (*domains.User, 
 	return updatedUser, nil
 }
 
-func (s *UserService) UpdateUserAPIKey(userId uuid.UUID) (string, *servererrors.ServerError) {
+func (s *UserService) UpdateUserAPIKey(ctx context.Context, userId uuid.UUID) (string, *servererrors.ServerError) {
 	newStreamKey, genErr := uuid.NewGen().NewV4()
 	if genErr != nil {
 		return "", servererrors.ErrInternalServer
 	}
 
-	err := s.userRepo.UpdateStreamAPIKey(userId, newStreamKey.String())
+	err := s.userRepo.UpdateStreamAPIKey(ctx, userId, newStreamKey.String())
 	if err != nil {
 		return "", err
 	}
@@ -142,13 +134,13 @@ func (s *UserService) UpdateUserAPIKey(userId uuid.UUID) (string, *servererrors.
 	return newStreamKey.String(), nil
 }
 
-func (s UserService) UpdateUserProfilePicture(file multipart.File, fileHeader *multipart.FileHeader, userId uuid.UUID) (string, *servererrors.ServerError) {
-	savedPath, err := s.minioService.AddFile(file, fileHeader, "profile-pictures")
+func (s UserService) UpdateUserProfilePicture(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader, userId uuid.UUID) (string, *servererrors.ServerError) {
+	savedPath, err := s.minioService.AddFile(ctx, file, fileHeader, "profile-pictures")
 	if err != nil {
 		return "", servererrors.ErrInternalServer
 	}
 
-	updateErr := s.userRepo.UpdateProfilePicture(userId, savedPath)
+	updateErr := s.userRepo.UpdateProfilePicture(ctx, userId, savedPath)
 	if updateErr != nil {
 		return "", updateErr
 	}
@@ -156,13 +148,13 @@ func (s UserService) UpdateUserProfilePicture(file multipart.File, fileHeader *m
 	return savedPath, nil
 }
 
-func (s UserService) UpdateUserBackgroundPicture(file multipart.File, fileHeader *multipart.FileHeader, userId uuid.UUID) (string, *servererrors.ServerError) {
-	savedPath, err := s.minioService.AddFile(file, fileHeader, "background-pictures")
+func (s UserService) UpdateUserBackgroundPicture(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader, userId uuid.UUID) (string, *servererrors.ServerError) {
+	savedPath, err := s.minioService.AddFile(ctx, file, fileHeader, "background-pictures")
 	if err != nil {
 		return "", servererrors.ErrInternalServer
 	}
 
-	updateErr := s.userRepo.UpdateBackgroundPicture(userId, savedPath)
+	updateErr := s.userRepo.UpdateBackgroundPicture(ctx, userId, savedPath)
 	if updateErr != nil {
 		return "", updateErr
 	}
@@ -171,14 +163,12 @@ func (s UserService) UpdateUserBackgroundPicture(file multipart.File, fileHeader
 }
 
 // INTERNAL USE
-func (s UserService) UpdateUserInternal(data dto.UpdateUserRequestDTO) (*domains.User, *servererrors.ServerError) {
+func (s UserService) UpdateUserInternal(ctx context.Context, data dto.UpdateUserRequestDTO) (*domains.User, *servererrors.ServerError) {
 	if err := utils.Validator.Struct(&data); err != nil {
 		return nil, servererrors.ErrInvalidInput
 	}
 
-	updateUser := mapper.UpdateUserRequestDTOToUser(data)
-
-	updatedUser, err := s.userRepo.Update(updateUser)
+	updatedUser, err := s.userRepo.Update(ctx, data)
 	if err != nil {
 		return nil, err
 	}
@@ -186,8 +176,8 @@ func (s UserService) UpdateUserInternal(data dto.UpdateUserRequestDTO) (*domains
 	return updatedUser, nil
 }
 
-func (s UserService) UploadFileToMinIO(file multipart.File, fileHeader *multipart.FileHeader) (string, *servererrors.ServerError) {
-	savedPath, err := s.minioService.AddFile(file, fileHeader, "general-files")
+func (s UserService) UploadFileToMinIO(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, *servererrors.ServerError) {
+	savedPath, err := s.minioService.AddFile(ctx, file, fileHeader, "general-files")
 	if err != nil {
 		return "", servererrors.ErrInternalServer
 	}

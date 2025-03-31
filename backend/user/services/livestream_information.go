@@ -3,14 +3,13 @@ package services
 import (
 	"sen1or/letslive/user/domains"
 	servererrors "sen1or/letslive/user/errors"
-	"sen1or/letslive/user/repositories"
 )
 
 type LivestreamInformationService struct {
-	repo repositories.LivestreamInformationRepository
+	repo domains.LivestreamInformationRepository
 }
 
-func NewLivestreamInformationService(repo repositories.LivestreamInformationRepository) *LivestreamInformationService {
+func NewLivestreamInformationService(repo domains.LivestreamInformationRepository) *LivestreamInformationService {
 	return &LivestreamInformationService{
 		repo: repo,
 	}

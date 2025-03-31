@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -27,6 +28,8 @@ func NewUserHandler(userService services.UserService) *UserHandler {
 }
 
 func (h *UserHandler) GetUserByIdPublicHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
 	authenticatedUserId, _ := getUserIdFromCookie(r)
 	userId := r.PathValue("userId")
 	if len(userId) == 0 {
@@ -40,7 +43,7 @@ func (h *UserHandler) GetUserByIdPublicHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	user, serviceErr := h.userService.GetUserById(userUUID, authenticatedUserId)
+	user, serviceErr := h.userService.GetUserPublicInfoById(ctx, userUUID, authenticatedUserId)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
@@ -52,6 +55,8 @@ func (h *UserHandler) GetUserByIdPublicHandler(w http.ResponseWriter, r *http.Re
 }
 
 func (h *UserHandler) GetAllUsersPublicHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
 	page, err := strconv.Atoi(r.URL.Query().Get("page"))
 
 	if err != nil || page < 0 {
@@ -59,7 +64,7 @@ func (h *UserHandler) GetAllUsersPublicHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	users, serviceErr := h.userService.GetAllUsers(page)
+	users, serviceErr := h.userService.GetAllUsers(ctx, page)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
@@ -71,9 +76,14 @@ func (h *UserHandler) GetAllUsersPublicHandler(w http.ResponseWriter, r *http.Re
 }
 
 func (h *UserHandler) SearchUsersPublicHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	authenticatedUserId, _ := getUserIdFromCookie(r)
+
 	username := r.URL.Query().Get("username")
 
-	users, err := h.userService.SearchUserByUsername(username)
+	users, err := h.userService.SearchUsersByUsername(ctx, username, authenticatedUserId)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
@@ -85,6 +95,9 @@ func (h *UserHandler) SearchUsersPublicHandler(w http.ResponseWriter, r *http.Re
 }
 
 func (h *UserHandler) GetUserByStreamAPIKeyInternalHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	streamAPIKeyString := r.URL.Query().Get("streamAPIKey")
 	if len(streamAPIKeyString) == 0 {
 		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
@@ -97,7 +110,7 @@ func (h *UserHandler) GetUserByStreamAPIKeyInternalHandler(w http.ResponseWriter
 		return
 	}
 
-	user, err := h.userService.GetUserByStreamAPIKey(streamAPIKey)
+	user, err := h.userService.GetUserByStreamAPIKey(ctx, streamAPIKey)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -105,12 +118,16 @@ func (h *UserHandler) GetUserByStreamAPIKeyInternalHandler(w http.ResponseWriter
 }
 
 func (h *UserHandler) GetCurrentUserPrivateHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
 		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
 		return
 	}
-	user, err := h.userService.GetUserFullInformation(*userUUID)
+
+	user, err := h.userService.GetUserById(ctx, *userUUID)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
@@ -123,13 +140,16 @@ func (h *UserHandler) GetCurrentUserPrivateHandler(w http.ResponseWriter, r *htt
 
 // INTERNAL
 func (h *UserHandler) CreateUserInternalHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	var body dto.CreateUserRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		h.WriteErrorResponse(w, servererrors.ErrInvalidPayload)
 		return
 	}
 
-	createdUser, err := h.userService.CreateNewUser(body)
+	createdUser, err := h.userService.CreateNewUser(ctx, body)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
@@ -142,6 +162,9 @@ func (h *UserHandler) CreateUserInternalHandler(w http.ResponseWriter, r *http.R
 
 // INTERNAL
 func (h *UserHandler) SetUserVerifiedInternalHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	userId := r.PathValue("userId")
 	if len(userId) == 0 {
 		h.WriteErrorResponse(w, servererrors.ErrInvalidInput)
@@ -154,7 +177,7 @@ func (h *UserHandler) SetUserVerifiedInternalHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	if err := h.userService.UpdateUserVerified(userUUID); err != nil {
+	if err := h.userService.UpdateUserVerified(ctx, userUUID); err != nil {
 		h.WriteErrorResponse(w, servererrors.ErrInvalidInput)
 		return
 	}
@@ -163,6 +186,9 @@ func (h *UserHandler) SetUserVerifiedInternalHandler(w http.ResponseWriter, r *h
 }
 
 func (h *UserHandler) UpdateCurrentUserPrivateHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
 		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
@@ -177,7 +203,7 @@ func (h *UserHandler) UpdateCurrentUserPrivateHandler(w http.ResponseWriter, r *
 	}
 
 	requestBody.Id = uuid.FromStringOrNil(userUUID.String())
-	updatedUser, err := h.userService.UpdateUser(requestBody)
+	updatedUser, err := h.userService.UpdateUser(ctx, requestBody)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
@@ -189,6 +215,9 @@ func (h *UserHandler) UpdateCurrentUserPrivateHandler(w http.ResponseWriter, r *
 }
 
 func (h *UserHandler) GenerateNewAPIStreamKeyPrivateHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
 		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
@@ -196,7 +225,7 @@ func (h *UserHandler) GenerateNewAPIStreamKeyPrivateHandler(w http.ResponseWrite
 	}
 	defer r.Body.Close()
 
-	newKey, err := h.userService.UpdateUserAPIKey(*userUUID)
+	newKey, err := h.userService.UpdateUserAPIKey(ctx, *userUUID)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
@@ -208,6 +237,9 @@ func (h *UserHandler) GenerateNewAPIStreamKeyPrivateHandler(w http.ResponseWrite
 }
 
 func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	const maxUploadSize = 10 * 1024 * 1024
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
@@ -235,7 +267,7 @@ func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWrit
 		return
 	}
 
-	savedPath, err := h.userService.UpdateUserProfilePicture(file, fileHeader, *userUUID)
+	savedPath, err := h.userService.UpdateUserProfilePicture(ctx, file, fileHeader, *userUUID)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
@@ -247,6 +279,9 @@ func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWrit
 }
 
 func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	const maxUploadSize = 10 * 1024 * 1024
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
@@ -274,7 +309,7 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 		return
 	}
 
-	savedPath, err := h.userService.UpdateUserBackgroundPicture(file, fileHeader, *userUUID)
+	savedPath, err := h.userService.UpdateUserBackgroundPicture(ctx, file, fileHeader, *userUUID)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
@@ -286,6 +321,9 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 }
 
 func (h *UserHandler) UpdateUserInternalHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	userID := r.PathValue("userId")
 	defer r.Body.Close()
 
@@ -301,7 +339,7 @@ func (h *UserHandler) UpdateUserInternalHandler(w http.ResponseWriter, r *http.R
 	}
 	requestBody.Id = uuid.FromStringOrNil(userID)
 
-	updatedUser, err := h.userService.UpdateUserInternal(requestBody)
+	updatedUser, err := h.userService.UpdateUserInternal(ctx, requestBody)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
@@ -338,8 +376,12 @@ func getUserIdFromCookie(r *http.Request) (*uuid.UUID, *servererrors.ServerError
 }
 
 func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	const maxUploadSize = 10 * 1024 * 1024
 	defer r.Body.Close()
+
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
 	if err := r.ParseMultipartForm(0); err != nil {
 		var maxByteError *http.MaxBytesError
@@ -358,7 +400,7 @@ func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	savedPath, err := h.userService.UploadFileToMinIO(file, fileHeader)
+	savedPath, err := h.userService.UploadFileToMinIO(ctx, file, fileHeader)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
