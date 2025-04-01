@@ -1,0 +1,78 @@
+import { FILE_SIZE_LIMIT_MB_UNIT } from "@/constant/image";
+import { cn } from "@/utils/cn";
+import { IsValidFileSizeInMB } from "@/utils/file";
+import { Loader, X } from "lucide-react";
+import React from "react";
+import { toast } from "react-toastify";
+
+interface Props {
+  className?: string;
+  onClick?: () => void;
+  inputRef: React.RefObject<HTMLInputElement>;
+  onValueChange?: (file: File) => void;
+  title?: string | React.ReactNode;
+  showCloseIcon?: boolean;
+  closeIconPosition?: "top" | "bottom" | "top-right";
+  onCloseIconClick?: () => void;
+}
+
+export default function ImageHover({
+  className,
+  onClick,
+  inputRef,
+  onValueChange,
+  title,
+  showCloseIcon = true,
+  closeIconPosition = "top-right",
+  onCloseIconClick,
+}: Props) {
+  const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!IsValidFileSizeInMB(file, FILE_SIZE_LIMIT_MB_UNIT)) {
+        toast.error(`File size exceeds ${FILE_SIZE_LIMIT_MB_UNIT} MB`);
+        return;
+      }
+      onValueChange?.(file);
+    }
+  };
+
+  const postions = {
+    top: "absolute left-1/2 -translate-x-1/2 top-2",
+    bottom: "absolute left-1/2 -translate-x-1/2 bottom-2",
+    "top-right": "absolute right-2 top-2",
+  };
+
+  const handleCloseIconClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    onCloseIconClick?.();
+  };
+
+  return (
+    <div
+      className={cn(
+        "absolute w-full h-full flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-all duration-300 ease-in-out cursor-pointer",
+        className
+      )}
+      onClick={onClick}
+    >
+      <input
+        type="file"
+        ref={inputRef}
+        className="hidden"
+        onChange={handleValueChange}
+      />
+      <div className="flex flex-row gap-2 text-white">{title}</div>
+      <div
+        className={cn(
+          "p-1 flex items-center justify-center rounded-full bg-purple-500 cursor-pointer",
+          postions[closeIconPosition],
+          !showCloseIcon && "hidden"
+        )}
+        onClick={handleCloseIconClick}
+      >
+        <X className="text-white" size={12} />
+      </div>
+    </div>
+  );
+}
