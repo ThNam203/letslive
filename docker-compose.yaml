@@ -16,10 +16,10 @@ services:
   #    - NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
 
   auth:
-    image: sen1or/letslive-auth:latest
-    #build:
-    #  context: ./backend/auth/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-auth:latest
+    build:
+      context: ./backend/auth/
+      dockerfile: Dockerfile
     restart: always
     container_name: letslive_auth
     ports:
@@ -74,10 +74,10 @@ services:
       - /var/log/letslive:/usr/local/bin/logs
 
   transcode:
-    image: sen1or/letslive-transcode:latest
-    #build:
-    #  context: ./backend/transcode/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-transcode:latest
+    build:
+      context: ./backend/transcode/
+      dockerfile: Dockerfile
     container_name: letslive_transcode
     restart: always
     ports:
@@ -104,10 +104,10 @@ services:
       - /var/log/letslive:/usr/local/bin/logs
 
   livestream:
-    image: sen1or/letslive-livestream:latest
-    #build:
-    #  context: ./backend/livestream/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-livestream:latest
+    build:
+      context: ./backend/livestream/
+      dockerfile: Dockerfile
     container_name: letslive_livestream
     restart: always
     ports:
@@ -128,10 +128,10 @@ services:
       - /var/log/letslive:/usr/local/bin/logs
 
   configserver:
-    image: sen1or/letslive-configserver:latest
-    #build:
-    #  context: ./backend/configserver
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-configserver:latest
+    build:
+      context: ./backend/configserver
+      dockerfile: Dockerfile
     container_name: letslive_configserver
     restart: always
     ports:
@@ -151,10 +151,10 @@ services:
       retries: 5
 
   chat:
-    image: sen1or/letslive-chat:latest
-    #build:
-    #  context: ./backend/chat/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-chat:latest
+    build:
+      context: ./backend/chat/
+      dockerfile: Dockerfile
     container_name: letslive_chat
     command: npm run start
     restart: always
@@ -176,7 +176,7 @@ services:
         condition: service_healthy
 
   auth_db:
-    image: postgres:16.3
+    image: postgres:17.4-alpine
     container_name: letslive_auth_db
     restart: always
     shm_size: 64mb
@@ -199,7 +199,7 @@ services:
       retries: 5
 
   user_db:
-    image: postgres:16.3
+    image: postgres:17.4-alpine
     container_name: letslive_user_db
     restart: always
     shm_size: 64mb
@@ -222,7 +222,7 @@ services:
       retries: 5
 
   livestream_db:
-    image: postgres:16.3
+    image: postgres:17.4-alpine
     container_name: letslive_livestream_db
     restart: always
     shm_size: 64mb
