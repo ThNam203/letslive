@@ -1,0 +1,2 @@
+export const FILE_SIZE_LIMIT_MB_UNIT = 10; // 10MB
+export const FILE_SIZE_LIMIT_BYTES_UNIT = FILE_SIZE_LIMIT_MB_UNIT * 1024 * 1024; // 1MB in bytes

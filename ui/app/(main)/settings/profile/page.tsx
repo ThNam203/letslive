@@ -1,355 +1,196 @@
 "use client";
 
 import { Loader } from "lucide-react";
-import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import {
-    UpdateBackgroundPicture,
-    UpdateProfile,
-    UpdateProfilePicture,
-} from "../../../../lib/api/user";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import useUser from "../../../../hooks/user";
 import { Button } from "../../../../components/ui/button";
-import { Input } from "../../../../components/ui/input";
-import { Textarea } from "../../../../components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "../../../../components/ui/avatar";
+import useUser from "../../../../hooks/user";
+import {
+  UpdateBackgroundPicture,
+  UpdateProfile,
+  UpdateProfilePicture,
+} from "../../../../lib/api/user";
+import TextField from "./_components/input-field";
+import ProfileBanner from "./_components/profile-banner";
+import Section from "./_components/section";
+import TextAreaField from "./_components/textarea-field";
 
 export default function ProfileSettings() {
-    const user = useUser((state) => state.user);
-    const updateUser = useUser((state) => state.updateUser);
+  const user = useUser((state) => state.user);
+  const updateUser = useUser((state) => state.updateUser);
 
-    const [displayName, setDisplayName] = useState(user?.displayName || "");
-    const [bio, setBio] = useState(user?.bio || "");
-    const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(
+    null
+  );
 
-    const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-    const [isUpdatingProfilePicture, setIsUpdatingProfilePicture] =
-        useState(false);
-    const [isUpdatingBackgroundPicture, setIsUpdatingBackgroundPicture] =
-        useState(false);
-    const profileImageInputRef = useRef<HTMLInputElement>(null);
-    const backgroundImageInputRef = useRef<HTMLInputElement>(null);
+  const handleProfileImageChange = (file: File | null) => {
+    setProfileImageFile(file);
+  };
 
-    const handleProfileUpdateButtonClick = () => {
-        profileImageInputRef.current?.click(); // Trigger file input
-    };
+  const handleBackgroundImageChange = (file: File | null) => {
+    setBackgroundImageFile(file);
+  };
 
-    const handleBackgroundUpdateButtonClick = () => {
-        backgroundImageInputRef.current?.click(); // Trigger file input
-    };
+  const handleUpdateProfileInformation = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+    setIsUpdatingProfile(true);
 
-    const handleProfileImageChange = async (
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        if (event.target.files && event.target.files.length > 0) {
-            const file = event.target.files[0];
+    if (backgroundImageFile) {
+      const { fetchError: backgroundImageError, newPath: backgroundImagePath } =
+        await UpdateBackgroundPicture(backgroundImageFile).finally(() =>
+          setIsUpdatingProfile(false)
+        );
+      if (backgroundImageError) {
+        toast.error(backgroundImageError.message);
+        return;
+      }
+      setBackgroundImageFile(null);
+      updateUser({
+        ...user!,
+        backgroundPicture: backgroundImagePath,
+      });
+    }
 
-            setIsUpdatingProfilePicture(true);
-            const { newPath, fetchError } = await UpdateProfilePicture(file);
-            setIsUpdatingProfilePicture(false);
-            if (fetchError) {
-                toast(fetchError.message, { type: "error" });
-            } else {
-                updateUser({
-                    ...user!,
-                    profilePicture: newPath!,
-                });
+    if (profileImageFile) {
+      const { fetchError: profileImageError, newPath: profileImagePath } =
+        await UpdateProfilePicture(profileImageFile).finally(() =>
+          setIsUpdatingProfile(false)
+        );
+      if (profileImageError) {
+        toast.error(profileImageError.message);
+        return;
+      }
+      setProfileImageFile(null);
+      updateUser({
+        ...user!,
+        profilePicture: profileImagePath,
+      });
+    }
 
-                toast("Profile picture updated successfully!", {
-                    type: "success",
-                });
-            }
-        }
-    };
+    if (bio || displayName) {
+      const { updatedUser, fetchError } = await UpdateProfile({
+        ...user!,
+        displayName,
+        bio,
+      }).finally(() => setIsUpdatingProfile(false));
+      if (fetchError) {
+        toast.error(fetchError.message);
+        return;
+      }
+      updateUser({
+        ...user!,
+        ...updatedUser!,
+      });
+    }
 
-    const handleBackgroundImageChange = async (
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        if (event.target.files && event.target.files.length > 0) {
-            const file = event.target.files[0];
+    toast.success("Profile information updated successfully!");
+  };
 
-            setIsUpdatingBackgroundPicture(true);
-            const { newPath, fetchError } = await UpdateBackgroundPicture(file);
-            setIsUpdatingBackgroundPicture(false);
-            if (fetchError) {
-                toast(fetchError.message, { type: "error" });
-            } else {
-                updateUser({
-                    ...user!,
-                    backgroundPicture: newPath!,
-                });
+  useEffect(() => {
+    if (!user) return;
 
-                toast("Background picture updated successfully!", {
-                    type: "success",
-                });
-            }
-        }
-    };
+    const isDisplayNameChange = (user.displayName ?? "") !== displayName;
+    const isBioChange = (user.bio ?? "") !== bio;
+    const isProfileImageChange = profileImageFile !== null;
+    const isBackgroundImageChange = backgroundImageFile !== null;
 
-    const handleUpdateProfileInformation = async (
-        event: React.FormEvent<HTMLFormElement>
-    ) => {
-        event.preventDefault();
-        setIsUpdatingProfile(true);
+    console.log(
+      isDisplayNameChange,
+      isBioChange,
+      isProfileImageChange,
+      isBackgroundImageChange
+    );
 
-        const { updatedUser, fetchError } = await UpdateProfile({
-            ...user!,
-            displayName,
-            bio,
-        });
+    const isUserDataChange =
+      isDisplayNameChange ||
+      isBioChange ||
+      isProfileImageChange ||
+      isBackgroundImageChange;
 
-        if (fetchError) {
-            toast(fetchError.message, { type: "error" });
-        } else {
-            toast("Profile information updated successfully!", {
-                type: "success",
-            });
+    if (isUserDataChange) setIsButtonDisabled(false);
+    else setIsButtonDisabled(true);
+  }, [displayName, bio, user, profileImageFile, backgroundImageFile]);
 
-            updateUser(updatedUser!);
-        }
+  useEffect(() => {
+    setDisplayName(user?.displayName ?? "");
+    setBio(user?.bio ?? "");
+  }, [user]);
 
-        setIsUpdatingProfile(false);
-    };
+  return (
+    <div className="min-h-screen text-gray-900 p-6 overflow-y-auto">
+      <div className="max-w-4xl space-y-8">
+        {/* Profile Settings Section */}
+        <Section
+          title="Profile Settings"
+          description="Change identifying details for your account"
+          hasBorder
+        >
+          <form className="space-y-6" onSubmit={handleUpdateProfileInformation}>
+            <ProfileBanner
+              className="mb-14"
+              onProfileImageChange={handleProfileImageChange}
+              onBackgroundImageChange={handleBackgroundImageChange}
+            />
+            <TextField
+              label="Username"
+              disabled
+              defaultValue={user?.username}
+            />
+            <TextField
+              label="Display Name"
+              defaultValue={user?.displayName}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              disabled={isUpdatingProfile}
+            />
+            <TextAreaField
+              label="Bio"
+              defaultValue={user?.bio}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              disabled={isUpdatingProfile}
+              className="min-h-[100px]"
+            />
 
-    useEffect(() => {
-        if (!user) return;
-
-        const normalizedDisplayName = user.displayName ?? "";
-        const normalizedBio = user.bio ?? "";
-
-        if (normalizedDisplayName !== displayName || normalizedBio !== bio) {
-            setIsButtonDisabled(false);
-        } else {
-            setIsButtonDisabled(true);
-        }
-    }, [displayName, bio]);
-
-    useEffect(() => {
-        setDisplayName(user?.displayName ?? "");
-        setBio(user?.bio ?? "");
-    }, [user]);
-
-    return (
-        <div className="min-h-screen text-gray-900 p-6 overflow-y-auto">
-            <div className="max-w-4xl space-y-8">
-                {/* Profile Picture Section */}
-                <section>
-                    <h2 className="text-xl font-semibold mb-6">
-                        Profile Picture
-                    </h2>
-                    <div className="flex gap-4 items-center">
-                            <Avatar className="w-16 h-16">
-                                <AvatarImage
-                                    src={user?.profilePicture}
-                                    alt="avatar"
-                                />
-                                <AvatarFallback>
-                                    {user?.username.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                            </Avatar>
-                        <div className="space-y-2">
-                            <div>
-                                <input
-                                    type="file"
-                                    ref={profileImageInputRef}
-                                    className="hidden"
-                                    onChange={handleProfileImageChange}
-                                />
-                                <Button
-                                    variant="secondary"
-                                    disabled={isUpdatingProfilePicture}
-                                    className="bg-gray-300 hover:bg-gray-500 text-gray-900"
-                                    onClick={handleProfileUpdateButtonClick}
-                                >
-                                    {isUpdatingProfilePicture && (
-                                        <Loader className="animate-spin" />
-                                    )}{" "}
-                                    Update picture
-                                </Button>
-                            </div>
-                            <p className="text-sm text-gray-400">
-                                Must be JPEG, PNG, or GIF and cannot exceed
-                                10MB.
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Profile Banner Section */}
-                <section>
-                    <h2 className="text-xl font-semibold mb-6">
-                        Profile Banner
-                    </h2>
-                    <div className="space-y-4">
-                        <div className="relative w-full h-40 rounded-lg overflow-hidden border-1 border-gray-900">
-                            <div className="absolute inset-0 grid grid-cols-6 gap-2 p-2 w-1/2 m-2 ml-8 border-[1px] bg-gray-800 border-gray-600 rounded-lg">
-                                {user && user.backgroundPicture ? (
-                                    <Image
-                                        src={user.backgroundPicture}
-                                        alt="Profile Banner"
-                                        layout="fill"
-                                        objectFit="cover"
-                                        className="rounded-lg"
-                                    />
-                                ) : (
-                                    generateBackground()
-                                )}
-                            </div>
-                            <div className="absolute space-y-2 right-3 bottom-1/2 translate-y-1/2">
-                                <input
-                                    type="file"
-                                    ref={backgroundImageInputRef}
-                                    className="hidden"
-                                    onChange={handleBackgroundImageChange}
-                                />
-                                <Button
-                                    variant="secondary"
-                                    className="bg-gray-300 hover:bg-gray-500 text-gray-900"
-                                    onClick={handleBackgroundUpdateButtonClick}
-                                    disabled={isUpdatingBackgroundPicture}
-                                >
-                                    {isUpdatingBackgroundPicture && (
-                                        <Loader className="animate-spin" />
-                                    )}{" "}
-                                    Update background
-                                </Button>
-                                <p className="text-sm text-gray-400">
-                                    File format: JPEG, PNG, GIF and cannot
-                                    exceed 10MB
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Profile Settings Section */}
-                <section className="p-8 border-gray-600 border-[1px] rounded-lg">
-                    <h2 className="text-xl font-semibold mb-1">
-                        Profile Settings
-                    </h2>
-                    <p className="text-sm text-gray-400 mb-6">
-                        Change identifying details for your account
-                    </p>
-
-                    <form
-                        className="space-y-6"
-                        onSubmit={handleUpdateProfileInformation}
-                    >
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                Username
-                            </label>
-                            <div className="relative">
-                                <Input
-                                    type="text"
-                                    readOnly
-                                    defaultValue={user?.username}
-                                    className="text-gray-900 border-gray-700 pr-10"
-                                />
-                                {/* <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-gray-400 hover:bg-opacity-40 rounded-3xl"
-                                >
-                                    <Pencil className="h-2 w-2" />
-                                </Button> */}
-                            </div>
-                            <p className="text-sm mt-1 text-red-500">
-                                You can&apos;t update your username now.
-                            </p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                Display Name
-                            </label>
-                            <Input
-                                type="text"
-                                defaultValue={user?.displayName}
-                                value={displayName}
-                                onChange={(e) => setDisplayName(e.target.value)}
-                                disabled={isUpdatingProfile}
-                                className="text-gray-900 border-gray-700"
-                            />
-                            <p className="text-sm text-gray-400 mt-1">
-                                Create an alternative for your username
-                            </p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                Bio
-                            </label>
-                            <Textarea
-                                className="text-gray-900 border-gray-700 min-h-[100px]"
-                                defaultValue={user?.bio}
-                                value={bio}
-                                onChange={(e) => setBio(e.target.value)}
-                                disabled={isUpdatingProfile}
-                            />
-                            <p className="text-sm text-gray-400 mt-1">
-                                Give everyone a description your channel in
-                                under 300 characters
-                            </p>
-                        </div>
-
-                        <div className="flex justify-end mt-6">
-                            <Button
-                                className="bg-purple-600 hover:bg-purple-700 text-white disabled:bg-gray-400"
-                                disabled={isUpdatingProfile || isButtonDisabled}
-                                type="submit"
-                            >
-                                {isUpdatingProfile && (
-                                    <Loader className="animate-spin" />
-                                )}{" "}
-                                Save Changes
-                            </Button>
-                        </div>
-                    </form>
-                </section>
-
-                {/* Disable Account Section */}
-                <section className="border-t border-gray-800 pt-8">
-                    <h2 className="text-xl font-semibold mb-1">
-                        Disabling your Let&apos;s Live account
-                    </h2>
-                    <p className="text-sm text-gray-400 mb-4">
-                        Completely deactivate your account
-                    </p>
-
-                    <div className="border-1 rounded-md p-4">
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm text-gray-800">
-                                When you disable your account, your profile and
-                                notifications will be hidden, and your account
-                                will be deactivated. You can reactivate your
-                                account at any time.
-                            </p>
-                            <button className="text-sm font-medium text-white bg-red-800 px-4 py-2 rounded-md hover:bg-red-700">
-                                Disable Your Let&apos;s Live Account
-                            </button>
-                        </div>
-                    </div>
-                </section>
+            <div className="flex justify-end mt-6">
+              <Button
+                className="bg-purple-600 hover:bg-purple-700 text-white disabled:bg-gray-400"
+                disabled={isUpdatingProfile || isButtonDisabled}
+                type="submit"
+              >
+                {isUpdatingProfile && <Loader className="animate-spin" />} Save
+                Changes
+              </Button>
             </div>
-        </div>
-    );
-}
+          </form>
+        </Section>
 
-const generateBackground = () => {
-    return (
-        <>
-            {[...Array(18)].map((_, i) => (
-                <svg
-                    key={i}
-                    className="w-8 h-8 text-white opacity-25"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                >
-                    <path d="M21 3H3v18h18V3zm-9 14H7v-4h5v4zm0-6H7V7h5v4zm6 6h-4v-4h4v4zm0-6h-4V7h4v4z" />
-                </svg>
-            ))}
-        </>
-    );
-};
+        {/* Disable Account Section */}
+        <Section
+          title="Disabling your Let's Live account"
+          description="Completely deactivate your account"
+          className="border-t border-gray-800 pt-8"
+          contentClassName="border-1 rounded-md p-4"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-800">
+              When you disable your account, your profile and notifications will
+              be hidden, and your account will be deactivated. You can
+              reactivate your account at any time.
+            </p>
+            <button className="text-sm font-medium text-white bg-red-800 px-4 py-2 rounded-md hover:bg-red-700">
+              Disable Your Let&apos;s Live Account
+            </button>
+          </div>
+        </Section>
+      </div>
+    </div>
+  );
+}
