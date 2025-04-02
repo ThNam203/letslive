@@ -1,0 +1,460 @@
+openapi: 3.0.0
+info:
+  title: LetsLive Livestream Service API
+  version: 1.0.0
+  description: API documentation for the LetsLive livestream service
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 500
+        message:
+          type: string
+          example: internal server error
+
+    CreateLivestreamRequest:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: ID of the user creating the livestream
+        title:
+          type: string
+          description: Title of the livestream
+        description:
+          type: string
+          maxLength: 500
+          description: Description of the livestream
+        thumbnailUrl:
+          type: string
+          format: uri
+          description: URL of the livestream thumbnail
+        status:
+          type: string
+          maxLength: 20
+          description: Status of the livestream
+
+    UpdateLivestreamRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 100
+          description: Updated title of the livestream
+        description:
+          type: string
+          maxLength: 500
+          description: Updated description of the livestream
+        thumbnailURL:
+          type: string
+          description: Updated thumbnail URL
+        status:
+          type: string
+          description: Updated status of the livestream
+        visibility:
+          type: string
+          enum: [public, private]
+          description: Updated visibility setting
+        playbackUrl:
+          type: string
+          description: Updated playback URL
+        viewCount:
+          type: integer
+          minimum: 0
+          description: Updated view count
+        endedAt:
+          type: string
+          format: date-time
+          description: Time when the livestream ended
+        duration:
+          type: integer
+          description: Duration of the livestream in seconds
+
+paths:
+  /health:
+    get:
+      summary: Check service health
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "OK"
+
+  /livestreams:
+    post:
+      summary: Create a new livestream
+      operationId: createLivestream
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLivestreamRequest'
+      responses:
+        '200':
+          description: Livestream created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  userId:
+                    type: string
+                    format: uuid
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  thumbnailUrl:
+                    type: string
+                  status:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /livestreams/{livestreamId}:
+    parameters:
+      - name: livestreamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get livestream by ID
+      operationId: getLivestreamById
+      responses:
+        '200':
+          description: Livestream retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  userId:
+                    type: string
+                    format: uuid
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  thumbnailUrl:
+                    type: string
+                  status:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+        '404':
+          description: Livestream not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update livestream
+      operationId: updateLivestream
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLivestreamRequest'
+      responses:
+        '200':
+          description: Livestream updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  userId:
+                    type: string
+                    format: uuid
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  thumbnailUrl:
+                    type: string
+                  status:
+                    type: string
+                  visibility:
+                    type: string
+                  playbackUrl:
+                    type: string
+                  viewCount:
+                    type: integer
+                  endedAt:
+                    type: string
+                    format: date-time
+                  duration:
+                    type: integer
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Livestream not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete livestream
+      operationId: deleteLivestream
+      responses:
+        '204':
+          description: Livestream deleted successfully
+        '404':
+          description: Livestream not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /livestreams/user/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get livestreams of a user
+      operationId: getLivestreamsOfUser
+      responses:
+        '200':
+          description: List of user's livestreams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    userId:
+                      type: string
+                      format: uuid
+                    title:
+                      type: string
+                    description:
+                      type: string
+                    thumbnailUrl:
+                      type: string
+                    status:
+                      type: string
+                    createdAt:
+                      type: string
+                      format: date-time
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /livestreams/check:
+    get:
+      summary: Check if user is livestreaming
+      operationId: checkIsUserLivestreaming
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Check result
+          content:
+            text/plain:
+              schema:
+                type: boolean
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /livestreams/popular:
+    get:
+      summary: Get popular VODs
+      operationId: getPopularVODs
+      parameters:
+        - name: page
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: List of popular VODs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    userId:
+                      type: string
+                      format: uuid
+                    title:
+                      type: string
+                    description:
+                      type: string
+                    thumbnailUrl:
+                      type: string
+                    status:
+                      type: string
+                    viewCount:
+                      type: integer
+                    createdAt:
+                      type: string
+                      format: date-time
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /livestreams/live:
+    get:
+      summary: Get all active livestreams
+      operationId: getLivestreamings
+      parameters:
+        - name: page
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: List of active livestreams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    userId:
+                      type: string
+                      format: uuid
+                    title:
+                      type: string
+                    description:
+                      type: string
+                    thumbnailUrl:
+                      type: string
+                    status:
+                      type: string
+                    viewCount:
+                      type: integer
+                    createdAt:
+                      type: string
+                      format: date-time
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error' 
