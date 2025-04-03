@@ -10,10 +10,10 @@ import {
   UpdateProfile,
   UpdateProfilePicture,
 } from "../../../../lib/api/user";
-import TextField from "./_components/input-field";
+import TextField from "../_components/text-field";
 import ProfileBanner from "./_components/profile-banner";
 import Section from "../_components/section";
-import TextAreaField from "./_components/textarea-field";
+import TextAreaField from "../_components/textarea-field";
 
 export default function ProfileSettings() {
   const user = useUser((state) => state.user);

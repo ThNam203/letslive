@@ -7,7 +7,7 @@ import { Avatar } from "@radix-ui/react-avatar";
 import Image from "next/image";
 import { useRef } from "react";
 import DefaultBackgound from "./default-background";
-import ImageHover from "./image-hover";
+import ImageHover from "../../_components/image-hover";
 
 interface Props {
   className?: string;
@@ -54,7 +54,7 @@ export default function ProfileBanner({
 
   return (
     <div className={cn("w-full relative", className)}>
-      <div className="relative w-full h-[300px] rounded-lg overflow-hidden">
+      <div className="z-10 relative w-full h-[300px] rounded-lg overflow-hidden">
         {/* Profile Banner */}
         {user && user.backgroundPicture ? (
           <Image
@@ -80,7 +80,7 @@ export default function ProfileBanner({
           showCloseIcon={Boolean(user?.backgroundPicture)}
         />
       </div>
-      <div className="absolute -translate-y-2/3 left-1/2 -translate-x-1/2">
+      <div className="z-20 absolute -translate-y-2/3 left-1/2 -translate-x-1/2">
         <Avatar className="relative flex rounded-full border-4 border-white w-32 h-32 overflow-hidden">
           <AvatarImage
             src={user ? user.profilePicture : ""}

@@ -42,14 +42,16 @@ const VerificationRequest = () => {
           Please wait {cooldownTime}s before retrying.
         </span>
       ) : (
-        <span
-          className="underline text-purple-600 cursor-pointer hover:font-semibold"
-          onClick={handleClick}
-        >
-          Click here
-        </span>
-      )}{" "}
-      to send verification to your email.
+        <p>
+          <span
+            className="underline text-purple-600 cursor-pointer hover:font-semibold"
+            onClick={handleClick}
+          >
+            Click here
+          </span>
+          to send verification to your email.
+        </p>
+      )}
     </p>
   );
 };
