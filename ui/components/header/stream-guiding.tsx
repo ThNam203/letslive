@@ -1,20 +1,40 @@
 "use client";
 import { cn } from "@/utils/cn";
-import { Tv } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import LiveStreamIcon from "../icons/live-stream";
+import { Button } from "../ui/button";
 
 export default function StreamGuiding() {
   const [open, setOpen] = React.useState(false);
+  const [isGotIt, setIsGotIt] = React.useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("readStreamGuiding", JSON.stringify(isGotIt));
+  }, [isGotIt]);
+
+  useEffect(() => {
+    const readStreamGuiding = localStorage.getItem("readStreamGuiding");
+    setIsGotIt(readStreamGuiding === "true");
+  }, []);
+
+  const handleGotIt = () => {
+    setIsGotIt(true);
+    setOpen(false);
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger>
-        <Tv
+        <div
           className={cn(
-            "bg-white text-purple-600 cursor-pointer scale-80 hover:scale-100 transition-all duration-700 animate-bounce",
-            open && "scale-100 animate-none"
+            "bg-whitecursor-pointer transition-all duration-700 animate-bounce",
+            open && "scale-100 animate-none",
+            isGotIt && "animate-none"
           )}
-        />
+        >
+          <LiveStreamIcon />
+        </div>
       </PopoverTrigger>
       <PopoverContent className="w-100 mr-4 text-sm">
         <h1 className="font-semibold text-xl">Livestreaming</h1>
@@ -28,6 +48,14 @@ export default function StreamGuiding() {
           :1935, StreamKey: Your key in Security Setting&quot;
         </p>
         <p className="mb-2">Start your livestream</p>
+        <div className="w-full flex flex-row justify-center">
+          <Button
+            className="bg-purple-500 hover:bg-purple-600 text-white"
+            onClick={handleGotIt}
+          >
+            Got it
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   );
