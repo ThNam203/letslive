@@ -101,6 +101,7 @@ func (t *Transcoder) Start(publishName string) {
 	err = t.commandExec.Wait()
 	if err != nil {
 		logger.Errorf("ffmpeg failed: %s", err)
+		t.Stop()
 	}
 }
 

@@ -114,8 +114,10 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 		startTime = time.Now()
 	}
 
+	transcoder := transcoder.NewTranscoder(pipeOut, s.config.Transcode, startTimer)
+	defer transcoder.Stop()
+
 	go func() {
-		transcoder := transcoder.NewTranscoder(pipeOut, s.config.Transcode, startTimer)
 		transcoder.Start(streamId)
 	}()
 
