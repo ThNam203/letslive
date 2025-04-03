@@ -12,7 +12,7 @@ import {
 } from "../../../../lib/api/user";
 import TextField from "./_components/input-field";
 import ProfileBanner from "./_components/profile-banner";
-import Section from "./_components/section";
+import Section from "../_components/section";
 import TextAreaField from "./_components/textarea-field";
 
 export default function ProfileSettings() {
@@ -134,7 +134,7 @@ export default function ProfileSettings() {
         >
           <form className="space-y-6" onSubmit={handleUpdateProfileInformation}>
             <ProfileBanner
-              className="mb-14"
+              className="mb-10"
               onProfileImageChange={handleProfileImageChange}
               onBackgroundImageChange={handleBackgroundImageChange}
             />
@@ -179,8 +179,8 @@ export default function ProfileSettings() {
           className="border-t border-gray-800 pt-8"
           contentClassName="border-1 rounded-md p-4"
         >
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-800">
+          <div className="w-full flex items-center justify-between">
+            <p className="w-2/3 text-sm text-gray-800">
               When you disable your account, your profile and notifications will
               be hidden, and your account will be deactivated. You can
               reactivate your account at any time.

@@ -62,7 +62,7 @@ export default function ProfileHeader({
 
   return (
     <div className="relative">
-      <div className="h-[300px] bg-gray-100 border-1 border-gray-400 rounded-sm">
+      <div className="relative w-full h-[300px] bg-gray-100 rounded-md overflow-hidden shadow">
         {/* Profile Banner */}
         <Image
           src={
@@ -72,9 +72,8 @@ export default function ProfileHeader({
             }`
           }
           alt="Profile Banner"
-          width={1200}
-          height={300}
-          className="w-full h-full object-cover rounded-sm"
+          layout="fill"
+          objectFit="cover"
         />
       </div>
       <div className="sm:px-6 px-4">
