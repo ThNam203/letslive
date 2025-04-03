@@ -6,14 +6,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../../../../components/ui/dialog";
-import { ShieldCheck, ShieldOff } from "lucide-react";
-import VerificationRequest from "./send-verification";
-import ApiKeyTab from "./api-key-tab";
-import ChangePasswordTab from "./change-password-tab";
 import { AuthProvider, User } from "../../../../../types/user";
 import Section from "../../_components/section";
-import UserVerification from "./user-verification";
-import Description from "../../_components/description";
+import ApiKeyTab from "./api-key-tab";
+import ChangePasswordTab from "./change-password-tab";
 
 export default function ContactSettings({ user }: { user: User }) {
   return (
@@ -25,22 +21,11 @@ export default function ContactSettings({ user }: { user: User }) {
           hasBorder
           contentClassName="space-y-4"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-medium">Email</h2>
-
-              <div className="flex flex-row gap-2 items-center">
-                <p className="text-gray-900 font-semibold text-medium italic">
-                  {user?.email}
-                </p>
-                <UserVerification isVerified={user?.isVerified} />
-              </div>
-              {user?.isVerified ? (
-                <Description content="Thank you for verifying your email." />
-              ) : (
-                <VerificationRequest />
-              )}
-            </div>
+          <div className="flex flex-row items-center justify-between">
+            <h2 className="text-sm font-medium">Email</h2>
+            <p className="text-gray-900 font-semibold text-medium italic">
+              {user?.email}
+            </p>
           </div>
           <div className="flex items-center justify-between border-t border-zinc-800 pt-4">
             <h2 className="text-sm font-medium">Phone Number</h2>
@@ -97,7 +82,6 @@ export default function ContactSettings({ user }: { user: User }) {
                 </h2>
               </div>
               <button
-                // disabled={!user.isVerified || user.authProvider === AuthProvider.GOOGLE}
                 disabled={true}
                 className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm"
               >
@@ -106,8 +90,6 @@ export default function ContactSettings({ user }: { user: User }) {
               <p className="text-sm text-gray-400">
                 {user.authProvider !== AuthProvider.LOCAL
                   ? `Your account is secured with third-party provider.`
-                  : !user.isVerified
-                  ? "Please verify your account before setting up 2FA."
                   : "Add an extra layer of security to your Let&apos;s Live account by enabling 2FA before logging in."}
               </p>
             </div>

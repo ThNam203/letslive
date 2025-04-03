@@ -102,7 +102,6 @@ export default function StreamEdit() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="resize-none"
-            required
           />
           <ImageField
             label="Thumbnail"
