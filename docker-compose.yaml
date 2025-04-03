@@ -21,7 +21,7 @@ services:
     #  context: ./backend/auth/
     #  dockerfile: Dockerfile
     restart: always
-    container_name: letslive_auth
+    container_name: letslive-auth
     ports:
       - "7777:7777"
     expose:
@@ -48,11 +48,11 @@ services:
       - /var/log/letslive:/usr/local/bin/logs
 
   user:
-    #image: sen1or/letslive-user:latest
-    build:
-      context: ./backend/user/
-      dockerfile: Dockerfile
-    container_name: letslive_user
+    image: sen1or/letslive-user:latest
+    #build:
+    #  context: ./backend/user/
+    #  dockerfile: Dockerfile
+    container_name: letslive-user
     restart: always
     ports:
       - "7778:7778"
@@ -78,11 +78,11 @@ services:
     #build:
     #  context: ./backend/transcode/
     #  dockerfile: Dockerfile
-    container_name: letslive_transcode
+    container_name: letslive-transcode
     restart: always
     ports:
       - "1935:1935"
-      - "7779:7779" 
+      - "7779:7779"
       - "8889:8889" # expose the webserver
     expose:
       - "1935"
@@ -108,7 +108,7 @@ services:
     #build:
     #  context: ./backend/livestream/
     #  dockerfile: Dockerfile
-    container_name: letslive_livestream
+    container_name: letslive-livestream
     restart: always
     ports:
       - "7781:7781"
@@ -132,7 +132,7 @@ services:
     #build:
     #  context: ./backend/configserver
     #  dockerfile: Dockerfile
-    container_name: letslive_configserver
+    container_name: letslive-configserver
     restart: always
     ports:
       - "8181:8181"
@@ -155,7 +155,7 @@ services:
     #build:
     #  context: ./backend/chat/
     #  dockerfile: Dockerfile
-    container_name: letslive_chat
+    container_name: letslive-chat
     command: npm run start
     restart: always
     ports:
@@ -175,9 +175,23 @@ services:
       chat_db:
         condition: service_healthy
 
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: letslive-api-docs
+    ports:
+      - "11111:8080"
+    volumes:
+      - ./backend/auth/docs/openapi.yaml:/usr/share/nginx/html/specs/auth.yaml:ro
+      - ./backend/chat/src/docs/openapi.yaml:/usr/share/nginx/html/specs/chat.yaml:ro
+      - ./backend/user/docs/openapi.yaml:/usr/share/nginx/html/specs/user.yaml:ro
+      - ./backend/livestream/docs/openapi.yaml:/usr/share/nginx/html/specs/livestream.yaml:ro
+    environment:
+      URLS: '[{"url": "/specs/auth.yaml", "name": "Auth Service"}, {"url": "/specs/chat.yaml", "name": "Chat Service"}, {"url": "/specs/user.yaml", "name": "User Service"}, {"url": "/specs/livestream.yaml", "name": "Livestream Service"}]'
+      URLS_PRIMARY_NAME: "LetsLive API Documentation"
+
   auth_db:
-    image: postgres:16.3
-    container_name: letslive_auth_db
+    image: postgres:17.4-alpine
+    container_name: letslive-auth-db
     restart: always
     shm_size: 64mb
     environment:
@@ -199,8 +213,8 @@ services:
       retries: 5
 
   user_db:
-    image: postgres:16.3
-    container_name: letslive_user_db
+    image: postgres:17.4-alpine
+    container_name: letslive-user-db
     restart: always
     shm_size: 64mb
     environment:
@@ -216,14 +230,14 @@ services:
     expose:
       - "5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"] 
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 10s
       retries: 5
 
   livestream_db:
-    image: postgres:16.3
-    container_name: letslive_livestream_db
+    image: postgres:17.4-alpine
+    container_name: letslive-livestream-db
     restart: always
     shm_size: 64mb
     environment:
@@ -246,20 +260,21 @@ services:
 
   chat_pubsub:
     image: redis:7.4.2-alpine
+    container_name: letslive-chat-pubsub
     restart: always
     ports:
-      - '6379:6379'
+      - "6379:6379"
     command: redis-server --save 60 1 --loglevel warning
-    volumes: 
+    volumes:
       - chat_pubsub_data:/data
     networks:
       general_network:
     healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
 
   chat_db:
     image: mongo:latest
-    container_name: letslive_chat_db
+    container_name: letslive-chat-db
     restart: always
     command: mongod --quiet --logpath /dev/null
     ports:
@@ -280,10 +295,10 @@ services:
 
   consul:
     image: hashicorp/consul:latest
-    container_name: consul
+    container_name: letslive-consul
     ports:
-      - "8500:8500"  # Consul UI and API
-      - "8600:8600/udp"  # DNS
+      - "8500:8500" # Consul UI and API
+      - "8600:8600/udp" # DNS
     expose:
       - "8500"
       - "8600"
@@ -298,7 +313,7 @@ services:
     depends_on:
       configserver:
         condition: service_healthy
- 
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8500/v1/status/leader"]
       interval: 30s
@@ -307,7 +322,7 @@ services:
 
   kong:
     image: kong:latest
-    container_name: letslive_kong
+    container_name: letslive-kong
     networks:
       kong_network:
       general_network:
@@ -350,7 +365,7 @@ services:
   minio:
     image: quay.io/minio/minio:latest
     command: server --console-address ":9090" /mnt/data
-    container_name: letslive_minio
+    container_name: letslive-minio
     restart: always
     ports:
       - "9000:9000"
