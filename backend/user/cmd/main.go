@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"sen1or/letslive/user/api"
 	cfg "sen1or/letslive/user/config"
 	"sen1or/letslive/user/handlers"
 	"sen1or/letslive/user/pkg/discovery"
@@ -67,7 +68,7 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 	}
 }
 
-func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *APIServer {
+func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *api.APIServer {
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var livestreamInfoRepo = repositories.NewLivestreamInformationRepository(dbConn)
 	var followRepo = repositories.NewFollowRepository(dbConn)
@@ -80,5 +81,5 @@ func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Conf
 	var userHandler = handlers.NewUserHandler(*userService)
 	var livestreamInfoHandler = handlers.NewLivestreamInformationHandler(*livestreamInfoService, *minioService)
 	var followHandler = handlers.NewFollowHandler(*followService)
-	return NewAPIServer(userHandler, livestreamInfoHandler, followHandler, cfg)
+	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, cfg)
 }
