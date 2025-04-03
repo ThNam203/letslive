@@ -74,10 +74,10 @@ services:
       - /var/log/letslive:/usr/local/bin/logs
 
   transcode:
-    image: sen1or/letslive-transcode:latest
-    #build:
-    #  context: ./backend/transcode/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-transcode:latest
+    build:
+      context: ./backend/transcode/
+      dockerfile: Dockerfile
     container_name: letslive-transcode
     restart: always
     ports:
