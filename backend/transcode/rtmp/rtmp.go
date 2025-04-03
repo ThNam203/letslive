@@ -114,8 +114,9 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 		startTime = time.Now()
 	}
 
+	transcoder := transcoder.NewTranscoder(pipeOut, s.config.Transcode, startTimer)
+	defer transcoder.Stop()
 	go func() {
-		transcoder := transcoder.NewTranscoder(pipeOut, s.config.Transcode, startTimer)
 		transcoder.Start(streamId)
 	}()
 
@@ -125,6 +126,8 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 		pkt, err := c.ReadPacket()
 		if err == io.EOF {
 			duration := int64(math.Ceil(time.Now().Sub(startTime).Seconds()) - 7) // TODO: proper duration calculation
+			pipeOut.Close()
+			pipeIn.Close()
 			s.onDisconnect(streamId, duration)
 			return
 		}
@@ -132,6 +135,8 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 		if err := w.WritePacket(pkt); err != nil {
 			logger.Errorf("failed to write rtmp package: %s", err)
 			duration := int64(math.Ceil(time.Now().Sub(startTime).Seconds()) - 7)
+			pipeIn.Close()
+			pipeOut.Close()
 			s.onDisconnect(streamId, duration)
 			return
 		}
