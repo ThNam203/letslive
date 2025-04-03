@@ -1,15 +1,15 @@
-import { Textarea } from "@/components/ui/textarea";
-import { ComponentProps } from "react";
-import Description from "../../_components/description";
+import { Input } from "@/components/ui/input";
+import React, { ComponentProps } from "react";
+import Description from "./description";
 import { cn } from "@/utils/cn";
 
-type TextAreaProps = ComponentProps<typeof Textarea>;
+type TextProps = ComponentProps<typeof Input>;
 type Props = {
   label: string;
   description?: string;
-} & TextAreaProps;
+} & TextProps;
 
-export default function TextAreaField({
+export default function TextField({
   label,
   description,
   className,
@@ -20,7 +20,7 @@ export default function TextAreaField({
       <label className="block text-sm font-medium mb-2" htmlFor={label}>
         {label}
       </label>
-      <Textarea
+      <Input
         id={label}
         className={cn("text-gray-900 border-gray-700", className)}
         {...props}

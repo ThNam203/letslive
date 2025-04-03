@@ -2,7 +2,7 @@ import React from "react";
 
 export default function DefaultBackgound() {
   return (
-    <div className="relative h-40 inset-0 grid grid-cols-6 gap-2 p-2 bg-gray-800 rounded-lg">
+    <div className="absolute h-[300px] inset-0 grid grid-cols-6 gap-2 p-2 bg-gray-800 rounded-lg">
       {[...Array(18)].map((_, i) => (
         <svg
           key={i}

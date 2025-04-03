@@ -5,16 +5,18 @@ import { Loader, X } from "lucide-react";
 import React from "react";
 import { toast } from "react-toastify";
 
-interface Props {
+type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
+
+type Props = {
   className?: string;
   onClick?: () => void;
-  inputRef: React.RefObject<HTMLInputElement>;
+  inputRef?: React.RefObject<HTMLInputElement>;
   onValueChange?: (file: File) => void;
   title?: string | React.ReactNode;
   showCloseIcon?: boolean;
   closeIconPosition?: "top" | "bottom" | "top-right";
   onCloseIconClick?: () => void;
-}
+} & InputProps;
 
 export default function ImageHover({
   className,
@@ -25,6 +27,7 @@ export default function ImageHover({
   showCloseIcon = true,
   closeIconPosition = "top-right",
   onCloseIconClick,
+  ...props
 }: Props) {
   const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -45,6 +48,7 @@ export default function ImageHover({
 
   const handleCloseIconClick = (event: React.MouseEvent) => {
     event.stopPropagation();
+    if (inputRef?.current) inputRef.current.value = "";
     onCloseIconClick?.();
   };
 
@@ -61,6 +65,7 @@ export default function ImageHover({
         ref={inputRef}
         className="hidden"
         onChange={handleValueChange}
+        {...props}
       />
       <div className="flex flex-row gap-2 text-white">{title}</div>
       <div

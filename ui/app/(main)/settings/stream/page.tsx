@@ -1,14 +1,15 @@
 "use client";
 
 import { Loader } from "lucide-react";
-import { ChangeEvent, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import { Button } from "../../../../components/ui/button";
 import useUser from "../../../../hooks/user";
 import { UpdateLivestreamInformation } from "../../../../lib/api/user";
-import { Label } from "../../../../components/ui/label";
-import { Input } from "../../../../components/ui/input";
-import { Textarea } from "../../../../components/ui/textarea";
-import { Button } from "../../../../components/ui/button";
+import ImageField from "../_components/image-field";
+import Section from "../_components/section";
+import TextField from "../_components/text-field";
+import TextAreaField from "../_components/textarea-field";
 
 export default function StreamEdit() {
   const user = useUser((state) => state.user);
@@ -16,25 +17,29 @@ export default function StreamEdit() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleImageChange = (file: File | null) => {
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setImage(file);
-      setSelectedImage(imageUrl);
+      setImageUrl(imageUrl);
     }
+  };
+
+  const handleResetImage = () => {
+    setImage(null);
+    setImageUrl(null);
   };
 
   useEffect(() => {
     if (user) {
       setTitle(user.livestreamInformation.title || "");
       setDescription(user.livestreamInformation.description || "");
-      setThumbnailUrl(user.livestreamInformation.thumbnailUrl || "");
+      setImageUrl(user.livestreamInformation.thumbnailUrl || null);
+      setImage(null);
     }
   }, [user]);
 
@@ -66,110 +71,53 @@ export default function StreamEdit() {
           thumbnailUrl: updatedInfo.thumbnailUrl,
         },
       });
-
-      setSelectedImage(null);
-      setImage(null);
     }
   };
 
+  const isFormChange = useMemo(() => {
+    return (
+      title !== user?.livestreamInformation.title ||
+      description !== user?.livestreamInformation.description ||
+      imageUrl !== user?.livestreamInformation.thumbnailUrl
+    );
+  }, [title, description, imageUrl, user]);
+
   return (
     <div className="min-h-screen max-w-4xl text-gray-900 p-6">
-      <div className="space-y-6 mb-4">
-        <div className="space-y-1">
-          <h1 className="text-xl font-semibold">Livestream</h1>
-          <p className="text-sm text-gray-400">
-            Your next livestream information will be based on the information.
-          </p>
-          <p className="text-sm text-gray-400">
-            It won&apos;t change even after livestream ends.
-          </p>
-        </div>
-      </div>
-
-      <div className="rounded-lg border-1 border-gray-900 p-4">
+      <Section
+        title="Livestream"
+        description={`Your next livestream information will be based on the information.\nIt won't change even after livestream ends.`}
+        hasBorder
+      >
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-4 items-start gap-4">
-            <Label htmlFor="title">
-              Title
-              <p className="text-xs text-gray-500 font-normal">
-                If empty, the title will be generated automatically.
-              </p>
-            </Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="col-span-3"
-              required
-            />
-          </div>
-          <div className="grid grid-cols-4 gap-4">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="col-span-3 resize-none"
-              required
-            />
-          </div>
+          <TextField
+            label="Title"
+            description="If empty, the title will be generated automatically."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+          <TextAreaField
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="resize-none"
+            required
+          />
+          <ImageField
+            label="Thumbnail"
+            description="If empty, the thumbnail will be generated automatically."
+            imageUrl={imageUrl}
+            hoverText="Change thumbnail"
+            onImageChange={handleImageChange}
+            onResetImage={handleResetImage}
+            showCloseIcon={imageUrl !== null}
+          />
 
-          <div className="grid grid-cols-4 gap-4">
-            <Label htmlFor="image-upload">
-              Thumbnail
-              <p className="text-xs text-gray-500 font-normal">
-                If empty, the thumbnail will be generated automatically.
-              </p>
-            </Label>
-            <div className="col-span-3 w-full max-w-3xl">
-              <label
-                htmlFor="image-upload"
-                className={`
-                                    group
-                                    relative
-                                    flex items-center justify-center
-                                    w-full aspect-video 
-                                    border-2 border-dashed border-gray-300 
-                                    rounded-lg 
-                                    cursor-pointer
-                                    transition-all duration-300 ease-in-out
-                                    overflow-hidden
-                                    bg-cover bg-center bg-no-repeat
-                                    group-hover:bg-opacity-50
-                                `}
-                style={{
-                  backgroundImage: selectedImage
-                    ? `url(${selectedImage})`
-                    : `url("${thumbnailUrl}")`,
-                }}
-              >
-                <input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-                <div
-                  className={`
-                                        absolute inset-0
-                                        flex items-center justify-center
-                                        opacity-0 group-hover:opacity-100
-                                        transition-opacity duration-200
-                                        bg-black/40
-                                    `}
-                >
-                  <span className="text-lg font-medium text-white">
-                    Change thumbnail
-                  </span>
-                </div>
-              </label>
-            </div>
-          </div>
           <div className="flex justify-end items-center">
             <Button
               className="disabled:bg-gray-200 disabled:hover:cursor-not-allowed"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !isFormChange}
               type="submit"
             >
               {isSubmitting && <Loader className="animate-spin" />}
@@ -177,7 +125,7 @@ export default function StreamEdit() {
             </Button>
           </div>
         </form>
-      </div>
+      </Section>
     </div>
   );
 }
