@@ -1,17 +1,19 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"sen1or/letslive/auth/dto"
-	servererrors "sen1or/letslive/auth/errors"
 	"sen1or/letslive/auth/pkg/logger"
+	serviceresponse "sen1or/letslive/auth/responses"
 	"sen1or/letslive/auth/services"
+	"sen1or/letslive/auth/utils"
 )
 
 // TODO: put verificationGateway into config
 type AuthHandler struct {
-	ErrorHandler
+	ResponseHandler
 	jwtService          services.JWTService
 	authService         services.AuthService
 	googleAuthService   services.GoogleAuthService
@@ -36,25 +38,28 @@ func NewAuthHandler(
 }
 
 func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	var userCredentials dto.LogInRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
-		h.WriteErrorResponse(w, servererrors.ErrInvalidPayload)
+		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPayload)
 		return
 	}
 
 	ip := r.Header.Get("CF-Connecting-IP")
-	if err := h.authService.CheckCAPTCHA(userCredentials.TurnstileToken, ip); err != nil {
+	if err := utils.CheckCAPTCHA(userCredentials.TurnstileToken, ip); err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
 
-	auth, err := h.authService.GetUserFromCredentials(userCredentials)
+	auth, err := h.authService.GetUserFromCredentials(ctx, userCredentials)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
 
-	if err := h.setAuthJWTsInCookie(auth.UserId.String(), w); err != nil {
+	if err := h.setAuthJWTsInCookie(ctx, auth.UserId.String(), w); err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
@@ -62,44 +67,48 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *AuthHandler) SignUpHandler(w http.ResponseWriter, r *http.Request) {
-	var userForm dto.SignUpRequestDTO
-	if err := json.NewDecoder(r.Body).Decode(&userForm); err != nil {
-		h.WriteErrorResponse(w, servererrors.ErrInvalidPayload)
+func (h *AuthHandler) RequestEmailVerificationHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	var requestDTO dto.SignUpRequestVerificationRequestDTO
+	if err := json.NewDecoder(r.Body).Decode(&requestDTO); err != nil {
+		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPayload)
 		return
 	}
 
 	ip := r.Header.Get("CF-Connecting-IP")
-	if err := h.authService.CheckCAPTCHA(userForm.TurnstileToken, ip); err != nil {
+	if err := utils.CheckCAPTCHA(requestDTO.TurnstileToken, ip); err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
 
-	createdAuth, err := h.authService.CreateNewAuth(userForm)
+	// if an auth is already existed with the email, no point to continue
+	err := h.authService.CheckIfAuthExistedForEmail(ctx, requestDTO)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
 
-	if err := h.setAuthJWTsInCookie(createdAuth.UserId.String(), w); err != nil {
+	if err := h.verificationService.CreateOTPAndSendEmailVerification(ctx, h.verificationGateway, requestDTO.Email); err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	h.WriteSuccessResponse(w, serviceresponse.SuccessSentVerification, nil)
 }
 
 func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 	refreshTokenCookie, err := r.Cookie("REFRESH_TOKEN")
 	if err != nil {
 		logger.Errorf("get refresh token from cookie failed: %s", err)
-		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
+		h.WriteErrorResponse(w, serviceresponse.ErrUnauthorized)
 		return
 	}
 
 	if len(refreshTokenCookie.Value) == 0 {
 		logger.Errorf("missing refresh token")
-		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
+		h.WriteErrorResponse(w, serviceresponse.ErrUnauthorized)
 		return
 	}
 
@@ -120,63 +129,53 @@ func (h *AuthHandler) LogOutHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *AuthHandler) VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
-	var token = r.URL.Query().Get("token")
-	if len(token) == 0 {
-		w.Write([]byte("Missing token!"))
-		w.WriteHeader(http.StatusBadRequest)
+func (h *AuthHandler) VerifyOTPAndSignUpHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	// TODO: validate
+	var requestDTO dto.SignUpRequestDTO
+	if err := json.NewDecoder(r.Body).Decode(&requestDTO); err != nil {
+		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPayload)
 		return
 	}
 
-	if verifyErr := h.verificationService.Verify(token); verifyErr != nil {
-		w.Write([]byte(verifyErr.Message))
-		w.WriteHeader(verifyErr.StatusCode)
+	if verifyErr := h.verificationService.Verify(ctx, requestDTO.OTPCode, requestDTO.Email); verifyErr != nil {
+		h.WriteErrorResponse(w, verifyErr)
 		return
 	}
 
-	w.Write([]byte("Email verification complete!"))
+	createdAuth, err := h.authService.CreateNewAuth(ctx, requestDTO)
+	if err != nil {
+		h.WriteErrorResponse(w, err)
+		return
+	}
+
+	if err := h.setAuthJWTsInCookie(ctx, createdAuth.UserId.String(), w); err != nil {
+		h.WriteErrorResponse(w, err)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 
-// TODO: check if has been verified ?
-func (h *AuthHandler) SendVerificationHandler(w http.ResponseWriter, r *http.Request) {
-	userUUID, cookieErr := h.getUserIDFromCookie(r)
-	if cookieErr != nil {
-		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
-		return
-	}
-
-	auth, err := h.authService.GetUserById(*userUUID)
-	if err != nil {
-		h.WriteErrorResponse(w, err)
-		return
-	}
-
-	createdToken, err := h.verificationService.Create(auth.UserId)
-	if err != nil {
-		h.WriteErrorResponse(w, err)
-		return
-	}
-
-	h.verificationService.SendConfirmEmail(*createdToken, h.verificationGateway, auth.Email)
-	w.WriteHeader(http.StatusNoContent)
-}
-
 func (h *AuthHandler) UpdatePasswordHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
 	userUUID, err := h.getUserIDFromCookie(r)
 	if err != nil {
-		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
+		h.WriteErrorResponse(w, serviceresponse.ErrUnauthorized)
 		return
 	}
 
 	reqDTO := dto.ChangePasswordRequestDTO{}
 	if err := json.NewDecoder(r.Body).Decode(&reqDTO); err != nil {
-		h.WriteErrorResponse(w, servererrors.ErrInvalidPayload)
+		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPayload)
 		return
 	}
 	defer r.Body.Close()
 
-	if err := h.authService.UpdatePassword(reqDTO, *userUUID); err != nil {
+	if err := h.authService.UpdatePassword(ctx, reqDTO, *userUUID); err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}

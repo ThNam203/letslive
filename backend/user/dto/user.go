@@ -9,7 +9,6 @@ import (
 type CreateUserRequestDTO struct {
 	Username     string `json:"username" validate:"required,gte=4,lte=50"`
 	Email        string `json:"email" validate:"required,email"`
-	IsVerified   bool   `json:"isVerified,omitempty" validate:"omitempty"`
 	AuthProvider string `json:"authProvider" validate:"oneof=google local"`
 }
 
@@ -19,7 +18,6 @@ type GetUserPublicResponseDTO struct {
 	Id                uuid.UUID `json:"id"`
 	Username          string    `json:"username"`
 	Email             string    `json:"email"`
-	IsVerified        bool      `json:"isVerified"`
 	CreatedAt         time.Time `json:"createdAt"`
 	PhoneNumber       *string   `json:"phoneNumber,omitempty"`
 	Bio               *string   `json:"bio,omitempty"`

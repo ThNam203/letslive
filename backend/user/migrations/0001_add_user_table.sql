@@ -8,7 +8,6 @@ CREATE TABLE "users" (
   "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   "username" VARCHAR(50) NOT NULL UNIQUE,
   "email" TEXT NOT NULL UNIQUE,
-  "is_verified" BOOLEAN NOT NULL DEFAULT false,
   "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, 
   "stream_api_key" UUID NOT NULL DEFAULT uuid_generate_v4() UNIQUE, 
   "display_name" VARCHAR(50) UNIQUE,

@@ -1,13 +1,12 @@
 import { FetchError } from "../../types/fetch-error";
 import { fetchClient } from "../../utils/fetchClient";
-import jwt from "jsonwebtoken";
-
 
 export async function SignUp(body: {
     email: string;
     username: string;
     password: string;
     turnstileToken: string;
+    otpCode: string;
 }): Promise<{ fetchError?: FetchError }> {
     try {
         await fetchClient<void>("/auth/signup", {
@@ -17,6 +16,7 @@ export async function SignUp(body: {
                 username: body.username,
                 password: body.password,
                 turnstileToken: body.turnstileToken,
+                otpCode: body.otpCode,
             }),
         });
      
@@ -75,13 +75,27 @@ export async function ChangePassword(body: {
     }
 }
 
-export async function RequestToSendVerification(): Promise<{ fetchError?: FetchError }> {
+export async function RequestToSendVerification(email: string, turnstileToken: string): Promise<{ fetchError?: FetchError }> {
     try {
-        await fetchClient<void>("/auth/send-verification", {
-            method: "POST"
+        await fetchClient<void>("/auth/verify-email", {
+            method: "POST",
+            body: JSON.stringify({email, turnstileToken}),
         });
         return {};
     } catch (error) {
         return { fetchError: error as FetchError };
     }
 }
+
+export async function VerifyOTP(email: string, otpCode: string): Promise<{ fetchError?: FetchError }> {
+    try {
+        await fetchClient<void>("/auth/verify-otp", {
+            method: "POST",
+            body: JSON.stringify({email, otpCode}),
+        });
+        return {};
+    } catch (error) {
+        return { fetchError: error as FetchError };
+    }
+}
+

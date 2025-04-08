@@ -5,35 +5,35 @@ import (
 	"net/smtp"
 	"os"
 	"sen1or/letslive/auth/domains"
-	servererrors "sen1or/letslive/auth/errors"
-	usergateway "sen1or/letslive/auth/gateway/user"
 	"sen1or/letslive/auth/pkg/logger"
+	serviceresponse "sen1or/letslive/auth/responses"
+	"sen1or/letslive/auth/utils"
 	"time"
-
-	"github.com/gofrs/uuid/v5"
 )
 
 type VerificationService struct {
-	repo        domains.VerifyTokenRepository
-	userGateway usergateway.UserGateway
+	repo domains.SignUpOTPRepository
 }
 
-func NewVerificationService(repo domains.VerifyTokenRepository, userGateway usergateway.UserGateway) *VerificationService {
+func NewVerificationService(repo domains.SignUpOTPRepository) *VerificationService {
 	return &VerificationService{
-		repo:        repo,
-		userGateway: userGateway,
+		repo: repo,
 	}
 }
 
-func (c *VerificationService) Create(userId uuid.UUID) (*domains.VerifyToken, *servererrors.ServerError) {
-	token, _ := uuid.NewGen().NewV4()
-	newToken := &domains.VerifyToken{
-		Token:     token.String(),
-		ExpiresAt: time.Now().Add(1 * time.Hour),
-		UserID:    userId,
+func (c *VerificationService) Create(ctx context.Context, email string) (*domains.SignUpOTP, *serviceresponse.ServiceErrorResponse) {
+	generatedOTP, err := utils.GenerateOTP()
+	if err != nil {
+		return nil, err
 	}
 
-	err := c.repo.Insert(*newToken)
+	newToken := &domains.SignUpOTP{
+		Code:      generatedOTP,
+		ExpiresAt: time.Now().Add(5 * time.Minute),
+		Email:     email,
+	}
+
+	err = c.repo.Insert(ctx, *newToken)
 	if err != nil {
 		return nil, err
 	}
@@ -41,66 +41,95 @@ func (c *VerificationService) Create(userId uuid.UUID) (*domains.VerifyToken, *s
 	return newToken, nil
 }
 
-func (s VerificationService) Verify(token string) *servererrors.ServerError {
-	verifyToken, err := s.repo.GetByValue(token)
+func (s VerificationService) Verify(ctx context.Context, code, email string) *serviceresponse.ServiceErrorResponse {
+	otp, err := s.repo.GetOTP(ctx, code, email)
 	if err != nil {
-		return servererrors.ErrVerifyTokenNotFound
+		return err
 	}
 
-	if verifyToken.ExpiresAt.Before(time.Now()) {
-		return servererrors.ErrUnauthorized
+	if otp.UsedAt != nil {
+		return serviceresponse.ErrSignUpOTPAlreadyUsed
 	}
 
-	errRes := s.userGateway.UpdateUserVerified(context.Background(), verifyToken.UserID.String())
-	if errRes != nil {
-		return servererrors.NewServerError(errRes.StatusCode, errRes.Message)
+	if otp.ExpiresAt.Before(time.Now()) {
+		return serviceresponse.ErrSignUpOTPExpired
 	}
 
-	err = s.repo.DeleteByID(verifyToken.ID)
-	if err != nil {
+	if err := s.repo.UpdateUsedAt(ctx, otp.Id, time.Now()); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (c *VerificationService) SendConfirmEmail(token domains.VerifyToken, verificationGateway string, userEmail string) {
+func (c *VerificationService) CreateOTPAndSendEmailVerification(ctx context.Context, verificationGateway string, userEmail string) *serviceresponse.ServiceErrorResponse {
+	createdToken, err := c.Create(ctx, userEmail)
+	if err != nil {
+		return err
+	}
+
 	smtpServer := "smtp.gmail.com:587"
 	smtpUser := "letsliveglobal@gmail.com"
 	smtpPassword := os.Getenv("GMAIL_APP_PASSWORD")
-	verificationURL := verificationGateway + `/auth/email-verify?token=` + token.Token
 
 	from := "letsliveglobal@gmail.com"
 	to := []string{userEmail}
-	subject := "Lets Live Email Confirmation"
+	subject := "Lets Live Email Verification Code"
+
 	body := `<!DOCTYPE html>
-			 <html>
-			 <head>
-			     <title>` + subject + `</title>
-			 </head>
-			 <body>
-			    <p>Please confirm your email address, if you did not request any verification from Let's Live, please let us know.</p>
-			    <p>The verication code has a duration of 60 minutes, if exceeds please try to issue a new one.</p>
+            <html>
+            <head>
+                <title>` + subject + `</title>
+                <style>
+                    /* Basic styles for better readability */
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333333; }
+                    .container { padding: 20px; border: 1px solid #dddddd; margin: 10px; max-width: 600px; }
+                    .code-display {
+                        background-color: #f0f8ff; /* Light Alice Blue background */
+                        border: 1px dashed #add8e6; /* Light blue dashed border */
+                        padding: 15px;
+                        margin: 20px 0;
+                        text-align: center;
+                        font-size: 24px; /* Larger font size for code */
+                        font-weight: bold;
+                        letter-spacing: 3px; /* Space out digits slightly */
+                        color: #0056b3; /* Darker blue color for code */
+                    }
+                    .footer { font-size: 0.9em; color: #777777; margin-top: 15px;}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h2>Email Verification Required</h2>
+                    <p>Hello,</p>
+                    <p>Please use the following verification code to complete your action with Let's Live. This code is valid for a 5 minutes.</p>
 
-			 	<p>Click <a href="` + verificationURL + `">here</a> to confirm your email.</p>
+                    <p>Your verification code is:</p>
+                    <div class="code-display">
+                        ` + createdToken.Code + `
+                    </div>
 
-				<p>If the link is not clickable, please try to use the below url: ` + verificationURL + `</p>
+                    <p>If you did not request this verification, please disregard this email.</p>
 
-			 	<p>Best Regards</p>
-			 	<p>Let's Live Global</p>
-			 </body>
-			 </html>`
+                    <p class="footer">Best Regards,<br>The Let's Live Global Team</p>
+                </div>
+            </body>
+            </html>`
 
 	msg := "From: " + from + "\n" +
 		"To: " + userEmail + "\n" +
 		"Subject: " + subject + "\n" +
-		"Content-Type: text/html; charset=\"UTF-8\"\n\n" +
+		"Content-Type: text/html; charset=\"UTF-8\"\n\n" + // Ensures HTML is rendered
 		body
 
 	auth := smtp.PlainAuth("", smtpUser, smtpPassword, "smtp.gmail.com")
 
-	err := smtp.SendMail(smtpServer, auth, from, to, []byte(msg))
-	if err != nil {
-		logger.Errorf("failed trying to send confirmation email: %s", err.Error())
+	mErr := smtp.SendMail(smtpServer, auth, from, to, []byte(msg))
+	if mErr != nil {
+		logger.Errorf("failed trying to send confirmation code email to %s: %s", userEmail, mErr.Error())
+		return serviceresponse.ErrFailedToSendVerification // Ensure this error type is defined
 	}
+
+	logger.Infof("verification code email sent successfully to %s", userEmail)
+	return nil // success
 }

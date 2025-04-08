@@ -62,7 +62,15 @@ func Init(level LogLevel) {
 		}
 	}
 
-	Logger = zap.New(zapcore.NewCore(zapcore.NewConsoleEncoder(config), zapcore.AddSync(logFile), l)).Sugar()
+	core := zapcore.NewCore(
+		zapcore.NewJSONEncoder(config),
+		zapcore.AddSync(logFile),
+		l,
+	)
+
+	baseLogger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
+
+	Logger = baseLogger.Sugar()
 }
 
 func Warnw(message string, keysAndValues ...interface{}) {
