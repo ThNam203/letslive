@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"sen1or/letslive/auth/domains"
-	servererrors "sen1or/letslive/auth/errors"
 	"sen1or/letslive/auth/pkg/logger"
+	serviceresponse "sen1or/letslive/auth/responses"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
@@ -22,119 +22,131 @@ func NewAuthRepository(conn *pgxpool.Pool) domains.AuthRepository {
 	}
 }
 
-func (r *postgresAuthRepo) GetByID(authID uuid.UUID) (*domains.Auth, *servererrors.ServerError) {
-	rows, err := r.dbConn.Query(context.Background(), "select * from auths where id = $1", authID.String())
+func (r *postgresAuthRepo) GetByID(ctx context.Context, authID uuid.UUID) (*domains.Auth, *serviceresponse.ServiceErrorResponse) {
+	rows, err := r.dbConn.Query(ctx, `
+		SELECT * 
+		FROM auths 
+		WHERE id = $1
+	`, authID.String())
 	if err != nil {
 		logger.Errorf("failed to get auth from id: %s", err)
-		return nil, servererrors.ErrDatabaseQuery
+		return nil, serviceresponse.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Auth])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrAuthNotFound
+			return nil, serviceresponse.ErrAuthNotFound
 		}
 
 		logger.Errorf("failed to collect row: %s", err)
-		return nil, servererrors.ErrDatabaseIssue
+		return nil, serviceresponse.ErrDatabaseIssue
 	}
 
 	return &user, nil
 }
 
-func (r *postgresAuthRepo) GetByUserID(userID uuid.UUID) (*domains.Auth, *servererrors.ServerError) {
-	rows, err := r.dbConn.Query(context.Background(), "select * from auths where user_id = $1", userID.String())
+func (r *postgresAuthRepo) GetByUserID(ctx context.Context, userID uuid.UUID) (*domains.Auth, *serviceresponse.ServiceErrorResponse) {
+	rows, err := r.dbConn.Query(ctx, `
+		SELECT * 
+		FROM auths 
+		WHERE user_id = $1
+	`, userID.String())
 	if err != nil {
 		logger.Errorf("failed to get auth from user id: %s", err)
-		return nil, servererrors.ErrDatabaseQuery
+		return nil, serviceresponse.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Auth])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrAuthNotFound
+			return nil, serviceresponse.ErrAuthNotFound
 		}
 
 		logger.Errorf("failed to collect row: %s", err)
-		return nil, servererrors.ErrDatabaseIssue
+		return nil, serviceresponse.ErrDatabaseIssue
 	}
 
 	return &user, nil
 }
 
-func (r *postgresAuthRepo) GetByEmail(email string) (*domains.Auth, *servererrors.ServerError) {
-	rows, err := r.dbConn.Query(context.Background(), "select * from auths where email = $1", email)
+func (r *postgresAuthRepo) GetByEmail(ctx context.Context, email string) (*domains.Auth, *serviceresponse.ServiceErrorResponse) {
+	rows, err := r.dbConn.Query(ctx, `
+		SELECT * 
+		FROM auths 
+		WHERE email = $1
+	`, email)
 	if err != nil {
 		logger.Errorf("failed to get auth from email: %s", err)
-		return nil, servererrors.ErrDatabaseQuery
+		return nil, serviceresponse.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Auth])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrAuthNotFound
+			return nil, serviceresponse.ErrAuthNotFound
 		}
 
 		logger.Errorf("failed to collect row: %s", err)
-		return nil, servererrors.ErrDatabaseIssue
+		return nil, serviceresponse.ErrDatabaseIssue
 	}
 
 	return &user, nil
 }
 
-func (r *postgresAuthRepo) Create(newAuth domains.Auth) (*domains.Auth, *servererrors.ServerError) {
+func (r *postgresAuthRepo) Create(ctx context.Context, newAuth domains.Auth) (*domains.Auth, *serviceresponse.ServiceErrorResponse) {
 	params := pgx.NamedArgs{
 		"email":         newAuth.Email,
 		"password_hash": newAuth.PasswordHash,
 		"user_id":       newAuth.UserId,
 	}
 
-	rows, err := r.dbConn.Query(context.Background(), "insert into auths (email, password_hash, user_id) values (@email, @password_hash, @user_id) RETURNING *", params)
+	rows, err := r.dbConn.Query(ctx, `
+		INSERT INTO auths (
+			email,
+			password_hash,
+			user_id
+		) values (
+			@email, 
+			@password_hash, 
+			@user_id
+		) RETURNING *
+	`, params)
 	if err != nil {
 		logger.Errorf("failed to create auth: %s", err)
-		return nil, servererrors.ErrDatabaseQuery
+		return nil, serviceresponse.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Auth])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrAuthNotFound
+			return nil, serviceresponse.ErrAuthNotFound
 		}
 
 		logger.Errorf("failed to collect row: %s", err)
-		return nil, servererrors.ErrDatabaseIssue
+		return nil, serviceresponse.ErrDatabaseIssue
 	}
 
 	return &user, nil
 }
 
-func (r *postgresAuthRepo) UpdatePasswordHash(authId, newPasswordHash string) *servererrors.ServerError {
-	result, err := r.dbConn.Exec(context.Background(), "UPDATE auths SET password_hash = $1 WHERE id = $2 RETURNING *", newPasswordHash, authId)
+func (r *postgresAuthRepo) UpdatePasswordHash(ctx context.Context, authId, newPasswordHash string) *serviceresponse.ServiceErrorResponse {
+	result, err := r.dbConn.Exec(ctx, `
+		UPDATE auths 
+		SET password_hash = $1 
+		WHERE id = $2
+	`, newPasswordHash, authId)
 	if err != nil {
 		logger.Errorf("failed to update password hash: %s", err)
-		return servererrors.ErrDatabaseQuery
+		return serviceresponse.ErrDatabaseQuery
 	}
 
 	if result.RowsAffected() == 0 {
-		return servererrors.ErrAuthNotFound
-	}
-
-	return nil
-}
-
-func (r *postgresAuthRepo) Delete(userID uuid.UUID) *servererrors.ServerError {
-	result, err := r.dbConn.Exec(context.Background(), "DELETE FROM auths WHERE id = $1", userID.String())
-	if err != nil {
-		logger.Errorf("failed to delete auth: %s", err)
-		return servererrors.ErrDatabaseQuery
-	}
-
-	if result.RowsAffected() == 0 {
-		return servererrors.ErrAuthNotFound
+		return serviceresponse.ErrAuthNotFound
 	}
 
 	return nil
