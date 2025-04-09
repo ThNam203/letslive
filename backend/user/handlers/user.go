@@ -160,31 +160,6 @@ func (h *UserHandler) CreateUserInternalHandler(w http.ResponseWriter, r *http.R
 	json.NewEncoder(w).Encode(&createdUser)
 }
 
-// INTERNAL
-func (h *UserHandler) SetUserVerifiedInternalHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithCancel(r.Context())
-	defer cancel()
-
-	userId := r.PathValue("userId")
-	if len(userId) == 0 {
-		h.WriteErrorResponse(w, servererrors.ErrInvalidInput)
-		return
-	}
-
-	userUUID, err := uuid.FromString(userId)
-	if err != nil {
-		h.WriteErrorResponse(w, servererrors.ErrInvalidInput)
-		return
-	}
-
-	if err := h.userService.UpdateUserVerified(ctx, userUUID); err != nil {
-		h.WriteErrorResponse(w, servererrors.ErrInvalidInput)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
 func (h *UserHandler) UpdateCurrentUserPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()

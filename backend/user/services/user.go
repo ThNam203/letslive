@@ -86,7 +86,7 @@ func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequ
 	}
 
 	// TODO: transaction please
-	createdUser, err := s.userRepo.Create(ctx, data.Username, data.Email, data.IsVerified, domains.AuthProvider(data.AuthProvider))
+	createdUser, err := s.userRepo.Create(ctx, data.Username, data.Email, domains.AuthProvider(data.AuthProvider))
 	if err != nil {
 		return nil, err
 	}
@@ -96,15 +96,6 @@ func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequ
 	}
 
 	return createdUser, nil
-}
-
-func (s *UserService) UpdateUserVerified(ctx context.Context, userId uuid.UUID) *servererrors.ServerError {
-	err := s.userRepo.UpdateUserVerified(ctx, userId)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequestDTO) (*domains.User, *servererrors.ServerError) {

@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"context"
@@ -22,9 +22,9 @@ type APIServer struct {
 	logger *zap.SugaredLogger
 	config config.Config
 
-	authHandler   *handlers.AuthHandler
-	errorHandler  *handlers.ErrorHandler
-	healthHandler *handlers.HealthHandler
+	authHandler     *handlers.AuthHandler
+	responseHandler *handlers.ResponseHandler
+	healthHandler   *handlers.HealthHandler
 }
 
 func NewAPIServer(
@@ -36,9 +36,9 @@ func NewAPIServer(
 		logger: logger.Logger,
 		config: cfg,
 
-		authHandler:   authHandler,
-		errorHandler:  handlers.NewErrorHandler(),
-		healthHandler: handlers.NewHeathHandler(),
+		authHandler:     authHandler,
+		responseHandler: handlers.NewResponseHandler(),
+		healthHandler:   handlers.NewHeathHandler(),
 	}
 }
 
@@ -84,19 +84,18 @@ func (a *APIServer) ListenAndServe(useTLS bool) {
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
-	sm.HandleFunc("POST /v1/auth/signup", a.authHandler.SignUpHandler)
+	sm.HandleFunc("POST /v1/auth/signup", a.authHandler.VerifyOTPAndSignUpHandler)
 	sm.HandleFunc("POST /v1/auth/login", a.authHandler.LogInHandler)
 	sm.HandleFunc("POST /v1/auth/refresh-token", a.authHandler.RefreshTokenHandler)
 	sm.HandleFunc("PATCH /v1/auth/password", a.authHandler.UpdatePasswordHandler)
 	sm.HandleFunc("DELETE /v1/auth/logout", a.authHandler.LogOutHandler)
-	sm.HandleFunc("POST /v1/auth/send-verification", a.authHandler.SendVerificationHandler)
-	sm.HandleFunc("GET /v1/auth/email-verify", a.authHandler.VerifyEmailHandler)
+	sm.HandleFunc("POST /v1/auth/verify-email", a.authHandler.RequestEmailVerificationHandler)
 
 	sm.HandleFunc("GET /v1/auth/google", a.authHandler.OAuthGoogleLoginHandler)
 	sm.HandleFunc("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBackHandler)
 
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
-	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)
+	sm.HandleFunc("GET /", a.responseHandler.RouteNotFoundHandler)
 
 	finalHandler := middlewares.LoggingMiddleware(sm)
 

@@ -1,28 +1,29 @@
 import { FetchError } from "../../types/fetch-error";
 import { fetchClient } from "../../utils/fetchClient";
-import jwt from "jsonwebtoken";
 
 export async function SignUp(body: {
-  email: string;
-  username: string;
-  password: string;
-  turnstileToken: string;
+    email: string;
+    username: string;
+    password: string;
+    turnstileToken: string;
+    otpCode: string;
 }): Promise<{ fetchError?: FetchError }> {
-  try {
-    await fetchClient<void>("/auth/signup", {
-      method: "POST",
-      body: JSON.stringify({
-        email: body.email,
-        username: body.username,
-        password: body.password,
-        turnstileToken: body.turnstileToken,
-      }),
-    });
-
-    return {};
-  } catch (error) {
-    return { fetchError: error as FetchError };
-  }
+    try {
+        await fetchClient<void>("/auth/signup", {
+            method: "POST",
+            body: JSON.stringify({
+                email: body.email,
+                username: body.username,
+                password: body.password,
+                turnstileToken: body.turnstileToken,
+                otpCode: body.otpCode,
+            }),
+        });
+     
+        return {}
+    } catch (error) {
+        return { fetchError: error as FetchError };
+    }
 }
 
 export async function LogIn(body: {
@@ -73,3 +74,28 @@ export async function ChangePassword(body: {
     return { fetchError: error as FetchError };
   }
 }
+
+export async function RequestToSendVerification(email: string, turnstileToken: string): Promise<{ fetchError?: FetchError }> {
+    try {
+        await fetchClient<void>("/auth/verify-email", {
+            method: "POST",
+            body: JSON.stringify({email, turnstileToken}),
+        });
+        return {};
+    } catch (error) {
+        return { fetchError: error as FetchError };
+    }
+}
+
+export async function VerifyOTP(email: string, otpCode: string): Promise<{ fetchError?: FetchError }> {
+    try {
+        await fetchClient<void>("/auth/verify-otp", {
+            method: "POST",
+            body: JSON.stringify({email, otpCode}),
+        });
+        return {};
+    } catch (error) {
+        return { fetchError: error as FetchError };
+    }
+}
+

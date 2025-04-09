@@ -109,6 +109,7 @@ export const fetchClient = async <T>(
 
         return validateAndParseResponse<T>(response);
     } catch (error) {
+        console.log("Error in fetchClient:", error);
         if (error instanceof TypeError) {
             throw new FetchError(
                 'network-error',
