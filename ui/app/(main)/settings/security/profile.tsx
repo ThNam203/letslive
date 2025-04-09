@@ -9,7 +9,6 @@ import {
     DialogTrigger,
 } from "../../../../components/ui/dialog";
 import { ShieldCheck, ShieldOff } from "lucide-react";
-import VerificationRequest from "./send-verification";
 import ApiKeyTab from "./api-key-tab";
 import ChangePasswordTab from "./change-password-tab";
 import { AuthProvider, User } from "../../../../types/user";
@@ -60,13 +59,6 @@ export default function ContactSettings({ user }: { user: User }) {
                                             </>
                                         )}
                                     </div>
-                                    {user?.isVerified ? (
-                                        <p className="text-gray-500 text-sm">
-                                            Thank you for verifying your email.
-                                        </p>
-                                    ) : (
-                                        <VerificationRequest />
-                                    )}
                                 </div>
                             </div>
                             <div className="flex items-center justify-between border-t border-zinc-800 pt-4">

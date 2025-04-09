@@ -1,17 +1,18 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"net/http"
-	servererrors "sen1or/letslive/auth/errors"
+	serviceresponse "sen1or/letslive/auth/responses"
 	"sen1or/letslive/auth/types"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (h *AuthHandler) setAuthJWTsInCookie(userId string, w http.ResponseWriter) *servererrors.ServerError {
-	tokensInfo, err := h.jwtService.GenerateTokenPair(userId)
+func (h *AuthHandler) setAuthJWTsInCookie(ctx context.Context, userId string, w http.ResponseWriter) *serviceresponse.ServiceErrorResponse {
+	tokensInfo, err := h.jwtService.GenerateTokenPair(ctx, userId)
 	if err != nil {
 		return err
 	}

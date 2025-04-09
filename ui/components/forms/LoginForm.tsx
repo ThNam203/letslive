@@ -59,6 +59,7 @@ export default function LogInForm() {
             const { fetchError } = await LogIn({ email, password, turnstileToken });
             if (fetchError) {
                 turnstile.reset();
+                setTurnstileToken("");
                 toast.error(fetchError.message);
             } else {
                 router.replace("/")
