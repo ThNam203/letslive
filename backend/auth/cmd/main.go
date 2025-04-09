@@ -72,13 +72,13 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *api.APIServer {
 	var userRepo = repositories.NewAuthRepository(dbConn)
 	var refreshTokenRepo = repositories.NewRefreshTokenRepository(dbConn)
-	var verifyTokenRepo = repositories.NewVerifyTokenRepo(dbConn)
+	var signUpOTPRepo = repositories.NewSignUpOTPRepo(dbConn)
 
 	userGateway := usergateway.NewUserGateway(registry)
 	var authService = services.NewAuthService(userRepo, userGateway)
 	var googleAuthService = services.NewGoogleAuthService(userRepo, userGateway)
 	var jwtService = services.NewJWTService(refreshTokenRepo, cfg.JWT)
-	var verificationService = services.NewVerificationService(verifyTokenRepo, userGateway)
+	var verificationService = services.NewVerificationService(signUpOTPRepo)
 	var authHandler = handlers.NewAuthHandler(*jwtService, *authService, *verificationService, *googleAuthService, cfg.Verification.Gateway)
 	return api.NewAPIServer(authHandler, registry, cfg)
 }

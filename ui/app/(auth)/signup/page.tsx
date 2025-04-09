@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { IconGoogle } from "../../../components/icons/google";
-import SignUpForm from "../../../components/forms/SignupForm";
 import GLOBAL from "../../../global";
 import Script from "next/script";
+import SignUpForm from "@/components/forms/SignupForm";
 
 export default function SignUpPage() {
     return (
@@ -30,7 +30,8 @@ export default function SignUpPage() {
                     <p className="text-center mx-4 text-gray-500">or</p>
                     <hr className="bg-gray-400 h-[2px] flex-1" />
                 </div>
-                <SignUpForm />
+                {/* <SignUpForm /> */}
+                <SignUpForm/>
                 <p className="text-end text-sm opacity-80 mt-4">
                     Already have an account?
                     <Link

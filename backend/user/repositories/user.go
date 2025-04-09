@@ -26,7 +26,7 @@ func NewUserRepository(conn *pgxpool.Pool) domains.UserRepository {
 func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT 
-			u.id, u.username, u.email, u.is_verified, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, 
+			u.id, u.username, u.email, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, 
 			l.user_id, l.title, l.description, l.thumbnail_url, 
 			COUNT(f.follower_id) AS follower_count,
 			CASE 
@@ -64,7 +64,7 @@ func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UU
 func (r *postgresUserRepo) GetById(ctx context.Context, userId uuid.UUID) (*domains.User, *servererrors.ServerError) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT 
-			u.id, u.username, u.email, u.is_verified, u.created_at, u.display_name, u.auth_provider, u.stream_api_key, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
+			u.id, u.username, u.email, u.created_at, u.display_name, u.auth_provider, u.stream_api_key, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
 		FROM users u
 		LEFT JOIN livestream_information l ON u.id = l.user_id
 		WHERE u.id = $1
@@ -114,7 +114,6 @@ func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query stri
 		    u.id,
 		    u.username,
 		    u.email,
-		    u.is_verified,
 		    u.created_at,
 		    u.display_name,
 		    u.phone_number,
@@ -205,7 +204,7 @@ func (r *postgresUserRepo) GetByEmail(ctx context.Context, email string) (*domai
 func (r *postgresUserRepo) GetByAPIKey(ctx context.Context, apiKey uuid.UUID) (*domains.User, *servererrors.ServerError) {
 	var user domains.User
 	rows, err := r.dbConn.Query(ctx, `
-		SELECT u.id, u.username, u.email, u.is_verified, u.created_at, u.stream_api_key, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url 
+		SELECT u.id, u.username, u.email, u.created_at, u.stream_api_key, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url 
 		FROM users u
 		JOIN livestream_information l ON u.id = l.user_id
 		WHERE u.stream_api_key = $1
@@ -227,15 +226,14 @@ func (r *postgresUserRepo) GetByAPIKey(ctx context.Context, apiKey uuid.UUID) (*
 	return &user, nil
 }
 
-func (r *postgresUserRepo) Create(ctx context.Context, username string, email string, isVerified bool, provider domains.AuthProvider) (*domains.User, *servererrors.ServerError) {
+func (r *postgresUserRepo) Create(ctx context.Context, username string, email string, provider domains.AuthProvider) (*domains.User, *servererrors.ServerError) {
 	params := pgx.NamedArgs{
 		"username":      username,
 		"email":         email,
-		"is_verified":   isVerified,
 		"auth_provider": provider,
 	}
 
-	row, err := r.dbConn.Query(ctx, "insert into users (username, email, is_verified, auth_provider) values (@username, @email, @is_verified, @auth_provider) returning *", params)
+	row, err := r.dbConn.Query(ctx, "insert into users (username, email, auth_provider) values (@username, @email,  @auth_provider) returning *", params)
 	if err != nil {
 		return nil, servererrors.ErrDatabaseQuery
 	}
@@ -317,21 +315,6 @@ func (r *postgresUserRepo) UpdateProfilePicture(ctx context.Context, userId uuid
 
 func (r *postgresUserRepo) UpdateBackgroundPicture(ctx context.Context, userId uuid.UUID, path string) *servererrors.ServerError {
 	result, err := r.dbConn.Exec(ctx, "UPDATE users SET background_picture = $1 WHERE id = $2", path, userId)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return servererrors.ErrUserNotFound
-		}
-
-		return servererrors.ErrDatabaseQuery
-	} else if result.RowsAffected() == 0 {
-		return servererrors.ErrUserNotFound
-	}
-
-	return nil
-}
-
-func (r *postgresUserRepo) UpdateUserVerified(ctx context.Context, userId uuid.UUID) *servererrors.ServerError {
-	result, err := r.dbConn.Exec(ctx, "UPDATE users SET is_verified = $1 WHERE id = $2", true, userId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return servererrors.ErrUserNotFound
