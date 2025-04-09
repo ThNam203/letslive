@@ -15,6 +15,7 @@ components:
       required:
         - email
         - password
+        - turnstileToken
       properties:
         email:
           type: string
@@ -25,6 +26,23 @@ components:
           minLength: 8
           maxLength: 72
           example: "123123123"
+        turnstileToken:
+          type: string
+          description: Cloudflare Turnstile token for bot detection
+    
+    SignUpVerificationRequest:
+      type: object
+      required:
+        - email
+        - turnstileToken
+      properties:
+        email:
+          type: string
+          format: email
+          example: hthnam203@gmail.com
+        turnstileToken:
+          type: string
+          description: Cloudflare Turnstile token for bot detection
     
     SignUpRequest:
       type: object
@@ -32,6 +50,7 @@ components:
         - username
         - email
         - password
+        - otpCode
       properties:
         username:
           type: string
@@ -47,6 +66,11 @@ components:
           minLength: 8
           maxLength: 72
           example: "123123123"
+        otpCode:
+          type: string
+          minLength: 6
+          maxLength: 6
+          description: 6-digit OTP code sent to email
     
     ChangePasswordRequest:
       type: object
@@ -116,10 +140,30 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /auth/verify-email:
+    post:
+      summary: Request signup email verification
+      description: Sends OTP code to email for signup verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpVerificationRequest'
+      responses:
+        '204':
+          description: Verification email sent successfully
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /auth/signup:
     post:
-      summary: User registration
-      description: Creates a new user account
+      summary: Complete user registration
+      description: Creates a new user account with verified email, the OTP will be verified by the backend, if the OTP is valid, the user will be created and the JWT tokens will be set in cookies
       requestBody:
         required: true
         content:
@@ -131,6 +175,12 @@ paths:
           description: Account created successfully, JWT tokens set in cookies
         '400':
           description: Invalid payload or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid OTP code
           content:
             application/json:
               schema:
@@ -161,40 +211,6 @@ paths:
       responses:
         '204':
           description: Logged out successfully
-
-  /auth/verify-email:
-    get:
-      summary: Verify email
-      description: Verifies user's email using verification token
-      parameters:
-        - in: query
-          name: token
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Email verified successfully
-        '400':
-          description: Invalid or missing token
-        '401':
-          description: Invalid verification token
-
-  /auth/send-verification:
-    post:
-      summary: Send verification email
-      description: Sends a new verification email to the user
-      security:
-        - cookieAuth: []
-      responses:
-        '204':
-          description: Verification email sent successfully
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
 
   /auth/update-password:
     post:
@@ -248,7 +264,11 @@ paths:
           schema:
             type: string
       responses:
-        '301':
-          description: Redirects to client application with authentication tokens
         '307':
-          description: Redirects to login page with error message on failure
+          description: Redirects to frontend with authentication cookies set
+        '400':
+          description: Invalid OAuth parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
