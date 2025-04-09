@@ -16,10 +16,10 @@ services:
   #    - NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
 
   auth:
-    #image: sen1or/letslive-auth:latest
-    build:
-      context: ./backend/auth/
-      dockerfile: Dockerfile
+    image: sen1or/letslive-auth:latest
+    #build:
+    #  context: ./backend/auth/
+    #  dockerfile: Dockerfile
     restart: always
     container_name: letslive-auth
     ports:
