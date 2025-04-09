@@ -82,7 +82,7 @@ services:
     restart: always
     ports:
       - "1935:1935"
-      - "7779:7779" 
+      - "7779:7779"
       - "8889:8889" # expose the webserver
     expose:
       - "1935"
@@ -230,7 +230,7 @@ services:
     expose:
       - "5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"] 
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 10s
       retries: 5
@@ -263,14 +263,14 @@ services:
     container_name: letslive-chat-pubsub
     restart: always
     ports:
-      - '6379:6379'
+      - "6379:6379"
     command: redis-server --save 60 1 --loglevel warning
-    volumes: 
+    volumes:
       - chat_pubsub_data:/data
     networks:
       general_network:
     healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
 
   chat_db:
     image: mongo:latest
@@ -297,8 +297,8 @@ services:
     image: hashicorp/consul:latest
     container_name: letslive-consul
     ports:
-      - "8500:8500"  # Consul UI and API
-      - "8600:8600/udp"  # DNS
+      - "8500:8500" # Consul UI and API
+      - "8600:8600/udp" # DNS
     expose:
       - "8500"
       - "8600"
@@ -313,7 +313,7 @@ services:
     depends_on:
       configserver:
         condition: service_healthy
- 
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8500/v1/status/leader"]
       interval: 30s
