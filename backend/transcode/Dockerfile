@@ -1,15 +1,29 @@
-FROM golang:1.24.0
+# STAGE 1
+FROM golang:1.24.1 AS builder
 
 WORKDIR /usr/src/app
 
-RUN apt-get update && apt-get install -y ffmpeg curl
-
-COPY ../go.mod ../go.sum ./
+COPY ./go.mod ./go.sum .
 RUN go mod download
 RUN go mod verify
 
-COPY ../ .
+COPY . .
 
-RUN go build -v -o /usr/local/bin/app ./cmd/
+RUN CGO_ENABLED=0 go build -ldflags="-w -s" -v -o /app ./cmd/
+
+# STAGE 2
+FROM alpine:latest AS final
+
+RUN apk update && \
+    apk add --no-cache \
+        ffmpeg \
+        curl \
+        ca-certificates \
+        tzdata && \
+    rm -rf /var/cache/apk/*
+
+WORKDIR /usr/src/app
+
+COPY --from=builder /app /usr/local/bin/app
 
 CMD ["app"]
