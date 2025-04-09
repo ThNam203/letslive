@@ -308,7 +308,7 @@ services:
       - ./configs/consul.json:/consul/config/consul.json
     networks:
       kong_network:
-        ipv4_address: 192.168.1.10
+        ipv4_address: 172.30.0.10
       general_network:
     depends_on:
       configserver:
@@ -329,7 +329,7 @@ services:
     restart: always
     environment:
       - KONG_DATABASE=off
-      - KONG_DNS_RESOLVER=192.168.1.10:8600,127.0.0.11
+      - KONG_DNS_RESOLVER=172.30.0.10:8600,127.0.0.11 # use consul ip address
       - KONG_PROXY_ACCESS_LOG=/dev/stdout
       - KONG_ADMIN_ACCESS_LOG=/dev/stdout
       - KONG_PROXY_ERROR_LOG=/dev/stderr
@@ -394,7 +394,7 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 192.168.1.0/24
+        - subnet: 172.30.0.0/16
 
 volumes:
   postgres_auth_data:
