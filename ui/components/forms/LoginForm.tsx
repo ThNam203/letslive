@@ -55,16 +55,17 @@ export default function LogInForm() {
     e.stopPropagation();
     setIsLoading(true);
 
-    if (validate()) {
-      const { fetchError } = await LogIn({ email, password, turnstileToken });
-      if (fetchError) {
-        turnstile.reset();
-        toast.error(fetchError.message);
-      } else {
-        router.replace("/");
-        router.refresh();
-      }
-    }
+        if (validate()) {
+            const { fetchError } = await LogIn({ email, password, turnstileToken });
+            if (fetchError) {
+                turnstile.reset();
+                setTurnstileToken("");
+                toast.error(fetchError.message);
+            } else {
+                router.replace("/")
+                router.refresh()
+            }
+        }
 
     setIsLoading(false);
   };

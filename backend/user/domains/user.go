@@ -13,7 +13,6 @@ type User struct {
 	Id                uuid.UUID    `json:"id" db:"id"`
 	Username          string       `json:"username" db:"username"`
 	Email             string       `json:"email" db:"email"`
-	IsVerified        bool         `json:"isVerified" db:"is_verified"`
 	Status            UserStatus   `json:"status" db:"status"`
 	AuthProvider      AuthProvider `json:"authProvider" db:"auth_provider"`
 	CreatedAt         time.Time    `json:"createdAt" db:"created_at"`
@@ -52,9 +51,8 @@ type UserRepository interface {
 	GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *servererrors.ServerError)
 	SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, *servererrors.ServerError)
 
-	Create(ctx context.Context, username, email string, isVerified bool, authProvider AuthProvider) (*User, *servererrors.ServerError)
+	Create(ctx context.Context, username, email string, authProvider AuthProvider) (*User, *servererrors.ServerError)
 	Update(ctx context.Context, user dto.UpdateUserRequestDTO) (*User, *servererrors.ServerError)
-	UpdateUserVerified(ctx context.Context, userId uuid.UUID) *servererrors.ServerError
 	UpdateStreamAPIKey(ctx context.Context, userId uuid.UUID, newKey string) *servererrors.ServerError
 	UpdateProfilePicture(ctx context.Context, userId uuid.UUID, newProfilePictureURL string) *servererrors.ServerError
 	UpdateBackgroundPicture(ctx context.Context, userId uuid.UUID, newBackgroundPictureURL string) *servererrors.ServerError

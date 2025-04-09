@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"context"
@@ -87,10 +87,9 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("PATCH /v1/user/me/profile-picture", a.userHandler.UpdateUserProfilePicturePrivateHandler)
 	sm.HandleFunc("PATCH /v1/user/me/background-picture", a.userHandler.UpdateUserBackgroundPicturePrivateHandler)
 
-	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUserInternalHandler)                             // internal
-	sm.HandleFunc("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                     // internal
-	sm.HandleFunc("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler)      // internal
-	sm.HandleFunc("PATCH /v1/user/{userId}/set-verified", a.userHandler.SetUserVerifiedInternalHandler) // internal
+	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUserInternalHandler)                        // internal
+	sm.HandleFunc("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                // internal
+	sm.HandleFunc("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler) // internal
 
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyStateHandler)
 	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)

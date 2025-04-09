@@ -1,0 +1,274 @@
+openapi: 3.0.0
+info:
+  title: LetsLive Authentication API
+  description: Authentication service for LetsLive application
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+components:
+  schemas:
+    LogInRequest:
+      type: object
+      required:
+        - email
+        - password
+        - turnstileToken
+      properties:
+        email:
+          type: string
+          format: email
+          example: hthnam203@gmail.com
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+          example: "123123123"
+        turnstileToken:
+          type: string
+          description: Cloudflare Turnstile token for bot detection
+    
+    SignUpVerificationRequest:
+      type: object
+      required:
+        - email
+        - turnstileToken
+      properties:
+        email:
+          type: string
+          format: email
+          example: hthnam203@gmail.com
+        turnstileToken:
+          type: string
+          description: Cloudflare Turnstile token for bot detection
+    
+    SignUpRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+        - otpCode
+      properties:
+        username:
+          type: string
+          minLength: 6
+          maxLength: 50
+          example: sen1or
+        email:
+          type: string
+          format: email
+          example: hthnam203@gmail.com
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+          example: "123123123"
+        otpCode:
+          type: string
+          minLength: 6
+          maxLength: 6
+          description: 6-digit OTP code sent to email
+    
+    ChangePasswordRequest:
+      type: object
+      required:
+        - oldPassword
+        - newPassword
+      properties:
+        oldPassword:
+          type: string
+          minLength: 8
+          maxLength: 72
+          example: "123123123"
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 72
+          example: "123123123"
+    
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 500
+        message:
+          type: string
+          example: "internal server error"
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: ACCESS_TOKEN
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns 200 OK if the service is healthy
+      responses:
+        '200':
+          description: Service is healthy
+
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticates a user and returns JWT tokens in cookies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogInRequest'
+      responses:
+        '204':
+          description: Login successful, JWT tokens set in cookies
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/verify-email:
+    post:
+      summary: Request signup email verification
+      description: Sends OTP code to email for signup verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpVerificationRequest'
+      responses:
+        '204':
+          description: Verification email sent successfully
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/signup:
+    post:
+      summary: Complete user registration
+      description: Creates a new user account with verified email, the OTP will be verified by the backend, if the OTP is valid, the user will be created and the JWT tokens will be set in cookies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+      responses:
+        '201':
+          description: Account created successfully, JWT tokens set in cookies
+        '400':
+          description: Invalid payload or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid OTP code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      description: Uses refresh token to generate new access token
+      security:
+        - cookieAuth: []
+      responses:
+        '204':
+          description: New access token generated successfully
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      summary: User logout
+      description: Clears authentication cookies
+      security:
+        - cookieAuth: []
+      responses:
+        '204':
+          description: Logged out successfully
+
+  /auth/update-password:
+    post:
+      summary: Update password
+      description: Changes user's password
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Password updated successfully
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/google/login:
+    get:
+      summary: Google OAuth login
+      description: Initiates Google OAuth authentication flow
+      responses:
+        '307':
+          description: Redirects to Google OAuth consent screen
+
+  /auth/google/callback:
+    get:
+      summary: Google OAuth callback
+      description: Handles the callback from Google OAuth
+      parameters:
+        - in: query
+          name: code
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: state
+          required: true
+          schema:
+            type: string
+      responses:
+        '307':
+          description: Redirects to frontend with authentication cookies set
+        '400':
+          description: Invalid OAuth parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

@@ -1,0 +1,184 @@
+openapi: 3.0.0
+info:
+  title: Chat Service API
+  description: WebSocket-based chat service API documentation
+  version: 1.0.0
+servers:
+  - url: ws://localhost:3000
+    description: WebSocket server
+
+components:
+  schemas:
+    ChatMessage:
+      type: object
+      required:
+        - type
+        - roomId
+        - userId
+        - username
+        - text
+      properties:
+        type:
+          type: string
+          enum: [join, leave, message]
+          description: Type of the message
+        roomId:
+          type: string
+          description: Room identifier
+        userId:
+          type: string
+          description: User identifier
+        username:
+          type: string
+          description: Username of the sender
+        text:
+          type: string
+          description: Message content
+    MessageResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [join, leave, message]
+          description: Type of the message
+        roomId:
+          type: string
+          description: Room identifier
+        userId:
+          type: string
+          description: User identifier
+        username:
+          type: string
+          description: Username of the sender
+        text:
+          type: string
+          description: Message content
+        timestamp:
+          type: string
+          format: date-time
+          description: Message timestamp
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok]
+          description: Server health status
+        timestamp:
+          type: string
+          format: date-time
+          description: Server timestamp
+
+paths:
+  /ws:
+    get:
+      summary: Establish WebSocket connection
+      description: |
+        Establishes a WebSocket connection for real-time chat communication.
+        
+        After connection is established, you can:
+        1. Join a room by sending a message with type "join"
+        2. Leave a room by sending a message with type "leave"
+        3. Send messages by sending a message with type "message"
+        
+        Example messages:
+        ```json
+        // Join room
+        {
+          "type": "join",
+          "roomId": "room123",
+          "userId": "user123",
+          "username": "John",
+          "text": ""
+        }
+        
+        // Send message
+        {
+          "type": "message",
+          "roomId": "room123",
+          "userId": "user123",
+          "username": "John",
+          "text": "Hello everyone!"
+        }
+        
+        // Leave room
+        {
+          "type": "leave",
+          "roomId": "room123",
+          "userId": "user123",
+          "username": "John",
+          "text": ""
+        }
+        ```
+      responses:
+        '101':
+          description: WebSocket connection established
+      security:
+        - bearerAuth: []
+      tags:
+        - Chat
+
+  /v1/messages:
+    get:
+      summary: Get room messages
+      description: Retrieve messages for a specific room
+      parameters:
+        - name: roomId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Room identifier
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+          description: Maximum number of messages to return
+        - name: before
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Return messages before this timestamp
+      responses:
+        '200':
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessageResponse'
+      security:
+        - bearerAuth: []
+      tags:
+        - Messages
+
+  /v1/health:
+    get:
+      summary: Check server health
+      description: Returns the current health status of the server
+      responses:
+        '200':
+          description: Server health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+      tags:
+        - Health
+
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
+
+tags:
+  - name: Chat
+    description: Real-time chat operations
+  - name: Messages
+    description: Message history operations
+  - name: Health
+    description: Server health check operations 

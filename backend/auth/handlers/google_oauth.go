@@ -1,19 +1,20 @@
 package handlers
 
 import (
+	"context"
 	cryptorand "crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"net/http"
 	"os"
-	servererrors "sen1or/letslive/auth/errors"
+	serviceresponse "sen1or/letslive/auth/responses"
 	"time"
 )
 
 func (h *AuthHandler) OAuthGoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
 	oauthState, err := generateOAuthCookieState(w)
 	if err != nil {
-		h.WriteErrorResponse(w, servererrors.ErrInternalServer)
+		h.WriteErrorResponse(w, serviceresponse.ErrInternalServer)
 		return
 	}
 
@@ -22,6 +23,8 @@ func (h *AuthHandler) OAuthGoogleLoginHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
 	GetRedirectURLOnFail := func(errMsg string) string {
 		clientAddr := os.Getenv("CLIENT_URL")
 		return fmt.Sprintf("%s/login?errorMessage=%s", clientAddr, errMsg)
@@ -44,13 +47,13 @@ func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	createdAuth, handleErr := h.googleAuthService.CallbackHandler(r.FormValue("code"))
+	createdAuth, handleErr := h.googleAuthService.CallbackHandler(ctx, r.FormValue("code"))
 	if handleErr != nil {
 		http.Redirect(w, r, GetRedirectURLOnFail(handleErr.Message), http.StatusTemporaryRedirect)
 		return
 	}
 
-	if err := h.setAuthJWTsInCookie(createdAuth.UserId.String(), w); err != nil {
+	if err := h.setAuthJWTsInCookie(ctx, createdAuth.UserId.String(), w); err != nil {
 		http.Redirect(w, r, GetRedirectURLOnFail(err.Message), http.StatusTemporaryRedirect)
 		return
 	}

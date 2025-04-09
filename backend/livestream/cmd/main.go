@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"sen1or/letslive/livestream/api"
 	cfg "sen1or/letslive/livestream/config"
 	"sen1or/letslive/livestream/handlers"
 	"sen1or/letslive/livestream/pkg/discovery"
@@ -67,9 +68,9 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 	}
 }
 
-func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *APIServer {
+func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *api.APIServer {
 	var livestreamRepo = repositories.NewLivestreamRepository(dbConn)
 	var livestreamService = services.NewLivestreamService(livestreamRepo)
 	var livestreamHandler = handlers.NewLivestreamHandler(*livestreamService)
-	return NewAPIServer(livestreamHandler, cfg)
+	return api.NewAPIServer(livestreamHandler, cfg)
 }

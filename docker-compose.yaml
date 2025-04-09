@@ -386,6 +386,9 @@ services:
 networks:
   general_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.0.0/16
 
   kong_network:
     driver: bridge
