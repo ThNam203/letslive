@@ -7,11 +7,7 @@ import { Button } from "../ui/button";
 
 export default function StreamGuiding() {
   const [open, setOpen] = React.useState(false);
-  const [isGotIt, setIsGotIt] = React.useState(false);
-
-  useEffect(() => {
-    localStorage.setItem("readStreamGuiding", JSON.stringify(isGotIt));
-  }, [isGotIt]);
+  const [isGotIt, setIsGotIt] = React.useState(true);
 
   useEffect(() => {
     const readStreamGuiding = localStorage.getItem("readStreamGuiding");
@@ -21,6 +17,7 @@ export default function StreamGuiding() {
   const handleGotIt = () => {
     setIsGotIt(true);
     setOpen(false);
+    localStorage.setItem("readStreamGuiding", JSON.stringify(true)); // keep it true forever
   };
 
   return (
