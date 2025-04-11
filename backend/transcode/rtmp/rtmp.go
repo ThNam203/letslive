@@ -2,6 +2,7 @@ package rtmp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -40,6 +41,7 @@ type RTMPServer struct {
 	livestreamGateway *livestreamgateway.LivestreamGateway
 	config            config.Config
 	vodHandler        watcher.VODHandler
+	listener          net.Listener
 }
 
 func NewRTMPServer(config RTMPServerConfig, userGateway *usergateway.UserGateway, livestreamgateway *livestreamgateway.LivestreamGateway) *RTMPServer {
@@ -56,14 +58,13 @@ func NewRTMPServer(config RTMPServerConfig, userGateway *usergateway.UserGateway
 func (s *RTMPServer) Start() {
 	portStr := strconv.Itoa(s.Port)
 	server := rtmp.NewServer()
-	var listener net.Listener
 
 	serverAddr, err := net.ResolveTCPAddr("tcp", ":"+portStr)
 	if err != nil {
 		logger.Panicf("failed to resolve rtmp addr: %s", err)
 	}
 
-	listener, err = net.ListenTCP("tcp", serverAddr)
+	s.listener, err = net.ListenTCP("tcp", serverAddr)
 	if err != nil {
 		logger.Panicf("rtmp failed to listen: %s", err)
 	}
@@ -77,7 +78,7 @@ func (s *RTMPServer) Start() {
 	server.HandleConn = s.HandleConnection
 
 	for {
-		conn, err := listener.Accept()
+		conn, err := s.listener.Accept()
 
 		if err != nil {
 			logger.Errorf("rtmp failed to connect: %s", err)
@@ -225,4 +226,27 @@ func removeLiveGeneratedFiles(streamingKey, privatePath, publicPath string) erro
 	}
 
 	return nil
+}
+
+func (s *RTMPServer) Shutdown(ctx context.Context) error {
+	listener := s.listener
+	s.listener = nil
+
+	// Check if listener exists (might be nil if Start failed or Shutdown called twice)
+	if listener == nil {
+		logger.Warnf("RTMP server listener already closed or not started.")
+		return nil // Idempotent shutdown
+	}
+
+	logger.Infow("Shutting down RTMP server listener...")
+
+	err := listener.Close()
+	if err != nil && !errors.Is(err, net.ErrClosed) {
+		logger.Errorf("Error closing RTMP listener: %v", err)
+		return err // Return the unexpected error
+	}
+
+	logger.Infow("RTMP server listener closed.")
+
+	return nil // Shutdown initiated successfully
 }

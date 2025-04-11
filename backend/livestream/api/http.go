@@ -3,10 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
-	"os"
-	"os/signal"
 	"sen1or/letslive/livestream/config"
 	"sen1or/letslive/livestream/handlers"
 	"sen1or/letslive/livestream/middlewares"
@@ -18,15 +15,16 @@ import (
 )
 
 type APIServer struct {
-	logger *zap.SugaredLogger
-	config config.Config
+	httpServer *http.Server
+	logger     *zap.SugaredLogger
+	config     *config.Config
 
 	errorHandler      *handlers.ErrorHandler
 	healthHandler     *handlers.HealthHandler
 	livestreamHandler *handlers.LivestreamHandler
 }
 
-func NewAPIServer(livestreamHandler *handlers.LivestreamHandler, cfg config.Config) *APIServer {
+func NewAPIServer(livestreamHandler *handlers.LivestreamHandler, cfg *config.Config) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
@@ -35,34 +33,6 @@ func NewAPIServer(livestreamHandler *handlers.LivestreamHandler, cfg config.Conf
 		healthHandler:     handlers.NewHeathHandler(),
 		livestreamHandler: livestreamHandler,
 	}
-}
-
-func (a *APIServer) ListenAndServe(useTLS bool) {
-	server := &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", a.config.Service.APIBindAddress, a.config.Service.APIPort),
-		Handler:      a.getHandler(),
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-
-	go log.Panic("server ends: ", server.ListenAndServe())
-
-	log.Printf("server running on addr: %s", server.Addr)
-	<-quit
-
-	// Shutdown gracefully
-	logger.Infow("shutting down server...")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := server.Shutdown(ctx); err != nil {
-		logger.Errorf("server shutdown failed: %+v", err)
-	}
-
-	logger.Infow("server exited gracefully")
 }
 
 func (a *APIServer) getHandler() http.Handler {
@@ -88,4 +58,55 @@ func (a *APIServer) getHandler() http.Handler {
 	finalHandler := middlewares.LoggingMiddleware(sm)
 
 	return finalHandler
+}
+
+// ListenAndServe sets up and runs the HTTP server.
+// it blocks until the server is shut down or an error occurs.
+// it returns http.ErrServerClosed on graceful shutdown, otherwise the error.
+func (a *APIServer) ListenAndServe(useTLS bool) error { // Changed signature to return error
+	addr := fmt.Sprintf("%s:%d", a.config.Service.APIBindAddress, a.config.Service.APIPort)
+
+	a.httpServer = &http.Server{
+		Addr:         addr,
+		Handler:      a.getHandler(),
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	// start the server (this will block)
+	var err error
+	if useTLS {
+		err = fmt.Errorf("TLS not implemented")
+	} else {
+		err = a.httpServer.ListenAndServe()
+	}
+
+	// This line is reached when ListenAndServe returns.
+	// It returns http.ErrServerClosed if Shutdown was called gracefully.
+	// Otherwise, it returns the error that caused it to stop.
+	if err != nil && err != http.ErrServerClosed {
+		logger.Errorf("server listener error: %v", err)
+		return err
+	}
+
+	// If err is nil or http.ErrServerClosed, it means server stopped cleanly or via Shutdown.
+	return nil
+}
+
+// shutdown gracefully shuts down the server without interrupting active connections.
+func (a *APIServer) Shutdown(ctx context.Context) error {
+	if a.httpServer == nil {
+		logger.Warnf("server instance not found, cannot shutdown.")
+		return nil
+	}
+
+	logger.Infof("attempting graceful shutdown of server...")
+	err := a.httpServer.Shutdown(ctx)
+	if err != nil {
+		logger.Errorf("server shutdown failed: %v", err)
+		return err
+	}
+
+	logger.Infof("server shutdown completed.")
+	return nil
 }
