@@ -78,12 +78,12 @@ func (s *MinIOStrorage) SetUp() error {
 }
 
 // uploads segment to MinIO and returns the permanent URL
-func (s *MinIOStrorage) AddSegment(filePath string, streamId string, qualityIndex int) (string, error) {
+func (s *MinIOStrorage) AddSegment(ctx context.Context, filePath string, streamId string, qualityIndex int) (string, error) {
 	filename := filepath.Base(filePath)
 	savePath := fmt.Sprintf("%s/%d/%s", streamId, qualityIndex, filename)
 
 	// Upload the file
-	_, err := s.minioClient.FPutObject(context.Background(), s.config.BucketName, savePath, filePath, minio.PutObjectOptions{
+	_, err := s.minioClient.FPutObject(ctx, s.config.BucketName, savePath, filePath, minio.PutObjectOptions{
 		ContentType:  "video/mp2t",
 		CacheControl: "max-age=3600",
 	})
@@ -98,12 +98,12 @@ func (s *MinIOStrorage) AddSegment(filePath string, streamId string, qualityInde
 }
 
 // uploads thumbnail to MinIO and returns the permanent URL
-func (s *MinIOStrorage) AddThumbnail(filePath string, streamId string, contentType string) (string, error) {
+func (s *MinIOStrorage) AddThumbnail(ctx context.Context, filePath string, streamId string, contentType string) (string, error) {
 	filename := filepath.Base(filePath)
 	savePath := fmt.Sprintf("%s/%s", streamId, filename)
 
 	// Upload the file
-	_, err := s.minioClient.FPutObject(context.Background(), s.config.BucketName, savePath, filePath, minio.PutObjectOptions{
+	_, err := s.minioClient.FPutObject(ctx, s.config.BucketName, savePath, filePath, minio.PutObjectOptions{
 		ContentType:  contentType,
 		CacheControl: "max-age=600",
 	})

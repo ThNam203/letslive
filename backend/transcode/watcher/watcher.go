@@ -1,6 +1,7 @@
 package watcher
 
 import (
+	"context"
 	"path/filepath"
 	"sen1or/letslive/transcode/pkg/logger"
 	"strings"
@@ -11,16 +12,17 @@ import (
 )
 
 type FileWatcherStrategy interface {
-	OnCreate(event watcher.Event) error
-	OnMaster(event watcher.Event) error
-	OnVariant(event watcher.Event) error
-	OnSegment(event watcher.Event) error
-	OnThumbnail(event watcher.Event) error
+	OnCreate(ctx context.Context, event watcher.Event) error
+	OnMaster(ctx context.Context, event watcher.Event) error
+	OnVariant(ctx context.Context, event watcher.Event) error
+	OnSegment(ctx context.Context, event watcher.Event) error
+	OnThumbnail(ctx context.Context, event watcher.Event) error
 }
 
 type FFMpegFileWatcher struct {
 	watcherStrategy FileWatcherStrategy
 	monitorPath     string
+	watcher         *watcher.Watcher
 }
 
 func NewFFMpegFileWatcher(monitorPath string, watcherStrategy FileWatcherStrategy) *FFMpegFileWatcher {
@@ -34,52 +36,57 @@ func (w *FFMpegFileWatcher) SetStrategy(watcherStrategy FileWatcherStrategy) {
 	w.watcherStrategy = watcherStrategy
 }
 
-func (w *FFMpegFileWatcher) Watch() {
-	myWatcher := watcher.New()
+func (w *FFMpegFileWatcher) Watch(ctx context.Context) {
+	w.watcher = watcher.New()
 
 	go func() {
 		for {
 			select {
-			case event := <-myWatcher.Event:
+			case event := <-w.watcher.Event:
 				if event.Op == watcher.Remove {
 					continue
 				}
 
 				if event.IsDir() && event.Op == watcher.Create {
-					w.watcherStrategy.OnCreate(event)
+					w.watcherStrategy.OnCreate(ctx, event)
 					continue
 				}
 
 				fileType := w.getEventFileType(event.Path)
 				if fileType == "Master" {
-					w.watcherStrategy.OnMaster(event)
+					w.watcherStrategy.OnMaster(ctx, event)
 				} else if fileType == "Variant" {
-					w.watcherStrategy.OnVariant(event)
+					w.watcherStrategy.OnVariant(ctx, event)
 				} else if fileType == "Segment" {
-					w.watcherStrategy.OnSegment(event)
+					w.watcherStrategy.OnSegment(ctx, event)
 				} else if fileType == "Thumbnail" {
-					w.watcherStrategy.OnThumbnail(event)
+					w.watcherStrategy.OnThumbnail(ctx, event)
 				} else {
 					if fileType != "" {
 						logger.Errorf("unknown file appeared when watching: %s", fileType)
 					}
 				}
-			case err := <-myWatcher.Error:
+			case err := <-w.watcher.Error:
 				logger.Errorf("something failed while running watcher", err)
-			case <-myWatcher.Closed:
+			case <-w.watcher.Closed:
 				return
 			}
 		}
 	}()
 
 	// Watch the hls segment storage folder recursively for changes.
-	if err := myWatcher.AddRecursive(w.monitorPath); err != nil {
+	if err := w.watcher.AddRecursive(w.monitorPath); err != nil {
 		logger.Panicf("error while setting up watcher path: %s", err)
 	}
 
-	if err := myWatcher.Start(time.Millisecond * 100); err != nil {
+	if err := w.watcher.Start(time.Millisecond * 100); err != nil {
 		logger.Panicf("error starting watcher: %s", err)
 	}
+}
+
+func (w FFMpegFileWatcher) Shutdown() {
+	w.watcher.Close()
+	logger.Infof("watcher has closed")
 }
 
 // getFileType should return one of the three: Master, Variant, Segment
