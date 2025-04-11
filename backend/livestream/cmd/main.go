@@ -28,7 +28,8 @@ var (
 	discoveryBaseDelay = 1 * time.Second
 	discoveryMaxDelay  = 1 * time.Minute
 
-	shutdownTimeout = 15 * time.Second
+	shutdownTimeout            = 15 * time.Second
+	discoveryDeregisterTimeout = 10 * time.Second
 )
 
 func main() {
@@ -42,7 +43,7 @@ func main() {
 
 	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile, configReloadInterval)
 	if err != nil {
-		logger.Panicf("failed to start discovery mechanism: %s", err)
+		logger.Panicf("failed to set up config manager: %s", err)
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -55,7 +56,7 @@ func main() {
 	dbConn := ConnectDB(ctx, config)
 	defer dbConn.Close()
 
-	server := SetupServer(dbConn, registry, *config)
+	server := SetupServer(dbConn, registry, config)
 	go func() {
 		logger.Infof("starting server on %s:%d...", config.Service.Hostname, config.Service.APIPort)
 		// ListenAndServe should ideally block until an error occurs (e.g., server stopped)
@@ -139,7 +140,7 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 	// Create a new short-lived context for the deregistration call.
 	// The original context `ctx` is already cancelled, so using it might cause immediate failure.
 	// Use context.Background() as the parent to ensure it's not tied to the cancelled context.
-	deregisterCtx, cancelDeregister := context.WithTimeout(context.Background(), 5*time.Second) // 5-second timeout for deregistration
+	deregisterCtx, cancelDeregister := context.WithTimeout(context.Background(), discoveryDeregisterTimeout)
 	defer cancelDeregister()
 
 	if err := registry.Deregister(deregisterCtx, serviceName, instanceID); err != nil {
@@ -149,7 +150,7 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 	}
 }
 
-func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg cfg.Config) *api.APIServer {
+func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
 	var livestreamRepo = repositories.NewLivestreamRepository(dbConn)
 	var livestreamService = services.NewLivestreamService(livestreamRepo)
 	var livestreamHandler = handlers.NewLivestreamHandler(*livestreamService)
