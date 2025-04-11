@@ -62,24 +62,24 @@ type ConfigManager struct {
 
 // NewConfigManager creates a new ConfigManager, performs the initial fetch with retry,
 // and starts the background reloader.
-func NewConfigManager(registry discovery.Registry, appName string, profile string, reloadInterval time.Duration) (*ConfigManager, error) {
+func NewConfigManager(registry discovery.Registry, serviceName string, profile string, reloadInterval time.Duration) (*ConfigManager, error) {
 	if profile == "" {
 		logger.Warnf("CONFIG_SERVER_PROFILE environment variable not set, using default 'default'")
 		profile = "default"
 	}
 
-	if appName == "" {
+	if serviceName == "" {
 		return nil, fmt.Errorf("application name cannot be empty")
 	}
 
 	cm := &ConfigManager{
 		registry:    registry,
 		stopChan:    make(chan struct{}),
-		serviceName: appName,
+		serviceName: serviceName,
 		profile:     profile,
 	}
 
-	logger.Infof("attempting initial configuration fetch for %s-%s...", appName, profile)
+	logger.Infof("attempting initial configuration fetch for %s-%s...", serviceName, profile)
 
 	// initial fetch with infinite retry
 	var initialConfig *Config

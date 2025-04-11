@@ -17,14 +17,14 @@ import (
 type APIServer struct {
 	httpServer *http.Server
 	logger     *zap.SugaredLogger
-	config     config.Config
+	config     *config.Config
 
 	errorHandler      *handlers.ErrorHandler
 	healthHandler     *handlers.HealthHandler
 	livestreamHandler *handlers.LivestreamHandler
 }
 
-func NewAPIServer(livestreamHandler *handlers.LivestreamHandler, cfg config.Config) *APIServer {
+func NewAPIServer(livestreamHandler *handlers.LivestreamHandler, cfg *config.Config) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,

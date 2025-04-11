@@ -18,7 +18,7 @@ import (
 type APIServer struct {
 	httpServer *http.Server
 	logger     *zap.SugaredLogger
-	config     config.Config
+	config     *config.Config
 
 	authHandler     *handlers.AuthHandler
 	responseHandler *handlers.ResponseHandler
@@ -28,7 +28,7 @@ type APIServer struct {
 func NewAPIServer(
 	authHandler *handlers.AuthHandler,
 	registry discovery.Registry,
-	cfg config.Config,
+	cfg *config.Config,
 ) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
