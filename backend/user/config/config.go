@@ -207,10 +207,10 @@ func (cm *ConfigManager) fetchAndParseConfig() (*Config, error) {
 		return nil, fmt.Errorf("error unmarshaling config YAML: %w", err)
 	}
 
-	dbUser := os.Getenv("AUTH_DB_USER")
-	dbPassword := os.Getenv("AUTH_DB_PASSWORD")
+	dbUser := os.Getenv("USER_DB_USER")
+	dbPassword := os.Getenv("USER_DB_PASSWORD")
 	if dbUser == "" || dbPassword == "" {
-		logger.Warnf("database credentials (AUTH_DB_USER, AUTH_DB_PASSWORD) not found in environment.")
+		logger.Warnf("database credentials (USER_DB_USER, USER_DB_PASSWORD) not found in environment.")
 	}
 
 	config.Database.ConnectionString = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?%s",

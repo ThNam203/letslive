@@ -1,6 +1,7 @@
 package miniowatcher
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -48,7 +49,7 @@ func NewMinIOFileWatcherStrategy(vodHandler mywatcher.VODHandler, storage storag
 	}
 }
 
-func (w *MinIOFileWatcherStrategy) OnCreate(event watcher.Event) error {
+func (w *MinIOFileWatcherStrategy) OnCreate(ctx context.Context, event watcher.Event) error {
 	components := strings.Split(event.Path, "/")
 	publishName := components[len(components)-1]
 
@@ -76,7 +77,7 @@ func (w *MinIOFileWatcherStrategy) OnCreate(event watcher.Event) error {
 	return nil
 }
 
-func (w *MinIOFileWatcherStrategy) OnMaster(event watcher.Event) error {
+func (w *MinIOFileWatcherStrategy) OnMaster(ctx context.Context, event watcher.Event) error {
 	components := strings.Split(event.Path, "/")
 	publishName := components[len(components)-2]
 
@@ -88,7 +89,7 @@ func (w *MinIOFileWatcherStrategy) OnMaster(event watcher.Event) error {
 	return nil
 }
 
-func (w *MinIOFileWatcherStrategy) OnVariant(event watcher.Event) error {
+func (w *MinIOFileWatcherStrategy) OnVariant(ctx context.Context, event watcher.Event) error {
 	info, err := w.getInfoFromPath(event.Path)
 	if err != nil {
 		logger.Errorf("failed to get variant info: %s", err)
@@ -108,7 +109,7 @@ func (w *MinIOFileWatcherStrategy) OnVariant(event watcher.Event) error {
 	return nil
 }
 
-func (w *MinIOFileWatcherStrategy) OnSegment(event watcher.Event) error {
+func (w *MinIOFileWatcherStrategy) OnSegment(ctx context.Context, event watcher.Event) error {
 	segment, err := getSegmentFromPath(event.Path)
 	if segment == nil {
 		logger.Errorf("error getting segment on segment: %s", err)
@@ -130,7 +131,7 @@ func (w *MinIOFileWatcherStrategy) OnSegment(event watcher.Event) error {
 		var err error
 
 		if w.storage != nil {
-			newObjectPath, err = w.storage.AddSegment(event.Path, stream.PublishName, int(variant.VariantIndex))
+			newObjectPath, err = w.storage.AddSegment(ctx, event.Path, stream.PublishName, int(variant.VariantIndex))
 
 			if err != nil {
 				logger.Errorf("error while saving segments into storage", err)
@@ -146,7 +147,7 @@ func (w *MinIOFileWatcherStrategy) OnSegment(event watcher.Event) error {
 	return nil
 }
 
-func (w *MinIOFileWatcherStrategy) OnThumbnail(event watcher.Event) error {
+func (w *MinIOFileWatcherStrategy) OnThumbnail(ctx context.Context, event watcher.Event) error {
 	publishName := filepath.Base(filepath.Dir(event.Path))
 	stream, ok := streams[publishName]
 	if !ok {
@@ -155,7 +156,7 @@ func (w *MinIOFileWatcherStrategy) OnThumbnail(event watcher.Event) error {
 	}
 
 	if w.storage != nil {
-		savedPath, err := w.storage.AddThumbnail(event.Path, stream.PublishName, "image/jpeg")
+		savedPath, err := w.storage.AddThumbnail(ctx, event.Path, stream.PublishName, "image/jpeg")
 
 		if err != nil {
 			logger.Errorf("error while saving thumbnail into storage", err)
