@@ -16,10 +16,10 @@ services:
   #    - NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
 
   auth:
-    #image: sen1or/letslive-auth:latest
-    build:
-      context: ./backend/auth/
-      dockerfile: Dockerfile
+    image: sen1or/letslive-auth:latest
+    #build:
+    #  context: ./backend/auth/
+    #  dockerfile: Dockerfile
     restart: always
     container_name: letslive-auth
     ports:
@@ -48,10 +48,10 @@ services:
       - /var/log/letslive:/usr/local/bin/logs
 
   user:
-    #image: sen1or/letslive-user:latest
-    build:
-      context: ./backend/user/
-      dockerfile: Dockerfile
+    image: sen1or/letslive-user:latest
+    #build:
+    #  context: ./backend/user/
+    #  dockerfile: Dockerfile
     container_name: letslive-user
     restart: always
     ports:
@@ -74,10 +74,10 @@ services:
       - /var/log/letslive:/usr/local/bin/logs
 
   transcode:
-    #image: sen1or/letslive-transcode:latest
-    build:
-      context: ./backend/transcode/
-      dockerfile: Dockerfile
+    image: sen1or/letslive-transcode:latest
+    #build:
+    #  context: ./backend/transcode/
+    #  dockerfile: Dockerfile
     container_name: letslive-transcode
     restart: always
     ports:
@@ -99,15 +99,13 @@ services:
       consul:
         condition: service_healthy
     volumes:
-      - /var/lib/letslive/private:/usr/src/app/private
-      - /var/lib/letslive/public:/usr/src/app/public
       - /var/log/letslive:/usr/local/bin/logs
 
   livestream:
-    #image: sen1or/letslive-livestream:latest
-    build:
-      context: ./backend/livestream/
-      dockerfile: Dockerfile
+    image: sen1or/letslive-livestream:latest
+    #build:
+    #  context: ./backend/livestream/
+    #  dockerfile: Dockerfile
     container_name: letslive-livestream
     restart: always
     ports:
@@ -303,13 +301,14 @@ services:
       - "8500"
       - "8600"
     restart: always
-    command: agent -dev -client=0.0.0.0 -log-level=warn -enable-script-checks -bootstrap-expect=1 -config-dir=/consul/config
+    #command: agent -dev -client=0.0.0.0 -log-level=warn -enable-script-checks -bootstrap-expect=1 -config-dir=/consul/config -ui
+    command: agent -server -client=0.0.0.0 -log-level=warn -enable-script-checks -bootstrap-expect=1 -config-dir=/consul/config -ui -data-dir=/consul/data
     volumes:
       - ./configs/consul.json:/consul/config/consul.json
+      - consul_data:/consul/data
     networks:
-      kong_network:
-        ipv4_address: 172.30.0.10
       general_network:
+        ipv4_address: 172.29.0.10
     depends_on:
       configserver:
         condition: service_healthy
@@ -324,12 +323,11 @@ services:
     image: kong:latest
     container_name: letslive-kong
     networks:
-      kong_network:
       general_network:
     restart: always
     environment:
       - KONG_DATABASE=off
-      - KONG_DNS_RESOLVER=172.30.0.10:8600,127.0.0.11 # use consul ip address
+      - KONG_DNS_RESOLVER=172.29.0.10:8600,127.0.0.11 # use consul ip address
       - KONG_PROXY_ACCESS_LOG=/dev/stdout
       - KONG_ADMIN_ACCESS_LOG=/dev/stdout
       - KONG_PROXY_ERROR_LOG=/dev/stderr
@@ -390,12 +388,6 @@ networks:
       config:
         - subnet: 172.29.0.0/16
 
-  kong_network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.30.0.0/16
-
 volumes:
   postgres_auth_data:
   postgres_user_data:
@@ -403,3 +395,4 @@ volumes:
   mongodb_chat_data:
   chat_pubsub_data:
   minio_data:
+  consul_data:

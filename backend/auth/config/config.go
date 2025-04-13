@@ -69,7 +69,7 @@ func NewConfigManager(registry discovery.Registry, serviceName string, profile s
 	}
 
 	if serviceName == "" {
-		return nil, fmt.Errorf("application name cannot be empty")
+		return nil, fmt.Errorf("service name cannot be empty")
 	}
 
 	cm := &ConfigManager{
