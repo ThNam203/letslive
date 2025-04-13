@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -30,13 +31,10 @@ var (
 	discoveryBaseDelay = 1 * time.Second
 	discoveryMaxDelay  = 1 * time.Minute
 
-	shutdownTimeout            = 15 * time.Second
-	discoveryDeregisterTimeout = 10 * time.Second
+	shutdownTimeout = 15 * time.Second
 )
 
 func main() {
-	ctx := context.Background()
-
 	logger.Init(logger.LogLevel(logger.Debug))
 	registry, err := discovery.NewConsulRegistry(os.Getenv("REGISTRY_SERVICE_ADDRESS"))
 	if err != nil {
@@ -44,6 +42,7 @@ func main() {
 	}
 
 	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile, configReloadInterval)
+	defer cfgManager.Stop()
 	if err != nil {
 		logger.Panicf("failed to set up config manager: %s", err)
 	}
@@ -55,7 +54,10 @@ func main() {
 
 	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
 
-	go RegisterToDiscoveryService(ctx, registry, config)
+	// service discovery
+	serviceName := config.Service.Name
+	instanceId := discovery.GenerateInstanceID(serviceName)
+	go RegisterToDiscoveryService(ctx, registry, serviceName, instanceId, config)
 
 	dbConn := ConnectDB(ctx, config)
 	defer dbConn.Close()
@@ -76,14 +78,25 @@ func main() {
 	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), shutdownTimeout) // Adjust timeout as needed
 	defer cancelShutdown()
 
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		if err == context.DeadlineExceeded {
-			logger.Errorf("server shutdown timed out after 15 seconds.")
-		}
-	} else {
-		logger.Infof("server shutdown initiated successfully via main.")
-	}
+	var shutdownWg sync.WaitGroup
 
+	shutdownWg.Add(1)
+	go (func() {
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			if err == context.DeadlineExceeded {
+				logger.Errorf("server shutdown timed out.")
+			}
+		}
+		shutdownWg.Done()
+	})()
+
+	shutdownWg.Add(1)
+	go (func() {
+		DeregisterDiscoveryService(shutdownCtx, registry, serviceName, instanceId)
+		shutdownWg.Done()
+	})()
+
+	shutdownWg.Wait()
 	logger.Infof("service shut down complete.")
 }
 
@@ -96,31 +109,29 @@ func ConnectDB(ctx context.Context, config *cfg.Config) *pgxpool.Pool {
 	return dbConn
 }
 
-func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry, config *cfg.Config) {
-	serviceName := config.Service.Name
+func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry, serviceName, instanceId string, config *cfg.Config) {
 	serviceHostPort := fmt.Sprintf("%s:%d", config.Service.Hostname, config.Service.APIPort)
 	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/health", serviceHostPort)
-	instanceID := discovery.GenerateInstanceID(serviceName)
 
 	currentDelay := discoveryBaseDelay
 
-	logger.Infof("attempting to register service '%s' instance '%s' [%s] with discovery service...", serviceName, instanceID, serviceHostPort)
+	logger.Infof("attempting to register service '%s' instance '%s' [%s] with discovery service...", serviceName, instanceId, serviceHostPort)
 
 	for {
-		err := registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, serviceName, instanceID, nil) // Pass metadata if needed
+		err := registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, serviceName, instanceId, nil) // Pass metadata if needed
 		if err == nil {
-			logger.Infof("successfully registered service '%s' instance '%s'", serviceName, instanceID)
+			logger.Infof("successfully registered service '%s' instance '%s'", serviceName, instanceId)
 			break
 		}
 
-		logger.Errorf("failed to register service '%s' instance '%s': %v - retrying in %v...", serviceName, instanceID, err, currentDelay)
+		logger.Errorf("failed to register service '%s' instance '%s': %v - retrying in %v...", serviceName, instanceId, err, currentDelay)
 
 		// Wait for the current delay duration, but also listen for context cancellation
 		timer := time.NewTimer(currentDelay)
 		select {
 		case <-ctx.Done():
 			// context was cancelled during the wait
-			logger.Warnf("registration attempt cancelled for service '%s' instance '%s' due to context cancellation: %v", serviceName, instanceID, ctx.Err())
+			logger.Warnf("registration attempt cancelled for service '%s' instance '%s' due to context cancellation: %v", serviceName, instanceId, ctx.Err())
 			timer.Stop()
 			return
 		case <-timer.C:
@@ -132,24 +143,15 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 			currentDelay = discoveryMaxDelay
 		}
 	}
+}
 
-	// wait for the application context to be cancelled (e.g., shutdown signal)
-	// before attempting to deregister.
-	logger.Infof("service '%s' instance '%s' registered. Waiting for context cancellation signal to deregister...", serviceName, instanceID)
-	<-ctx.Done() // Wait for shutdown signal
+func DeregisterDiscoveryService(shutdownContext context.Context, registry discovery.Registry, serviceName, instanceId string) {
+	logger.Infof("attempting to deregister service")
 
-	logger.Infof("context cancelled - attempting to deregister service '%s' instance '%s'...", serviceName, instanceID)
-
-	// Create a new short-lived context for the deregistration call.
-	// The original context `ctx` is already cancelled, so using it might cause immediate failure.
-	// Use context.Background() as the parent to ensure it's not tied to the cancelled context.
-	deregisterCtx, cancelDeregister := context.WithTimeout(context.Background(), discoveryDeregisterTimeout)
-	defer cancelDeregister()
-
-	if err := registry.Deregister(deregisterCtx, serviceName, instanceID); err != nil {
-		logger.Errorf("failed to deregister service '%s' instance '%s': %v", serviceName, instanceID, err)
+	if err := registry.Deregister(shutdownContext, serviceName, instanceId); err != nil {
+		logger.Errorf("failed to deregister service '%s' instance '%s': %v", serviceName, instanceId, err)
 	} else {
-		logger.Infof("successfully deregistered service '%s' instance '%s'", serviceName, instanceID)
+		logger.Infof("successfully deregistered service '%s' instance '%s'", serviceName, instanceId)
 	}
 }
 

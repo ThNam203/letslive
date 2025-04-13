@@ -89,8 +89,33 @@ if (esMain(import.meta)) {
         console.log(`Server started on port ${'7780'}`)
     })
 
-    process.on('SIGINT', async () => {
-        await consul.deregister()
-        process.exit(0)
-    })
+    process.on('SIGINT', () => shutdown('SIGINT', consul));
+    process.on('SIGTERM', () => shutdown('SIGTERM', consul));
+
+    process.on('uncaughtException', (error) => {
+        console.error('Uncaught Exception:', error);
+        process.exit(1);
+      });
+      
+      process.on('unhandledRejection', (reason, promise) => {
+        console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+        process.exit(1);
+      });
+}
+
+const shutdown = async (signal: string, consul: ConsulRegistry) => {
+    console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
+    try {
+        console.log('Deregistering from Consul...');
+        if (consul && typeof consul.deregister === 'function') {
+            await consul.deregister();
+            console.log('successfully deregistered from Consul.');
+        } else {
+            console.warn('consul client or deregister function not available.');
+        }
+        process.exit(0);
+    } catch (err) {
+        console.error(`error during ${signal} cleanup:`, err);
+        process.exit(1);
+    }
 }

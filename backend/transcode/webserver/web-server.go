@@ -3,10 +3,8 @@ package webserver
 import (
 	"context"
 	"net/http"
-	"path/filepath"
 	"sen1or/letslive/transcode/pkg/logger"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -27,12 +25,6 @@ func NewWebServer(listenPort int, allowedSuffixes []string, baseDirectory string
 	}
 }
 
-func sanitizeRequestPath(requestPath string) string {
-	trimmedPath := strings.TrimSpace(requestPath)
-	cleanedRequestPath := filepath.Clean(trimmedPath)
-	return cleanedRequestPath
-}
-
 func (ws *WebServer) ListenAndServe() {
 	router := mux.NewRouter()
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(ws.BaseDirectory))))
@@ -49,7 +41,7 @@ func (ws *WebServer) ListenAndServe() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	if err := ws.httpServer.ListenAndServe(); err != nil {
+	if err := ws.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		logger.Errorf("failed to start web server: %s", err.Error())
 	}
 }
