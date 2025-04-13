@@ -19,6 +19,7 @@ import (
 	"sen1or/letslive/transcode/watcher"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -28,6 +29,7 @@ import (
 )
 
 type RTMPServerConfig struct {
+	Context    context.Context
 	Port       int
 	Registry   *discovery.Registry
 	Config     config.Config
@@ -35,6 +37,7 @@ type RTMPServerConfig struct {
 }
 
 type RTMPServer struct {
+	ctx               context.Context
 	Port              int
 	Registry          *discovery.Registry
 	userGateway       *usergateway.UserGateway
@@ -46,6 +49,7 @@ type RTMPServer struct {
 
 func NewRTMPServer(config RTMPServerConfig, userGateway *usergateway.UserGateway, livestreamgateway *livestreamgateway.LivestreamGateway) *RTMPServer {
 	return &RTMPServer{
+		ctx:               config.Context,
 		Port:              config.Port,
 		Registry:          config.Registry,
 		config:            config.Config,
@@ -81,10 +85,25 @@ func (s *RTMPServer) Start() {
 		conn, err := s.listener.Accept()
 
 		if err != nil {
-			logger.Errorf("rtmp failed to connect: %s", err)
-			continue
+			if errors.Is(err, net.ErrClosed) {
+				logger.Infow("RTMP listener closed, shutting down accept loop.")
+				return
+			}
+
+			select {
+			case <-s.ctx.Done():
+				logger.Infow("context cancelled - shutting down rtmp accept loop.")
+				return
+			default:
+				logger.Errorf("rtmp failed to accept connection: %s", err)
+				time.Sleep(1 * time.Second) // Prevent fast spinning on unexpected errors
+				continue
+			}
+
 		}
 
+		logger.Debugf("RTMP connection accepted from: %s", conn.RemoteAddr())
+		// Launch a goroutine to handle the connection using the rtmp library's handler
 		go server.HandleNetConn(conn)
 	}
 }
@@ -148,7 +167,10 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 // then update the user status to online
 // return the stream id to be used as publishName
 func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId string, err error) {
-	userInfo, errRes := s.userGateway.GetUserInformation(context.Background(), streamingKey)
+	reqCtx, reqCtxCancel := context.WithTimeout(s.ctx, 10*time.Second)
+	defer reqCtxCancel()
+
+	userInfo, errRes := s.userGateway.GetUserInformation(reqCtx, streamingKey)
 	if errRes != nil {
 		return "", "", fmt.Errorf("failed to get user information: %s", errRes.Message)
 	}
@@ -161,7 +183,10 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 		Status:       "live",
 	}
 
-	createdLivestream, createErrRes := s.livestreamGateway.Create(context.Background(), *streamDTO)
+	req2Ctx, req2CtxCancel := context.WithTimeout(s.ctx, 10*time.Second)
+	defer req2CtxCancel()
+
+	createdLivestream, createErrRes := s.livestreamGateway.Create(req2Ctx, *streamDTO)
 	if createErrRes != nil {
 		return "", "", fmt.Errorf("failed to create livestream: %s", createErrRes.Message)
 	}
@@ -193,18 +218,26 @@ func (s *RTMPServer) onDisconnect(streamId string, duration int64) {
 		Duration:     duration,
 	}
 
-	createErrRes := s.livestreamGateway.Update(context.Background(), *updateDTO)
+	reqCtx, reqCtxCancel := context.WithTimeout(s.ctx, 10*time.Second)
+	defer reqCtxCancel()
+
+	createErrRes := s.livestreamGateway.Update(reqCtx, *updateDTO)
 	if createErrRes != nil {
 		logger.Errorf("failed to update livestream: %s", createErrRes.Message)
 	}
 
-	// should be put on the last line
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	cleanUpCtx, cancelCleanUp := context.WithTimeout(context.Background(), 10*time.Second)
+
 	go func() {
-		<-ctx.Done()
+		defer wg.Done()
+		defer cancelCleanUp()
+		<-cleanUpCtx.Done()
 		removeLiveGeneratedFiles(streamId, s.config.Transcode.PrivateHLSPath, s.config.Transcode.PublicHLSPath)
 	}()
+	wg.Wait()
 }
 
 // remove live-generated private files and public files after saving into vods
@@ -230,23 +263,29 @@ func removeLiveGeneratedFiles(streamingKey, privatePath, publicPath string) erro
 
 func (s *RTMPServer) Shutdown(ctx context.Context) error {
 	listener := s.listener
-	s.listener = nil
+	s.listener = nil // prevent further use
 
-	// Check if listener exists (might be nil if Start failed or Shutdown called twice)
 	if listener == nil {
 		logger.Warnf("RTMP server listener already closed or not started.")
-		return nil // Idempotent shutdown
+		return nil
 	}
 
-	logger.Infow("Shutting down RTMP server listener...")
+	logger.Infow("shutting down RTMP server listener...")
 
+	// Close the listener; this will cause the Accept loop in Start() to unblock
 	err := listener.Close()
+
 	if err != nil && !errors.Is(err, net.ErrClosed) {
-		logger.Errorf("Error closing RTMP listener: %v", err)
-		return err // Return the unexpected error
+		logger.Errorf("error closing RTMP listener: %v", err)
+		return err
 	}
 
 	logger.Infow("RTMP server listener closed.")
 
-	return nil // Shutdown initiated successfully
+	// Optionally: Add waiting logic here if you need to ensure active connections are finished.
+	// This usually involves tracking active connections and waiting for them to complete.
+	// The provided code doesn't track connections actively in the RTMPServer struct itself,
+	// relying on the rtmp library and individual handler goroutines.
+
+	return nil
 }
