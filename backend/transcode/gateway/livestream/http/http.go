@@ -65,7 +65,7 @@ func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestrea
 		if err := json.NewDecoder(resp.Body).Decode(&resInfo); err != nil {
 			return nil, &ErrorResponse{
 				Message:    fmt.Sprintf("failed to decode error response from user service: %s", err),
-				StatusCode: http.StatusInternalServerError,
+				StatusCode: resp.StatusCode,
 			}
 		}
 
@@ -84,7 +84,7 @@ func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestrea
 	return &livestreamResponse, nil
 }
 
-func (g *LivestreamGateway) Update(ctx context.Context, updateDTO dto.UpdateLivestreamRequestDTO) *ErrorResponse {
+func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, endDTO dto.EndLivestreamRequestDTO) *ErrorResponse {
 	addr, err := g.registry.ServiceAddress(ctx, "livestream")
 	if err != nil {
 		return &ErrorResponse{
@@ -93,16 +93,16 @@ func (g *LivestreamGateway) Update(ctx context.Context, updateDTO dto.UpdateLive
 		}
 	}
 
-	url := fmt.Sprintf("http://%s/v1/internal/livestreams/%s", addr, updateDTO.Id)
+	url := fmt.Sprintf("http:/%s/v1/internal/livestreams/%s/end", addr, streamId)
 	payloadBuf := new(bytes.Buffer)
-	if err := json.NewEncoder(payloadBuf).Encode(updateDTO); err != nil {
+	if err := json.NewEncoder(payloadBuf).Encode(endDTO); err != nil {
 		return &ErrorResponse{
-			Message:    fmt.Sprintf("failed to encode livestream body: %s", err),
+			Message:    fmt.Sprintf("failed to encode end livestream body: %s", err),
 			StatusCode: 500,
 		}
 	}
 
-	req, err := http.NewRequest(http.MethodPut, url, payloadBuf)
+	req, err := http.NewRequest(http.MethodPost, url, payloadBuf)
 	if err != nil {
 		return &ErrorResponse{
 			Message:    fmt.Sprintf("failed to create request: %s", err),
@@ -121,7 +121,7 @@ func (g *LivestreamGateway) Update(ctx context.Context, updateDTO dto.UpdateLive
 
 	if resp.StatusCode/100 != 2 {
 		return &ErrorResponse{
-			Message:    fmt.Sprintf("failed to update livestream from livestream service: %s", err),
+			Message:    fmt.Sprintf("failed to end livestream from livestream service: %s", err),
 			StatusCode: resp.StatusCode,
 		}
 	}

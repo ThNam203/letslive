@@ -4,14 +4,14 @@ import (
 	"net/http"
 )
 
-type ServerSuccessResponse struct {
+type ServiceSuccessResponse struct {
 	StatusCode int
 	Message    string
 	Data       any
 }
 
-func NewServerSuccessResponse(statusCode int, message string, data any) *ServerSuccessResponse {
-	return &ServerSuccessResponse{
+func NewServerSuccessResponse(statusCode int, message string, data any) *ServiceSuccessResponse {
+	return &ServiceSuccessResponse{
 		StatusCode: statusCode,
 		Message:    message,
 		Data:       data,
