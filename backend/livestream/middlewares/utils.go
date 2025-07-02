@@ -3,10 +3,10 @@ package middlewares
 import (
 	"encoding/json"
 	"net/http"
-	servererrors "sen1or/letslive/livestream/errors"
+	serviceresponse "sen1or/letslive/livestream/responses"
 )
 
-func writeErrorResponse(w http.ResponseWriter, err *servererrors.ServerError) {
+func writeErrorResponse(w http.ResponseWriter, err *serviceresponse.ServiceErrorResponse) {
 	type HTTPErrorResponse struct {
 		StatusCode int    `json:"statusCode" example:"500"`
 		Message    string `json:"message" example:"internal server error"`
