@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"sen1or/letslive/livestream/domains"
-	servererrors "sen1or/letslive/livestream/errors"
 	"sen1or/letslive/livestream/pkg/logger"
+	serviceresponse "sen1or/letslive/livestream/responses"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
@@ -22,212 +22,138 @@ func NewLivestreamRepository(conn *pgxpool.Pool) domains.LivestreamRepository {
 	}
 }
 
-func (r postgresLivestreamRepo) GetById(userId uuid.UUID) (*domains.Livestream, *servererrors.ServerError) {
-	rows, err := r.dbConn.Query(context.Background(), `
-		SELECT *
-		FROM livestreams 
+func (r *postgresLivestreamRepo) GetById(ctx context.Context, id uuid.UUID) (*domains.Livestream, *serviceresponse.ServiceErrorResponse) {
+	query := `
+		SELECT id, user_id, title, description, thumbnail_url, visibility, view_count, started_at, ended_at, created_at, updated_at, vod_id
+		FROM livestreams
 		WHERE id = $1
-	`, userId.String())
+	`
+
+	rows, err := r.dbConn.Query(ctx, query, id)
 	if err != nil {
-		return nil, servererrors.ErrDatabaseQuery
+		logger.Errorf("db query error [getlivestreambyid: %v]", err)
+		return nil, serviceresponse.ErrDatabaseQuery
 	}
 
-	livestream, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Livestream])
-
+	livestream, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.Livestream])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrLivestreamNotFound
+			return nil, serviceresponse.ErrLivestreamNotFound
 		}
-
-		return nil, servererrors.ErrDatabaseIssue
+		logger.Errorf("db scan error [getlivestreambyid: %v]", err)
+		return nil, serviceresponse.ErrQueryScanFailed
 	}
-
 	return &livestream, nil
 }
 
-// we dont care if the result is good or not
-func (r postgresLivestreamRepo) AddOneToViewCount(livestreamId uuid.UUID) {
-	_, err := r.dbConn.Exec(context.Background(), `
-		UPDATE livestreams 
-		SET view_count = view_count + 1
-		WHERE id = $1
-	`, livestreamId)
-
+// TODO: implement a recommendation system
+func (r *postgresLivestreamRepo) GetRecommendedLivestreams(ctx context.Context, page int, limit int) ([]domains.Livestream, *serviceresponse.ServiceErrorResponse) {
+	offset := limit * page
+	query := `
+		SELECT id, user_id, title, description, thumbnail_url, visibility, view_count, started_at, ended_at, created_at, updated_at, vod_id
+		FROM livestreams
+        	WHERE ended_at IS NULL AND visibility = 'public'
+        	ORDER BY started_at DESC
+        	OFFSET $1 LIMIT $2
+	`
+	rows, err := r.dbConn.Query(ctx, query, offset, limit)
 	if err != nil {
-		logger.Errorf("failed to add one to view count: %s", err)
+		logger.Errorf("db query error [getalllivestreamings: %v]", err)
+		return nil, serviceresponse.ErrDatabaseQuery
 	}
-}
 
-func (r postgresLivestreamRepo) GetByUser(userId uuid.UUID) ([]domains.Livestream, *servererrors.ServerError) {
-	rows, err := r.dbConn.Query(context.Background(), `
-		SELECT * 
-		FROM livestreams 
-		WHERE user_id = $1
-		ORDER BY created_at DESC
-	`, userId)
+	livestreams, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[domains.Livestream])
 	if err != nil {
-		return nil, servererrors.ErrDatabaseQuery
-	}
-	defer rows.Close()
-
-	livestreams, err := pgx.CollectRows(rows, pgx.RowToStructByName[domains.Livestream])
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrLivestreamNotFound
-		}
-		return nil, servererrors.ErrDatabaseIssue
+		logger.Errorf("db scan error [getalllivestreamings: %v]", err)
+		return nil, serviceresponse.ErrQueryScanFailed
 	}
 
 	return livestreams, nil
 }
-
-func (r postgresLivestreamRepo) GetAllLivestreamings(page int) ([]domains.Livestream, *servererrors.ServerError) {
-	rows, err := r.dbConn.Query(context.Background(), `
-		SELECT *
-		FROM livestreams 
-		WHERE ended_at IS NULL AND visibility = 'public'
-		OFFSET $1 
-		LIMIT $2
-	`, 10*page, 10)
-	if err != nil {
-		return nil, servererrors.ErrDatabaseQuery
-	}
-
-	livestreams, err := pgx.CollectRows(rows, pgx.RowToStructByName[domains.Livestream])
-
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrLivestreamNotFound
-		}
-
-		return nil, servererrors.ErrDatabaseIssue
-	}
-
-	return livestreams, nil
-}
-
-func (r postgresLivestreamRepo) GetPopularVODs(page int) ([]domains.Livestream, *servererrors.ServerError) {
-	rows, err := r.dbConn.Query(context.Background(), `
-		SELECT *
-		FROM livestreams 
-		WHERE ended_at IS NOT NULL AND status = 'ended' AND visibility = 'public'
-		ORDER BY view_count DESC
-		OFFSET $1 LIMIT $2
-	`, 10*page, 10)
-	if err != nil {
-		return nil, servererrors.ErrDatabaseQuery
-	}
-
-	livestreams, err := pgx.CollectRows(rows, pgx.RowToStructByName[domains.Livestream])
-
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return []domains.Livestream{}, nil
-		}
-
-		return nil, servererrors.ErrDatabaseIssue
-	}
-
-	return livestreams, nil
-}
-
-func (r postgresLivestreamRepo) CheckIsUserLivestreaming(userId uuid.UUID) (bool, *servererrors.ServerError) {
+func (r *postgresLivestreamRepo) CheckIsUserLivestreaming(ctx context.Context, userId uuid.UUID) (bool, *serviceresponse.ServiceErrorResponse) {
 	var exists bool
-	err := r.dbConn.QueryRow(context.Background(), `
-		SELECT EXISTS (
-			SELECT 1 
-			FROM livestreams 
-			WHERE ended_at IS NULL AND user_id = $1
-		)
-	`, userId).Scan(&exists)
+	query := `SELECT EXISTS (SELECT 1 FROM livestreams WHERE ended_at IS NULL AND user_id = $1)`
+	err := r.dbConn.QueryRow(ctx, query, userId).Scan(&exists)
 	if err != nil {
-		return false, servererrors.ErrDatabaseQuery
+		logger.Errorf("db scan error [checkisuserlivestreaming: %v]", err)
+		return false, serviceresponse.ErrQueryScanFailed
 	}
 
 	return exists, nil
 }
 
-func (r *postgresLivestreamRepo) Create(newLivestream domains.Livestream) (*domains.Livestream, *servererrors.ServerError) {
-	params := pgx.NamedArgs{
-		"title":         newLivestream.Title,
-		"user_id":       newLivestream.UserId,
-		"description":   newLivestream.Description,
-		"thumbnail_url": newLivestream.ThumbnailURL,
-		"status":        newLivestream.Status,
-		"view_count":    0,
-		//"ended_at": nil,
-		"playback_url": newLivestream.PlaybackURL,
-	}
-
-	rows, err := r.dbConn.Query(context.Background(), `
-		INSERT INTO livestreams (title, user_id, description, thumbnail_url, status, view_count, playback_url) 
-		VALUES (@title, @user_id, @description, @thumbnail_url, @status, @view_count, @playback_url) 
-		RETURNING *
-	`, params)
+func (r *postgresLivestreamRepo) Create(ctx context.Context, newLivestream domains.Livestream) (*domains.Livestream, *serviceresponse.ServiceErrorResponse) {
+	query := `
+		INSERT INTO livestreams (user_id, title, description, thumbnail_url, visibility)
+        	VALUES ($1, $2, $3, $4, $5)
+        	RETURNING id, user_id, title, description, thumbnail_url, visibility, view_count, started_at, ended_at, created_at, updated_at, vod_id
+	`
+	rows, err := r.dbConn.Query(ctx, query,
+		newLivestream.UserId,
+		newLivestream.Title,
+		newLivestream.Description,
+		newLivestream.ThumbnailURL,
+		newLivestream.Visibility,
+	)
 	if err != nil {
-		return nil, servererrors.ErrDatabaseQuery
+		logger.Errorf("db query error [createlivestream: %v]", err)
+		return nil, serviceresponse.ErrLivestreamCreateFailed
 	}
-	defer rows.Close()
 
-	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Livestream])
+	createdLs, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.Livestream])
 	if err != nil {
-		return nil, servererrors.ErrDatabaseIssue
+		logger.Errorf("db scan error [createlivestream: %v]", err)
+		return nil, serviceresponse.ErrQueryScanFailed
 	}
-
-	return &user, nil
+	return &createdLs, nil
 }
 
-func (r postgresLivestreamRepo) Update(livestream domains.Livestream) (*domains.Livestream, *servererrors.ServerError) {
-	params := pgx.NamedArgs{
-		"title":         livestream.Title,
-		"description":   livestream.Description,
-		"status":        livestream.Status,
-		"view_count":    livestream.ViewCount,
-		"visibility":    livestream.Visibility,
-		"thumbnail_url": livestream.ThumbnailURL,
-		"playback_url":  livestream.PlaybackURL,
-		"ended_at":      livestream.EndedAt,
-		"duration":      livestream.Duration,
-		"id":            livestream.Id,
-	}
-	rows, err := r.dbConn.Query(
-		context.Background(),
-		`
-		UPDATE livestreams 
-		SET title = @title, description = @description, status = @status, view_count = @view_count, visibility = @visibility, thumbnail_url = @thumbnail_url, playback_url = @playback_url, ended_at = @ended_at, duration = @duration, updated_at = NOW()
-		WHERE id = @id
-		RETURNING *
-	`, params)
-	if err != nil {
-		return nil, servererrors.ErrDatabaseQuery
-	}
-	defer rows.Close()
+func (r *postgresLivestreamRepo) Update(ctx context.Context, livestream domains.Livestream) (*domains.Livestream, *serviceresponse.ServiceErrorResponse) {
+	query := `
+		UPDATE livestreams
+		SET title = $1, description = $2, thumbnail_url = $3, visibility = $4, ended_at = $5, vod_id = $6, updated_at = NOW()
+		WHERE id = $7
+		RETURNING id, user_id, title, description, thumbnail_url, visibility, view_count, started_at, ended_at, created_at, updated_at, vod_id
+	`
 
-	updatedLivestream, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Livestream])
+	rows, err := r.dbConn.Query(ctx, query,
+		livestream.Title,
+		livestream.Description,
+		livestream.ThumbnailURL,
+		livestream.Visibility,
+		livestream.EndedAt,
+		livestream.VODId,
+		livestream.Id,
+	)
+	if err != nil {
+		logger.Errorf("db query error [updatelivestream id=%s: %v]", livestream.Id, err)
+		return nil, serviceresponse.ErrLivestreamUpdateFailed
+	}
+
+	updatedLs, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.Livestream])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrLivestreamNotFound
+			return nil, serviceresponse.ErrLivestreamNotFound
 		}
-
-		return nil, servererrors.ErrDatabaseIssue
+		logger.Errorf("db scan error [updatelivestream id=%s: %v]", livestream.Id, err)
+		return nil, serviceresponse.ErrQueryScanFailed
 	}
-
-	return &updatedLivestream, nil
+	return &updatedLs, nil
 }
 
-func (r postgresLivestreamRepo) Delete(livestreamId uuid.UUID) *servererrors.ServerError {
-	result, err := r.dbConn.Exec(context.Background(), "DELETE FROM livestreams WHERE id = $1", livestreamId)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return servererrors.ErrLivestreamNotFound
-		}
+func (r *postgresLivestreamRepo) Delete(ctx context.Context, livestreamId uuid.UUID) *serviceresponse.ServiceErrorResponse {
+	result, err := r.dbConn.Exec(ctx, `
+		DELETE FROM livestreams 
+		WHERE id = $1
+	`, livestreamId)
 
-		return servererrors.ErrDatabaseIssue
+	if err != nil {
+		logger.Errorf("db exec error [deletelivestream id=%s: %v]", livestreamId, err)
+		return serviceresponse.ErrDatabaseQuery
 	}
 
 	if result.RowsAffected() == 0 {
-		return servererrors.ErrLivestreamNotFound
+		return serviceresponse.ErrLivestreamNotFound
 	}
-
 	return nil
 }

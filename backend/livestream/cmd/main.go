@@ -15,7 +15,8 @@ import (
 	"sen1or/letslive/livestream/pkg/discovery"
 	"sen1or/letslive/livestream/pkg/logger"
 	"sen1or/letslive/livestream/repositories"
-	"sen1or/letslive/livestream/services"
+	"sen1or/letslive/livestream/services/livestream"
+	"sen1or/letslive/livestream/services/vod"
 	"sen1or/letslive/livestream/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -156,7 +157,12 @@ func DeregisterDiscoveryService(shutdownContext context.Context, registry discov
 
 func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
 	var livestreamRepo = repositories.NewLivestreamRepository(dbConn)
-	var livestreamService = services.NewLivestreamService(livestreamRepo)
-	var livestreamHandler = handlers.NewLivestreamHandler(*livestreamService)
-	return api.NewAPIServer(livestreamHandler, cfg)
+	var vodRepo = repositories.NewVODRepository(dbConn)
+
+	var livestreamService = livestream.NewLivestreamService(livestreamRepo, vodRepo)
+	var vodService = vod.NewVODService(vodRepo)
+
+	var livestreamHandler = handlers.NewLivestreamHandler(livestreamService)
+	var vodHandler = handlers.NewVODHandler(vodService)
+	return api.NewAPIServer(livestreamHandler, vodHandler, cfg)
 }
