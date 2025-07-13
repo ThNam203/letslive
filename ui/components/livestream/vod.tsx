@@ -1,15 +1,13 @@
-
-import { Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { datediffFromNow, formatSeconds } from "../utils/timeFormats";
-import { Livestream } from "../types/livestream";
-import GLOBAL from "../global";
+import { dateDiffFromNow, formatSeconds } from "../../utils/timeFormats";
+import { Livestream } from "../../types/livestream";
+import GLOBAL from "../../global";
 
-export default function VODLink({ vod, classname }: { vod: Livestream, classname?: string }) {
+export default function VODView({ vod, classname } : { vod: Livestream, classname?: string }) {
     return <div
-    className={`bg-gray-200 overflow-hidden shadow-sm rounded-sm ${classname}`}
->
+        className={`bg-gray-200 overflow-hidden shadow-sm rounded-sm ${classname}`}
+    >
     <Link
         className={`w-full inline-block hover:cursor-pointer`}
         href={`/users/${vod.userId}/vods/${vod.id}`}
@@ -36,7 +34,7 @@ export default function VODLink({ vod, classname }: { vod: Livestream, classname
             {formatSeconds(vod.duration)}
         </p>
         <p className="text-sm text-gray-500 mt-1">
-            {vod.description && vod.description.length > 50 ? `${vod.description.substring(0, 47)}...` : vod.description} • {datediffFromNow(vod.endedAt)} ago
+            {vod.description && vod.description.length > 50 ? `${vod.description.substring(0, 47)}...` : vod.description} • {dateDiffFromNow(vod.endedAt)} ago
         </p>
         <div className="flex items-center mt-2 text-sm text-gray-500">
             <span>{vod.viewCount} {vod.viewCount < 2 ? "view" : "views"}</span>

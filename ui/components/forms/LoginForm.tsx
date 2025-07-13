@@ -4,13 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { LogIn } from "../../lib/api/auth";
-import { IconEmail } from "../icons/email";
+import IconEmail from "../icons/email";
 import FormErrorText from "./FormErrorText";
-import { IconPasswordOutline } from "../icons/password";
-import { IconEye } from "../icons/eye";
-import { IconEyeOff } from "../icons/eye-off";
-import { Loader } from "lucide-react";
+import IconPasswordOutline from "../icons/password";
+import IconEye from "../icons/eye";
+import IconEyeOff from "../icons/eye-off";
 import Turnstile, { useTurnstile } from "react-turnstile";
+import IconLoader from "../icons/loader";
 
 export default function LogInForm() {
   const [email, setEmail] = useState("");
@@ -137,7 +137,7 @@ export default function LogInForm() {
         disabled={isLoading}
         className="w-full rounded-md flex justify-center items-center bg-blue-400 hover:bg-blue-500 text-white h-[50px] border-transparent border font-semibold"
       >
-        {isLoading && <Loader className="animate-spin ml-2" />}
+        {isLoading && <IconLoader className="ml-2" />}
         LOG IN
       </button>
     </form>

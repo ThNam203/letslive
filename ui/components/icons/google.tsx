@@ -1,12 +1,12 @@
 import React from "react";
-import type { SVGProps } from "react";
+import { BaseIcon } from "./base-icon";
+import { IconProp } from "@/types/icon-prop";
 
-export function IconGoogle(props: SVGProps<SVGSVGElement>) {
+function IconGoogle(props: IconProp) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="0.98em"
-      height="1em"
+    <BaseIcon
+      width="1.47rem"
+      height="1.5rem"
       viewBox="0 0 256 262"
       {...props}
     >
@@ -26,6 +26,8 @@ export function IconGoogle(props: SVGProps<SVGSVGElement>) {
         fill="#eb4335"
         d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0C79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251"
       ></path>
-    </svg>
+    </BaseIcon>
   );
 }
+
+export default IconGoogle;

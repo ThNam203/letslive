@@ -1,7 +1,6 @@
 "use client";
 
 import useUser from "../../../../hooks/user";
-import VODLink from "../../../../components/vodlink";
 import { useEffect, useState } from "react";
 import { GetAllVODsAsAuthor } from "../../../../lib/api/livestream";
 import { toast } from "react-toastify";

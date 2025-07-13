@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LuChevronDown } from "react-icons/lu";
 import { Play } from "lucide-react";
 import { toast } from "react-toastify";
-import LivestreamPreviewView from "./LivestreamPreviewView";
-import { User } from "../../types/user";
-import Separator from "../Separator";
+import LivestreamPreviewView from "./livestream-preview";
 import { GetLivestreamings } from "../../lib/api/livestream";
 import { Livestream } from "../../types/livestream";
+import IconChevronDown from "../icons/chevron-down";
+import { Separator } from "../ui/separator";
 
 const LivestreamsPreviewView = () => {
     const [limitView, setLimitView] = useState<number>(4);
@@ -47,7 +46,7 @@ const LivestreamsPreviewView = () => {
             )}
             {livestreamings.length == 0 && (
                 <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                    <div className="bg-muted/30 p-6 rounded-full mb-6">
+                    <div className="bg-muted p-6 rounded-full mb-6">
                         <Play className="h-12 w-12 text-muted-foreground" />
                     </div>
                     <h2 className="text-2xl font-semibold mb-2">No Live Streams</h2>
@@ -69,7 +68,7 @@ const StreamsSeparator = ({ onClick }: { onClick: () => void }) => {
                 onClick={onClick}
             >
                 <span className="">Show more</span>
-                <LuChevronDown />
+                <IconChevronDown />
             </button>
             <Separator />
         </div>

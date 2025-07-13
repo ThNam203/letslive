@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Livestream } from "../../types/livestream";
 import { User } from "../../types/user";
 import { Clock, Eye } from "lucide-react";
-import { datediffFromNow } from "../../utils/timeFormats";
+import { dateDiffFromNow } from "../../utils/timeFormats";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 const LivestreamPreviewDetailView = ({
     livestream,
@@ -41,7 +41,7 @@ const LivestreamPreviewDetailView = ({
                     <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         <span>
-                            Started at {datediffFromNow(livestream.startedAt)}{" "}
+                            Started at {dateDiffFromNow(livestream.startedAt)}{" "}
                             ago
                         </span>
                     </div>

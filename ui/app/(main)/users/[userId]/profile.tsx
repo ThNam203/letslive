@@ -1,16 +1,9 @@
 "use client";
 
-import { CalendarDays, Users, Heart, ShieldCheck } from "lucide-react";
 import { User } from "../../../../types/user";
 import ProfileHeader from "./profile_header";
-import VODLink from "../../../../components/vodlink";
+import VODLink from "../../../../components/livestream/vod";
 import { Livestream } from "../../../../types/livestream";
-import { useEffect, useState } from "react";
-import {
-  GetAllLivestreamOfUser,
-  GetAllVODsAsAuthor,
-} from "../../../../lib/api/livestream";
-import { toast } from "react-toastify";
 
 export default function ProfileView({
   user,

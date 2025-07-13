@@ -1,11 +1,11 @@
-import { Loader2 } from "lucide-react"
+import IconLoader from "@/components/icons/loader";
 
 export default function LoadingPage() {
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-gradient-to-b from-background to-muted/20">
       <div className="max-w-[500px] text-center space-y-6 px-4">
         <div className="flex items-center justify-center">
-          <Loader2 className="h-12 w-12 text-primary animate-spin" />
+          <IconLoader className="h-12 w-12 text-primary animate-spin" />
         </div>
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Loading...</h1>

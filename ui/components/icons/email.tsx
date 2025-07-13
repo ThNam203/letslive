@@ -1,6 +1,13 @@
 import React from 'react';
-import type { SVGProps } from 'react';
+import { BaseIcon } from './base-icon';
+import { IconProp } from '@/types/icon-prop';
 
-export function IconEmail(props: SVGProps<SVGSVGElement>) {
-	return (<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 32 32" {...props}><path fill="currentColor" d="M28 6H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h24a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2m-2.2 2L16 14.78L6.2 8ZM4 24V8.91l11.43 7.91a1 1 0 0 0 1.14 0L28 8.91V24Z"></path></svg>);
+function IconEmail(props: IconProp) {
+	return (
+		<BaseIcon {...props}>
+			<path fill="currentColor" d="m20 8l-8 5l-8-5V6l8 5l8-5m0-2H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2"/>
+		</BaseIcon>
+	);
 }
+
+export default IconEmail;

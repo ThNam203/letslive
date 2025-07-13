@@ -1,6 +1,5 @@
 "use client";
 
-import { LuBell, LuLogOut, LuMessageSquare, LuSettings } from "react-icons/lu";
 import Link from "next/link";
 
 import { useEffect, useState } from "react";
@@ -13,6 +12,8 @@ import { FetchError } from "../../types/fetch-error";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import IconSettings from "../icons/settings";
+import IconLogOut from "../icons/log-out";
 
 export default function UserInfo() {
   const userState = useUser();
@@ -87,7 +88,7 @@ export default function UserInfo() {
                   onMouseUp={() => setIsPopoverOpen(false)}
                   className="flex flex-1 flex-row gap-2 items-center"
                 >
-                  <LuSettings />
+                  <IconSettings />
                   <span className="text-xs">Setting</span>
                 </Link>
               </Button>
@@ -95,7 +96,7 @@ export default function UserInfo() {
                 onClick={logoutHandler}
                 className="flex flex-1 flex-row gap-2 items-center text-red-500 hover:cursor-pointer"
               >
-                <LuLogOut />
+                <IconLogOut />
                 <span className="text-xs">Log Out</span>
               </Button>
             </div>
@@ -107,12 +108,12 @@ export default function UserInfo() {
     <div className="flex flex-row gap-2">
       <Link
         href="/login"
-        className="whitespace-nowrap bg-white border-1 rounded-md hover:bg-gray-200 text-gray-900 border-gray-700 text-sm py-1 px-4"
+        className="whitespace-nowrap bg-primary border-1 rounded-md hover:bg-primary-hover text-primary-foreground border-border text-sm py-1 px-4"
       >
         Log in
       </Link>
       <Link
-        className="whitespace-nowrap bg-white border-1 rounded-md hover:bg-gray-200 text-gray-900 border-gray-700 text-sm py-1 px-4"
+        className="whitespace-nowrap bg-primary border-1 rounded-md hover:bg-primary-hover text-primary-foreground border-border text-sm py-1 px-4"
         href="/signup"
       >
         Sign up

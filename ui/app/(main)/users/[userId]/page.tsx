@@ -7,7 +7,7 @@ import { User } from "../../../../types/user";
 import {
   StreamingFrame,
   VideoInfo,
-} from "../../../../components/custom_react_player/streaming_frame";
+} from "../../../../components/custom_react_player/streaming-frame";
 import { GetUserById } from "../../../../lib/api/user";
 import ProfileView from "./profile";
 import ChatUI from "./chat";
