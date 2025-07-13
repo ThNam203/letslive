@@ -4,27 +4,23 @@ import Image from "next/image";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import { ClassValue } from "clsx";
 import Link from "next/link";
-import { cn } from "../utils/cn";
+import { cn } from "../../utils/cn";
 
 const Hover3DBox = ({
     className,
     imageSrc,
-    viewers = 0,
-    showViewer = false,
     showStream = false,
     onClick,
 }: {
     className?: ClassValue;
     imageSrc: StaticImport | string;
-    viewers?: number;
-    showViewer?: boolean;
     showStream?: boolean;
     onClick?: () => void;
 }) => {
     return (
         <div
             className={cn(
-                "relative w-full h-full bg-primary z-0 group",
+                "relative aspect-video w-full bg-primary z-0 group",
                 className
             )}
             onClick={onClick}
@@ -46,14 +42,6 @@ const Hover3DBox = ({
             >
                 LIVE
             </span>
-            {/* <span
-        className={cn(
-          "absolute px-1 rounded-sm text-white text-sm bg-black/60 bottom-2 left-2 z-20 group-hover:translate-x-2 group-hover:-translate-y-2 ease-linear duration-100",
-          showViewer ? "" : "hidden"
-        )}
-      >
-        {viewers} viewers
-      </span> */}
         </div>
     );
 };

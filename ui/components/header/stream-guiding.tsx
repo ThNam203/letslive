@@ -2,7 +2,7 @@
 import { cn } from "@/utils/cn";
 import React, { useEffect } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import LiveStreamIcon from "../icons/live-stream";
+import IconLiveStream from "../icons/live-stream";
 import { Button } from "../ui/button";
 
 export default function StreamGuiding() {
@@ -30,7 +30,7 @@ export default function StreamGuiding() {
             isGotIt && "animate-none"
           )}
         >
-          <LiveStreamIcon />
+          <IconLiveStream className="text-primary" />
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-100 mr-4 text-sm">

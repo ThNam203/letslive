@@ -11,9 +11,8 @@ import { toast } from "react-toastify";
 import { Livestream } from "../../types/livestream";
 import { User } from "../../types/user";
 import { GetUserById } from "../../lib/api/user";
-import { datediffFromNow, formatSeconds } from "../../utils/timeFormats";
+import { dateDiffFromNow, formatSeconds } from "../../utils/timeFormats";
 import { useRouter } from "next/navigation";
-import { CardHeader } from "@mui/material";
 import GLOBAL from "../../global";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
@@ -43,7 +42,7 @@ export function PopularVODView() {
     if (vods.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                <div className="bg-muted/30 p-6 rounded-full mb-6">
+                <div className="bg-muted p-6 rounded-full mb-6">
                     <Film className="h-12 w-12 text-muted-foreground" />
                 </div>
                 <h2 className="text-2xl font-semibold mb-2">
@@ -137,7 +136,7 @@ function VODCard({ vod }: { vod: Livestream }) {
                             </div>
                             <div className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
-                                <span>{datediffFromNow(vod.endedAt)} ago</span>
+                                <span>{dateDiffFromNow(vod.endedAt)} ago</span>
                             </div>
                         </div>
                     </div>

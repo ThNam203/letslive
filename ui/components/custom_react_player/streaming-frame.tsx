@@ -17,11 +17,11 @@ import screenfull from "screenfull";
 import { cn } from "../../utils/cn";
 
 import dynamic from "next/dynamic";
-const ReactPlayerWrapper = dynamic(() => import("./react_player_wrapper"), {
+const ReactPlayerWrapper = dynamic(() => import("./react-player-wrapper"), {
     ssr: false,
 });
 
-const formatTime = (seconds: number) => {
+export const formatTime = (seconds: number) => {
     if (isNaN(seconds) || seconds < 0) return "00:00";
 
     const hrs = Math.floor(seconds / 3600);
@@ -34,7 +34,6 @@ const formatTime = (seconds: number) => {
 
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 };
-
 
 const RESOLUTION_TO_CLASS: { [key: string]: number } = {
     "416x234": 240,
@@ -52,7 +51,7 @@ const playbackRates = {
     "2x": 2.0,
 };
 
-type VideoInfo = {
+export type VideoInfo = {
     videoUrl: string | null;
     videoTitle: string;
     streamer: {
@@ -81,7 +80,7 @@ type FnControl = {
     handleResolutionChange: (value: string) => void;
 };
 
-export function VODFrame({
+export function StreamingFrame({
     videoInfo,
     className,
     onVideoStart,
@@ -284,7 +283,7 @@ function FrontOfVideo({
     return (
         <div
             className={cn(
-                "absolute top-0 w-full h-full flex flex-col items-center justify-end border border-gray-300",
+                "absolute top-0 w-full h-full flex flex-col items-center justify-end  border border-gray-300",
                 className
             )}
         >
@@ -395,7 +394,7 @@ function VideoTracking({
     return (
         <div
             className={cn(
-                "w-full bg-transparent flex items-center justify-center",
+                "w-full bg-transparent flex items-center justify-center hidden",
                 className
             )}
         >
@@ -458,20 +457,25 @@ function VideoControlButtons({
                     )}
                 </div>
                 <VolumeButton onVolumeChange={fnControl.handleVolumeChange} />
-                <span className="text-white">
-                    {formatTime(currentTime)} / {formatTime(duration)}
-                </span>
+                {/* <span className="text-white">
+          {formatTime(currentTime)} / {formatTime(duration)}
+        </span> */}
+                <div className="text-red-600 font-semibold">
+                    <div className="w-2 h-2 bg-red-600 rounded-full"></div>
+                    Live
+                </div>
             </div>
+
             <div className="flex flex-row items-center gap-4">
-                <Combobox
-                    options={Object.keys(playbackRates)}
-                    value={config.playbackRate + "x"}
-                    onChange={(value: string) =>
-                        fnControl.handlePlaybackRateChange(
-                            playbackRates[value as keyof typeof playbackRates]
-                        )
-                    }
-                />
+                {/* <Combobox
+          options={Object.keys(playbackRates)}
+          value={config.playbackRate + "x"}
+          onChange={(value: string) =>
+            fnControl.handlePlaybackRateChange(
+              playbackRates[value as keyof typeof playbackRates]
+            )
+          }
+        /> */}
 
                 <Combobox
                     options={resolutions.map((res) =>

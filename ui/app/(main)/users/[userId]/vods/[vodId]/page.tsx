@@ -3,12 +3,12 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { User } from "../../../../../../types/user";
-import { VideoInfo } from "../../../../../../components/custom_react_player/streaming_frame";
+import { VideoInfo } from "../../../../../../components/custom_react_player/streaming-frame";
 import { GetAllLivestreamOfUser, GetVODInformation } from "../../../../../../lib/api/livestream";
 import { GetUserById } from "../../../../../../lib/api/user";
-import { VODFrame } from "../../../../../../components/custom_react_player/vod_frame";
+import { VODFrame } from "../../../../../../components/custom_react_player/vod-frame";
 import ProfileView from "../../profile";
-import VODLink from "../../../../../../components/vodlink";
+import VODLink from "../../../../../../components/livestream/vod";
 import GLOBAL from "../../../../../../global";
 import { Livestream } from "../../../../../../types/livestream";
 

@@ -1,6 +1,6 @@
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Header } from "../../components/header/header";
-import { LeftBar } from "../../components/LeftBar";
-
+import LeftBar from "../../components/leftbar/left-bar";
 
 export default function RootLayout({
   children,
@@ -10,10 +10,16 @@ export default function RootLayout({
   return (
     <div className="h-screen w-screen overflow-hidden">
       <Header />
-      <div className="w-full h-[calc(100%-48px)] flex flex-row">
+      <ResizablePanelGroup
+        autoSaveId={"sidebar-size"}
+        direction="horizontal"
+      >
         <LeftBar />
-        <div className="h-full w-full ml-64">{children}</div>
-      </div>
+        <ResizableHandle />
+        <ResizablePanel order={2} className="bg-background">
+          {children}
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }

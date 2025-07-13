@@ -64,7 +64,7 @@ export default function SearchBar({
                     placeholder="Search users..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    className="pr-8"
+                    className="pr-8 border-border"
                     onFocus={() => query.trim() && setShowResults(true)}
                 />
                 {query && (

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Livestream } from "../../../../types/livestream";
-import { datediffFromNow, formatSeconds } from "../../../../utils/timeFormats";
+import { dateDiffFromNow, formatSeconds } from "../../../../utils/timeFormats";
 import type React from "react";
 import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
 import { Eye, EyeOff, Heart, MoreVertical, Save } from "lucide-react";
@@ -196,7 +196,7 @@ export default function VODEditCard({
                         {vod.description && vod.description.length > 50
                             ? `${vod.description.substring(0, 47)}...`
                             : vod.description}{" "}
-                        • {datediffFromNow(vod.endedAt)} ago
+                        • {dateDiffFromNow(vod.endedAt)} ago
                     </p>
                     <div className="flex items-center mt-2 text-sm text-gray-500">
                         <span>{vod.viewCount} {vod.viewCount < 2 ? "view" : "views"}</span>

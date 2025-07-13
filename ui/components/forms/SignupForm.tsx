@@ -150,7 +150,7 @@ export default function SignUpForm() {
     };
 
     return (
-        <div>
+        <div className="max-w">
             <form onSubmit={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
