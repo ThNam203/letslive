@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { RequestToSendVerification, SignUp, VerifyOTP } from "../../lib/api/auth";
-import { IconEmail } from "../icons/email";
+import IconEmail from "../icons/email";
 import FormErrorText from "./FormErrorText";
-import { IconUserOutline } from "../icons/user";
-import { IconPasswordOutline } from "../icons/password";
-import { IconEye } from "../icons/eye";
-import { IconEyeOff } from "../icons/eye-off";
+import IconUserOutline from "../icons/user";
+import IconPasswordOutline from "../icons/password";
+import IconEye from "../icons/eye";
+import IconEyeOff from "../icons/eye-off";
 import Turnstile, { useTurnstile } from "react-turnstile";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
@@ -156,14 +156,14 @@ export default function SignUpForm() {
                 e.stopPropagation();
                 handleBeginEmailVerification();
             }}>
-                <div className="flex px-4 gap-4 items-center rounded-md border border-gray-200">
+                <div className="flex px-4 gap-4 items-center rounded-md border border-border">
                     <label htmlFor="email">
                         <IconEmail className="opacity-40 scale-125" />
                     </label>
                     <input
                         id="email"
                         aria-label="Email"
-                        className="h-[50px] focus:outline-none flex-1"
+                        className="h-12 focus:outline-none bg-background flex-1"
                         placeholder="Email"
                         type="email"
                         value={email}
@@ -171,14 +171,14 @@ export default function SignUpForm() {
                     />
                 </div>
                 <FormErrorText textError={errors.email} />
-                <div className="flex px-4 gap-4 items-center rounded-md border border-gray-200 mt-4">
+                <div className="flex px-4 gap-4 items-center rounded-md border border-border mt-4">
                     <label htmlFor="username">
                         <IconUserOutline className="opacity-40 scale-125" />
                     </label>
                     <input
                         id="username"
                         aria-label="Username"
-                        className="h-[50px] focus:outline-none flex-1"
+                        className="h-12 focus:outline-none bg-background flex-1"
                         placeholder="Username"
                         type="text"
                         value={username}
@@ -186,14 +186,14 @@ export default function SignUpForm() {
                     />
                 </div>
                 <FormErrorText textError={errors.username} />
-                <div className="flex px-4 gap-4 items-center rounded-md border border-gray-200 mt-4">
+                <div className="flex px-4 gap-4 items-center rounded-md border border-border mt-4">
                     <label htmlFor="password">
                         <IconPasswordOutline className="opacity-40 scale-125" />
                     </label>
                     <input
                         id="password"
                         aria-label="Password"
-                        className="h-[50px] focus:outline-none flex-1"
+                        className="h-12 focus:outline-none bg-background flex-1"
                         placeholder="Password"
                         type={hidingPassword ? "password" : "text"}
                         value={password}
@@ -213,14 +213,14 @@ export default function SignUpForm() {
                 </div>
                 <FormErrorText textError={errors.password} />
 
-                <div className="flex px-4 gap-4 items-center rounded-md border border-gray-200 mt-4">
+                <div className="flex px-4 gap-4 items-center rounded-md border border-border mt-4">
                     <label htmlFor="confirm-password">
                         <IconPasswordOutline className="opacity-40 scale-125" />
                     </label>
                     <input
                         id="confirm-password"
                         aria-label="Confirm Password"
-                        className="h-[50px] focus:outline-none flex-1"
+                        className="h-12 focus:outline-none bg-background flex-1"
                         placeholder="Confirm Password"
                         type={hidingConfirmPassword ? "password" : "text"}
                         value={confirmPassword}
@@ -262,7 +262,7 @@ export default function SignUpForm() {
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full rounded-md flex justify-center items-center bg-blue-400 hover:bg-blue-500 text-white h-[50px] border-transparent border font-semibold"
+                    className="w-full rounded-md flex justify-center items-center bg-blue-400 hover:bg-blue-500 text-white h-12 border-transparent border font-semibold"
                 >
                     {isLoading && <Loader className="animate-spin ml-2" />}
                     SIGN UP
@@ -299,7 +299,7 @@ export default function SignUpForm() {
                             </InputOTPGroup>
                         </InputOTP>
                         {otpError && (
-                            <p className="text-sm text-red-500 mt-2">{otpError}</p>
+                            <p className="text-sm text-destructive mt-2">{otpError}</p>
                         )}
                     </div>
                     <DialogFooter>

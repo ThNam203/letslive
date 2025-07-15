@@ -10,8 +10,8 @@ const config: Config = {
         extend: {
             colors: {
                 background: "hsl(var(--background))",
-                foreground: "hsl(var(--foreground))",
 				"background-hover": "hsl(var(--background-hover))",
+                foreground: "hsl(var(--foreground))",
                 primary: "hsl(var(--primary))",
                 "primary-hover": "hsl(var(--primary-hover))",
                 "primary-foreground": "hsl(var(--primary-foreground))",
@@ -23,10 +23,12 @@ const config: Config = {
                 accent: "hsl(var(--accent))",
                 "accent-hover": "hsl(var(--accent-hover))",
                 "accent-foreground": "hsl(var(--accent-foreground))",
+                destructive: "hsl(var(--destructive))",
+                "destructive-hover": "hsl(var(--destructive-hover))",
+                "destructive-foreground": "hsl(var(--destructive-foreground))",
             },
         },
     },
-    darkMode: ["class", "class"],
     plugins: [require("tailwindcss-animate")],
 };
 

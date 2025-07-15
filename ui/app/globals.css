@@ -5,7 +5,7 @@
 @layer base {
   :root[data-theme='light'] {
     --background: 0 0% 100%;
-    --background-hover: 0 0% 95%;
+    --background-hover: 0 0% 92%;
     --foreground: 222 47% 11%;
 
     --muted: 210 40% 96%;
@@ -22,6 +22,10 @@
     --accent: 140 70% 45%;
     --accent-hover: 140 70% 55%;
     --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 90.3% 60%;
+    --destructive-hover: 0 90.3% 55%;
+    --destructive-foreground: 0 0% 100%;
 
     --radius: 0.5rem;
   }
@@ -45,6 +49,27 @@
     --accent: 140 70% 60%;
     --accent-hover: 140 70% 70%;
     --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 100% 50.9%;
+    --destructive-hover: 0 100% 45.9%;
+    --destructive-foreground: 0 0% 100%;
+
+    --radius: 0.5rem;
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus {
+    @apply border-none;
+    -webkit-text-fill-color: hsl(var(--foreground));
+    box-shadow: 0 0 0px 1000px hsl(var(--background)) inset;
+    transition: background-color 5000s ease-in-out 0s;
   }
 }
 

@@ -179,7 +179,7 @@ export default function AllChannelsView({
                                 )}
                             </Link>
                         </HoverCardTrigger>
-                        <HoverCardContent className="z-10 w-80 bg-background">
+                        <HoverCardContent className="z-10 w-80 bg-muted border-border">
                             <div className="flex gap-4">
                                 <Avatar>
                                     <AvatarImage
