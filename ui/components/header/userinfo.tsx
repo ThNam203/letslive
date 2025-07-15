@@ -102,12 +102,12 @@ export default function UserInfo() {
     <div className="flex flex-row gap-2">
       <Link
         href="/login"
-        className="whitespace-nowrap bg-primary border-1 rounded-md hover:bg-primary-hover text-primary-foreground border-border text-sm py-1 px-4"
+        className="whitespace-nowrap bg-primary border rounded-md hover:bg-primary-hover text-primary-foreground border-border text-sm py-1 px-4"
       >
         Log in
       </Link>
       <Link
-        className="whitespace-nowrap bg-primary border-1 rounded-md hover:bg-primary-hover text-primary-foreground border-border text-sm py-1 px-4"
+        className="whitespace-nowrap bg-primary border rounded-md hover:bg-primary-hover text-primary-foreground border-border text-sm py-1 px-4"
         href="/signup"
       >
         Sign up

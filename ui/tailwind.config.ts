@@ -12,6 +12,7 @@ const config: Config = {
                 background: "hsl(var(--background))",
 				"background-hover": "hsl(var(--background-hover))",
                 foreground: "hsl(var(--foreground))",
+                "foreground-muted": "hsl(var(--foreground-muted))",
                 primary: "hsl(var(--primary))",
                 "primary-hover": "hsl(var(--primary-hover))",
                 "primary-foreground": "hsl(var(--primary-foreground))",
