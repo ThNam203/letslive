@@ -45,22 +45,16 @@ export default function ApiKeyTab() {
           id="api-key"
           value={user?.streamAPIKey}
           readOnly={true}
-          className="flex-grow text-right"
+          className="flex-grow text-right border border-border"
         />
       </div>
       <div className="flex gap-4">
         <div className="flex-grow" />
-        <Button
-          className="bg-purple-600 hover:bg-purple-700"
-          onClick={copyApiKey}
-        >
-          <Copy className="h-4 w-4" color="white" />
+        <Button onClick={copyApiKey}>
+          <Copy className="h-4 w-4 text-primary-foreground" />
         </Button>
 
-        <Button
-          className="bg-purple-600 hover:bg-purple-700 text-white"
-          onClick={generateNewApiKey}
-        >
+        <Button onClick={generateNewApiKey}>
           <RefreshCw className="mr-2 h-4 w-4" /> Generate New API Key
         </Button>
       </div>

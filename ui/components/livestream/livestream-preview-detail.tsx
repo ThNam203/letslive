@@ -14,16 +14,16 @@ const LivestreamPreviewDetailView = ({
     return (
         <div className="flex items-start gap-3">
             <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                <Avatar>
-                <AvatarImage
-                    src={
-                        user?.profilePicture
-                    }
-                    alt={`${user?.username} avatar`}
-                />
-                <AvatarFallback>
-                    {user?.username.charAt(0).toUpperCase()}
-                </AvatarFallback>
+                <Avatar className="border border-border">
+                    <AvatarImage
+                        src={
+                            user?.profilePicture
+                        }
+                        alt={`${user?.username} avatar`}
+                    />
+                    <AvatarFallback>
+                        {user?.username.charAt(0).toUpperCase()}
+                    </AvatarFallback>
                 </Avatar>
             </div>
             <div className="flex-1 min-w-0">

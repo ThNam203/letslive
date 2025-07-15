@@ -44,11 +44,10 @@ const LivestreamPreviewView = ({
                     livestream.thumbnailUrl ??
                     `${GLOBAL.API_URL}/files/livestreams/${livestream.id}/thumbnail.jpeg`
                 }
-                className="cursor-pointer mb-4"
+                className="cursor-pointer"
                 onClick={() => router.push(`/users/${livestream.userId}`)}
             />
-            {/* </CardHeader> */}
-            <CardContent>
+            <CardContent className="p-4 bg-muted">
                 <LivestreamPreviewDetailView
                     livestream={livestream}
                     user={user}

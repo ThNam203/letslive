@@ -22,7 +22,7 @@ export default function TextAreaField({
       </label>
       <Textarea
         id={label}
-        className={cn("text-gray-900 border-gray-700", className)}
+        className={cn("text-foreground border border-border", className)}
         {...props}
       />
       {description && <Description content={description} className="mt-1" />}

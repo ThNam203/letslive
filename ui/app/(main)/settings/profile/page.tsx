@@ -124,7 +124,7 @@ export default function ProfileSettings() {
   }, [user]);
 
   return (
-    <div className="min-h-screen text-gray-900 p-6 overflow-y-auto">
+    <div className="min-h-screen text-foreground p-6 overflow-y-auto">
       <div className="max-w-4xl space-y-8">
         {/* Profile Settings Section */}
         <Section
@@ -161,7 +161,6 @@ export default function ProfileSettings() {
 
             <div className="flex justify-end mt-6">
               <Button
-                className="bg-purple-600 hover:bg-purple-700 text-white disabled:bg-gray-400"
                 disabled={isUpdatingProfile || isButtonDisabled}
                 type="submit"
               >
@@ -176,20 +175,21 @@ export default function ProfileSettings() {
         <Section
           title="Disabling your Let's Live account"
           description="Completely deactivate your account"
-          className="border-t border-gray-800 pt-8"
-          contentClassName="border-1 rounded-md p-4"
+          className="border-t border-border pt-8"
+          contentClassName="border border-border rounded-md p-4"
         >
           <div className="w-full flex items-center justify-between">
-            <p className="w-2/3 text-sm text-gray-800">
+            <p className="w-2/3 text-sm text-destructive">
               When you disable your account, your profile and notifications will
               be hidden, and your account will be deactivated. You can
               reactivate your account at any time.
             </p>
-            <button className="text-sm font-medium text-white bg-red-800 px-4 py-2 rounded-md hover:bg-red-700">
+            <button className="text-sm font-medium text-destructive-foreground bg-destructive px-4 py-2 rounded-md hover:bg-destructive-hover">
               Disable Your Let&apos;s Live Account
             </button>
           </div>
         </Section>
+        <div className="h-10"/>
       </div>
     </div>
   );

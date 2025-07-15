@@ -7,6 +7,7 @@
     --background: 0 0% 100%;
     --background-hover: 0 0% 92%;
     --foreground: 222 47% 11%;
+    --foreground-muted: 222 10.3% 25.4%;
 
     --muted: 210 40% 96%;
     --border: 210 10% 23%;
@@ -34,6 +35,7 @@
     --background: 222 47% 11%;
     --background-hover: 222 30% 20%;
     --foreground: 0 0% 100%;
+    --foreground-muted: 0 0% 80%;
     
     --muted: 220 20% 25%;
     --border: 220 15% 30%;
@@ -50,9 +52,9 @@
     --accent-hover: 140 70% 70%;
     --accent-foreground: 0 0% 0%;
 
-    --destructive: 0 100% 50.9%;
-    --destructive-hover: 0 100% 45.9%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 90.3% 60%;
+    --destructive-hover: 0 90.3% 55%;
+    --destructive-foreground: 0 0% 90%;
 
     --radius: 0.5rem;
   }

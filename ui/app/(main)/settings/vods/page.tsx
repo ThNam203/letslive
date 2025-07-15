@@ -36,7 +36,7 @@ export default function VODsEdit() {
             <div className="space-y-6 mb-4 max-w-4xl">
                 <div className="space-y-1">
                     <h1 className="text-xl font-semibold">VODs Manager</h1>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-foreground-muted ">
                         Manage your VODs and edit their information here.
                     </p>
                 </div>

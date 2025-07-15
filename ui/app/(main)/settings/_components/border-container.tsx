@@ -9,7 +9,7 @@ export default function BorderContainer({ children, className }: Props) {
   return (
     <div
       className={cn(
-        "relative w-full rounded-lg border-1 border-gray-900 p-6",
+        "relative w-full rounded-lg border border-border p-6",
         className
       )}
     >

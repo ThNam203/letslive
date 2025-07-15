@@ -183,7 +183,7 @@ export default function VODEditCard({
                     </div>
                 </Link>
                 <div className="p-4">
-                    <h3 className="font-semibold text-gray-900">{vod.title}</h3>
+                    <h3 className="font-semibold text-foreground">{vod.title}</h3>
                     <p className="text-sm text-gray-500 mt-1">
                         {formatSeconds(vod.duration)} -{" "}
                         {vod.visibility === "public" ? (
@@ -192,13 +192,13 @@ export default function VODEditCard({
                             <EyeOff className="w-4 h-4 mr-1 inline-block" />
                         )}
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-foreground-muted mt-1">
                         {vod.description && vod.description.length > 50
                             ? `${vod.description.substring(0, 47)}...`
                             : vod.description}{" "}
                         • {dateDiffFromNow(vod.endedAt)} ago
                     </p>
-                    <div className="flex items-center mt-2 text-sm text-gray-500">
+                    <div className="flex items-center mt-2 text-sm text-foreground-muted">
                         <span>{vod.viewCount} {vod.viewCount < 2 ? "view" : "views"}</span>
                         <div className="flex-1" />
                         <DropdownMenu>
@@ -240,7 +240,7 @@ export default function VODEditCard({
                                     relative
                                     flex items-center justify-center
                                     w-full aspect-video 
-                                    border-2 border-dashed border-gray-300 
+                                    border-2 border-dashed border-border
                                     rounded-lg 
                                     cursor-pointer
                                     transition-all duration-300 ease-in-out

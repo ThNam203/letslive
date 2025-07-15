@@ -38,7 +38,7 @@ export default function ImageField({
         <div
           className={cn(
             "absolute w-full h-full rounded-lg cursor-pointer bg-cover bg-center bg-no-repeat",
-            !imageUrl && "border-2 border-dashed border-gray-300"
+            !imageUrl && "border border-dashed border-border"
           )}
           style={{
             backgroundImage: `url("${imageUrl}")`,

@@ -20,6 +20,7 @@ export async function Header() {
                 <SearchBar />
             </div>
             <div className="flex flex-row items-center gap-4">
+                <ThemeSwitch />
                 <StreamGuiding />
                 <UserInfo />
             </div>
