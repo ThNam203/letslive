@@ -187,7 +187,7 @@ export function VODFrame({
 
     return (
         <div
-            className="w-full h-full relative"
+            className={cn("relative aspect-video w-full bg-black", className)}
             id="frame"
             onMouseMove={() => {
                 setCount(0);
@@ -196,20 +196,6 @@ export function VODFrame({
                 setCount(0);
             }}
         >
-            {/* <div
-        className={cn(
-          "absolute top-0 w-full h-full z-30 bg-red-300",
-          isLoading ? "" : "hidden"
-        )}
-      >
-        <Skeleton
-          width="100%"
-          height="100%"
-          borderRadius="0"
-          className="absolute -top-1"
-        />
-      </div> */}
-            {/* <div className="w-full h-full bg-blue-300"></div> */}
             {videoInfo.videoUrl != null && (
                 <>
                     <ReactPlayerWrapper
@@ -284,7 +270,7 @@ function FrontOfVideo({
     return (
         <div
             className={cn(
-                "absolute top-0 w-full h-full flex flex-col items-center justify-end border border-gray-300",
+                "absolute top-0 w-full h-full flex flex-col items-center justify-end border border-border",
                 className
             )}
         >

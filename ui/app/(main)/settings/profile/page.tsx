@@ -14,6 +14,8 @@ import TextField from "../_components/text-field";
 import ProfileBanner from "./_components/profile-banner";
 import Section from "../_components/section";
 import TextAreaField from "../_components/textarea-field";
+import ThemeSwitch from "@/components/utils/theme-switch";
+import ThemeList from "@/components/utils/theme-list";
 
 export default function ProfileSettings() {
   const user = useUser((state) => state.user);
@@ -171,7 +173,15 @@ export default function ProfileSettings() {
           </form>
         </Section>
 
-        {/* Disable Account Section */}
+        <Section
+          title="Themes"
+          description="Customize the look and feel of the website"
+          className="border-t border-border pt-8"
+          contentClassName="border border-border rounded-md p-4"
+        >
+          <ThemeList/>
+        </Section>
+
         <Section
           title="Disabling your Let's Live account"
           description="Completely deactivate your account"

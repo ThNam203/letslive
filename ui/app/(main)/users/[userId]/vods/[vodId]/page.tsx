@@ -109,22 +109,21 @@ export default function VODPage() {
         <div className="flex h-full overflow-hidden ml-4 gap-6">
             {/* Main content area */}
             <div className="flex-1 overflow-auto no-scrollbar">
-                <div className="w-full aspect-video bg-black mb-4">
-                    <VODFrame videoInfo={playerInfo} />
-                </div>
+                <VODFrame videoInfo={playerInfo} className="mt-1" />
                 {user && (
                     <ProfileView
                         user={user}
                         updateUser={updateUser}
                         vods={vods.filter((v) => v.id !== params.vodId)}
                         showRecentActivity={false}
+                        className="mt-2"
                     />
                 )}
             </div>
             <div
                 className={`w-full h-[100%-48px] md:w-80 lg:w-96 bg-background transition-all duration-300 fixed md:relative top-0 right-2 z-40 ${isExtraOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}
             >
-                <div className="w-full h-full flex flex-col font-sans border-x border-gray-200 bg-gray-50">
+                <div className="w-full h-full flex flex-col font-sans border-x bg-background border-border">
                     <h2 className="font-semibold p-4">
                         Other streams
                     </h2>

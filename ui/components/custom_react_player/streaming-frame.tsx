@@ -186,7 +186,7 @@ export function StreamingFrame({
 
     return (
         <div
-            className="w-full h-full relative"
+            className={cn("relative aspect-video w-full bg-black", className)}
             id="frame"
             onMouseMove={() => {
                 setCount(0);
@@ -195,20 +195,6 @@ export function StreamingFrame({
                 setCount(0);
             }}
         >
-            {/* <div
-        className={cn(
-          "absolute top-0 w-full h-full z-30 bg-red-300",
-          isLoading ? "" : "hidden"
-        )}
-      >
-        <Skeleton
-          width="100%"
-          height="100%"
-          borderRadius="0"
-          className="absolute -top-1"
-        />
-      </div> */}
-            {/* <div className="w-full h-full bg-blue-300"></div> */}
             {videoInfo.videoUrl != null && (
                 <>
                     <ReactPlayerWrapper
@@ -237,7 +223,7 @@ export function StreamingFrame({
                                 reactPlayer.getInternalPlayer("hls");
                             if (!hlsPlayer) return;
                             const newResolutions = hlsPlayer.levels.map(
-                                (level: any) => level.attrs.RESOLUTION
+                                (level: any) => level.attrs.RESOLUTION,
                             );
                             setResolutions(["Auto", ...newResolutions]);
                         }}
@@ -283,20 +269,20 @@ function FrontOfVideo({
     return (
         <div
             className={cn(
-                "absolute top-0 w-full h-full flex flex-col items-center justify-end  border border-gray-300",
-                className
+                "absolute top-0 flex h-full w-full flex-col items-center justify-end border border-border",
+                className,
             )}
         >
-            <div className="absolute top-4 left-4 right-4 text-white  font-bold font-sans flex flex-row items-center justify-between">
-                <span className="bg-black/70 rounded px-2 py-1">
+            <div className="absolute left-4 right-4 top-4 flex flex-row items-center justify-between font-sans font-bold text-white">
+                <span className="rounded bg-black/70 px-2 py-1">
                     {videoInfo.videoTitle}
                 </span>
-                <span className="bg-black/70 rounded px-2 py-1">
+                <span className="rounded bg-black/70 px-2 py-1">
                     {videoInfo.streamer.name}
                 </span>
             </div>
             <div
-                className="h-full w-full flex items-center justify-center"
+                className="flex h-full w-full items-center justify-center"
                 onMouseUp={() => {
                     if (isPlaying) {
                         if (fnControl.pauseVideo) fnControl.pauseVideo();
@@ -308,7 +294,7 @@ function FrontOfVideo({
                 {!isPlaying && (
                     <PlayArrow
                         sx={{ fontSize: 100 }}
-                        className="text-white cursor-pointer"
+                        className="cursor-pointer text-white"
                     />
                 )}
             </div>
@@ -348,8 +334,8 @@ function VideoControl({
     return (
         <div
             className={cn(
-                "w-full px-10 bg-black/60 pt-4 h-fit pb-4 flex flex-col items-center justify-center",
-                className
+                "flex h-fit w-full flex-col items-center justify-center bg-black/60 px-10 pb-4 pt-4",
+                className,
             )}
         >
             <VideoTracking
@@ -394,8 +380,8 @@ function VideoTracking({
     return (
         <div
             className={cn(
-                "w-full bg-transparent flex items-center justify-center hidden",
-                className
+                "flex hidden w-full items-center justify-center bg-transparent",
+                className,
             )}
         >
             <Slider
@@ -430,8 +416,8 @@ function VideoControlButtons({
     return (
         <div
             className={cn(
-                "w-full flex flex-row items-center justify-between text-white",
-                className
+                "flex w-full flex-row items-center justify-between text-white",
+                className,
             )}
         >
             <div className="flex flex-row items-center gap-6">
@@ -447,12 +433,12 @@ function VideoControlButtons({
                     {isPlaying ? (
                         <Pause
                             sx={{ fontSize: 24 }}
-                            className="text-white cursor-pointer"
+                            className="cursor-pointer text-white"
                         />
                     ) : (
                         <PlayArrow
                             sx={{ fontSize: 24 }}
-                            className="text-white cursor-pointer"
+                            className="cursor-pointer text-white"
                         />
                     )}
                 </div>
@@ -460,8 +446,8 @@ function VideoControlButtons({
                 {/* <span className="text-white">
           {formatTime(currentTime)} / {formatTime(duration)}
         </span> */}
-                <div className="text-red-600 font-semibold">
-                    <div className="w-2 h-2 bg-red-600 rounded-full"></div>
+                <div className="font-semibold text-red-600">
+                    <div className="h-2 w-2 rounded-full bg-red-600"></div>
                     Live
                 </div>
             </div>
@@ -479,7 +465,9 @@ function VideoControlButtons({
 
                 <Combobox
                     options={resolutions.map((res) =>
-                        res === "Auto" ? "Auto" : RESOLUTION_TO_CLASS[res] + "p"
+                        res === "Auto"
+                            ? "Auto"
+                            : RESOLUTION_TO_CLASS[res] + "p",
                     )}
                     value={config.resolution}
                     onChange={fnControl.handleResolutionChange}
@@ -499,12 +487,12 @@ function VideoControlButtons({
                     {config.isFullscreen ? (
                         <FullscreenExit
                             sx={{ fontSize: 24 }}
-                            className="text-white cursor-pointer"
+                            className="cursor-pointer text-white"
                         />
                     ) : (
                         <Fullscreen
                             sx={{ fontSize: 24 }}
-                            className="text-white cursor-pointer"
+                            className="cursor-pointer text-white"
                         />
                     )}
                 </div>
@@ -531,9 +519,9 @@ function VolumeButton({
     }, [volumeValue]);
 
     return (
-        <div className="w-[120px] flex flex-row items-center gap-4">
+        <div className="flex w-[120px] flex-row items-center gap-4">
             <div
-                className="text-white cursor-pointer"
+                className="cursor-pointer text-white"
                 onClick={() => {
                     if (volumeValue === 0) handleVolumeChange(currentVolume);
                     else handleVolumeChange(0);
@@ -579,21 +567,21 @@ const Combobox = ({
     return (
         <div
             ref={ref}
-            className="relative flex flex-row items-center justify-center gap-4 cursor-pointer"
+            className="relative flex cursor-pointer flex-row items-center justify-center gap-4"
         >
             <div
-                className={cn("text-white cursor-pointer")}
+                className={cn("cursor-pointer text-white")}
                 onClick={(e: any) => handleClick(e)}
             >
                 {value}
             </div>
             {showOptions && (
-                <div className="absolute bottom-full w-fit h-fit px-1 py-1 bg-black/70 flex flex-col items-center rounded-md">
+                <div className="absolute bottom-full flex h-fit w-fit flex-col items-center rounded-md bg-black/70 px-1 py-1">
                     {options.map((option) => (
                         <div
                             key={option}
                             className={cn(
-                                "text-white border-0 outline-none cursor-pointer flex flex-row items-center justify-start gap-2 hover:bg-white/20 rounded"
+                                "flex cursor-pointer flex-row items-center justify-start gap-2 rounded border-0 text-white outline-none hover:bg-white/20",
                             )}
                             onClick={() => handleValueChange(option)}
                         >
