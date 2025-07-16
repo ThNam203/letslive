@@ -111,27 +111,26 @@ export default function Livestreaming() {
       {/* Main content area */}
       <div className="flex-1 overflow-auto no-scrollbar">
         {isStreaming ? (
-          <div className="w-full aspect-video bg-black mb-4 rounded-sm">
             <StreamingFrame
               videoInfo={playerInfo}
               onVideoStart={() => {
                 setTimeVideoStart(new Date());
               }}
+              className="mt-1"
             />
-          </div>
         ) : (
           <div className="w-full aspect-video mb-4 bg-black flex items-center justify-center bg-opacity-9 0">
-            <h2 className="text-gray-400 text-3xl font-mono ">
+            <h2 className="text-foreground-muted text-3xl font-mono ">
               The user is currently offline.
             </h2>
           </div>
         )}
-
         {user && (
           <ProfileView
             user={user}
             updateUser={updateUser}
             vods={vods.filter((vod) => vod.status !== "live")}
+            className="mt-2"
           />
         )}
       </div>
