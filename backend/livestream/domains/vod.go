@@ -19,12 +19,12 @@ type VOD struct {
 	Id           uuid.UUID     `json:"id" db:"id"`
 	LivestreamId uuid.UUID     `json:"livestreamId" db:"livestream_id"`
 	UserId       uuid.UUID     `json:"userId" db:"user_id"`
-	Title        *string       `json:"title" db:"title"`
+	Title        string        `json:"title" db:"title"`
 	Description  *string       `json:"description" db:"description"`
 	ThumbnailURL *string       `json:"thumbnailUrl" db:"thumbnail_url"`
 	Visibility   VODVisibility `json:"visibility" db:"visibility"`
 	ViewCount    int64         `json:"viewCount" db:"view_count"`
-	Duration     *int64        `json:"duration" db:"duration"`
+	Duration     int64         `json:"duration" db:"duration"`
 	PlaybackURL  *string       `json:"playbackUrl" db:"playback_url"`
 	CreatedAt    time.Time     `json:"createdAt" db:"created_at"`
 	UpdatedAt    time.Time     `json:"updatedAt" db:"updated_at"`

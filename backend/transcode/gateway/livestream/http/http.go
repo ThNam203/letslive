@@ -93,7 +93,7 @@ func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, 
 		}
 	}
 
-	url := fmt.Sprintf("http:/%s/v1/internal/livestreams/%s/end", addr, streamId)
+	url := fmt.Sprintf("http://%s/v1/internal/livestreams/%s/end", addr, streamId)
 	payloadBuf := new(bytes.Buffer)
 	if err := json.NewEncoder(payloadBuf).Encode(endDTO); err != nil {
 		return &ErrorResponse{
@@ -121,7 +121,7 @@ func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, 
 
 	if resp.StatusCode/100 != 2 {
 		return &ErrorResponse{
-			Message:    fmt.Sprintf("failed to end livestream from livestream service: %s", err),
+			Message:    fmt.Sprintf("failed to end livestream from livestream service with status code: %d", resp.StatusCode),
 			StatusCode: resp.StatusCode,
 		}
 	}

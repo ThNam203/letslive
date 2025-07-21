@@ -21,6 +21,7 @@ type Livestream struct {
 	Title        string               `json:"title" db:"title"`
 	Description  *string              `json:"description" db:"description"`
 	ThumbnailURL *string              `json:"thumbnailUrl" db:"thumbnail_url"`
+	ViewCount    int                  `json:"viewCount" db:"view_count"`
 	Visibility   LivestreamVisibility `json:"visibility" db:"visibility"`
 	StartedAt    time.Time            `json:"startedAt" db:"started_at"`
 	EndedAt      *time.Time           `json:"endedAt" db:"ended_at"`
@@ -31,8 +32,8 @@ type Livestream struct {
 
 type LivestreamRepository interface {
 	GetById(ctx context.Context, id uuid.UUID) (*Livestream, *serviceresponse.ServiceErrorResponse)
+	GetByUser(ctx context.Context, userId uuid.UUID) (*Livestream, *serviceresponse.ServiceErrorResponse)
 	GetRecommendedLivestreams(ctx context.Context, page int, limit int) ([]Livestream, *serviceresponse.ServiceErrorResponse)
-	CheckIsUserLivestreaming(ctx context.Context, userId uuid.UUID) (bool, *serviceresponse.ServiceErrorResponse)
 	Create(ctx context.Context, ls Livestream) (*Livestream, *serviceresponse.ServiceErrorResponse)
 	Update(ctx context.Context, ls Livestream) (*Livestream, *serviceresponse.ServiceErrorResponse)
 	Delete(ctx context.Context, id uuid.UUID) *serviceresponse.ServiceErrorResponse

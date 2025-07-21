@@ -63,9 +63,8 @@ export default function ContactSettings({ user }: { user: User }) {
               </Dialog>
               <span className="text-foreground-muted text-sm">
                 {user?.authProvider === AuthProvider.LOCAL
-                  ? "Improve your security with a strong password"
+                  ? "Improve your security with a strong password."
                   : "Your account is secured with a password from a third-party provider."}
-                .
               </span>
             </div>
           </div>

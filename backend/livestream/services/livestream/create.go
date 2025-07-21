@@ -8,20 +8,28 @@ import (
 	serviceresponse "sen1or/letslive/livestream/responses"
 	"sen1or/letslive/livestream/utils"
 	"time"
-
-	"github.com/gofrs/uuid/v5"
 )
 
-func (s *LivestreamService) Create(ctx context.Context, data dto.CreateLivestreamRequestDTO, userId uuid.UUID) (*domains.Livestream, *serviceresponse.ServiceErrorResponse) {
+func (s *LivestreamService) Create(ctx context.Context, data dto.CreateLivestreamRequestDTO) (*domains.Livestream, *serviceresponse.ServiceErrorResponse) {
 	if err := utils.Validator.Struct(&data); err != nil {
 		return nil, serviceresponse.NewServiceErrorResponse(http.StatusBadRequest, err.Error())
 	}
 
+	var titleString = ""
+	if data.Title != nil {
+		titleString = *data.Title
+	}
+
+	if data.Visibility == nil {
+		*data.Visibility = domains.LivestreamPublicVisibility
+	}
+
 	livestreamData := domains.Livestream{
 		UserId:       data.UserId,
-		Title:        *data.Title,
+		Title:        titleString,
 		Description:  data.Description,
 		ThumbnailURL: data.ThumbnailURL,
+		Visibility:   *data.Visibility,
 	}
 
 	if livestreamData.Title == "" {

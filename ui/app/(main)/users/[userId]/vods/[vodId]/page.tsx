@@ -4,18 +4,20 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { User } from "../../../../../../types/user";
 import { VideoInfo } from "../../../../../../components/custom_react_player/streaming-frame";
-import { GetAllLivestreamOfUser, GetVODInformation } from "../../../../../../lib/api/livestream";
+import {
+    GetPublicVODsOfUser,
+    GetVODInformation,
+} from "../../../../../../lib/api/vod";
 import { GetUserById } from "../../../../../../lib/api/user";
 import { VODFrame } from "../../../../../../components/custom_react_player/vod-frame";
 import ProfileView from "../../profile";
-import VODLink from "../../../../../../components/livestream/vod";
-import GLOBAL from "../../../../../../global";
-import { Livestream } from "../../../../../../types/livestream";
+import VODView from "../../../../../../components/livestream/vod";
+import { VOD } from "@/types/vod";
 
 export default function VODPage() {
     const [user, setUser] = useState<User | null>(null);
-    const [vods, setVods] = useState<Livestream[]>([]);
-    const [isExtraOpen, setIsExtraOpen] = useState(false)
+    const [vods, setVods] = useState<VOD[]>([]);
+    const [isExtraOpen, setIsExtraOpen] = useState(false);
 
     const updateUser = (newUserInfo: User) => {
         setUser((prev) => {
@@ -40,9 +42,7 @@ export default function VODPage() {
 
     useEffect(() => {
         const fetchVODInfo = async () => {
-            const { vod, fetchError } = await GetVODInformation(
-                params.vodId
-            );
+            const { vod, fetchError } = await GetVODInformation(params.vodId);
 
             if (fetchError) {
                 toast.error(fetchError.message, {
@@ -51,11 +51,10 @@ export default function VODPage() {
                 return;
             }
 
-            const newUrl = `${GLOBAL.API_URL}/transcode/vods/${params.vodId}/index.m3u8`;
             setPlayerInfo((prev) => ({
                 ...prev,
                 videoTitle: vod!.title,
-                videoUrl: newUrl,
+                videoUrl: vod!.playbackUrl,
             }));
         };
 
@@ -68,7 +67,7 @@ export default function VODPage() {
         }
 
         const fetchVODs = async () => {
-            const { livestreams, fetchError } = await GetAllLivestreamOfUser(user.id);
+            const { vods, fetchError } = await GetPublicVODsOfUser(user.id);
 
             if (fetchError) {
                 toast(fetchError.message, {
@@ -76,7 +75,7 @@ export default function VODPage() {
                     type: "error",
                 });
             } else {
-                setVods(livestreams);
+                setVods(vods);
             }
         };
 
@@ -96,8 +95,8 @@ export default function VODPage() {
                     ...prev,
                     streamer: {
                         name: user?.displayName ?? user?.username ?? "Streamer",
-                    }
-                }))
+                    },
+                }));
             }
         };
 
@@ -105,10 +104,9 @@ export default function VODPage() {
     }, [params.userId]);
 
     return (
-
-        <div className="flex h-full overflow-hidden ml-4 gap-6">
+        <div className="ml-4 flex h-full gap-6 overflow-hidden">
             {/* Main content area */}
-            <div className="flex-1 overflow-auto no-scrollbar">
+            <div className="no-scrollbar flex-1 overflow-auto">
                 <VODFrame videoInfo={playerInfo} className="mt-1" />
                 {user && (
                     <ProfileView
@@ -121,22 +119,14 @@ export default function VODPage() {
                 )}
             </div>
             <div
-                className={`w-full h-[100%-48px] md:w-80 lg:w-96 bg-background transition-all duration-300 fixed md:relative top-0 right-2 z-40 ${isExtraOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}
+                className={`fixed right-2 top-0 z-40 h-[100%-48px] w-full bg-background transition-all duration-300 md:relative md:w-80 lg:w-96 ${isExtraOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}
             >
-                <div className="w-full h-full flex flex-col font-sans border-x bg-background border-border">
-                    <h2 className="font-semibold p-4">
-                        Other streams
-                    </h2>
-                    <div className="overflow-y-auto h-full px-4 small-scrollbar">
-                        {vods
-                            ?.filter(
-                                (v) =>
-                                    v.id !== params.vodId &&
-                                    v.status !== "live"
-                            )
-                            .map((vod, idx) => (
-                                <VODLink key={idx} vod={vod} classname="mb-2" />
-                            ))}
+                <div className="flex h-full w-full flex-col border-x border-border bg-background font-sans">
+                    <h2 className="p-4 font-semibold">Other streams</h2>
+                    <div className="small-scrollbar h-full overflow-y-auto px-4">
+                        {vods.map((vod, idx) => (
+                            <VODView key={idx} vod={vod} classname="mb-2" />
+                        ))}
                     </div>
                 </div>
             </div>

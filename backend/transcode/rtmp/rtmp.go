@@ -200,7 +200,7 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 func (s *RTMPServer) onDisconnect(streamId string, duration int64) {
 	s.vodHandler.OnStreamEnd(streamId, s.config.Transcode.PublicHLSPath, s.config.Transcode.FFMpegSetting.MasterFileName)
 
-	playbackURL := fmt.Sprintf("http://%s:%d/vods/%s/index.m3u8", s.config.Service.Hostname, s.config.Webserver.Port, streamId)
+	playbackURL := fmt.Sprintf("%s/%s/index.m3u8", s.config.VODPlaybackUrlPrefix, streamId)
 	endDTO := &livestreamdto.EndLivestreamRequestDTO{
 		PlaybackURL: &playbackURL,
 		EndedAt:     time.Now(),

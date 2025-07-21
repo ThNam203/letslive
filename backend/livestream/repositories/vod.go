@@ -113,29 +113,6 @@ func (r *postgresVODRepo) GetByUser(ctx context.Context, userId uuid.UUID, page 
 	return vods, nil
 }
 
-func (r *postgresVODRepo) GetPublicAvailable(ctx context.Context, page int, limit int) ([]domains.VOD, *serviceresponse.ServiceErrorResponse) {
-	offset := limit * page
-	query := `
-        select id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, created_at, updated_at
-        from vods
-        where visibility = 'public'
-        order by created_at desc
-        offset $1 limit $2
-    `
-	rows, err := r.dbConn.Query(ctx, query, offset, limit)
-	if err != nil {
-		logger.Errorf("db query error [getpublicavailablevods: %v]", err)
-		return nil, serviceresponse.ErrDatabaseQuery
-	}
-
-	vods, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[domains.VOD])
-	if err != nil {
-		logger.Errorf("db scan error [getpublicavailablevods: %v]", err)
-		return nil, serviceresponse.ErrQueryScanFailed
-	}
-	return vods, nil
-}
-
 func (r *postgresVODRepo) GetPopular(ctx context.Context, page int, limit int) ([]domains.VOD, *serviceresponse.ServiceErrorResponse) {
 	offset := limit * page
 	query := `
@@ -161,14 +138,15 @@ func (r *postgresVODRepo) GetPopular(ctx context.Context, page int, limit int) (
 
 func (r *postgresVODRepo) Create(ctx context.Context, vod domains.VOD) (*domains.VOD, *serviceresponse.ServiceErrorResponse) {
 	query := `
-        insert into vods (livestream_id, user_id, title, description, thumbnail_url, visibility, duration, playback_url, view_count)
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        insert into vods (livestream_id, user_id, title, description, thumbnail_url, visibility, duration, playback_url, view_count, created_at)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         returning id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, created_at, updated_at
     `
 	rows, err := r.dbConn.Query(ctx, query,
 		vod.LivestreamId, vod.UserId, vod.Title, vod.Description, vod.ThumbnailURL,
-		vod.Visibility, vod.Duration, vod.PlaybackURL, vod.ViewCount,
+		vod.Visibility, vod.Duration, vod.PlaybackURL, vod.ViewCount, vod.CreatedAt,
 	)
+
 	if err != nil {
 		// todo: check for specific db errors like fk violations if possible
 		logger.Errorf("db query error [createvod: %v]", err)

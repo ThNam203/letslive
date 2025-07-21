@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { Button } from "../../../../components/ui/button";
@@ -16,6 +15,7 @@ import Section from "../_components/section";
 import TextAreaField from "../_components/textarea-field";
 import ThemeSwitch from "@/components/utils/theme-switch";
 import ThemeList from "@/components/utils/theme-list";
+import IconLoader from "@/components/icons/loader";
 
 export default function ProfileSettings() {
   const user = useUser((state) => state.user);
@@ -166,7 +166,7 @@ export default function ProfileSettings() {
                 disabled={isUpdatingProfile || isButtonDisabled}
                 type="submit"
               >
-                {isUpdatingProfile && <Loader className="animate-spin" />} Save
+                {isUpdatingProfile && <IconLoader />} Save
                 Changes
               </Button>
             </div>

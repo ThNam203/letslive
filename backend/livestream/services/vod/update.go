@@ -26,8 +26,8 @@ func (s *VODService) UpdateVODMetadata(ctx context.Context, data dto.UpdateVODRe
 
 	// TODO: Mapper: UpdateVODRequestDTOToVOD(data, currentVOD) -> domains.VOD
 	updated := false
-	if data.Title != nil && (currentVOD.Title == nil || *data.Title != *currentVOD.Title) {
-		currentVOD.Title = data.Title
+	if data.Title != nil && (*data.Title != currentVOD.Title) {
+		currentVOD.Title = *data.Title
 		updated = true
 	}
 	if data.Description != nil && (currentVOD.Description == nil || *data.Description != *currentVOD.Description) {

@@ -1,7 +1,7 @@
+import IconClose from "@/components/icons/close";
 import { FILE_SIZE_LIMIT_MB_UNIT } from "@/constant/image";
 import { cn } from "@/utils/cn";
 import { IsValidFileSizeInMB } from "@/utils/file";
-import { Loader, X } from "lucide-react";
 import React from "react";
 import { toast } from "react-toastify";
 
@@ -76,7 +76,7 @@ export default function ImageHover({
         )}
         onClick={handleCloseIconClick}
       >
-        <X className="text-primary-foreground" size={12} />
+        <IconClose className="text-primary-foreground" />
       </div>
     </div>
   );

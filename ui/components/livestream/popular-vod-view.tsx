@@ -1,29 +1,31 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Clock, Eye, Film } from "lucide-react";
-import Image from "next/image";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
-import { GetPopularVODs } from "../../lib/api/livestream";
+import { GetPopularVODs } from "../../lib/api/vod";
 import { toast } from "react-toastify";
-import { Livestream } from "../../types/livestream";
 import { User } from "../../types/user";
 import { GetUserById } from "../../lib/api/user";
 import { dateDiffFromNow, formatSeconds } from "../../utils/timeFormats";
 import { useRouter } from "next/navigation";
 import GLOBAL from "../../global";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import IconFilm from "../icons/film";
+import IconEye from "../icons/eye";
+import IconClock from "../icons/clock";
+import LiveImage from "./live-image";
+import { VOD } from "@/types/vod";
 
 export function PopularVODView() {
     const [isLoading, setIsLoading] = useState(false);
-    const [vods, setVods] = useState<Livestream[]>([]);
+    const [vods, setVods] = useState<VOD[]>([]);
 
     useEffect(() => {
         setIsLoading(true);
         const fetchData = async () => {
-            const { vods, fetchError } = await GetPopularVODs(0);
+            const { vods, fetchError } = await GetPopularVODs();
             if (fetchError) {
                 toast("Failed to fetch popular videos", { type: "error" });
                 return;
@@ -43,7 +45,7 @@ export function PopularVODView() {
         return (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                 <div className="bg-muted p-6 rounded-full mb-6">
-                    <Film className="h-12 w-12 text-muted-foreground" />
+                    <IconFilm className="h-12 w-12 text-muted-foreground" />
                 </div>
                 <h2 className="text-2xl font-semibold mb-2">
                     No Videos Available
@@ -67,13 +69,13 @@ export function PopularVODView() {
     );
 }
 
-function VODCard({ vod }: { vod: Livestream }) {
+function VODCard({ vod }: { vod: VOD }) {
     const [user, setUser] = useState<User | null>(null);
     const router = useRouter();
 
     useEffect(() => {
         const fetchUser = async () => {
-            const { user, fetchError } = await GetUserById(vod.userId);
+            const { user } = await GetUserById(vod.userId);
             if (user) setUser(user);
         };
 
@@ -81,7 +83,7 @@ function VODCard({ vod }: { vod: Livestream }) {
     }, [vod.userId]);
 
     return (
-        <Card className="w-full overflow-hidden transition-all hover:shadow-md rounded-sm">
+        <Card className="w-full overflow-hidden transition-all hover:shadow-md rounded-sm border-border">
             <div className="relative aspect-video bg-muted">
                 <div className="absolute bottom-2 right-2">
                     <Badge
@@ -91,7 +93,7 @@ function VODCard({ vod }: { vod: Livestream }) {
                         {formatSeconds(vod.duration)}
                     </Badge>
                 </div>
-                <Image
+                <LiveImage
                     src={vod.thumbnailUrl ?? `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`}
                     alt={vod.title}
                     className="w-full h-full hover:cursor-pointer"
@@ -100,6 +102,8 @@ function VODCard({ vod }: { vod: Livestream }) {
                     onClick={() =>
                         router.push(`/users/${vod.userId}/vods/${vod.id}`)
                     }
+                    fallbackSrc="/images/streaming.jpg"
+                    alwaysRefresh={false}
                 />
             </div>
             <CardContent className="p-4">
@@ -131,12 +135,12 @@ function VODCard({ vod }: { vod: Livestream }) {
                         </p>
                         <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
-                                <Eye className="h-3 w-3" />
+                                <IconEye className="h-3 w-3" />
                                 <span>{vod.viewCount} {vod.viewCount < 2 ? "view" : "views"}</span>
                             </div>
                             <div className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                <span>{dateDiffFromNow(vod.endedAt)} ago</span>
+                                <IconClock className="h-3 w-3" />
+                                <span>{dateDiffFromNow(vod.createdAt)} ago</span>
                             </div>
                         </div>
                     </div>

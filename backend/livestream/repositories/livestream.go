@@ -46,6 +46,31 @@ func (r *postgresLivestreamRepo) GetById(ctx context.Context, id uuid.UUID) (*do
 	return &livestream, nil
 }
 
+func (r *postgresLivestreamRepo) GetByUser(ctx context.Context, userId uuid.UUID) (*domains.Livestream, *serviceresponse.ServiceErrorResponse) {
+	query := `
+		SELECT id, user_id, title, description, thumbnail_url, visibility, view_count, started_at, ended_at, created_at, updated_at, vod_id
+		FROM livestreams
+		WHERE user_id = $1 AND vod_id IS NULL
+		LIMIT 1
+	`
+
+	rows, err := r.dbConn.Query(ctx, query, userId)
+	if err != nil {
+		logger.Errorf("db query error [getlivestreambyuser: %v]", err)
+		return nil, serviceresponse.ErrDatabaseQuery
+	}
+
+	livestream, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.Livestream])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, serviceresponse.ErrLivestreamNotFound
+		}
+		logger.Errorf("db scan error [getlivestreambyuser: %v]", err)
+		return nil, serviceresponse.ErrQueryScanFailed
+	}
+	return &livestream, nil
+}
+
 // TODO: implement a recommendation system
 func (r *postgresLivestreamRepo) GetRecommendedLivestreams(ctx context.Context, page int, limit int) ([]domains.Livestream, *serviceresponse.ServiceErrorResponse) {
 	offset := limit * page
@@ -70,17 +95,6 @@ func (r *postgresLivestreamRepo) GetRecommendedLivestreams(ctx context.Context, 
 
 	return livestreams, nil
 }
-func (r *postgresLivestreamRepo) CheckIsUserLivestreaming(ctx context.Context, userId uuid.UUID) (bool, *serviceresponse.ServiceErrorResponse) {
-	var exists bool
-	query := `SELECT EXISTS (SELECT 1 FROM livestreams WHERE ended_at IS NULL AND user_id = $1)`
-	err := r.dbConn.QueryRow(ctx, query, userId).Scan(&exists)
-	if err != nil {
-		logger.Errorf("db scan error [checkisuserlivestreaming: %v]", err)
-		return false, serviceresponse.ErrQueryScanFailed
-	}
-
-	return exists, nil
-}
 
 func (r *postgresLivestreamRepo) Create(ctx context.Context, newLivestream domains.Livestream) (*domains.Livestream, *serviceresponse.ServiceErrorResponse) {
 	query := `
@@ -95,6 +109,7 @@ func (r *postgresLivestreamRepo) Create(ctx context.Context, newLivestream domai
 		newLivestream.ThumbnailURL,
 		newLivestream.Visibility,
 	)
+
 	if err != nil {
 		logger.Errorf("db query error [createlivestream: %v]", err)
 		return nil, serviceresponse.ErrLivestreamCreateFailed
@@ -146,7 +161,6 @@ func (r *postgresLivestreamRepo) Delete(ctx context.Context, livestreamId uuid.U
 		DELETE FROM livestreams 
 		WHERE id = $1
 	`, livestreamId)
-
 	if err != nil {
 		logger.Errorf("db exec error [deletelivestream id=%s: %v]", livestreamId, err)
 		return serviceresponse.ErrDatabaseQuery

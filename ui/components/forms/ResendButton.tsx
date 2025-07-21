@@ -29,7 +29,7 @@ export const ResendOtpButton: React.FC<ResendOtpButtonProps> = ({
   countdownText = (seconds) => `Resend in ${seconds}s`,
   sendingText = "Sending...",
 }) => {
-  const [countdown, setCountdown] = useState<number>(0);
+  const [countdown, setCountdown] = useState<number>(initialCountdown);
   const [isResending, setIsResending] = useState<boolean>(false);
 
   const isButtonDisabled = countdown > 0 || isResending;

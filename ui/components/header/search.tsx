@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
 
 import { toast } from "react-toastify";
 import { User } from "../../types/user";
@@ -9,6 +8,7 @@ import { SearchUsersByUsername } from "../../lib/api/user";
 import { Input } from "../ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Link from "next/link";
+import IconClose from "../icons/close";
 
 export default function SearchBar({
     onSearch,
@@ -73,7 +73,7 @@ export default function SearchBar({
                         className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         aria-label="Clear search"
                     >
-                        <X className="h-4 w-4" />
+                        <IconClose className="h-4 w-4" />
                     </button>
                 )}
             </div>

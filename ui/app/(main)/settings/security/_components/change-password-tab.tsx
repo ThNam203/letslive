@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { Loader } from "lucide-react";
 import { ChangePassword } from "../../../../../lib/api/auth";
 import { Label } from "../../../../../components/ui/label";
 import { Input } from "../../../../../components/ui/input";
 import FormErrorText from "../../../../../components/forms/FormErrorText";
 import { Button } from "../../../../../components/ui/button";
+import IconLoader from "@/components/icons/loader";
 
 export default function ChangePasswordTab() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -103,7 +103,7 @@ export default function ChangePasswordTab() {
         className="disabled:bg-gray-300 float-right"
         type="submit"
       >
-        {isUpdatingPassword && <Loader className="animate-spin" />}
+        {isUpdatingPassword && <IconLoader className="animate-spin" />}
         Confirm
       </Button>
     </form>
