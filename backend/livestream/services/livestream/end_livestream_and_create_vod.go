@@ -31,13 +31,14 @@ func (s *LivestreamService) EndLivestreamAndCreateVOD(ctx context.Context, strea
 	vodData := &domains.VOD{
 		LivestreamId: currentLivestream.Id,
 		UserId:       currentLivestream.UserId,
-		Title:        &currentLivestream.Title,
+		Title:        currentLivestream.Title,
 		Description:  currentLivestream.Description,
 		ThumbnailURL: currentLivestream.ThumbnailURL,
 		Visibility:   domains.VODVisibility(currentLivestream.Visibility),
 		ViewCount:    0,
-		Duration:     &endReqDTO.Duration,
+		Duration:     endReqDTO.Duration,
 		PlaybackURL:  endReqDTO.PlaybackURL,
+		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
 

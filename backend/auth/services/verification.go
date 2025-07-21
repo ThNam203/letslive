@@ -21,7 +21,7 @@ func NewVerificationService(repo domains.SignUpOTPRepository) *VerificationServi
 	}
 }
 
-func (c *VerificationService) Create(ctx context.Context, email string) (*domains.SignUpOTP, *serviceresponse.ServiceErrorResponse) {
+func (c *VerificationService) CreateSignUpOTP(ctx context.Context, email string) (*domains.SignUpOTP, *serviceresponse.ServiceErrorResponse) {
 	generatedOTP, err := utils.GenerateOTP()
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (s VerificationService) Verify(ctx context.Context, code, email string) *se
 }
 
 func (c *VerificationService) CreateOTPAndSendEmailVerification(ctx context.Context, verificationGateway string, userEmail string) *serviceresponse.ServiceErrorResponse {
-	createdToken, err := c.Create(ctx, userEmail)
+	createdToken, err := c.CreateSignUpOTP(ctx, userEmail)
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import useUser from "../../hooks/user";
-import { AuthProvider, User, UserStatus } from "../../types/user";
+import { User } from "../../types/user";
 import { GetAllUsers } from "../../lib/api/user";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { cn } from "@/utils/cn";

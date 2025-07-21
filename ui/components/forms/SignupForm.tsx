@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -16,6 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
 import { Button } from "../ui/button";
 import { ResendOtpButton } from "./ResendButton";
+import IconLoader from "../icons/loader";
 
 export default function SignUpForm() {
     const [email, setEmail] = useState("");
@@ -84,6 +84,7 @@ export default function SignUpForm() {
 
         return (
             !newErrors.email &&
+            !newErrors.username &&
             !newErrors.password &&
             !newErrors.confirmPassword &&
             !newErrors.turnstile
@@ -125,7 +126,6 @@ export default function SignUpForm() {
             router.refresh()
         }
 
-        setIsOtpDialogOpen(false);
         setIsOtpSubmitting(false);
         setIsLoading(false);
     };
@@ -264,7 +264,7 @@ export default function SignUpForm() {
                     disabled={isLoading}
                     className="w-full rounded-md flex justify-center items-center bg-blue-400 hover:bg-blue-500 text-white h-12 border-transparent border font-semibold"
                 >
-                    {isLoading && <Loader className="animate-spin ml-2" />}
+                    {isLoading && <IconLoader className="ml-2" />}
                     SIGN UP
                 </button>
             </form>
@@ -303,7 +303,7 @@ export default function SignUpForm() {
                         )}
                     </div>
                     <DialogFooter>
-                        <ResendOtpButton onResend={handleBeginEmailVerification} initialCountdown={30}/>
+                        <ResendOtpButton onResend={handleBeginEmailVerification} initialCountdown={60}/>
                         <Button
                             type="button"
                             onClick={handleSignUp}
@@ -311,7 +311,7 @@ export default function SignUpForm() {
                             className="w-full"
                         >
                             {isOtpSubmitting && (
-                                <Loader className="animate-spin mr-2 h-4 w-4" />
+                                <IconLoader className="mr-2 h-4 w-4" />
                             )}
                             VERIFY OTP
                         </Button>

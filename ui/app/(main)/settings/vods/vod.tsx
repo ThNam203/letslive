@@ -2,11 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Livestream } from "../../../../types/livestream";
 import { dateDiffFromNow, formatSeconds } from "../../../../utils/timeFormats";
 import type React from "react";
 import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
-import { Eye, EyeOff, Heart, MoreVertical, Save } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -25,17 +23,23 @@ import {
 import { Label } from "../../../../components/ui/label";
 import { Input } from "../../../../components/ui/input";
 import { Switch } from "../../../../components/ui/switch";
-import { DeleteVOD, UpdateVOD } from "../../../../lib/api/livestream";
+import { DeleteVOD, UpdateVOD } from "../../../../lib/api/vod";
 import { toast } from "react-toastify";
 import { UploadFile } from "../../../../lib/api/utils";
 import GLOBAL from "../../../../global";
+import IconEye from "@/components/icons/eye";
+import IconEyeOff from "@/components/icons/eye-off";
+import IconDotsVertical from "@/components/icons/dots-vertical";
+import IconSave from "@/components/icons/save";
+import { VOD } from "@/types/vod";
+import IconLoader from "@/components/icons/loader";
 
 export default function VODEditCard({
     vod,
     setVODS,
 }: {
-    vod: Livestream;
-    setVODS: Dispatch<SetStateAction<Livestream[]>>;
+    vod: VOD;
+    setVODS: Dispatch<SetStateAction<VOD[]>>;
 }) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -187,16 +191,16 @@ export default function VODEditCard({
                     <p className="text-sm text-gray-500 mt-1">
                         {formatSeconds(vod.duration)} -{" "}
                         {vod.visibility === "public" ? (
-                            <Eye className="w-4 h-4 mr-1 inline-block" />
+                            <IconEye className="w-4 h-4 mr-1 inline-block" />
                         ) : (
-                            <EyeOff className="w-4 h-4 mr-1 inline-block" />
+                            <IconEyeOff className="w-4 h-4 mr-1 inline-block" />
                         )}
                     </p>
                     <p className="text-sm text-foreground-muted mt-1">
                         {vod.description && vod.description.length > 50
                             ? `${vod.description.substring(0, 47)}...`
                             : vod.description}{" "}
-                        • {dateDiffFromNow(vod.endedAt)} ago
+                        • {dateDiffFromNow(vod.createdAt)} ago
                     </p>
                     <div className="flex items-center mt-2 text-sm text-foreground-muted">
                         <span>{vod.viewCount} {vod.viewCount < 2 ? "view" : "views"}</span>
@@ -204,7 +208,7 @@ export default function VODEditCard({
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon">
-                                    <MoreVertical className="h-5 w-5" />
+                                    <IconDotsVertical className="h-5 w-5" />
                                     <span className="sr-only">Open menu</span>
                                 </Button>
                             </DropdownMenuTrigger>
@@ -311,7 +315,7 @@ export default function VODEditCard({
                             Cancel
                         </Button>
                         <Button onClick={handleSave}>
-                            <Save className="mr-2 h-4 w-4" />
+                            {isSubmitting ? <IconLoader className="h-4 w-4"/> : <IconSave className="mr-2 h-4 w-4" />}
                             Save Changes
                         </Button>
                     </DialogFooter>

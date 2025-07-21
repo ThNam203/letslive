@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { Send, X } from "lucide-react";
 import { toast } from "react-toastify";
 import useUser from "../../../../hooks/user";
 import { ReceivedMessage, SendMessage } from "../../../../types/message";
@@ -10,6 +9,8 @@ import { GetMessages } from "../../../../lib/api/chat";
 import GLOBAL from "../../../../global";
 import { Input } from "../../../../components/ui/input";
 import { Button } from "../../../../components/ui/button";
+import IconClose from "@/components/icons/close";
+import IconSend from "@/components/icons/send";
 
 export default function ChatPanel({
     roomId,
@@ -52,7 +53,7 @@ export default function ChatPanel({
         };
 
         fetchMessages();
-    }, []);
+    }, [roomId]);
 
     useEffect(() => {
         const connectWebSocket = async () => {
@@ -99,10 +100,10 @@ export default function ChatPanel({
                 } else wsRef.current.close();
             }
         };
-    }, [user]);
+    }, [user, roomId]);
 
     return (
-        <div className="relative flex w-full max-h-screen flex-col">
+        <div className="relative flex w-full h-full flex-col">
             <div className="flex items-center justify-between border border-y-0 border-border px-4 py-3">
                 <h2 className="font-semibold">Chat</h2>
                 <Button
@@ -111,7 +112,7 @@ export default function ChatPanel({
                     onClick={onClose}
                     className="md:hidden"
                 >
-                    <X className="h-4 w-4" />
+                    <IconClose className="h-4 w-4" />
                 </Button>
             </div>
             <div className="overflow-y-auto flex-1 rounded-md rounded-t-none border border-t-0 border-border px-4 py-2 mb-24">
@@ -150,7 +151,7 @@ export default function ChatPanel({
                     className="flex-1"
                 />
                 <Button type="submit" disabled={!user}>
-                    <Send className="h-4 w-4" />
+                    <IconSend className="h-4 w-4" />
                 </Button>
             </form>
         </div>

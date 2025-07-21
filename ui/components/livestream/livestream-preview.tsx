@@ -44,6 +44,7 @@ const LivestreamPreviewView = ({
                     livestream.thumbnailUrl ??
                     `${GLOBAL.API_URL}/files/livestreams/${livestream.id}/thumbnail.jpeg`
                 }
+                fallbackSrc="/images/streaming.jpg"
                 className="cursor-pointer"
                 onClick={() => router.push(`/users/${livestream.userId}`)}
             />

@@ -31,7 +31,7 @@ var (
 
 	ErrImageTooLarge = NewServerError(http.StatusRequestEntityTooLarge, "Image exceeds 10mb limit.")
 
-	ErrDatabaseQuery  = NewServerError(http.StatusInternalServerError, "Something went wrong.")
-	ErrDatabaseIssue  = NewServerError(http.StatusInternalServerError, "Something went wrong.")
+	ErrDatabaseQuery  = NewServerError(http.StatusInternalServerError, "Error querying database, please try again.")
+	ErrDatabaseIssue  = NewServerError(http.StatusInternalServerError, "Database issue, please try again.")
 	ErrInternalServer = NewServerError(http.StatusInternalServerError, "Something went wrong.")
 )

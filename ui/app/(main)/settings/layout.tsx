@@ -23,7 +23,7 @@ export default function SettingsNav({
 
     useEffect(() => {
         fetchUser().catch(() => router.push("/login"))
-    }, [])
+    }, [fetchUser, router])
 
     if (!user) return <p>Unauthenticated</p>
 

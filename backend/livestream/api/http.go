@@ -40,12 +40,12 @@ func NewAPIServer(livestreamHandler *handlers.LivestreamHandler, vodHandler *han
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 	//TODO: change to query livestreams
-	sm.HandleFunc("GET /v1/vods", a.vodHandler.GetRecommendedVODsPublicHandler)
-	sm.HandleFunc("GET /v1/vods/{vodId}", a.vodHandler.GetVODByIdPublicHandler)
+	sm.HandleFunc("GET /v1/vods", a.vodHandler.GetVODsOfUserPublicHandler)
 	sm.HandleFunc("GET /v1/vods/author", a.vodHandler.GetVODsOfAuthorPrivateHandler)
-	sm.HandleFunc("GET /v1/livestreamings", a.livestreamHandler.GetLivestreamsPublicHandler)
+	sm.HandleFunc("GET /v1/vods/{vodId}", a.vodHandler.GetVODByIdPublicHandler)
+	sm.HandleFunc("GET /v1/popular-livestreams", a.livestreamHandler.GetRecommendedLivestreamsPublicHandler)
+	sm.HandleFunc("GET /v1/livestreams", a.livestreamHandler.GetLivestreamOfUserPublicHandler)
 	sm.HandleFunc("GET /v1/popular-vods", a.vodHandler.GetRecommendedVODsPublicHandler)
-	sm.HandleFunc("GET /v1/is-streaming", a.livestreamHandler.CheckIsUserLivestreamingPublicHandler)
 
 	sm.HandleFunc("PATCH /v1/vods/{vodId}", a.vodHandler.UpdateVODMetadataPrivateHandler)
 	sm.HandleFunc("DELETE /v1/vods/{vodId}", a.vodHandler.DeleteVODPrivateHandler)

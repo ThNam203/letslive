@@ -23,34 +23,7 @@ func NewLivestreamHandler(livestreamService *livestream.LivestreamService) *Live
 	}
 }
 
-func (h *LivestreamHandler) CreateLivestreamInternalHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, cancelCtx := context.WithCancel(r.Context())
-	defer cancelCtx()
-
-	userId, err := getUserIdFromCookie(r)
-	if err != nil {
-		h.WriteErrorResponse(w, err)
-		return
-	}
-
-	var body dto.CreateLivestreamRequestDTO
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPayload)
-		return
-	}
-
-	createdLivestream, err := h.livestreamService.Create(ctx, body, *userId)
-	if err != nil {
-		h.WriteErrorResponse(w, err)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(createdLivestream)
-}
-
-func (h *LivestreamHandler) CheckIsUserLivestreamingPublicHandler(w http.ResponseWriter, r *http.Request) {
+func (h LivestreamHandler) GetLivestreamOfUserPublicHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancelCtx := context.WithCancel(r.Context())
 	defer cancelCtx()
 
@@ -66,18 +39,39 @@ func (h *LivestreamHandler) CheckIsUserLivestreamingPublicHandler(w http.Respons
 		return
 	}
 
-	isLivestreaming, serviceErr := h.livestreamService.CheckIsUserLivestreaming(ctx, userUUID)
+	vod, serviceErr := h.livestreamService.GetLivestreamOfUser(ctx, userUUID)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(strconv.FormatBool(isLivestreaming)))
+	json.NewEncoder(w).Encode(vod)
 }
 
-func (h *LivestreamHandler) GetLivestreamsPublicHandler(w http.ResponseWriter, r *http.Request) {
+func (h *LivestreamHandler) CreateLivestreamInternalHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancelCtx := context.WithCancel(r.Context())
+	defer cancelCtx()
+
+	var body dto.CreateLivestreamRequestDTO
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPayload)
+		return
+	}
+
+	createdLivestream, err := h.livestreamService.Create(ctx, body)
+	if err != nil {
+		h.WriteErrorResponse(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(createdLivestream)
+}
+
+func (h *LivestreamHandler) GetRecommendedLivestreamsPublicHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancelCtx := context.WithCancel(r.Context())
 	defer cancelCtx()
 

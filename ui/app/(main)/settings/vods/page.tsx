@@ -2,14 +2,14 @@
 
 import useUser from "../../../../hooks/user";
 import { useEffect, useState } from "react";
-import { GetAllVODsAsAuthor } from "../../../../lib/api/livestream";
+import { GetAllVODsAsAuthor } from "../../../../lib/api/vod";
 import { toast } from "react-toastify";
-import { Livestream } from "../../../../types/livestream";
 import VODEditCard from "./vod";
+import { VOD } from "@/types/vod";
 
 export default function VODsEdit() {
     const user = useUser((state) => state.user);
-    const [vods, setVODS] = useState<Livestream[]>([]);
+    const [vods, setVODS] = useState<VOD[]>([]);
     useEffect(() => {
         if (!user) {
             return;

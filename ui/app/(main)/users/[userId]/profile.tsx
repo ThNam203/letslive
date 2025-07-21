@@ -2,8 +2,7 @@
 
 import { User } from "../../../../types/user";
 import ProfileHeader from "./profile_header";
-import VODLink from "../../../../components/livestream/vod";
-import { Livestream } from "../../../../types/livestream";
+import VODView from "../../../../components/livestream/vod";
 import IconCalendar from "@/components/icons/calendar";
 import IconUsers from "@/components/icons/users";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { toast } from "react-toastify";
 import useUser from "../../../../hooks/user";
 import { FollowOtherUser, UnfollowOtherUser } from "../../../../lib/api/user";
 import IconLoader from "@/components/icons/loader";
+import { VOD } from "@/types/vod";
 
 export default function ProfileView({
   user,
@@ -21,7 +21,7 @@ export default function ProfileView({
   className,
 }: {
   user: User;
-  vods: Livestream[];
+  vods: VOD[];
   updateUser: (newUserInfo: User) => void;
   showRecentActivity?: boolean;
   className?: string;
@@ -122,8 +122,7 @@ export default function ProfileView({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {vods.map((vod, idx) => {
-                    if (vod.status == "live") return null;
-                    return <VODLink key={idx} vod={vod} />;
+                    return <VODView key={idx} vod={vod} />;
                   })}
                 </div>
               </div>

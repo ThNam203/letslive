@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { Button } from "../../../../components/ui/button";
@@ -10,6 +9,7 @@ import ImageField from "../_components/image-field";
 import Section from "../_components/section";
 import TextField from "../_components/text-field";
 import TextAreaField from "../_components/textarea-field";
+import IconLoader from "@/components/icons/loader";
 
 export default function StreamEdit() {
   const user = useUser((state) => state.user);
@@ -118,7 +118,7 @@ export default function StreamEdit() {
               disabled={isSubmitting || !isFormChange}
               type="submit"
             >
-              {isSubmitting && <Loader className="animate-spin" />}
+              {isSubmitting && <IconLoader />}
               Confirm edit
             </Button>
           </div>

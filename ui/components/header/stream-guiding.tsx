@@ -33,7 +33,7 @@ export default function StreamGuiding() {
           <IconLiveStream className="text-primary" />
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-100 mr-4 text-sm bg-background text-foreground border border-border">
+      <PopoverContent className="w-100 mr-4 text-sm bg-muted text-foreground border border-border">
         <h1 className="font-semibold text-xl">Livestreaming</h1>
         <p>How to start your livestream: </p>
         <p>Open OBS &rarr; Settings &rarr; Stream </p>
