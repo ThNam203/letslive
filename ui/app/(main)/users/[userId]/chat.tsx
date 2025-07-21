@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { Send, X } from "lucide-react";
 import { toast } from "react-toastify";
 import useUser from "../../../../hooks/user";
 import { ReceivedMessage, SendMessage } from "../../../../types/message";
@@ -10,8 +9,16 @@ import { GetMessages } from "../../../../lib/api/chat";
 import GLOBAL from "../../../../global";
 import { Input } from "../../../../components/ui/input";
 import { Button } from "../../../../components/ui/button";
+import IconClose from "@/components/icons/close";
+import IconSend from "@/components/icons/send";
 
-export default function ChatPanel({ roomId, onClose }: { roomId: string, onClose: () => any }) {
+export default function ChatPanel({
+    roomId,
+    onClose,
+}: {
+    roomId: string;
+    onClose: () => any;
+}) {
     const user = useUser((state) => state.user);
     const [messages, setMessages] = useState<ReceivedMessage[]>([]);
     const [inputMessage, setInputMessage] = useState("");
@@ -41,12 +48,12 @@ export default function ChatPanel({ roomId, onClose }: { roomId: string, onClose
                     toastId: "message-fetch-error",
                 });
             } else {
-                setMessages(prev => [...messages, ...prev]);
+                setMessages((prev) => [...messages, ...prev]);
             }
         };
 
         fetchMessages();
-    }, []);
+    }, [roomId]);
 
     useEffect(() => {
         const connectWebSocket = async () => {
@@ -61,7 +68,7 @@ export default function ChatPanel({ roomId, onClose }: { roomId: string, onClose
                             roomId: roomId,
                             userId: user.id,
                             username: user.displayName ?? user.username,
-                        })
+                        }),
                     );
                 }
             };
@@ -73,13 +80,9 @@ export default function ChatPanel({ roomId, onClose }: { roomId: string, onClose
                 else setMessages((prev) => [...prev, data]);
             };
 
-            ws.onclose = (ev) => {
+            ws.onclose = (ev) => {};
 
-            };
-
-            ws.onerror = (error) => {
-
-            };
+            ws.onerror = (error) => {};
         };
 
         connectWebSocket();
@@ -92,61 +95,63 @@ export default function ChatPanel({ roomId, onClose }: { roomId: string, onClose
                             roomId: roomId,
                             userId: user.id,
                             username: user!.displayName ?? user!.username,
-                        })
+                        }),
                     );
                 } else wsRef.current.close();
             }
         };
-    }, [user]);
+    }, [user, roomId]);
 
     return (
-        <div className="w-full h-full flex flex-col">
-            <div className="border border-y-0 px-4 py-3 flex justify-between items-center">
+        <div className="relative flex w-full h-full flex-col">
+            <div className="flex items-center justify-between border border-y-0 border-border px-4 py-3">
                 <h2 className="font-semibold">Chat</h2>
-                <Button variant="ghost" size="icon" onClick={onClose} className="md:hidden">
-                    <X className="h-4 w-4" />
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onClose}
+                    className="md:hidden"
+                >
+                    <IconClose className="h-4 w-4" />
                 </Button>
             </div>
-            <div className="flex-1 overflow-y-auto mb-4 border border-t-0 border-gray-200 rounded-md rounded-t-none px-4 py-2 bg-gray-50">
+            <div className="overflow-y-auto flex-1 rounded-md rounded-t-none border border-t-0 border-border px-4 py-2 mb-24">
                 {messages.map((message, idx) => (
                     <div key={idx} className="mb-3">
                         <span
                             style={{
                                 color: `${uuidToReadableHexColor(
-                                    message.userId
+                                    message.userId,
                                 )}`,
                             }}
-                            className="font-semibold mr-2"
+                            className="mr-2 font-semibold"
                         >
                             {message.username}:
                         </span>
-                        <span className="text-gray-800">
+                        <span className="text-foreground">
                             {message.type === "join"
                                 ? "joined the chat"
                                 : message.type === "leave"
-                                    ? "left the chat"
-                                    : message.text}
+                                  ? "left the chat"
+                                  : message.text}
                         </span>
                     </div>
                 ))}
             </div>
-
             {/* Message input form */}
-            <form onSubmit={handleSendMessage} className="flex gap-2 mb-2">
+            <form onSubmit={handleSendMessage} className="absolute bottom-14 right-0 left-0 flex gap-2">
                 <Input
                     type="text"
-                    placeholder={!user ? "Login to start messaging" : "Type a message..."}
+                    placeholder={
+                        !user ? "Login to start messaging" : "Type a message..."
+                    }
                     disabled={!user}
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     className="flex-1"
                 />
-                <Button
-                    type="submit"
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                    disabled={!user}
-                >
-                    <Send className="w-4 h-4" />
+                <Button type="submit" disabled={!user}>
+                    <IconSend className="h-4 w-4" />
                 </Button>
             </form>
         </div>
@@ -175,7 +180,7 @@ function uuidToReadableHexColor(uuid: string): string {
     let adjustedRgb: { r: number; g: number; b: number } = hslToRgb(
         hsl.h,
         hsl.s,
-        hsl.l
+        hsl.l,
     );
 
     // Convert RGB back to HEX
@@ -186,9 +191,9 @@ function uuidToReadableHexColor(uuid: string): string {
 function rgbToHsl(
     r: number,
     g: number,
-    b: number
+    b: number,
 ): { h: number; s: number; l: number } {
-    (r /= 255), (g /= 255), (b /= 255);
+    ((r /= 255), (g /= 255), (b /= 255));
     let max: number = Math.max(r, g, b),
         min: number = Math.min(r, g, b);
     let h: number = 0,
@@ -219,7 +224,7 @@ function rgbToHsl(
 function hslToRgb(
     h: number,
     s: number,
-    l: number
+    l: number,
 ): { r: number; g: number; b: number } {
     let r: number, g: number, b: number;
 

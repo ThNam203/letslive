@@ -86,7 +86,7 @@ export default function ProfileBanner({
             src={user ? user.profilePicture : ""}
             alt="user avatar"
           />
-          <AvatarFallback className="bg-purple-500 text-white">
+          <AvatarFallback className="bg-primary text-primary-foreground">
             {user && user.username[0].toUpperCase()}
           </AvatarFallback>
           <ImageHover

@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { Button } from "../../../../components/ui/button";
@@ -10,6 +9,7 @@ import ImageField from "../_components/image-field";
 import Section from "../_components/section";
 import TextField from "../_components/text-field";
 import TextAreaField from "../_components/textarea-field";
+import IconLoader from "@/components/icons/loader";
 
 export default function StreamEdit() {
   const user = useUser((state) => state.user);
@@ -83,7 +83,7 @@ export default function StreamEdit() {
   }, [title, description, imageUrl, user]);
 
   return (
-    <div className="min-h-screen max-w-4xl text-gray-900 p-6">
+    <div className="min-h-screen max-w-4xl text-foreground p-6">
       <Section
         title="Livestream"
         description={`Your next livestream information will be based on the information.\nIt won't change even after livestream ends.`}
@@ -101,7 +101,7 @@ export default function StreamEdit() {
             label="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="resize-none"
+            rows={4}
           />
           <ImageField
             label="Thumbnail"
@@ -115,11 +115,10 @@ export default function StreamEdit() {
 
           <div className="flex justify-end items-center">
             <Button
-              className="disabled:bg-gray-200 disabled:hover:cursor-not-allowed"
               disabled={isSubmitting || !isFormChange}
               type="submit"
             >
-              {isSubmitting && <Loader className="animate-spin" />}
+              {isSubmitting && <IconLoader />}
               Confirm edit
             </Button>
           </div>

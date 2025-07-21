@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, RefreshCw } from "lucide-react";
 import { toast } from "react-toastify";
 import useUser from "../../../../../hooks/user";
 import { RequestToGenerateNewAPIKey } from "../../../../../lib/api/user";
 import { Label } from "../../../../../components/ui/label";
 import { Input } from "../../../../../components/ui/input";
 import { Button } from "../../../../../components/ui/button";
+import IconCopy from "@/components/icons/copy";
+import IconRefresh from "@/components/icons/refresh";
+import IconLoader from "@/components/icons/loader";
+import { cn } from "@/utils/cn";
 
 export default function ApiKeyTab() {
   const user = useUser((state) => state.user);
@@ -45,23 +48,17 @@ export default function ApiKeyTab() {
           id="api-key"
           value={user?.streamAPIKey}
           readOnly={true}
-          className="flex-grow text-right"
+          className="flex-grow text-right border border-border"
         />
       </div>
       <div className="flex gap-4">
         <div className="flex-grow" />
-        <Button
-          className="bg-purple-600 hover:bg-purple-700"
-          onClick={copyApiKey}
-        >
-          <Copy className="h-4 w-4" color="white" />
+        <Button disabled={isGenerating} onClick={copyApiKey}>
+          <IconCopy className="h-4 w-4 text-primary-foreground" />
         </Button>
 
-        <Button
-          className="bg-purple-600 hover:bg-purple-700 text-white"
-          onClick={generateNewApiKey}
-        >
-          <RefreshCw className="mr-2 h-4 w-4" /> Generate New API Key
+        <Button disabled={isGenerating} onClick={generateNewApiKey}>
+          <IconRefresh className={cn("mr-2 h-4 w-4", isGenerating ? "animate-spin" : "")} /> Generate New API Key
         </Button>
       </div>
     </div>
