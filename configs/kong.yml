@@ -76,7 +76,7 @@ services:
         - name: rate-limiting
           config:
             error_message: "Verification request should only happens once a minute."
-            minute: 1
+            minute: 123 #TODO: change to one
             policy: local
 
   - name: Livestream
@@ -109,7 +109,49 @@ services:
                 - ACCESS_TOKEN
               key_claim_name: consumer
               run_on_preflight: true
-      - name: Livestream_Public_Routes
+      - name: VOD_Private_Routes
+        paths:
+          - ~/vods/[^/]+$
+        methods:
+          - PATCH
+          - PUT
+          - DELETE
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: true
+      - name: VOD_Author_Private_Route
+        paths:
+          - ~/vods/author
+        methods:
+          - GET
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: true
+      - name: Public_Routes
         protocols:
           - http
           - https
@@ -118,7 +160,9 @@ services:
           - ~/livestreams/[^/]+$
           - /livestreamings
           - /popular-vods
+          - /popular-livestreams
           - /is-streaming
+          - /vods
         strip_path: false
         preserve_host: false
         https_redirect_status_code: 426
@@ -176,7 +220,7 @@ services:
     read_timeout: 10000
     write_timeout: 10000
     routes:
-      - name: Transcode_Get_File_Route
+      - name: Transcode_Get_Live_File_Route
         protocols:
           - http
           - https
@@ -205,8 +249,8 @@ plugins:
       preflight_continue: false
   - name: rate-limiting
     config:
-      second: 10
-      minute: 50
-      hour: 1000
+      second: 100
+      minute: 6000
+      hour: 360000
       policy: local
 

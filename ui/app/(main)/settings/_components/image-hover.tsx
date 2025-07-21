@@ -1,7 +1,7 @@
+import IconClose from "@/components/icons/close";
 import { FILE_SIZE_LIMIT_MB_UNIT } from "@/constant/image";
 import { cn } from "@/utils/cn";
 import { IsValidFileSizeInMB } from "@/utils/file";
-import { Loader, X } from "lucide-react";
 import React from "react";
 import { toast } from "react-toastify";
 
@@ -55,7 +55,7 @@ export default function ImageHover({
   return (
     <div
       className={cn(
-        "absolute w-full h-full flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-all duration-300 ease-in-out cursor-pointer",
+        "absolute w-full h-full flex items-center justify-center bg-background-hover/20 opacity-0 hover:opacity-100 transition-all duration-300 ease-in-out cursor-pointer",
         className
       )}
       onClick={onClick}
@@ -67,16 +67,16 @@ export default function ImageHover({
         onChange={handleValueChange}
         {...props}
       />
-      <div className="flex flex-row gap-2 text-white">{title}</div>
+      <div className="flex flex-row gap-2 text-foreground">{title}</div>
       <div
         className={cn(
-          "p-1 flex items-center justify-center rounded-full bg-purple-500 cursor-pointer",
+          "p-1 flex items-center justify-center rounded-full bg-primary cursor-pointer",
           postions[closeIconPosition],
           !showCloseIcon && "hidden"
         )}
         onClick={handleCloseIconClick}
       >
-        <X className="text-white" size={12} />
+        <IconClose className="text-primary-foreground" />
       </div>
     </div>
   );

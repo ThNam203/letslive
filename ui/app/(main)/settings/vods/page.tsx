@@ -1,16 +1,15 @@
 "use client";
 
 import useUser from "../../../../hooks/user";
-import VODLink from "../../../../components/vodlink";
 import { useEffect, useState } from "react";
-import { GetAllVODsAsAuthor } from "../../../../lib/api/livestream";
+import { GetAllVODsAsAuthor } from "../../../../lib/api/vod";
 import { toast } from "react-toastify";
-import { Livestream } from "../../../../types/livestream";
 import VODEditCard from "./vod";
+import { VOD } from "@/types/vod";
 
 export default function VODsEdit() {
     const user = useUser((state) => state.user);
-    const [vods, setVODS] = useState<Livestream[]>([]);
+    const [vods, setVODS] = useState<VOD[]>([]);
     useEffect(() => {
         if (!user) {
             return;
@@ -37,7 +36,7 @@ export default function VODsEdit() {
             <div className="space-y-6 mb-4 max-w-4xl">
                 <div className="space-y-1">
                     <h1 className="text-xl font-semibold">VODs Manager</h1>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-foreground-muted ">
                         Manage your VODs and edit their information here.
                     </p>
                 </div>

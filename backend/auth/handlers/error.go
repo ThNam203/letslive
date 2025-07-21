@@ -27,7 +27,7 @@ func (h ResponseHandler) WriteErrorResponse(w http.ResponseWriter, err *servicer
 	})
 }
 
-func (h ResponseHandler) WriteSuccessResponse(w http.ResponseWriter, successRes *serviceresponse.ServerSuccessResponse, data any) {
+func (h ResponseHandler) WriteSuccessResponse(w http.ResponseWriter, successRes *serviceresponse.ServiceSuccessResponse, data any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(successRes.StatusCode)

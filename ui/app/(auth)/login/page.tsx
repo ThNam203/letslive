@@ -1,12 +1,13 @@
 "use client"
 
 import Link from "next/link";
-import { IconGoogle } from "../../../components/icons/google";
+import IconGoogle from "../../../components/icons/google";
 import LogInForm from "../../../components/forms/LoginForm";
 import GLOBAL from "../../../global";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
+import ThemeSwitch from "@/components/utils/theme-switch";
 
 export default function LogInPage() {
     const params = useSearchParams()
@@ -28,8 +29,9 @@ export default function LogInPage() {
     }, [params, router]);
 
     return (
-        <section className="flex items-center justify-center h-screen w-screen">
-            <div className="flex flex-col justify-center rounded-xl p-12 bg-white w-full max-w-[600px]">
+        <section className="flex items-center justify-center h-screen w-screen bg-background">
+            <ThemeSwitch className="absolute right-8 top-4" />
+            <div className="flex flex-col justify-center rounded-xl p-12 w-full max-w-[600px]">
                 <h1 className="text-lg font-bold">LET&apos;S LIVE</h1>
                 <h1 className="text-2xl font-bold mb-1">Welcome back!</h1>
                 <p className="text-md">Gain access to the world right now.</p>
@@ -37,17 +39,17 @@ export default function LogInPage() {
                     <div className="w-full">
                         <Link
                             href={GLOBAL.API_URL + "/auth/google"}
-                            className="flex-1 flex flex-row items-center justify-center gap-4 border-1 py-2 rounded-lg hover:bg-gray-200"
+                            className="h-12 flex-1 flex flex-row items-center justify-center gap-4 border border-border py-2 rounded-lg bg-white text-black hover:bg-[#ebebeb]"
                         >
                             <IconGoogle /> Google
                         </Link>
-                        {process.env.NEXT_PUBLIC_ENVIRONMENT === "production" && <p className="text-xs italic text-red-500 mt-1">Because the backend and frontend has different domains, please allows 3rd party cookies to use google authentication. I will fix it later.</p>}
+                        <p className="text-xs italic text-destructive mt-1">Because the backend and frontend have different domains, please allows 3rd party cookies to use google authentication. I will fix it later.</p>
                     </div>
                 </div>
                 <div className="flex items-center justify-center w-full mt-2 mb-4">
-                    <hr className="bg-gray-400 h-[2px] flex-1" />
-                    <p className="text-center mx-4 text-gray-500">or</p>
-                    <hr className="bg-gray-400 h-[2px] flex-1" />
+                    <hr className="bg-border h-[2px] flex-1" />
+                    <p className="text-center mx-4 text-foreground">or</p>
+                    <hr className="bg-border h-[2px] flex-1" />
                 </div>
                 <LogInForm />
                 <p className="text-end text-sm opacity-80 mt-4">

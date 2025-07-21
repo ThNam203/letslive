@@ -233,7 +233,7 @@ func (r *postgresUserRepo) Create(ctx context.Context, username string, email st
 		"auth_provider": provider,
 	}
 
-	row, err := r.dbConn.Query(ctx, "insert into users (username, email, auth_provider) values (@username, @email,  @auth_provider) returning *", params)
+	row, err := r.dbConn.Query(ctx, "insert into users (username, email, auth_provider) values (@username, @email, @auth_provider) returning *", params)
 	if err != nil {
 		return nil, servererrors.ErrDatabaseQuery
 	}

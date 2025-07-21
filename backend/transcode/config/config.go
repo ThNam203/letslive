@@ -35,9 +35,11 @@ type MinIO struct {
 }
 
 type Transcode struct {
-	PublicHLSPath  string `yaml:"publicHLSPath"`
-	PrivateHLSPath string `yaml:"privateHLSPath"`
-	FFMpegSetting  struct {
+	PublicHLSPath        string `yaml:"publicHLSPath"`
+	PrivateHLSPath       string `yaml:"privateHLSPath"`
+	VODPlaybackUrlPrefix string `yaml:"vodPlaybackUrlPrefix"`
+
+	FFMpegSetting struct {
 		FFMpegPath     string `yaml:"ffmpegPath"`
 		MasterFileName string `yaml:"masterFileName"`
 		HLSTime        int    `yaml:"hlsTime"`

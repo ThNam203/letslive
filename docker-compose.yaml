@@ -16,10 +16,10 @@ services:
   #    - NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
 
   auth:
-    image: sen1or/letslive-auth:latest
-    #build:
-    #  context: ./backend/auth/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-auth:latest
+    build:
+      context: ./backend/auth/
+      dockerfile: Dockerfile
     restart: always
     container_name: letslive-auth
     ports:
@@ -48,10 +48,10 @@ services:
       - /var/log/letslive:/usr/local/bin/logs
 
   user:
-    image: sen1or/letslive-user:latest
-    #build:
-    #  context: ./backend/user/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-user:latest
+    build:
+      context: ./backend/user/
+      dockerfile: Dockerfile
     container_name: letslive-user
     restart: always
     ports:
@@ -74,10 +74,10 @@ services:
       - /var/log/letslive:/usr/local/bin/logs
 
   transcode:
-    image: sen1or/letslive-transcode:latest
-    #build:
-    #  context: ./backend/transcode/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-transcode:latest
+    build:
+      context: ./backend/transcode/
+      dockerfile: Dockerfile
     container_name: letslive-transcode
     restart: always
     ports:
@@ -102,10 +102,10 @@ services:
       - /var/log/letslive:/usr/local/bin/logs
 
   livestream:
-    image: sen1or/letslive-livestream:latest
-    #build:
-    #  context: ./backend/livestream/
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-livestream:latest
+    build:
+      context: ./backend/livestream/
+      dockerfile: Dockerfile
     container_name: letslive-livestream
     restart: always
     ports:

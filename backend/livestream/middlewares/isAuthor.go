@@ -2,8 +2,8 @@ package middlewares
 
 import (
 	"net/http"
-	servererrors "sen1or/letslive/livestream/errors"
 	"sen1or/letslive/livestream/pkg/logger"
+	serviceresponse "sen1or/letslive/livestream/responses"
 	"sen1or/letslive/livestream/types"
 
 	"github.com/gofrs/uuid/v5"
@@ -15,12 +15,12 @@ func IsAuthorMiddleware(next http.Handler) http.Handler {
 		userId := r.URL.Query().Get("userId")
 		if len(userId) == 0 {
 			logger.Debugf("isAuthor middleware missing userId param")
-			writeErrorResponse(w, servererrors.ErrInvalidPath)
+			writeErrorResponse(w, serviceresponse.ErrInvalidPath)
 		}
 
 		accessTokenCookie, err := r.Cookie("ACCESS_TOKEN")
 		if err != nil || len(accessTokenCookie.Value) == 0 {
-			writeErrorResponse(w, servererrors.ErrUnauthorized)
+			writeErrorResponse(w, serviceresponse.ErrUnauthorized)
 			return
 		}
 
@@ -29,18 +29,18 @@ func IsAuthorMiddleware(next http.Handler) http.Handler {
 		// the signature should already been checked from the api gateway before going to this
 		_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
 		if err != nil {
-			writeErrorResponse(w, servererrors.ErrUnauthorized)
+			writeErrorResponse(w, serviceresponse.ErrUnauthorized)
 			return
 		}
 
 		_, err = uuid.FromString(myClaims.UserId)
 		if err != nil {
-			writeErrorResponse(w, servererrors.ErrUnauthorized)
+			writeErrorResponse(w, serviceresponse.ErrUnauthorized)
 			return
 		}
 
 		if myClaims.UserId == userId {
-			writeErrorResponse(w, servererrors.ErrForbidden)
+			writeErrorResponse(w, serviceresponse.ErrForbidden)
 			return
 		}
 

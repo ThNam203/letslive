@@ -1,4 +1,4 @@
-export function datediffFromNow(pastDate: string) {        
+export function dateDiffFromNow(pastDate: string) {
     const now = new Date();
     const past = new Date(pastDate);
     const seconds = Math.round((now.getTime() - past.getTime()) / 1000);

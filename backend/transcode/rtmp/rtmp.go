@@ -22,7 +22,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/nareix/joy5/format/flv"
 	"github.com/nareix/joy5/format/flv/flvio"
 	"github.com/nareix/joy5/format/rtmp"
@@ -180,7 +179,7 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 		UserId:       userInfo.Id,
 		Description:  userInfo.LivestreamInformationResponseDTO.Description,
 		ThumbnailURL: userInfo.LivestreamInformationResponseDTO.ThumbnailURL,
-		Status:       "live",
+		Visibility:   "public", // TODO: add to livestream information instead of default to public
 	}
 
 	req2Ctx, req2CtxCancel := context.WithTimeout(s.ctx, 10*time.Second)
@@ -198,32 +197,22 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 	return livestreamId, userInfo.Id.String(), nil
 }
 
-// change the status of user to be not online
 func (s *RTMPServer) onDisconnect(streamId string, duration int64) {
-	endedAt := time.Now()
-	// create the VOD playlists and remove the entry
 	s.vodHandler.OnStreamEnd(streamId, s.config.Transcode.PublicHLSPath, s.config.Transcode.FFMpegSetting.MasterFileName)
 
-	endedStatus := "ended"
-	playbackURL := fmt.Sprintf("http://%s:%d/vods/%s/index.m3u8", s.config.Service.Hostname, s.config.Webserver.Port, streamId)
-	updateDTO := &livestreamdto.UpdateLivestreamRequestDTO{
-		Id:           uuid.FromStringOrNil(streamId),
-		Title:        nil,
-		Description:  nil,
-		ThumbnailURL: nil,
-		Status:       &endedStatus,
-		PlaybackURL:  &playbackURL,
-		ViewCount:    nil,
-		EndedAt:      &endedAt,
-		Duration:     duration,
+	playbackURL := fmt.Sprintf("%s/%s/index.m3u8", s.config.VODPlaybackUrlPrefix, streamId)
+	endDTO := &livestreamdto.EndLivestreamRequestDTO{
+		PlaybackURL: &playbackURL,
+		EndedAt:     time.Now(),
+		Duration:    duration,
 	}
 
 	reqCtx, reqCtxCancel := context.WithTimeout(s.ctx, 10*time.Second)
 	defer reqCtxCancel()
 
-	createErrRes := s.livestreamGateway.Update(reqCtx, *updateDTO)
+	createErrRes := s.livestreamGateway.EndLivestream(reqCtx, streamId, *endDTO)
 	if createErrRes != nil {
-		logger.Errorf("failed to update livestream: %s", createErrRes.Message)
+		logger.Errorf("failed to end livestream: %s", createErrRes.Message)
 	}
 
 	var wg sync.WaitGroup
@@ -272,7 +261,7 @@ func (s *RTMPServer) Shutdown(ctx context.Context) error {
 
 	logger.Infow("shutting down RTMP server listener...")
 
-	// Close the listener; this will cause the Accept loop in Start() to unblock
+	// close the listener, this will cause the accept loop in Start() to unblock
 	err := listener.Close()
 
 	if err != nil && !errors.Is(err, net.ErrClosed) {

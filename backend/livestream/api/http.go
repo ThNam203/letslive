@@ -19,41 +19,43 @@ type APIServer struct {
 	logger     *zap.SugaredLogger
 	config     *config.Config
 
-	errorHandler      *handlers.ErrorHandler
+	responseHandler   *handlers.ResponseHandler
 	healthHandler     *handlers.HealthHandler
 	livestreamHandler *handlers.LivestreamHandler
+	vodHandler        *handlers.VODHandler
 }
 
-func NewAPIServer(livestreamHandler *handlers.LivestreamHandler, cfg *config.Config) *APIServer {
+func NewAPIServer(livestreamHandler *handlers.LivestreamHandler, vodHandler *handlers.VODHandler, cfg *config.Config) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
 
-		errorHandler:      handlers.NewErrorHandler(),
+		responseHandler:   handlers.NewResponseHandler(),
 		healthHandler:     handlers.NewHeathHandler(),
 		livestreamHandler: livestreamHandler,
+		vodHandler:        vodHandler,
 	}
 }
 
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 	//TODO: change to query livestreams
-	sm.HandleFunc("GET /v1/livestreams", a.livestreamHandler.GetLivestreamsOfUserPublicHandler)
-	sm.HandleFunc("GET /v1/livestreams/{livestreamId}", a.livestreamHandler.GetLivestreamByIdPublicHandler)
-	sm.HandleFunc("GET /v1/livestreamings", a.livestreamHandler.GetLivestreamingsPublicHandler)
-	sm.HandleFunc("GET /v1/popular-vods", a.livestreamHandler.GetPopularVODsPublicHandler)
-	sm.HandleFunc("GET /v1/is-streaming", a.livestreamHandler.CheckIsUserLivestreamingPublicHandler)
+	sm.HandleFunc("GET /v1/vods", a.vodHandler.GetVODsOfUserPublicHandler)
+	sm.HandleFunc("GET /v1/vods/author", a.vodHandler.GetVODsOfAuthorPrivateHandler)
+	sm.HandleFunc("GET /v1/vods/{vodId}", a.vodHandler.GetVODByIdPublicHandler)
+	sm.HandleFunc("GET /v1/popular-livestreams", a.livestreamHandler.GetRecommendedLivestreamsPublicHandler)
+	sm.HandleFunc("GET /v1/livestreams", a.livestreamHandler.GetLivestreamOfUserPublicHandler)
+	sm.HandleFunc("GET /v1/popular-vods", a.vodHandler.GetRecommendedVODsPublicHandler)
 
-	sm.HandleFunc("GET /v1/livestreams/author", a.livestreamHandler.GetAllLivestreamsOfAuthorPrivateHandler)
-	sm.HandleFunc("PATCH /v1/livestreams/{livestreamId}", a.livestreamHandler.UpdateLivestreamPrivateHandler)
-	sm.HandleFunc("DELETE /v1/livestreams/{livestreamId}", a.livestreamHandler.DeleteLivestreamPrivateHandler)
+	sm.HandleFunc("PATCH /v1/vods/{vodId}", a.vodHandler.UpdateVODMetadataPrivateHandler)
+	sm.HandleFunc("DELETE /v1/vods/{vodId}", a.vodHandler.DeleteVODPrivateHandler)
 
-	sm.HandleFunc("PUT /v1/internal/livestreams/{livestreamId}", a.livestreamHandler.UpdateLivestreamInternalHandler)
+	sm.HandleFunc("POST /v1/internal/livestreams/{livestreamId}/end", a.livestreamHandler.EndLivestreamAndCreateVODInternalHandler)
 	sm.HandleFunc("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)
 
 	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyStateHandler)
 
-	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)
+	sm.HandleFunc("GET /", a.responseHandler.RouteNotFoundHandler)
 
 	finalHandler := middlewares.LoggingMiddleware(sm)
 

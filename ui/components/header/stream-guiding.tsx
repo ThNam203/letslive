@@ -2,7 +2,7 @@
 import { cn } from "@/utils/cn";
 import React, { useEffect } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import LiveStreamIcon from "../icons/live-stream";
+import IconLiveStream from "../icons/live-stream";
 import { Button } from "../ui/button";
 
 export default function StreamGuiding() {
@@ -30,10 +30,10 @@ export default function StreamGuiding() {
             isGotIt && "animate-none"
           )}
         >
-          <LiveStreamIcon />
+          <IconLiveStream className="text-primary" />
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-100 mr-4 text-sm">
+      <PopoverContent className="w-100 mr-4 text-sm bg-muted text-foreground border border-border">
         <h1 className="font-semibold text-xl">Livestreaming</h1>
         <p>How to start your livestream: </p>
         <p>Open OBS &rarr; Settings &rarr; Stream </p>
@@ -46,10 +46,7 @@ export default function StreamGuiding() {
         </p>
         <p className="mb-2">Start your livestream</p>
         <div className="w-full flex flex-row justify-center">
-          <Button
-            className="bg-purple-500 hover:bg-purple-600 text-white"
-            onClick={handleGotIt}
-          >
+          <Button onClick={handleGotIt}>
             Got it
           </Button>
         </div>
