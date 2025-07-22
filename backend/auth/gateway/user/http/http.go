@@ -47,6 +47,13 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergate
 		}
 	}
 
+	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
+		return nil, &gateway.ErrorResponse{
+			Message:    fmt.Sprintf("failed to create the request: %s", err),
+			StatusCode: http.StatusInternalServerError,
+		}
+	}
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, &gateway.ErrorResponse{

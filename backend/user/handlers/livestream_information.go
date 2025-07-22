@@ -71,7 +71,7 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 		ThumbnailURL: &thumbnailUrl,
 	}
 
-	updatedData, updateErr := h.ctrl.Update(updateData)
+	updatedData, updateErr := h.ctrl.Update(ctx, updateData)
 	if updateErr != nil {
 		h.WriteErrorResponse(w, updateErr)
 		return

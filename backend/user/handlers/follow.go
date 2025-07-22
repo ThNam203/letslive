@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	servererrors "sen1or/letslive/user/errors"
 	"sen1or/letslive/user/services"
@@ -18,13 +19,16 @@ func NewFollowHandler(followService services.FollowService) *FollowHandler {
 }
 
 func (h *FollowHandler) FollowPrivateHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	followedId := r.PathValue("userId")
 	followerId, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
 		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
 	}
 
-	serviceErr := h.followService.Follow(followerId.String(), followedId)
+	serviceErr := h.followService.Follow(ctx, followerId.String(), followedId)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
@@ -34,13 +38,16 @@ func (h *FollowHandler) FollowPrivateHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *FollowHandler) UnfollowPrivateHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	followedId := r.PathValue("userId")
 	followerId, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
 		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
 	}
 
-	serviceErr := h.followService.Unfollow(followerId.String(), followedId)
+	serviceErr := h.followService.Unfollow(ctx, followerId.String(), followedId)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return

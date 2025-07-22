@@ -1,6 +1,7 @@
 package domains
 
 import (
+	"context"
 	servererrors "sen1or/letslive/user/errors"
 	"time"
 
@@ -14,6 +15,6 @@ type Follower struct {
 }
 
 type FollowRepository interface {
-	FollowUser(followUser, followedUser uuid.UUID) *servererrors.ServerError
-	UnfollowUser(followUser, followedUser uuid.UUID) *servererrors.ServerError
+	FollowUser(ctx context.Context, followUser, followedUser uuid.UUID) *servererrors.ServerError
+	UnfollowUser(ctx context.Context, followUser, followedUser uuid.UUID) *servererrors.ServerError
 }
