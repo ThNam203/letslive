@@ -253,4 +253,8 @@ plugins:
       minute: 6000
       hour: 360000
       policy: local
-
+  - name: correlation-id
+    config:
+      header_name: X-Correlation-ID
+      generator: uuid
+      echo_downstream: true
