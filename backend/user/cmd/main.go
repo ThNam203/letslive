@@ -62,7 +62,7 @@ func main() {
 	dbConn := ConnectDB(ctx, config)
 	defer dbConn.Close()
 
-	server := SetupServer(dbConn, registry, config)
+	server := SetupServer(ctx, dbConn, registry, config)
 	go func() {
 		logger.Infof("starting server on %s:%d...", config.Service.Hostname, config.Service.APIPort)
 		// ListenAndServe should ideally block until an error occurs (e.g., server stopped)
@@ -155,12 +155,12 @@ func DeregisterDiscoveryService(shutdownContext context.Context, registry discov
 	}
 }
 
-func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
+func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var livestreamInfoRepo = repositories.NewLivestreamInformationRepository(dbConn)
 	var followRepo = repositories.NewFollowRepository(dbConn)
 
-	minioService := services.NewMinIOService(context.Background(), cfg.MinIO)
+	minioService := services.NewMinIOService(ctx, cfg.MinIO)
 	var userService = services.NewUserService(userRepo, livestreamInfoRepo, *minioService)
 	var livestreamInfoService = services.NewLivestreamInformationService(livestreamInfoRepo)
 	var followService = services.NewFollowService(followRepo)

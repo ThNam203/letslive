@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sen1or/letslive/transcode/gateway"
 	dto "sen1or/letslive/transcode/gateway/livestream/dto"
 	"sen1or/letslive/transcode/pkg/discovery"
 )
@@ -47,6 +48,13 @@ func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestrea
 	if err != nil {
 		return nil, &ErrorResponse{
 			Message:    fmt.Sprintf("failed to create request: %s", err),
+			StatusCode: http.StatusInternalServerError,
+		}
+	}
+
+	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
+		return nil, &ErrorResponse{
+			Message:    fmt.Sprintf("failed to create the request: %s", err),
 			StatusCode: http.StatusInternalServerError,
 		}
 	}
@@ -106,6 +114,13 @@ func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, 
 	if err != nil {
 		return &ErrorResponse{
 			Message:    fmt.Sprintf("failed to create request: %s", err),
+			StatusCode: http.StatusInternalServerError,
+		}
+	}
+
+	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
+		return &ErrorResponse{
+			Message:    fmt.Sprintf("failed to create the request: %s", err),
 			StatusCode: http.StatusInternalServerError,
 		}
 	}

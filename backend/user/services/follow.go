@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"sen1or/letslive/user/domains"
 	servererrors "sen1or/letslive/user/errors"
 
@@ -19,13 +20,13 @@ func NewFollowService(
 	}
 }
 
-func (s FollowService) Follow(followId, followedId string) *servererrors.ServerError {
+func (s FollowService) Follow(ctx context.Context, followId, followedId string) *servererrors.ServerError {
 	followUUID, err1 := uuid.FromString(followId)
 	followedUUID, err2 := uuid.FromString(followedId)
 	if err1 != nil || err2 != nil || followId == followedId {
 		return servererrors.ErrInvalidInput
 	}
-	err := s.followRepo.FollowUser(followUUID, followedUUID)
+	err := s.followRepo.FollowUser(ctx, followUUID, followedUUID)
 	if err != nil {
 		return err
 	}
@@ -33,13 +34,13 @@ func (s FollowService) Follow(followId, followedId string) *servererrors.ServerE
 	return nil
 }
 
-func (s FollowService) Unfollow(followId, followedId string) *servererrors.ServerError {
+func (s FollowService) Unfollow(ctx context.Context, followId, followedId string) *servererrors.ServerError {
 	followUUID, err1 := uuid.FromString(followId)
 	followedUUID, err2 := uuid.FromString(followedId)
 	if err1 != nil || err2 != nil || followId == followedId {
 		return servererrors.ErrInvalidInput
 	}
-	err := s.followRepo.UnfollowUser(followUUID, followedUUID)
+	err := s.followRepo.UnfollowUser(ctx, followUUID, followedUUID)
 	if err != nil {
 		return err
 	}

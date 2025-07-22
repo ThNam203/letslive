@@ -85,7 +85,7 @@ func (s AuthService) CreateNewAuth(ctx context.Context, userForm dto.SignUpReque
 		AuthProvider: usergateway.ProviderLocal,
 	}
 
-	createdUser, errRes := s.userGateway.CreateNewUser(context.Background(), *dto)
+	createdUser, errRes := s.userGateway.CreateNewUser(ctx, *dto)
 	if errRes != nil {
 		return nil, serviceresponse.NewServiceErrorResponse(errRes.StatusCode, errRes.Message)
 	}
