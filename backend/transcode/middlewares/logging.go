@@ -3,7 +3,7 @@ package middlewares
 import (
 	"net"
 	"net/http"
-	"sen1or/letslive/livestream/pkg/logger"
+	"sen1or/letslive/transcode/pkg/logger"
 	"time"
 )
 

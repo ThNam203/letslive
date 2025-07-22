@@ -66,6 +66,7 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)
 
 	finalHandler := middlewares.LoggingMiddleware(sm)
+	finalHandler = middlewares.RequestIDMiddleware(finalHandler)
 
 	return finalHandler
 }

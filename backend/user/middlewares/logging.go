@@ -44,7 +44,10 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			}
 		}
 
-		fields := []interface{}{
+		requestId := r.Context().Value("requestId")
+
+		fields := []any{
+			"requestId", requestId,
 			"duration", duration,
 			"method", r.Method,
 			"remote#addr", remoteAddr,
@@ -54,7 +57,9 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		}
 
 		if lrw.statusCode/100 == 2 {
-			logger.Infow("success api call", fields...)
+			if r.RequestURI != "/v1/health" {
+				logger.Infow("success api call", fields...)
+			}
 		} else {
 			err := lrw.w.Header().Get("X-LetsLive-Error")
 			if len(err) == 0 {
