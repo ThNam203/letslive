@@ -42,6 +42,13 @@ type Config struct {
 	Service  `yaml:"service"`
 	Database `yaml:"database"`
 	MinIO    `yaml:"minio"`
+	Tracer   `yaml:"tracer"`
+}
+
+type Tracer struct {
+	Endpoint     string `yaml:"endpoint"`
+	Secure       bool   `yaml:"secure"`
+	BatchTimeout int    `yaml:"batchTimeout"` /// in milli-second
 }
 
 type ConfigManager struct {

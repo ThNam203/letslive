@@ -12,6 +12,7 @@ import (
 	"sen1or/letslive/user/api"
 	cfg "sen1or/letslive/user/config"
 	"sen1or/letslive/user/handlers"
+	"sen1or/letslive/user/middlewares"
 	"sen1or/letslive/user/pkg/discovery"
 	"sen1or/letslive/user/pkg/logger"
 	"sen1or/letslive/user/repositories"
@@ -40,8 +41,8 @@ func main() {
 	registry, err := discovery.NewConsulRegistry(os.Getenv("REGISTRY_SERVICE_ADDRESS"))
 	if err != nil {
 		logger.Panicf("failed to start discovery mechanism: %s", err)
-		panic(1)
 	}
+
 	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile, configReloadInterval)
 	if err != nil {
 		logger.Panicf("failed to set up config manager: %s", err)
@@ -58,6 +59,11 @@ func main() {
 	serviceName := config.Service.Name
 	instanceId := discovery.GenerateInstanceID(serviceName)
 	go RegisterToDiscoveryService(ctx, registry, serviceName, instanceId, config)
+
+	otelShutdownFunc, err := middlewares.SetupOTelSDK(ctx, *config)
+	if err != nil {
+		logger.Panicf("failed to setup otel sdk: %v", err)
+	}
 
 	dbConn := ConnectDB(ctx, config)
 	defer dbConn.Close()
@@ -93,6 +99,12 @@ func main() {
 	shutdownWg.Add(1)
 	go (func() {
 		DeregisterDiscoveryService(shutdownCtx, registry, serviceName, instanceId)
+		shutdownWg.Done()
+	})()
+
+	shutdownWg.Add(1)
+	go (func() {
+		otelShutdownFunc(shutdownCtx)
 		shutdownWg.Done()
 	})()
 

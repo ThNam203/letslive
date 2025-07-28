@@ -291,6 +291,54 @@ services:
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
 
+  tempo:
+    image: grafana/tempo:latest
+    container_name: letslive-grafana-tempo
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./configs/tempo.yaml:/etc/tempo.yaml
+    expose:
+      - "3200"
+      - "4318"
+    ports:
+      - "3200:3200"   # Tempo HTTP endpoint
+    networks:
+      general_network:
+        ipv4_address: 172.29.0.13
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: letslive-grafana
+    environment:
+      - GRAFANA_SECURITY_ADMIN_USER=${GRAFANA_SECURITY_ADMIN_USER}
+      - GRAFANA_SECURITY_ADMIN_PASSWORD=${GRAFANA_SECURITY_ADMIN_PASSWORD}
+    ports:
+      - "12345:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - tempo
+    networks:
+      general_network:
+        ipv4_address: 172.29.0.12
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: letslive-otel-collector
+    volumes:
+      - ./configs/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    command:
+      --config /etc/otel-collector-config.yaml
+    expose:
+      - "4318"
+      - "4317"
+    ports:
+      - "4318:4318" # HTTP OTLP receiver
+      - "4317:4317"
+    networks:
+      general_network:
+        ipv4_address: 172.29.0.11
+
   consul:
     image: hashicorp/consul:latest
     container_name: letslive-consul
