@@ -11,6 +11,7 @@ import (
 
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
 
@@ -39,25 +40,32 @@ func NewAPIServer(livestreamHandler *handlers.LivestreamHandler, vodHandler *han
 
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
+
+	wrapHandleFuncWithOtel := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
+		handler := otelhttp.WithRouteTag(pattern, http.HandlerFunc(handlerFunc))
+		sm.Handle(pattern, handler)
+	}
+
 	//TODO: change to query livestreams
-	sm.HandleFunc("GET /v1/vods", a.vodHandler.GetVODsOfUserPublicHandler)
-	sm.HandleFunc("GET /v1/vods/author", a.vodHandler.GetVODsOfAuthorPrivateHandler)
-	sm.HandleFunc("GET /v1/vods/{vodId}", a.vodHandler.GetVODByIdPublicHandler)
-	sm.HandleFunc("GET /v1/popular-livestreams", a.livestreamHandler.GetRecommendedLivestreamsPublicHandler)
-	sm.HandleFunc("GET /v1/livestreams", a.livestreamHandler.GetLivestreamOfUserPublicHandler)
-	sm.HandleFunc("GET /v1/popular-vods", a.vodHandler.GetRecommendedVODsPublicHandler)
+	wrapHandleFuncWithOtel("GET /v1/vods", a.vodHandler.GetVODsOfUserPublicHandler)
+	wrapHandleFuncWithOtel("GET /v1/vods/author", a.vodHandler.GetVODsOfAuthorPrivateHandler)
+	wrapHandleFuncWithOtel("GET /v1/vods/{vodId}", a.vodHandler.GetVODByIdPublicHandler)
+	wrapHandleFuncWithOtel("GET /v1/popular-livestreams", a.livestreamHandler.GetRecommendedLivestreamsPublicHandler)
+	wrapHandleFuncWithOtel("GET /v1/livestreams", a.livestreamHandler.GetLivestreamOfUserPublicHandler)
+	wrapHandleFuncWithOtel("GET /v1/popular-vods", a.vodHandler.GetRecommendedVODsPublicHandler)
 
-	sm.HandleFunc("PATCH /v1/vods/{vodId}", a.vodHandler.UpdateVODMetadataPrivateHandler)
-	sm.HandleFunc("DELETE /v1/vods/{vodId}", a.vodHandler.DeleteVODPrivateHandler)
+	wrapHandleFuncWithOtel("PATCH /v1/vods/{vodId}", a.vodHandler.UpdateVODMetadataPrivateHandler)
+	wrapHandleFuncWithOtel("DELETE /v1/vods/{vodId}", a.vodHandler.DeleteVODPrivateHandler)
 
-	sm.HandleFunc("POST /v1/internal/livestreams/{livestreamId}/end", a.livestreamHandler.EndLivestreamAndCreateVODInternalHandler)
-	sm.HandleFunc("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)
+	wrapHandleFuncWithOtel("POST /v1/internal/livestreams/{livestreamId}/end", a.livestreamHandler.EndLivestreamAndCreateVODInternalHandler)
+	wrapHandleFuncWithOtel("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)
 
-	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyStateHandler)
+	wrapHandleFuncWithOtel("GET /v1/health", a.healthHandler.GetHealthyStateHandler)
 
-	sm.HandleFunc("GET /", a.responseHandler.RouteNotFoundHandler)
+	wrapHandleFuncWithOtel("GET /", a.responseHandler.RouteNotFoundHandler)
 
-	finalHandler := middlewares.LoggingMiddleware(sm)
+	finalHandler := otelhttp.NewHandler(sm, "/")
+	finalHandler = middlewares.LoggingMiddleware(finalHandler)
 	finalHandler = middlewares.RequestIDMiddleware(finalHandler)
 
 	return finalHandler

@@ -44,11 +44,18 @@ type Verification struct {
 	Gateway string `yaml:"gateway"`
 }
 
+type Tracer struct {
+	Endpoint     string `yaml:"endpoint"`
+	Secure       bool   `yaml:"secure"`
+	BatchTimeout int    `yaml:"batchTimeout"` /// in milli-second
+}
+
 type Config struct {
 	Service      `yaml:"service"`
 	JWT          `yaml:"jwt"`
 	Database     `yaml:"database"`
 	Verification `yaml:"verification"`
+	Tracer       `yaml:"tracer"`
 }
 
 type ConfigManager struct {
