@@ -32,9 +32,16 @@ type Database struct {
 	ConnectionString string
 }
 
+type Tracer struct {
+	Endpoint     string `yaml:"endpoint"`
+	Secure       bool   `yaml:"secure"`
+	BatchTimeout int    `yaml:"batchTimeout"` /// in milli-second
+}
+
 type Config struct {
 	Service  `yaml:"service"`
 	Database `yaml:"database"`
+	Tracer   `yaml:"tracer"`
 }
 
 type ConfigManager struct {

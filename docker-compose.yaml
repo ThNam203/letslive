@@ -316,6 +316,7 @@ services:
       - "12345:3000"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
     depends_on:
       - tempo
     networks:
@@ -444,3 +445,4 @@ volumes:
   chat_pubsub_data:
   minio_data:
   consul_data:
+  grafana-data:

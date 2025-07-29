@@ -12,6 +12,7 @@ import (
 	"sen1or/letslive/auth/middlewares"
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
 
@@ -43,20 +44,26 @@ func NewAPIServer(
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
-	sm.HandleFunc("POST /v1/auth/signup", a.authHandler.VerifyOTPAndSignUpHandler)
-	sm.HandleFunc("POST /v1/auth/login", a.authHandler.LogInHandler)
-	sm.HandleFunc("POST /v1/auth/refresh-token", a.authHandler.RefreshTokenHandler)
-	sm.HandleFunc("PATCH /v1/auth/password", a.authHandler.UpdatePasswordHandler)
-	sm.HandleFunc("DELETE /v1/auth/logout", a.authHandler.LogOutHandler)
-	sm.HandleFunc("POST /v1/auth/verify-email", a.authHandler.RequestEmailVerificationHandler)
+	wrapHandleFuncWithOtel := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
+		handler := otelhttp.WithRouteTag(pattern, http.HandlerFunc(handlerFunc))
+		sm.Handle(pattern, handler)
+	}
 
-	sm.HandleFunc("GET /v1/auth/google", a.authHandler.OAuthGoogleLoginHandler)
-	sm.HandleFunc("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBackHandler)
+	wrapHandleFuncWithOtel("POST /v1/auth/signup", a.authHandler.VerifyOTPAndSignUpHandler)
+	wrapHandleFuncWithOtel("POST /v1/auth/login", a.authHandler.LogInHandler)
+	wrapHandleFuncWithOtel("POST /v1/auth/refresh-token", a.authHandler.RefreshTokenHandler)
+	wrapHandleFuncWithOtel("PATCH /v1/auth/password", a.authHandler.UpdatePasswordHandler)
+	wrapHandleFuncWithOtel("DELETE /v1/auth/logout", a.authHandler.LogOutHandler)
+	wrapHandleFuncWithOtel("POST /v1/auth/verify-email", a.authHandler.RequestEmailVerificationHandler)
 
-	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
-	sm.HandleFunc("GET /", a.responseHandler.RouteNotFoundHandler)
+	wrapHandleFuncWithOtel("GET /v1/auth/google", a.authHandler.OAuthGoogleLoginHandler)
+	wrapHandleFuncWithOtel("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBackHandler)
 
-	finalHandler := middlewares.LoggingMiddleware(sm)
+	wrapHandleFuncWithOtel("GET /v1/health", a.healthHandler.GetHealthyState)
+	wrapHandleFuncWithOtel("GET /", a.responseHandler.RouteNotFoundHandler)
+
+	finalHandler := otelhttp.NewHandler(sm, "/")
+	finalHandler = middlewares.LoggingMiddleware(finalHandler)
 	finalHandler = middlewares.RequestIDMiddleware(finalHandler)
 
 	return finalHandler
