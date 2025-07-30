@@ -7,19 +7,20 @@ import (
 	"net/http"
 	"sen1or/letslive/user/domains"
 	servererrors "sen1or/letslive/user/errors"
+	"sen1or/letslive/user/pkg/tracer"
 	"sen1or/letslive/user/services"
 )
 
 type LivestreamInformationHandler struct {
 	ErrorHandler
-	ctrl         services.LivestreamInformationService
-	minioService services.MinIOService
+	livestreamService services.LivestreamInformationService
+	minioService      services.MinIOService
 }
 
-func NewLivestreamInformationHandler(ctrl services.LivestreamInformationService, minioService services.MinIOService) *LivestreamInformationHandler {
+func NewLivestreamInformationHandler(livestreamService services.LivestreamInformationService, minioService services.MinIOService) *LivestreamInformationHandler {
 	return &LivestreamInformationHandler{
-		ctrl:         ctrl,
-		minioService: minioService,
+		livestreamService: livestreamService,
+		minioService:      minioService,
 	}
 }
 
@@ -71,11 +72,13 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 		ThumbnailURL: &thumbnailUrl,
 	}
 
-	updatedData, updateErr := h.ctrl.Update(ctx, updateData)
+	ctx, span := tracer.MyTracer.Start(ctx, "update_private_handler.livestream_service.update")
+	updatedData, updateErr := h.livestreamService.Update(ctx, updateData)
 	if updateErr != nil {
 		h.WriteErrorResponse(w, updateErr)
 		return
 	}
+	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

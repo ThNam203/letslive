@@ -59,10 +59,14 @@ func (a *APIServer) getHandler() http.Handler {
 	wrapHandleFuncWithOtel("GET /v1/auth/google", a.authHandler.OAuthGoogleLoginHandler)
 	wrapHandleFuncWithOtel("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBackHandler)
 
-	wrapHandleFuncWithOtel("GET /v1/health", a.healthHandler.GetHealthyState)
+	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
 	wrapHandleFuncWithOtel("GET /", a.responseHandler.RouteNotFoundHandler)
 
-	finalHandler := otelhttp.NewHandler(sm, "/")
+	//finalHandler := otelhttp.NewHandler(sm, "/")
+	// TODO: remove filter
+	finalHandler := otelhttp.NewHandler(sm, "/", otelhttp.WithFilter(func(r *http.Request) bool {
+		return r.URL.Path != "/v1/health" // exclude this path from tracing
+	}))
 	finalHandler = middlewares.LoggingMiddleware(finalHandler)
 	finalHandler = middlewares.RequestIDMiddleware(finalHandler)
 

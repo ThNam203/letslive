@@ -12,9 +12,9 @@ import (
 	"sen1or/letslive/user/api"
 	cfg "sen1or/letslive/user/config"
 	"sen1or/letslive/user/handlers"
-	"sen1or/letslive/user/middlewares"
 	"sen1or/letslive/user/pkg/discovery"
 	"sen1or/letslive/user/pkg/logger"
+	"sen1or/letslive/user/pkg/tracer"
 	"sen1or/letslive/user/repositories"
 	"sen1or/letslive/user/services"
 	"sen1or/letslive/user/utils"
@@ -60,7 +60,7 @@ func main() {
 	instanceId := discovery.GenerateInstanceID(serviceName)
 	go RegisterToDiscoveryService(ctx, registry, serviceName, instanceId, config)
 
-	otelShutdownFunc, err := middlewares.SetupOTelSDK(ctx, *config)
+	otelShutdownFunc, err := tracer.SetupOTelSDK(ctx, *config)
 	if err != nil {
 		logger.Panicf("failed to setup otel sdk: %v", err)
 	}

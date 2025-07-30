@@ -1,4 +1,4 @@
-package middlewares
+package tracer
 
 import (
 	"context"
@@ -14,7 +14,10 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
+	oteltrace "go.opentelemetry.io/otel/trace"
 )
+
+var MyTracer oteltrace.Tracer
 
 // setupOTelSDK bootstraps the OpenTelemetry pipeline.
 // If it does not return an error, make sure to call shutdown for proper cleanup.
@@ -50,6 +53,7 @@ func SetupOTelSDK(ctx context.Context, cfg config.Config) (shutdown func(context
 	}
 	shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
 	otel.SetTracerProvider(tracerProvider)
+	MyTracer = otel.Tracer(cfg.Service.Name)
 
 	// Set up meter provider.
 	//meterProvider, err := newMeterProvider()

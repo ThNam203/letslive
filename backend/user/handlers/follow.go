@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	servererrors "sen1or/letslive/user/errors"
+	"sen1or/letslive/user/pkg/tracer"
 	"sen1or/letslive/user/services"
 )
 
@@ -28,11 +29,13 @@ func (h *FollowHandler) FollowPrivateHandler(w http.ResponseWriter, r *http.Requ
 		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "follow_private_handler.follow_service.follow")
 	serviceErr := h.followService.Follow(ctx, followerId.String(), followedId)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
+	span.End()
 
 	w.WriteHeader(http.StatusCreated)
 }
@@ -47,11 +50,13 @@ func (h *FollowHandler) UnfollowPrivateHandler(w http.ResponseWriter, r *http.Re
 		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "unfollow_private_handler.follow_service.unfollow")
 	serviceErr := h.followService.Unfollow(ctx, followerId.String(), followedId)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
+	span.End()
 
 	w.WriteHeader(http.StatusOK)
 }
