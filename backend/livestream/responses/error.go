@@ -22,8 +22,6 @@ var (
 	ErrInvalidPayload             = NewServiceErrorResponse(http.StatusBadRequest, "Payload invalid.")
 	ErrInvalidPath                = NewServiceErrorResponse(http.StatusBadRequest, "Invalid path.")
 	ErrLivestreamUpdateAfterEnded = NewServiceErrorResponse(http.StatusBadRequest, "Failed to update, the livestream has ended.")
-	ErrMissingPageParameter       = NewServiceErrorResponse(http.StatusBadRequest, "Missing page parameter in request.")
-	ErrMissingLimitParameter      = NewServiceErrorResponse(http.StatusBadRequest, "Missing limit parameter in request.")
 
 	ErrUnauthorized = NewServiceErrorResponse(http.StatusUnauthorized, "Unauthorized.")
 

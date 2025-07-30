@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"sen1or/letslive/livestream/dto"
+	"sen1or/letslive/livestream/pkg/tracer"
 	serviceresponse "sen1or/letslive/livestream/responses"
 	"sen1or/letslive/livestream/services/livestream"
-	"strconv"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -39,11 +39,13 @@ func (h LivestreamHandler) GetLivestreamOfUserPublicHandler(w http.ResponseWrite
 		return
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "get_livestream_of_user_public_handler.livestream_service.get_livestream_of_user")
 	vod, serviceErr := h.livestreamService.GetLivestreamOfUser(ctx, userUUID)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
+	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -60,11 +62,13 @@ func (h *LivestreamHandler) CreateLivestreamInternalHandler(w http.ResponseWrite
 		return
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "create_livestream_internal_handler.livestream_service.create")
 	createdLivestream, err := h.livestreamService.Create(ctx, body)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
+	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -75,25 +79,15 @@ func (h *LivestreamHandler) GetRecommendedLivestreamsPublicHandler(w http.Respon
 	ctx, cancelCtx := context.WithCancel(r.Context())
 	defer cancelCtx()
 
-	page := r.URL.Query().Get("page")
-	pageNum, pageErr := strconv.Atoi(page)
-	if pageErr != nil || pageNum < 0 {
-		h.WriteErrorResponse(w, serviceresponse.ErrMissingPageParameter)
-		return
-	}
+	page, limit := getPageAndLimitQuery(r)
 
-	limit := r.URL.Query().Get("limit")
-	limitNum, limitErr := strconv.Atoi(limit)
-	if limitErr != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrMissingLimitParameter)
-		return
-	}
-
-	livestreams, serviceErr := h.livestreamService.GetRecommendedLivestreams(ctx, pageNum, limitNum)
+	ctx, span := tracer.MyTracer.Start(ctx, "get_recommended_livestreams_public_handler.livestream_service.get_recommended_livestreams")
+	livestreams, serviceErr := h.livestreamService.GetRecommendedLivestreams(ctx, page, limit)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
+	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -118,11 +112,13 @@ func (h *LivestreamHandler) EndLivestreamAndCreateVODInternalHandler(w http.Resp
 		return
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "end_livestream_and_create_vod_internal_handler.livestream_service.end_livestream_and_create_vod")
 	serviceErr := h.livestreamService.EndLivestreamAndCreateVOD(ctx, streamId, requestBody)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
+	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -152,11 +148,13 @@ func (h *LivestreamHandler) UpdateLivestreamPrivateHandler(w http.ResponseWriter
 		return
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "update_livestream_private_handler.livestream_service.update")
 	updatedLivestream, serviceErr := h.livestreamService.Update(ctx, requestBody, streamId, *userUUID)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
+	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

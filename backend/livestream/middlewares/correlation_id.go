@@ -3,8 +3,11 @@ package middlewares
 import (
 	"context"
 	"net/http"
+	"sen1or/letslive/livestream/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func RequestIDMiddleware(next http.Handler) http.Handler {
@@ -18,7 +21,13 @@ func RequestIDMiddleware(next http.Handler) http.Handler {
 			} else {
 				requestId = requestObj.String()
 			}
+		}
 
+		// add the request id to the span
+		if span := trace.SpanFromContext(r.Context()); span != nil {
+			span.SetAttributes(attribute.String("http.request_id", requestId))
+		} else {
+			logger.Warnf("missing span from context")
 		}
 
 		ctx := context.WithValue(r.Context(), "requestId", requestId)

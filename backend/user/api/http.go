@@ -71,7 +71,10 @@ func (a *APIServer) getHandler() http.Handler {
 	wrapHandleFuncWithOtel("GET /v1/health", a.healthHandler.GetHealthyStateHandler)
 	wrapHandleFuncWithOtel("GET /", a.errorHandler.RouteNotFoundHandler)
 
-	finalHandler := otelhttp.NewHandler(sm, "/")
+	// TODO: remove filter
+	finalHandler := otelhttp.NewHandler(sm, "/", otelhttp.WithFilter(func(r *http.Request) bool {
+		return r.URL.Path != "/v1/health" // exclude this path from tracing
+	}))
 	finalHandler = middlewares.RequestIDMiddleware(finalHandler)
 	finalHandler = middlewares.LoggingMiddleware(finalHandler)
 
