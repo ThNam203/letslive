@@ -8,11 +8,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="h-screen w-screen overflow-hidden">
+    <div className="flex flex-col h-screen w-screen overflow-hidden">
       <Header />
       <ResizablePanelGroup
         autoSaveId={"sidebar-size"}
         direction="horizontal"
+        className="flex-1"
       >
         <LeftBar />
         <ResizableHandle />
