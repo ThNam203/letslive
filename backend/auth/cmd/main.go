@@ -25,9 +25,8 @@ import (
 )
 
 var (
-	configServiceName    = "auth_service"
-	configProfile        = os.Getenv("CONFIG_SERVER_PROFILE")
-	configReloadInterval = 30 * time.Second
+	configServiceName = "auth_service"
+	configProfile     = os.Getenv("CONFIG_SERVER_PROFILE")
 
 	discoveryBaseDelay = 1 * time.Second
 	discoveryMaxDelay  = 1 * time.Minute
@@ -42,7 +41,7 @@ func main() {
 		logger.Panicf("failed to start discovery mechanism: %s", err)
 	}
 
-	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile, configReloadInterval)
+	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile)
 	defer cfgManager.Stop()
 	if err != nil {
 		logger.Panicf("failed to set up config manager: %s", err)
