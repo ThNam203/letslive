@@ -27,6 +27,7 @@ const config: Config = {
                 destructive: "hsl(var(--destructive))",
                 "destructive-hover": "hsl(var(--destructive-hover))",
                 "destructive-foreground": "hsl(var(--destructive-foreground))",
+                success: "hsl(var(--success))",
             },
         },
     },

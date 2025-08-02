@@ -8,6 +8,7 @@ import (
 	"sen1or/letslive/user/dto"
 	servererrors "sen1or/letslive/user/errors"
 	"sen1or/letslive/user/pkg/logger"
+	"sen1or/letslive/user/pkg/tracer"
 	"sen1or/letslive/user/services"
 	"sen1or/letslive/user/types"
 	"strconv"
@@ -30,6 +31,7 @@ func NewUserHandler(userService services.UserService) *UserHandler {
 func (h *UserHandler) GetUserByIdPublicHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
+
 	authenticatedUserId, _ := getUserIdFromCookie(r)
 	userId := r.PathValue("userId")
 	if len(userId) == 0 {
@@ -43,11 +45,13 @@ func (h *UserHandler) GetUserByIdPublicHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "get_user_by_id_public_handler.user_service.get_user_public_info_by_id")
 	user, serviceErr := h.userService.GetUserPublicInfoById(ctx, userUUID, authenticatedUserId)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
+	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -64,11 +68,13 @@ func (h *UserHandler) GetAllUsersPublicHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "get_all_users_public_handler.user_service.get_all_users")
 	users, serviceErr := h.userService.GetAllUsers(ctx, page)
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
+	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -80,14 +86,15 @@ func (h *UserHandler) SearchUsersPublicHandler(w http.ResponseWriter, r *http.Re
 	defer cancel()
 
 	authenticatedUserId, _ := getUserIdFromCookie(r)
-
 	username := r.URL.Query().Get("username")
 
+	ctx, span := tracer.MyTracer.Start(ctx, "search_users_public_handler.user_service.search_users_by_username")
 	users, err := h.userService.SearchUsersByUsername(ctx, username, authenticatedUserId)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
+	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -110,7 +117,9 @@ func (h *UserHandler) GetUserByStreamAPIKeyInternalHandler(w http.ResponseWriter
 		return
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "get_user_by_stream_api_key_internal_handler.user_service.get_user_by_stream_api_key")
 	user, err := h.userService.GetUserByStreamAPIKey(ctx, streamAPIKey)
+	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -127,11 +136,13 @@ func (h *UserHandler) GetCurrentUserPrivateHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "get_current_user_private_handler.user_service.get_user_by_id")
 	user, err := h.userService.GetUserById(ctx, *userUUID)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
+	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -149,11 +160,13 @@ func (h *UserHandler) CreateUserInternalHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "create_user_internal_handler.user_service.create_new_user")
 	createdUser, err := h.userService.CreateNewUser(ctx, body)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
+	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -171,11 +184,13 @@ func (h *UserHandler) UpdateCurrentUserPrivateHandler(w http.ResponseWriter, r *
 	}
 	defer r.Body.Close()
 
+	ctx, span := tracer.MyTracer.Start(ctx, "update_current_user_private_handler.user_service.update_user")
 	var requestBody dto.UpdateUserRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 		h.WriteErrorResponse(w, servererrors.ErrInvalidPayload)
 		return
 	}
+	span.End()
 
 	requestBody.Id = uuid.FromStringOrNil(userUUID.String())
 	updatedUser, err := h.userService.UpdateUser(ctx, requestBody)
@@ -200,11 +215,13 @@ func (h *UserHandler) GenerateNewAPIStreamKeyPrivateHandler(w http.ResponseWrite
 	}
 	defer r.Body.Close()
 
+	ctx, span := tracer.MyTracer.Start(ctx, "generate_new_api_stream_key_private_hanlder.user_service.update_user_api_key")
 	newKey, err := h.userService.UpdateUserAPIKey(ctx, *userUUID)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
+	span.End()
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
@@ -242,11 +259,13 @@ func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWrit
 		return
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "update_user_profile_picture_private_handler.user_service.update_user_profile_picture")
 	savedPath, err := h.userService.UpdateUserProfilePicture(ctx, file, fileHeader, *userUUID)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
+	span.End()
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/plain")
@@ -284,11 +303,13 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 		return
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "update_user_background_picture_private_handler.user_service.update_user_background_picture")
 	savedPath, err := h.userService.UpdateUserBackgroundPicture(ctx, file, fileHeader, *userUUID)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
+	span.End()
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/plain")
@@ -314,11 +335,13 @@ func (h *UserHandler) UpdateUserInternalHandler(w http.ResponseWriter, r *http.R
 	}
 	requestBody.Id = uuid.FromStringOrNil(userID)
 
+	ctx, span := tracer.MyTracer.Start(ctx, "update_user_internal_handler.user_service.update_user_internal")
 	updatedUser, err := h.userService.UpdateUserInternal(ctx, requestBody)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
+	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -375,11 +398,13 @@ func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *h
 		return
 	}
 
+	ctx, span := tracer.MyTracer.Start(ctx, "upload_single_file_to_min_io_handler.user_service.upload_file_to_min_io")
 	savedPath, err := h.userService.UploadFileToMinIO(ctx, file, fileHeader)
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
+	span.End()
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/plain")

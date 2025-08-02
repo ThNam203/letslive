@@ -47,7 +47,7 @@ func (r postgresVODRepo) GetById(ctx context.Context, id uuid.UUID) (*domains.VO
 
 func (r postgresVODRepo) GetPublicVODsByUser(ctx context.Context, userId uuid.UUID, page, limit int) ([]domains.VOD, *serviceresponse.ServiceErrorResponse) {
 	offset := limit * page
-	rows, err := r.dbConn.Query(context.Background(), `
+	rows, err := r.dbConn.Query(ctx, `
 		SELECT * 
 		FROM vods
 		WHERE user_id = $1 AND visibility = 'public'

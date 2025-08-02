@@ -32,11 +32,11 @@ export default function VODsEdit() {
     }, [user]);
 
     return (
-        <div className="min-h-screen text-gray-900 p-6">
-            <div className="space-y-6 mb-4 max-w-4xl">
+        <>
+            <div className="mb-4">
                 <div className="space-y-1">
                     <h1 className="text-xl font-semibold">VODs Manager</h1>
-                    <p className="text-sm text-foreground-muted ">
+                    <p className="text-sm text-foreground-muted">
                         Manage your VODs and edit their information here.
                     </p>
                 </div>
@@ -49,6 +49,6 @@ export default function VODsEdit() {
                     );
                 })}
             </div>
-        </div>
+        </>
     );
 }

@@ -14,6 +14,7 @@ import (
 	"sen1or/letslive/auth/handlers"
 	"sen1or/letslive/auth/pkg/discovery"
 	"sen1or/letslive/auth/pkg/logger"
+	"sen1or/letslive/auth/pkg/tracer"
 	"sen1or/letslive/auth/repositories"
 	"sen1or/letslive/auth/services"
 	"sen1or/letslive/auth/utils"
@@ -24,9 +25,8 @@ import (
 )
 
 var (
-	configServiceName    = "auth_service"
-	configProfile        = os.Getenv("CONFIG_SERVER_PROFILE")
-	configReloadInterval = 30 * time.Second
+	configServiceName = "auth_service"
+	configProfile     = os.Getenv("CONFIG_SERVER_PROFILE")
 
 	discoveryBaseDelay = 1 * time.Second
 	discoveryMaxDelay  = 1 * time.Minute
@@ -41,7 +41,7 @@ func main() {
 		logger.Panicf("failed to start discovery mechanism: %s", err)
 	}
 
-	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile, configReloadInterval)
+	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile)
 	defer cfgManager.Stop()
 	if err != nil {
 		logger.Panicf("failed to set up config manager: %s", err)
@@ -58,6 +58,11 @@ func main() {
 	serviceName := config.Service.Name
 	instanceId := discovery.GenerateInstanceID(serviceName)
 	go RegisterToDiscoveryService(ctx, registry, serviceName, instanceId, config)
+
+	otelShutdownFunc, err := tracer.SetupOTelSDK(ctx, *config)
+	if err != nil {
+		logger.Panicf("failed to setup otel sdk: %v", err)
+	}
 
 	dbConn := ConnectDB(ctx, config)
 	defer dbConn.Close()
@@ -93,6 +98,12 @@ func main() {
 	shutdownWg.Add(1)
 	go (func() {
 		DeregisterDiscoveryService(shutdownCtx, registry, serviceName, instanceId)
+		shutdownWg.Done()
+	})()
+
+	shutdownWg.Add(1)
+	go (func() {
+		otelShutdownFunc(shutdownCtx)
 		shutdownWg.Done()
 	})()
 

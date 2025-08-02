@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sen1or/letslive/transcode/gateway"
 	dto "sen1or/letslive/transcode/gateway/user"
 	"sen1or/letslive/transcode/pkg/discovery"
 )
@@ -38,6 +39,13 @@ func (g *UserGateway) GetUserInformation(ctx context.Context, streamAPIKey strin
 	if err != nil {
 		return nil, &ErrorResponse{
 			Message:    fmt.Sprintf("failed to create request: %s", err),
+			StatusCode: http.StatusInternalServerError,
+		}
+	}
+
+	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
+		return nil, &ErrorResponse{
+			Message:    fmt.Sprintf("failed to create the request: %s", err),
 			StatusCode: http.StatusInternalServerError,
 		}
 	}

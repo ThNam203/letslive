@@ -13,3 +13,4 @@ k8s
 k8s/secrets
 
 elastic_certs
+grafana
