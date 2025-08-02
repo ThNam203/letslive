@@ -37,6 +37,7 @@ services:
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
       - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
       - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
       - AUTH_DB_USER=${AUTH_DB_USER}
       - AUTH_DB_PASSWORD=${AUTH_DB_PASSWORD}
@@ -60,6 +61,7 @@ services:
       - "7778"
     environment:
       - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
@@ -90,6 +92,7 @@ services:
       - "8889"
     environment:
       - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
@@ -114,6 +117,7 @@ services:
       - "7781"
     environment:
       - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
       - LIVESTREAM_DB_USER=${LIVESTREAM_DB_USER}
       - LIVESTREAM_DB_PASSWORD=${LIVESTREAM_DB_PASSWORD}
@@ -126,10 +130,10 @@ services:
       - /var/log/letslive:/usr/local/bin/logs
 
   configserver:
-    image: sen1or/letslive-configserver:latest
-    #build:
-    #  context: ./backend/configserver
-    #  dockerfile: Dockerfile
+    #image: sen1or/letslive-configserver:latest
+    build:
+      context: ./backend/configserver
+      dockerfile: Dockerfile
     container_name: letslive-configserver
     restart: always
     ports:
@@ -137,9 +141,9 @@ services:
     expose:
       - "8181"
     environment:
-      - CONFIGSERVER_GIT_URI=${CONFIGSERVER_GIT_URI}
-      - CONFIGSERVER_GIT_USERNAME=${CONFIGSERVER_GIT_USERNAME}
-      - CONFIGSERVER_GIT_PASSWORD=${CONFIGSERVER_GIT_PASSWORD}
+      - CONFIG_SERVER_GIT_URI=${CONFIG_SERVER_GIT_URI}
+      - CONFIG_SERVER_GIT_USERNAME=${CONFIG_SERVER_GIT_USERNAME}
+      - CONFIG_SERVER_GIT_PASSWORD=${CONFIG_SERVER_GIT_PASSWORD}
     networks:
       general_network:
     healthcheck:
@@ -291,21 +295,6 @@ services:
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
 
-  tempo:
-    image: grafana/tempo:latest
-    container_name: letslive-grafana-tempo
-    command: ["-config.file=/etc/tempo.yaml"]
-    volumes:
-      - ./configs/tempo.yaml:/etc/tempo.yaml
-    expose:
-      - "3200"
-      - "4318"
-    ports:
-      - "3200:3200"   # Tempo HTTP endpoint
-    networks:
-      general_network:
-        ipv4_address: 172.29.0.13
-
   grafana:
     image: grafana/grafana:latest
     container_name: letslive-grafana
@@ -323,6 +312,21 @@ services:
       general_network:
         ipv4_address: 172.29.0.12
 
+  tempo:
+    image: grafana/tempo:latest
+    container_name: letslive-grafana-tempo
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./configs/tempo.yaml:/etc/tempo.yaml
+    expose:
+      - "3200"
+      - "4318"
+    ports:
+      - "3200:3200"   # Tempo HTTP endpoint
+    networks:
+      general_network:
+        ipv4_address: 172.29.0.13
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: letslive-otel-collector
@@ -339,6 +343,72 @@ services:
     networks:
       general_network:
         ipv4_address: 172.29.0.11
+
+  loki:
+    image: grafana/loki:latest
+    container_name: letslive-loki
+    expose: 
+      - "3100"
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./configs/loki.yaml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      general_network:
+        ipv4_address: 172.29.1.1
+
+  promtail-auth:
+    image: grafana/promtail:latest
+    container_name: letslive-promtail-auth
+    volumes:
+      - ./configs/promtail-auth.yaml:/etc/promtail/config.yaml
+      - /var/log/letslive/auth_log.txt:/var/log/auth_service.log
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+    networks:
+      general_network:
+        ipv4_address: 172.29.1.2
+
+  promtail-user:
+    image: grafana/promtail:latest
+    container_name: letslive-promtail-user
+    volumes:
+      - ./configs/promtail-user.yaml:/etc/promtail/config.yaml
+      - /var/log/letslive/user_log.txt:/var/log/user_service.log
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+    networks:
+      general_network:
+        ipv4_address: 172.29.1.3
+
+  promtail-livestream:
+    image: grafana/promtail:latest
+    container_name: letslive-promtail-livestream
+    volumes:
+      - ./configs/promtail-livestream.yaml:/etc/promtail/config.yaml
+      - /var/log/letslive/livestream_log.txt:/var/log/livestream_service.log
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+    networks:
+      general_network:
+        ipv4_address: 172.29.1.4
+
+  promtail-transcode:
+    image: grafana/promtail:latest
+    container_name: letslive-promtail-transcode
+    volumes:
+      - ./configs/promtail-transcode.yaml:/etc/promtail/config.yaml
+      - /var/log/letslive/transcode_log.txt:/var/log/transcode_service.log
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+    networks:
+      general_network:
+        ipv4_address: 172.29.1.5
 
   consul:
     image: hashicorp/consul:latest

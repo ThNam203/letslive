@@ -5,12 +5,12 @@ spring:
     config:
       server:
         git:
-          uri: ${CONFIGSERVER_GIT_URI}
+          uri: ${CONFIG_SERVER_GIT_URI}
           default-label: main
           timeout: 10
           clone-on-start: true
-          username: ${CONFIGSERVER_GIT_USERNAME}
-          password: ${CONFIGSERVER_GIT_PASSWORD}
+          username: ${CONFIG_SERVER_GIT_USERNAME}
+          password: ${CONFIG_SERVER_GIT_PASSWORD}
   #main:
     #show_banner: "off"
 
