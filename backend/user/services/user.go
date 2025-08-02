@@ -91,7 +91,7 @@ func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequ
 		return nil, err
 	}
 
-	if err := s.livestreamInformationRepo.Create(createdUser.Id); err != nil {
+	if err := s.livestreamInformationRepo.Create(ctx, createdUser.Id); err != nil {
 		return nil, err
 	}
 

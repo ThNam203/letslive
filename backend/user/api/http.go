@@ -11,6 +11,7 @@ import (
 
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
 
@@ -42,30 +43,40 @@ func NewAPIServer(userHandler *handlers.UserHandler, livestreamInfoHandler *hand
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
-	sm.HandleFunc("POST /v1/upload-file", a.userHandler.UploadSingleFileToMinIOHandler) // TODO: find another way to upload file
+	wrapHandleFuncWithOtel := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
+		handler := otelhttp.WithRouteTag(pattern, http.HandlerFunc(handlerFunc))
+		sm.Handle(pattern, handler)
+	}
 
-	sm.HandleFunc("GET /v1/users", a.userHandler.GetAllUsersPublicHandler) // TODO: should change into get random users
-	sm.HandleFunc("GET /v1/users/search", a.userHandler.SearchUsersPublicHandler)
-	sm.HandleFunc("GET /v1/user/{userId}", a.userHandler.GetUserByIdPublicHandler)
+	wrapHandleFuncWithOtel("POST /v1/upload-file", a.userHandler.UploadSingleFileToMinIOHandler) // TODO: find another way to upload file
 
-	sm.HandleFunc("POST /v1/user/{userId}/follow", a.followHandler.FollowPrivateHandler)
-	sm.HandleFunc("DELETE /v1/user/{userId}/unfollow", a.followHandler.UnfollowPrivateHandler)
-	sm.HandleFunc("GET /v1/user/me", a.userHandler.GetCurrentUserPrivateHandler)
-	sm.HandleFunc("PUT /v1/user/me", a.userHandler.UpdateCurrentUserPrivateHandler)
-	sm.HandleFunc("PATCH /v1/user/me/livestream-information", a.livestreamInformationHandler.UpdatePrivateHandler)
-	sm.HandleFunc("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKeyPrivateHandler)
+	wrapHandleFuncWithOtel("GET /v1/users", a.userHandler.GetAllUsersPublicHandler) // TODO: should change into get random users
+	wrapHandleFuncWithOtel("GET /v1/users/search", a.userHandler.SearchUsersPublicHandler)
+	wrapHandleFuncWithOtel("GET /v1/user/{userId}", a.userHandler.GetUserByIdPublicHandler)
+
+	wrapHandleFuncWithOtel("POST /v1/user/{userId}/follow", a.followHandler.FollowPrivateHandler)
+	wrapHandleFuncWithOtel("DELETE /v1/user/{userId}/unfollow", a.followHandler.UnfollowPrivateHandler)
+	wrapHandleFuncWithOtel("GET /v1/user/me", a.userHandler.GetCurrentUserPrivateHandler)
+	wrapHandleFuncWithOtel("PUT /v1/user/me", a.userHandler.UpdateCurrentUserPrivateHandler)
+	wrapHandleFuncWithOtel("PATCH /v1/user/me/livestream-information", a.livestreamInformationHandler.UpdatePrivateHandler)
+	wrapHandleFuncWithOtel("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKeyPrivateHandler)
 	// TODO: change this to not include the FormData
-	sm.HandleFunc("PATCH /v1/user/me/profile-picture", a.userHandler.UpdateUserProfilePicturePrivateHandler)
-	sm.HandleFunc("PATCH /v1/user/me/background-picture", a.userHandler.UpdateUserBackgroundPicturePrivateHandler)
+	wrapHandleFuncWithOtel("PATCH /v1/user/me/profile-picture", a.userHandler.UpdateUserProfilePicturePrivateHandler)
+	wrapHandleFuncWithOtel("PATCH /v1/user/me/background-picture", a.userHandler.UpdateUserBackgroundPicturePrivateHandler)
 
-	sm.HandleFunc("POST /v1/user", a.userHandler.CreateUserInternalHandler)                        // internal
-	sm.HandleFunc("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                // internal
-	sm.HandleFunc("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler) // internal
+	wrapHandleFuncWithOtel("POST /v1/user", a.userHandler.CreateUserInternalHandler)                        // internal
+	wrapHandleFuncWithOtel("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                // internal
+	wrapHandleFuncWithOtel("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler) // internal
 
-	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyStateHandler)
-	sm.HandleFunc("GET /", a.errorHandler.RouteNotFoundHandler)
+	wrapHandleFuncWithOtel("GET /v1/health", a.healthHandler.GetHealthyStateHandler)
+	wrapHandleFuncWithOtel("GET /", a.errorHandler.RouteNotFoundHandler)
 
-	finalHandler := middlewares.LoggingMiddleware(sm)
+	// TODO: remove filter
+	finalHandler := otelhttp.NewHandler(sm, "/", otelhttp.WithFilter(func(r *http.Request) bool {
+		return r.URL.Path != "/v1/health" // exclude this path from tracing
+	}))
+	finalHandler = middlewares.RequestIDMiddleware(finalHandler)
+	finalHandler = middlewares.LoggingMiddleware(finalHandler)
 
 	return finalHandler
 }

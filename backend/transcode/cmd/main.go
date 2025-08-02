@@ -21,9 +21,8 @@ import (
 )
 
 var (
-	configServiceName    = "transcode_service"
-	configProfile        = os.Getenv("CONFIG_SERVER_PROFILE")
-	configReloadInterval = 30 * time.Second
+	configServiceName = "transcode_service"
+	configProfile     = os.Getenv("CONFIG_SERVER_PROFILE")
 
 	discoveryBaseDelay = 1 * time.Second
 	discoveryMaxDelay  = 1 * time.Minute
@@ -38,7 +37,7 @@ func main() {
 		logger.Panicf("failed to get a new registry")
 	}
 
-	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile, configReloadInterval)
+	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile)
 	if err != nil {
 		logger.Panicf("failed to set up config manager: %s", err)
 	}

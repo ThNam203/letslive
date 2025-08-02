@@ -14,6 +14,7 @@ import (
 	"sen1or/letslive/user/handlers"
 	"sen1or/letslive/user/pkg/discovery"
 	"sen1or/letslive/user/pkg/logger"
+	"sen1or/letslive/user/pkg/tracer"
 	"sen1or/letslive/user/repositories"
 	"sen1or/letslive/user/services"
 	"sen1or/letslive/user/utils"
@@ -22,9 +23,8 @@ import (
 )
 
 var (
-	configServiceName    = "user_service"
-	configProfile        = os.Getenv("CONFIG_SERVER_PROFILE")
-	configReloadInterval = 30 * time.Second
+	configServiceName = "user_service"
+	configProfile     = os.Getenv("CONFIG_SERVER_PROFILE")
 
 	discoveryBaseDelay = 1 * time.Second
 	discoveryMaxDelay  = 1 * time.Minute
@@ -40,9 +40,9 @@ func main() {
 	registry, err := discovery.NewConsulRegistry(os.Getenv("REGISTRY_SERVICE_ADDRESS"))
 	if err != nil {
 		logger.Panicf("failed to start discovery mechanism: %s", err)
-		panic(1)
 	}
-	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile, configReloadInterval)
+
+	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile)
 	if err != nil {
 		logger.Panicf("failed to set up config manager: %s", err)
 	}
@@ -59,10 +59,15 @@ func main() {
 	instanceId := discovery.GenerateInstanceID(serviceName)
 	go RegisterToDiscoveryService(ctx, registry, serviceName, instanceId, config)
 
+	otelShutdownFunc, err := tracer.SetupOTelSDK(ctx, *config)
+	if err != nil {
+		logger.Panicf("failed to setup otel sdk: %v", err)
+	}
+
 	dbConn := ConnectDB(ctx, config)
 	defer dbConn.Close()
 
-	server := SetupServer(dbConn, registry, config)
+	server := SetupServer(ctx, dbConn, registry, config)
 	go func() {
 		logger.Infof("starting server on %s:%d...", config.Service.Hostname, config.Service.APIPort)
 		// ListenAndServe should ideally block until an error occurs (e.g., server stopped)
@@ -93,6 +98,12 @@ func main() {
 	shutdownWg.Add(1)
 	go (func() {
 		DeregisterDiscoveryService(shutdownCtx, registry, serviceName, instanceId)
+		shutdownWg.Done()
+	})()
+
+	shutdownWg.Add(1)
+	go (func() {
+		otelShutdownFunc(shutdownCtx)
 		shutdownWg.Done()
 	})()
 
@@ -155,12 +166,12 @@ func DeregisterDiscoveryService(shutdownContext context.Context, registry discov
 	}
 }
 
-func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
+func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var livestreamInfoRepo = repositories.NewLivestreamInformationRepository(dbConn)
 	var followRepo = repositories.NewFollowRepository(dbConn)
 
-	minioService := services.NewMinIOService(context.Background(), cfg.MinIO)
+	minioService := services.NewMinIOService(ctx, cfg.MinIO)
 	var userService = services.NewUserService(userRepo, livestreamInfoRepo, *minioService)
 	var livestreamInfoService = services.NewLivestreamInformationService(livestreamInfoRepo)
 	var followService = services.NewFollowService(followRepo)

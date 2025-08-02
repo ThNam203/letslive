@@ -20,8 +20,8 @@ func NewFollowRepository(conn *pgxpool.Pool) domains.FollowRepository {
 	}
 }
 
-func (r postgresFollowRepo) FollowUser(followUser, followedUser uuid.UUID) *servererrors.ServerError {
-	result, err := r.dbConn.Exec(context.Background(), `
+func (r postgresFollowRepo) FollowUser(ctx context.Context, followUser, followedUser uuid.UUID) *servererrors.ServerError {
+	result, err := r.dbConn.Exec(ctx, `
 		INSERT INTO followers (user_id, follower_id)
 		VALUES ($1, $2)
 	`, followedUser, followUser)
@@ -37,8 +37,8 @@ func (r postgresFollowRepo) FollowUser(followUser, followedUser uuid.UUID) *serv
 
 	return nil
 }
-func (r postgresFollowRepo) UnfollowUser(followUser, followedUser uuid.UUID) *servererrors.ServerError {
-	result, err := r.dbConn.Exec(context.Background(), `
+func (r postgresFollowRepo) UnfollowUser(ctx context.Context, followUser, followedUser uuid.UUID) *servererrors.ServerError {
+	result, err := r.dbConn.Exec(ctx, `
 		DELETE FROM followers
 		WHERE user_id = $1 AND follower_id = $2
 	`, followedUser, followUser)

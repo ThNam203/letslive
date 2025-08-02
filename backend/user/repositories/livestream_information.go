@@ -21,8 +21,8 @@ func NewLivestreamInformationRepository(conn *pgxpool.Pool) domains.LivestreamIn
 	}
 }
 
-func (r *postgresLivestreamInformationRepo) GetByUserId(userId uuid.UUID) (*domains.LivestreamInformation, *servererrors.ServerError) {
-	rows, err := r.dbConn.Query(context.Background(), "select * from livestream_information where user_id = $1", userId.String())
+func (r *postgresLivestreamInformationRepo) GetByUserId(ctx context.Context, userId uuid.UUID) (*domains.LivestreamInformation, *servererrors.ServerError) {
+	rows, err := r.dbConn.Query(ctx, "select * from livestream_information where user_id = $1", userId.String())
 	if err != nil {
 		return nil, servererrors.ErrDatabaseQuery
 	}
@@ -40,8 +40,8 @@ func (r *postgresLivestreamInformationRepo) GetByUserId(userId uuid.UUID) (*doma
 	return &user, nil
 }
 
-func (r *postgresLivestreamInformationRepo) Create(userId uuid.UUID) *servererrors.ServerError {
-	result, err := r.dbConn.Exec(context.Background(), "insert into livestream_information (user_id) values ($1)", userId)
+func (r *postgresLivestreamInformationRepo) Create(ctx context.Context, userId uuid.UUID) *servererrors.ServerError {
+	result, err := r.dbConn.Exec(ctx, "insert into livestream_information (user_id) values ($1)", userId)
 	if err != nil || result.RowsAffected() == 0 {
 		return servererrors.ErrDatabaseQuery
 	}
@@ -49,7 +49,7 @@ func (r *postgresLivestreamInformationRepo) Create(userId uuid.UUID) *servererro
 	return nil
 }
 
-func (r *postgresLivestreamInformationRepo) Update(livestreamInformation domains.LivestreamInformation) (*domains.LivestreamInformation, *servererrors.ServerError) {
+func (r *postgresLivestreamInformationRepo) Update(ctx context.Context, livestreamInformation domains.LivestreamInformation) (*domains.LivestreamInformation, *servererrors.ServerError) {
 	params := pgx.NamedArgs{
 		"user_id":       livestreamInformation.UserID,
 		"title":         livestreamInformation.Title,
@@ -57,7 +57,7 @@ func (r *postgresLivestreamInformationRepo) Update(livestreamInformation domains
 		"thumbnail_url": livestreamInformation.ThumbnailURL,
 	}
 
-	rows, err := r.dbConn.Query(context.Background(), "UPDATE livestream_information SET title = @title, description = @description, thumbnail_url = @thumbnail_url WHERE user_id = @user_id RETURNING *", params)
+	rows, err := r.dbConn.Query(ctx, "UPDATE livestream_information SET title = @title, description = @description, thumbnail_url = @thumbnail_url WHERE user_id = @user_id RETURNING *", params)
 	if err != nil {
 		return nil, servererrors.ErrDatabaseQuery
 	}

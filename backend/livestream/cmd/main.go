@@ -14,6 +14,7 @@ import (
 	"sen1or/letslive/livestream/handlers"
 	"sen1or/letslive/livestream/pkg/discovery"
 	"sen1or/letslive/livestream/pkg/logger"
+	"sen1or/letslive/livestream/pkg/tracer"
 	"sen1or/letslive/livestream/repositories"
 	"sen1or/letslive/livestream/services/livestream"
 	"sen1or/letslive/livestream/services/vod"
@@ -23,9 +24,8 @@ import (
 )
 
 var (
-	configServiceName    = "livestream_service"
-	configProfile        = os.Getenv("CONFIG_SERVER_PROFILE")
-	configReloadInterval = 30 * time.Second
+	configServiceName = "livestream_service"
+	configProfile     = os.Getenv("CONFIG_SERVER_PROFILE")
 
 	discoveryBaseDelay = 1 * time.Second
 	discoveryMaxDelay  = 1 * time.Minute
@@ -42,7 +42,7 @@ func main() {
 		panic(1)
 	}
 
-	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile, configReloadInterval)
+	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile)
 	defer cfgManager.Stop()
 	if err != nil {
 		logger.Panicf("failed to set up config manager: %s", err)
@@ -58,6 +58,11 @@ func main() {
 	serviceName := config.Service.Name
 	instanceId := discovery.GenerateInstanceID(serviceName)
 	go RegisterToDiscoveryService(ctx, registry, serviceName, instanceId, config)
+
+	otelShutdownFunc, err := tracer.SetupOTelSDK(ctx, *config)
+	if err != nil {
+		logger.Panicf("failed to setup otel sdk: %v", err)
+	}
 
 	dbConn := ConnectDB(ctx, config)
 	defer dbConn.Close()
@@ -93,6 +98,12 @@ func main() {
 	shutdownWg.Add(1)
 	go (func() {
 		DeregisterDiscoveryService(shutdownCtx, registry, serviceName, instanceId)
+		shutdownWg.Done()
+	})()
+
+	shutdownWg.Add(1)
+	go (func() {
+		otelShutdownFunc(shutdownCtx)
 		shutdownWg.Done()
 	})()
 

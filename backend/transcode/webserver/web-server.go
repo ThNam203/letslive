@@ -3,6 +3,7 @@ package webserver
 import (
 	"context"
 	"net/http"
+	"sen1or/letslive/transcode/middlewares"
 	"sen1or/letslive/transcode/pkg/logger"
 	"strconv"
 	"time"
@@ -32,7 +33,9 @@ func (ws *WebServer) ListenAndServe() {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	router.Use(corsMiddleware)
+	router.Use(middlewares.CORSMiddleware)
+	router.Use(middlewares.RequestIDMiddleware)
+	router.Use(middlewares.LoggingMiddleware)
 
 	ws.httpServer = &http.Server{
 		Addr:         ":" + strconv.Itoa(ws.ListenPort),
@@ -44,21 +47,6 @@ func (ws *WebServer) ListenAndServe() {
 	if err := ws.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		logger.Errorf("failed to start web server: %s", err.Error())
 	}
-}
-
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Cache,Cache-Control,Authorization")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
 }
 
 // shutdown gracefully shuts down the server without interrupting active connections.

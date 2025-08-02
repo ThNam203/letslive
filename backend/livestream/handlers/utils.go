@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"net/http"
+	"sen1or/letslive/livestream/constants"
 	"sen1or/letslive/livestream/pkg/logger"
 	serviceresponse "sen1or/letslive/livestream/responses"
 	"sen1or/letslive/livestream/types"
+	"strconv"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/golang-jwt/jwt/v5"
@@ -33,4 +35,25 @@ func getUserIdFromCookie(r *http.Request) (*uuid.UUID, *serviceresponse.ServiceE
 	}
 
 	return &userUUID, nil
+}
+
+func getPageAndLimitQuery(r *http.Request) (finalPage int, finalLimit int) {
+	page := r.URL.Query().Get("page")
+	finalPage, pageErr := strconv.Atoi(page)
+	if pageErr != nil || finalPage < constants.REQUEST_PAGE_QUERY_DEFAULT_MIN_VALUE {
+		finalPage = constants.REQUEST_PAGE_QUERY_DEFAULT_MIN_VALUE
+	}
+
+	limit := r.URL.Query().Get("limit")
+	finalLimit, limitErr := strconv.Atoi(limit)
+	if limitErr != nil {
+		//h.WriteErrorResponse(w, serviceresponse.ErrMissingLimitParameter)
+		finalLimit = constants.REQUEST_LIMIT_QUERY_DEFAULT_MAX_VALUE
+	} else if finalLimit < constants.REQUEST_LIMIT_QUERY_DEFAULT_MIN_VALUE {
+		finalLimit = constants.REQUEST_LIMIT_QUERY_DEFAULT_MIN_VALUE
+	} else if finalLimit > constants.REQUEST_LIMIT_QUERY_DEFAULT_MAX_VALUE {
+		finalLimit = constants.REQUEST_LIMIT_QUERY_DEFAULT_MAX_VALUE
+	}
+
+	return
 }

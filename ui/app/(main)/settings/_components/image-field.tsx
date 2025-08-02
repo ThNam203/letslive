@@ -41,7 +41,7 @@ export default function ImageField({
             !imageUrl && "border border-dashed border-border"
           )}
           style={{
-            backgroundImage: `url("${imageUrl}")`,
+            backgroundImage: `${imageUrl ? `url("${imageUrl}")` : 'none'}`,
           }}
         />
         <ImageHover

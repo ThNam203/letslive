@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"sen1or/letslive/user/constants"
 	"sen1or/letslive/user/pkg/discovery"
 	"sen1or/letslive/user/pkg/logger"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -42,6 +44,13 @@ type Config struct {
 	Service  `yaml:"service"`
 	Database `yaml:"database"`
 	MinIO    `yaml:"minio"`
+	Tracer   `yaml:"tracer"`
+}
+
+type Tracer struct {
+	Endpoint     string `yaml:"endpoint"`
+	Secure       bool   `yaml:"secure"`
+	BatchTimeout int    `yaml:"batchTimeout"` /// in milli-second
 }
 
 type ConfigManager struct {
@@ -55,7 +64,7 @@ type ConfigManager struct {
 
 // NewConfigManager creates a new ConfigManager, performs the initial fetch with retry,
 // and starts the background reloader.
-func NewConfigManager(registry discovery.Registry, serviceName string, profile string, reloadInterval time.Duration) (*ConfigManager, error) {
+func NewConfigManager(registry discovery.Registry, serviceName string, profile string) (*ConfigManager, error) {
 	if profile == "" {
 		logger.Warnf("CONFIG_SERVER_PROFILE environment variable not set, using default 'default'")
 		profile = "default"
@@ -97,9 +106,15 @@ func NewConfigManager(registry discovery.Registry, serviceName string, profile s
 	// store the successfully fetched initial configuration
 	cm.currentConfig.Store(initialConfig)
 
+	var reloadIntervalString = os.Getenv("CONFIG_SERVER_RELOAD_INTERVAL") // milli
+	reloadInterval, err := strconv.Atoi(reloadIntervalString)
+	if err != nil || reloadInterval < 0 {
+		reloadInterval = constants.CONFIG_SERVER_DEFAULT_RELOAD_INTERVAL
+	}
+
 	// start background polling for updates
 	if reloadInterval > 0 {
-		cm.ticker = time.NewTicker(reloadInterval)
+		cm.ticker = time.NewTicker(time.Duration(reloadInterval) * time.Millisecond)
 		go cm.startReloader()
 		logger.Infof("started configuration reloader with interval %v", reloadInterval)
 	} else {
