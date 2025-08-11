@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "../../../utils/cn";
 import useUser from "@/hooks/user";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import IconLoader from "@/components/icons/loader";
 
 const navItems = [
     { name: "Profile", href: "/settings/profile" },
@@ -16,29 +17,35 @@ const navItems = [
 export default function SettingsNav({
     children,
 }: Readonly<{ children: React.ReactNode }>) {
+    const [isGettingUser, setIsGettingUser] = useState(true);
     const pathname = usePathname();
-    const user = useUser((state) => state.user);
     const fetchUser = useUser((state) => state.fetchUser);
     const router = useRouter();
 
     useEffect(() => {
-        fetchUser().catch(() => router.push("/login"));
+        setIsGettingUser(true);
+        fetchUser()
+            .catch(() => router.push("/login"))
+            .finally(() => {
+                setIsGettingUser(false);
+            });
     }, [fetchUser, router]);
 
-    if (!user) return <p>Unauthenticated</p>;
-
     return (
-        <div className="flex flex-col h-full bg-background text-foreground">
+        <div className="flex h-full flex-col bg-background text-foreground">
             <div className="max-w-7xl px-6">
-                <h1 className="mt-6 text-4xl font-bold">Settings</h1>
+                <div className="flex mt-6 items-center">
+                    <h1 className="text-4xl font-bold">Settings</h1>
+                    {isGettingUser && <IconLoader width="40" height="40"/>}
+                </div>
                 <nav className="border-b border-border">
-                    <ul className="flex flex-wrap gap-8">
+                    <ul className="flex">
                         {navItems.map((item) => (
                             <li key={item.href}>
                                 <Link
                                     href={item.href}
                                     className={cn(
-                                        "relative inline-block py-4 text-sm transition-colors hover:text-primary",
+                                        "relative inline-block w-20 py-4 text-center text-sm transition-colors hover:text-primary",
                                         pathname === item.href
                                             ? "text-primary"
                                             : "text-foreground",
@@ -54,9 +61,9 @@ export default function SettingsNav({
                     </ul>
                 </nav>
             </div>
-            <div className="overflow-y-auto flex-1 p-6 text-foreground">
+            <div className="flex-1 overflow-y-auto p-6 text-foreground">
                 <div className="max-w-4xl space-y-8">
-                    {children}
+                    {!isGettingUser && children}
                 </div>
             </div>
         </div>

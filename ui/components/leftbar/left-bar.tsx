@@ -27,10 +27,10 @@ export default function LeftBar() {
         <ResizablePanel
             minSize={15}
             defaultSize={15}
-            maxSize={20}
+            maxSize={25}
             order={1}
             className={cn(
-                "bg-background relative h-full w-full py-4",
+                "bg-background relative h-full w-full py-4 min-w-[18rem]",
                 minimizedLeftBar ? "min-w-16 max-w-16" : "",
             )}
         >
