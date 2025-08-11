@@ -17,7 +17,10 @@ export default function StreamEdit() {
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [image, setImage] = useState<File | null>(null);
+
+    // use undefined to indicate no image initially
+    // use null to indicate that user has reset the image
+    const [image, setImage] = useState<File | null | undefined>(undefined);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -49,8 +52,8 @@ export default function StreamEdit() {
 
         setIsSubmitting(true);
         const { updatedInfo, fetchError } = await UpdateLivestreamInformation(
-            image,
-            user!.livestreamInformation.thumbnailUrl,
+            image === undefined ? null : image,
+            image === null ? null : user!.livestreamInformation.thumbnailUrl,
             title,
             description,
         );
@@ -83,46 +86,43 @@ export default function StreamEdit() {
     }, [title, description, imageUrl, user]);
 
     return (
-        <>
-            <Section
-                title="Livestream"
-                description={`Your next livestream information will be based on the information.\nIt won't change even after livestream ends.`}
-                hasBorder
-            >
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <TextField
-                        label="Title"
-                        description="If empty, the title will be generated automatically."
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        required
-                    />
-                    <TextAreaField
-                        label="Description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        rows={4}
-                    />
-                    <ImageField
-                        label="Thumbnail"
-                        description="If empty, the thumbnail will be generated automatically."
-                        imageUrl={imageUrl}
-                        hoverText="Change thumbnail"
-                        onImageChange={handleImageChange}
-                        onResetImage={handleResetImage}
-                        showCloseIcon={imageUrl !== null}
-                    />
-                    <div className="flex items-center justify-end">
-                        <Button
-                            disabled={isSubmitting || !isFormChange}
-                            type="submit"
-                        >
-                            {isSubmitting && <IconLoader />}
-                            Confirm edit
-                        </Button>
-                    </div>
-                </form>
-            </Section>
-        </>
+        <Section
+            title="Livestream"
+            description={`Your next livestream information will be based on the information.\nIt won't change even after livestream ends.`}
+            hasBorder
+        >
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <TextField
+                    label="Title"
+                    description="If empty, the title will be generated automatically."
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                />
+                <TextAreaField
+                    label="Description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={4}
+                />
+                <ImageField
+                    label="Thumbnail"
+                    description="If empty, the thumbnail will be generated automatically."
+                    imageUrl={imageUrl}
+                    hoverText="Change thumbnail"
+                    onImageChange={handleImageChange}
+                    onResetImage={handleResetImage}
+                    showCloseIcon={imageUrl !== null}
+                />
+                <div className="flex items-center justify-end">
+                    <Button
+                        disabled={isSubmitting || !isFormChange}
+                        type="submit"
+                    >
+                        {isSubmitting && <IconLoader />}
+                        Confirm edit
+                    </Button>
+                </div>
+            </form>
+        </Section>
     );
 }

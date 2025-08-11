@@ -34,7 +34,7 @@ const ThemeSwitch = ({
   return (
       <Select onValueChange={(value) => setTheme(value)} value={theme}>
         <SelectTrigger className={cn("w-fit border-border", className)} >
-          <SelectValue defaultValue={THEME_COLORS.LIGHT} />
+          <SelectValue defaultValue={THEME_COLORS.SYSTEM} />
         </SelectTrigger>
         <SelectContent className='bg-background text-foreground border-border border'>
           <SelectGroup>

@@ -98,7 +98,6 @@ export async function UpdateBackgroundPicture(
     }
 }
 
-// if there is not file, thumbnailUrl will be used
 export async function UpdateLivestreamInformation(
     file: File | null,
     thumbnailUrl: string | null,
@@ -107,8 +106,10 @@ export async function UpdateLivestreamInformation(
 ): Promise<{ updatedInfo?: LivestreamInformation, fetchError?: FetchError }> {
     try {
         const formData = new FormData();
+
+        // file will be used, if not then thumbnailUrl (BACKEND)
         if (file) formData.append("thumbnail", file);
-        else if (thumbnailUrl) formData.append("thumbnailUrl", thumbnailUrl);
+        if (thumbnailUrl) formData.append("thumbnailUrl", thumbnailUrl);
 
         formData.append("title", title);
         formData.append("description", description);
