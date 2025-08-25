@@ -43,8 +43,8 @@ const LivestreamsPreviewView = () => {
             )}
             {livestreams.length == 0 && (
                 <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-                    <div className="mb-6 rounded-full bg-muted p-6">
-                        <IconPlay className="text-muted-foreground h-12 w-12" />
+                    <div className="mb-6 rounded-full bg-muted p-4">
+                        <IconPlay className="text-muted-foreground h-16 w-16" />
                     </div>
                     <h2 className="mb-2 text-2xl font-semibold">
                         No Live Streams

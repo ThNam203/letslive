@@ -65,8 +65,8 @@ export default function ProfileBanner({
               }`
             }
             alt="Profile Banner"
-            layout="fill"
-            objectFit="cover"
+            fill={true}
+            className="object-cover"
           />
         ) : (
           <DefaultBackgound />

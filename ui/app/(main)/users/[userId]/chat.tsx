@@ -23,6 +23,8 @@ export default function ChatPanel({
     const [messages, setMessages] = useState<ReceivedMessage[]>([]);
     const [inputMessage, setInputMessage] = useState("");
     const wsRef = useRef<WebSocket | null>(null);
+    const [atBottom, setAtBottom] = useState(false);
+    const messageContainerRef = useRef<HTMLDivElement | null>(null);
 
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
@@ -54,6 +56,28 @@ export default function ChatPanel({
 
         fetchMessages();
     }, [roomId]);
+    
+    useEffect(() => {
+      const container = messageContainerRef.current;
+      if (!container) return;
+    
+      const handleScroll = () => {
+        const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+        setAtBottom(distanceFromBottom < 3); // 3px tolerance
+      };
+    
+      container.addEventListener("scroll", handleScroll);
+      return () => container.removeEventListener("scroll", handleScroll);
+    }, []);
+    
+    useEffect(() => {
+      if (atBottom) {
+        const container = messageContainerRef.current;
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      }
+    }, [messages, atBottom]);    
 
     useEffect(() => {
         const connectWebSocket = async () => {
@@ -115,7 +139,7 @@ export default function ChatPanel({
                     <IconClose className="h-4 w-4" />
                 </Button>
             </div>
-            <div className="overflow-y-auto flex-1 rounded-md rounded-t-none border border-t-0 border-border px-4 py-2 mb-24">
+            <div ref={messageContainerRef} className="overflow-y-auto flex-1 rounded-md rounded-t-none border border-t-0 border-border px-4 py-2 mb-12">
                 {messages.map((message, idx) => (
                     <div key={idx} className="mb-3">
                         <span
@@ -139,7 +163,7 @@ export default function ChatPanel({
                 ))}
             </div>
             {/* Message input form */}
-            <form onSubmit={handleSendMessage} className="absolute bottom-14 right-0 left-0 flex gap-2">
+            <form onSubmit={handleSendMessage} className="absolute bottom-2 right-0 left-0 flex gap-2">
                 <Input
                     type="text"
                     placeholder={
@@ -150,8 +174,8 @@ export default function ChatPanel({
                     onChange={(e) => setInputMessage(e.target.value)}
                     className="flex-1"
                 />
-                <Button type="submit" disabled={!user}>
-                    <IconSend className="h-4 w-4" />
+                <Button type="submit" disabled={!user} className="p-0 w-12 h-9">
+                    <IconSend className="!h-6 !w-6" />
                 </Button>
             </form>
         </div>

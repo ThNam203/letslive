@@ -105,13 +105,6 @@ export default function ProfileSettings() {
         const isProfileImageChange = profileImageFile !== null;
         const isBackgroundImageChange = backgroundImageFile !== null;
 
-        console.log(
-            isDisplayNameChange,
-            isBioChange,
-            isProfileImageChange,
-            isBackgroundImageChange,
-        );
-
         const isUserDataChange =
             isDisplayNameChange ||
             isBioChange ||

@@ -28,6 +28,7 @@ export default function LeftBar() {
             minSize={15}
             defaultSize={15}
             maxSize={25}
+            id="1"
             order={1}
             className={cn(
                 "bg-background relative h-full w-full py-4 min-w-[18rem]",
