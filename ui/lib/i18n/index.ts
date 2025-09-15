@@ -3,7 +3,7 @@ import { headers } from "next/headers"
 import { headerName } from "./settings"
 
 export async function myGetT(ns: string | string[] = "translation") {
-  const headerList = await headers()
+  const headerList = headers()
   const lng = headerList.get(headerName)
 
   if (lng && i18next.resolvedLanguage !== lng) {
