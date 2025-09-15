@@ -1,6 +1,6 @@
 import { VOD } from "@/types/vod";
 import { FetchError } from "../../types/fetch-error";
-import { fetchClient } from "../../utils/fetchClient";
+import { fetchClient } from "@/utils/fetchClient";
 
 export async function GetAllVODsAsAuthor(): Promise<{
     vods: VOD[];

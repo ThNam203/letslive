@@ -253,6 +253,7 @@ func (r *postgresUserRepo) Create(ctx context.Context, username string, email st
 func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserRequestDTO) (*domains.User, *servererrors.ServerError) {
 	params := pgx.NamedArgs{
 		"id":           user.Id,
+		"status":       user.Status,
 		"display_name": user.DisplayName,
 		"phone_number": user.PhoneNumber,
 		"bio":          user.Bio,
@@ -261,7 +262,7 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 	rows, err := r.dbConn.Query(
 		ctx, `
 		UPDATE users 
-		SET display_name = @display_name, phone_number = @phone_number, bio = @bio 
+		SET display_name = @display_name, phone_number = @phone_number, bio = @bio, status = @status
 		WHERE id = @id 
 		RETURNING *
 	`, params)

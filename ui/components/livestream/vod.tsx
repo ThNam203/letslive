@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { dateDiffFromNow, formatSeconds } from "../../utils/timeFormats";
+import { dateDiffFromNow, formatSeconds } from "@/utils/timeFormats";
 import GLOBAL from "../../global";
 import { VOD } from "@/types/vod";
 import LiveImage from "./live-image";

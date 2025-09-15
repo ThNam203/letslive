@@ -44,7 +44,7 @@ type GetUserByStreamAPIKeyRequestDTO struct{}
 type UpdateUserRequestDTO struct {
 	Id          uuid.UUID `json:"id" validate:"uuid"`
 	Username    *string   `json:"username,omitempty" validate:"omitempty,gte=6,lte=20"`
-	IsActive    *bool     `json:"isActive,omitempty"`
+	Status      *string   `json:"status,omitempty" validate:"oneof=normal disabled"`
 	PhoneNumber *string   `json:"phoneNumber,omitempty"`
 	Bio         *string   `json:"bio,omitempty"`
 	DisplayName *string   `json:"displayName,omitempty" validate:"omitempty,gte=6,lte=20"`

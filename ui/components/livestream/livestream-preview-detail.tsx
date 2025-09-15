@@ -1,6 +1,6 @@
 import { Livestream } from "../../types/livestream";
 import { User } from "../../types/user";
-import { dateDiffFromNow } from "../../utils/timeFormats";
+import { dateDiffFromNow } from "@/utils/timeFormats";
 import IconClock from "../icons/clock";
 import IconEye from "../icons/eye";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";

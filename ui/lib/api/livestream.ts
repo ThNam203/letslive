@@ -1,6 +1,6 @@
 import { FetchError } from "../../types/fetch-error";
 import { Livestream } from "../../types/livestream";
-import { fetchClient } from "../../utils/fetchClient";
+import { fetchClient } from "@/utils/fetchClient";
 
 export async function GetPopularLivestreams(page: number = 0, limit: number = 10): Promise<{
     livestreams: Livestream[];

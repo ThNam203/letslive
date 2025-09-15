@@ -41,11 +41,12 @@ func (h LivestreamHandler) GetLivestreamOfUserPublicHandler(w http.ResponseWrite
 
 	ctx, span := tracer.MyTracer.Start(ctx, "get_livestream_of_user_public_handler.livestream_service.get_livestream_of_user")
 	vod, serviceErr := h.livestreamService.GetLivestreamOfUser(ctx, userUUID)
+	span.End()
+
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
-	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -64,11 +65,12 @@ func (h *LivestreamHandler) CreateLivestreamInternalHandler(w http.ResponseWrite
 
 	ctx, span := tracer.MyTracer.Start(ctx, "create_livestream_internal_handler.livestream_service.create")
 	createdLivestream, err := h.livestreamService.Create(ctx, body)
+	span.End()
+
 	if err != nil {
 		h.WriteErrorResponse(w, err)
 		return
 	}
-	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -83,11 +85,12 @@ func (h *LivestreamHandler) GetRecommendedLivestreamsPublicHandler(w http.Respon
 
 	ctx, span := tracer.MyTracer.Start(ctx, "get_recommended_livestreams_public_handler.livestream_service.get_recommended_livestreams")
 	livestreams, serviceErr := h.livestreamService.GetRecommendedLivestreams(ctx, page, limit)
+	span.End()
+
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
-	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -114,11 +117,12 @@ func (h *LivestreamHandler) EndLivestreamAndCreateVODInternalHandler(w http.Resp
 
 	ctx, span := tracer.MyTracer.Start(ctx, "end_livestream_and_create_vod_internal_handler.livestream_service.end_livestream_and_create_vod")
 	serviceErr := h.livestreamService.EndLivestreamAndCreateVOD(ctx, streamId, requestBody)
+	span.End()
+
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
-	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -150,11 +154,12 @@ func (h *LivestreamHandler) UpdateLivestreamPrivateHandler(w http.ResponseWriter
 
 	ctx, span := tracer.MyTracer.Start(ctx, "update_livestream_private_handler.livestream_service.update")
 	updatedLivestream, serviceErr := h.livestreamService.Update(ctx, requestBody, streamId, *userUUID)
+	span.End()
+
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
-	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

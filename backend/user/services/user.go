@@ -99,11 +99,44 @@ func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequ
 }
 
 func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequestDTO) (*domains.User, *servererrors.ServerError) {
-	if err := utils.Validator.Struct(&data); err != nil {
-		return nil, servererrors.ErrInvalidInput
+	existedData, err := s.userRepo.GetById(ctx, data.Id)
+	if err != nil {
+		logger.Errorf("failed to get existedData for user id: %s", data.Id)
+		return nil, servererrors.ErrUserNotFound
 	}
 
-	updatedUser, err := s.userRepo.Update(ctx, data)
+	if data.Bio != nil {
+		existedData.Bio = data.Bio
+	}
+
+	// TODO: what
+	var statusPtr *string
+	if data.Status != nil {
+		statusPtr = data.Status
+	}
+
+	if data.DisplayName != nil {
+		existedData.DisplayName = data.DisplayName
+	}
+
+	// currently username is not changable
+	//if data.Username != nil {
+	//	existedData.Username = *data.Username
+	//}
+
+	if data.PhoneNumber != nil {
+		existedData.PhoneNumber = data.PhoneNumber
+	}
+
+	finalDTO := dto.UpdateUserRequestDTO{
+		Id:          existedData.Id,
+		Status:      statusPtr,
+		PhoneNumber: existedData.PhoneNumber,
+		Bio:         existedData.Bio,
+		DisplayName: existedData.DisplayName,
+	}
+
+	updatedUser, err := s.userRepo.Update(ctx, finalDTO)
 	if err != nil {
 		return nil, err
 	}
