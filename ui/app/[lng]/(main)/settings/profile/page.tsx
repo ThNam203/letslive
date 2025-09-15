@@ -16,7 +16,7 @@ import TextAreaField from "../_components/textarea-field";
 import ThemeList from "@/components/utils/theme-list";
 import IconLoader from "@/components/icons/loader";
 import DisableAccountDialog from "./_components/disable-account-dialog";
-import { useT } from "@/hooks/use-translation";
+import useT from "@/hooks/use-translation";
 
 export default function ProfileSettings() {
     const { t } = useT("translation");

@@ -6,7 +6,7 @@ import { GetAllVODsAsAuthor } from "@/lib/api/vod";
 import { toast } from "react-toastify";
 import VODEditCard from "./vod";
 import { VOD } from "@/types/vod";
-import { useT } from "@/hooks/use-translation";
+import useT from "@/hooks/use-translation";
 
 export default function VODsEdit() {
     const { t } = useT("translation");

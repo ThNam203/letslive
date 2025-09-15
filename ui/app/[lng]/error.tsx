@@ -1,11 +1,13 @@
-"use client"
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useT } from "@/hooks/use-translation";
+import useT from "@/hooks/use-translation";
 
 export default function GlobalError() {
-    const { t } = useT("translation");
+    const { t } = useT("error");
+
     return (
         <div className="min-h-screen w-full flex flex-col items-center justify-center p-4">
             <div className="max-w-[600px] text-center flex items-center justify-center">

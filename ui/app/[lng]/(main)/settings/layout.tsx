@@ -25,7 +25,7 @@ export default function SettingsNav({
     useEffect(() => {
         setIsGettingUser(true);
         fetchUser()
-            .catch(() => router.push("/login"))
+            .catch(() => router.push("/login")) // TODO: should not redirect but show error
             .finally(() => {
                 setIsGettingUser(false);
             });

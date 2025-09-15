@@ -13,7 +13,7 @@ import { FollowOtherUser, UnfollowOtherUser } from "@/lib/api/user";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import IconLoader from "@/components/icons/loader";
-import { useT } from "@/hooks/use-translation";
+import useT from "@/hooks/use-translation";
 
 export default function ProfileHeader({
     user,

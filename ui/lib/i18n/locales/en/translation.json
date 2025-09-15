@@ -1,22 +1,7 @@
 {
-  "app": {
-    "title": "FavoList",
-    "loading": "Loading..."
-  },
   "home": {
     "livestreams": "Livestreams",
     "videos": "Videos"
-  },
-  "auth": {
-    "login": "Log in",
-    "login_title": "Welcome back!",
-    "login_subtitle": "Gain access to the world right now.",
-    "signup": "Sign up",
-    "signup_title": "Welcome! Sign up for a new world?",
-    "signup_subtitle": "Choose a method below to begin",
-    "google_cookie_warning": "Because the backend and frontend have different domains, please allow 3rd party cookies to use Google authentication. I will fix it later.",
-    "no_account": "Don't have an account?",
-    "have_account": "Already have an account?"
   },
   "users": {
     "live_streaming": "Live Streaming",
@@ -24,17 +9,7 @@
     "follow": "Follow",
     "unfollow": "Unfollow"
   },
-  "common": {
-    "save": "Save",
-    "cancel": "Cancel",
-    "or": "or",
-    "go_home": "Go home",
-    "save_changes": "Save Changes"
-  },
-  "error": {
-    "title": "Oops!",
-    "description": "Something has gone wrong, please try again later"
-  },
+
   "settings": {
     "profile": {
       "title": "Profile Settings",

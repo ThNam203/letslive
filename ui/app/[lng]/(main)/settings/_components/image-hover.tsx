@@ -10,7 +10,7 @@ type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 type Props = {
   className?: string;
   onClick?: () => void;
-  inputRef?: React.RefObject<HTMLInputElement>;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
   onValueChange?: (file: File) => void;
   title?: string | React.ReactNode;
   showCloseIcon?: boolean;
