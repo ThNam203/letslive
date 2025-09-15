@@ -2,7 +2,7 @@ export const fallbackLng = 'en'
 export const languages = [fallbackLng, 'vi']
 export const defaultNS = 'translation'
 export const cookieName = 'lng'
-export const headerName = 'X-Locale'
+export const headerName = 'X-Letslive-Locale'
 
 export const countryNameToLanguageMap: Record<string, string> = {
   en: "English",

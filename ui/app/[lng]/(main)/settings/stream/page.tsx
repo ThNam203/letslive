@@ -10,8 +10,10 @@ import Section from "../_components/section";
 import TextField from "../_components/text-field";
 import TextAreaField from "../_components/textarea-field";
 import IconLoader from "@/components/icons/loader";
+import { useT } from "@/hooks/use-translation";
 
 export default function StreamEdit() {
+    const { t } = useT("translation");
     const user = useUser((state) => state.user);
     const updateUser = useUser((state) => state.updateUser);
 
@@ -64,7 +66,7 @@ export default function StreamEdit() {
         }
 
         if (updatedInfo) {
-            toast.success("Livestream information updated successfully");
+            toast.success(t("settings.stream.updated_success"));
             updateUser({
                 ...user,
                 livestreamInformation: {
@@ -87,28 +89,28 @@ export default function StreamEdit() {
 
     return (
         <Section
-            title="Livestream"
-            description={`Your next livestream information will be based on the information.\nIt won't change even after livestream ends.`}
+            title={t("settings.stream.title")}
+            description={t("settings.stream.description")}
             hasBorder
         >
             <form onSubmit={handleSubmit} className="space-y-4">
                 <TextField
-                    label="Title"
-                    description="If empty, the title will be generated automatically."
+                    label={t("settings.stream.title_label")}
+                    description={t("settings.stream.title_description")}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                 />
                 <TextAreaField
-                    label="Description"
+                    label={t("settings.stream.description_label")}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={4}
                 />
                 <ImageField
-                    label="Thumbnail"
-                    description="If empty, the thumbnail will be generated automatically."
+                    label={t("settings.stream.thumbnail_label")}
+                    description={t("settings.stream.thumbnail_description")}
                     imageUrl={imageUrl}
-                    hoverText="Change thumbnail"
+                    hoverText={t("settings.stream.thumbnail_hover")}
                     onImageChange={handleImageChange}
                     onResetImage={handleResetImage}
                     showCloseIcon={imageUrl !== null}
@@ -119,7 +121,7 @@ export default function StreamEdit() {
                         type="submit"
                     >
                         {isSubmitting && <IconLoader />}
-                        Confirm edit
+                        {t("settings.stream.confirm_edit_button")}
                     </Button>
                 </div>
             </form>

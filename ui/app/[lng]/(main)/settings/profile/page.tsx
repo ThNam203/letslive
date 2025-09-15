@@ -16,8 +16,10 @@ import TextAreaField from "../_components/textarea-field";
 import ThemeList from "@/components/utils/theme-list";
 import IconLoader from "@/components/icons/loader";
 import DisableAccountDialog from "./_components/disable-account-dialog";
+import { useT } from "@/hooks/use-translation";
 
 export default function ProfileSettings() {
+    const { t } = useT("translation");
     const user = useUser((state) => state.user);
     const updateUser = useUser((state) => state.updateUser);
 
@@ -142,8 +144,8 @@ export default function ProfileSettings() {
         <>
             {/* Profile Settings Section */}
             <Section
-                title="Profile Settings"
-                description="Change identifying details for your account"
+                title={t("settings.profile.title")}
+                description={t("settings.profile.description")}
                 hasBorder
             >
                 <form
@@ -156,19 +158,19 @@ export default function ProfileSettings() {
                         onBackgroundImageChange={handleBackgroundImageChange}
                     />
                     <TextField
-                        label="Username"
+                        label={t("settings.profile.username")}
                         disabled
                         defaultValue={user?.username}
                     />
                     <TextField
-                        label="Display Name"
+                        label={t("settings.profile.display_name")}
                         defaultValue={user?.displayName}
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
                         disabled={isUpdatingProfile}
                     />
                     <TextAreaField
-                        label="Bio"
+                        label={t("settings.profile.bio")}
                         defaultValue={user?.bio}
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
@@ -181,15 +183,15 @@ export default function ProfileSettings() {
                             disabled={isUpdatingProfile || isButtonDisabled}
                             type="submit"
                         >
-                            {isUpdatingProfile && <IconLoader />} Save Changes
+                            {isUpdatingProfile && <IconLoader />} {t("common.save_changes")}
                         </Button>
                     </div>
                 </form>
             </Section>
 
             <Section
-                title="Themes"
-                description="Customize the look and feel of the website"
+                title={t("settings.themes.title")}
+                description={t("settings.themes.description")}
                 className="border-t border-border pt-8"
                 contentClassName="border border-border rounded-md p-4"
             >
@@ -197,17 +199,14 @@ export default function ProfileSettings() {
             </Section>
 
             <Section
-                title="Disabling your Let's Live account"
-                description="Completely deactivate your account"
+                title={t("settings.disable.title")}
+                description={t("settings.disable.description")}
                 className="border-t border-border pt-8"
                 contentClassName="border border-border rounded-md p-4"
             >
                 <div className="flex w-full items-center justify-between">
                     <p className="w-2/3 text-sm text-destructive">
-                        When you disable your account, your profile and
-                        notifications will be hidden, and your account will be
-                        deactivated. You can reactivate your account at any
-                        time.
+                        {t("settings.disable.note")}
                     </p>
                     <DisableAccountDialog isUpdatingProfile={isUpdatingProfile} />
                 </div>
