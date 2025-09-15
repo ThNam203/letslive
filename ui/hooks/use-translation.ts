@@ -8,7 +8,7 @@ import { useParams } from 'next/navigation'
 
 const runsOnServerSide = typeof window === 'undefined'
 
-export function useT(ns: string = "translation", options?: UseTranslationOptions<undefined>) {
+function useT(ns: string | string[] = "translation", options?: UseTranslationOptions<undefined>) {
   const lng = useParams()?.lng
   if (typeof lng !== 'string') throw new Error('useT is only available inside /app/[lng]')
   if (runsOnServerSide && i18next.resolvedLanguage !== lng) {
@@ -26,3 +26,5 @@ export function useT(ns: string = "translation", options?: UseTranslationOptions
   }
   return useTranslation(ns, options)
 }
+
+export default useT;

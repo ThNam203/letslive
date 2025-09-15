@@ -10,7 +10,7 @@ import Section from "../_components/section";
 import TextField from "../_components/text-field";
 import TextAreaField from "../_components/textarea-field";
 import IconLoader from "@/components/icons/loader";
-import { useT } from "@/hooks/use-translation";
+import useT from "@/hooks/use-translation";
 
 export default function StreamEdit() {
     const { t } = useT("translation");

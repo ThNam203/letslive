@@ -18,7 +18,7 @@ import IconMenu from "@/components/icons/menu";
 import { VOD } from "@/types/vod";
 import { Livestream } from "@/types/livestream";
 import { GetPublicVODsOfUser } from "@/lib/api/vod";
-import { useT } from "@/hooks/use-translation";
+import useT from "@/hooks/use-translation";
 
 export default function Livestreaming() {
     const { t } = useT("translation");

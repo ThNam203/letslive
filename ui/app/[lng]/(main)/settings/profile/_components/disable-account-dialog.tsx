@@ -16,7 +16,7 @@ import useUser from "@/hooks/user";
 import { Logout } from "@/lib/api/auth";
 import { UpdateProfile } from "@/lib/api/user";
 import { UserStatus } from "@/types/user";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
@@ -30,6 +30,7 @@ export default function DisableAccountDialog({
     const router = useRouter();
     const [isDisablingAccount, setIsDisablingAccount] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const { lng } = useParams() as { lng: string } 
 
     const logoutHandler = async () => {
         const { fetchError } = await Logout();
@@ -40,7 +41,7 @@ export default function DisableAccountDialog({
             });
         } else {
             clearUser();
-            router.push("/login");
+            router.push(`${lng}/login`);
         }
     };
     const handleDisableAccount = async () => {

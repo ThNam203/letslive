@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import { User } from "../../types/user";
 import { GetUserById } from "../../lib/api/user";
 import { dateDiffFromNow, formatSeconds } from "@/utils/timeFormats";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import GLOBAL from "../../global";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import IconFilm from "../icons/film";
@@ -72,6 +72,7 @@ export function PopularVODView() {
 function VODCard({ vod }: { vod: VOD }) {
     const [user, setUser] = useState<User | null>(null);
     const router = useRouter();
+    const { lng } = useParams() as { lng: string }
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -100,7 +101,7 @@ function VODCard({ vod }: { vod: VOD }) {
                     width={500}
                     height={500}
                     onClick={() =>
-                        router.push(`/users/${vod.userId}/vods/${vod.id}`)
+                        router.push(`${lng}/users/${vod.userId}/vods/${vod.id}`)
                     }
                     fallbackSrc="/images/streaming.jpg"
                     alwaysRefresh={false}

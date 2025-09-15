@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import useUser from "../../hooks/user";
 import { Logout } from "../../lib/api/auth";
 import { Button } from "../ui/button";
@@ -17,6 +17,7 @@ export default function UserInfo() {
   const userState = useUser();
   const router = useRouter();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+    const { lng } = useParams() as { lng: string }
 
   const logoutHandler = async () => {
     const { fetchError } = await Logout();
@@ -27,13 +28,14 @@ export default function UserInfo() {
       });
     } else {
       userState.clearUser();
-      router.push("/login");
+      router.push(`/${lng}/login`);
     }
   };
 
   useEffect(() => {
     const fetchUser = async () => {
       userState.fetchUser().catch((e) => {
+        // TODO
         // if (e instanceof FetchError && e.isClientError) {
         //     toast(e.message, {
         //         toastId: "fetch-user-error",

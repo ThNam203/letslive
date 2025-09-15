@@ -1,39 +1,13 @@
 {
-  "app": {
-    "title": "FavoList",
-    "loading": "Đang tải..."
-  },
   "home": {
     "livestreams": "Phát trực tiếp",
     "videos": "Video"
-  },
-  "auth": {
-    "login": "Đăng nhập",
-    "login_title": "Chào mừng trở lại!",
-    "login_subtitle": "Truy cập thế giới ngay bây giờ.",
-    "signup": "Đăng ký",
-    "signup_title": "Chào mừng! Đăng ký để khám phá thế giới mới?",
-    "signup_subtitle": "Chọn một phương thức bên dưới để bắt đầu",
-    "google_cookie_warning": "Vì backend và frontend khác miền, vui lòng cho phép cookie bên thứ ba để dùng đăng nhập Google. Mình sẽ sửa sau.",
-    "no_account": "Chưa có tài khoản?",
-    "have_account": "Đã có tài khoản?"
   },
   "users": {
     "live_streaming": "Trực tiếp",
     "offline": "Người dùng hiện đang ngoại tuyến.",
     "follow": "Theo dõi",
     "unfollow": "Bỏ theo dõi"
-  },
-  "common": {
-    "save": "Lưu",
-    "cancel": "Hủy",
-    "or": "hoặc",
-    "go_home": "Về trang chủ",
-    "save_changes": "Lưu thay đổi"
-  },
-  "error": {
-    "title": "Rất tiếc!",
-    "description": "Đã xảy ra lỗi, vui lòng thử lại sau"
   },
   "settings": {
     "profile": {

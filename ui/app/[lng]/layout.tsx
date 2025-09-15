@@ -1,49 +1,51 @@
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "@/app/globals.css";
 import React, { Suspense } from "react";
 import Loading from "./loading";
 import Toast from "@/components/utils/toast";
-import { ThemeProvider } from 'next-themes'
 import { languages } from "@/lib/i18n/settings";
 import { dir } from "i18next";
 import { myGetT } from "@/lib/i18n";
+import TranslationsProvider from "@/components/utils/i18n-provider";
+import { ThemeProviderWrapper } from "@/components/utils/theme-provider-wrapper";
 
 const inter = Inter({ subsets: ["latin"] });
+type Params = Promise<{ lng: string }>;
 
 export async function generateStaticParams() {
     return languages.map((language) => ({
         lng: language,
-    }))
+    }));
 }
 
 export async function generateMetadata() {
-    const { t } = await myGetT('second-page')
+    const { t } = await myGetT();
+
     return {
-      title: t('title')
-    }
+        title: t("title"),
+    };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
     params,
-}: Readonly<{
+}: {
     children: React.ReactNode;
-    params: { lng: string };
-}>) {
+    params: Params;
+}) {
+    const { lng } = await params;
+
     return (
-        <html lang={params.lng} dir={dir(params.lng)} suppressHydrationWarning>
+        <html lang={lng} dir={dir(lng)}>
             <body className={inter.className}>
-                <Suspense fallback={<Loading />}>
-                    <ThemeProvider       
-                        attribute="data-theme"
-                        defaultTheme="system"
-                        enableSystem
-                    >
-                        {children}
-                        <Toast />
-                    </ThemeProvider>
-                </Suspense>
+                <TranslationsProvider>
+                    <ThemeProviderWrapper>
+                        <Suspense fallback={<Loading />}>
+                            {children}
+                            <Toast />
+                        </Suspense>
+                    </ThemeProviderWrapper>
+                </TranslationsProvider>
             </body>
         </html>
     );
