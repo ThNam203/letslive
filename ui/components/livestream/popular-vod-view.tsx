@@ -8,7 +8,7 @@ import { GetPopularVODs } from "../../lib/api/vod";
 import { toast } from "react-toastify";
 import { User } from "../../types/user";
 import { GetUserById } from "../../lib/api/user";
-import { dateDiffFromNow, formatSeconds } from "../../utils/timeFormats";
+import { dateDiffFromNow, formatSeconds } from "@/utils/timeFormats";
 import { useRouter } from "next/navigation";
 import GLOBAL from "../../global";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";

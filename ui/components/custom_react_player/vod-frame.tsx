@@ -14,7 +14,7 @@ import { ClassValue } from "clsx";
 import { useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import screenfull from "screenfull";
-import { cn } from "../../utils/cn";
+import { cn } from "@/utils/cn";
 
 import dynamic from "next/dynamic";
 const ReactPlayerWrapper = dynamic(() => import("./react-player-wrapper"), {

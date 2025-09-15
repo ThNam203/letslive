@@ -1,5 +1,5 @@
 import { FetchError } from "../../types/fetch-error";
-import { fetchClient } from "../../utils/fetchClient";
+import { fetchClient } from "@/utils/fetchClient";
 
 export async function UploadFile(
     file: File

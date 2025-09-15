@@ -1,6 +1,6 @@
 import { FetchError } from "../../types/fetch-error";
 import { ReceivedMessage } from "../../types/message";
-import { fetchClient } from "../../utils/fetchClient";
+import { fetchClient } from "@/utils/fetchClient";
 
 
 export async function GetMessages(roomId: string): Promise<{

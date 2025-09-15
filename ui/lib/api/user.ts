@@ -1,6 +1,6 @@
 import { FetchError } from "../../types/fetch-error";
 import { LivestreamInformation, User } from "../../types/user";
-import { fetchClient } from "../../utils/fetchClient";
+import { fetchClient } from "@/utils/fetchClient";
 
 export async function SearchUsersByUsername(query: string): Promise<{
     users: User[];
@@ -49,7 +49,7 @@ export async function GetMeProfile(): Promise<{
     }
 }
 
-export async function UpdateProfile(user: User): Promise<{ updatedUser?: User; fetchError?: FetchError }> {
+export async function UpdateProfile(user: Partial<User>): Promise<{ updatedUser?: User; fetchError?: FetchError }> {
     try {
         const data = await fetchClient<User>(`/user/me`, {
             method: "PUT",

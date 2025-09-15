@@ -41,11 +41,12 @@ func (h VODHandler) GetVODByIdPublicHandler(w http.ResponseWriter, r *http.Reque
 
 	ctx, span := tracer.MyTracer.Start(ctx, "get_vod_by_id_public_handler.vod_service.get_vod_by_id")
 	vod, serviceErr := h.vodService.GetVODById(ctx, vodUUID)
+	span.End()
+
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
-	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -72,11 +73,12 @@ func (h VODHandler) GetVODsOfUserPublicHandler(w http.ResponseWriter, r *http.Re
 
 	ctx, span := tracer.MyTracer.Start(ctx, "get_vods_of_user_public_handler.vod_service.get_public_vods_by_user")
 	vods, serviceErr := h.vodService.GetPublicVODsByUser(ctx, userUUID, page, limit)
+	span.End()
+
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
-	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -97,11 +99,12 @@ func (h VODHandler) GetVODsOfAuthorPrivateHandler(w http.ResponseWriter, r *http
 
 	ctx, span := tracer.MyTracer.Start(ctx, "get_vods_of_author_private_handler.vod_service.get_all_vods_by_user")
 	livestreams, serviceErr := h.vodService.GetAllVODsByUser(ctx, *userUUID, page, limit)
+	span.End()
+
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
-	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -117,11 +120,12 @@ func (h VODHandler) GetRecommendedVODsPublicHandler(w http.ResponseWriter, r *ht
 
 	ctx, span := tracer.MyTracer.Start(ctx, "get_recommended_vods_public_handler.vod_service.get_recommended_vods")
 	vods, serviceErr := h.vodService.GetRecommendedVODs(ctx, page, limit)
+	span.End()
+
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
-	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -154,11 +158,12 @@ func (h VODHandler) UpdateVODMetadataPrivateHandler(w http.ResponseWriter, r *ht
 
 	ctx, span := tracer.MyTracer.Start(ctx, "update_vod_metadata_private_handler.vod_service.update_vod_metadata")
 	updatedvod, serviceErr := h.vodService.UpdateVODMetadata(ctx, requestBody, streamId, *userId)
+	span.End()
+
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
-	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -185,11 +190,12 @@ func (h VODHandler) DeleteVODPrivateHandler(w http.ResponseWriter, r *http.Reque
 
 	ctx, span := tracer.MyTracer.Start(ctx, "delete_vod_private_handler.vod_service.delete")
 	serviceErr := h.vodService.Delete(ctx, vodId, *userUUID)
+	span.End()
+
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
-	span.End()
 
 	w.WriteHeader(http.StatusNoContent)
 }

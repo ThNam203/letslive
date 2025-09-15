@@ -4,7 +4,7 @@ import { ClassValue } from "clsx";
 import { useRouter } from "next/navigation";
 import { User } from "../../types/user";
 import { Hover3DBox } from "./hover-3d-box";
-import { cn } from "../../utils/cn";
+import { cn } from "@/utils/cn";
 import LivestreamPreviewDetailView from "./livestream-preview-detail";
 import GLOBAL from "../../global";
 import { Livestream } from "../../types/livestream";

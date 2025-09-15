@@ -74,11 +74,12 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 
 	ctx, span := tracer.MyTracer.Start(ctx, "update_private_handler.livestream_service.update")
 	updatedData, updateErr := h.livestreamService.Update(ctx, updateData)
+	span.End()
+
 	if updateErr != nil {
 		h.WriteErrorResponse(w, updateErr)
 		return
 	}
-	span.End()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

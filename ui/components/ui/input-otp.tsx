@@ -3,7 +3,7 @@
 import * as React from "react"
 import { OTPInput, OTPInputContext } from "input-otp"
 
-import { cn } from "../../utils/cn"
+import { cn } from "@/utils/cn"
 import IconMinus from "../icons/minus"
 
 const InputOTP = React.forwardRef<

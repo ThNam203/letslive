@@ -31,11 +31,12 @@ func (h *FollowHandler) FollowPrivateHandler(w http.ResponseWriter, r *http.Requ
 
 	ctx, span := tracer.MyTracer.Start(ctx, "follow_private_handler.follow_service.follow")
 	serviceErr := h.followService.Follow(ctx, followerId.String(), followedId)
+	span.End()
+
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
-	span.End()
 
 	w.WriteHeader(http.StatusCreated)
 }
@@ -52,11 +53,12 @@ func (h *FollowHandler) UnfollowPrivateHandler(w http.ResponseWriter, r *http.Re
 
 	ctx, span := tracer.MyTracer.Start(ctx, "unfollow_private_handler.follow_service.unfollow")
 	serviceErr := h.followService.Unfollow(ctx, followerId.String(), followedId)
+	span.End()
+
 	if serviceErr != nil {
 		h.WriteErrorResponse(w, serviceErr)
 		return
 	}
-	span.End()
 
 	w.WriteHeader(http.StatusOK)
 }
