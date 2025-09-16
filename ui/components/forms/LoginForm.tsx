@@ -26,7 +26,6 @@ export default function LogInForm() {
     });
     const [turnstileToken, setTurnstileToken] = useState("");
     const turnstile = useTurnstile();
-    const { lng } = useParams() as { lng: string }
     const { t, i18n } = useT(["auth", "error"]);
 
     const validate = () => {
@@ -69,7 +68,7 @@ export default function LogInForm() {
                 setTurnstileToken("");
                 toast.error(fetchError.message);
             } else {
-                router.replace(`/${lng}`);
+                router.push("/");
                 router.refresh();
             }
         }

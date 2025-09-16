@@ -27,10 +27,8 @@ export default function DisableAccountDialog({
 }) {
     const user = useUser((state) => state.user);
     const clearUser = useUser((state) => state.clearUser);
-    const router = useRouter();
     const [isDisablingAccount, setIsDisablingAccount] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
-    const { lng } = useParams() as { lng: string } 
 
     const logoutHandler = async () => {
         const { fetchError } = await Logout();
@@ -41,9 +39,9 @@ export default function DisableAccountDialog({
             });
         } else {
             clearUser();
-            router.push(`${lng}/login`);
         }
     };
+
     const handleDisableAccount = async () => {
         try {
             setIsDisablingAccount(true);
@@ -55,7 +53,7 @@ export default function DisableAccountDialog({
                 toast.error(fetchError.message);
                 return;
             }
-            // await logoutHandler();
+            await logoutHandler();
         } catch (error) {
             toast.error("An unknown error occurred");
         } finally {

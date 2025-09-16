@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import Link from "next/link";
 import IconGoogle from "@/components/icons/google";
@@ -7,64 +7,61 @@ import GLOBAL from "@/global";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
-import ThemeSwitch from "@/components/utils/theme-switch";
 import useT from "@/hooks/use-translation";
 
 export default function LogInPage() {
     const { t } = useT(["auth", "common"]);
-    const { lng } = useParams() as { lng: string } 
-    const params = useSearchParams()
+    const searchParams = useSearchParams();
     const router = useRouter();
 
     useEffect(() => {
-        const err = params.get("errorMessage")
+        const err = searchParams.get("errorMessage");
         if (err) {
             toast(err, {
-                type: "error"
-            })
-            return
+                type: "error",
+            });
+            return;
         }
-        
-        const redirectURL = params.get("redirectUrl")
-        if (redirectURL === null) return
-        if (redirectURL.length === 0) router.push(`/${lng}`)
+
+        const redirectURL = searchParams.get("redirectUrl");
+        if (redirectURL === null) return;
         else router.push(redirectURL);
-    }, [params, router]);
+    }, [searchParams, router]);
 
     return (
-        <section className="flex items-center justify-center h-screen w-screen bg-background">
-            <ThemeSwitch className="absolute right-8 top-4" />
-            <div className="flex flex-col justify-center rounded-xl p-12 w-full max-w-[600px]">
-                <h1 className="text-lg font-bold">LET&apos;S LIVE</h1>
-                <h1 className="text-2xl font-bold mb-1">{t("login_title")}</h1>
-                <p className="text-md">{t("login_subtitle")}</p>
-                <div className="flex gap-2 mb-2 mt-4">
-                    <div className="w-full">
-                        <Link
-                            href={GLOBAL.API_URL + "/auth/google"}
-                            className="h-12 flex-1 flex flex-row items-center justify-center gap-4 border border-border py-2 rounded-lg bg-white text-black hover:bg-[#ebebeb]"
-                        >
-                            <IconGoogle /> Google
-                        </Link>
-                        <p className="text-xs italic text-destructive mt-1">{t("google_cookie_warning")}</p>
-                    </div>
-                </div>
-                <div className="flex items-center justify-center w-full mt-2 mb-4">
-                    <hr className="bg-border h-[2px] flex-1" />
-                    <p className="text-center mx-4 text-foreground">{t("common:or")}</p>
-                    <hr className="bg-border h-[2px] flex-1" />
-                </div>
-                <LogInForm />
-                <p className="text-end text-sm opacity-80 mt-4">
-                    {t("no_account")}
+        <>
+            <h1 className="mb-1 text-2xl font-bold">{t("login_title")}</h1>
+            <p className="text-md">{t("login_subtitle")}</p>
+            <div className="mb-2 mt-4 flex gap-2">
+                <div className="w-full">
                     <Link
-                        href="/signup"
-                        className="ml-2 text-blue-400 font-bold hover:text-blue-600"
+                        href={GLOBAL.API_URL + "/auth/google"}
+                        className="flex h-12 flex-1 flex-row items-center justify-center gap-4 rounded-lg border border-border bg-white py-2 text-black hover:bg-[#ebebeb]"
                     >
-                        {t("signup")}
+                        <IconGoogle /> Google
                     </Link>
-                </p>
+                    <p className="mt-1 text-xs italic text-destructive">
+                        {t("google_cookie_warning")}
+                    </p>
+                </div>
             </div>
-        </section>
+            <div className="mb-4 mt-2 flex w-full items-center justify-center">
+                <hr className="h-[2px] flex-1 bg-border" />
+                <p className="mx-4 text-center text-foreground">
+                    {t("common:or")}
+                </p>
+                <hr className="h-[2px] flex-1 bg-border" />
+            </div>
+            <LogInForm />
+            <p className="mt-4 text-end text-sm opacity-80">
+                {t("no_account")}
+                <Link
+                    href="/signup"
+                    className="ml-2 font-bold text-blue-400 hover:text-blue-600"
+                >
+                    {t("signup")}
+                </Link>
+            </p>
+        </>
     );
 }

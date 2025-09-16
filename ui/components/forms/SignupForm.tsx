@@ -47,7 +47,6 @@ export default function SignUpForm() {
         turnstile: "",
     });
     const turnstile = useTurnstile();
-    const { lng } = useParams() as { lng: string }
 
     const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false);
     const [otpValue, setOtpValue] = useState("");
@@ -135,7 +134,7 @@ export default function SignUpForm() {
         } else {
             toast.success("Account created successfully");
             setIsOtpDialogOpen(false);
-            router.replace(`/${lng}`);
+            router.push("/");
             router.refresh();
         }
 
@@ -289,7 +288,7 @@ export default function SignUpForm() {
                     className="mt-4 flex h-12 w-full items-center justify-center rounded-md border border-transparent bg-blue-400 font-semibold uppercase text-white hover:bg-blue-500"
                 >
                     {isLoading && <IconLoader className="ml-2" />}
-                    {t("sign_up")}
+                    {t("signup")}
                 </button>
             </form>
 
