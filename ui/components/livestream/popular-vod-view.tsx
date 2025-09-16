@@ -72,7 +72,6 @@ export function PopularVODView() {
 function VODCard({ vod }: { vod: VOD }) {
     const [user, setUser] = useState<User | null>(null);
     const router = useRouter();
-    const { lng } = useParams() as { lng: string }
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -101,7 +100,7 @@ function VODCard({ vod }: { vod: VOD }) {
                     width={500}
                     height={500}
                     onClick={() =>
-                        router.push(`${lng}/users/${vod.userId}/vods/${vod.id}`)
+                        router.push(`/users/${vod.userId}/vods/${vod.id}`)
                     }
                     fallbackSrc="/images/streaming.jpg"
                     alwaysRefresh={false}

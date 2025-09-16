@@ -3,7 +3,7 @@ import "@/app/globals.css";
 import React, { Suspense } from "react";
 import Loading from "./loading";
 import Toast from "@/components/utils/toast";
-import { languages } from "@/lib/i18n/settings";
+import { I18N_LANGUAGES } from "@/lib/i18n/settings";
 import { dir } from "i18next";
 import { myGetT } from "@/lib/i18n";
 import TranslationsProvider from "@/components/utils/i18n-provider";
@@ -13,13 +13,13 @@ const inter = Inter({ subsets: ["latin"] });
 type Params = Promise<{ lng: string }>;
 
 export async function generateStaticParams() {
-    return languages.map((language) => ({
+    return I18N_LANGUAGES.map((language) => ({
         lng: language,
     }));
 }
 
 export async function generateMetadata() {
-    const { t } = await myGetT();
+    const { t } = await myGetT("common");
 
     return {
         title: t("title"),

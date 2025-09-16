@@ -21,7 +21,6 @@ const LivestreamPreviewView = ({
 }) => {
     const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
-    const { lng } = useParams() as { lng: string }
 
     useEffect(() => {
         const fetchUserInfo = async () => {
@@ -44,7 +43,7 @@ const LivestreamPreviewView = ({
                 }
                 fallbackSrc="/images/streaming.jpg"
                 className="cursor-pointer"
-                onClick={() => router.push(`${lng}/users/${livestream.userId}`)}
+                onClick={() => router.push(`/users/${livestream.userId}`)}
             />
             <CardContent className="p-4 bg-muted">
                 <LivestreamPreviewDetailView

@@ -15,9 +15,7 @@ import IconLogOut from "../icons/log-out";
 
 export default function UserInfo() {
   const userState = useUser();
-  const router = useRouter();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-    const { lng } = useParams() as { lng: string }
 
   const logoutHandler = async () => {
     const { fetchError } = await Logout();
@@ -28,7 +26,6 @@ export default function UserInfo() {
       });
     } else {
       userState.clearUser();
-      router.push(`/${lng}/login`);
     }
   };
 
