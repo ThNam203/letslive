@@ -2,7 +2,7 @@ import { headers } from "next/headers"
 import { I18N_HEADER_NAME } from "./settings"
 import i18next from "@/lib/i18n/i18next"
 
-export async function myGetT(ns: string | string[] = "translation") {
+export async function myGetT(ns: string | string[] = "common") {
   const headerList = await headers()
   const lng = headerList.get(I18N_HEADER_NAME)
 

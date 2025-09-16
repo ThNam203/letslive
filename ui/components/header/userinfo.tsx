@@ -4,7 +4,6 @@ import Link from "next/link";
 
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { useParams, useRouter } from "next/navigation";
 import useUser from "../../hooks/user";
 import { Logout } from "../../lib/api/auth";
 import { Button } from "../ui/button";
@@ -12,10 +11,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import IconSettings from "../icons/settings";
 import IconLogOut from "../icons/log-out";
+import useT from "@/hooks/use-translation";
 
 export default function UserInfo() {
   const userState = useUser();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const { t } = useT(["auth", "common"])
 
   const logoutHandler = async () => {
     const { fetchError } = await Logout();
@@ -79,7 +80,7 @@ export default function UserInfo() {
                   className="flex flex-1 flex-row gap-2 items-center"
                 >
                   <IconSettings />
-                  <span className="text-xs">Setting</span>
+                  <span className="text-xs">{t("common:setting")}</span>
                 </Link>
               </Button>
               <Button
@@ -88,7 +89,7 @@ export default function UserInfo() {
                 variant={"destructive"}
               >
                 <IconLogOut />
-                <span className="text-xs">Log Out</span>
+                <span className="text-xs">{t("logout")}</span>
               </Button>
             </div>
           </div>
@@ -101,13 +102,13 @@ export default function UserInfo() {
         href="/login"
         className="whitespace-nowrap bg-primary border rounded-md hover:bg-primary-hover text-primary-foreground border-border text-sm py-1 px-4"
       >
-        Log in
+        {t("login")}
       </Link>
       <Link
         className="whitespace-nowrap bg-primary border rounded-md hover:bg-primary-hover text-primary-foreground border-border text-sm py-1 px-4"
         href="/signup"
       >
-        Sign up
+        {t("signup")}
       </Link>
     </div>
   );

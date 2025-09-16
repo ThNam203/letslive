@@ -8,10 +8,12 @@ import { Livestream } from "../../types/livestream";
 import IconChevronDown from "../icons/chevron-down";
 import { Separator } from "../ui/separator";
 import IconPlay from "../icons/play";
+import useT from "@/hooks/use-translation";
 
 const LivestreamsPreviewView = () => {
     const [limitView, setLimitView] = useState<number>(4);
     const [livestreams, setLivestreams] = useState<Livestream[]>([]);
+    const { t } = useT();
 
     useEffect(() => {
         const fetchLivestreams = async () => {
@@ -47,11 +49,10 @@ const LivestreamsPreviewView = () => {
                         <IconPlay className="text-muted-foreground h-16 w-16" />
                     </div>
                     <h2 className="mb-2 text-2xl font-semibold">
-                        No Live Streams
+                        {t("no_livestreams")}
                     </h2>
                     <p className="text-muted-foreground max-w-md">
-                        There is currently no one streaming. Check back later or
-                        explore our video on demand content.
+                        {t("no_livestreams_description")}
                     </p>
                 </div>
             )}

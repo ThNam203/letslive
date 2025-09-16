@@ -11,5 +11,6 @@
     "username_too_long": "Tên người dùng phải <= 20 ký tự",
     "confirm_password_required": "Vui lòng xác nhận mật khẩu của bạn",
     "passwords_do_not_match": "Mật khẩu không khớp",
-    "otp_required": "Vui lòng nhập mã OTP"
+    "otp_required": "Vui lòng nhập mã OTP",
+    "otp_send_fail": "Có lỗi xảy ra khi gửi OTP"
 }
