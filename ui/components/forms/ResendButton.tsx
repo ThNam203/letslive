@@ -1,5 +1,9 @@
+"use client"
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button"; // Adjust the import path based on your project structure
+import { toast } from 'react-toastify';
+import useT from '@/hooks/use-translation';
 
 // --- Component Props Interface ---
 interface ResendOtpButtonProps {
@@ -15,9 +19,6 @@ interface ResendOtpButtonProps {
    */
   initialCountdown?: number;
   className?: string;
-  resendText?: string;
-  countdownText?: (seconds: number) => string;
-  sendingText?: string;
 }
 
 // --- The Component ---
@@ -25,12 +26,10 @@ export const ResendOtpButton: React.FC<ResendOtpButtonProps> = ({
   onResend,
   initialCountdown = 60,
   className,
-  resendText = "Resend OTP",
-  countdownText = (seconds) => `Resend in ${seconds}s`,
-  sendingText = "Sending...",
 }) => {
   const [countdown, setCountdown] = useState<number>(initialCountdown);
   const [isResending, setIsResending] = useState<boolean>(false);
+  const { t } = useT(["auth", "error"]);
 
   const isButtonDisabled = countdown > 0 || isResending;
 
@@ -58,7 +57,10 @@ export const ResendOtpButton: React.FC<ResendOtpButtonProps> = ({
       // Start the countdown *after* the onResend logic completes successfully
       setCountdown(initialCountdown);
     } catch (error) {
-      console.error("Failed to resend OTP:", error);
+      toast(t("error:otp_send_fail"), {
+        toastId: "resend-otp-failed",
+        type: "error"
+      })
     } finally {
       setIsResending(false); // Ensure loading state is reset
     }
@@ -66,12 +68,12 @@ export const ResendOtpButton: React.FC<ResendOtpButtonProps> = ({
 
   const getButtonText = () => {
     if (isResending) {
-      return sendingText;
+      return t("sending_otp");
     }
     if (countdown > 0) {
-      return countdownText(countdown);
+      return t("otp_resend_count_down", { countdown })
     }
-    return resendText;
+    return t("resend_otp");
   };
 
   return (

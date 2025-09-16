@@ -1,6 +1,6 @@
 {
-    "title": "Oops!",
-    "description": "Something has gone wrong, please try again later",
+    "general_title": "Oops!",
+    "general_description": "Something has gone wrong, please try again later",
     "email_required": "Email is required",
     "email_invalid": "Email is invalid",
     "password_required": "Password is required",
@@ -11,5 +11,6 @@
     "username_too_long": "Username must be <= 20 characters",
     "confirm_password_required": "Please confirm your password",
     "passwords_do_not_match": "Passwords do not match",
-    "otp_required": "Please enter OTP code"
+    "otp_required": "Please enter OTP code",
+    "otp_send_fail": "Failed to send OTP"
 }

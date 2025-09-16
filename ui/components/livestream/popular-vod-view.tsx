@@ -17,10 +17,12 @@ import IconEye from "../icons/eye";
 import IconClock from "../icons/clock";
 import LiveImage from "./live-image";
 import { VOD } from "@/types/vod";
+import useT from "@/hooks/use-translation";
 
 export function PopularVODView() {
     const [isLoading, setIsLoading] = useState(false);
     const [vods, setVods] = useState<VOD[]>([]);
+    const { t } = useT("common")
 
     useEffect(() => {
         setIsLoading(true);
@@ -48,11 +50,10 @@ export function PopularVODView() {
                     <IconFilm className="h-12 w-12 text-muted-foreground" />
                 </div>
                 <h2 className="text-2xl font-semibold mb-2">
-                    No Videos Available
+                    {t("no_videos")}
                 </h2>
                 <p className="text-muted-foreground max-w-md">
-                    There are currently no videos available. Check back later
-                    for new content.
+                    {t("no_videos_description")}
                 </p>
             </div>
         );

@@ -132,7 +132,7 @@ export default function SignUpForm() {
             setOtpValue("");
             toast.error(fetchError.message);
         } else {
-            toast.success("Account created successfully");
+            toast.success(t("account_created_success"));
             setIsOtpDialogOpen(false);
             router.push("/");
             router.refresh();
@@ -155,9 +155,7 @@ export default function SignUpForm() {
                 setTurnstileToken("");
                 toast.error(fetchError.message);
             } else {
-                toast.success(
-                    "Verification email sent, please check your inbox.",
-                );
+                toast.success(t("verification_email_sent_success"));
                 setIsOtpDialogOpen(true);
                 setOtpValue("");
                 setOtpError("");
@@ -299,11 +297,11 @@ export default function SignUpForm() {
                     }}
                 >
                     <DialogHeader>
-                        <DialogTitle>Enter Verification Code</DialogTitle>
+                        <DialogTitle>{t("enter_verification_code")}</DialogTitle>
                         <DialogDescription>
-                            A 6-digit code has been sent to{" "}
-                            <span className="font-medium">{email}</span>. Please
-                            enter it below to verify your email address.
+                            {t("otp_dialog_description_part_1")}{" "}
+                            <span className="font-medium">{email}</span>
+                            {t("otp_dialog_description_part_2")}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -363,7 +361,7 @@ export default function SignUpForm() {
                             {isOtpSubmitting && (
                                 <IconLoader className="mr-2 h-4 w-4" />
                             )}
-                            VERIFY OTP
+                            {t("verify_otp")}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

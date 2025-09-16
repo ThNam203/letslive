@@ -22,9 +22,10 @@ export async function generateMetadata() {
     const { t } = await myGetT("common");
 
     return {
-        title: t("title"),
+        title: t("app_title"),
     };
 }
+
 
 export default async function RootLayout({
     children,
@@ -34,7 +35,7 @@ export default async function RootLayout({
     params: Params;
 }) {
     const { lng } = await params;
-
+    
     return (
         <html lang={lng} dir={dir(lng)}>
             <body className={inter.className}>
