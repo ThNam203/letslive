@@ -19,7 +19,7 @@ import DisableAccountDialog from "./_components/disable-account-dialog";
 import useT from "@/hooks/use-translation";
 
 export default function ProfileSettings() {
-    const { t } = useT("translation");
+    const { t } = useT(["settings", "common"]);
     const user = useUser((state) => state.user);
     const updateUser = useUser((state) => state.updateUser);
 
@@ -101,7 +101,7 @@ export default function ProfileSettings() {
             });
         }
 
-        if (hasError) toast.success("Profile information updated successfully!");
+        if (hasError) toast.success(t("settings:profile.update_success"));
     };
 
     useEffect(() => {
@@ -144,8 +144,8 @@ export default function ProfileSettings() {
         <>
             {/* Profile Settings Section */}
             <Section
-                title={t("settings.profile.title")}
-                description={t("settings.profile.description")}
+                title={t("settings:profile.title")}
+                description={t("settings:profile.description")}
                 hasBorder
             >
                 <form
@@ -158,20 +158,19 @@ export default function ProfileSettings() {
                         onBackgroundImageChange={handleBackgroundImageChange}
                     />
                     <TextField
-                        label={t("settings.profile.username")}
+                        label={t("settings:profile.username")}
                         disabled
                         defaultValue={user?.username}
                     />
                     <TextField
-                        label={t("settings.profile.display_name")}
+                        label={t("settings:profile.display_name")}
                         defaultValue={user?.displayName}
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
                         disabled={isUpdatingProfile}
                     />
                     <TextAreaField
-                        label={t("settings.profile.bio")}
-                        defaultValue={user?.bio}
+                        label={t("settings:profile.bio")}
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
                         disabled={isUpdatingProfile}
@@ -183,15 +182,15 @@ export default function ProfileSettings() {
                             disabled={isUpdatingProfile || isButtonDisabled}
                             type="submit"
                         >
-                            {isUpdatingProfile && <IconLoader />} {t("common.save_changes")}
+                            {isUpdatingProfile && <IconLoader />} {t("common:save_changes")}
                         </Button>
                     </div>
                 </form>
             </Section>
 
             <Section
-                title={t("settings.themes.title")}
-                description={t("settings.themes.description")}
+                title={t("settings:themes.title")}
+                description={t("settings:themes.description")}
                 className="border-t border-border pt-8"
                 contentClassName="border border-border rounded-md p-4"
             >
@@ -199,14 +198,14 @@ export default function ProfileSettings() {
             </Section>
 
             <Section
-                title={t("settings.disable.title")}
-                description={t("settings.disable.description")}
+                title={t("settings:disable.title")}
+                description={t("settings:disable.description")}
                 className="border-t border-border pt-8"
                 contentClassName="border border-border rounded-md p-4"
             >
                 <div className="flex w-full items-center justify-between">
                     <p className="w-2/3 text-sm text-destructive">
-                        {t("settings.disable.note")}
+                        {t("settings:disable.note")}
                     </p>
                     <DisableAccountDialog isUpdatingProfile={isUpdatingProfile} />
                 </div>
