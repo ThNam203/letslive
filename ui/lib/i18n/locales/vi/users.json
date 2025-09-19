@@ -1,0 +1,17 @@
+{
+  "chat": {
+    "title": "Trò chuyện",
+    "joined": "đã tham gia phòng chat",
+    "left": "đã rời phòng chat",
+    "placeholder_login": "Đăng nhập để bắt đầu nhắn tin",
+    "placeholder_typing": "Nhập tin nhắn..."
+  },
+  "offline": "Ngoại tuyến",
+  "profile": {
+    "about": "Giới thiệu",
+    "followers_one": "người theo dõi",
+    "followers_other": "người theo dõi",
+    "joined_prefix": "Tham gia",
+    "recent_streams": "Luồng gần đây"
+  }
+}

@@ -22,7 +22,7 @@ export default function ProfileHeader({
     user: User;
     updateUser: (newUserInfo: User) => void;
 }) {
-    const { t } = useT("translation");
+    const { t } = useT(["common", "users"]);
     const me = useUser((state) => state.user);
     const [isFetching, setIsFetching] = useState(false);
 
@@ -96,7 +96,7 @@ export default function ProfileHeader({
                           className="absolute bottom-4 right-0 translate-x-[50%] flex flex-row items-center justify-center gap-0"
                       >
                           {isFetching && <IconLoader className="mr-1" />}
-                          {user.isFollowing ? t("users.unfollow") : t("users.follow")}
+                          {user.isFollowing ? t("common:unfollow") : t("common:follow")}
                       </Button>
                   )}
                 </div>
