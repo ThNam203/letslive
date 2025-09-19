@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { LogIn } from "../../lib/api/auth";
+import { LogIn } from "@/lib/api/auth";
 import IconEmail from "../icons/email";
 import FormErrorText from "./FormErrorText";
 import IconPasswordOutline from "../icons/password";
@@ -11,6 +11,7 @@ import IconEye from "../icons/eye";
 import IconEyeOff from "../icons/eye-off";
 import Turnstile, { useTurnstile } from "react-turnstile";
 import IconLoader from "../icons/loader";
+import useT from "@/hooks/use-translation";
 
 export default function LogInForm() {
     const [email, setEmail] = useState("");
@@ -25,24 +26,25 @@ export default function LogInForm() {
     });
     const [turnstileToken, setTurnstileToken] = useState("");
     const turnstile = useTurnstile();
+    const { t, i18n } = useT(["auth", "error"]);
 
     const validate = () => {
         const newErrors = { email: "", password: "", turnstile: "" };
 
         if (!email) {
-            newErrors.email = "Email is required";
+            newErrors.email = t("error:email_required");
         } else if (!/\S+@\S+\.\S+/.test(email)) {
-            newErrors.email = "Email is invalid";
+            newErrors.email = t("error:email_invalid");
         }
 
         if (!password) {
-            newErrors.password = "Password is required";
+            newErrors.password = t("error:password_required");
         } else if (password.length < 8) {
-            newErrors.password = "Password must be at least 8 characters";
+            newErrors.password = t("error:password_too_short");
         }
 
         if (!turnstileToken) {
-            newErrors.turnstile = "Please complete the CAPTCHA.";
+            newErrors.turnstile = t("error:turnstile_required");
         }
 
         setErrors(newErrors);
@@ -66,7 +68,7 @@ export default function LogInForm() {
                 setTurnstileToken("");
                 toast.error(fetchError.message);
             } else {
-                router.replace("/");
+                router.push("/");
                 router.refresh();
             }
         }
@@ -83,9 +85,9 @@ export default function LogInForm() {
                 <input
                     id="email"
                     aria-label="Email"
-                    className="h-12 flex-1 bg-background focus:outline-none focus:bg-background"
+                    className="h-12 flex-1 bg-background focus:bg-background focus:outline-none"
                     autoComplete="email"
-                    placeholder="Email"
+                    placeholder={t("email")}
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -100,50 +102,54 @@ export default function LogInForm() {
                     id="password"
                     aria-label="Password"
                     className="h-12 flex-1 bg-background focus:outline-none"
-                    placeholder="Password"
+                    placeholder={t("password")}
                     type={hidingPassword ? "password" : "text"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                 />
                 {!hidingPassword ? (
                     <IconEye
-                        className="scale-150 opacity-50"
+                        className="opacity-50 hover:cursor-pointer"
                         onClick={() => setHidingPassword(true)}
                     />
                 ) : (
                     <IconEyeOff
-                        className="scale-150 opacity-50"
+                        className="opacity-50 hover:cursor-pointer"
                         onClick={() => setHidingPassword(false)}
                     />
                 )}
             </div>
             <FormErrorText textError={errors.password} />
-            <Turnstile
-                sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!}
-                onSuccess={(token) => {
-                    setTurnstileToken(token);
-                    setErrors((prev) => ({
-                        ...prev,
-                        turnstile: "",
-                    }));
-                }}
-                onError={(err) => {
-                    setTurnstileToken("");
-                    setErrors((prev) => ({
-                        ...prev,
-                        turnstile: err ?? "",
-                    }));
-                }}
-                className="float-right my-2 mt-4"
-            />
-            <FormErrorText textError={errors.turnstile} />
+            <div className="mt-4 flex flex-col items-end">
+                <Turnstile
+                    language={i18n.resolvedLanguage || i18n.language}
+                    sitekey={
+                        process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!
+                    }
+                    onSuccess={(token) => {
+                        setTurnstileToken(token);
+                        setErrors((prev) => ({
+                            ...prev,
+                            turnstile: "",
+                        }));
+                    }}
+                    onError={(err) => {
+                        setTurnstileToken("");
+                        setErrors((prev) => ({
+                            ...prev,
+                            turnstile: err ?? "",
+                        }));
+                    }}
+                />
+                <FormErrorText textError={errors.turnstile} />
+            </div>
             <button
                 type="submit"
                 disabled={isLoading}
-                className="flex h-12 w-full items-center justify-center rounded-md border border-transparent bg-blue-400 font-semibold text-white hover:bg-blue-500"
+                className="mt-4 flex h-12 w-full items-center justify-center rounded-md border border-transparent bg-blue-400 font-semibold uppercase text-white hover:bg-blue-500"
             >
                 {isLoading && <IconLoader className="ml-2" />}
-                LOG IN
+                {t("login")}
             </button>
         </form>
     );

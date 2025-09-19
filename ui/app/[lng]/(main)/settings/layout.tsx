@@ -6,12 +6,13 @@ import { cn } from "@/utils/cn";
 import useUser from "@/hooks/user";
 import { useEffect, useState } from "react";
 import IconLoader from "@/components/icons/loader";
+import useT from "@/hooks/use-translation";
 
-const navItems = [
-    { name: "Profile", href: "/settings/profile" },
-    { name: "Security", href: "/settings/security" },
-    { name: "Stream", href: "/settings/stream" },
-    { name: "VODs", href: "/settings/vods" },
+const getNavItems = (t: any) => [
+    { name: t("settings:navigation.profile"), href: "/settings/profile" },
+    { name: t("settings:navigation.security"), href: "/settings/security" },
+    { name: t("settings:navigation.stream"), href: "/settings/stream" },
+    { name: t("settings:navigation.vods"), href: "/settings/vods" },
 ];
 
 export default function SettingsNav({
@@ -21,11 +22,13 @@ export default function SettingsNav({
     const pathname = usePathname();
     const fetchUser = useUser((state) => state.fetchUser);
     const router = useRouter();
+    const { t } = useT("settings");
+    const navItems = getNavItems(t);
 
     useEffect(() => {
         setIsGettingUser(true);
         fetchUser()
-            .catch(() => router.push("/login"))
+            .catch(() => router.push("/login")) // TODO: should not redirect but show error
             .finally(() => {
                 setIsGettingUser(false);
             });
@@ -35,7 +38,7 @@ export default function SettingsNav({
         <div className="flex h-full flex-col bg-background text-foreground">
             <div className="max-w-7xl px-6">
                 <div className="flex mt-6 items-center">
-                    <h1 className="text-4xl font-bold">Settings</h1>
+                    <h1 className="text-4xl font-bold">{t("settings:page_title")}</h1>
                     {isGettingUser && <IconLoader width="40" height="40"/>}
                 </div>
                 <nav className="border-b border-border">

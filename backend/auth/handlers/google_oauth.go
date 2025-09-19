@@ -58,7 +58,7 @@ func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	http.Redirect(w, r, GetRedirectURLOnSuccess(""), http.StatusMovedPermanently)
+	http.Redirect(w, r, GetRedirectURLOnSuccess("/"), http.StatusMovedPermanently)
 }
 
 func generateOAuthCookieState(w http.ResponseWriter) (string, error) {

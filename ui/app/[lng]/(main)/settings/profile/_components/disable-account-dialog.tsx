@@ -16,9 +16,10 @@ import useUser from "@/hooks/user";
 import { Logout } from "@/lib/api/auth";
 import { UpdateProfile } from "@/lib/api/user";
 import { UserStatus } from "@/types/user";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import useT from "@/hooks/use-translation";
 
 export default function DisableAccountDialog({
     isUpdatingProfile,
@@ -27,9 +28,9 @@ export default function DisableAccountDialog({
 }) {
     const user = useUser((state) => state.user);
     const clearUser = useUser((state) => state.clearUser);
-    const router = useRouter();
     const [isDisablingAccount, setIsDisablingAccount] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const { t } = useT("settings");
 
     const logoutHandler = async () => {
         const { fetchError } = await Logout();
@@ -40,9 +41,9 @@ export default function DisableAccountDialog({
             });
         } else {
             clearUser();
-            router.push("/login");
         }
     };
+
     const handleDisableAccount = async () => {
         try {
             setIsDisablingAccount(true);
@@ -54,9 +55,9 @@ export default function DisableAccountDialog({
                 toast.error(fetchError.message);
                 return;
             }
-            // await logoutHandler();
+            await logoutHandler();
         } catch (error) {
-            toast.error("An unknown error occurred");
+            toast.error(t("settings:disable.unknown_error"));
         } finally {
             setIsOpen(false);
             setIsDisablingAccount(false);
@@ -69,27 +70,26 @@ export default function DisableAccountDialog({
                     disabled={isUpdatingProfile || isDisablingAccount}
                     className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive-hover"
                 >
-                    Disable Your Let&apos;s Live Account
+                    {t("settings:disable.button")}
                 </button>
             </DialogTrigger>
             <DialogContent className="bg-background text-foreground">
                 <DialogHeader>
-                    <DialogTitle>Disable your account!</DialogTitle>
+                    <DialogTitle>{t("settings:disable.dialog.title")}</DialogTitle>
                     <DialogDescription>
-                        Are you sure you want to disable your account? You can
-                        reactivate your account at any time by logging back in.
+                        {t("settings:disable.dialog.description")}
                     </DialogDescription>
                 </DialogHeader>
 
                 <DialogFooter>
                     <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
+                        <Button variant="outline">{t("common:cancel")}</Button>
                     </DialogClose>
                     <Button
                         disabled={isUpdatingProfile || isDisablingAccount}
                         onClick={handleDisableAccount}
                     >
-                        I understand!
+                        {t("settings:disable.dialog.confirm")}
                         {isDisablingAccount && <IconLoader className="ml-1" />}
                     </Button>
                 </DialogFooter>
@@ -97,3 +97,4 @@ export default function DisableAccountDialog({
         </Dialog>
     );
 }
+

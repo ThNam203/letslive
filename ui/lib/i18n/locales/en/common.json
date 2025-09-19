@@ -1,0 +1,64 @@
+{
+    "app_title": "Let's Live",
+    "loading": "Loading...",
+    "setting": "Setting",
+    "save": "Save",
+    "cancel": "Cancel",
+    "or": "or",
+    "go_home": "Go home",
+    "save_changes": "Save changes",
+    "username": "Username",
+    "livestreams": "Livestreams",
+    "channels": "Channels",
+    "videos": "Videos",
+    "home": "Home",
+    "search_users": "Search users",
+    "got_it": "Got it",
+    "how_to_livestream": "How to livestream",
+    "start_your_livestream": "Start your livestream",
+    "stream_guide_step_1": "Open OBS → Settings → Stream",
+    "stream_guide_step_2": "Enter: \"Server: {{server_url}}, StreamKey: Get your key in setting\"",
+    "live_streaming": "Live Streaming",
+    "follow": "Follow",
+    "unfollow": "Unfollow",
+    "please_wait_while_loading": "Please wait while we load the content",
+    "no_livestreams": "No livestreams",
+    "no_livestreams_description": "There is currently no one streaming, pheck back later or explore our video on demand content",
+    "no_videos": "No Videos Available",
+    "no_videos_description": "There are currently no videos available. Check back later for new content",
+
+    "settings": {
+        "profile": {
+            "title": "Profile Settings",
+            "description": "Change identifying details for your account",
+            "username": "Username",
+            "display_name": "Display Name",
+            "bio": "Bio"
+        },
+        "themes": {
+            "title": "Themes",
+            "description": "Customize the look and feel of the website"
+        },
+        "stream": {
+            "title": "Livestream",
+            "description": "Your next livestream information will be based on the information. It won't change even after livestream ends.",
+            "title_label": "Title",
+            "title_description": "If empty, the title will be generated automatically.",
+            "description_label": "Description",
+            "thumbnail_label": "Thumbnail",
+            "thumbnail_description": "If empty, the thumbnail will be generated automatically.",
+            "thumbnail_hover": "Change thumbnail",
+            "confirm_edit_button": "Confirm edit",
+            "updated_success": "Livestream information updated successfully"
+        },
+        "vods": {
+            "title": "VODs Manager",
+            "description": "Manage your VODs and edit their information here."
+        },
+        "disable": {
+            "title": "Disabling your Let's Live account",
+            "description": "Completely deactivate your account",
+            "note": "When you disable your account, your profile and notifications will be hidden, and your account will be deactivated. You can reactivate your account at any time."
+        }
+    }
+}

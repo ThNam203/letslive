@@ -6,8 +6,10 @@ import { GetAllVODsAsAuthor } from "@/lib/api/vod";
 import { toast } from "react-toastify";
 import VODEditCard from "./vod";
 import { VOD } from "@/types/vod";
+import useT from "@/hooks/use-translation";
 
 export default function VODsEdit() {
+    const { t } = useT("settings");
     const user = useUser((state) => state.user);
     const [vods, setVODS] = useState<VOD[]>([]);
     useEffect(() => {
@@ -35,10 +37,8 @@ export default function VODsEdit() {
         <>
             <div className="mb-4">
                 <div className="space-y-1">
-                    <h1 className="text-xl font-semibold">VODs Manager</h1>
-                    <p className="text-sm text-foreground-muted">
-                        Manage your VODs and edit their information here.
-                    </p>
+                    <h1 className="text-xl font-semibold">{t("settings:vods.title")}</h1>
+                    <p className="text-sm text-foreground-muted">{t("settings:vods.description")}</p>
                 </div>
             </div>
 

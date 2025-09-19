@@ -1,0 +1,16 @@
+{
+    "title": "Rất tiếc!",
+    "description": "Đã xảy ra lỗi, vui lòng thử lại sau",
+    "email_required": "Email là bắt buộc",
+    "email_invalid": "Email không hợp lệ",
+    "password_required": "Mật khẩu là bắt buộc",
+    "password_too_short": "Mật khẩu phải có ít nhất 8 ký tự",
+    "turnstile_required": "Vui lòng hoàn thành CAPTCHA.",
+    "username_required": "Tên người dùng là bắt buộc",
+    "username_too_short": "Tên người dùng phải >= 6 ký tự",
+    "username_too_long": "Tên người dùng phải <= 20 ký tự",
+    "confirm_password_required": "Vui lòng xác nhận mật khẩu của bạn",
+    "passwords_do_not_match": "Mật khẩu không khớp",
+    "otp_required": "Vui lòng nhập mã OTP",
+    "otp_send_fail": "Có lỗi xảy ra khi gửi OTP"
+}

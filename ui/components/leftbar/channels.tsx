@@ -12,6 +12,7 @@ import {
     HoverCardContent,
     HoverCardTrigger,
 } from "../ui/hover-card";
+import useT from "@/hooks/use-translation";
 
 export default function AllChannelsView({
     isMinimized = false,
@@ -22,6 +23,7 @@ export default function AllChannelsView({
 }) {
     const curUser = useUser((state) => state.user);
     const [users, setUsers] = useState<User[]>([]);
+    const { t } = useT();
     useEffect(() => {
         const fetchAllUsers = async () => {
             const { users, fetchError } = await GetAllUsers();
@@ -47,7 +49,7 @@ export default function AllChannelsView({
         >
             <div className="flex w-full flex-row items-center justify-between">
                 {!isMinimized ? (
-                    <h2 className="text-xl font-semibold">Channels</h2>
+                    <h2 className="text-xl font-semibold">{t("channels")}</h2>
                 ) : null}
                 {minimizeLeftBarIcon}
             </div>

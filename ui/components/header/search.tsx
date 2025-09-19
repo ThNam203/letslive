@@ -9,6 +9,7 @@ import { Input } from "../ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Link from "next/link";
 import IconClose from "../icons/close";
+import useT from "@/hooks/use-translation";
 
 export default function SearchBar({
     onSearch,
@@ -19,6 +20,7 @@ export default function SearchBar({
     const [results, setResults] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [showResults, setShowResults] = useState(false);
+    const { t } = useT()
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -61,7 +63,7 @@ export default function SearchBar({
             <div className="relative">
                 <Input
                     type="text"
-                    placeholder="Search users..."
+                    placeholder={t("search_users")}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     className="pr-8 border-border"

@@ -1,9 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { RequestToSendVerification, SignUp, VerifyOTP } from "../../lib/api/auth";
+import {
+    RequestToSendVerification,
+    SignUp,
+    VerifyOTP,
+} from "../../lib/api/auth";
 import IconEmail from "../icons/email";
 import FormErrorText from "./FormErrorText";
 import IconUserOutline from "../icons/user";
@@ -11,11 +15,19 @@ import IconPasswordOutline from "../icons/password";
 import IconEye from "../icons/eye";
 import IconEyeOff from "../icons/eye-off";
 import Turnstile, { useTurnstile } from "react-turnstile";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "../ui/dialog";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
 import { Button } from "../ui/button";
 import { ResendOtpButton } from "./ResendButton";
 import IconLoader from "../icons/loader";
+import useT from "@/hooks/use-translation";
 
 export default function SignUpForm() {
     const [email, setEmail] = useState("");
@@ -40,6 +52,7 @@ export default function SignUpForm() {
     const [otpValue, setOtpValue] = useState("");
     const [isOtpSubmitting, setIsOtpSubmitting] = useState(false);
     const [otpError, setOtpError] = useState("");
+    const { t, i18n } = useT(["auth", "error", "common"]);
 
     const validate = () => {
         const newErrors = {
@@ -51,33 +64,33 @@ export default function SignUpForm() {
         };
 
         if (!email) {
-            newErrors.email = "Email is required";
+            newErrors.email = t("error:email_required");
         } else if (!/\S+@\S+\.\S+/.test(email)) {
-            newErrors.email = "Email is invalid";
+            newErrors.email = t("error:email_invalid");
         }
 
         if (!username) {
-            newErrors.username = "Username is required";
+            newErrors.username = t("error:username_required");
         } else if (username.length < 6) {
-            newErrors.username = "Username must be >= 6 characters";
+            newErrors.username = t("error:username_too_short");
         } else if (username.length > 20) {
-            newErrors.username = "Username must be <= 20 characters";
+            newErrors.username = t("error:username_too_long");
         }
 
         if (!password) {
-            newErrors.password = "Password is required";
+            newErrors.password = t("error:password_required");
         } else if (password.length < 8) {
-            newErrors.password = "Password must be at least 8 characters";
+            newErrors.password = t("error:password_too_short");
         }
 
         if (!confirmPassword) {
-            newErrors.confirmPassword = "Please confirm your password";
+            newErrors.confirmPassword = t("error:confirm_password_required");
         } else if (confirmPassword !== password) {
-            newErrors.confirmPassword = "Passwords do not match";
+            newErrors.confirmPassword = t("error:passwords_do_not_match");
         }
 
         if (!turnstileToken) {
-            newErrors.turnstile = "Please complete the CAPTCHA."
+            newErrors.turnstile = t("error:turnstile_required");
         }
 
         setErrors(newErrors);
@@ -91,14 +104,13 @@ export default function SignUpForm() {
         );
     };
 
-
     const handleSignUp = async () => {
         if (!validate()) {
             return;
         }
 
         if (otpValue.length !== 6) {
-            setOtpError("Please enter a 6-digit OTP.");
+            setOtpError(t("otp_required"));
             return;
         }
 
@@ -120,10 +132,10 @@ export default function SignUpForm() {
             setOtpValue("");
             toast.error(fetchError.message);
         } else {
-            toast.success("Account created successfully");
+            toast.success(t("account_created_success"));
             setIsOtpDialogOpen(false);
-            router.replace("/")
-            router.refresh()
+            router.push("/");
+            router.refresh();
         }
 
         setIsOtpSubmitting(false);
@@ -134,13 +146,16 @@ export default function SignUpForm() {
         setIsLoading(true);
 
         if (validate()) {
-            const { fetchError } = await RequestToSendVerification(email, turnstileToken);
+            const { fetchError } = await RequestToSendVerification(
+                email,
+                turnstileToken,
+            );
             if (fetchError) {
                 turnstile.reset();
                 setTurnstileToken("");
                 toast.error(fetchError.message);
             } else {
-                toast.success("Verification email sent, please check your inbox.");
+                toast.success(t("verification_email_sent_success"));
                 setIsOtpDialogOpen(true);
                 setOtpValue("");
                 setOtpError("");
@@ -151,132 +166,142 @@ export default function SignUpForm() {
 
     return (
         <div className="max-w">
-            <form onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleBeginEmailVerification();
-            }}>
-                <div className="flex px-4 gap-4 items-center rounded-md border border-border">
+            <form
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleBeginEmailVerification();
+                }}
+            >
+                <div className="flex items-center gap-4 rounded-md border border-border px-4">
                     <label htmlFor="email">
-                        <IconEmail className="opacity-40 scale-125" />
+                        <IconEmail className="scale-125 opacity-40" />
                     </label>
                     <input
                         id="email"
-                        aria-label="Email"
-                        className="h-12 focus:outline-none bg-background flex-1"
-                        placeholder="Email"
+                        aria-label={t("email")}
+                        className="h-12 flex-1 bg-background focus:outline-none"
+                        placeholder={t("email")}
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
                 </div>
                 <FormErrorText textError={errors.email} />
-                <div className="flex px-4 gap-4 items-center rounded-md border border-border mt-4">
+                <div className="mt-4 flex items-center gap-4 rounded-md border border-border px-4">
                     <label htmlFor="username">
-                        <IconUserOutline className="opacity-40 scale-125" />
+                        <IconUserOutline className="scale-125 opacity-40" />
                     </label>
                     <input
                         id="username"
-                        aria-label="Username"
-                        className="h-12 focus:outline-none bg-background flex-1"
-                        placeholder="Username"
+                        aria-label={t("common:username")}
+                        className="h-12 flex-1 bg-background focus:outline-none"
+                        placeholder={t("common:username")}
                         type="text"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                     />
                 </div>
                 <FormErrorText textError={errors.username} />
-                <div className="flex px-4 gap-4 items-center rounded-md border border-border mt-4">
+                <div className="mt-4 flex items-center gap-4 rounded-md border border-border px-4">
                     <label htmlFor="password">
-                        <IconPasswordOutline className="opacity-40 scale-125" />
+                        <IconPasswordOutline className="scale-125 opacity-40" />
                     </label>
                     <input
                         id="password"
-                        aria-label="Password"
-                        className="h-12 focus:outline-none bg-background flex-1"
-                        placeholder="Password"
+                        aria-label={t("password")}
+                        className="h-12 flex-1 bg-background focus:outline-none"
+                        placeholder={t("password")}
                         type={hidingPassword ? "password" : "text"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
                     {!hidingPassword ? (
                         <IconEye
-                            className="scale-150 opacity-50"
+                            className="opacity-50 hover:cursor-pointer"
                             onClick={() => setHidingPassword(true)}
                         />
                     ) : (
                         <IconEyeOff
-                            className="scale-150 opacity-50"
+                            className="opacity-50 hover:cursor-pointer"
                             onClick={() => setHidingPassword(false)}
                         />
                     )}
                 </div>
                 <FormErrorText textError={errors.password} />
 
-                <div className="flex px-4 gap-4 items-center rounded-md border border-border mt-4">
+                <div className="mt-4 flex items-center gap-4 rounded-md border border-border px-4">
                     <label htmlFor="confirm-password">
-                        <IconPasswordOutline className="opacity-40 scale-125" />
+                        <IconPasswordOutline className="scale-125 opacity-40" />
                     </label>
                     <input
                         id="confirm-password"
-                        aria-label="Confirm Password"
-                        className="h-12 focus:outline-none bg-background flex-1"
-                        placeholder="Confirm Password"
+                        aria-label={t("confirm_password")}
+                        className="h-12 flex-1 bg-background focus:outline-none"
+                        placeholder={t("confirm_password")}
                         type={hidingConfirmPassword ? "password" : "text"}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                     />
                     {!hidingConfirmPassword ? (
                         <IconEye
-                            className="scale-150 opacity-50"
+                            className="opacity-50 hover:cursor-pointer"
                             onClick={() => setHidingConfirmPassword(true)}
                         />
                     ) : (
                         <IconEyeOff
-                            className="scale-150 opacity-50"
+                            className="opacity-50 hover:cursor-pointer"
                             onClick={() => setHidingConfirmPassword(false)}
                         />
                     )}
                 </div>
                 <FormErrorText textError={errors.confirmPassword} />
-                <Turnstile
-                    sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!}
-                    onSuccess={(token) => {
-                        setTurnstileToken(token);
-                        setErrors(prev => ({
-                            ...prev,
-                            turnstile: "",
-                        }))
-                    }}
-
-                    onError={(err) => {
-                        setTurnstileToken("");
-                        setErrors(prev => ({
-                            ...prev,
-                            turnstile: err ?? ""
-                        }))
-                    }}
-                    className="mt-4 my-2 float-right"
-                />
-                <FormErrorText textError={errors.turnstile} />
+                <div className="mt-4 flex flex-col items-end">
+                    <Turnstile
+                        language={i18n.resolvedLanguage || i18n.language}
+                        sitekey={
+                            process.env
+                                .NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!
+                        }
+                        onSuccess={(token) => {
+                            setTurnstileToken(token);
+                            setErrors((prev) => ({
+                                ...prev,
+                                turnstile: "",
+                            }));
+                        }}
+                        onError={(err) => {
+                            setTurnstileToken("");
+                            setErrors((prev) => ({
+                                ...prev,
+                                turnstile: err ?? "",
+                            }));
+                        }}
+                    />
+                    <FormErrorText textError={errors.turnstile} />
+                </div>
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full rounded-md flex justify-center items-center bg-blue-400 hover:bg-blue-500 text-white h-12 border-transparent border font-semibold"
+                    className="mt-4 flex h-12 w-full items-center justify-center rounded-md border border-transparent bg-blue-400 font-semibold uppercase text-white hover:bg-blue-500"
                 >
                     {isLoading && <IconLoader className="ml-2" />}
-                    SIGN UP
+                    {t("signup")}
                 </button>
             </form>
 
             <Dialog open={isOtpDialogOpen} onOpenChange={setIsOtpDialogOpen}>
-                <DialogContent onInteractOutside={(e) => { e.preventDefault() }}>
+                <DialogContent
+                    onInteractOutside={(e) => {
+                        e.preventDefault();
+                    }}
+                >
                     <DialogHeader>
-                        <DialogTitle>Enter Verification Code</DialogTitle>
+                        <DialogTitle>{t("enter_verification_code")}</DialogTitle>
                         <DialogDescription>
-                            A 6-digit code has been sent to{" "}
-                            <span className="font-medium">{email}</span>. Please
-                            enter it below to verify your email address.
+                            {t("otp_dialog_description_part_1")}{" "}
+                            <span className="font-medium">{email}</span>
+                            {t("otp_dialog_description_part_2")}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -289,21 +314,44 @@ export default function SignUpForm() {
                             onComplete={handleSignUp}
                             containerClassName="w-full"
                         >
-                            <InputOTPGroup className="w-full flex">
-                                <InputOTPSlot index={0} className="flex-1 h-14"/>
-                                <InputOTPSlot index={1} className="flex-1 h-14"/>
-                                <InputOTPSlot index={2} className="flex-1 h-14"/>
-                                <InputOTPSlot index={3} className="flex-1 h-14"/>
-                                <InputOTPSlot index={4} className="flex-1 h-14"/>
-                                <InputOTPSlot index={5} className="flex-1 h-14"/>
+                            <InputOTPGroup className="flex w-full">
+                                <InputOTPSlot
+                                    index={0}
+                                    className="h-14 flex-1"
+                                />
+                                <InputOTPSlot
+                                    index={1}
+                                    className="h-14 flex-1"
+                                />
+                                <InputOTPSlot
+                                    index={2}
+                                    className="h-14 flex-1"
+                                />
+                                <InputOTPSlot
+                                    index={3}
+                                    className="h-14 flex-1"
+                                />
+                                <InputOTPSlot
+                                    index={4}
+                                    className="h-14 flex-1"
+                                />
+                                <InputOTPSlot
+                                    index={5}
+                                    className="h-14 flex-1"
+                                />
                             </InputOTPGroup>
                         </InputOTP>
                         {otpError && (
-                            <p className="text-sm text-destructive mt-2">{otpError}</p>
+                            <p className="mt-2 text-sm text-destructive">
+                                {otpError}
+                            </p>
                         )}
                     </div>
                     <DialogFooter>
-                        <ResendOtpButton onResend={handleBeginEmailVerification} initialCountdown={60}/>
+                        <ResendOtpButton
+                            onResend={handleBeginEmailVerification}
+                            initialCountdown={60}
+                        />
                         <Button
                             type="button"
                             onClick={handleSignUp}
@@ -313,7 +361,7 @@ export default function SignUpForm() {
                             {isOtpSubmitting && (
                                 <IconLoader className="mr-2 h-4 w-4" />
                             )}
-                            VERIFY OTP
+                            {t("verify_otp")}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

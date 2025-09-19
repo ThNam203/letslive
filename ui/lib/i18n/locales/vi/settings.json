@@ -1,0 +1,130 @@
+{
+    "title": "Cài đặt",
+    "page_title": "Cài đặt",
+    "navigation": {
+        "profile": "Hồ sơ",
+        "security": "Bảo mật",
+        "stream": "Stream",
+        "vods": "VODs"
+    },
+    "profile": {
+        "title": "Cài đặt hồ sơ",
+        "description": "Thay đổi thông tin nhận dạng cho tài khoản của bạn",
+        "username": "Tên người dùng",
+        "display_name": "Tên hiển thị",
+        "bio": "Tiểu sử",
+        "update_success": "Cập nhật thông tin hồ sơ thành công!",
+        "update_background": "Cập nhật ảnh nền",
+        "update_profile_picture": "Cập nhật ảnh đại diện"
+    },
+    "themes": {
+        "title": "Giao diện",
+        "description": "Tùy chỉnh giao diện của trang web"
+    },
+    "stream": {
+        "title": "Livestream",
+        "description": "Thông tin livestream tiếp theo của bạn sẽ dựa trên thông tin này. Nó sẽ không thay đổi ngay cả sau khi livestream kết thúc.",
+        "title_label": "Tiêu đề",
+        "title_description": "Nếu để trống, tiêu đề sẽ được tạo tự động.",
+        "description_label": "Mô tả",
+        "thumbnail_label": "Ảnh thu nhỏ",
+        "thumbnail_description": "Nếu để trống, ảnh thu nhỏ sẽ được tạo tự động.",
+        "thumbnail_hover": "Thay đổi ảnh thu nhỏ",
+        "confirm_edit_button": "Xác nhận chỉnh sửa",
+        "updated_success": "Cập nhật thông tin livestream thành công"
+    },
+    "file_size_exceeds": "Kích thước tệp vượt quá {{size}} MB",
+    "save_changes": "Lưu thay đổi",
+    "vods": {
+        "title": "Quản lý VODs",
+        "description": "Quản lý VODs và chỉnh sửa thông tin của chúng tại đây.",
+        "edit_dialog": {
+            "title": "Chỉnh sửa thông tin",
+            "description": "Thay đổi thông tin VOD tại đây.",
+            "thumbnail": "Ảnh thu nhỏ",
+            "change_thumbnail": "Thay đổi ảnh thu nhỏ",
+            "title_label": "Tiêu đề",
+            "description_label": "Mô tả",
+            "public": "Công khai",
+            "cancel": "Hủy",
+            "save_changes": "Lưu thay đổi",
+            "update_success": "Cập nhật VOD thành công"
+        },
+        "delete_dialog": {
+            "title": "Xác nhận xóa",
+            "description": "Bạn có chắc chắn muốn xóa mục này không? Hành động này không thể hoàn tác.",
+            "cancel": "Hủy",
+            "delete": "Xóa"
+        },
+        "actions": {
+            "edit": "Chỉnh sửa",
+            "delete": "Xóa"
+        },
+        "metadata": {
+            "view": "lượt xem",
+            "views": "lượt xem"
+        }
+    },
+    "disable": {
+        "title": "Vô hiệu hóa tài khoản của bạn",
+        "description": "Vô hiệu hóa hoàn toàn tài khoản của bạn",
+        "note": "Khi bạn vô hiệu hóa tài khoản, hồ sơ và thông báo của bạn sẽ bị ẩn, và tài khoản của bạn sẽ bị vô hiệu hóa. Bạn có thể kích hoạt lại tài khoản bất cứ lúc nào.",
+        "button": "Vô hiệu hóa tài khoản của bạn",
+        "dialog": {
+            "title": "Vô hiệu hóa tài khoản của bạn!",
+            "description": "Bạn có chắc chắn muốn vô hiệu hóa tài khoản không? Bạn có thể kích hoạt lại bất cứ lúc nào bằng cách đăng nhập lại.",
+            "confirm": "Tôi đã hiểu!"
+        },
+        "unknown_error": "Đã xảy ra lỗi không xác định"
+    },
+    "security": {
+        "api_key": {
+            "label": "API Key của bạn",
+            "generate": "Tạo API Key mới",
+            "copied": "Đã sao chép API Key vào clipboard"
+        },
+        "contact": {
+            "title": "Liên hệ",
+            "description": "Nơi chúng tôi gửi tin nhắn quan trọng về tài khoản của bạn",
+            "email": "Email",
+            "phone": "Số điện thoại",
+            "add_phone": "Thêm số điện thoại"
+        },
+        "security": {
+            "title": "Bảo mật",
+            "description": "Giữ tài khoản của bạn an toàn",
+            "password": {
+                "title": "Mật khẩu",
+                "change": "Thay đổi mật khẩu",
+                "dialog_title": "Thay đổi mật khẩu",
+                "local_description": "Tăng cường bảo mật với mật khẩu mạnh.",
+                "third_party_description": "Tài khoản của bạn được bảo mật bằng mật khẩu từ nhà cung cấp bên thứ ba.",
+                "updated_success": "Cập nhật mật khẩu thành công",
+                "error_mismatch": "Mật khẩu không khớp",
+                "error_min_length": "Mật khẩu phải có ít nhất 8 ký tự",
+                "error_same": "Mật khẩu mới phải khác mật khẩu hiện tại",
+                "form": {
+                    "current_label": "Mật khẩu hiện tại",
+                    "current_placeholder": "Nhập mật khẩu hiện tại của bạn",
+                    "new_label": "Mật khẩu mới",
+                    "new_placeholder": "Nhập mật khẩu mới",
+                    "confirm_label": "Xác nhận mật khẩu mới",
+                    "confirm_placeholder": "Xác nhận mật khẩu mới của bạn",
+                    "submit": "Xác nhận"
+                }
+            },
+            "two_factor": {
+                "title": "Xác thực hai yếu tố",
+                "setup": "Thiết lập xác thực hai yếu tố",
+                "local_description": "Thêm lớp bảo mật cho tài khoản Let's Live của bạn bằng cách bật 2FA trước khi đăng nhập.",
+                "third_party_description": "Tài khoản của bạn được bảo mật bởi nhà cung cấp bên thứ ba."
+            },
+            "sign_out": {
+                "title": "Đăng xuất khỏi tất cả thiết bị",
+                "description": "Thao tác này sẽ đăng xuất bạn khỏi Let's Live trên tất cả các thiết bị. Nếu bạn cho rằng tài khoản của mình đã bị xâm phạm, chúng tôi khuyên bạn nên",
+                "change_password": "thay đổi mật khẩu",
+                "button": "Đăng xuất khỏi tất cả thiết bị"
+            }
+        }
+    }
+}

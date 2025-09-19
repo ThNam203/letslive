@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import useT from "@/hooks/use-translation";
 import { dateDiffFromNow, formatSeconds } from "@/utils/timeFormats";
 import type React from "react";
 import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
@@ -41,6 +42,7 @@ export default function VODEditCard({
     vod: VOD;
     setVODS: Dispatch<SetStateAction<VOD[]>>;
 }) {
+    const { t } = useT("settings");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [formData, setFormData] = useState<{
@@ -125,7 +127,7 @@ export default function VODEditCard({
         );
 
         if (!fetchError) {
-            toast("VOD updated successfully", { type: "success" });
+            toast(t("settings:vods.edit_dialog.update_success"), { type: "success" });
             setVODS((prev) =>
                 prev.map((v) =>
                     v.id === vod.id
@@ -203,7 +205,7 @@ export default function VODEditCard({
                         • {dateDiffFromNow(vod.createdAt)} ago
                     </p>
                     <div className="flex items-center mt-2 text-sm text-foreground-muted">
-                        <span>{vod.viewCount} {vod.viewCount < 2 ? "view" : "views"}</span>
+                        <span>{vod.viewCount} {t(`settings:vods.metadata.${vod.viewCount === 1 ? 'view' : 'views'}`)}</span>
                         <div className="flex-1" />
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -214,10 +216,10 @@ export default function VODEditCard({
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={handleEdit}>
-                                    Edit
+                                    {t("settings:vods.actions.edit")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={handleDelete}>
-                                    Delete
+                                    {t("settings:vods.actions.delete")}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -228,14 +230,14 @@ export default function VODEditCard({
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Edit Information</DialogTitle>
+                        <DialogTitle>{t("settings:vods.edit_dialog.title")}</DialogTitle>
                         <DialogDescription>
-                            Make changes to the VOD information here.
+                            {t("settings:vods.edit_dialog.description")}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="image-upload">Thumbnail</Label>
+                            <Label htmlFor="image-upload">{t("settings:vods.edit_dialog.thumbnail")}</Label>
                             <div className="col-span-3 w-full max-w-3xl">
                                 <label
                                     htmlFor="image-upload"
@@ -275,14 +277,14 @@ export default function VODEditCard({
                                     `}
                                     >
                                         <span className="text-lg font-medium text-white">
-                                            Change thumbnail
+                                            {t("settings:vods.edit_dialog.change_thumbnail")}
                                         </span>
                                     </div>
                                 </label>
                             </div>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="title">Title</Label>
+                            <Label htmlFor="title">{t("settings:vods.edit_dialog.title_label")}</Label>
                             <Input
                                 id="title"
                                 name="title"
@@ -291,7 +293,7 @@ export default function VODEditCard({
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="description">Description</Label>
+                            <Label htmlFor="description">{t("settings:vods.edit_dialog.description_label")}</Label>
                             <Input
                                 id="description"
                                 name="description"
@@ -307,16 +309,16 @@ export default function VODEditCard({
                                 checked={formData.isPublic}
                                 onCheckedChange={handleSwitchChange}
                             />
-                            <Label htmlFor="isPublic">Public</Label>
+                            <Label htmlFor="isPublic">{t("settings:vods.edit_dialog.public")}</Label>
                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={handleCancel}>
-                            Cancel
+                            {t("settings:vods.edit_dialog.cancel")}
                         </Button>
                         <Button onClick={handleSave}>
                             {isSubmitting ? <IconLoader className="h-4 w-4"/> : <IconSave className="mr-2 h-4 w-4" />}
-                            Save Changes
+                            {t("settings:vods.edit_dialog.save_changes")}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -327,10 +329,9 @@ export default function VODEditCard({
             >
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Confirm Deletion</DialogTitle>
+                        <DialogTitle>{t("settings:vods.delete_dialog.title")}</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete this item? This
-                            action cannot be undone.
+                            {t("settings:vods.delete_dialog.description")}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="mt-4">
@@ -338,13 +339,13 @@ export default function VODEditCard({
                             variant="outline"
                             onClick={() => setIsDeleteDialogOpen(false)}
                         >
-                            Cancel
+                            {t("settings:vods.delete_dialog.cancel")}
                         </Button>
                         <Button
                             variant="destructive"
                             onClick={handleConfirmDelete}
                         >
-                            Delete
+                            {t("settings:vods.delete_dialog.delete")}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
