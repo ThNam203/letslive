@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import IconClose from "@/components/icons/close";
 import IconSend from "@/components/icons/send";
+import useT from "@/hooks/use-translation";
 
 export default function ChatPanel({
     roomId,
@@ -25,6 +26,7 @@ export default function ChatPanel({
     const wsRef = useRef<WebSocket | null>(null);
     const [atBottom, setAtBottom] = useState(false);
     const messageContainerRef = useRef<HTMLDivElement | null>(null);
+    const { t } = useT("users");
 
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
@@ -129,7 +131,7 @@ export default function ChatPanel({
     return (
         <div className="relative flex w-full h-full flex-col">
             <div className="flex items-center justify-between border border-y-0 border-border px-4 py-3">
-                <h2 className="font-semibold">Chat</h2>
+                <h2 className="font-semibold">{t("users:chat.title")}</h2>
                 <Button
                     variant="ghost"
                     size="icon"
@@ -154,9 +156,9 @@ export default function ChatPanel({
                         </span>
                         <span className="text-foreground">
                             {message.type === "join"
-                                ? "joined the chat"
+                                ? t("users:chat.joined")
                                 : message.type === "leave"
-                                  ? "left the chat"
+                                  ? t("users:chat.left")
                                   : message.text}
                         </span>
                     </div>
@@ -167,7 +169,7 @@ export default function ChatPanel({
                 <Input
                     type="text"
                     placeholder={
-                        !user ? "Login to start messaging" : "Type a message..."
+                        !user ? t("users:chat.placeholder_login") : t("users:chat.placeholder_typing")
                     }
                     disabled={!user}
                     value={inputMessage}

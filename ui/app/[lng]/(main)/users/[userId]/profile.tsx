@@ -6,6 +6,7 @@ import VODView from "@/components/livestream/vod";
 import IconCalendar from "@/components/icons/calendar";
 import IconUsers from "@/components/icons/users";
 import { VOD } from "@/types/vod";
+import useT from "@/hooks/use-translation";
 
 export default function ProfileView({
     user,
@@ -20,6 +21,7 @@ export default function ProfileView({
     showRecentActivity?: boolean;
     className?: string;
 }) {
+    const { t } = useT("users");
     return (
         <div className={className}>
             <ProfileHeader user={user} updateUser={updateUser} />
@@ -38,7 +40,7 @@ export default function ProfileView({
                 {/* Bio */}
                 <div className="mt-2">
                     <h2 className="text-xl font-semibold text-foreground">
-                        About
+                        {t("users:profile.about")}
                     </h2>
                     <p className="text-foreground-muted">{user.bio}</p>
                 </div>
@@ -49,16 +51,14 @@ export default function ProfileView({
                         <IconUsers className="mr-2" />
                         <span>
                             {user.followerCount !== undefined
-                                ? `${user.followerCount} follower${
-                                      user.followerCount > 1 ? "s" : ""
-                                  }`
-                                : "0 follower"}
+                                ? `${user.followerCount} ${t(user.followerCount === 1 ? "users:profile.followers_one" : "users:profile.followers_other")}`
+                                : `0 ${t("users:profile.followers_other")}`}
                         </span>
                     </div>
                     <div className="flex items-center text-foreground-muted">
                         <IconCalendar className="mr-2" />
                         <span>
-                            Joined {new Date(user.createdAt).toLocaleString()}
+                            {t("users:profile.joined_prefix")} {new Date(user.createdAt).toLocaleString()}
                         </span>
                     </div>
                 </div>
@@ -68,7 +68,7 @@ export default function ProfileView({
                     ? vods.length > 0 && (
                           <div className="mt-4">
                               <h2 className="mb-4 text-xl font-semibold text-foreground">
-                                  Recent Streams
+                                  {t("users:profile.recent_streams")}
                               </h2>
 
                               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
