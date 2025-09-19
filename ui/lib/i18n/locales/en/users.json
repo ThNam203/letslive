@@ -1,0 +1,17 @@
+{
+  "chat": {
+    "title": "Chat",
+    "joined": "joined the chat",
+    "left": "left the chat",
+    "placeholder_login": "Login to start messaging",
+    "placeholder_typing": "Type a message..."
+  },
+  "offline": "Offline",
+  "profile": {
+    "about": "About",
+    "followers_one": "follower",
+    "followers_other": "followers",
+    "joined_prefix": "Joined",
+    "recent_streams": "Recent Streams"
+  }
+}
