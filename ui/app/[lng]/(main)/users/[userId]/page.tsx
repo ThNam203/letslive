@@ -21,7 +21,7 @@ import { GetPublicVODsOfUser } from "@/lib/api/vod";
 import useT from "@/hooks/use-translation";
 
 export default function Livestreaming() {
-    const { t } = useT("translation");
+    const { t } = useT(["common", "users"]);
     const [user, setUser] = useState<User | null>(null);
     const [livestream, setLivestream] = useState<Livestream | null>(null);
     const [vods, setVods] = useState<VOD[]>([]);
@@ -41,7 +41,7 @@ export default function Livestreaming() {
 
     const params = useParams<{ userId: string }>();
     const [playerInfo, setPlayerInfo] = useState<VideoInfo>({
-        videoTitle: t("users.live_streaming"),
+        videoTitle: t("common:live_streaming"),
         streamer: {
             name: "",
         },
@@ -116,7 +116,7 @@ export default function Livestreaming() {
                 ) : (
                     <div className="bg-opacity-9 0 mb-4 flex aspect-video w-full items-center justify-center bg-black mt-1">
                         <h2 className="font-mono text-3xl text-foreground-muted">
-                            {t("users.offline")}
+                            {t("users:offline")}
                         </h2>
                     </div>
                 )}
