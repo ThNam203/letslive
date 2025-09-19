@@ -75,7 +75,6 @@ export default function ProfileBanner({
         )}
         <ImageHover
           inputRef={backgroundImageInputRef}
-          title={t("settings:profile.update_background")}
           onValueChange={handleBackgroundImageChange}
           onClick={handleBackgroundUpdateButtonClick}
           onCloseIconClick={handleRemoveBackgroundImage}
