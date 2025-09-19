@@ -7,7 +7,7 @@ function sleep(ms: number) {
 
 export default async function HomePage() {
   const { t } = await myGetT("common");
-await sleep(30000)
+
   return (
     <div className="flex flex-col w-full max-h-full px-8 py-4 overflow-y-auto overflow-x-hidden text-xs">
       <h1 className="font-semibold text-xl my-2">{t("livestreams")}</h1>

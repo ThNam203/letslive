@@ -13,7 +13,7 @@ import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";
 
 export default function StreamEdit() {
-    const { t } = useT("translation");
+    const { t } = useT("settings");
     const user = useUser((state) => state.user);
     const updateUser = useUser((state) => state.updateUser);
 
@@ -66,7 +66,7 @@ export default function StreamEdit() {
         }
 
         if (updatedInfo) {
-            toast.success(t("settings.stream.updated_success"));
+            toast.success(t("settings:stream.updated_success"));
             updateUser({
                 ...user,
                 livestreamInformation: {
@@ -89,28 +89,28 @@ export default function StreamEdit() {
 
     return (
         <Section
-            title={t("settings.stream.title")}
-            description={t("settings.stream.description")}
+            title={t("settings:stream.title")}
+            description={t("settings:stream.description")}
             hasBorder
         >
             <form onSubmit={handleSubmit} className="space-y-4">
                 <TextField
-                    label={t("settings.stream.title_label")}
-                    description={t("settings.stream.title_description")}
+                    label={t("settings:stream.title_label")}
+                    description={t("settings:stream.title_description")}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                 />
                 <TextAreaField
-                    label={t("settings.stream.description_label")}
+                    label={t("settings:stream.description_label")}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={4}
                 />
                 <ImageField
-                    label={t("settings.stream.thumbnail_label")}
-                    description={t("settings.stream.thumbnail_description")}
+                    label={t("settings:stream.thumbnail_label")}
+                    description={t("settings:stream.thumbnail_description")}
                     imageUrl={imageUrl}
-                    hoverText={t("settings.stream.thumbnail_hover")}
+                    hoverText={t("settings:stream.thumbnail_hover")}
                     onImageChange={handleImageChange}
                     onResetImage={handleResetImage}
                     showCloseIcon={imageUrl !== null}
@@ -121,7 +121,7 @@ export default function StreamEdit() {
                         type="submit"
                     >
                         {isSubmitting && <IconLoader />}
-                        {t("settings.stream.confirm_edit_button")}
+                        {t("settings:stream.confirm_edit_button")}
                     </Button>
                 </div>
             </form>

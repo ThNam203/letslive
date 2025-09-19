@@ -4,6 +4,7 @@ import { cn } from "@/utils/cn";
 import { IsValidFileSizeInMB } from "@/utils/file";
 import React from "react";
 import { toast } from "react-toastify";
+import useT from "@/hooks/use-translation";
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
@@ -29,11 +30,14 @@ export default function ImageHover({
   onCloseIconClick,
   ...props
 }: Props) {
+  const { t } = useT("settings");
   const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (!IsValidFileSizeInMB(file, FILE_SIZE_LIMIT_MB_UNIT)) {
-        toast.error(`File size exceeds ${FILE_SIZE_LIMIT_MB_UNIT} MB`);
+        toast.error(
+          t("settings:file_size_exceeds", { size: FILE_SIZE_LIMIT_MB_UNIT })
+        );
         return;
       }
       onValueChange?.(file);

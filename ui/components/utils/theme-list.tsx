@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { cn } from "@/utils/cn";
 import { THEME_COLORS } from "@/constant/theme";
+import useT from "@/hooks/use-translation";
 
 const ThemeList = ({ className }: { className?: string }) => {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
+  const { t } = useT(["theme"]);
 
   useEffect(() => {
     setMounted(true);
@@ -29,7 +31,7 @@ const ThemeList = ({ className }: { className?: string }) => {
             color === "dark" ? "bg-[#0f1729] text-white" : "",
           )}
         >
-          {color}
+          {t(`theme:${color}`)}
         </button>
       ))}
     </div>
