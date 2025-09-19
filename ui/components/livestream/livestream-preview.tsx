@@ -1,17 +1,16 @@
 "use client";
 
 import { ClassValue } from "clsx";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { User } from "../../types/user";
 import { Hover3DBox } from "./hover-3d-box";
-import { cn } from "@/utils/cn";
 import LivestreamPreviewDetailView from "./livestream-preview-detail";
 import GLOBAL from "../../global";
 import { Livestream } from "../../types/livestream";
 import { useEffect, useState } from "react";
 import { GetUserById } from "../../lib/api/user";
 import { Card, CardContent } from "../ui/card";
-import { CardHeader } from "@mui/material";
+import { cn } from "@/utils/cn";
 
 const LivestreamPreviewView = ({
     className,
@@ -35,9 +34,7 @@ const LivestreamPreviewView = ({
     }, [livestream]);
 
     return (
-        <Card className="w-full transition-all hover:shadow-md rounded-sm border-muted">
-            {/* <CardHeader> */}
-
+        <Card className={cn("w-full transition-all hover:shadow-md rounded-sm border-muted", className)}>
             <Hover3DBox
                 showStream={true}
                 imageSrc={

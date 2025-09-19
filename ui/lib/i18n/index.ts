@@ -1,10 +1,10 @@
-import i18next from "./i18next"
 import { headers } from "next/headers"
-import { headerName } from "./settings"
+import { I18N_HEADER_NAME } from "./settings"
+import i18next from "@/lib/i18n/i18next"
 
-export async function myGetT(ns: string | string[] = "translation") {
+export async function myGetT(ns: string | string[] = "common") {
   const headerList = await headers()
-  const lng = headerList.get(headerName)
+  const lng = headerList.get(I18N_HEADER_NAME)
 
   if (lng && i18next.resolvedLanguage !== lng) {
     await i18next.changeLanguage(lng)

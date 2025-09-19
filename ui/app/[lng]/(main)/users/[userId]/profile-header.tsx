@@ -13,6 +13,7 @@ import { FollowOtherUser, UnfollowOtherUser } from "@/lib/api/user";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import IconLoader from "@/components/icons/loader";
+import useT from "@/hooks/use-translation";
 
 export default function ProfileHeader({
     user,
@@ -21,6 +22,7 @@ export default function ProfileHeader({
     user: User;
     updateUser: (newUserInfo: User) => void;
 }) {
+    const { t } = useT("translation");
     const me = useUser((state) => state.user);
     const [isFetching, setIsFetching] = useState(false);
 
@@ -94,7 +96,7 @@ export default function ProfileHeader({
                           className="absolute bottom-4 right-0 translate-x-[50%] flex flex-row items-center justify-center gap-0"
                       >
                           {isFetching && <IconLoader className="mr-1" />}
-                          {user.isFollowing ? "Unfollow" : "Follow"}
+                          {user.isFollowing ? t("users.unfollow") : t("users.follow")}
                       </Button>
                   )}
                 </div>

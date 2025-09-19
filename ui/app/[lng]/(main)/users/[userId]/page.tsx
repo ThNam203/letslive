@@ -18,8 +18,10 @@ import IconMenu from "@/components/icons/menu";
 import { VOD } from "@/types/vod";
 import { Livestream } from "@/types/livestream";
 import { GetPublicVODsOfUser } from "@/lib/api/vod";
+import useT from "@/hooks/use-translation";
 
 export default function Livestreaming() {
+    const { t } = useT("translation");
     const [user, setUser] = useState<User | null>(null);
     const [livestream, setLivestream] = useState<Livestream | null>(null);
     const [vods, setVods] = useState<VOD[]>([]);
@@ -39,9 +41,9 @@ export default function Livestreaming() {
 
     const params = useParams<{ userId: string }>();
     const [playerInfo, setPlayerInfo] = useState<VideoInfo>({
-        videoTitle: "Live Streaming",
+        videoTitle: t("users.live_streaming"),
         streamer: {
-            name: "Dr. Doppelgangers",
+            name: "",
         },
         videoUrl: null,
     });
@@ -114,7 +116,7 @@ export default function Livestreaming() {
                 ) : (
                     <div className="bg-opacity-9 0 mb-4 flex aspect-video w-full items-center justify-center bg-black mt-1">
                         <h2 className="font-mono text-3xl text-foreground-muted">
-                            The user is currently offline.
+                            {t("users.offline")}
                         </h2>
                     </div>
                 )}

@@ -1,0 +1,130 @@
+{
+    "title": "Settings",
+    "page_title": "Settings",
+    "navigation": {
+        "profile": "Profile",
+        "security": "Security",
+        "stream": "Stream",
+        "vods": "VODs"
+    },
+    "profile": {
+        "title": "Profile Settings",
+        "description": "Change identifying details for your account",
+        "username": "Username",
+        "display_name": "Display Name",
+        "bio": "Bio",
+        "update_success": "Profile information updated successfully!",
+        "update_background": "Update background",
+        "update_profile_picture": "Update profile picture"
+    },
+    "themes": {
+        "title": "Themes",
+        "description": "Customize the look and feel of the website"
+    },
+    "stream": {
+        "title": "Livestream",
+        "description": "Your next livestream information will be based on the information. It won't change even after livestream ends.",
+        "title_label": "Title",
+        "title_description": "If empty, the title will be generated automatically.",
+        "description_label": "Description",
+        "thumbnail_label": "Thumbnail",
+        "thumbnail_description": "If empty, the thumbnail will be generated automatically.",
+        "thumbnail_hover": "Change thumbnail",
+        "confirm_edit_button": "Confirm edit",
+        "updated_success": "Livestream information updated successfully"
+    },
+    "save_changes": "Save Changes",
+    "file_size_exceeds": "File size exceeds {{size}} MB",
+    "vods": {
+        "title": "VODs Manager",
+        "description": "Manage your VODs and edit their information here.",
+        "edit_dialog": {
+            "title": "Edit Information",
+            "description": "Make changes to the VOD information here.",
+            "thumbnail": "Thumbnail",
+            "change_thumbnail": "Change thumbnail",
+            "title_label": "Title",
+            "description_label": "Description",
+            "public": "Public",
+            "cancel": "Cancel",
+            "save_changes": "Save Changes",
+            "update_success": "VOD updated successfully"
+        },
+        "delete_dialog": {
+            "title": "Confirm Deletion",
+            "description": "Are you sure you want to delete this item? This action cannot be undone.",
+            "cancel": "Cancel",
+            "delete": "Delete"
+        },
+        "actions": {
+            "edit": "Edit",
+            "delete": "Delete"
+        },
+        "metadata": {
+            "view": "view",
+            "views": "views"
+        }
+    },
+    "disable": {
+        "title": "Disabling your Let's Live account",
+        "description": "Completely deactivate your account",
+        "note": "When you disable your account, your profile and notifications will be hidden, and your account will be deactivated. You can reactivate your account at any time.",
+        "button": "Disable Your Let's Live Account",
+        "dialog": {
+            "title": "Disable your account!",
+            "description": "Are you sure you want to disable your account? You can reactivate your account at any time by logging back in.",
+            "confirm": "I understand!"
+        },
+        "unknown_error": "An unknown error occurred"
+    },
+    "security": {
+        "api_key": {
+            "label": "Your API Key",
+            "generate": "Generate New API Key",
+            "copied": "API Key copied to clipboard"
+        },
+        "contact": {
+            "title": "Contact",
+            "description": "Where we send important messages about your account",
+            "email": "Email",
+            "phone": "Phone Number",
+            "add_phone": "Add a number"
+        },
+        "security": {
+            "title": "Security",
+            "description": "Keep your account safe and sound",
+            "password": {
+                "title": "Password",
+                "change": "Change password",
+                "dialog_title": "Change Password",
+                "local_description": "Improve your security with a strong password.",
+                "third_party_description": "Your account is secured with a password from a third-party provider.",
+                "updated_success": "Password updated successfully",
+                "error_mismatch": "Passwords do not match",
+                "error_min_length": "Password must be at least 8 characters",
+                "error_same": "New password must be different from current password",
+                "form": {
+                    "current_label": "Current Password",
+                    "current_placeholder": "Enter your current password",
+                    "new_label": "New Password",
+                    "new_placeholder": "Enter your new password",
+                    "confirm_label": "Confirm New Password",
+                    "confirm_placeholder": "Confirm your new password",
+                    "submit": "Confirm"
+                }
+            },
+            "two_factor": {
+                "title": "Two-Factor Authentication",
+                "setup": "Set Up Two-Factor Authentication",
+                "local_description": "Add an extra layer of security to your Let's Live account by enabling 2FA before logging in.",
+                "third_party_description": "Your account is secured with third-party provider."
+            },
+            "sign_out": {
+                "title": "Sign Out Everywhere",
+                "description": "This will log out you of Let's Live everywhere you're logged in. If you believe your account has been compromised, we recommend you",
+                "change_password": "change your password",
+                "button": "Sign Out Everywhere"
+            }
+        }
+    }
+}
