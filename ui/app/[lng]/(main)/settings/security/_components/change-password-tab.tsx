@@ -9,6 +9,7 @@ import FormErrorText from "@/components/forms/FormErrorText";
 import { Button } from "@/components/ui/button";
 import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";
+import { changePasswordSchema } from "@/lib/validations/changePassword";
 
 export default function ChangePasswordTab() {
   const { t } = useT("settings");
@@ -16,13 +17,16 @@ export default function ChangePasswordTab() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [updatePasswordError, setUpdatePasswordError] = useState("");
-  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [errors, setErrors] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validatePassword()) return;
+    if (!validate()) return;
 
     setIsUpdatingPassword(true);
     const { fetchError } = await ChangePassword({
@@ -33,37 +37,37 @@ export default function ChangePasswordTab() {
     setIsUpdatingPassword(false);
 
     if (fetchError) {
-      setUpdatePasswordError(fetchError.message);
+      setErrors((prev) => ({ ...prev, newPassword: fetchError.message }));
       return;
     }
 
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
-    setUpdatePasswordError("");
+    setErrors({ currentPassword: "", newPassword: "", confirmPassword: "" });
 
     toast(t("settings:security.security.password.updated_success"), { type: "success" });
   };
 
-  const validatePassword = () => {
-    if (newPassword !== confirmPassword) {
-      setConfirmPasswordError(t("settings:security.security.password.error_mismatch"));
-      return false;
-    } else setConfirmPasswordError("");
-
-    if (newPassword.length < 8 || currentPassword.length < 8) {
-      setUpdatePasswordError(t("settings:security.security.password.error_min_length"));
-      return false;
+  const validate = () => {
+    const result = changePasswordSchema(t).safeParse({
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    });
+    const newErrors: typeof errors = {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    };
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const key = issue.path[0] as keyof typeof newErrors;
+        if (key in newErrors) newErrors[key] = issue.message;
+      }
     }
-
-    if (newPassword === currentPassword) {
-      setUpdatePasswordError(
-        t("settings:security.security.password.error_same")
-      );
-      return false;
-    }
-
-    return true;
+    setErrors(newErrors);
+    return result.success;
   };
 
   return (
@@ -77,6 +81,7 @@ export default function ChangePasswordTab() {
           onChange={(e) => setCurrentPassword(e.target.value)}
           placeholder={t("settings:security.security.password.form.current_placeholder")}
         />
+        <FormErrorText textError={errors.currentPassword} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="new-password">{t("settings:security.security.password.form.new_label")}</Label>
@@ -87,6 +92,7 @@ export default function ChangePasswordTab() {
           onChange={(e) => setNewPassword(e.target.value)}
           placeholder={t("settings:security.security.password.form.new_placeholder")}
         />
+        <FormErrorText textError={errors.newPassword} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="confirm-password">{t("settings:security.security.password.form.confirm_label")}</Label>
@@ -97,9 +103,8 @@ export default function ChangePasswordTab() {
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder={t("settings:security.security.password.form.confirm_placeholder")}
         />
+        <FormErrorText textError={errors.confirmPassword} />
       </div>
-      <FormErrorText textError={confirmPasswordError} />
-      <FormErrorText textError={updatePasswordError} />
       <Button
         disabled={isUpdatingPassword}
         className="disabled:bg-gray-300 float-right"

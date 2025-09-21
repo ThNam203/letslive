@@ -3,11 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import {
-    RequestToSendVerification,
-    SignUp,
-    VerifyOTP,
-} from "../../lib/api/auth";
+import { RequestToSendVerification, SignUp } from "../../lib/api/auth";
 import IconEmail from "../icons/email";
 import FormErrorText from "./FormErrorText";
 import IconUserOutline from "../icons/user";
@@ -28,6 +24,7 @@ import { Button } from "../ui/button";
 import { ResendOtpButton } from "./ResendButton";
 import IconLoader from "../icons/loader";
 import useT from "@/hooks/use-translation";
+import { signUpSchema } from "../../lib/validations/signUp";
 
 export default function SignUpForm() {
     const [email, setEmail] = useState("");
@@ -55,53 +52,33 @@ export default function SignUpForm() {
     const { t, i18n } = useT(["auth", "error", "common"]);
 
     const validate = () => {
-        const newErrors = {
+        const parseResult = signUpSchema(t).safeParse({
+            email,
+            username,
+            password,
+            confirmPassword,
+            turnstile: turnstileToken,
+        });
+
+        const newErrors: typeof errors = {
             email: "",
+            username: "",
             password: "",
             confirmPassword: "",
-            username: "",
             turnstile: "",
         };
 
-        if (!email) {
-            newErrors.email = t("error:email_required");
-        } else if (!/\S+@\S+\.\S+/.test(email)) {
-            newErrors.email = t("error:email_invalid");
-        }
-
-        if (!username) {
-            newErrors.username = t("error:username_required");
-        } else if (username.length < 6) {
-            newErrors.username = t("error:username_too_short");
-        } else if (username.length > 20) {
-            newErrors.username = t("error:username_too_long");
-        }
-
-        if (!password) {
-            newErrors.password = t("error:password_required");
-        } else if (password.length < 8) {
-            newErrors.password = t("error:password_too_short");
-        }
-
-        if (!confirmPassword) {
-            newErrors.confirmPassword = t("error:confirm_password_required");
-        } else if (confirmPassword !== password) {
-            newErrors.confirmPassword = t("error:passwords_do_not_match");
-        }
-
-        if (!turnstileToken) {
-            newErrors.turnstile = t("error:turnstile_required");
+        if (!parseResult.success) {
+            for (const issue of parseResult.error.issues) {
+                const pathKey = issue.path[0] as keyof typeof newErrors;
+                if (pathKey && pathKey in newErrors) {
+                    newErrors[pathKey] = issue.message;
+                }
+            }
         }
 
         setErrors(newErrors);
-
-        return (
-            !newErrors.email &&
-            !newErrors.username &&
-            !newErrors.password &&
-            !newErrors.confirmPassword &&
-            !newErrors.turnstile
-        );
+        return parseResult.success;
     };
 
     const handleSignUp = async () => {
