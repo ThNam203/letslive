@@ -12,6 +12,7 @@ import IconEyeOff from "../icons/eye-off";
 import Turnstile, { useTurnstile } from "react-turnstile";
 import IconLoader from "../icons/loader";
 import useT from "@/hooks/use-translation";
+import { loginSchema } from "@/lib/validations/login";
 
 export default function LogInForm() {
     const [email, setEmail] = useState("");
@@ -29,27 +30,20 @@ export default function LogInForm() {
     const { t, i18n } = useT(["auth", "error"]);
 
     const validate = () => {
-        const newErrors = { email: "", password: "", turnstile: "" };
-
-        if (!email) {
-            newErrors.email = t("error:email_required");
-        } else if (!/\S+@\S+\.\S+/.test(email)) {
-            newErrors.email = t("error:email_invalid");
+        const result = loginSchema(t).safeParse({
+            email,
+            password,
+            turnstile: turnstileToken,
+        });
+        const newErrors: typeof errors = { email: "", password: "", turnstile: "" };
+        if (!result.success) {
+            for (const issue of result.error.issues) {
+                const key = issue.path[0] as keyof typeof newErrors;
+                if (key in newErrors) newErrors[key] = issue.message;
+            }
         }
-
-        if (!password) {
-            newErrors.password = t("error:password_required");
-        } else if (password.length < 8) {
-            newErrors.password = t("error:password_too_short");
-        }
-
-        if (!turnstileToken) {
-            newErrors.turnstile = t("error:turnstile_required");
-        }
-
         setErrors(newErrors);
-
-        return !newErrors.email && !newErrors.password && !newErrors.turnstile;
+        return result.success;
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
