@@ -380,7 +380,7 @@ function VideoTracking({
     return (
         <div
             className={cn(
-                "flex hidden w-full items-center justify-center bg-transparent",
+                "flex w-full items-center justify-center bg-transparent",
                 className,
             )}
         >

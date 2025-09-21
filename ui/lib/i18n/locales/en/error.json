@@ -11,6 +11,7 @@
     "username_too_long": "Username must be <= 20 characters",
     "confirm_password_required": "Please confirm your password",
     "passwords_do_not_match": "Passwords do not match",
+    "new_password_must_be_different": "New password must be different from current password",
     "otp_required": "Please enter OTP code",
     "otp_send_fail": "Failed to send OTP"
 }
