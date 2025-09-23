@@ -2,7 +2,7 @@ package domains
 
 import (
 	"context"
-	serviceresponse "sen1or/letslive/auth/responses"
+	serviceresponse "sen1or/letslive/auth/response"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -18,7 +18,7 @@ type SignUpOTP struct {
 }
 
 type SignUpOTPRepository interface {
-	Insert(ctx context.Context, newOTP SignUpOTP) *serviceresponse.ServiceErrorResponse
-	GetOTP(ctx context.Context, code, email string) (*SignUpOTP, *serviceresponse.ServiceErrorResponse)
-	UpdateUsedAt(ctx context.Context, otpId uuid.UUID, usedAt time.Time) *serviceresponse.ServiceErrorResponse
+	Insert(ctx context.Context, newOTP SignUpOTP) *serviceresponse.Response[any]
+	GetOTP(ctx context.Context, code, email string) (*SignUpOTP, *serviceresponse.Response[any])
+	UpdateUsedAt(ctx context.Context, otpId uuid.UUID, usedAt time.Time) *serviceresponse.Response[any]
 }

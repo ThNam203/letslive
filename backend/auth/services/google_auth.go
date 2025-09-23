@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"math/rand/v2"
@@ -12,7 +11,7 @@ import (
 	"sen1or/letslive/auth/domains"
 	usergateway "sen1or/letslive/auth/gateway/user"
 	"sen1or/letslive/auth/pkg/logger"
-	serviceresponse "sen1or/letslive/auth/responses"
+	serviceresponse "sen1or/letslive/auth/response"
 	"strconv"
 	"strings"
 
@@ -58,22 +57,37 @@ func (s GoogleAuthService) GenerateAuthCodeURL(oauthState string) string {
 	return s.getGoogleOauthConfig().AuthCodeURL(oauthState)
 }
 
-func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode string) (*domains.Auth, *serviceresponse.ServiceErrorResponse) {
+func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode string) (*domains.Auth, *serviceresponse.Response[any]) {
 	data, getErr := s.getUserDataFromGoogle(ctx, googleCode)
 	if getErr != nil {
 		logger.Errorf("failed to get user data from google: %s", getErr)
-		return nil, serviceresponse.ErrInternalServer
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	var returnedOAuthUser googleOAuthUser
 	if err := json.Unmarshal(data, &returnedOAuthUser); err != nil {
 		logger.Errorf("failed to unmarshal data into google user")
-		return nil, serviceresponse.ErrInternalServer
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	existedRecord, err := s.repo.GetByEmail(ctx, returnedOAuthUser.Email)
-	if err != nil && !errors.Is(err, serviceresponse.ErrAuthNotFound) {
-		return nil, serviceresponse.ErrInternalServer
+	if err != nil && err.Code == serviceresponse.RES_ERR_AUTH_NOT_FOUND_CODE {
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	} else if err != nil {
 		dto := &usergateway.CreateUserRequestDTO{
 			Username:     generateUsername(returnedOAuthUser.Email),
@@ -84,7 +98,7 @@ func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode strin
 		createdUser, errRes := s.userGateway.CreateNewUser(ctx, *dto)
 		if errRes != nil {
 			logger.Errorf("failed to create new user through gateway: %s", errRes.Message)
-			return nil, serviceresponse.NewServiceErrorResponse(errRes.StatusCode, errRes.Message)
+			return nil, errRes
 		}
 
 		newOAuthUserRecord := &domains.Auth{
