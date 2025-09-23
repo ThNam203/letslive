@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	serviceresponse "sen1or/letslive/auth/responses"
+	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/types"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (h *AuthHandler) setAuthJWTsInCookie(ctx context.Context, userId string, w http.ResponseWriter) *serviceresponse.ServiceErrorResponse {
+func (h *AuthHandler) setAuthJWTsInCookie(ctx context.Context, userId string, w http.ResponseWriter) *serviceresponse.Response[any] {
 	tokensInfo, err := h.jwtService.GenerateTokenPair(ctx, userId)
 	if err != nil {
 		return err

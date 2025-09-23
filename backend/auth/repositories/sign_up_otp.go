@@ -5,7 +5,7 @@ import (
 	"errors"
 	"sen1or/letslive/auth/domains"
 	"sen1or/letslive/auth/pkg/logger"
-	serviceresponse "sen1or/letslive/auth/responses"
+	serviceresponse "sen1or/letslive/auth/response"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -23,7 +23,7 @@ func NewSignUpOTPRepo(conn *pgxpool.Pool) domains.SignUpOTPRepository {
 	}
 }
 
-func (r *postgresSignUpOTPRepo) Insert(ctx context.Context, otp domains.SignUpOTP) *serviceresponse.ServiceErrorResponse {
+func (r *postgresSignUpOTPRepo) Insert(ctx context.Context, otp domains.SignUpOTP) *serviceresponse.Response[any] {
 	_ = pgx.NamedArgs{
 		"code":       otp.Code,
 		"expires_at": otp.ExpiresAt,
@@ -36,16 +36,26 @@ func (r *postgresSignUpOTPRepo) Insert(ctx context.Context, otp domains.SignUpOT
 	`, otp.Code, otp.ExpiresAt, otp.Email)
 	if err != nil {
 		logger.Errorf("failed to exec insert otp: %s", err)
-		return serviceresponse.ErrDatabaseQuery
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	} else if result.RowsAffected() == 0 {
 		logger.Errorf("failed to insert otp: %s", err)
-		return serviceresponse.ErrDatabaseIssue
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_DATABASE_ISSUE,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return nil
 }
 
-func (r *postgresSignUpOTPRepo) GetOTP(ctx context.Context, code string, email string) (*domains.SignUpOTP, *serviceresponse.ServiceErrorResponse) {
+func (r *postgresSignUpOTPRepo) GetOTP(ctx context.Context, code string, email string) (*domains.SignUpOTP, *serviceresponse.Response[any]) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT id, code, email, expires_at, created_at, used_at
 		FROM sign_up_otps
@@ -53,24 +63,39 @@ func (r *postgresSignUpOTPRepo) GetOTP(ctx context.Context, code string, email s
 	`, code, email)
 	if err != nil {
 		logger.Errorf("failed to get otp: %s", err)
-		return nil, serviceresponse.ErrDatabaseQuery
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	}
 	defer rows.Close()
 
 	otp, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.SignUpOTP])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, serviceresponse.ErrSignUpOTPNotFound
+			return nil, serviceresponse.NewResponseFromTemplate[any](
+				serviceresponse.RES_ERR_SIGN_UP_OTP_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 		}
 
 		logger.Errorf("failed to collect otp: %s", err)
-		return nil, serviceresponse.ErrDatabaseIssue
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_DATABASE_ISSUE,
+			nil,
+			nil,
+			&serviceresponse.ErrorDetails{serviceresponse.ErrorDetail{"code": code, "email": email}},
+		)
 	}
 
 	return &otp, nil
 }
 
-func (r *postgresSignUpOTPRepo) UpdateUsedAt(ctx context.Context, otpId uuid.UUID, verifiedAt time.Time) *serviceresponse.ServiceErrorResponse {
+func (r *postgresSignUpOTPRepo) UpdateUsedAt(ctx context.Context, otpId uuid.UUID, verifiedAt time.Time) *serviceresponse.Response[any] {
 	result, err := r.dbConn.Exec(ctx, `
 		UPDATE sign_up_otps
 		SET used_at = $1
@@ -81,15 +106,30 @@ func (r *postgresSignUpOTPRepo) UpdateUsedAt(ctx context.Context, otpId uuid.UUI
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return serviceresponse.ErrSignUpOTPNotFound
+			return serviceresponse.NewResponseFromTemplate[any](
+				serviceresponse.RES_ERR_SIGN_UP_OTP_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 		}
 
 		logger.Errorf("failed to update otp used at", err)
-		return serviceresponse.ErrDatabaseQuery
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	if result.RowsAffected() == 0 {
-		return serviceresponse.ErrSignUpOTPNotFound
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_SIGN_UP_OTP_NOT_FOUND,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return nil

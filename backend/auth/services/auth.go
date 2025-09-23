@@ -2,15 +2,13 @@ package services
 
 import (
 	"context"
-	"errors"
 	"sen1or/letslive/auth/domains"
 	"sen1or/letslive/auth/dto"
 	usergateway "sen1or/letslive/auth/gateway/user"
 	"sen1or/letslive/auth/pkg/logger"
-	serviceresponse "sen1or/letslive/auth/responses"
+	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/utils"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -28,7 +26,7 @@ func NewAuthService(repo domains.AuthRepository, userGateway usergateway.UserGat
 	}
 }
 
-func (s AuthService) GetUserById(ctx context.Context, userId uuid.UUID) (*domains.Auth, *serviceresponse.ServiceErrorResponse) {
+func (s AuthService) GetUserById(ctx context.Context, userId uuid.UUID) (*domains.Auth, *serviceresponse.Response[any]) {
 	auth, err := s.repo.GetByUserID(ctx, userId)
 	if err != nil {
 		return nil, err
@@ -37,46 +35,69 @@ func (s AuthService) GetUserById(ctx context.Context, userId uuid.UUID) (*domain
 	return auth, nil
 }
 
-func (s AuthService) GetUserFromCredentials(ctx context.Context, credentials dto.LogInRequestDTO) (*domains.Auth, *serviceresponse.ServiceErrorResponse) {
-	validate := validator.New(validator.WithRequiredStructEnabled())
-	validateErr := validate.Struct(&credentials)
+func (s AuthService) GetUserFromCredentials(ctx context.Context, credentials dto.LogInRequestDTO) (*domains.Auth, *serviceresponse.Response[any]) {
+	validateErr := utils.Validator.Struct(&credentials)
 
 	if validateErr != nil {
-		return nil, serviceresponse.ErrInvalidInput
+		return nil, serviceresponse.NewResponseWithValidationErrors[any](nil, nil, validateErr)
 	}
 
 	auth, err := s.repo.GetByEmail(ctx, credentials.Email)
 	if err != nil {
-		if errors.Is(err, serviceresponse.ErrAuthNotFound) {
-			return nil, serviceresponse.ErrEmailOrPasswordIncorrect
+		if err.Code == serviceresponse.RES_ERR_AUTH_NOT_FOUND_CODE {
+			return nil, serviceresponse.NewResponseFromTemplate(
+				serviceresponse.RES_ERR_EMAIL_OR_PASSWORD_INCORRECT,
+				err.Data,
+				err.Meta,
+				err.ErrorDetails,
+			)
 		}
 
 		return nil, err
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(auth.PasswordHash), []byte(credentials.Password)); err != nil {
-		return nil, serviceresponse.ErrEmailOrPasswordIncorrect
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_EMAIL_OR_PASSWORD_INCORRECT,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return auth, nil
 }
 
-func (s AuthService) CreateNewAuth(ctx context.Context, userForm dto.SignUpRequestDTO) (*domains.Auth, *serviceresponse.ServiceErrorResponse) {
+func (s AuthService) CreateNewAuth(ctx context.Context, userForm dto.SignUpRequestDTO) (*domains.Auth, *serviceresponse.Response[any]) {
 	err := utils.Validator.Struct(&userForm)
 	if err != nil {
 		logger.Errorf("failed to validate user signup form data: %s", err)
-		return nil, serviceresponse.ErrInvalidInput
+		return nil, serviceresponse.NewResponseWithValidationErrors[any](
+			nil,
+			nil,
+			err,
+		)
 	}
 
 	existed, _ := s.repo.GetByEmail(ctx, userForm.Email)
 	if existed != nil {
-		return nil, serviceresponse.ErrAuthAlreadyExists
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_AUTH_ALREADY_EXISTS,
+			nil,
+			nil,
+			&serviceresponse.ErrorDetails{serviceresponse.ErrorDetail{"email": userForm.Email}},
+		)
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userForm.Password), bcrypt.DefaultCost)
 	if err != nil {
 		logger.Errorf("failed to generate hash password: %s", err)
-		return nil, serviceresponse.ErrInternalServer
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	dto := &usergateway.CreateUserRequestDTO{
@@ -87,7 +108,7 @@ func (s AuthService) CreateNewAuth(ctx context.Context, userForm dto.SignUpReque
 
 	createdUser, errRes := s.userGateway.CreateNewUser(ctx, *dto)
 	if errRes != nil {
-		return nil, serviceresponse.NewServiceErrorResponse(errRes.StatusCode, errRes.Message)
+		return nil, errRes
 	}
 
 	auth := &domains.Auth{
@@ -105,28 +126,43 @@ func (s AuthService) CreateNewAuth(ctx context.Context, userForm dto.SignUpReque
 	return createdAuthDTO, nil
 }
 
-func (s AuthService) CheckIfAuthExistedForEmail(ctx context.Context, emailVerificationForm dto.SignUpRequestVerificationRequestDTO) *serviceresponse.ServiceErrorResponse {
+func (s AuthService) CheckIfAuthExistedForEmail(ctx context.Context, emailVerificationForm dto.SignUpRequestVerificationRequestDTO) *serviceresponse.Response[any] {
 	err := utils.Validator.Struct(&emailVerificationForm)
 	if err != nil {
 		logger.Errorf("failed to validate user sign up form data: %s", err)
-		return serviceresponse.ErrInvalidInput
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INVALID_INPUT,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	existed, rErr := s.repo.GetByEmail(ctx, emailVerificationForm.Email)
-	if rErr != nil && !errors.Is(rErr, serviceresponse.ErrAuthNotFound) {
+	if rErr != nil && rErr.Code != serviceresponse.RES_ERR_AUTH_NOT_FOUND_CODE {
 		return rErr
 	}
 
 	if existed != nil {
-		return serviceresponse.ErrAuthAlreadyExists
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_AUTH_ALREADY_EXISTS,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return nil
 }
 
-func (s AuthService) UpdatePassword(ctx context.Context, dto dto.ChangePasswordRequestDTO, userUUID uuid.UUID) *serviceresponse.ServiceErrorResponse {
+func (s AuthService) UpdatePassword(ctx context.Context, dto dto.ChangePasswordRequestDTO, userUUID uuid.UUID) *serviceresponse.Response[any] {
 	if err := utils.Validator.Struct(&dto); err != nil {
-		return serviceresponse.ErrInvalidInput
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INVALID_INPUT,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	auth, err := s.repo.GetByUserID(ctx, userUUID)
@@ -135,12 +171,22 @@ func (s AuthService) UpdatePassword(ctx context.Context, dto dto.ChangePasswordR
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(auth.PasswordHash), []byte(dto.OldPassword)); err != nil {
-		return serviceresponse.ErrPasswordNotMatch
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_PASSWORD_NOT_MATCH,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	updateHashedPassword, genErr := bcrypt.GenerateFromPassword([]byte(dto.NewPassword), bcrypt.DefaultCost)
 	if genErr != nil {
-		return serviceresponse.ErrInternalServer
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	auth.PasswordHash = string(updateHashedPassword)
