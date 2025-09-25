@@ -2,17 +2,16 @@ package livestream
 
 import (
 	"context"
-	"net/http"
 	"sen1or/letslive/livestream/domains"
 	"sen1or/letslive/livestream/dto"
-	serviceresponse "sen1or/letslive/livestream/responses"
+	response "sen1or/letslive/livestream/response"
 	"sen1or/letslive/livestream/utils"
 	"time"
 )
 
-func (s *LivestreamService) Create(ctx context.Context, data dto.CreateLivestreamRequestDTO) (*domains.Livestream, *serviceresponse.ServiceErrorResponse) {
+func (s *LivestreamService) Create(ctx context.Context, data dto.CreateLivestreamRequestDTO) (*domains.Livestream, *response.Response[any]) {
 	if err := utils.Validator.Struct(&data); err != nil {
-		return nil, serviceresponse.NewServiceErrorResponse(http.StatusBadRequest, err.Error())
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil)
 	}
 
 	var titleString = ""

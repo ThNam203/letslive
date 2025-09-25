@@ -80,7 +80,7 @@ func main() {
 
 	logger.Infof(ctx, "shutdown signal received, starting graceful shutdown...")
 
-	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), shutdownTimeout) // Adjust timeout as needed
+	shutdownCtx, cancelShutdown := context.WithTimeout(ctx, shutdownTimeout) // Adjust timeout as needed
 	defer cancelShutdown()
 
 	var shutdownWg sync.WaitGroup
