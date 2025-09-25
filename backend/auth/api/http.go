@@ -21,9 +21,8 @@ type APIServer struct {
 	logger     *zap.SugaredLogger
 	config     *config.Config
 
-	authHandler     *handlers.AuthHandler
-	responseHandler *handlers.ResponseHandler
-	healthHandler   *handlers.HealthHandler
+	authHandler    *handlers.AuthHandler
+	generalHandler *handlers.GeneralHandler
 }
 
 func NewAPIServer(
@@ -35,9 +34,8 @@ func NewAPIServer(
 		logger: logger.Logger,
 		config: cfg,
 
-		authHandler:     authHandler,
-		responseHandler: handlers.NewResponseHandler(),
-		healthHandler:   handlers.NewHeathHandler(),
+		authHandler:    authHandler,
+		generalHandler: handlers.NewGeneralHandler(),
 	}
 }
 
@@ -59,8 +57,8 @@ func (a *APIServer) getHandler() http.Handler {
 	wrapHandleFuncWithOtel("GET /v1/auth/google", a.authHandler.OAuthGoogleLoginHandler)
 	wrapHandleFuncWithOtel("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBackHandler)
 
-	sm.HandleFunc("GET /v1/health", a.healthHandler.GetHealthyState)
-	wrapHandleFuncWithOtel("GET /", a.responseHandler.RouteNotFoundHandler)
+	sm.HandleFunc("GET /v1/health", a.generalHandler.RouteServiceHealth)
+	wrapHandleFuncWithOtel("GET /", a.generalHandler.RouteNotFoundHandler)
 
 	//finalHandler := otelhttp.NewHandler(sm, "/")
 	// TODO: remove filter

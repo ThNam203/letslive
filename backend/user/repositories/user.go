@@ -5,8 +5,8 @@ import (
 	"errors"
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/dto"
-	servererrors "sen1or/letslive/user/errors"
 	"sen1or/letslive/user/pkg/logger"
+	"sen1or/letslive/user/response"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
@@ -23,7 +23,7 @@ func NewUserRepository(conn *pgxpool.Pool) domains.UserRepository {
 	}
 }
 
-func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
+func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *response.Response[any]) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT 
 			u.id, u.username, u.email, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, 
@@ -43,25 +43,40 @@ func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UU
 		GROUP BY u.id, l.user_id, l.title, l.description, l.thumbnail_url
 	`, userId.String(), authenticatedUserId)
 	if err != nil {
-		logger.Errorf("failed to query user full information: %s", err)
-		return nil, servererrors.ErrDatabaseQuery
+		logger.Errorf(ctx, "failed to query user full information: %s", err)
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[dto.GetUserPublicResponseDTO])
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrUserNotFound
+			return nil, response.NewResponseFromTemplate[any](
+				response.RES_ERR_USER_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 		}
 
-		logger.Errorf("failed to collect user full information: %s", err)
-		return nil, servererrors.ErrDatabaseIssue
+		logger.Errorf(ctx, "failed to collect user full information: %s", err)
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_ISSUE,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return &user, nil
 }
 
-func (r *postgresUserRepo) GetById(ctx context.Context, userId uuid.UUID) (*domains.User, *servererrors.ServerError) {
+func (r *postgresUserRepo) GetById(ctx context.Context, userId uuid.UUID) (*domains.User, *response.Response[any]) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT 
 			u.id, u.username, u.email, u.created_at, u.display_name, u.auth_provider, u.stream_api_key, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
@@ -70,25 +85,40 @@ func (r *postgresUserRepo) GetById(ctx context.Context, userId uuid.UUID) (*doma
 		WHERE u.id = $1
 	`, userId.String())
 	if err != nil {
-		logger.Errorf("failed to query user full information: %s", err)
-		return nil, servererrors.ErrDatabaseQuery
+		logger.Errorf(ctx, "failed to query user full information: %s", err)
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.User])
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrUserNotFound
+			return nil, response.NewResponseFromTemplate[any](
+				response.RES_ERR_USER_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 		}
 
-		logger.Errorf("failed to collect user full information: %s", err)
-		return nil, servererrors.ErrDatabaseIssue
+		logger.Errorf(ctx, "failed to collect user full information: %s", err)
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_ISSUE,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return &user, nil
 }
 
-func (r postgresUserRepo) GetAll(ctx context.Context, page int) ([]domains.User, *servererrors.ServerError) {
+func (r postgresUserRepo) GetAll(ctx context.Context, page int) ([]domains.User, *response.Response[any]) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT *
 		FROM users
@@ -96,19 +126,29 @@ func (r postgresUserRepo) GetAll(ctx context.Context, page int) ([]domains.User,
 	`, page*10, 10)
 
 	if err != nil {
-		logger.Errorf("failed to get all users: %s", err)
-		return nil, servererrors.ErrDatabaseQuery
+		logger.Errorf(ctx, "failed to get all users: %s", err)
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[domains.User])
 	if err != nil {
-		return nil, servererrors.ErrDatabaseIssue
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_ISSUE,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return users, nil
 }
 
-func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, *servererrors.ServerError) {
+func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, *response.Response[any]) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT
 		    u.id,
@@ -151,57 +191,97 @@ func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query stri
 		LIMIT 10;
 	`, query, authenticatedUserId)
 	if err != nil {
-		logger.Errorf("failed to search for users: %s", err)
-		return nil, servererrors.ErrDatabaseQuery
+		logger.Errorf(ctx, "failed to search for users: %s", err)
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByName[dto.GetUserPublicResponseDTO])
 	if err != nil {
-		logger.Errorf("failed to collect rows: %s", err)
-		return nil, servererrors.ErrDatabaseIssue
+		logger.Errorf(ctx, "failed to collect rows: %s", err)
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_ISSUE,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return users, nil
 }
 
-func (r *postgresUserRepo) GetByUsername(ctx context.Context, username string) (*domains.User, *servererrors.ServerError) {
+func (r *postgresUserRepo) GetByUsername(ctx context.Context, username string) (*domains.User, *response.Response[any]) {
 	rows, err := r.dbConn.Query(ctx, "select * from users where username = $1", username)
 	if err != nil {
-		return nil, servererrors.ErrDatabaseQuery
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	}
 	defer rows.Close()
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrUserNotFound
+			return nil, response.NewResponseFromTemplate[any](
+				response.RES_ERR_USER_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 		}
 
-		return nil, servererrors.ErrDatabaseIssue
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_ISSUE,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return &user, nil
 }
 
-func (r *postgresUserRepo) GetByEmail(ctx context.Context, email string) (*domains.User, *servererrors.ServerError) {
+func (r *postgresUserRepo) GetByEmail(ctx context.Context, email string) (*domains.User, *response.Response[any]) {
 	rows, err := r.dbConn.Query(ctx, "select * from users where email = $1", email)
 	if err != nil {
-		return nil, servererrors.ErrDatabaseQuery
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	}
 	defer rows.Close()
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.User])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrUserNotFound
+			return nil, response.NewResponseFromTemplate[any](
+				response.RES_ERR_USER_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 		}
-		return nil, servererrors.ErrDatabaseIssue
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_ISSUE,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return &user, nil
 }
 
-func (r *postgresUserRepo) GetByAPIKey(ctx context.Context, apiKey uuid.UUID) (*domains.User, *servererrors.ServerError) {
+func (r *postgresUserRepo) GetByAPIKey(ctx context.Context, apiKey uuid.UUID) (*domains.User, *response.Response[any]) {
 	var user domains.User
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT u.id, u.username, u.email, u.created_at, u.stream_api_key, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url 
@@ -210,23 +290,38 @@ func (r *postgresUserRepo) GetByAPIKey(ctx context.Context, apiKey uuid.UUID) (*
 		WHERE u.stream_api_key = $1
 	`, apiKey)
 	if err != nil {
-		return nil, servererrors.ErrDatabaseQuery
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	}
 	defer rows.Close()
 
 	user, err = pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.User])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrUserNotFound
+			return nil, response.NewResponseFromTemplate[any](
+				response.RES_ERR_USER_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 		}
 
-		return nil, servererrors.ErrDatabaseIssue
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_ISSUE,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return &user, nil
 }
 
-func (r *postgresUserRepo) Create(ctx context.Context, username string, email string, provider domains.AuthProvider) (*domains.User, *servererrors.ServerError) {
+func (r *postgresUserRepo) Create(ctx context.Context, username string, email string, provider domains.AuthProvider) (*domains.User, *response.Response[any]) {
 	params := pgx.NamedArgs{
 		"username":      username,
 		"email":         email,
@@ -235,22 +330,37 @@ func (r *postgresUserRepo) Create(ctx context.Context, username string, email st
 
 	row, err := r.dbConn.Query(ctx, "insert into users (username, email, auth_provider) values (@username, @email, @auth_provider) returning *", params)
 	if err != nil {
-		return nil, servererrors.ErrDatabaseQuery
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	createdUser, err := pgx.CollectOneRow(row, pgx.RowToStructByNameLax[domains.User])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrUserNotFound
+			return nil, response.NewResponseFromTemplate[any](
+				response.RES_ERR_USER_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 		}
 
-		return nil, servererrors.ErrDatabaseIssue
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_ISSUE,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return &createdUser, nil
 }
 
-func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserRequestDTO) (*domains.User, *servererrors.ServerError) {
+func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserRequestDTO) (*domains.User, *response.Response[any]) {
 	params := pgx.NamedArgs{
 		"id":           user.Id,
 		"status":       user.Status,
@@ -268,62 +378,122 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 	`, params)
 
 	if err != nil {
-		return nil, servererrors.ErrDatabaseQuery
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	}
 	defer rows.Close()
 
 	updatedUser, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.User])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, servererrors.ErrUserNotFound
+			return nil, response.NewResponseFromTemplate[any](
+				response.RES_ERR_USER_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 		}
 
-		return nil, servererrors.ErrDatabaseIssue
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_ISSUE,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return &updatedUser, nil
 }
 
-func (r *postgresUserRepo) UpdateStreamAPIKey(ctx context.Context, userId uuid.UUID, newKey string) *servererrors.ServerError {
+func (r *postgresUserRepo) UpdateStreamAPIKey(ctx context.Context, userId uuid.UUID, newKey string) *response.Response[any] {
 	result, err := r.dbConn.Exec(ctx, "UPDATE users SET stream_api_key = $1 WHERE id = $2", newKey, userId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return servererrors.ErrUserNotFound
+			return response.NewResponseFromTemplate[any](
+				response.RES_ERR_USER_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 		}
 
-		return servererrors.ErrDatabaseQuery
+		return response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	} else if result.RowsAffected() == 0 {
-		return servererrors.ErrUserNotFound
+		return response.NewResponseFromTemplate[any](
+				response.RES_ERR_USER_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 	}
 
 	return nil
 }
 
-func (r *postgresUserRepo) UpdateProfilePicture(ctx context.Context, userId uuid.UUID, path string) *servererrors.ServerError {
+func (r *postgresUserRepo) UpdateProfilePicture(ctx context.Context, userId uuid.UUID, path string) *response.Response[any] {
 	result, err := r.dbConn.Exec(ctx, "UPDATE users SET profile_picture = $1 WHERE id = $2", path, userId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return servererrors.ErrUserNotFound
+			return response.NewResponseFromTemplate[any](
+				response.RES_ERR_USER_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 		}
 
-		return servererrors.ErrDatabaseQuery
+		return response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	} else if result.RowsAffected() == 0 {
-		return servererrors.ErrUserNotFound
+		return response.NewResponseFromTemplate[any](
+				response.RES_ERR_USER_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 	}
 
 	return nil
 }
 
-func (r *postgresUserRepo) UpdateBackgroundPicture(ctx context.Context, userId uuid.UUID, path string) *servererrors.ServerError {
+func (r *postgresUserRepo) UpdateBackgroundPicture(ctx context.Context, userId uuid.UUID, path string) *response.Response[any] {
 	result, err := r.dbConn.Exec(ctx, "UPDATE users SET background_picture = $1 WHERE id = $2", path, userId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return servererrors.ErrUserNotFound
+			return response.NewResponseFromTemplate[any](
+				response.RES_ERR_USER_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 		}
 
-		return servererrors.ErrDatabaseQuery
+		return response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	} else if result.RowsAffected() == 0 {
-		return servererrors.ErrUserNotFound
+		return response.NewResponseFromTemplate[any](
+				response.RES_ERR_USER_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
 	}
 
 	return nil

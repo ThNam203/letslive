@@ -2,7 +2,7 @@ package domains
 
 import (
 	"context"
-	servererrors "sen1or/letslive/user/errors"
+	"sen1or/letslive/user/response"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -15,6 +15,6 @@ type Follower struct {
 }
 
 type FollowRepository interface {
-	FollowUser(ctx context.Context, followUser, followedUser uuid.UUID) *servererrors.ServerError
-	UnfollowUser(ctx context.Context, followUser, followedUser uuid.UUID) *servererrors.ServerError
+	FollowUser(ctx context.Context, followUser, followedUser uuid.UUID) *response.Response[any]
+	UnfollowUser(ctx context.Context, followUser, followedUser uuid.UUID) *response.Response[any]
 }

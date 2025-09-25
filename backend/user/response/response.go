@@ -1,4 +1,4 @@
-package serviceresponse
+package response
 
 import (
 	"errors"

@@ -6,13 +6,12 @@ import (
 	"errors"
 	"net/http"
 	"sen1or/letslive/user/domains"
-	servererrors "sen1or/letslive/user/errors"
 	"sen1or/letslive/user/pkg/tracer"
+	"sen1or/letslive/user/response"
 	"sen1or/letslive/user/services"
 )
 
 type LivestreamInformationHandler struct {
-	ErrorHandler
 	livestreamService services.LivestreamInformationService
 	minioService      services.MinIOService
 }
@@ -30,7 +29,12 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	const maxUploadSize = 11 * 1024 * 1024 // for other information outside of image
 	userUUID, err := getUserIdFromCookie(r)
 	if err != nil {
-		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
+		writeResponse(w, response.NewResponseFromTemplate[any](
+			response.RES_ERR_UNAUTHORIZED,
+			nil,
+			nil,
+			nil,
+		))
 		return
 	}
 	defer r.Body.Close()
@@ -40,11 +44,21 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	if err := r.ParseMultipartForm(0); err != nil {
 		var maxByteError *http.MaxBytesError
 		if errors.As(err, &maxByteError) {
-			h.WriteErrorResponse(w, servererrors.ErrImageTooLarge)
+			writeResponse(w, response.NewResponseFromTemplate[any](
+				response.RES_ERR_IMAGE_TOO_LARGE,
+				nil,
+				nil,
+				nil,
+			))
 			return
 		}
 
-		h.WriteErrorResponse(w, servererrors.ErrInternalServer)
+		writeResponse(w, response.NewResponseFromTemplate[any](
+			response.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		))
 		return
 	}
 
@@ -58,7 +72,12 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	} else {
 		savedPath, err := h.minioService.AddFile(ctx, file, fileHeader, "thumbnails")
 		if err != nil {
-			h.WriteErrorResponse(w, servererrors.ErrInternalServer)
+			writeResponse(w, response.NewResponseFromTemplate[any](
+			response.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		))
 			return
 		}
 
@@ -77,7 +96,7 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	span.End()
 
 	if updateErr != nil {
-		h.WriteErrorResponse(w, updateErr)
+		writeResponse(w, updateErr)
 		return
 	}
 

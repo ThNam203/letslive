@@ -14,7 +14,7 @@ import (
 func (h *AuthHandler) OAuthGoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
 	oauthState, err := generateOAuthCookieState(w)
 	if err != nil {
-		h.WriteResponse(
+		writeResponse(
 			w,
 			serviceresponse.NewResponseFromTemplate[any](
 				serviceresponse.RES_ERR_INTERNAL_SERVER,
