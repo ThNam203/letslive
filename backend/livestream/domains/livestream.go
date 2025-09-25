@@ -2,7 +2,7 @@ package domains
 
 import (
 	"context"
-	serviceresponse "sen1or/letslive/livestream/responses"
+	"sen1or/letslive/livestream/response"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -31,10 +31,10 @@ type Livestream struct {
 }
 
 type LivestreamRepository interface {
-	GetById(ctx context.Context, id uuid.UUID) (*Livestream, *serviceresponse.ServiceErrorResponse)
-	GetByUser(ctx context.Context, userId uuid.UUID) (*Livestream, *serviceresponse.ServiceErrorResponse)
-	GetRecommendedLivestreams(ctx context.Context, page int, limit int) ([]Livestream, *serviceresponse.ServiceErrorResponse)
-	Create(ctx context.Context, ls Livestream) (*Livestream, *serviceresponse.ServiceErrorResponse)
-	Update(ctx context.Context, ls Livestream) (*Livestream, *serviceresponse.ServiceErrorResponse)
-	Delete(ctx context.Context, id uuid.UUID) *serviceresponse.ServiceErrorResponse
+	GetById(ctx context.Context, id uuid.UUID) (*Livestream, *response.Response[any])
+	GetByUser(ctx context.Context, userId uuid.UUID) (*Livestream, *response.Response[any])
+	GetRecommendedLivestreams(ctx context.Context, page int, limit int) ([]Livestream, *response.Response[any])
+	Create(ctx context.Context, ls Livestream) (*Livestream, *response.Response[any])
+	Update(ctx context.Context, ls Livestream) (*Livestream, *response.Response[any])
+	Delete(ctx context.Context, id uuid.UUID) *response.Response[any]
 }

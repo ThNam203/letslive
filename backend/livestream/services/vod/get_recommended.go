@@ -3,10 +3,10 @@ package vod
 import (
 	"context"
 	"sen1or/letslive/livestream/domains"
-	serviceresponse "sen1or/letslive/livestream/responses"
+	response "sen1or/letslive/livestream/response"
 )
 
-func (s *VODService) GetRecommendedVODs(ctx context.Context, page int, limit int) ([]domains.VOD, *serviceresponse.ServiceErrorResponse) {
+func (s *VODService) GetRecommendedVODs(ctx context.Context, page int, limit int) ([]domains.VOD, *response.Response[any]) {
 	if page < 0 {
 		page = 0
 	}

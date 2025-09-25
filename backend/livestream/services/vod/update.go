@@ -4,15 +4,15 @@ import (
 	"context"
 	"sen1or/letslive/livestream/domains"
 	"sen1or/letslive/livestream/dto"
-	serviceresponse "sen1or/letslive/livestream/responses"
+	"sen1or/letslive/livestream/response"
 	"sen1or/letslive/livestream/utils"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *VODService) UpdateVODMetadata(ctx context.Context, data dto.UpdateVODRequestDTO, vodId uuid.UUID, authorId uuid.UUID) (*domains.VOD, *serviceresponse.ServiceErrorResponse) {
+func (s *VODService) UpdateVODMetadata(ctx context.Context, data dto.UpdateVODRequestDTO, vodId uuid.UUID, authorId uuid.UUID) (*domains.VOD, *response.Response[any]) {
 	if err := utils.Validator.Struct(&data); err != nil {
-		return nil, serviceresponse.ErrInvalidPayload
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil)
 	}
 
 	currentVOD, err := s.vodRepo.GetById(ctx, vodId)
@@ -21,7 +21,12 @@ func (s *VODService) UpdateVODMetadata(ctx context.Context, data dto.UpdateVODRe
 	}
 
 	if authorId != currentVOD.UserId {
-		return nil, serviceresponse.ErrForbidden
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_FORBIDDEN,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	// TODO: Mapper: UpdateVODRequestDTOToVOD(data, currentVOD) -> domains.VOD

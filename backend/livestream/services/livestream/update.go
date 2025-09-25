@@ -2,18 +2,22 @@ package livestream
 
 import (
 	"context"
-	"net/http"
 	"sen1or/letslive/livestream/domains"
 	"sen1or/letslive/livestream/dto"
-	serviceresponse "sen1or/letslive/livestream/responses"
+	"sen1or/letslive/livestream/response"
 	"sen1or/letslive/livestream/utils"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *LivestreamService) Update(ctx context.Context, data dto.UpdateLivestreamRequestDTO, streamId uuid.UUID, authorId uuid.UUID) (*domains.Livestream, *serviceresponse.ServiceErrorResponse) {
+func (s *LivestreamService) Update(ctx context.Context, data dto.UpdateLivestreamRequestDTO, streamId uuid.UUID, authorId uuid.UUID) (*domains.Livestream, *response.Response[any]) {
 	if err := utils.Validator.Struct(&data); err != nil {
-		return nil, serviceresponse.NewServiceErrorResponse(http.StatusBadRequest, err.Error())
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_INVALID_PAYLOAD,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	currentLivestream, err := s.livestreamRepo.GetById(ctx, streamId)
@@ -22,11 +26,21 @@ func (s *LivestreamService) Update(ctx context.Context, data dto.UpdateLivestrea
 	}
 
 	if currentLivestream.EndedAt != nil {
-		return nil, serviceresponse.ErrLivestreamUpdateAfterEnded
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_LIVESTREAM_UPDATE_AFTER_ENDED,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	if authorId != currentLivestream.UserId {
-		return nil, serviceresponse.ErrForbidden
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_FORBIDDEN,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	updated := false
