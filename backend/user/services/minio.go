@@ -41,7 +41,7 @@ func NewMinIOService(ctx context.Context, config config.MinIO) *MinIOService {
 	}
 
 	if err := storage.SetUp(); err != nil {
-		logger.Panicf("error setting up minio storage: %s", err)
+		logger.Panicf(ctx, "error setting up minio storage: %s", err)
 	}
 
 	return storage

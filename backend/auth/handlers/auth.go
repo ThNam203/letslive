@@ -13,7 +13,6 @@ import (
 
 // TODO: put verificationGateway into config
 type AuthHandler struct {
-	ResponseHandler
 	jwtService          services.JWTService
 	authService         services.AuthService
 	googleAuthService   services.GoogleAuthService
@@ -43,24 +42,24 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 
 	var userCredentials dto.LogInRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
-		h.WriteResponse(w, serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
+		writeResponse(w, serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
 		return
 	}
 
 	ip := r.Header.Get("CF-Connecting-IP")
 	if err := utils.CheckCAPTCHA(userCredentials.TurnstileToken, ip); err != nil {
-		h.WriteResponse(w, serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_CAPTCHA_FAILED, nil, nil, nil))
+		writeResponse(w, serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_CAPTCHA_FAILED, nil, nil, nil))
 		return
 	}
 
 	auth, err := h.authService.GetUserFromCredentials(ctx, userCredentials)
 	if err != nil {
-		h.WriteResponse(w, err)
+		writeResponse(w, err)
 		return
 	}
 
 	if err := h.setAuthJWTsInCookie(ctx, auth.UserId.String(), w); err != nil {
-		h.WriteResponse(w, err)
+		writeResponse(w, err)
 		return
 	}
 
@@ -73,7 +72,7 @@ func (h *AuthHandler) RequestEmailVerificationHandler(w http.ResponseWriter, r *
 
 	var requestDTO dto.SignUpRequestVerificationRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&requestDTO); err != nil {
-		h.WriteResponse(w, serviceresponse.NewResponseFromTemplate[any](
+		writeResponse(w, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_INVALID_PAYLOAD,
 			nil,
 			nil,
@@ -84,23 +83,23 @@ func (h *AuthHandler) RequestEmailVerificationHandler(w http.ResponseWriter, r *
 
 	ip := r.Header.Get("CF-Connecting-IP")
 	if err := utils.CheckCAPTCHA(requestDTO.TurnstileToken, ip); err != nil {
-		h.WriteResponse(w, err)
+		writeResponse(w, err)
 		return
 	}
 
 	// if an auth is already existed with the email, no point to continue
 	err := h.authService.CheckIfAuthExistedForEmail(ctx, requestDTO)
 	if err != nil {
-		h.WriteResponse(w, err)
+		writeResponse(w, err)
 		return
 	}
 
 	if err := h.verificationService.CreateOTPAndSendEmailVerification(ctx, h.verificationGateway, requestDTO.Email); err != nil {
-		h.WriteResponse(w, err)
+		writeResponse(w, err)
 		return
 	}
 
-	h.WriteResponse(w, serviceresponse.NewResponseFromTemplate[any](
+	writeResponse(w, serviceresponse.NewResponseFromTemplate[any](
 		serviceresponse.RES_SUCC_SENT_VERIFICATION,
 		nil,
 		nil,
@@ -116,7 +115,7 @@ func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 
 	if err != nil {
 		logger.Errorf(ctx, "get refresh token from cookie failed: %s", err)
-		h.WriteResponse(w, serviceresponse.NewResponseFromTemplate[any](
+		writeResponse(w, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
@@ -127,7 +126,7 @@ func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 
 	if len(refreshTokenCookie.Value) == 0 {
 		logger.Errorf(ctx, "missing refresh token")
-		h.WriteResponse(w, serviceresponse.NewResponseFromTemplate[any](
+		writeResponse(w, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
@@ -138,7 +137,7 @@ func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 
 	accessTokenInfo, refreshErr := h.jwtService.RefreshToken(ctx, refreshTokenCookie.Value)
 	if refreshErr != nil {
-		h.WriteResponse(w, refreshErr)
+		writeResponse(w, refreshErr)
 		return
 	}
 
@@ -160,7 +159,7 @@ func (h *AuthHandler) VerifyOTPAndSignUpHandler(w http.ResponseWriter, r *http.R
 	// TODO: validate
 	var requestDTO dto.SignUpRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&requestDTO); err != nil {
-		h.WriteResponse(w, serviceresponse.NewResponseFromTemplate[any](
+		writeResponse(w, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_INVALID_PAYLOAD,
 			nil,
 			nil,
@@ -171,18 +170,18 @@ func (h *AuthHandler) VerifyOTPAndSignUpHandler(w http.ResponseWriter, r *http.R
 	}
 
 	if verifyErr := h.verificationService.Verify(ctx, requestDTO.OTPCode, requestDTO.Email); verifyErr != nil {
-		h.WriteResponse(w, verifyErr)
+		writeResponse(w, verifyErr)
 		return
 	}
 
 	createdAuth, err := h.authService.CreateNewAuth(ctx, requestDTO)
 	if err != nil {
-		h.WriteResponse(w, err)
+		writeResponse(w, err)
 		return
 	}
 
 	if err := h.setAuthJWTsInCookie(ctx, createdAuth.UserId.String(), w); err != nil {
-		h.WriteResponse(w, err)
+		writeResponse(w, err)
 		return
 	}
 
@@ -194,7 +193,7 @@ func (h *AuthHandler) UpdatePasswordHandler(w http.ResponseWriter, r *http.Reque
 	defer cancel()
 	userUUID, err := h.getUserIDFromCookie(r)
 	if err != nil {
-		h.WriteResponse(w, serviceresponse.NewResponseFromTemplate[any](
+		writeResponse(w, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
@@ -205,7 +204,7 @@ func (h *AuthHandler) UpdatePasswordHandler(w http.ResponseWriter, r *http.Reque
 
 	reqDTO := dto.ChangePasswordRequestDTO{}
 	if err := json.NewDecoder(r.Body).Decode(&reqDTO); err != nil {
-		h.WriteResponse(w, serviceresponse.NewResponseFromTemplate[any](
+		writeResponse(w, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_INVALID_PAYLOAD,
 			nil,
 			nil,
@@ -216,7 +215,7 @@ func (h *AuthHandler) UpdatePasswordHandler(w http.ResponseWriter, r *http.Reque
 	defer r.Body.Close()
 
 	if err := h.authService.UpdatePassword(ctx, reqDTO, *userUUID); err != nil {
-		h.WriteResponse(w, err)
+		writeResponse(w, err)
 		return
 	}
 

@@ -60,13 +60,10 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			if r.RequestURI != "/v1/health" {
 				logger.Infow(r.Context(), "success api call", fields...)
 			}
+		} else if lrw.statusCode < 600 && lrw.statusCode >= 400 {
+			logger.Errorw(r.Context(), "failed api call", fields...)
 		} else {
-			err := lrw.w.Header().Get("X-LetsLive-Error")
-			if len(err) == 0 {
-				logger.Infow(r.Context(), "failed api call", fields...)
-			} else {
-				logger.Errorw(r.Context(), "failed api call: "+err, fields...)
-			}
+			logger.Infow(r.Context(), "other api call", fields...)
 		}
 	})
 }

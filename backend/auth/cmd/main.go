@@ -89,7 +89,7 @@ func main() {
 	go (func() {
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			if err == context.DeadlineExceeded {
-				logger.Errorf(ctx, "server shutdown timed out.")
+				logger.Errorf(shutdownCtx, "server shutdown timed out.")
 			}
 		}
 		shutdownWg.Done()
@@ -108,7 +108,7 @@ func main() {
 	})()
 
 	shutdownWg.Wait()
-	logger.Infof(ctx, "service shut down complete.")
+	logger.Infof(shutdownCtx, "service shut down complete.")
 }
 
 func ConnectDB(ctx context.Context, config *cfg.Config) *pgxpool.Pool {
