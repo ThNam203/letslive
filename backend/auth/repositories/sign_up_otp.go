@@ -35,7 +35,7 @@ func (r *postgresSignUpOTPRepo) Insert(ctx context.Context, otp domains.SignUpOT
 		VALUES ($1, $2, $3)
 	`, otp.Code, otp.ExpiresAt, otp.Email)
 	if err != nil {
-		logger.Errorf("failed to exec insert otp: %s", err)
+		logger.Errorf(ctx, "failed to exec insert otp: %s", err)
 		return serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_QUERY,
 			nil,
@@ -43,7 +43,7 @@ func (r *postgresSignUpOTPRepo) Insert(ctx context.Context, otp domains.SignUpOT
 			nil,
 		)
 	} else if result.RowsAffected() == 0 {
-		logger.Errorf("failed to insert otp: %s", err)
+		logger.Errorf(ctx, "failed to insert otp: %s", err)
 		return serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_ISSUE,
 			nil,
@@ -62,7 +62,7 @@ func (r *postgresSignUpOTPRepo) GetOTP(ctx context.Context, code string, email s
 		WHERE code = $1 AND email = $2
 	`, code, email)
 	if err != nil {
-		logger.Errorf("failed to get otp: %s", err)
+		logger.Errorf(ctx, "failed to get otp: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_QUERY,
 			nil,
@@ -83,7 +83,7 @@ func (r *postgresSignUpOTPRepo) GetOTP(ctx context.Context, code string, email s
 			)
 		}
 
-		logger.Errorf("failed to collect otp: %s", err)
+		logger.Errorf(ctx, "failed to collect otp: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_ISSUE,
 			nil,
@@ -114,7 +114,7 @@ func (r *postgresSignUpOTPRepo) UpdateUsedAt(ctx context.Context, otpId uuid.UUI
 			)
 		}
 
-		logger.Errorf("failed to update otp used at", err)
+		logger.Errorf(ctx, "failed to update otp used at", err)
 		return serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_QUERY,
 			nil,

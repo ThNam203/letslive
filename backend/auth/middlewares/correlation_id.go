@@ -27,7 +27,7 @@ func RequestIDMiddleware(next http.Handler) http.Handler {
 		if span := trace.SpanFromContext(r.Context()); span != nil {
 			span.SetAttributes(attribute.String("http.request_id", requestId))
 		} else {
-			logger.Warnf("missing span from context")
+			logger.Warnf(r.Context(), "missing span from context")
 		}
 
 		ctx := context.WithValue(r.Context(), "requestId", requestId)

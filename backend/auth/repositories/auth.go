@@ -29,7 +29,7 @@ func (r *postgresAuthRepo) GetByID(ctx context.Context, authId uuid.UUID) (*doma
 		WHERE id = $1
 	`, authId.String())
 	if err != nil {
-		logger.Errorf("failed to get auth from id: %s", err)
+		logger.Errorf(ctx, "failed to get auth from id: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_QUERY,
 			nil,
@@ -50,7 +50,7 @@ func (r *postgresAuthRepo) GetByID(ctx context.Context, authId uuid.UUID) (*doma
 			)
 		}
 
-		logger.Errorf("failed to collect row: %s", err)
+		logger.Errorf(ctx, "failed to collect row: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_ISSUE,
 			nil,
@@ -69,7 +69,7 @@ func (r *postgresAuthRepo) GetByUserID(ctx context.Context, userId uuid.UUID) (*
 		WHERE user_id = $1
 	`, userId.String())
 	if err != nil {
-		logger.Errorf("failed to get auth from user id: %s", err)
+		logger.Errorf(ctx, "failed to get auth from user id: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_QUERY,
 			nil,
@@ -90,7 +90,7 @@ func (r *postgresAuthRepo) GetByUserID(ctx context.Context, userId uuid.UUID) (*
 			)
 		}
 
-		logger.Errorf("failed to collect row: %s", err)
+		logger.Errorf(ctx, "failed to collect row: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_ISSUE,
 			nil,
@@ -109,7 +109,7 @@ func (r *postgresAuthRepo) GetByEmail(ctx context.Context, email string) (*domai
 		WHERE email = $1
 	`, email)
 	if err != nil {
-		logger.Errorf("failed to get auth from email: %s", err)
+		logger.Errorf(ctx, "failed to get auth from email: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_QUERY,
 			nil,
@@ -130,7 +130,7 @@ func (r *postgresAuthRepo) GetByEmail(ctx context.Context, email string) (*domai
 			)
 		}
 
-		logger.Errorf("failed to collect row: %s", err)
+		logger.Errorf(ctx, "failed to collect row: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_ISSUE,
 			nil,
@@ -161,7 +161,7 @@ func (r *postgresAuthRepo) Create(ctx context.Context, newAuth domains.Auth) (*d
 		) RETURNING *
 	`, params)
 	if err != nil {
-		logger.Errorf("failed to create auth: %s", err)
+		logger.Errorf(ctx, "failed to create auth: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_QUERY,
 			nil,
@@ -182,7 +182,7 @@ func (r *postgresAuthRepo) Create(ctx context.Context, newAuth domains.Auth) (*d
 			)
 		}
 
-		logger.Errorf("failed to collect row: %s", err)
+		logger.Errorf(ctx, "failed to collect row: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_ISSUE,
 			nil,
@@ -201,7 +201,7 @@ func (r *postgresAuthRepo) UpdatePasswordHash(ctx context.Context, authId, newPa
 		WHERE id = $2
 	`, newPasswordHash, authId)
 	if err != nil {
-		logger.Errorf("failed to update password hash: %s", err)
+		logger.Errorf(ctx, "failed to update password hash: %s", err)
 		return serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_QUERY,
 			nil,

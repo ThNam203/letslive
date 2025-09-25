@@ -37,7 +37,7 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergate
 	url := fmt.Sprintf("http://%s/v1/user", addr)
 	payloadBuf := new(bytes.Buffer)
 	if err := json.NewEncoder(payloadBuf).Encode(&userRequestDTO); err != nil {
-		logger.Errorf("failed to encode user dto body: %s", err)
+		logger.Errorf(ctx, "failed to encode user dto body: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_INTERNAL_SERVER,
 			nil,
@@ -48,7 +48,7 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergate
 
 	req, err := http.NewRequest(http.MethodPost, url, payloadBuf)
 	if err != nil {
-		logger.Errorf("failed to create the request: %s", err)
+		logger.Errorf(ctx, "failed to create the request: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_INTERNAL_SERVER,
 			nil,
@@ -58,7 +58,7 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergate
 	}
 
 	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
-		logger.Errorf("failed to create the request: %s", err)
+		logger.Errorf(ctx, "failed to create the request: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_INTERNAL_SERVER,
 			nil,
@@ -69,7 +69,7 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergate
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		logger.Errorf("failed to call request: %s", err)
+		logger.Errorf(ctx, "failed to call request: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_INTERNAL_SERVER,
 			nil,
@@ -82,7 +82,7 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergate
 	if resp.StatusCode/100 != 2 {
 		resInfo := serviceresponse.Response[any]{}
 		if err := json.NewDecoder(resp.Body).Decode(&resInfo); err != nil {
-			logger.Errorf("failed to decode error response from user service: %s", err)
+			logger.Errorf(ctx, "failed to decode error response from user service: %s", err)
 			return nil, serviceresponse.NewResponseFromTemplate[any](
 				serviceresponse.RES_ERR_INTERNAL_SERVER,
 				nil,
@@ -98,7 +98,7 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergate
 	defer resp.Body.Close()
 
 	if err := json.NewDecoder(resp.Body).Decode(&createdUser); err != nil {
-		logger.Errorf("failed to decode resp body: %s", err)
+		logger.Errorf(ctx, "failed to decode resp body: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_INTERNAL_SERVER,
 			nil,

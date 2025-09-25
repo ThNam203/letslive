@@ -61,6 +61,7 @@ type Config struct {
 }
 
 type ConfigManager struct {
+	ctx           context.Context
 	registry      discovery.Registry
 	currentConfig atomic.Pointer[Config] // Stores *Config
 	ticker        *time.Ticker
@@ -71,9 +72,9 @@ type ConfigManager struct {
 
 // NewConfigManager creates a new ConfigManager, performs the initial fetch with retry,
 // and starts the background reloader.
-func NewConfigManager(registry discovery.Registry, serviceName string, profile string) (*ConfigManager, error) {
+func NewConfigManager(ctx context.Context, registry discovery.Registry, serviceName string, profile string) (*ConfigManager, error) {
 	if profile == "" {
-		logger.Warnf("CONFIG_SERVER_PROFILE environment variable not set, using default 'default'")
+		logger.Warnf(ctx, "CONFIG_SERVER_PROFILE environment variable not set, using default 'default'")
 		profile = "default"
 	}
 
@@ -82,13 +83,14 @@ func NewConfigManager(registry discovery.Registry, serviceName string, profile s
 	}
 
 	cm := &ConfigManager{
+		ctx:         ctx,
 		registry:    registry,
 		stopChan:    make(chan struct{}),
 		serviceName: serviceName,
 		profile:     profile,
 	}
 
-	logger.Infof("attempting initial configuration fetch for %s-%s...", serviceName, profile)
+	logger.Infof(ctx, "attempting initial configuration fetch for %s-%s...", serviceName, profile)
 
 	// initial fetch with infinite retry
 	var initialConfig *Config
@@ -98,11 +100,11 @@ func NewConfigManager(registry discovery.Registry, serviceName string, profile s
 	for {
 		initialConfig, err = cm.fetchAndParseConfig()
 		if err == nil {
-			logger.Infof("successfully fetched initial configuration.")
+			logger.Infof(ctx, "successfully fetched initial configuration.")
 			break
 		}
 
-		logger.Errorf("failed to fetch initial config: %v - retrying in %v...", err, retryDelay)
+		logger.Errorf(ctx, "failed to fetch initial config: %v - retrying in %v...", err, retryDelay)
 		time.Sleep(retryDelay)
 		retryDelay *= 2
 		if retryDelay > 1*time.Minute {
@@ -123,9 +125,9 @@ func NewConfigManager(registry discovery.Registry, serviceName string, profile s
 	if reloadInterval > 0 {
 		cm.ticker = time.NewTicker(time.Duration(reloadInterval * int(time.Millisecond)))
 		go cm.startReloader()
-		logger.Infof("started configuration reloader with interval %v", reloadInterval)
+		logger.Infof(ctx, "started configuration reloader with interval %v", reloadInterval)
 	} else {
-		logger.Infof("configuration reloading disabled (interval <= 0)")
+		logger.Infof(ctx, "configuration reloading disabled (interval <= 0)")
 	}
 
 	return cm, nil
@@ -138,10 +140,10 @@ func (cm *ConfigManager) GetConfig() *Config {
 // stop halts the background configuration reloader.
 func (cm *ConfigManager) Stop() {
 	if cm.ticker != nil {
-		logger.Infof("stopping configuration reloader...")
+		logger.Infof(cm.ctx, "stopping configuration reloader...")
 		cm.ticker.Stop()
 		close(cm.stopChan) // Signal the goroutine to exit
-		logger.Infof("configuration reloader stopped.")
+		logger.Infof(cm.ctx, "configuration reloader stopped.")
 	}
 }
 
@@ -150,10 +152,10 @@ func (cm *ConfigManager) startReloader() {
 	for {
 		select {
 		case <-cm.ticker.C:
-			logger.Debugf("polling for configuration changes...")
+			logger.Debugf(cm.ctx, "polling for configuration changes...")
 			cm.reload()
 		case <-cm.stopChan:
-			logger.Debugf("exiting configuration reload loop.")
+			logger.Debugf(cm.ctx, "exiting configuration reload loop.")
 			return // Exit the goroutine
 		}
 	}
@@ -163,7 +165,7 @@ func (cm *ConfigManager) startReloader() {
 func (cm *ConfigManager) reload() {
 	newConfig, err := cm.fetchAndParseConfig()
 	if err != nil {
-		logger.Errorf("failed to fetch/parse config during reload: %v", err)
+		logger.Errorf(cm.ctx, "failed to fetch/parse config during reload: %v", err)
 		return
 	}
 
@@ -172,10 +174,10 @@ func (cm *ConfigManager) reload() {
 	// compare the new config with the current one
 	if !reflect.DeepEqual(currentConfig, newConfig) {
 		cm.currentConfig.Store(newConfig)
-		logger.Infof("configuration updated.")
+		logger.Infof(cm.ctx, "configuration updated.")
 		// trigger actions here ##consider channels or callbacks.
 	} else {
-		logger.Debugf("configuration unchanged.")
+		logger.Debugf(cm.ctx, "configuration unchanged.")
 	}
 }
 
@@ -197,7 +199,7 @@ func (cm *ConfigManager) fetchAndParseConfig() (*Config, error) {
 		cm.serviceName,
 		cm.profile,
 	)
-	logger.Debugf("fetching config from: %s", url)
+	logger.Debugf(cm.ctx, "fetching config from: %s", url)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -232,7 +234,7 @@ func (cm *ConfigManager) fetchAndParseConfig() (*Config, error) {
 	dbUser := os.Getenv("AUTH_DB_USER")
 	dbPassword := os.Getenv("AUTH_DB_PASSWORD")
 	if dbUser == "" || dbPassword == "" {
-		logger.Warnf("database credentials (AUTH_DB_USER, AUTH_DB_PASSWORD) not found in environment.")
+		logger.Warnf(cm.ctx, "database credentials (AUTH_DB_USER, AUTH_DB_PASSWORD) not found in environment.")
 	}
 
 	config.Database.ConnectionString = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?%s",

@@ -1,29 +1,20 @@
 export type ErrorResponse = {
     id: string;
     message: string;
-    statusCode: number;
+    code: string; // general error code
+    key: string; // i18n key
 };
 
 export class FetchError extends Error {
     id: string;
     status?: number;
     response?: any;
-    isClientError?: boolean;
-    isServerError?: boolean;
-    isNetworkError?: boolean;
     payload?: any;
 
     constructor(
         id: string,
+        code: string,
         message: string,
-        options?: {
-            status?: number;
-            response?: any;
-            isClientError?: boolean;
-            isServerError?: boolean;
-            isNetworkError?: boolean;
-            payload?: any;
-        }
     ) {
         super(message);
         this.id = id;

@@ -109,9 +109,13 @@ func (h *AuthHandler) RequestEmailVerificationHandler(w http.ResponseWriter, r *
 }
 
 func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	refreshTokenCookie, err := r.Cookie("REFRESH_TOKEN")
+
 	if err != nil {
-		logger.Errorf("get refresh token from cookie failed: %s", err)
+		logger.Errorf(ctx, "get refresh token from cookie failed: %s", err)
 		h.WriteResponse(w, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_UNAUTHORIZED,
 			nil,
@@ -122,7 +126,7 @@ func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	if len(refreshTokenCookie.Value) == 0 {
-		logger.Errorf("missing refresh token")
+		logger.Errorf(ctx, "missing refresh token")
 		h.WriteResponse(w, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_UNAUTHORIZED,
 			nil,
@@ -132,7 +136,7 @@ func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	accessTokenInfo, refreshErr := h.jwtService.RefreshToken(refreshTokenCookie.Value)
+	accessTokenInfo, refreshErr := h.jwtService.RefreshToken(ctx, refreshTokenCookie.Value)
 	if refreshErr != nil {
 		h.WriteResponse(w, refreshErr)
 		return
