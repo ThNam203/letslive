@@ -60,7 +60,7 @@ func (s GoogleAuthService) GenerateAuthCodeURL(oauthState string) string {
 func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode string) (*domains.Auth, *serviceresponse.Response[any]) {
 	data, getErr := s.getUserDataFromGoogle(ctx, googleCode)
 	if getErr != nil {
-		logger.Errorf("failed to get user data from google: %s", getErr)
+		logger.Errorf(ctx, "failed to get user data from google: %s", getErr)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_INTERNAL_SERVER,
 			nil,
@@ -71,7 +71,7 @@ func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode strin
 
 	var returnedOAuthUser googleOAuthUser
 	if err := json.Unmarshal(data, &returnedOAuthUser); err != nil {
-		logger.Errorf("failed to unmarshal data into google user")
+		logger.Errorf(ctx, "failed to unmarshal data into google user")
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_INTERNAL_SERVER,
 			nil,
@@ -97,7 +97,7 @@ func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode strin
 
 		createdUser, errRes := s.userGateway.CreateNewUser(ctx, *dto)
 		if errRes != nil {
-			logger.Errorf("failed to create new user through gateway: %s", errRes.Message)
+			logger.Errorf(ctx, "failed to create new user through gateway: %s", errRes.Message)
 			return nil, errRes
 		}
 

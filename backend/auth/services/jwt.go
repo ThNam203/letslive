@@ -48,14 +48,14 @@ func (c *JWTService) GenerateTokenPair(ctx context.Context, userId string) (*typ
 
 // create a new access token for the refresh token
 // the process is called "refresh token"
-func (c *JWTService) RefreshToken(refreshToken string) (*types.AccessTokenInformation, *serviceresponse.Response[any]) {
+func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*types.AccessTokenInformation, *serviceresponse.Response[any]) {
 	myClaims := types.MyClaims{}
 	parsedToken, err := jwt.NewParser().ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (any, error) {
 		return []byte(os.Getenv("REFRESH_TOKEN_SECRET")), nil
 	})
 
 	if err != nil {
-		logger.Errorf("token parsing failed: %s", err)
+		logger.Errorf(ctx, "token parsing failed: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_INTERNAL_SERVER,
 			nil,
@@ -63,7 +63,7 @@ func (c *JWTService) RefreshToken(refreshToken string) (*types.AccessTokenInform
 			nil,
 		)
 	} else if !parsedToken.Valid {
-		logger.Errorf("token not valid")
+		logger.Errorf(ctx, "token not valid")
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_UNAUTHORIZED,
 			nil,
@@ -74,7 +74,7 @@ func (c *JWTService) RefreshToken(refreshToken string) (*types.AccessTokenInform
 
 	accessToken, genErr := c.generateAccessToken(myClaims.UserId)
 	if genErr != nil {
-		logger.Errorf("failed to refresh token: %s", genErr)
+		logger.Errorf(ctx, "failed to refresh token: %s", genErr)
 		return nil, genErr
 	}
 

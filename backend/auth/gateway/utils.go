@@ -25,7 +25,7 @@ func SetRequestIDHeader(ctx context.Context, req *http.Request) error {
 
 	v, ok := ctx.Value(requestIDKey).(string)
 	if !ok || len(v) == 0 || v == "" {
-		logger.Warnf("no requestId/correlationId found when set request id header, proceeding with manually creating")
+		logger.Warnf(ctx, "no requestId/correlationId found when set request id header, proceeding with manually creating")
 		newId, err := uuid.NewGen().NewV4()
 		if err != nil {
 			newId = uuid.Nil

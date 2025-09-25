@@ -136,7 +136,7 @@ func (c *VerificationService) CreateOTPAndSendEmailVerification(ctx context.Cont
 
 	mErr := smtp.SendMail(smtpServer, auth, from, to, []byte(msg))
 	if mErr != nil {
-		logger.Errorf("failed trying to send confirmation code email to %s: %s", userEmail, mErr.Error())
+		logger.Errorf(ctx, "failed trying to send confirmation code email to %s: %s", userEmail, mErr.Error())
 		return serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_FAILED_TO_SEND_VERIFICATION,
 			nil,
@@ -145,6 +145,6 @@ func (c *VerificationService) CreateOTPAndSendEmailVerification(ctx context.Cont
 		)
 	}
 
-	logger.Infof("verification code email sent successfully to %s", userEmail)
+	logger.Infof(ctx, "verification code email sent successfully to %s", userEmail)
 	return nil // success
 }

@@ -71,7 +71,7 @@ func (s AuthService) GetUserFromCredentials(ctx context.Context, credentials dto
 func (s AuthService) CreateNewAuth(ctx context.Context, userForm dto.SignUpRequestDTO) (*domains.Auth, *serviceresponse.Response[any]) {
 	err := utils.Validator.Struct(&userForm)
 	if err != nil {
-		logger.Errorf("failed to validate user signup form data: %s", err)
+		logger.Errorf(ctx, "failed to validate user signup form data: %s", err)
 		return nil, serviceresponse.NewResponseWithValidationErrors[any](
 			nil,
 			nil,
@@ -91,7 +91,7 @@ func (s AuthService) CreateNewAuth(ctx context.Context, userForm dto.SignUpReque
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userForm.Password), bcrypt.DefaultCost)
 	if err != nil {
-		logger.Errorf("failed to generate hash password: %s", err)
+		logger.Errorf(ctx, "failed to generate hash password: %s", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_INTERNAL_SERVER,
 			nil,
@@ -129,7 +129,7 @@ func (s AuthService) CreateNewAuth(ctx context.Context, userForm dto.SignUpReque
 func (s AuthService) CheckIfAuthExistedForEmail(ctx context.Context, emailVerificationForm dto.SignUpRequestVerificationRequestDTO) *serviceresponse.Response[any] {
 	err := utils.Validator.Struct(&emailVerificationForm)
 	if err != nil {
-		logger.Errorf("failed to validate user sign up form data: %s", err)
+		logger.Errorf(ctx, "failed to validate user sign up form data: %s", err)
 		return serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_INVALID_INPUT,
 			nil,
