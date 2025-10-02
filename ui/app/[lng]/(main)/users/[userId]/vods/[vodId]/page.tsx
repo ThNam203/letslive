@@ -10,8 +10,10 @@ import { User } from "@/types/user";
 import { GetPublicVODsOfUser, GetVODInformation } from "@/lib/api/vod";
 import { GetUserById } from "@/lib/api/user";
 import ProfileView from "@/app/[lng]/(main)/users/[userId]/profile";
+import useT from "@/hooks/use-translation";
 
 export default function VODPage() {
+    const { t } = useT(["fetch-error", "api-response"]);
     const [user, setUser] = useState<User | null>(null);
     const [vods, setVods] = useState<VOD[]>([]);
     const [isExtraOpen, setIsExtraOpen] = useState(false);
@@ -39,20 +41,25 @@ export default function VODPage() {
 
     useEffect(() => {
         const fetchVODInfo = async () => {
-            const { vod, fetchError } = await GetVODInformation(params.vodId);
-
-            if (fetchError) {
-                toast.error(fetchError.message, {
+            await GetVODInformation(params.vodId).then(res => {
+                if (res.success) {
+                    setPlayerInfo((prev) => ({
+                        ...prev,
+                        videoTitle: res.data?.vod?.title ?? "",
+                        videoUrl: res.data?.vod?.playbackUrl ?? null,
+                    }));
+                } else {
+                    toast(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
+                        type: "error",
+                    });
+                }
+            }).catch((_) => {
+                toast(t("fetch-error:client_fetch_error"), {
                     toastId: "vod-fetch-error",
+                    type: "error",
                 });
-                return;
-            }
-
-            setPlayerInfo((prev) => ({
-                ...prev,
-                videoTitle: vod!.title,
-                videoUrl: vod!.playbackUrl,
-            }));
+            });
         };
 
         fetchVODInfo();
@@ -64,16 +71,21 @@ export default function VODPage() {
         }
 
         const fetchVODs = async () => {
-            const { vods, fetchError } = await GetPublicVODsOfUser(user.id);
-
-            if (fetchError) {
-                toast(fetchError.message, {
+            await GetPublicVODsOfUser(user.id).then(res => {
+                if (res.success) {
+                    setVods(res.data?.vods ?? []);
+                } else {
+                    toast(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
+                        type: "error",
+                    });
+                }
+            }).catch((_) => {
+                toast(t("fetch-error:client_fetch_error"), {
                     toastId: "vod-fetch-error",
                     type: "error",
                 });
-            } else {
-                setVods(vods);
-            }
+            });
         };
 
         fetchVODs();
@@ -81,20 +93,29 @@ export default function VODPage() {
 
     useEffect(() => {
         const fetchUserInfo = async () => {
-            const { user, fetchError } = await GetUserById(params.userId);
-            if (fetchError != undefined) {
-                toast.error(fetchError.message, {
+            await GetUserById(params.userId).then(userRes => {
+                if (userRes.success) {
+                    setUser(userRes.data?.user ?? null);
+
+                    setPlayerInfo((prev) => ({
+                        ...prev,
+                        streamer: {
+                            name: userRes.data?.user?.displayName ?? userRes.data?.user?.username ?? "Streamer",
+                        },
+                    }));
+                } else {
+                    toast(t(`api-response:${userRes.key}`), {
+                        toastId: userRes.requestId,
+                        type: "error",
+                    });
+                }
+            })
+            .catch((_) => {
+                toast(t("fetch-error:client_fetch_error"), {
                     toastId: "user-fetch-error",
+                    type: "error",
                 });
-            } else {
-                setUser(user!);
-                setPlayerInfo((prev) => ({
-                    ...prev,
-                    streamer: {
-                        name: user?.displayName ?? user?.username ?? "Streamer",
-                    },
-                }));
-            }
+            });
         };
 
         fetchUserInfo();

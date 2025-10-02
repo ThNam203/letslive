@@ -42,7 +42,7 @@ export default function VODEditCard({
     vod: VOD;
     setVODS: Dispatch<SetStateAction<VOD[]>>;
 }) {
-    const { t } = useT("settings");
+    const { t } = useT(["settings", "api-response"]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [formData, setFormData] = useState<{
@@ -55,7 +55,9 @@ export default function VODEditCard({
     }>({
         title: vod.title,
         description: vod.description || "",
-        thumbnailURL: vod.thumbnailUrl ? vod.thumbnailUrl : `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`,
+        thumbnailURL: vod.thumbnailUrl
+            ? vod.thumbnailUrl
+            : `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`,
         image: undefined,
         selectedImage: undefined,
         isPublic: vod.visibility === "public",
@@ -78,7 +80,9 @@ export default function VODEditCard({
         setFormData({
             title: vod.title,
             description: vod.description || "",
-            thumbnailURL: vod.thumbnailUrl ? vod.thumbnailUrl : `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`,
+            thumbnailURL: vod.thumbnailUrl
+                ? vod.thumbnailUrl
+                : `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`,
             image: undefined,
             selectedImage: undefined,
             isPublic: vod.visibility === "public",
@@ -92,10 +96,11 @@ export default function VODEditCard({
 
     const handleConfirmDelete = async () => {
         setIsSubmitting(true);
-        const { fetchError } = await DeleteVOD(vod.id);
-        if (fetchError) {
-            toast(fetchError.message, { type: "error" });
-        }
+        await DeleteVOD(vod.id).then((res) => {
+            if (!res.success) {
+                toast(t(`api-response:${res.key}`), { type: "error" });
+            }
+        });
 
         setIsDeleteDialogOpen(false);
         setIsSubmitting(false);
@@ -107,47 +112,59 @@ export default function VODEditCard({
         var newThumbnailPath = "";
 
         if (formData.image) {
-            const { newPath, fetchError } = await UploadFile(formData.image);
-            if (fetchError) {
-                toast(fetchError.message, { type: "error" });
-                setIsSubmitting(false);
-                setIsDialogOpen(false);
-                return;
-            } else {
-                newThumbnailPath = newPath!;
-            }
+            await UploadFile(formData.image).then((res) => {
+                if (!res.success) {
+                    toast(t(`api-response:${res.key}`), { type: "error" });
+                    setIsSubmitting(false);
+                    setIsDialogOpen(false);
+                } else {
+                    newThumbnailPath = res.data?.newPath!;
+                }
+            });
         }
 
-        const { fetchError } = await UpdateVOD(
+        await UpdateVOD(
             vod.id,
             formData.title,
             formData.description,
             formData.isPublic ? "public" : "private",
-            newThumbnailPath.length > 0 ? newThumbnailPath : undefined
-        );
-
-        if (!fetchError) {
-            toast(t("settings:vods.edit_dialog.update_success"), { type: "success" });
-            setVODS((prev) =>
-                prev.map((v) =>
-                    v.id === vod.id
-                        ? {
-                            ...v,
-                            title: formData.title,
-                            description: formData.description,
-                            visibility: formData.isPublic
-                                ? "public"
-                                : "private",
-                            thumbnailUrl: newThumbnailPath.length > 0
-                                ? newThumbnailPath
-                                : v.thumbnailUrl ? v.thumbnailUrl : `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`,
-                        }
-                        : v
-                )
-            );
-        }
-        setIsSubmitting(false);
-        setIsDialogOpen(false);
+            newThumbnailPath.length > 0 ? newThumbnailPath : undefined,
+        )
+            .then((res) => {
+                if (!res.success) {
+                    toast(t(`api-response:${res.key}`), { type: "error" });
+                    setIsSubmitting(false);
+                    setIsDialogOpen(false);
+                } else {
+                    toast(t("settings:vods.edit_dialog.update_success"), {
+                        type: "success",
+                    });
+                    setVODS((prev) =>
+                        prev.map((v) =>
+                            v.id === vod.id
+                                ? {
+                                      ...v,
+                                      title: formData.title,
+                                      description: formData.description,
+                                      visibility: formData.isPublic
+                                          ? "public"
+                                          : "private",
+                                      thumbnailUrl:
+                                          newThumbnailPath.length > 0
+                                              ? newThumbnailPath
+                                              : v.thumbnailUrl
+                                                ? v.thumbnailUrl
+                                                : `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`,
+                                  }
+                                : v,
+                        ),
+                    );
+                }
+            })
+            .finally(() => {
+                setIsSubmitting(false);
+                setIsDialogOpen(false);
+            });
     };
 
     const handleCancel = () => {
@@ -172,40 +189,50 @@ export default function VODEditCard({
     return (
         <>
             <div
-                className={`bg-gray-200 overflow-hidden shadow-sm rounded-sm w-[350px]`}
+                className={`w-[350px] overflow-hidden rounded-sm bg-gray-200 shadow-sm`}
             >
                 <Link
-                    className={`w-full h-[180px] inline-block hover:cursor-pointer`}
+                    className={`inline-block h-[180px] w-full hover:cursor-pointer`}
                     href={`/users/${vod.userId}/vods/${vod.id}`}
                 >
-                    <div className="flex flex-col items-center justify-center h-full bg-black bg-opacity-50">
+                    <div className="flex h-full flex-col items-center justify-center bg-black bg-opacity-50">
                         <Image
                             alt="vod icon"
-                            src={vod.thumbnailUrl ?? `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`}
+                            src={
+                                vod.thumbnailUrl ??
+                                `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`
+                            }
                             width={350}
                             height={180}
-                            className="w-full h-full"
+                            className="h-full w-full"
                         />
                     </div>
                 </Link>
                 <div className="p-4">
-                    <h3 className="font-semibold text-foreground">{vod.title}</h3>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <h3 className="font-semibold text-foreground">
+                        {vod.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">
                         {formatSeconds(vod.duration)} -{" "}
                         {vod.visibility === "public" ? (
-                            <IconEye className="w-4 h-4 mr-1 inline-block" />
+                            <IconEye className="mr-1 inline-block h-4 w-4" />
                         ) : (
-                            <IconEyeOff className="w-4 h-4 mr-1 inline-block" />
+                            <IconEyeOff className="mr-1 inline-block h-4 w-4" />
                         )}
                     </p>
-                    <p className="text-sm text-foreground-muted mt-1">
+                    <p className="mt-1 text-sm text-foreground-muted">
                         {vod.description && vod.description.length > 50
                             ? `${vod.description.substring(0, 47)}...`
                             : vod.description}{" "}
                         • {dateDiffFromNow(vod.createdAt)} ago
                     </p>
-                    <div className="flex items-center mt-2 text-sm text-foreground-muted">
-                        <span>{vod.viewCount} {t(`settings:vods.metadata.${vod.viewCount === 1 ? 'view' : 'views'}`)}</span>
+                    <div className="mt-2 flex items-center text-sm text-foreground-muted">
+                        <span>
+                            {vod.viewCount}{" "}
+                            {t(
+                                `settings:vods.metadata.${vod.viewCount === 1 ? "view" : "views"}`,
+                            )}
+                        </span>
                         <div className="flex-1" />
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -230,30 +257,22 @@ export default function VODEditCard({
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>{t("settings:vods.edit_dialog.title")}</DialogTitle>
+                        <DialogTitle>
+                            {t("settings:vods.edit_dialog.title")}
+                        </DialogTitle>
                         <DialogDescription>
                             {t("settings:vods.edit_dialog.description")}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="image-upload">{t("settings:vods.edit_dialog.thumbnail")}</Label>
+                            <Label htmlFor="image-upload">
+                                {t("settings:vods.edit_dialog.thumbnail")}
+                            </Label>
                             <div className="col-span-3 w-full max-w-3xl">
                                 <label
                                     htmlFor="image-upload"
-                                    className={`
-                                    group
-                                    relative
-                                    flex items-center justify-center
-                                    w-full aspect-video 
-                                    border-2 border-dashed border-border
-                                    rounded-lg 
-                                    cursor-pointer
-                                    transition-all duration-300 ease-in-out
-                                    overflow-hidden
-                                    bg-cover bg-center bg-no-repeat
-                                    group-hover:bg-opacity-50
-                                `}
+                                    className={`group relative flex aspect-video w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border bg-cover bg-center bg-no-repeat transition-all duration-300 ease-in-out group-hover:bg-opacity-50`}
                                     style={{
                                         backgroundImage: formData.selectedImage
                                             ? `url(${formData.selectedImage})`
@@ -268,23 +287,21 @@ export default function VODEditCard({
                                         className="hidden"
                                     />
                                     <div
-                                        className={`
-                                        absolute inset-0
-                                        flex items-center justify-center
-                                        opacity-0 group-hover:opacity-100
-                                        transition-opacity duration-200
-                                        bg-black/40
-                                    `}
+                                        className={`absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100`}
                                     >
                                         <span className="text-lg font-medium text-white">
-                                            {t("settings:vods.edit_dialog.change_thumbnail")}
+                                            {t(
+                                                "settings:vods.edit_dialog.change_thumbnail",
+                                            )}
                                         </span>
                                     </div>
                                 </label>
                             </div>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="title">{t("settings:vods.edit_dialog.title_label")}</Label>
+                            <Label htmlFor="title">
+                                {t("settings:vods.edit_dialog.title_label")}
+                            </Label>
                             <Input
                                 id="title"
                                 name="title"
@@ -293,7 +310,11 @@ export default function VODEditCard({
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="description">{t("settings:vods.edit_dialog.description_label")}</Label>
+                            <Label htmlFor="description">
+                                {t(
+                                    "settings:vods.edit_dialog.description_label",
+                                )}
+                            </Label>
                             <Input
                                 id="description"
                                 name="description"
@@ -309,7 +330,9 @@ export default function VODEditCard({
                                 checked={formData.isPublic}
                                 onCheckedChange={handleSwitchChange}
                             />
-                            <Label htmlFor="isPublic">{t("settings:vods.edit_dialog.public")}</Label>
+                            <Label htmlFor="isPublic">
+                                {t("settings:vods.edit_dialog.public")}
+                            </Label>
                         </div>
                     </div>
                     <DialogFooter>
@@ -317,7 +340,11 @@ export default function VODEditCard({
                             {t("settings:vods.edit_dialog.cancel")}
                         </Button>
                         <Button onClick={handleSave}>
-                            {isSubmitting ? <IconLoader className="h-4 w-4"/> : <IconSave className="mr-2 h-4 w-4" />}
+                            {isSubmitting ? (
+                                <IconLoader className="h-4 w-4" />
+                            ) : (
+                                <IconSave className="mr-2 h-4 w-4" />
+                            )}
                             {t("settings:vods.edit_dialog.save_changes")}
                         </Button>
                     </DialogFooter>
@@ -329,7 +356,9 @@ export default function VODEditCard({
             >
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>{t("settings:vods.delete_dialog.title")}</DialogTitle>
+                        <DialogTitle>
+                            {t("settings:vods.delete_dialog.title")}
+                        </DialogTitle>
                         <DialogDescription>
                             {t("settings:vods.delete_dialog.description")}
                         </DialogDescription>

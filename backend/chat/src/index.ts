@@ -28,6 +28,7 @@ function CreateExpressServer() {
         res.json({ status: 'ok' })
     })
 
+    // TODO: update response
     app.get(
         '/v1/messages',
         asyncHandler(async (req, res) => {

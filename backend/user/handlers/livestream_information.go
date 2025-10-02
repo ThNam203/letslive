@@ -29,7 +29,7 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	const maxUploadSize = 11 * 1024 * 1024 // for other information outside of image
 	userUUID, err := getUserIdFromCookie(r)
 	if err != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
@@ -44,7 +44,7 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	if err := r.ParseMultipartForm(0); err != nil {
 		var maxByteError *http.MaxBytesError
 		if errors.As(err, &maxByteError) {
-			writeResponse(w, response.NewResponseFromTemplate[any](
+			writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_IMAGE_TOO_LARGE,
 				nil,
 				nil,
@@ -53,7 +53,7 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 			return
 		}
 
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INTERNAL_SERVER,
 			nil,
 			nil,
@@ -72,12 +72,12 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	} else {
 		savedPath, err := h.minioService.AddFile(ctx, file, fileHeader, "thumbnails")
 		if err != nil {
-			writeResponse(w, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		))
+			writeResponse(w, ctx, response.NewResponseFromTemplate[any](
+				response.RES_ERR_INTERNAL_SERVER,
+				nil,
+				nil,
+				nil,
+			))
 			return
 		}
 
@@ -96,7 +96,7 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	span.End()
 
 	if updateErr != nil {
-		writeResponse(w, updateErr)
+		writeResponse(w, ctx, updateErr)
 		return
 	}
 

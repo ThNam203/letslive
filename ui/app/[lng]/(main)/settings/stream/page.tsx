@@ -13,7 +13,7 @@ import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";
 
 export default function StreamEdit() {
-    const { t } = useT("settings");
+    const { t } = useT(["settings", "api-response", "fetch-error"]);
     const user = useUser((state) => state.user);
     const updateUser = useUser((state) => state.updateUser);
 
@@ -53,30 +53,41 @@ export default function StreamEdit() {
         if (!user) return;
 
         setIsSubmitting(true);
-        const { updatedInfo, fetchError } = await UpdateLivestreamInformation(
+        await UpdateLivestreamInformation(
             image === undefined ? null : image,
             image === null ? null : user!.livestreamInformation.thumbnailUrl,
             title,
             description,
-        );
-        setIsSubmitting(false);
-        if (fetchError) {
-            toast(fetchError.message, { type: "error" });
-            return;
-        }
-
-        if (updatedInfo) {
-            toast.success(t("settings:stream.updated_success"));
-            updateUser({
-                ...user,
-                livestreamInformation: {
-                    userId: updatedInfo.userId,
-                    title: updatedInfo.title,
-                    description: updatedInfo.description,
-                    thumbnailUrl: updatedInfo.thumbnailUrl,
-                },
+        ).then((res) => {
+            if (res.success) {
+                toast.success(t("settings:stream.updated_success"));
+                if (res.data && res.data.updatedInfo) {
+                    updateUser({
+                        ...user,
+                        livestreamInformation: {
+                            userId: res.data.updatedInfo.userId,
+                            title: res.data.updatedInfo.title,
+                            description: res.data.updatedInfo.description,
+                            thumbnailUrl: res.data.updatedInfo.thumbnailUrl,
+                        },
+                    });
+                }
+            } else {
+                toast(t(`api-response:${res.key}`), {
+                    toastId: res.requestId,
+                    type: "error",
+                });
+            }
+        })
+        .catch((_) => {
+            toast(t("fetch-error:client_fetch_error"), {
+                toastId: "stream-update-error",
+                type: "error",
             });
-        }
+        })
+        .finally(() => {
+            setIsSubmitting(false);
+        });
     };
 
     const isFormChange = useMemo(() => {

@@ -20,25 +20,31 @@ export default function SearchBar({
     const [results, setResults] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [showResults, setShowResults] = useState(false);
-    const { t } = useT()
+    const { t } = useT(["common", "api-response", "fetch-error"]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
             if (query.trim()) {
                 setIsLoading(true);
                 const search = async () => {
-                    const { users, fetchError } = await SearchUsersByUsername(
-                        query
-                    );
-
-                    if (fetchError) {
-                        toast(fetchError.message, { type: "error" });
-                    } else if (users) {
-                        setResults(users);
-                    }
-
-                    setIsLoading(false);
-                    setShowResults(true);
+                    await SearchUsersByUsername(query)
+                        .then((res) => {
+                            if (res.success) {
+                                setResults(res.data?.users ?? []);
+                            } else {
+                                toast(t(`api-response:${res.key}`), {
+                                    toastId: res.requestId,
+                                    type: "error",
+                                });
+                            }
+                        })
+                        .catch((_) => {
+                            toast(t("fetch-error:client_fetch_error"), { type: "error" });
+                        })
+                        .finally(() => {
+                            setIsLoading(false);
+                            setShowResults(true);
+                        });
                 };
 
                 search();
@@ -63,16 +69,16 @@ export default function SearchBar({
             <div className="relative">
                 <Input
                     type="text"
-                    placeholder={t("search_users")}
+                    placeholder={t("common:search_users")}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    className="pr-8 border-border"
+                    className="border-border pr-8"
                     onFocus={() => query.trim() && setShowResults(true)}
                 />
                 {query && (
                     <button
                         onClick={handleClear}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        className="text-muted-foreground absolute right-2 top-1/2 -translate-y-1/2 hover:text-foreground"
                         aria-label="Clear search"
                     >
                         <IconClose className="h-4 w-4" />
@@ -83,42 +89,40 @@ export default function SearchBar({
             {isLoading && query && (
                 <div className="absolute mt-1 w-full rounded-sm border bg-background p-4 shadow-md">
                     <div className="flex items-center justify-center">
-                        <p className="text-sm text-muted-foreground">
-                            Searching...
+                        <p className="text-muted-foreground text-sm">
+                            {t("common:searching")}
                         </p>
                     </div>
                 </div>
             )}
 
             {showResults && results.length > 0 && !isLoading && (
-                <div className="absolute mt-1 w-full rounded-sm bg-background shadow-md z-10 overflow-auto max-h-60">
+                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm bg-background shadow-md">
                     {results.map((user) => (
                         <Link
                             key={user.id}
                             href={`/users/${user.id}`}
-                            className="cursor-pointer hover:bg-gray-400 w-full flex flex-row items-center gap-3 p-2"
+                            className="flex w-full cursor-pointer flex-row items-center gap-3 p-2 hover:bg-gray-400"
                         >
-                                <Avatar className="h-8 w-8">
-                                    <AvatarImage
-                                        src={
-                                            user.profilePicture
-                                        }
-                                        alt={"user image"}
-                                        width={32}
-                                        height={32}
-                                    />
-                                    <AvatarFallback>
-                                        {user.username.charAt(0).toUpperCase()}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="text-sm font-medium">
-                                        {user.username}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {user.email}
-                                    </p>
-                                </div>
+                            <Avatar className="h-8 w-8">
+                                <AvatarImage
+                                    src={user.profilePicture}
+                                    alt={"user image"}
+                                    width={32}
+                                    height={32}
+                                />
+                                <AvatarFallback>
+                                    {user.username.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="text-sm font-medium">
+                                    {user.username}
+                                </p>
+                                <p className="text-muted-foreground text-xs">
+                                    {user.email}
+                                </p>
+                            </div>
                         </Link>
                     ))}
                 </div>
@@ -126,8 +130,8 @@ export default function SearchBar({
 
             {showResults && results.length === 0 && !isLoading && query && (
                 <div className="absolute mt-1 w-full rounded-sm border bg-background p-4 shadow-md">
-                    <p className="text-sm text-muted-foreground">
-                        No users found
+                    <p className="text-muted-foreground text-sm">
+                        {t("common:no_users_found")}
                     </p>
                 </div>
             )}

@@ -12,40 +12,39 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import IconSettings from "../icons/settings";
 import IconLogOut from "../icons/log-out";
 import useT from "@/hooks/use-translation";
+import { GetMeProfile } from "@/lib/api/user";
 
 export default function UserInfo() {
   const userState = useUser();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const { t } = useT(["auth", "common"])
+  const { t } = useT(["auth", "common", "api-response", "fetch-error"]);
 
   const logoutHandler = async () => {
-    const { fetchError } = await Logout();
-    if (fetchError) {
-      toast(fetchError.message, {
-        toastId: "logout-error",
-        type: "error",
+    await Logout().then(res => {
+      if (res.success) {
+        userState.clearUser();
+      } else {
+        toast(t(`api-response:${res.key}`), {
+          toastId: res.requestId,
+          type: "error",
+        });
+      }
+    })
+      .catch((err) => {
+        toast(t("fetch-error:client_fetch_error"), {
+          toastId: "logout-error",
+          type: "error",
+        });
       });
-    } else {
-      userState.clearUser();
-    }
   };
 
   useEffect(() => {
     const fetchUser = async () => {
-      userState.fetchUser().catch((e) => {
-        // TODO
-        // if (e instanceof FetchError && e.isClientError) {
-        //     toast(e.message, {
-        //         toastId: "fetch-user-error",
-        //         type: "error",
-        //     });
-        //     router.push("/login");
-        // } else {
-        //     toast("An unknown error occurred", {
-        //         toastId: "fetch-user-error",
-        //         type: "error",
-        //     });
-        // }
+      GetMeProfile().then(userRes => userState.setUser(userRes.data?.user ?? null)).catch((e) => {
+        toast(t("fetch-error:client_fetch_error"), {
+          toastId: "user-fetch-error",
+          type: "error",
+        });
       });
     };
 

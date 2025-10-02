@@ -13,15 +13,16 @@ import (
 
 func IsAuthorMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		userId := r.URL.Query().Get("userId")
 		if len(userId) == 0 {
 			logger.Debugf(r.Context(), "isAuthor middleware missing userId param")
-			handlers.WriteResponse(w, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
+			handlers.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		}
 
 		accessTokenCookie, err := r.Cookie("ACCESS_TOKEN")
 		if err != nil || len(accessTokenCookie.Value) == 0 {
-			handlers.WriteResponse(w, response.NewResponseFromTemplate[any](
+			handlers.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_UNAUTHORIZED,
 				nil,
 				nil,
@@ -35,7 +36,7 @@ func IsAuthorMiddleware(next http.Handler) http.Handler {
 		// the signature should already been checked from the api gateway before going to this
 		_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
 		if err != nil {
-			handlers.WriteResponse(w, response.NewResponseFromTemplate[any](
+			handlers.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_UNAUTHORIZED,
 				nil,
 				nil,
@@ -46,7 +47,7 @@ func IsAuthorMiddleware(next http.Handler) http.Handler {
 
 		_, err = uuid.FromString(myClaims.UserId)
 		if err != nil {
-			handlers.WriteResponse(w, response.NewResponseFromTemplate[any](
+			handlers.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_UNAUTHORIZED,
 				nil,
 				nil,
@@ -56,7 +57,7 @@ func IsAuthorMiddleware(next http.Handler) http.Handler {
 		}
 
 		if myClaims.UserId == userId {
-			handlers.WriteResponse(w, response.NewResponseFromTemplate[any](
+			handlers.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_FORBIDDEN,
 				nil,
 				nil,
