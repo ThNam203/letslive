@@ -27,7 +27,7 @@ export default function LogInForm() {
     });
     const [turnstileToken, setTurnstileToken] = useState("");
     const turnstile = useTurnstile();
-    const { t, i18n } = useT(["auth", "error"]);
+    const { t, i18n } = useT(["auth", "error", "api-response", "fetch-error"]);
 
     const validate = () => {
         const result = loginSchema(t).safeParse({
@@ -35,7 +35,11 @@ export default function LogInForm() {
             password,
             turnstile: turnstileToken,
         });
-        const newErrors: typeof errors = { email: "", password: "", turnstile: "" };
+        const newErrors: typeof errors = {
+            email: "",
+            password: "",
+            turnstile: "",
+        };
         if (!result.success) {
             for (const issue of result.error.issues) {
                 const key = issue.path[0] as keyof typeof newErrors;
@@ -49,25 +53,33 @@ export default function LogInForm() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (!validate()) return;
+
         setIsLoading(true);
-
-        if (validate()) {
-            const { fetchError } = await LogIn({
-                email,
-                password,
-                turnstileToken,
+        await LogIn({
+            email,
+            password,
+            turnstileToken,
+        })
+            .then((res) => {
+                if (!res.success) {
+                    turnstile.reset();
+                    setTurnstileToken("");
+                    toast.error(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
+                    });
+                } else {
+                    router.push("/");
+                    router.refresh();
+                }
+            })
+            .catch((_) => {
+                toast.error(t("fetch-error:client_fetch_error"));
+            })
+            .finally(() => {
+                setIsLoading(false);
             });
-            if (fetchError) {
-                turnstile.reset();
-                setTurnstileToken("");
-                toast.error(fetchError.message);
-            } else {
-                router.push("/");
-                router.refresh();
-            }
-        }
-
-        setIsLoading(false);
     };
 
     return (

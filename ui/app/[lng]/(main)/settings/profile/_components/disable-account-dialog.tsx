@@ -30,32 +30,41 @@ export default function DisableAccountDialog({
     const clearUser = useUser((state) => state.clearUser);
     const [isDisablingAccount, setIsDisablingAccount] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
-    const { t } = useT("settings");
+    const { t } = useT(["settings", "api-response", "fetch-error"]);
 
     const logoutHandler = async () => {
-        const { fetchError } = await Logout();
-        if (fetchError) {
-            toast(fetchError.message, {
-                toastId: "logout-error",
-                type: "error",
-            });
-        } else {
-            clearUser();
-        }
+        await Logout().then(res => {
+            if (res.success) {
+                clearUser();
+            } else {
+                toast(t(`api-response:${res.key}`), {
+                    toastId: res.requestId,
+                    type: "error",
+                })
+            }
+        })
     };
 
     const handleDisableAccount = async () => {
         try {
             setIsDisablingAccount(true);
-            const { fetchError } = await UpdateProfile({
+            await UpdateProfile({
                 id: user!.id,
                 status: UserStatus.DISABLED,
-            }).finally(() => setIsDisablingAccount(false));
-            if (fetchError) {
-                toast.error(fetchError.message);
-                return;
-            }
-            await logoutHandler();
+            }).then(res => {
+                if (res.success) return logoutHandler();
+                else toast.error(t(`api-response:${res.key}`), {
+                    toastId: res.requestId,
+                    type: "error",
+                });
+            })
+            .catch((_) => {
+                toast(t("fetch-error:client_fetch_error"), {
+                    toastId: "stream-update-error",
+                    type: "error",
+                });
+            })
+            .finally(() => setIsDisablingAccount(false));
         } catch (error) {
             toast.error(t("settings:disable.unknown_error"));
         } finally {

@@ -12,10 +12,9 @@ func NewGeneralHandler() *GeneralHandler {
 }
 
 func (h GeneralHandler) RouteNotFoundHandler(w http.ResponseWriter, r *http.Request) {
-	WriteResponse(w, response.NewResponseFromTemplate[any](response.RES_ERR_ROUTE_NOT_FOUND, nil, nil, nil))
+	WriteResponse(w, r.Context(), response.NewResponseFromTemplate[any](response.RES_ERR_ROUTE_NOT_FOUND, nil, nil, nil))
 }
 
 func (h *GeneralHandler) RouteServiceHealth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
-

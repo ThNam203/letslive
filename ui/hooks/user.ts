@@ -1,23 +1,17 @@
 import { create } from "zustand";
 import { User } from "../types/user";
-import { GetMeProfile } from "../lib/api/user";
 
 export type UserState = {
     user: User | null;
-    fetchUser: () => Promise<void>;
+    setUser: (user: User | null) => void;
     clearUser: () => void;
     updateUser: (user: User) => void;
 };
 
 const useUser = create<UserState>((set) => ({
     user: null,
-    fetchUser: async () => {
-        const response = await GetMeProfile();
-        if (response.fetchError) {
-            throw response.fetchError;
-        }
-
-        set({ user: response.user });
+    setUser: (user: User | null) => {
+        set({ user });
     },
     clearUser: () => {
         set({ user: null });

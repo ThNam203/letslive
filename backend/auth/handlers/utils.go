@@ -12,8 +12,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func writeResponse(w http.ResponseWriter, res *serviceresponse.Response[any]) {
-	res.RequestId = w.Header().Get("requestId")
+func writeResponse(w http.ResponseWriter, ctx context.Context, res *serviceresponse.Response[any]) {
+	requestId, ok := ctx.Value("requestId").(string)
+	if ok && len(requestId) > 0 {
+		res.RequestId = requestId
+	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")

@@ -1,20 +1,14 @@
-import { FetchError } from "../../types/fetch-error";
+import { ApiResponse } from "@/types/fetch-response";
 import { fetchClient } from "@/utils/fetchClient";
 
 export async function UploadFile(
-    file: File
-): Promise<{ newPath?: string; fetchError?: FetchError }> {
-    try {
-        const formData = new FormData();
-        formData.append("file", file);
+    file: File,
+): Promise<ApiResponse<{ newPath?: string }>> {
+    const formData = new FormData();
+    formData.append("file", file);
 
-        const data = await fetchClient<string>(`/upload-file`, {
-            method: "POST",
-            body: formData
-        });
-
-        return { newPath: data };
-    } catch (error) {
-        return { fetchError: error as FetchError };
-    }
+    return fetchClient<ApiResponse<{ newPath?: string }>>(`/upload-file`, {
+        method: "POST",
+        body: formData,
+    });
 }

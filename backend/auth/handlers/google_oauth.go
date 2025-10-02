@@ -16,6 +16,7 @@ func (h *AuthHandler) OAuthGoogleLoginHandler(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		writeResponse(
 			w,
+			r.Context(),
 			serviceresponse.NewResponseFromTemplate[any](
 				serviceresponse.RES_ERR_INTERNAL_SERVER,
 				nil,

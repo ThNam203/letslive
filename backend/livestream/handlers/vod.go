@@ -28,13 +28,13 @@ func (h VODHandler) GetVODByIdPublicHandler(w http.ResponseWriter, r *http.Reque
 
 	streamId := r.PathValue("vodId")
 	if len(streamId) == 0 {
-		WriteResponse(w, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
 	vodUUID, err := uuid.FromString(streamId)
 	if err != nil {
-		WriteResponse(w, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
@@ -43,7 +43,7 @@ func (h VODHandler) GetVODByIdPublicHandler(w http.ResponseWriter, r *http.Reque
 	span.End()
 
 	if serviceErr != nil {
-		WriteResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
@@ -58,13 +58,13 @@ func (h VODHandler) GetVODsOfUserPublicHandler(w http.ResponseWriter, r *http.Re
 
 	userId := r.URL.Query().Get("userId")
 	if len(userId) == 0 {
-		WriteResponse(w, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
 	userUUID, err := uuid.FromString(userId)
 	if err != nil {
-		WriteResponse(w, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
@@ -75,7 +75,7 @@ func (h VODHandler) GetVODsOfUserPublicHandler(w http.ResponseWriter, r *http.Re
 	span.End()
 
 	if serviceErr != nil {
-		WriteResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
@@ -90,7 +90,7 @@ func (h VODHandler) GetVODsOfAuthorPrivateHandler(w http.ResponseWriter, r *http
 
 	userUUID, err := getUserIdFromCookie(r)
 	if err != nil {
-		WriteResponse(w, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
@@ -101,7 +101,7 @@ func (h VODHandler) GetVODsOfAuthorPrivateHandler(w http.ResponseWriter, r *http
 	span.End()
 
 	if serviceErr != nil {
-		WriteResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
@@ -122,7 +122,7 @@ func (h VODHandler) GetRecommendedVODsPublicHandler(w http.ResponseWriter, r *ht
 	span.End()
 
 	if serviceErr != nil {
-		WriteResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
@@ -137,21 +137,21 @@ func (h VODHandler) UpdateVODMetadataPrivateHandler(w http.ResponseWriter, r *ht
 
 	userId, err := getUserIdFromCookie(r)
 	if err != nil {
-		WriteResponse(w, err)
+		WriteResponse(w, ctx, err)
 		return
 	}
 
 	rawStreamId := r.PathValue("vodId")
 	streamId, er := uuid.FromString(rawStreamId)
 	if er != nil {
-		WriteResponse(w, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 	defer r.Body.Close()
 
 	var requestBody dto.UpdateVODRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		WriteResponse(w, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
 		return
 	}
 
@@ -160,7 +160,7 @@ func (h VODHandler) UpdateVODMetadataPrivateHandler(w http.ResponseWriter, r *ht
 	span.End()
 
 	if serviceErr != nil {
-		WriteResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
@@ -177,13 +177,13 @@ func (h VODHandler) DeleteVODPrivateHandler(w http.ResponseWriter, r *http.Reque
 	vodId, err := uuid.FromString(rawVODId)
 
 	if err != nil {
-		WriteResponse(w, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
 	userUUID, cErr := getUserIdFromCookie(r)
 	if cErr != nil {
-		WriteResponse(w, cErr)
+		WriteResponse(w, ctx, cErr)
 		return
 	}
 
@@ -192,7 +192,7 @@ func (h VODHandler) DeleteVODPrivateHandler(w http.ResponseWriter, r *http.Reque
 	span.End()
 
 	if serviceErr != nil {
-		WriteResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 

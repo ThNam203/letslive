@@ -22,15 +22,23 @@ export default function ApiKeyTab() {
     if (!user) return;
 
     setIsGenerating(true);
-    const { newKey, fetchError } = await RequestToGenerateNewAPIKey();
-
-    if (fetchError) toast(fetchError.message, { type: "error" });
-    else
-      updateUser({
-        ...user,
-        streamAPIKey: newKey!,
+    await RequestToGenerateNewAPIKey()
+      .then(res => {
+        if (res.success) {
+          updateUser({
+            ...user,
+            streamAPIKey: res.data!.newKey,
+          });
+        } else {
+          toast(t(`api-response:${res.key}`), {
+            toastId: res.requestId,
+            type: "error",
+          });
+        }
+      })
+      .finally(() => {
+        setIsGenerating(false);
       });
-    setIsGenerating(false);
   };
 
   const copyApiKey = () => {

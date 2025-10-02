@@ -22,20 +22,30 @@ import useT from "@/hooks/use-translation";
 export function PopularVODView() {
     const [isLoading, setIsLoading] = useState(false);
     const [vods, setVods] = useState<VOD[]>([]);
-    const { t } = useT("common")
+    const { t } = useT(["common", "api-response", "fetch-error"]);
 
     useEffect(() => {
         setIsLoading(true);
         const fetchData = async () => {
-            const { vods, fetchError } = await GetPopularVODs();
-            if (fetchError) {
-                toast("Failed to fetch popular videos", { type: "error" });
-                return;
-            } else {
-                setVods(vods);
-            }
-            setIsLoading(false);
+            await GetPopularVODs()
+                .then((res) => {
+                    if (res.success) {
+                        setVods(res.data?.vods ?? []);
+                    } else {
+                        toast(t(`api-response:${res.key}`), {
+                            toastId: res.requestId,
+                            type: "error",
+                        });
+                    }
+                })
+                .catch((_) => {
+                    toast(t("fetch-error:client_fetch_error", { type: "error" }));
+                })
+                .finally(() => {
+                    setIsLoading(false);
+                });
         };
+
         fetchData();
     }, []);
 
@@ -45,15 +55,15 @@ export function PopularVODView() {
 
     if (vods.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                <div className="bg-muted p-6 rounded-full mb-6">
-                    <IconFilm className="h-12 w-12 text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+                <div className="mb-6 rounded-full bg-muted p-6">
+                    <IconFilm className="text-muted-foreground h-12 w-12" />
                 </div>
-                <h2 className="text-2xl font-semibold mb-2">
-                    {t("no_videos")}
+                <h2 className="mb-2 text-2xl font-semibold">
+                    {t("common:no_videos")}
                 </h2>
                 <p className="text-muted-foreground max-w-md">
-                    {t("no_videos_description")}
+                    {t("common:no_videos_description")}
                 </p>
             </div>
         );
@@ -61,7 +71,7 @@ export function PopularVODView() {
 
     return (
         <div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {vods.map((vod) => (
                     <VODCard key={vod.id} vod={vod} />
                 ))}
@@ -76,15 +86,15 @@ function VODCard({ vod }: { vod: VOD }) {
 
     useEffect(() => {
         const fetchUser = async () => {
-            const { user } = await GetUserById(vod.userId);
-            if (user) setUser(user);
+            const res = await GetUserById(vod.userId);
+            if (res.success) setUser(res.data?.user ?? null);
         };
 
         fetchUser();
     }, [vod.userId]);
 
     return (
-        <Card className="w-full overflow-hidden transition-all hover:shadow-md rounded-sm border-border">
+        <Card className="w-full overflow-hidden rounded-sm border-border transition-all hover:shadow-md">
             <div className="relative aspect-video bg-muted">
                 <div className="absolute bottom-2 right-2">
                     <Badge
@@ -95,9 +105,12 @@ function VODCard({ vod }: { vod: VOD }) {
                     </Badge>
                 </div>
                 <LiveImage
-                    src={vod.thumbnailUrl ?? `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`}
+                    src={
+                        vod.thumbnailUrl ??
+                        `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`
+                    }
                     alt={vod.title}
-                    className="w-full h-full hover:cursor-pointer"
+                    className="h-full w-full hover:cursor-pointer"
                     width={500}
                     height={500}
                     onClick={() =>
@@ -109,14 +122,12 @@ function VODCard({ vod }: { vod: VOD }) {
             </div>
             <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                    <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                    <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-muted">
                         <Avatar>
                             <AvatarImage
-                                src={
-                                    user?.profilePicture
-                                }
+                                src={user?.profilePicture}
                                 alt={`${user?.username} avatar`}
-                                className="w-full h-full object-cover"
+                                className="h-full w-full object-cover"
                                 width={40}
                                 height={40}
                             />
@@ -125,23 +136,28 @@ function VODCard({ vod }: { vod: VOD }) {
                             </AvatarFallback>
                         </Avatar>
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-base truncate">
+                    <div className="min-w-0 flex-1">
+                        <h3 className="truncate text-base font-semibold">
                             {vod.title}
                         </h3>
-                        <p className="text-sm text-muted-foreground truncate">
+                        <p className="text-muted-foreground truncate text-sm">
                             {user
-                                ? user.displayName ?? user.username
+                                ? (user.displayName ?? user.username)
                                 : "Unknown"}
                         </p>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        <div className="text-muted-foreground mt-1 flex items-center gap-3 text-xs">
                             <div className="flex items-center gap-1">
                                 <IconEye className="h-3 w-3" />
-                                <span>{vod.viewCount} {vod.viewCount < 2 ? "view" : "views"}</span>
+                                <span>
+                                    {vod.viewCount}{" "}
+                                    {vod.viewCount < 2 ? "view" : "views"}
+                                </span>
                             </div>
                             <div className="flex items-center gap-1">
                                 <IconClock className="h-3 w-3" />
-                                <span>{dateDiffFromNow(vod.createdAt)} ago</span>
+                                <span>
+                                    {dateDiffFromNow(vod.createdAt)} ago
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -154,16 +170,16 @@ function VODCard({ vod }: { vod: VOD }) {
 function VODSkeleton() {
     return (
         <div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                     <Card key={i} className="overflow-hidden">
                         <Skeleton className="aspect-video w-full" />
                         <CardContent className="p-4">
                             <div className="flex items-start gap-3">
-                                <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
+                                <Skeleton className="h-10 w-10 flex-shrink-0 rounded-full" />
                                 <div className="flex-1">
-                                    <Skeleton className="h-5 w-full mb-2" />
-                                    <Skeleton className="h-4 w-3/4 mb-2" />
+                                    <Skeleton className="mb-2 h-5 w-full" />
+                                    <Skeleton className="mb-2 h-4 w-3/4" />
                                     <Skeleton className="h-3 w-1/2" />
                                 </div>
                             </div>

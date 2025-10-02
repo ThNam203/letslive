@@ -17,7 +17,7 @@ type ErrorDetail map[string]any
 type ErrorDetails []ErrorDetail
 
 type Response[T any] struct {
-	RequestId    string        `json:"id"` // can be used as trace_id, well it is trace_id (request_id)
+	RequestId    string        `json:"requestId"` // can be used as trace_id, well it is trace_id (request_id)
 	Success      bool          `json:"success"`
 	StatusCode   int           `json:"-"`       // no include
 	Code         int           `json:"code"`    // business level

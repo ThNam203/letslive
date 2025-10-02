@@ -7,6 +7,8 @@ import useUser from "@/hooks/user";
 import { useEffect, useState } from "react";
 import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";
+import { GetMeProfile } from "@/lib/api/user";
+import { toast } from "react-toastify";
 
 const getNavItems = (t: any) => [
     { name: t("settings:navigation.profile"), href: "/settings/profile" },
@@ -20,19 +22,23 @@ export default function SettingsNav({
 }: Readonly<{ children: React.ReactNode }>) {
     const [isGettingUser, setIsGettingUser] = useState(true);
     const pathname = usePathname();
-    const fetchUser = useUser((state) => state.fetchUser);
+    const userState = useUser((state) => state);
     const router = useRouter();
-    const { t } = useT("settings");
+    const { t } = useT(["settings", "fetch-error"]);
     const navItems = getNavItems(t);
 
     useEffect(() => {
         setIsGettingUser(true);
-        fetchUser()
-            .catch(() => router.push("/login")) // TODO: should not redirect but show error
-            .finally(() => {
-                setIsGettingUser(false);
-            });
-    }, [fetchUser, router]);
+        GetMeProfile().then((res) => {
+            userState.setUser(res.data?.user ?? null);
+        }).catch(() => {
+            toast.error(t(`fetch-error:client_fetch_error`));
+            userState.setUser(null);
+        })
+        .finally(() => {
+            setIsGettingUser(false);
+        });
+    }, []);
 
     return (
         <div className="flex h-full flex-col bg-background text-foreground">

@@ -34,7 +34,7 @@ func (h *UserHandler) GetUserByIdPublicHandler(w http.ResponseWriter, r *http.Re
 	authenticatedUserId, _ := getUserIdFromCookie(r)
 	userId := r.PathValue("userId")
 	if len(userId) == 0 {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INVALID_INPUT,
 			nil,
 			nil,
@@ -45,7 +45,7 @@ func (h *UserHandler) GetUserByIdPublicHandler(w http.ResponseWriter, r *http.Re
 
 	userUUID, err := uuid.FromString(userId)
 	if err != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INVALID_INPUT,
 			nil,
 			nil,
@@ -59,7 +59,7 @@ func (h *UserHandler) GetUserByIdPublicHandler(w http.ResponseWriter, r *http.Re
 	span.End()
 
 	if serviceErr != nil {
-		writeResponse(w, serviceErr)
+		writeResponse(w, ctx, serviceErr)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *UserHandler) GetAllUsersPublicHandler(w http.ResponseWriter, r *http.Re
 	page, err := strconv.Atoi(r.URL.Query().Get("page"))
 
 	if err != nil || page < 0 {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INVALID_INPUT,
 			nil,
 			nil,
@@ -88,7 +88,7 @@ func (h *UserHandler) GetAllUsersPublicHandler(w http.ResponseWriter, r *http.Re
 	span.End()
 
 	if serviceErr != nil {
-		writeResponse(w, serviceErr)
+		writeResponse(w, ctx, serviceErr)
 		return
 	}
 
@@ -109,7 +109,7 @@ func (h *UserHandler) SearchUsersPublicHandler(w http.ResponseWriter, r *http.Re
 	span.End()
 
 	if err != nil {
-		writeResponse(w, err)
+		writeResponse(w, ctx, err)
 		return
 	}
 
@@ -124,7 +124,7 @@ func (h *UserHandler) GetUserByStreamAPIKeyInternalHandler(w http.ResponseWriter
 
 	streamAPIKeyString := r.URL.Query().Get("streamAPIKey")
 	if len(streamAPIKeyString) == 0 {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
@@ -135,7 +135,7 @@ func (h *UserHandler) GetUserByStreamAPIKeyInternalHandler(w http.ResponseWriter
 
 	streamAPIKey, err := uuid.FromString(streamAPIKeyString)
 	if err != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INVALID_INPUT,
 			nil,
 			nil,
@@ -148,7 +148,7 @@ func (h *UserHandler) GetUserByStreamAPIKeyInternalHandler(w http.ResponseWriter
 	user, sErr := h.userService.GetUserByStreamAPIKey(ctx, streamAPIKey)
 	span.End()
 	if sErr != nil {
-		writeResponse(w, sErr)
+		writeResponse(w, ctx, sErr)
 		return
 	}
 
@@ -163,7 +163,7 @@ func (h *UserHandler) GetCurrentUserPrivateHandler(w http.ResponseWriter, r *htt
 
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
@@ -177,7 +177,7 @@ func (h *UserHandler) GetCurrentUserPrivateHandler(w http.ResponseWriter, r *htt
 	span.End()
 
 	if err != nil {
-		writeResponse(w, err)
+		writeResponse(w, ctx, err)
 		return
 	}
 
@@ -193,7 +193,7 @@ func (h *UserHandler) CreateUserInternalHandler(w http.ResponseWriter, r *http.R
 
 	var body dto.CreateUserRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INVALID_PAYLOAD,
 			nil,
 			nil,
@@ -207,7 +207,7 @@ func (h *UserHandler) CreateUserInternalHandler(w http.ResponseWriter, r *http.R
 	span.End()
 
 	if err != nil {
-		writeResponse(w, err)
+		writeResponse(w, ctx, err)
 		return
 	}
 
@@ -222,7 +222,7 @@ func (h *UserHandler) UpdateCurrentUserPrivateHandler(w http.ResponseWriter, r *
 
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
@@ -235,7 +235,7 @@ func (h *UserHandler) UpdateCurrentUserPrivateHandler(w http.ResponseWriter, r *
 	var requestBody dto.UpdateUserRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 		logger.Errorf(ctx, "failed to decode request body: %s", err)
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INVALID_PAYLOAD,
 			nil,
 			nil,
@@ -250,7 +250,7 @@ func (h *UserHandler) UpdateCurrentUserPrivateHandler(w http.ResponseWriter, r *
 	span.End()
 
 	if err != nil {
-		writeResponse(w, err)
+		writeResponse(w, ctx, err)
 		return
 	}
 
@@ -265,7 +265,7 @@ func (h *UserHandler) GenerateNewAPIStreamKeyPrivateHandler(w http.ResponseWrite
 
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
@@ -280,7 +280,7 @@ func (h *UserHandler) GenerateNewAPIStreamKeyPrivateHandler(w http.ResponseWrite
 	span.End()
 
 	if err != nil {
-		writeResponse(w, err)
+		writeResponse(w, ctx, err)
 		return
 	}
 
@@ -296,7 +296,7 @@ func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWrit
 	const maxUploadSize = 10 * 1024 * 1024
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
@@ -311,7 +311,7 @@ func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWrit
 	if err := r.ParseMultipartForm(0); err != nil {
 		var maxByteError *http.MaxBytesError
 		if errors.As(err, &maxByteError) {
-			writeResponse(w, response.NewResponseFromTemplate[any](
+			writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_IMAGE_TOO_LARGE,
 				nil,
 				nil,
@@ -320,7 +320,7 @@ func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWrit
 			return
 		}
 
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INVALID_PAYLOAD,
 			nil,
 			nil,
@@ -331,7 +331,7 @@ func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWrit
 
 	file, fileHeader, formErr := r.FormFile("profile-picture")
 	if formErr != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INVALID_PAYLOAD,
 			nil,
 			nil,
@@ -345,7 +345,7 @@ func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWrit
 	span.End()
 
 	if err != nil {
-		writeResponse(w, err)
+		writeResponse(w, ctx, err)
 		return
 	}
 
@@ -361,7 +361,7 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 	const maxUploadSize = 10 * 1024 * 1024
 	userUUID, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
@@ -376,7 +376,7 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 	if err := r.ParseMultipartForm(0); err != nil {
 		var maxByteError *http.MaxBytesError
 		if errors.As(err, &maxByteError) {
-			writeResponse(w, response.NewResponseFromTemplate[any](
+			writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_IMAGE_TOO_LARGE,
 				nil,
 				nil,
@@ -385,7 +385,7 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 			return
 		}
 
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INTERNAL_SERVER,
 			nil,
 			nil,
@@ -396,7 +396,7 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 
 	file, fileHeader, formErr := r.FormFile("background-picture")
 	if formErr != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INTERNAL_SERVER,
 			nil,
 			nil,
@@ -410,7 +410,7 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 	span.End()
 
 	if err != nil {
-		writeResponse(w, err)
+		writeResponse(w, ctx, err)
 		return
 	}
 
@@ -427,7 +427,7 @@ func (h *UserHandler) UpdateUserInternalHandler(w http.ResponseWriter, r *http.R
 	defer r.Body.Close()
 
 	if len(userID) == 0 {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INVALID_INPUT,
 			nil,
 			nil,
@@ -438,7 +438,7 @@ func (h *UserHandler) UpdateUserInternalHandler(w http.ResponseWriter, r *http.R
 
 	var requestBody dto.UpdateUserRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INVALID_PAYLOAD,
 			nil,
 			nil,
@@ -453,7 +453,7 @@ func (h *UserHandler) UpdateUserInternalHandler(w http.ResponseWriter, r *http.R
 	span.End()
 
 	if err != nil {
-		writeResponse(w, err)
+		writeResponse(w, ctx, err)
 		return
 	}
 
@@ -513,7 +513,7 @@ func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *h
 	if err := r.ParseMultipartForm(0); err != nil {
 		var maxByteError *http.MaxBytesError
 		if errors.As(err, &maxByteError) {
-			writeResponse(w, response.NewResponseFromTemplate[any](
+			writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_IMAGE_TOO_LARGE,
 				nil,
 				nil,
@@ -522,7 +522,7 @@ func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *h
 			return
 		}
 
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INVALID_PAYLOAD,
 			nil,
 			nil,
@@ -533,7 +533,7 @@ func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *h
 
 	file, fileHeader, formErr := r.FormFile("file")
 	if formErr != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INVALID_PAYLOAD,
 			nil,
 			nil,
@@ -547,7 +547,7 @@ func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *h
 	span.End()
 
 	if err != nil {
-		writeResponse(w, err)
+		writeResponse(w, ctx, err)
 		return
 	}
 

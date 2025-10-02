@@ -4,7 +4,7 @@ import Link from "next/link";
 import IconGoogle from "@/components/icons/google";
 import LogInForm from "@/components/forms/LoginForm";
 import GLOBAL from "@/global";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import useT from "@/hooks/use-translation";

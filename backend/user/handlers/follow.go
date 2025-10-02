@@ -25,7 +25,7 @@ func (h *FollowHandler) FollowPrivateHandler(w http.ResponseWriter, r *http.Requ
 	followedId := r.PathValue("userId")
 	followerId, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
@@ -38,7 +38,7 @@ func (h *FollowHandler) FollowPrivateHandler(w http.ResponseWriter, r *http.Requ
 	span.End()
 
 	if serviceErr != nil {
-		writeResponse(w, serviceErr)
+		writeResponse(w, ctx, serviceErr)
 		return
 	}
 
@@ -52,7 +52,7 @@ func (h *FollowHandler) UnfollowPrivateHandler(w http.ResponseWriter, r *http.Re
 	followedId := r.PathValue("userId")
 	followerId, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
-		writeResponse(w, response.NewResponseFromTemplate[any](
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
@@ -65,7 +65,7 @@ func (h *FollowHandler) UnfollowPrivateHandler(w http.ResponseWriter, r *http.Re
 	span.End()
 
 	if serviceErr != nil {
-		writeResponse(w, serviceErr)
+		writeResponse(w, ctx, serviceErr)
 		return
 	}
 
