@@ -7,7 +7,7 @@ const (
 )
 
 const (
-	RES_SUCC_OK_KEY = "res_succ_ok_key"
+	RES_SUCC_OK_KEY = "res_succ_ok"
 )
 
 var (

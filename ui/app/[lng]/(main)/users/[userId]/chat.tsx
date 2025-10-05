@@ -46,9 +46,9 @@ export default function ChatPanel({
 
     useEffect(() => {
         const fetchMessages = async () => {
-            const { messages } = await GetMessages(roomId);
-            if (messages) {
-                setMessages((prev) => [...messages, ...prev]);
+            const res = await GetMessages(roomId);
+            if (res.messages) {
+                setMessages((prev) => [...res.messages, ...prev]);
             }
         };
 

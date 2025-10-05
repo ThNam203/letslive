@@ -30,7 +30,7 @@ export default function AllChannelsView({
             await GetAllUsers()
                 .then(res => {
                     if (res.success) {
-                        setUsers(res.data?.users ?? []);
+                        setUsers(res.data ?? []);
                     } else {
                         toast(t(`api-response:${res.key}`), {
                             toastId: res.requestId,
@@ -107,7 +107,7 @@ export default function AllChannelsView({
                                     </h4>
                                     <p className="text-sm text-muted-foreground">
                                         {user.livestreamInformation
-                                            ?.description ?? "No description"}
+                                            ?.description ?? t("common:no_description")}
                                     </p>
                                     <div className="text-xs text-muted-foreground">
                                         {t("common:followers_with_count", { count: user.followerCount })}

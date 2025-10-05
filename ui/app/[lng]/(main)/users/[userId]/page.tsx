@@ -63,32 +63,28 @@ export default function Livestreaming() {
                     return;
                 }
     
-                if (!userRes.data?.user) throw new Error(); // TODO: throw meaning full error
+                if (!userRes.data) throw new Error(); // TODO: throw meaning full error
     
-                setUser(userRes.data.user);
+                setUser(userRes.data);
     
-                const livestreamRes = await GetLivestreamOfUser(userRes.data.user.id);
+                const livestreamRes = await GetLivestreamOfUser(userRes.data.id);
     
-                if (!livestreamRes.success) {
-                    toast(t(`api-response:${livestreamRes.key}`), {
-                        toastId: livestreamRes.requestId,
-                        type: "error",
-                    });
-                } else if (livestreamRes.data?.livestream) {
-                    setLivestream(livestreamRes.data.livestream);
+                // only care if user is live
+                if (livestreamRes.success && livestreamRes.data) {
+                    setLivestream(livestreamRes.data);
     
                     setPlayerInfo({
-                        videoTitle: livestreamRes.data.livestream.title,
+                        videoTitle: livestreamRes.data.title,
                         streamer: {
                             name:
-                                userRes.data.user.displayName ??
-                                userRes.data.user.username,
+                                userRes.data!.displayName ??
+                                userRes.data!.username,
                         },
-                        videoUrl: `${GLOBAL.API_URL}/transcode/${livestreamRes.data.livestream.id}/index.m3u8`,
+                        videoUrl: `${GLOBAL.API_URL}/transcode/${livestreamRes.data.id}/index.m3u8`,
                     });
                 }
     
-                const vodsRes = await GetPublicVODsOfUser(userRes.data.user.id);
+                const vodsRes = await GetPublicVODsOfUser(userRes.data.id);
     
                 if (!vodsRes.success) {
                     toast(t(`api-response:${vodsRes.key}`), {
@@ -96,7 +92,7 @@ export default function Livestreaming() {
                         type: "error",
                     });
                 } else {
-                    setVods(vodsRes.data?.vods ?? []);
+                    setVods(vodsRes.data ?? []);
                 }
             } catch (err) {
                 console.error(err);

@@ -21,7 +21,7 @@ export default function VODsEdit() {
             await GetAllVODsAsAuthor()
                 .then((res) => {
                     if (res.success) {
-                        setVODS(res.data?.vods ?? []);
+                        setVODS(res.data ?? []);
                     } else {
                         toast(t(`api-response:${res.key}`), {
                             toastId: res.requestId,

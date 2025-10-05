@@ -79,7 +79,7 @@ func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UU
 func (r *postgresUserRepo) GetById(ctx context.Context, userId uuid.UUID) (*domains.User, *response.Response[any]) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT 
-			u.id, u.username, u.email, u.created_at, u.display_name, u.auth_provider, u.stream_api_key, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
+			u.id, u.username, u.email, u.status, u.created_at, u.display_name, u.auth_provider, u.stream_api_key, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
 		FROM users u
 		LEFT JOIN livestream_information l ON u.id = l.user_id
 		WHERE u.id = $1
@@ -398,6 +398,7 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 			)
 		}
 
+		logger.Errorf(ctx, "database issue when update profile: %s", err.Error())
 		return nil, response.NewResponseFromTemplate[any](
 			response.RES_ERR_DATABASE_ISSUE,
 			nil,
@@ -429,11 +430,11 @@ func (r *postgresUserRepo) UpdateStreamAPIKey(ctx context.Context, userId uuid.U
 		)
 	} else if result.RowsAffected() == 0 {
 		return response.NewResponseFromTemplate[any](
-				response.RES_ERR_USER_NOT_FOUND,
-				nil,
-				nil,
-				nil,
-			)
+			response.RES_ERR_USER_NOT_FOUND,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return nil
@@ -459,11 +460,11 @@ func (r *postgresUserRepo) UpdateProfilePicture(ctx context.Context, userId uuid
 		)
 	} else if result.RowsAffected() == 0 {
 		return response.NewResponseFromTemplate[any](
-				response.RES_ERR_USER_NOT_FOUND,
-				nil,
-				nil,
-				nil,
-			)
+			response.RES_ERR_USER_NOT_FOUND,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return nil
@@ -489,11 +490,11 @@ func (r *postgresUserRepo) UpdateBackgroundPicture(ctx context.Context, userId u
 		)
 	} else if result.RowsAffected() == 0 {
 		return response.NewResponseFromTemplate[any](
-				response.RES_ERR_USER_NOT_FOUND,
-				nil,
-				nil,
-				nil,
-			)
+			response.RES_ERR_USER_NOT_FOUND,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return nil

@@ -4,32 +4,32 @@ import { fetchClient } from "@/utils/fetchClient";
 
 export async function SearchUsersByUsername(
     query: string,
-): Promise<ApiResponse<{ users: User[] }>> {
-    return fetchClient<ApiResponse<{ users: User[] }>>(
+): Promise<ApiResponse<User[]>> {
+    return fetchClient<ApiResponse<User[]>>(
         `/users/search?username=${encodeURIComponent(query)}`,
     );
 }
 
 export async function GetUserById(
     userId: string,
-): Promise<ApiResponse<{ user?: User }>> {
-    return fetchClient<ApiResponse<{ user?: User }>>(`/user/${userId}`);
+): Promise<ApiResponse<User>> {
+    return fetchClient<ApiResponse<User>>(`/user/${userId}`);
 }
 
 export async function GetAllUsers(
     page: number = 0,
-): Promise<ApiResponse<{ users?: User[] }>> {
-    return fetchClient<ApiResponse<{ users?: User[] }>>(`/users?page=${page}`);
+): Promise<ApiResponse<User[]>> {
+    return fetchClient<ApiResponse<User[]>>(`/users?page=${page}`);
 }
 
-export async function GetMeProfile(): Promise<ApiResponse<{ user?: User }>> {
-    return fetchClient<ApiResponse<{ user?: User }>>(`/user/me`);
+export async function GetMeProfile(): Promise<ApiResponse<User>> {
+    return fetchClient<ApiResponse<User>>(`/user/me`);
 }
 
 export async function UpdateProfile(
     user: Partial<User>,
-): Promise<ApiResponse<{ updatedUser?: User }>> {
-    return fetchClient<ApiResponse<{ updatedUser?: User }>>(`/user/me`, {
+): Promise<ApiResponse<User>> {
+    return fetchClient<ApiResponse<User>>(`/user/me`, {
         method: "PUT",
         body: JSON.stringify(user),
     });
@@ -37,11 +37,11 @@ export async function UpdateProfile(
 
 export async function UpdateProfilePicture(
     file: File,
-): Promise<ApiResponse<{ newPath?: string }>> {
+): Promise<ApiResponse<string>> {
     const formData = new FormData();
     formData.append("profile-picture", file);
 
-    return fetchClient<ApiResponse<{ newPath?: string }>>(
+    return fetchClient<ApiResponse<string>>(
         `/user/me/profile-picture`,
         {
             method: "PATCH",
@@ -52,11 +52,11 @@ export async function UpdateProfilePicture(
 
 export async function UpdateBackgroundPicture(
     file: File,
-): Promise<ApiResponse<{ newPath?: string }>> {
+): Promise<ApiResponse<string>> {
     const formData = new FormData();
     formData.append("background-picture", file);
 
-    return fetchClient<ApiResponse<{ newPath?: string }>>(
+    return fetchClient<ApiResponse<string>>(
         `/user/me/background-picture`,
         {
             method: "PATCH",
@@ -70,7 +70,7 @@ export async function UpdateLivestreamInformation(
     thumbnailUrl: string | null,
     title: string,
     description: string,
-): Promise<ApiResponse<{ updatedInfo?: LivestreamInformation }>> {
+): Promise<ApiResponse<LivestreamInformation>> {
     const formData = new FormData();
 
     // file will be used, if not then thumbnailUrl (BACKEND)
@@ -80,7 +80,7 @@ export async function UpdateLivestreamInformation(
     formData.append("title", title);
     formData.append("description", description);
 
-    return fetchClient<ApiResponse<{ updatedInfo?: LivestreamInformation }>>(
+    return fetchClient<ApiResponse<LivestreamInformation>>(
         `/user/me/livestream-information`,
         {
             method: "PATCH",
@@ -89,8 +89,8 @@ export async function UpdateLivestreamInformation(
     );
 }
 
-export async function RequestToGenerateNewAPIKey(): Promise<ApiResponse<{ newKey: string }>> {
-    return fetchClient<ApiResponse<{ newKey: string }>>("/user/me/api-key", {
+export async function RequestToGenerateNewAPIKey(): Promise<ApiResponse<string>> {
+    return fetchClient<ApiResponse<string>>("/user/me/api-key", {
         method: "PATCH",
     });
 }

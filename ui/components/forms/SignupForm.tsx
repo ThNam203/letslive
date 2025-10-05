@@ -138,7 +138,7 @@ export default function SignUpForm() {
                     toastId: res.requestId,
                 });
             } else {
-                toast.success(t("verification_email_sent_success"));
+                toast.success(t(`api-response:${res.key}`));
                 setIsOtpDialogOpen(true);
                 setOtpValue("");
                 setOtpError("");

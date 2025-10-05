@@ -27,7 +27,7 @@ export default function ApiKeyTab() {
         if (res.success) {
           updateUser({
             ...user,
-            streamAPIKey: res.data!.newKey,
+            streamAPIKey: res.data!,
           });
         } else {
           toast(t(`api-response:${res.key}`), {

@@ -18,7 +18,9 @@ export default function UserInformationWrapper({
         const fetchUser = async () => {
           setIsLoading(true);
           GetMeProfile()
-          .then(userRes => setUser(userRes.data?.user ?? null))
+          .then(userRes => {
+            setUser(userRes.data ?? null)
+          })
           .catch((e) => {
             toast(t("fetch-error:client_fetch_error"), {
               toastId: "user-fetch-error",

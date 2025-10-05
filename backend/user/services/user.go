@@ -113,21 +113,23 @@ func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequest
 	if err != nil {
 		logger.Errorf(ctx, "failed to get existedData for user id: %s", data.Id)
 		return nil, response.NewResponseFromTemplate[any](
-				response.RES_ERR_USER_NOT_FOUND,
-				nil,
-				nil,
-				nil,
-			)
+			response.RES_ERR_USER_NOT_FOUND,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	if data.Bio != nil {
 		existedData.Bio = data.Bio
 	}
 
-	// TODO: what
 	var statusPtr *string
 	if data.Status != nil {
 		statusPtr = data.Status
+	} else {
+		s := string(existedData.Status)
+		statusPtr = &s
 	}
 
 	if data.DisplayName != nil {

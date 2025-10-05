@@ -60,17 +60,15 @@ export default function StreamEdit() {
             description,
         ).then((res) => {
             if (res.success) {
-                toast.success(t("settings:stream.updated_success"));
-                if (res.data && res.data.updatedInfo) {
+                if (res.data && res.data) {
                     updateUser({
                         ...user,
                         livestreamInformation: {
-                            userId: res.data.updatedInfo.userId,
-                            title: res.data.updatedInfo.title,
-                            description: res.data.updatedInfo.description,
-                            thumbnailUrl: res.data.updatedInfo.thumbnailUrl,
+                            ...user.livestreamInformation,
+                            ...res.data,
                         },
                     });
+                    toast.success(t("settings:stream.updated_success"));
                 }
             } else {
                 toast(t(`api-response:${res.key}`), {

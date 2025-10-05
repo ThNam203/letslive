@@ -6,6 +6,7 @@
     "cancel": "Cancel",
     "or": "or",
     "go_home": "Go home",
+    "page_not_found": "We couldn't find the page you were looking for",
     "save_changes": "Save changes",
     "username": "Username",
     "livestreams": "Livestreams",
@@ -30,5 +31,6 @@
     "no_videos": "No Videos Available",
     "no_videos_description": "There are currently no videos available. Check back later for new content",
     "searching": "Searching...",
-    "no_users_found": "No users found"
+    "no_users_found": "No users found",
+    "no_description": "No description"
 }
