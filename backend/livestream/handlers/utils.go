@@ -14,7 +14,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func WriteResponse(w http.ResponseWriter, ctx context.Context, res *response.Response[any]) {
+func WriteResponse[T any](w http.ResponseWriter, ctx context.Context, res *response.Response[T]) {
 	requestId, ok := ctx.Value("requestId").(string)
 	if ok && len(requestId) > 0 {
 		res.RequestId = requestId

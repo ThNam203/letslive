@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import useUser from "../../hooks/user";
 import { Logout } from "../../lib/api/auth";
@@ -12,7 +12,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import IconSettings from "../icons/settings";
 import IconLogOut from "../icons/log-out";
 import useT from "@/hooks/use-translation";
-import { GetMeProfile } from "@/lib/api/user";
 
 export default function UserInfo() {
   const userState = useUser();
@@ -20,16 +19,17 @@ export default function UserInfo() {
   const { t } = useT(["auth", "common", "api-response", "fetch-error"]);
 
   const logoutHandler = async () => {
-    await Logout().then(res => {
-      if (res.success) {
-        userState.clearUser();
-      } else {
-        toast(t(`api-response:${res.key}`), {
-          toastId: res.requestId,
-          type: "error",
-        });
-      }
-    })
+    await Logout()
+      .then(res => {
+        if (res.success) {
+          userState.clearUser();
+        } else {
+          toast(t(`api-response:${res.key}`), {
+            toastId: res.requestId,
+            type: "error",
+          });
+        }
+      })
       .catch((err) => {
         toast(t("fetch-error:client_fetch_error"), {
           toastId: "logout-error",
@@ -38,18 +38,6 @@ export default function UserInfo() {
       });
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      GetMeProfile().then(userRes => userState.setUser(userRes.data?.user ?? null)).catch((e) => {
-        toast(t("fetch-error:client_fetch_error"), {
-          toastId: "user-fetch-error",
-          type: "error",
-        });
-      });
-    };
-
-    fetchUser();
-  }, []);
   return userState.user ? (
     <div className="flex flex-row gap-4">
       <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
