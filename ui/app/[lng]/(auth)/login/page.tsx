@@ -8,11 +8,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import useT from "@/hooks/use-translation";
+import useUser from "@/hooks/user";
 
 export default function LogInPage() {
     const { t } = useT(["auth", "common"]);
     const searchParams = useSearchParams();
     const router = useRouter();
+    const user = useUser((userState) => userState.user);
 
     useEffect(() => {
         const err = searchParams.get("errorMessage");
@@ -27,6 +29,11 @@ export default function LogInPage() {
         if (redirectURL === null) return;
         else router.push(redirectURL);
     }, [searchParams, router]);
+
+    useEffect(() => {
+        console.log("USERSSS", user)
+        if (user) router.push("/");
+    }, [user]);
 
     return (
         <>

@@ -19,7 +19,7 @@ const LivestreamsPreviewView = () => {
         const fetchLivestreams = async () => {
             await GetPopularLivestreams().then(res => {
                 if (res.success) {
-                    setLivestreams(res.data?.livestreams ?? []);
+                    setLivestreams(res.data ?? []);
                 } else {
                     toast(t(`api-response:${res.key}`), {
                         toastId: res.requestId,

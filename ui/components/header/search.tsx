@@ -30,7 +30,7 @@ export default function SearchBar({
                     await SearchUsersByUsername(query)
                         .then((res) => {
                             if (res.success) {
-                                setResults(res.data?.users ?? []);
+                                setResults(res.data ?? []);
                             } else {
                                 toast(t(`api-response:${res.key}`), {
                                     toastId: res.requestId,

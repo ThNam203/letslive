@@ -45,8 +45,8 @@ export default function VODPage() {
                 if (res.success) {
                     setPlayerInfo((prev) => ({
                         ...prev,
-                        videoTitle: res.data?.vod?.title ?? "",
-                        videoUrl: res.data?.vod?.playbackUrl ?? null,
+                        videoTitle: res.data?.title ?? "",
+                        videoUrl: res.data?.playbackUrl ?? null,
                     }));
                 } else {
                     toast(t(`api-response:${res.key}`), {
@@ -73,7 +73,7 @@ export default function VODPage() {
         const fetchVODs = async () => {
             await GetPublicVODsOfUser(user.id).then(res => {
                 if (res.success) {
-                    setVods(res.data?.vods ?? []);
+                    setVods(res.data ?? []);
                 } else {
                     toast(t(`api-response:${res.key}`), {
                         toastId: res.requestId,
@@ -95,12 +95,12 @@ export default function VODPage() {
         const fetchUserInfo = async () => {
             await GetUserById(params.userId).then(userRes => {
                 if (userRes.success) {
-                    setUser(userRes.data?.user ?? null);
+                    setUser(userRes.data ?? null);
 
                     setPlayerInfo((prev) => ({
                         ...prev,
                         streamer: {
-                            name: userRes.data?.user?.displayName ?? userRes.data?.user?.username ?? "Streamer",
+                            name: userRes.data?.displayName ?? userRes.data?.username ?? "Streamer",
                         },
                     }));
                 } else {

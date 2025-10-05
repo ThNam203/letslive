@@ -56,7 +56,7 @@ export default function ProfileSettings() {
                     setBackgroundImageFile(null);
                     updateUser({
                         ...user!,
-                        backgroundPicture: res.data?.newPath,
+                        backgroundPicture: res.data,
                     });
                 } else {
                     toast.error(t(`api-response:${res.key}`), {
@@ -85,7 +85,7 @@ export default function ProfileSettings() {
                         setProfileImageFile(null);
                         updateUser({
                             ...user!,
-                            profilePicture: res.data?.newPath,
+                            profilePicture: res.data,
                         });
                     } else {
                         toast.error(t(`api-response:${res.key}`), {
@@ -109,7 +109,6 @@ export default function ProfileSettings() {
 
         if (bio || displayName) {
             await UpdateProfile({
-                id: user!.id,
                 displayName: isDisplayNameChanged ? displayName : undefined,
                 bio: isBioChanged ? bio : undefined,
             })
@@ -117,7 +116,7 @@ export default function ProfileSettings() {
                 if (res.success) {
                     updateUser({
                         ...user!,
-                        ...res.data?.updatedUser,
+                        ...res.data,
                     });
                 } else {
                     toast.error(t(`api-response:${res.key}`), {
@@ -137,7 +136,7 @@ export default function ProfileSettings() {
             .finally(() => setIsUpdatingProfile(false));
         }
 
-        if (hasError) toast.success(t("settings:profile.update_success"));
+        if (!hasError) toast.success(t("settings:profile.update_success"));
     };
 
     useEffect(() => {
@@ -196,11 +195,10 @@ export default function ProfileSettings() {
                     <TextField
                         label={t("settings:profile.username")}
                         disabled
-                        defaultValue={user?.username}
+                        value={user?.username}
                     />
                     <TextField
                         label={t("settings:profile.display_name")}
-                        defaultValue={user?.displayName}
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
                         disabled={isUpdatingProfile}

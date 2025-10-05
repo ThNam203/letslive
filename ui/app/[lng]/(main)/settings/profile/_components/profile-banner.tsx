@@ -92,7 +92,7 @@ export default function ProfileBanner({
           </AvatarFallback>
           <ImageHover
             inputRef={profileImageInputRef}
-            title={t("settings:profile.update_profile_picture")}
+            // title={t("settings:profile.update_profile_picture")}
             onValueChange={handleProfileImageChange}
             onClick={handleProfileUpdateButtonClick}
             closeIconPosition="bottom"

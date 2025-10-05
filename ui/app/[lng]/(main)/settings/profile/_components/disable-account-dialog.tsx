@@ -16,7 +16,6 @@ import useUser from "@/hooks/user";
 import { Logout } from "@/lib/api/auth";
 import { UpdateProfile } from "@/lib/api/user";
 import { UserStatus } from "@/types/user";
-import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import useT from "@/hooks/use-translation";
@@ -26,7 +25,6 @@ export default function DisableAccountDialog({
 }: {
     isUpdatingProfile: boolean;
 }) {
-    const user = useUser((state) => state.user);
     const clearUser = useUser((state) => state.clearUser);
     const [isDisablingAccount, setIsDisablingAccount] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
@@ -34,7 +32,7 @@ export default function DisableAccountDialog({
 
     const logoutHandler = async () => {
         await Logout().then(res => {
-            if (res.success) {
+            if (res.statusCode === 204) {
                 clearUser();
             } else {
                 toast(t(`api-response:${res.key}`), {
@@ -49,7 +47,6 @@ export default function DisableAccountDialog({
         try {
             setIsDisablingAccount(true);
             await UpdateProfile({
-                id: user!.id,
                 status: UserStatus.DISABLED,
             }).then(res => {
                 if (res.success) return logoutHandler();

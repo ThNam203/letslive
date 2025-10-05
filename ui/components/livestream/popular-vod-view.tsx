@@ -30,7 +30,7 @@ export function PopularVODView() {
             await GetPopularVODs()
                 .then((res) => {
                     if (res.success) {
-                        setVods(res.data?.vods ?? []);
+                        setVods(res.data ?? []);
                     } else {
                         toast(t(`api-response:${res.key}`), {
                             toastId: res.requestId,
@@ -87,7 +87,7 @@ function VODCard({ vod }: { vod: VOD }) {
     useEffect(() => {
         const fetchUser = async () => {
             const res = await GetUserById(vod.userId);
-            if (res.success) setUser(res.data?.user ?? null);
+            if (res.success) setUser(res.data ?? null);
         };
 
         fetchUser();

@@ -270,9 +270,7 @@ func (h *UserHandler) GenerateNewAPIStreamKeyPrivateHandler(w http.ResponseWrite
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(newKey))
+	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, &newKey, nil, nil))
 }
 
 func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWriter, r *http.Request) {
@@ -335,9 +333,7 @@ func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWrit
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(savedPath))
+	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, &savedPath, nil, nil))
 }
 
 func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseWriter, r *http.Request) {
@@ -400,9 +396,7 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(savedPath))
+	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, &savedPath, nil, nil))
 }
 
 func (h *UserHandler) UpdateUserInternalHandler(w http.ResponseWriter, r *http.Request) {
@@ -535,7 +529,5 @@ func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(savedPath))
+	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, &savedPath, nil, nil))
 }

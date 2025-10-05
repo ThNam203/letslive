@@ -21,7 +21,7 @@ export default function UserInfo() {
   const logoutHandler = async () => {
     await Logout()
       .then(res => {
-        if (res.success) {
+        if (res.statusCode === 204) {
           userState.clearUser();
         } else {
           toast(t(`api-response:${res.key}`), {

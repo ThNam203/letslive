@@ -29,7 +29,7 @@ const LivestreamPreviewView = ({
         const fetchUserInfo = async () => {
             await GetUserById(livestream.userId).then(res => {
                 if (res.success) {
-                    setUser(res.data?.user ?? null);
+                    setUser(res.data ?? null);
                 } else {
                     toast(t(`api-response:${res.key}`), {
                         toastId: res.requestId,
