@@ -63,9 +63,7 @@ func (h *UserHandler) GetUserByIdPublicHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, user, nil, nil))
 }
 
 func (h *UserHandler) GetAllUsersPublicHandler(w http.ResponseWriter, r *http.Request) {
@@ -92,9 +90,7 @@ func (h *UserHandler) GetAllUsersPublicHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(users)
+	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, &users, nil, nil))
 }
 
 func (h *UserHandler) SearchUsersPublicHandler(w http.ResponseWriter, r *http.Request) {
@@ -113,9 +109,7 @@ func (h *UserHandler) SearchUsersPublicHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(users)
+	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, &users, nil, nil))
 }
 
 func (h *UserHandler) GetUserByStreamAPIKeyInternalHandler(w http.ResponseWriter, r *http.Request) {
@@ -152,9 +146,7 @@ func (h *UserHandler) GetUserByStreamAPIKeyInternalHandler(w http.ResponseWriter
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, user, nil, nil))
 }
 
 func (h *UserHandler) GetCurrentUserPrivateHandler(w http.ResponseWriter, r *http.Request) {
@@ -181,9 +173,7 @@ func (h *UserHandler) GetCurrentUserPrivateHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, user, nil, nil))
 }
 
 // INTERNAL
@@ -211,9 +201,7 @@ func (h *UserHandler) CreateUserInternalHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(&createdUser)
+	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, createdUser, nil, nil))
 }
 
 func (h *UserHandler) UpdateCurrentUserPrivateHandler(w http.ResponseWriter, r *http.Request) {
@@ -254,9 +242,7 @@ func (h *UserHandler) UpdateCurrentUserPrivateHandler(w http.ResponseWriter, r *
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(updatedUser)
+	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, updatedUser, nil, nil))
 }
 
 func (h *UserHandler) GenerateNewAPIStreamKeyPrivateHandler(w http.ResponseWriter, r *http.Request) {
@@ -457,9 +443,7 @@ func (h *UserHandler) UpdateUserInternalHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(updatedUser)
+	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, updatedUser, nil, nil))
 }
 
 func getUserIdFromCookie(r *http.Request) (*uuid.UUID, *response.Response[any]) {

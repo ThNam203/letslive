@@ -7,7 +7,7 @@ import (
 	"sen1or/letslive/user/response"
 )
 
-func writeResponse(w http.ResponseWriter, ctx context.Context, res *response.Response[any]) {
+func writeResponse[T any](w http.ResponseWriter, ctx context.Context, res *response.Response[T]) {
 	requestId, ok := ctx.Value("requestId").(string)
 	if ok && len(requestId) > 0 {
 		res.RequestId = requestId

@@ -27,19 +27,20 @@ export default function AllChannelsView({
     const { t } = useT(["common", "api-response", "fetch-error"]);
     useEffect(() => {
         const fetchAllUsers = async () => {
-            await GetAllUsers().then(res => {
-                if (res.success) {
-                    setUsers(res.data?.users ?? []);
-                } else {
-                    toast(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                        type: "error",
-                    });
-                }
-            })
-            .catch((_) => {
-                toast(t("fetch-error:client_fetch_error"), { type: "error" });
-            });
+            await GetAllUsers()
+                .then(res => {
+                    if (res.success) {
+                        setUsers(res.data?.users ?? []);
+                    } else {
+                        toast(t(`api-response:${res.key}`), {
+                            toastId: res.requestId,
+                            type: "error",
+                        });
+                    }
+                })
+                .catch((_) => {
+                    toast(t("fetch-error:client_fetch_error"), { type: "error" });
+                });
         };
 
         fetchAllUsers();

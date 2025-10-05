@@ -49,7 +49,7 @@ func (h LivestreamHandler) GetLivestreamOfUserPublicHandler(w http.ResponseWrite
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(vod)
+	WriteResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, vod, nil, nil))
 }
 
 func (h *LivestreamHandler) CreateLivestreamInternalHandler(w http.ResponseWriter, r *http.Request) {
@@ -71,9 +71,7 @@ func (h *LivestreamHandler) CreateLivestreamInternalHandler(w http.ResponseWrite
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(createdLivestream)
+	WriteResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, createdLivestream, nil, nil))
 }
 
 func (h *LivestreamHandler) GetRecommendedLivestreamsPublicHandler(w http.ResponseWriter, r *http.Request) {
@@ -91,9 +89,12 @@ func (h *LivestreamHandler) GetRecommendedLivestreamsPublicHandler(w http.Respon
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(livestreams)
+	WriteResponse(w, ctx, response.NewResponseFromTemplate(
+		response.RES_SUCC_OK,
+		&livestreams,
+		nil,
+		nil,
+	))
 }
 
 func (h *LivestreamHandler) EndLivestreamAndCreateVODInternalHandler(w http.ResponseWriter, r *http.Request) {
@@ -160,9 +161,7 @@ func (h *LivestreamHandler) UpdateLivestreamPrivateHandler(w http.ResponseWriter
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(updatedLivestream)
+	WriteResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, updatedLivestream, nil, nil))
 }
 
 //func (h *LivestreamHandler) DeleteLivestreamPrivateHandler(w http.ResponseWriter, r *http.Request) {

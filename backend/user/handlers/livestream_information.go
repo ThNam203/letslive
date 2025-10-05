@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"sen1or/letslive/user/domains"
@@ -100,7 +99,5 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(updatedData)
+	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, updatedData, nil, nil))
 }

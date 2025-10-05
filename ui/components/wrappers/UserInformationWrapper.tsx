@@ -1,0 +1,37 @@
+"use client"
+
+import useT from "@/hooks/use-translation";
+import useUser from "@/hooks/user";
+import { GetMeProfile } from "@/lib/api/user";
+import { useEffect } from "react";
+import { toast } from "react-toastify";
+
+export default function UserInformationWrapper({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    const { setUser, setIsLoading } = useUser();
+    const { t } = useT(["fetch-error"]);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+          setIsLoading(true);
+          GetMeProfile()
+          .then(userRes => setUser(userRes.data?.user ?? null))
+          .catch((e) => {
+            toast(t("fetch-error:client_fetch_error"), {
+              toastId: "user-fetch-error",
+              type: "error",
+            });
+          })
+          .finally(() => {
+            setIsLoading(false);
+          })
+        };
+    
+        fetchUser();
+      }, []);
+
+    return <>{children}</>;
+}
