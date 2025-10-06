@@ -7,10 +7,12 @@ import { RedisService } from './services/redis'
 import esMain from 'es-main'
 import { createServer, Server } from 'http'
 import ConsulRegistry from 'services/discovery'
-import { ApiErrors } from 'types/api_error'
+import { RESPONSE_TEMPLATES, Response as ServiceResponse, newResponseFromTemplate } from './types/api-response'
 import express, { NextFunction, Request, Response } from 'express'
 import requestIdMiddleware from 'middlewares/requestId'
 import loggingMiddleware from 'middlewares/logging'
+import pinohttp from 'pino-http'
+import logger from 'lib/logger'
 
 function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) {
     return (req: Request, res: Response, next: NextFunction) => {
@@ -20,9 +22,18 @@ function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => P
 
 function CreateExpressServer() {
     const app = express()
+    const pinoM = pinohttp({
+        logger: logger,
+        autoLogging: {
+            ignore: (req: Request) => {
+                return req.url === '/v1/health' || req.method === 'OPTIONS';
+            },
+        },
+    })
 
+    app.use(pinoM)
     app.use(requestIdMiddleware)
-    app.use(loggingMiddleware)
+    // app.use(loggingMiddleware) replaced by pinohttp
 
     app.get('/v1/health', (req, res) => {
         res.json({ status: 'ok' })
@@ -34,22 +45,23 @@ function CreateExpressServer() {
         asyncHandler(async (req, res) => {
             const roomId = req.query.roomId as string
             if (!roomId) {
-                res.status(400).json(ApiErrors.INVALID_PATH)
+                writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_ROOM_NOT_FOUND))
                 return
             }
 
             const messages = await Message.find({ roomId }).sort({ timestamp: 1 }).limit(50)
-            res.json(messages)
+            // TODO: shouldn't be any
+            writeResponse(req, res, newResponseFromTemplate<any>(RESPONSE_TEMPLATES.RES_SUCC_OK, messages))
         })
     )
 
-    app.get('*', (_, res: Response) => {
-        res.status(404).json(ApiErrors.ROUTE_NOT_FOUND)
+    app.get('*', (req: Request, res: Response) => {
+        writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_ROUTE_NOT_FOUND))
     })
 
     app.use((err: any, req: Request, res: Response, next: NextFunction): void => {
-        console.error(err) // Log the error for debugging
-        res.status(500).json(ApiErrors.INTERNAL_SERVER_ERROR)
+        logger.error(err) // Log the error for debugging
+        writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_ROUTE_NOT_FOUND))
     })
 
     return createServer(app)
@@ -85,43 +97,51 @@ if (esMain(import.meta)) {
     const server = CreateExpressServer()
 
     SetupWebSocketServer(server)
-        .then(() => console.log('Server started'))
-        .catch(console.error)
+        .then(() => logger.info('Server started'))
+        .catch(logger.error)
 
     const consul = CreateConsulRegistry()
     consul.register()
 
     server.listen('7780', () => {
-        console.log(`Server started on port ${'7780'}`)
+        logger.info(`Server started on port ${'7780'}`)
     })
 
     process.on('SIGINT', () => shutdown('SIGINT', consul))
     process.on('SIGTERM', () => shutdown('SIGTERM', consul))
 
     process.on('uncaughtException', (error) => {
-        console.error('Uncaught Exception:', error)
+        logger.error(`Uncaught Exception: ${error.message}`)
         process.exit(1)
     })
 
     process.on('unhandledRejection', (reason, promise) => {
-        console.error('Unhandled Rejection at:', promise, 'reason:', reason)
+        logger.error({
+            message: 'Unhandled Rejection',
+            reason: reason instanceof Error ? reason.stack : reason,
+        })
         process.exit(1)
     })
 }
 
 const shutdown = async (signal: string, consul: ConsulRegistry) => {
-    console.log(`\nReceived ${signal}. Starting graceful shutdown...`)
+    logger.info(`\nReceived ${signal}. Starting graceful shutdown...`)
     try {
-        console.log('Deregistering from Consul...')
+        logger.info('Deregistering from Consul...')
         if (consul && typeof consul.deregister === 'function') {
             await consul.deregister()
-            console.log('successfully deregistered from Consul.')
+            logger.info('successfully deregistered from Consul.')
         } else {
-            console.warn('consul client or deregister function not available.')
+            logger.warn('consul client or deregister function not available.')
         }
         process.exit(0)
     } catch (err) {
-        console.error(`error during ${signal} cleanup:`, err)
+        logger.error(`error during ${signal} cleanup: ${err}`)
         process.exit(1)
     }
+}
+
+const writeResponse = function(req: Request, res: Response, resData: ServiceResponse<any>) {
+    resData.requestId = req.requestId ?? ""
+    res.status(resData.statusCode).json(resData)
 }
