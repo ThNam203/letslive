@@ -82,11 +82,6 @@ async function validateAndParseResponse<T>(response: Response): Promise<WithStat
     }
 
     const data = await response.json();
-
-    // TODO: temp fix for messages endpoint
-    if (Array.isArray(data)) {
-        return { data: data, statusCode: response.status } as any;
-    }
     return { ...data, statusCode: response.status };
 }
 
