@@ -2,9 +2,9 @@ package user
 
 import (
 	"context"
-	"sen1or/letslive/auth/gateway"
+	serviceresponse "sen1or/letslive/auth/response"
 )
 
 type UserGateway interface {
-	CreateNewUser(ctx context.Context, userRequestDTO CreateUserRequestDTO) (*CreateUserResponseDTO, *gateway.ErrorResponse)
+	CreateNewUser(ctx context.Context, userRequestDTO CreateUserRequestDTO) (*CreateUserResponseDTO, *serviceresponse.Response[any])
 }

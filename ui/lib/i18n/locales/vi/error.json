@@ -1,6 +1,6 @@
 {
-    "title": "Rất tiếc!",
-    "description": "Đã xảy ra lỗi, vui lòng thử lại sau",
+    "general_title": "Oops!",
+    "general_description": "Something has gone wrong, please try again later",
     "email_required": "Email là bắt buộc",
     "email_invalid": "Email không hợp lệ",
     "password_required": "Mật khẩu là bắt buộc",

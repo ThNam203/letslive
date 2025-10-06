@@ -6,6 +6,7 @@
     "cancel": "Hủy",
     "or": "hoặc",
     "go_home": "Về trang chủ",
+    "page_not_found": "Không tìm thấy trang",
     "save_changes": "Lưu thay đổi",
     "username": "Tên người dùng",
     "livestreams": "Livestreams",
@@ -22,9 +23,15 @@
     "live_streaming": "Live Streaming",
     "follow": "Theo dõi",
     "unfollow": "Bỏ theo dõi",
+    "followers_with_count": "Người theo dõi: {{count}}",
+    "joined": "Tham gia vào",
+    "show_more": "Xem thêm",
     "please_wait_while_loading": "Vui lòng chờ đợi việc tải dữ liệu",
     "no_livestreams": "Không có livestreams",
     "no_livestreams_description": "Hiện tại không có ai livestream, vui lòng quay lại sau hoặc xem thử những nội dung videos có sẵn",
     "no_videos": "Không có videos",
-    "no_videos_description": "Hiện không có videos nào có sẵn, vui lòng trở lại sau để xem các content mới nhất"
+    "no_videos_description": "Hiện không có videos nào có sẵn, vui lòng trở lại sau để xem các content mới nhất",
+    "searching": "Đang tìm kiếm...",
+    "no_users_found": "Không tìm thấy người dùng",
+    "no_description": "Không có mô tả"
 }

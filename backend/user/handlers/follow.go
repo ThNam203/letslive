@@ -3,13 +3,12 @@ package handlers
 import (
 	"context"
 	"net/http"
-	servererrors "sen1or/letslive/user/errors"
 	"sen1or/letslive/user/pkg/tracer"
+	"sen1or/letslive/user/response"
 	"sen1or/letslive/user/services"
 )
 
 type FollowHandler struct {
-	ErrorHandler
 	followService services.FollowService
 }
 
@@ -26,7 +25,12 @@ func (h *FollowHandler) FollowPrivateHandler(w http.ResponseWriter, r *http.Requ
 	followedId := r.PathValue("userId")
 	followerId, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
-		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
+			response.RES_ERR_UNAUTHORIZED,
+			nil,
+			nil,
+			nil,
+		))
 	}
 
 	ctx, span := tracer.MyTracer.Start(ctx, "follow_private_handler.follow_service.follow")
@@ -34,7 +38,7 @@ func (h *FollowHandler) FollowPrivateHandler(w http.ResponseWriter, r *http.Requ
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteErrorResponse(w, serviceErr)
+		writeResponse(w, ctx, serviceErr)
 		return
 	}
 
@@ -48,7 +52,12 @@ func (h *FollowHandler) UnfollowPrivateHandler(w http.ResponseWriter, r *http.Re
 	followedId := r.PathValue("userId")
 	followerId, cookieErr := getUserIdFromCookie(r)
 	if cookieErr != nil {
-		h.WriteErrorResponse(w, servererrors.ErrUnauthorized)
+		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
+			response.RES_ERR_UNAUTHORIZED,
+			nil,
+			nil,
+			nil,
+		))
 	}
 
 	ctx, span := tracer.MyTracer.Start(ctx, "unfollow_private_handler.follow_service.unfollow")
@@ -56,7 +65,7 @@ func (h *FollowHandler) UnfollowPrivateHandler(w http.ResponseWriter, r *http.Re
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteErrorResponse(w, serviceErr)
+		writeResponse(w, ctx, serviceErr)
 		return
 	}
 

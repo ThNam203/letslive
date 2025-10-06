@@ -46,13 +46,9 @@ export default function ChatPanel({
 
     useEffect(() => {
         const fetchMessages = async () => {
-            const { messages, fetchError } = await GetMessages(roomId);
-            if (fetchError) {
-                toast.error(fetchError.message, {
-                    toastId: "message-fetch-error",
-                });
-            } else {
-                setMessages((prev) => [...messages, ...prev]);
+            const res = await GetMessages(roomId);
+            if (res.messages) {
+                setMessages((prev) => [...res.messages, ...prev]);
             }
         };
 

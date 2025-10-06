@@ -6,14 +6,13 @@ import (
 	"net/http"
 	"sen1or/letslive/livestream/dto"
 	"sen1or/letslive/livestream/pkg/tracer"
-	serviceresponse "sen1or/letslive/livestream/responses"
+	response "sen1or/letslive/livestream/response"
 	"sen1or/letslive/livestream/services/livestream"
 
 	"github.com/gofrs/uuid/v5"
 )
 
 type LivestreamHandler struct {
-	ResponseHandler
 	livestreamService *livestream.LivestreamService
 }
 
@@ -29,13 +28,13 @@ func (h LivestreamHandler) GetLivestreamOfUserPublicHandler(w http.ResponseWrite
 
 	userId := r.URL.Query().Get("userId")
 	if len(userId) == 0 {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPath)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
 	userUUID, err := uuid.FromString(userId)
 	if err != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidInput)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
@@ -44,13 +43,13 @@ func (h LivestreamHandler) GetLivestreamOfUserPublicHandler(w http.ResponseWrite
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteErrorResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(vod)
+	WriteResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, vod, nil, nil))
 }
 
 func (h *LivestreamHandler) CreateLivestreamInternalHandler(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +58,7 @@ func (h *LivestreamHandler) CreateLivestreamInternalHandler(w http.ResponseWrite
 
 	var body dto.CreateLivestreamRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPayload)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
 		return
 	}
 
@@ -68,13 +67,11 @@ func (h *LivestreamHandler) CreateLivestreamInternalHandler(w http.ResponseWrite
 	span.End()
 
 	if err != nil {
-		h.WriteErrorResponse(w, err)
+		WriteResponse(w, ctx, err)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(createdLivestream)
+	WriteResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, createdLivestream, nil, nil))
 }
 
 func (h *LivestreamHandler) GetRecommendedLivestreamsPublicHandler(w http.ResponseWriter, r *http.Request) {
@@ -88,13 +85,16 @@ func (h *LivestreamHandler) GetRecommendedLivestreamsPublicHandler(w http.Respon
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteErrorResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(livestreams)
+	WriteResponse(w, ctx, response.NewResponseFromTemplate(
+		response.RES_SUCC_OK,
+		&livestreams,
+		nil,
+		nil,
+	))
 }
 
 func (h *LivestreamHandler) EndLivestreamAndCreateVODInternalHandler(w http.ResponseWriter, r *http.Request) {
@@ -104,14 +104,14 @@ func (h *LivestreamHandler) EndLivestreamAndCreateVODInternalHandler(w http.Resp
 	rawStreamId := r.PathValue("livestreamId")
 	streamId, err := uuid.FromString(rawStreamId)
 	if err != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidInput)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 	defer r.Body.Close()
 
 	var requestBody dto.EndLivestreamRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPayload)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
 		return
 	}
 
@@ -120,7 +120,7 @@ func (h *LivestreamHandler) EndLivestreamAndCreateVODInternalHandler(w http.Resp
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteErrorResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
@@ -134,21 +134,21 @@ func (h *LivestreamHandler) UpdateLivestreamPrivateHandler(w http.ResponseWriter
 
 	userUUID, e := getUserIdFromCookie(r)
 	if e != nil {
-		h.WriteErrorResponse(w, e)
+		WriteResponse(w, ctx, e)
 		return
 	}
 
 	rawStreamId := r.PathValue("livestreamId")
 	streamId, err := uuid.FromString(rawStreamId)
 	if err != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidInput)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 	defer r.Body.Close()
 
 	var requestBody dto.UpdateLivestreamRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPayload)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
 		return
 	}
 
@@ -157,13 +157,11 @@ func (h *LivestreamHandler) UpdateLivestreamPrivateHandler(w http.ResponseWriter
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteErrorResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(updatedLivestream)
+	WriteResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, updatedLivestream, nil, nil))
 }
 
 //func (h *LivestreamHandler) DeleteLivestreamPrivateHandler(w http.ResponseWriter, r *http.Request) {
@@ -174,19 +172,19 @@ func (h *LivestreamHandler) UpdateLivestreamPrivateHandler(w http.ResponseWriter
 //	streamId, err := uuid.FromString(rawStreamId)
 //
 //	if err != nil {
-//		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPath)
+//		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 //		return
 //	}
 //
 //	userUUID, cErr := getUserIdFromCookie(r)
 //	if cErr != nil {
-//		h.WriteErrorResponse(w, cErr)
+//		WriteResponse(w, ctx, cErr)
 //		return
 //	}
 //
 //	serviceErr := h.livestreamService.Delete(ctx, streamId, *userUUID)
 //	if serviceErr != nil {
-//		h.WriteErrorResponse(w, serviceErr)
+//		WriteResponse(w, ctx, serviceErr)
 //		return
 //	}
 //

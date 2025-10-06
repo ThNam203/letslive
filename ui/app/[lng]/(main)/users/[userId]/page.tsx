@@ -52,106 +52,108 @@ export default function Livestreaming() {
 
     useEffect(() => {
         const fetchUser = async () => {
-            const { user, fetchError } = await GetUserById(params.userId);
-            if (fetchError) {
-                toast(fetchError.message, {
-                    toastId: "user-fetch-error",
-                    type: "error",
-                });
-                return;
-            }
-
-            if (user) {
-                setUser(user);
-                const { livestream, fetchError: streamingError } =
-                    await GetLivestreamOfUser(user.id);
-                if (streamingError && streamingError.status !== 404) {
-                    // If the error is not a 404, it means there was an issue fetching the livestream
-                    toast(streamingError.message, {
-                        toastId: "streaming-fetch-error",
+            try {
+                const userRes = await GetUserById(params.userId);
+    
+                if (!userRes.success) {
+                    toast(t(`api-response:${userRes.key}`), {
+                        toastId: userRes.requestId,
                         type: "error",
                     });
                     return;
                 }
-
-                if (livestream) {
-                    setLivestream(livestream);
-
+    
+                if (!userRes.data) throw new Error(); // TODO: throw meaning full error
+    
+                setUser(userRes.data);
+    
+                const livestreamRes = await GetLivestreamOfUser(userRes.data.id);
+    
+                // only care if user is live
+                if (livestreamRes.success && livestreamRes.data) {
+                    setLivestream(livestreamRes.data);
+    
                     setPlayerInfo({
-                        videoTitle: livestream.title,
+                        videoTitle: livestreamRes.data.title,
                         streamer: {
-                            name: user.displayName ?? user.username,
+                            name:
+                                userRes.data!.displayName ??
+                                userRes.data!.username,
                         },
-                        videoUrl: `${GLOBAL.API_URL}/transcode/${livestream.id}/index.m3u8`,
+                        videoUrl: `${GLOBAL.API_URL}/transcode/${livestreamRes.data.id}/index.m3u8`,
                     });
                 }
-
-                const { vods, fetchError: vodsError } =
-                    await GetPublicVODsOfUser(user.id);
-                if (vodsError) {
-                    toast(vodsError.message, {
-                        toastId: "vods-fetch-error",
+    
+                const vodsRes = await GetPublicVODsOfUser(userRes.data.id);
+    
+                if (!vodsRes.success) {
+                    toast(t(`api-response:${vodsRes.key}`), {
+                        toastId: vodsRes.requestId,
                         type: "error",
                     });
-                    return;
-                } else setVods(vods);
+                } else {
+                    setVods(vodsRes.data ?? []);
+                }
+            } catch (err) {
+                console.error(err);
+                toast(t("api-response:unexpected_error"), { type: "error" });
             }
         };
-
+    
         fetchUser();
-    }, [params.userId]);
+    }, [params.userId, t]);
+    
 
-    return (
-        <div className="ml-4 flex h-full gap-6 overflow-hidden">
-            {/* Main content area */}
-            <div className="no-scrollbar flex-1 overflow-auto">
-                {livestream ? (
-                    <StreamingFrame
-                        videoInfo={playerInfo}
-                        onVideoStart={() => {
-                            setTimeVideoStart(new Date());
-                        }}
-                        className="mt-1"
-                    />
-                ) : (
-                    <div className="bg-opacity-9 0 mb-4 flex aspect-video w-full items-center justify-center bg-black mt-1">
-                        <h2 className="font-mono text-3xl text-foreground-muted">
-                            {t("users:offline")}
-                        </h2>
-                    </div>
-                )}
-                {user && (
-                    <ProfileView
-                        user={user}
-                        updateUser={updateUser}
-                        vods={vods}
-                        className="mt-2"
-                    />
-                )}
-            </div>
-            {/* Mobile chat toggle button */}
-            <Button
-                variant="outline"
-                size="icon"
-                className="fixed bottom-4 right-4 z-50 md:hidden"
-                onClick={() => setIsChatOpen(!isChatOpen)}
-            >
-                <IconMenu className="h-5 w-5" />
-            </Button>
-
-            {/* Chat panel - hidden on mobile unless toggled */}
-            <div
-                className={`fixed right-2 top-0 z-40 h-full w-full bg-background transition-all duration-300 md:relative md:w-80 lg:w-96 ${
-                    isChatOpen
-                        ? "translate-x-0"
-                        : "translate-x-full md:translate-x-0"
-                }`}
-            >
-                <ChatUI
-                    roomId={params.userId}
-                    onClose={() => setIsChatOpen(false)}
+return (
+    <div className="ml-4 flex h-full gap-6 overflow-hidden">
+        {/* Main content area */}
+        <div className="no-scrollbar flex-1 overflow-auto">
+            {livestream ? (
+                <StreamingFrame
+                    videoInfo={playerInfo}
+                    onVideoStart={() => {
+                        setTimeVideoStart(new Date());
+                    }}
+                    className="mt-1"
                 />
-            </div>
+            ) : (
+                <div className="bg-opacity-9 0 mb-4 flex aspect-video w-full items-center justify-center bg-black mt-1">
+                    <h2 className="font-mono text-3xl text-foreground-muted">
+                        {t("users:offline")}
+                    </h2>
+                </div>
+            )}
+            {user && (
+                <ProfileView
+                    user={user}
+                    updateUser={updateUser}
+                    vods={vods}
+                    className="mt-2"
+                />
+            )}
         </div>
-    );
+        {/* Mobile chat toggle button */}
+        <Button
+            variant="outline"
+            size="icon"
+            className="fixed bottom-4 right-4 z-50 md:hidden"
+            onClick={() => setIsChatOpen(!isChatOpen)}
+        >
+            <IconMenu className="h-5 w-5" />
+        </Button>
+
+        {/* Chat panel - hidden on mobile unless toggled */}
+        <div
+            className={`fixed right-2 top-0 z-40 h-full w-full bg-background transition-all duration-300 md:relative md:w-80 lg:w-96 ${isChatOpen
+                    ? "translate-x-0"
+                    : "translate-x-full md:translate-x-0"
+                }`}
+        >
+            <ChatUI
+                roomId={params.userId}
+                onClose={() => setIsChatOpen(false)}
+            />
+        </div>
+    </div>
+);
 }

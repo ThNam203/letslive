@@ -20,8 +20,7 @@ type APIServer struct {
 	logger     *zap.SugaredLogger
 	config     *config.Config
 
-	responseHandler   *handlers.ResponseHandler
-	healthHandler     *handlers.HealthHandler
+	generalHandler   *handlers.GeneralHandler
 	livestreamHandler *handlers.LivestreamHandler
 	vodHandler        *handlers.VODHandler
 }
@@ -31,8 +30,7 @@ func NewAPIServer(livestreamHandler *handlers.LivestreamHandler, vodHandler *han
 		logger: logger.Logger,
 		config: cfg,
 
-		responseHandler:   handlers.NewResponseHandler(),
-		healthHandler:     handlers.NewHeathHandler(),
+		generalHandler:   handlers.NewGeneralHandler(),
 		livestreamHandler: livestreamHandler,
 		vodHandler:        vodHandler,
 	}
@@ -60,9 +58,9 @@ func (a *APIServer) getHandler() http.Handler {
 	wrapHandleFuncWithOtel("POST /v1/internal/livestreams/{livestreamId}/end", a.livestreamHandler.EndLivestreamAndCreateVODInternalHandler)
 	wrapHandleFuncWithOtel("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)
 
-	wrapHandleFuncWithOtel("GET /v1/health", a.healthHandler.GetHealthyStateHandler)
+	wrapHandleFuncWithOtel("GET /v1/health", a.generalHandler.RouteServiceHealth)
 
-	wrapHandleFuncWithOtel("GET /", a.responseHandler.RouteNotFoundHandler)
+	wrapHandleFuncWithOtel("GET /", a.generalHandler.RouteNotFoundHandler)
 
 	// TODO: remove filter
 	finalHandler := otelhttp.NewHandler(sm, "/", otelhttp.WithFilter(func(r *http.Request) bool {
@@ -77,7 +75,7 @@ func (a *APIServer) getHandler() http.Handler {
 // ListenAndServe sets up and runs the HTTP server.
 // it blocks until the server is shut down or an error occurs.
 // it returns http.ErrServerClosed on graceful shutdown, otherwise the error.
-func (a *APIServer) ListenAndServe(useTLS bool) error { // Changed signature to return error
+func (a *APIServer) ListenAndServe(ctx context.Context, useTLS bool) error { // Changed signature to return error
 	addr := fmt.Sprintf("%s:%d", a.config.Service.APIBindAddress, a.config.Service.APIPort)
 
 	a.httpServer = &http.Server{
@@ -99,7 +97,7 @@ func (a *APIServer) ListenAndServe(useTLS bool) error { // Changed signature to 
 	// It returns http.ErrServerClosed if Shutdown was called gracefully.
 	// Otherwise, it returns the error that caused it to stop.
 	if err != nil && err != http.ErrServerClosed {
-		logger.Errorf("server listener error: %v", err)
+		logger.Errorf(ctx, "server listener error: %v", err)
 		return err
 	}
 
@@ -110,17 +108,17 @@ func (a *APIServer) ListenAndServe(useTLS bool) error { // Changed signature to 
 // shutdown gracefully shuts down the server without interrupting active connections.
 func (a *APIServer) Shutdown(ctx context.Context) error {
 	if a.httpServer == nil {
-		logger.Warnf("server instance not found, cannot shutdown.")
+		logger.Warnf(ctx, "server instance not found, cannot shutdown.")
 		return nil
 	}
 
-	logger.Infof("attempting graceful shutdown of server...")
+	logger.Infof(ctx, "attempting graceful shutdown of server...")
 	err := a.httpServer.Shutdown(ctx)
 	if err != nil {
-		logger.Errorf("server shutdown failed: %v", err)
+		logger.Errorf(ctx, "server shutdown failed: %v", err)
 		return err
 	}
 
-	logger.Infof("server shutdown completed.")
+	logger.Infof(ctx, "server shutdown completed.")
 	return nil
 }

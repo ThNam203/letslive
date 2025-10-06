@@ -41,6 +41,7 @@ type LivestreamInformation struct {
 
 type GetUserByStreamAPIKeyRequestDTO struct{}
 
+// TODO: remove id from dto
 type UpdateUserRequestDTO struct {
 	Id          uuid.UUID `json:"id" validate:"uuid"`
 	Username    *string   `json:"username,omitempty" validate:"omitempty,gte=6,lte=20"`

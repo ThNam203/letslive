@@ -37,18 +37,16 @@ function loggingMiddleware(req: Request, res: Response, next: NextFunction): voi
     }
 
     const isHealthCheck = req.originalUrl === '/v1/health'
-    const letsLiveError = res.getHeader('X-LetsLive-Error') as string | undefined
+    const child = req.log.child(fields)
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
       if (!isHealthCheck) {
-        console.info('success api call', fields)
+        child.info('success api call')
       }
+    } else if (res.statusCode < 600 && res.statusCode >= 400) {
+      child.error(`failed api call`)
     } else {
-      if (letsLiveError) {
-        console.error(`failed api call: ${letsLiveError}`, fields)
-      } else {
-        console.info('failed api call', fields)
-      }
+      child.info('other api call')
     }
   })
 

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"database/sql"
 	"os"
 	"path/filepath"
@@ -18,7 +19,7 @@ func StartMigration(connectionString string, migrationPath string) {
 
 	defer func() {
 		if err := db.Close(); err != nil {
-			logger.Errorf("goose: failed to close db %v\n", err)
+			logger.Errorf(context.TODO(), "goose: failed to close db %v\n", err)
 		}
 	}()
 
@@ -27,7 +28,7 @@ func StartMigration(connectionString string, migrationPath string) {
 		panic(err)
 	}
 	exPath := filepath.Dir(ex)
-	logger.Infof("currently executing path: %s", exPath)
+	logger.Infof(context.TODO(), "currently executing path: %s", exPath)
 
 	if err := goose.Up(db, migrationPath); err != nil {
 		panic(err)

@@ -1,8 +1,11 @@
 import Image from "next/image";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { myGetT } from "@/lib/i18n";
+import Link from "next/link";
 
-export default function NotFound() {
+export default async function NotFound() {
+    const { t } = await myGetT(["common"]);
+
     return (
         <div className="min-h-screen w-full flex flex-col items-center justify-center p-4">
             <div className="max-w-[600px] text-center flex items-center justify-center">
@@ -17,10 +20,10 @@ export default function NotFound() {
                 <div>
                     <h1 className="text-4xl font-bold mb-3">Oops!</h1>
                     <p className="text-muted-foreground text-lg mb-6">
-                        We couldn&apos;t find the page you were looking for
+                        {t("common:page_not_found")}
                     </p>
                     <Button asChild>
-                        <Link href="/">Go home</Link>
+                        <Link href="/">{t("common:go_home")}</Link>
                     </Button>
                 </div>
             </div>

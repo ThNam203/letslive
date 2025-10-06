@@ -11,6 +11,8 @@ import { useEffect, useState } from "react";
 import { GetUserById } from "../../lib/api/user";
 import { Card, CardContent } from "../ui/card";
 import { cn } from "@/utils/cn";
+import { toast } from "react-toastify";
+import useT from "@/hooks/use-translation";
 
 const LivestreamPreviewView = ({
     className,
@@ -21,13 +23,23 @@ const LivestreamPreviewView = ({
 }) => {
     const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
+    const { t } = useT(["api-response", "fetch-error"]);
 
     useEffect(() => {
         const fetchUserInfo = async () => {
-            const { user } = await GetUserById(livestream.userId);
-            if (user) {
-                setUser(user);
-            }
+            await GetUserById(livestream.userId).then(res => {
+                if (res.success) {
+                    setUser(res.data ?? null);
+                } else {
+                    toast(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
+                        type: "error",
+                    });
+                }
+            })
+            .catch((_) => {
+                toast(t("fetch-error:client_fetch_error", { type: "error"}));
+            });
         };
 
         fetchUserInfo();

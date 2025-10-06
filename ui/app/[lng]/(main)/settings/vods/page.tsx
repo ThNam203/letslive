@@ -9,7 +9,7 @@ import { VOD } from "@/types/vod";
 import useT from "@/hooks/use-translation";
 
 export default function VODsEdit() {
-    const { t } = useT("settings");
+    const { t } = useT(["settings", "api-response", "fetch-error"]);
     const user = useUser((state) => state.user);
     const [vods, setVODS] = useState<VOD[]>([]);
     useEffect(() => {
@@ -18,16 +18,23 @@ export default function VODsEdit() {
         }
 
         const fetchVODs = async () => {
-            const { vods, fetchError } = await GetAllVODsAsAuthor();
-
-            if (fetchError) {
-                toast(fetchError.message, {
-                    toastId: "vod-fetch-error",
-                    type: "error",
+            await GetAllVODsAsAuthor()
+                .then((res) => {
+                    if (res.success) {
+                        setVODS(res.data ?? []);
+                    } else {
+                        toast(t(`api-response:${res.key}`), {
+                            toastId: res.requestId,
+                            type: "error",
+                        });
+                    }
+                })
+                .catch((_) => {
+                    toast(t("fetch-error:client_fetch_error"), {
+                        toastId: "vod-fetch-error",
+                        type: "error",
+                    });
                 });
-            } else {
-                setVODS(vods);
-            }
         };
 
         fetchVODs();
@@ -37,8 +44,12 @@ export default function VODsEdit() {
         <>
             <div className="mb-4">
                 <div className="space-y-1">
-                    <h1 className="text-xl font-semibold">{t("settings:vods.title")}</h1>
-                    <p className="text-sm text-foreground-muted">{t("settings:vods.description")}</p>
+                    <h1 className="text-xl font-semibold">
+                        {t("settings:vods.title")}
+                    </h1>
+                    <p className="text-sm text-foreground-muted">
+                        {t("settings:vods.description")}
+                    </p>
                 </div>
             </div>
 
