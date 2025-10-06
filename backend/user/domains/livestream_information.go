@@ -2,7 +2,7 @@ package domains
 
 import (
 	"context"
-	servererrors "sen1or/letslive/user/errors"
+	"sen1or/letslive/user/response"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -15,7 +15,7 @@ type LivestreamInformation struct {
 }
 
 type LivestreamInformationRepository interface {
-	GetByUserId(context.Context, uuid.UUID) (*LivestreamInformation, *servererrors.ServerError)
-	Create(context.Context, uuid.UUID) *servererrors.ServerError
-	Update(context.Context, LivestreamInformation) (*LivestreamInformation, *servererrors.ServerError)
+	GetByUserId(context.Context, uuid.UUID) (*LivestreamInformation, *response.Response[any])
+	Create(context.Context, uuid.UUID) *response.Response[any]
+	Update(context.Context, LivestreamInformation) (*LivestreamInformation, *response.Response[any])
 }

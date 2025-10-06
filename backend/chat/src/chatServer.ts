@@ -1,8 +1,8 @@
 import WebSocket, { WebSocketServer } from 'ws'
 import { Message } from './models/Message'
 import { RedisService } from './services/redis'
-import { ChatEventType } from './types/chat_event'
-import { ChatMessage, ChatMessageType } from './types/chat_message'
+import { ChatEventType } from './types/chat-event'
+import { ChatMessage, ChatMessageType } from './types/chat-message'
 
 type UserInfo = { currentRoom: string | null; id: string | null; name: string | null }
 

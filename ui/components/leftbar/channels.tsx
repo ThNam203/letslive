@@ -13,6 +13,7 @@ import {
     HoverCardTrigger,
 } from "../ui/hover-card";
 import useT from "@/hooks/use-translation";
+import { toast } from "react-toastify";
 
 export default function AllChannelsView({
     isMinimized = false,
@@ -23,18 +24,23 @@ export default function AllChannelsView({
 }) {
     const curUser = useUser((state) => state.user);
     const [users, setUsers] = useState<User[]>([]);
-    const { t } = useT();
+    const { t } = useT(["common", "api-response", "fetch-error"]);
     useEffect(() => {
         const fetchAllUsers = async () => {
-            const { users, fetchError } = await GetAllUsers();
-
-            if (fetchError != undefined) {
-                // toast.error(fetchError.message, {
-                //     toastId: "all-channels-fetch-error",
-                // });
-            } else {
-                setUsers(users ?? []);
-            }
+            await GetAllUsers()
+                .then(res => {
+                    if (res.success) {
+                        setUsers(res.data ?? []);
+                    } else {
+                        toast(t(`api-response:${res.key}`), {
+                            toastId: res.requestId,
+                            type: "error",
+                        });
+                    }
+                })
+                .catch((_) => {
+                    toast(t("fetch-error:client_fetch_error"), { type: "error" });
+                });
         };
 
         fetchAllUsers();
@@ -101,13 +107,13 @@ export default function AllChannelsView({
                                     </h4>
                                     <p className="text-sm text-muted-foreground">
                                         {user.livestreamInformation
-                                            ?.description ?? "No description"}
+                                            ?.description ?? t("common:no_description")}
                                     </p>
                                     <div className="text-xs text-muted-foreground">
-                                        Followers: {user.followerCount}
+                                        {t("common:followers_with_count", { count: user.followerCount })}
                                     </div>
                                     <div className="text-xs text-muted-foreground">
-                                        Joined:{" "}
+                                        {t("common:joined")}:{" "}
                                         {new Date(
                                             user.createdAt,
                                         ).toLocaleDateString()}

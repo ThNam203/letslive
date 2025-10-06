@@ -12,7 +12,7 @@ import useT from "@/hooks/use-translation";
 import { changePasswordSchema } from "@/lib/validations/changePassword";
 
 export default function ChangePasswordTab() {
-  const { t } = useT("settings");
+  const { t } = useT(["settings", "api-response"]);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -29,15 +29,15 @@ export default function ChangePasswordTab() {
     if (!validate()) return;
 
     setIsUpdatingPassword(true);
-    const { fetchError } = await ChangePassword({
+    const res = await ChangePassword({
       oldPassword: currentPassword,
       newPassword: newPassword,
     });
 
     setIsUpdatingPassword(false);
 
-    if (fetchError) {
-      setErrors((prev) => ({ ...prev, newPassword: fetchError.message }));
+    if (!res.success) {
+      setErrors((prev) => ({ ...prev, confirmPassword: t(`api-response:${res.key}`) }));
       return;
     }
 

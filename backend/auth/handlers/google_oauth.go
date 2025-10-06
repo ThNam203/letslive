@@ -7,14 +7,23 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	serviceresponse "sen1or/letslive/auth/responses"
+	serviceresponse "sen1or/letslive/auth/response"
 	"time"
 )
 
 func (h *AuthHandler) OAuthGoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
 	oauthState, err := generateOAuthCookieState(w)
 	if err != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInternalServer)
+		writeResponse(
+			w,
+			r.Context(),
+			serviceresponse.NewResponseFromTemplate[any](
+				serviceresponse.RES_ERR_INTERNAL_SERVER,
+				nil,
+				nil,
+				nil,
+			),
+		)
 		return
 	}
 

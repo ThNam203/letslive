@@ -47,61 +47,96 @@ export default function ProfileSettings() {
     ) => {
         event.preventDefault();
         setIsUpdatingProfile(true);
-
-        if (backgroundImageFile) {
-            const {
-                fetchError: backgroundImageError,
-                newPath: backgroundImagePath,
-            } = await UpdateBackgroundPicture(backgroundImageFile).finally(() =>
-                setIsUpdatingProfile(false),
-            );
-            if (backgroundImageError) {
-                toast.error(backgroundImageError.message);
-                return;
-            }
-            setBackgroundImageFile(null);
-            updateUser({
-                ...user!,
-                backgroundPicture: backgroundImagePath,
-            });
-        }
-
         let hasError = false;
 
+        if (backgroundImageFile) {
+            await UpdateBackgroundPicture(backgroundImageFile)
+            .then(res => {
+                if (res.success) {
+                    setBackgroundImageFile(null);
+                    updateUser({
+                        ...user!,
+                        backgroundPicture: res.data,
+                    });
+                } else {
+                    toast.error(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
+                        type: "error",
+                    });
+                    hasError = true;
+                }
+            })
+            .catch((_) => {
+                toast(t("fetch-error:client_fetch_error"), {
+                    toastId: "update-background-error",
+                    type: "error",
+                });
+                hasError = true;
+            })
+            .finally(() =>
+                setIsUpdatingProfile(false),
+            );
+        }
+
         if (profileImageFile) {
-            const { fetchError: profileImageError, newPath: profileImagePath } =
-                await UpdateProfilePicture(profileImageFile).finally(() =>
+                await UpdateProfilePicture(profileImageFile)
+                .then(res => {
+                    if (res.success) {
+                        setProfileImageFile(null);
+                        updateUser({
+                            ...user!,
+                            profilePicture: res.data,
+                        });
+                    } else {
+                        toast.error(t(`api-response:${res.key}`), {
+                            toastId: res.requestId,
+                            type: "error",
+                        });
+                        hasError = true;
+                    }
+                })
+                .catch((_) => {
+                    toast(t("fetch-error:client_fetch_error"), {
+                        toastId: "update-profile-error",
+                        type: "error",
+                    });
+                    hasError = true;
+                })
+                .finally(() =>
                     setIsUpdatingProfile(false),
                 );
-            if (profileImageError) {
-                toast.error(profileImageError.message);
-                hasError = true;
-            } else {
-                setProfileImageFile(null);
-                updateUser({
-                    ...user!,
-                    profilePicture: profileImagePath,
-                });
-            }
         }
 
         if (bio || displayName) {
-            const { updatedUser, fetchError } = await UpdateProfile({
-                id: user!.id,
+            await UpdateProfile({
                 displayName: isDisplayNameChanged ? displayName : undefined,
                 bio: isBioChanged ? bio : undefined,
-            }).finally(() => setIsUpdatingProfile(false));
-            if (fetchError) {
-                toast.error(fetchError.message);
-                return;
-            }
-            updateUser({
-                ...user!,
-                ...updatedUser!,
-            });
+            })
+            .then(res => {
+                if (res.success) {
+                    updateUser({
+                        ...user!,
+                        ...res.data,
+                    });
+                } else {
+                    toast.error(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
+                        type: "error",
+                    });
+                    hasError = true;
+                }
+            })
+            .catch((_) => {
+                toast(t("fetch-error:client_fetch_error"), {
+                    toastId: "update-profile-error",
+                    type: "error",
+                });
+                hasError = true;
+            })
+            .finally(() => setIsUpdatingProfile(false));
         }
 
-        if (hasError) toast.success(t("settings:profile.update_success"));
+        if (!hasError) toast.success(t("settings:profile.update_success"));
     };
 
     useEffect(() => {
@@ -160,11 +195,10 @@ export default function ProfileSettings() {
                     <TextField
                         label={t("settings:profile.username")}
                         disabled
-                        defaultValue={user?.username}
+                        value={user?.username}
                     />
                     <TextField
                         label={t("settings:profile.display_name")}
-                        defaultValue={user?.displayName}
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
                         disabled={isUpdatingProfile}

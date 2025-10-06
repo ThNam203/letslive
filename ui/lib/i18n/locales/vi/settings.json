@@ -1,6 +1,7 @@
 {
     "title": "Cài đặt",
     "page_title": "Cài đặt",
+    "need_to_login": "Bạn cần đăng nhập để điều chỉnh cài đặt",
     "navigation": {
         "profile": "Hồ sơ",
         "security": "Bảo mật",

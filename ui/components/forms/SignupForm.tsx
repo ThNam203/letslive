@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { RequestToSendVerification, SignUp } from "../../lib/api/auth";
@@ -49,7 +49,7 @@ export default function SignUpForm() {
     const [otpValue, setOtpValue] = useState("");
     const [isOtpSubmitting, setIsOtpSubmitting] = useState(false);
     const [otpError, setOtpError] = useState("");
-    const { t, i18n } = useT(["auth", "error", "common"]);
+    const { t, i18n } = useT(["auth", "error", "common", "api-response", "fetch-error"]);
 
     const validate = () => {
         const parseResult = signUpSchema(t).safeParse({
@@ -95,50 +95,61 @@ export default function SignUpForm() {
         setIsOtpSubmitting(true);
         setOtpError("");
 
-        const { fetchError } = await SignUp({
+        await SignUp({
             email,
             username,
             password,
             turnstileToken,
             otpCode: otpValue,
-        });
-
-        if (fetchError) {
-            setTurnstileToken("");
-            turnstile.reset();
-            setOtpValue("");
-            toast.error(fetchError.message);
-        } else {
-            toast.success(t("account_created_success"));
-            setIsOtpDialogOpen(false);
-            router.push("/");
-            router.refresh();
-        }
-
-        setIsOtpSubmitting(false);
-        setIsLoading(false);
+        })
+            .then((res) => {
+                if (!res.success) {
+                    setTurnstileToken("");
+                    turnstile.reset();
+                    setOtpValue("");
+                    toast.error(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
+                    });
+                } else {
+                    toast.success(t("account_created_success"));
+                    setIsOtpDialogOpen(false);
+                    router.push("/");
+                    router.refresh();
+                }
+            })
+            .catch((_) => {
+                toast.error(t("fetch-error:client_fetch_error"));
+            })
+            .finally(() => {
+                setIsOtpSubmitting(false);
+                setIsLoading(false);
+            });
     };
 
     const handleBeginEmailVerification = async () => {
-        setIsLoading(true);
+        if (validate()) return;
 
-        if (validate()) {
-            const { fetchError } = await RequestToSendVerification(
-                email,
-                turnstileToken,
-            );
-            if (fetchError) {
+        setIsLoading(true);
+        await RequestToSendVerification(email, turnstileToken).then(res => {
+            if (!res.success) {
                 turnstile.reset();
                 setTurnstileToken("");
-                toast.error(fetchError.message);
+                toast.error(t(`api-response:${res.key}`), {
+                    toastId: res.requestId,
+                });
             } else {
-                toast.success(t("verification_email_sent_success"));
+                toast.success(t(`api-response:${res.key}`));
                 setIsOtpDialogOpen(true);
                 setOtpValue("");
                 setOtpError("");
             }
-        }
-        setIsLoading(false);
+        })
+        .catch((_) => {
+            toast.error(t("fetch-error:client_fetch_error"));
+        })
+        .finally(() => {
+            setIsLoading(false);
+        });
     };
 
     return (
@@ -274,7 +285,9 @@ export default function SignUpForm() {
                     }}
                 >
                     <DialogHeader>
-                        <DialogTitle>{t("enter_verification_code")}</DialogTitle>
+                        <DialogTitle>
+                            {t("enter_verification_code")}
+                        </DialogTitle>
                         <DialogDescription>
                             {t("otp_dialog_description_part_1")}{" "}
                             <span className="font-medium">{email}</span>

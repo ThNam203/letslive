@@ -26,5 +26,5 @@ type AuthProvider string
 
 const (
 	ProviderGoogle AuthProvider = "google"
-	ProviderLocal               = "local"
+	ProviderLocal  AuthProvider = "local"
 )

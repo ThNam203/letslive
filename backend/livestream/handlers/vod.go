@@ -6,14 +6,13 @@ import (
 	"net/http"
 	"sen1or/letslive/livestream/dto"
 	"sen1or/letslive/livestream/pkg/tracer"
-	serviceresponse "sen1or/letslive/livestream/responses"
+	response "sen1or/letslive/livestream/response"
 	"sen1or/letslive/livestream/services/vod"
 
 	"github.com/gofrs/uuid/v5"
 )
 
 type VODHandler struct {
-	ResponseHandler
 	vodService *vod.VODService
 }
 
@@ -29,13 +28,13 @@ func (h VODHandler) GetVODByIdPublicHandler(w http.ResponseWriter, r *http.Reque
 
 	streamId := r.PathValue("vodId")
 	if len(streamId) == 0 {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPath)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
 	vodUUID, err := uuid.FromString(streamId)
 	if err != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidInput)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
@@ -44,13 +43,11 @@ func (h VODHandler) GetVODByIdPublicHandler(w http.ResponseWriter, r *http.Reque
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteErrorResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(vod)
+	WriteResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, vod, nil, nil))
 }
 
 func (h VODHandler) GetVODsOfUserPublicHandler(w http.ResponseWriter, r *http.Request) {
@@ -59,13 +56,13 @@ func (h VODHandler) GetVODsOfUserPublicHandler(w http.ResponseWriter, r *http.Re
 
 	userId := r.URL.Query().Get("userId")
 	if len(userId) == 0 {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPath)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
 	userUUID, err := uuid.FromString(userId)
 	if err != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidInput)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
@@ -76,13 +73,11 @@ func (h VODHandler) GetVODsOfUserPublicHandler(w http.ResponseWriter, r *http.Re
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteErrorResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(vods)
+	WriteResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, &vods, nil, nil))
 }
 
 func (h VODHandler) GetVODsOfAuthorPrivateHandler(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +86,7 @@ func (h VODHandler) GetVODsOfAuthorPrivateHandler(w http.ResponseWriter, r *http
 
 	userUUID, err := getUserIdFromCookie(r)
 	if err != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidInput)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
@@ -102,13 +97,11 @@ func (h VODHandler) GetVODsOfAuthorPrivateHandler(w http.ResponseWriter, r *http
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteErrorResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(livestreams)
+	WriteResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, &livestreams, nil, nil))
 }
 
 // TODO: recommendation system
@@ -123,13 +116,11 @@ func (h VODHandler) GetRecommendedVODsPublicHandler(w http.ResponseWriter, r *ht
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteErrorResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(vods)
+	WriteResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, &vods, nil, nil))
 }
 
 func (h VODHandler) UpdateVODMetadataPrivateHandler(w http.ResponseWriter, r *http.Request) {
@@ -138,36 +129,34 @@ func (h VODHandler) UpdateVODMetadataPrivateHandler(w http.ResponseWriter, r *ht
 
 	userId, err := getUserIdFromCookie(r)
 	if err != nil {
-		h.WriteErrorResponse(w, err)
+		WriteResponse(w, ctx, err)
 		return
 	}
 
 	rawStreamId := r.PathValue("vodId")
 	streamId, er := uuid.FromString(rawStreamId)
 	if er != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidInput)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 	defer r.Body.Close()
 
 	var requestBody dto.UpdateVODRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPayload)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
 		return
 	}
 
 	ctx, span := tracer.MyTracer.Start(ctx, "update_vod_metadata_private_handler.vod_service.update_vod_metadata")
-	updatedvod, serviceErr := h.vodService.UpdateVODMetadata(ctx, requestBody, streamId, *userId)
+	updatedVOD, serviceErr := h.vodService.UpdateVODMetadata(ctx, requestBody, streamId, *userId)
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteErrorResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(updatedvod)
+	WriteResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, updatedVOD, nil, nil))
 }
 
 func (h VODHandler) DeleteVODPrivateHandler(w http.ResponseWriter, r *http.Request) {
@@ -178,13 +167,13 @@ func (h VODHandler) DeleteVODPrivateHandler(w http.ResponseWriter, r *http.Reque
 	vodId, err := uuid.FromString(rawVODId)
 
 	if err != nil {
-		h.WriteErrorResponse(w, serviceresponse.ErrInvalidPath)
+		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
 		return
 	}
 
 	userUUID, cErr := getUserIdFromCookie(r)
 	if cErr != nil {
-		h.WriteErrorResponse(w, cErr)
+		WriteResponse(w, ctx, cErr)
 		return
 	}
 
@@ -193,7 +182,7 @@ func (h VODHandler) DeleteVODPrivateHandler(w http.ResponseWriter, r *http.Reque
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteErrorResponse(w, serviceErr)
+		WriteResponse(w, ctx, serviceErr)
 		return
 	}
 

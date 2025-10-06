@@ -2,16 +2,29 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
-	serviceresponse "sen1or/letslive/auth/responses"
+	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/types"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (h *AuthHandler) setAuthJWTsInCookie(ctx context.Context, userId string, w http.ResponseWriter) *serviceresponse.ServiceErrorResponse {
+func writeResponse(w http.ResponseWriter, ctx context.Context, res *serviceresponse.Response[any]) {
+	requestId, ok := ctx.Value("requestId").(string)
+	if ok && len(requestId) > 0 {
+		res.RequestId = requestId
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(res.StatusCode)
+	json.NewEncoder(w).Encode(res)
+}
+
+func (h *AuthHandler) setAuthJWTsInCookie(ctx context.Context, userId string, w http.ResponseWriter) *serviceresponse.Response[any] {
 	tokensInfo, err := h.jwtService.GenerateTokenPair(ctx, userId)
 	if err != nil {
 		return err

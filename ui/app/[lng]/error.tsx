@@ -20,8 +20,8 @@ export default function GlobalError() {
                     priority
                 />
                 <div>
-                    <h1 className="text-4xl font-bold mb-3">{t("general_title")}</h1>
-                    <p className="text-muted-foreground text-lg mb-6">{t("general_description")}</p>
+                    <h1 className="text-4xl font-bold mb-3">{t("error:general_title")}</h1>
+                    <p className="text-muted-foreground text-lg mb-6">{t("error:general_description")}</p>
                     <Button asChild>
                         <Link href="/">{t("common:go_home")}</Link>
                     </Button>

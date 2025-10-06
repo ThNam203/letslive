@@ -6,6 +6,7 @@
     "cancel": "Cancel",
     "or": "or",
     "go_home": "Go home",
+    "page_not_found": "We couldn't find the page you were looking for",
     "save_changes": "Save changes",
     "username": "Username",
     "livestreams": "Livestreams",
@@ -21,44 +22,15 @@
     "live_streaming": "Live Streaming",
     "follow": "Follow",
     "unfollow": "Unfollow",
+    "followers_with_count": "Followers: {{count}}",
+    "joined": "Joined",
+    "show_more": "Show more",
     "please_wait_while_loading": "Please wait while we load the content",
     "no_livestreams": "No livestreams",
     "no_livestreams_description": "There is currently no one streaming, pheck back later or explore our video on demand content",
     "no_videos": "No Videos Available",
     "no_videos_description": "There are currently no videos available. Check back later for new content",
-
-    "settings": {
-        "profile": {
-            "title": "Profile Settings",
-            "description": "Change identifying details for your account",
-            "username": "Username",
-            "display_name": "Display Name",
-            "bio": "Bio"
-        },
-        "themes": {
-            "title": "Themes",
-            "description": "Customize the look and feel of the website"
-        },
-        "stream": {
-            "title": "Livestream",
-            "description": "Your next livestream information will be based on the information. It won't change even after livestream ends.",
-            "title_label": "Title",
-            "title_description": "If empty, the title will be generated automatically.",
-            "description_label": "Description",
-            "thumbnail_label": "Thumbnail",
-            "thumbnail_description": "If empty, the thumbnail will be generated automatically.",
-            "thumbnail_hover": "Change thumbnail",
-            "confirm_edit_button": "Confirm edit",
-            "updated_success": "Livestream information updated successfully"
-        },
-        "vods": {
-            "title": "VODs Manager",
-            "description": "Manage your VODs and edit their information here."
-        },
-        "disable": {
-            "title": "Disabling your Let's Live account",
-            "description": "Completely deactivate your account",
-            "note": "When you disable your account, your profile and notifications will be hidden, and your account will be deactivated. You can reactivate your account at any time."
-        }
-    }
+    "searching": "Searching...",
+    "no_users_found": "No users found",
+    "no_description": "No description"
 }

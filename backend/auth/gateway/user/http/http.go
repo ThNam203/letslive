@@ -9,6 +9,8 @@ import (
 	"sen1or/letslive/auth/gateway"
 	usergateway "sen1or/letslive/auth/gateway/user"
 	"sen1or/letslive/auth/pkg/discovery"
+	"sen1or/letslive/auth/pkg/logger"
+	serviceresponse "sen1or/letslive/auth/response"
 )
 
 type userGateway struct {
@@ -21,55 +23,72 @@ func NewUserGateway(registry discovery.Registry) usergateway.UserGateway {
 	}
 }
 
-func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergateway.CreateUserRequestDTO) (*usergateway.CreateUserResponseDTO, *gateway.ErrorResponse) {
+func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergateway.CreateUserRequestDTO) (*usergateway.CreateUserResponseDTO, *serviceresponse.Response[any]) {
 	addr, err := g.registry.ServiceAddress(ctx, "user")
 	if err != nil {
-		return nil, &gateway.ErrorResponse{
-			Message:    err.Error(),
-			StatusCode: http.StatusBadGateway,
-		}
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	url := fmt.Sprintf("http://%s/v1/user", addr)
 	payloadBuf := new(bytes.Buffer)
 	if err := json.NewEncoder(payloadBuf).Encode(&userRequestDTO); err != nil {
-		return nil, &gateway.ErrorResponse{
-			Message:    fmt.Sprintf("failed to encode user dto body: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Errorf(ctx, "failed to encode user dto body: %s", err)
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, payloadBuf)
 	if err != nil {
-		return nil, &gateway.ErrorResponse{
-			Message:    fmt.Sprintf("failed to create the request: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Errorf(ctx, "failed to create the request: %s", err)
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
-		return nil, &gateway.ErrorResponse{
-			Message:    fmt.Sprintf("failed to create the request: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Errorf(ctx, "failed to create the request: %s", err)
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, &gateway.ErrorResponse{
-			Message:    fmt.Sprintf("failed to call request: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Errorf(ctx, "failed to call request: %s", err)
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		resInfo := gateway.ErrorResponse{}
+		resInfo := serviceresponse.Response[any]{}
 		if err := json.NewDecoder(resp.Body).Decode(&resInfo); err != nil {
-			return nil, &gateway.ErrorResponse{
-				Message:    fmt.Sprintf("failed to decode error response from user service: %s", err),
-				StatusCode: http.StatusInternalServerError,
-			}
+			logger.Errorf(ctx, "failed to decode error response from user service: %s", err)
+			return nil, serviceresponse.NewResponseFromTemplate[any](
+				serviceresponse.RES_ERR_INTERNAL_SERVER,
+				nil,
+				nil,
+				nil,
+			)
 		}
 
 		return nil, &resInfo
@@ -79,10 +98,13 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergate
 	defer resp.Body.Close()
 
 	if err := json.NewDecoder(resp.Body).Decode(&createdUser); err != nil {
-		return nil, &gateway.ErrorResponse{
-			Message:    fmt.Sprintf("failed to decode resp body: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Errorf(ctx, "failed to decode resp body: %s", err)
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return &createdUser, nil

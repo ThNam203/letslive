@@ -8,6 +8,7 @@ import { dir } from "i18next";
 import { myGetT } from "@/lib/i18n";
 import TranslationsProvider from "@/components/utils/i18n-provider";
 import { ThemeProviderWrapper } from "@/components/utils/theme-provider-wrapper";
+import UserInformationWrapper from "@/components/wrappers/UserInformationWrapper";
 
 const inter = Inter({ subsets: ["latin"] });
 type Params = Promise<{ lng: string }>;
@@ -42,7 +43,9 @@ export default async function RootLayout({
                 <TranslationsProvider>
                     <ThemeProviderWrapper>
                         <Suspense fallback={<Loading />}>
-                            {children}
+                            <UserInformationWrapper>
+                                {children}
+                            </UserInformationWrapper>
                             <Toast />
                         </Suspense>
                     </ThemeProviderWrapper>

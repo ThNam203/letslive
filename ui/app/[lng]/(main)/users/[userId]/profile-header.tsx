@@ -22,7 +22,7 @@ export default function ProfileHeader({
     user: User;
     updateUser: (newUserInfo: User) => void;
 }) {
-    const { t } = useT(["common", "users"]);
+    const { t } = useT(["common", "users", "fetch-error", "api-response"]);
     const me = useUser((state) => state.user);
     const [isFetching, setIsFetching] = useState(false);
 
@@ -30,35 +30,51 @@ export default function ProfileHeader({
         setIsFetching(true);
 
         if (user.isFollowing) {
-            const { fetchError } = await UnfollowOtherUser(user.id);
-            if (fetchError) {
-                toast(fetchError.message, {
-                    toastId: "follow-error",
+            await UnfollowOtherUser(user.id).then(res => {
+                if (res.success) {
+
+                    updateUser({
+                        ...user,
+                        isFollowing: false,
+                        followerCount: user.followerCount - 1,
+                    });
+                } else {
+                    toast(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
+                        type: "error",
+                    });
+                }
+            }).catch(err => {
+                toast(t("fetch-error:client_fetch_error"), {
+                    toastId: "unfollow-user-error",
                     type: "error",
                 });
-            } else {
-                updateUser({
-                    ...user,
-                    isFollowing: false,
-                    followerCount: user.followerCount - 1,
-                });
-            }
+            }).finally(() => {
+                setIsFetching(false);
+            })
         } else {
-            const { fetchError } = await FollowOtherUser(user.id);
-            if (fetchError) {
-                toast(fetchError.message, {
-                    toastId: "follow-error",
+            await FollowOtherUser(user.id).then(res => {
+                if (res.success) {
+                    updateUser({
+                        ...user,
+                        isFollowing: true,
+                        followerCount: user.followerCount + 1,
+                    });
+                } else {
+                    toast(t(`api-response:${res.key}`), {
+                        toastId: res.key,
+                        type: "error",
+                    });
+                }
+            }).catch(err => {
+                toast(t("fetch-error:client_fetch_error"), {
+                    toastId: "follow-user-error",
                     type: "error",
                 });
-            } else {
-                updateUser({
-                    ...user,
-                    isFollowing: true,
-                    followerCount: user.followerCount + 1,
-                });
-            }
+            }).finally(() => {
+                setIsFetching(false);
+            })
         }
-        setIsFetching(false);
     };
 
     return (
@@ -68,8 +84,7 @@ export default function ProfileHeader({
                 <Image
                     src={
                         user.backgroundPicture ??
-                        `https://placehold.co/1200x600/F3F4F6/374151/png?font=playfair-display&text=${
-                            user.displayName ?? user.username
+                        `https://placehold.co/1200x600/F3F4F6/374151/png?font=playfair-display&text=${user.displayName ?? user.username
                         }`
                     }
                     alt="Profile Banner"
@@ -82,23 +97,23 @@ export default function ProfileHeader({
             </div>
             <div className="-mt-16 px-4 sm:-mt-24">
                 <div className="relative inline-block">
-                  <Avatar className="h-32 w-32 rounded-full border-4 border-white">
-                      <AvatarImage src={user.profilePicture} alt="user avatar" />
-                      <AvatarFallback>
-                          {user.username[0].toUpperCase()}
-                      </AvatarFallback>
-                  </Avatar>
-                  {me?.id !== user.id && (
-                      <Button
-                          variant={user.isFollowing ? "destructive" : "default"}
-                          disabled={isFetching || !me}
-                          onClick={onFollowClick}
-                          className="absolute bottom-4 right-0 translate-x-[50%] flex flex-row items-center justify-center gap-0"
-                      >
-                          {isFetching && <IconLoader className="mr-1" />}
-                          {user.isFollowing ? t("common:unfollow") : t("common:follow")}
-                      </Button>
-                  )}
+                    <Avatar className="h-32 w-32 rounded-full border-4 border-white">
+                        <AvatarImage src={user.profilePicture} alt="user avatar" />
+                        <AvatarFallback>
+                            {user.username[0].toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
+                    {me?.id !== user.id && (
+                        <Button
+                            variant={user.isFollowing ? "destructive" : "default"}
+                            disabled={isFetching || !me}
+                            onClick={onFollowClick}
+                            className="absolute bottom-4 right-0 translate-x-[50%] flex flex-row items-center justify-center gap-0"
+                        >
+                            {isFetching && <IconLoader className="mr-1" />}
+                            {user.isFollowing ? t("common:unfollow") : t("common:follow")}
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>

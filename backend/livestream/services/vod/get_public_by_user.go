@@ -3,12 +3,12 @@ package vod
 import (
 	"context"
 	"sen1or/letslive/livestream/domains"
-	serviceresponse "sen1or/letslive/livestream/responses"
+	response "sen1or/letslive/livestream/response"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *VODService) GetPublicVODsByUser(ctx context.Context, userId uuid.UUID, page int, limit int) ([]domains.VOD, *serviceresponse.ServiceErrorResponse) {
+func (s *VODService) GetPublicVODsByUser(ctx context.Context, userId uuid.UUID, page int, limit int) ([]domains.VOD, *response.Response[any]) {
 	if page < 0 {
 		page = 0
 	}

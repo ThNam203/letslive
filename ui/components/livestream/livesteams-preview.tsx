@@ -13,19 +13,23 @@ import useT from "@/hooks/use-translation";
 const LivestreamsPreviewView = () => {
     const [limitView, setLimitView] = useState<number>(4);
     const [livestreams, setLivestreams] = useState<Livestream[]>([]);
-    const { t } = useT();
+    const { t } = useT(["common", "api-response", "fetch-error"]);
 
     useEffect(() => {
         const fetchLivestreams = async () => {
-            const { livestreams, fetchError } = await GetPopularLivestreams();
-            if (fetchError) {
-                toast(fetchError.message, {
-                    toastId: "livestreams-fetch-error",
-                    type: "error",
-                });
-            }
-
-            setLivestreams(livestreams ?? []);
+            await GetPopularLivestreams().then(res => {
+                if (res.success) {
+                    setLivestreams(res.data ?? []);
+                } else {
+                    toast(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
+                        type: "error",
+                    });
+                }
+            })
+            .catch((_) => {
+                toast(t("fetch-error:client_fetch_error", { type: "error"}));
+            });
         };
 
         fetchLivestreams();
@@ -49,10 +53,10 @@ const LivestreamsPreviewView = () => {
                         <IconPlay className="text-muted-foreground h-16 w-16" />
                     </div>
                     <h2 className="mb-2 text-2xl font-semibold">
-                        {t("no_livestreams")}
+                        {t("common:no_livestreams")}
                     </h2>
                     <p className="text-muted-foreground max-w-md">
-                        {t("no_livestreams_description")}
+                        {t("common:no_livestreams_description")}
                     </p>
                 </div>
             )}
@@ -61,6 +65,8 @@ const LivestreamsPreviewView = () => {
 };
 
 const StreamsSeparator = ({ onClick }: { onClick: () => void }) => {
+    const { t } = useT(["common"]);
+
     return (
         <div className="flex w-full flex-row items-center justify-between gap-4">
             <Separator className="flex-1" />
@@ -68,7 +74,7 @@ const StreamsSeparator = ({ onClick }: { onClick: () => void }) => {
                 className="flex flex-row items-center justify-center text-nowrap rounded-md border-border px-2 py-1 text-xs font-semibold text-primary duration-100 ease-linear hover:text-primary-hover"
                 onClick={onClick}
             >
-                <span className="">Show more</span>
+                <span className="">{t("show_more")}</span>
                 <IconChevronDown />
             </button>
             <Separator className="flex-1" />

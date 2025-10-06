@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import useUser from "../../hooks/user";
 import { Logout } from "../../lib/api/auth";
@@ -16,41 +16,28 @@ import useT from "@/hooks/use-translation";
 export default function UserInfo() {
   const userState = useUser();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const { t } = useT(["auth", "common"])
+  const { t } = useT(["auth", "common", "api-response", "fetch-error"]);
 
   const logoutHandler = async () => {
-    const { fetchError } = await Logout();
-    if (fetchError) {
-      toast(fetchError.message, {
-        toastId: "logout-error",
-        type: "error",
+    await Logout()
+      .then(res => {
+        if (res.statusCode === 204) {
+          userState.clearUser();
+        } else {
+          toast(t(`api-response:${res.key}`), {
+            toastId: res.requestId,
+            type: "error",
+          });
+        }
+      })
+      .catch((err) => {
+        toast(t("fetch-error:client_fetch_error"), {
+          toastId: "logout-error",
+          type: "error",
+        });
       });
-    } else {
-      userState.clearUser();
-    }
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      userState.fetchUser().catch((e) => {
-        // TODO
-        // if (e instanceof FetchError && e.isClientError) {
-        //     toast(e.message, {
-        //         toastId: "fetch-user-error",
-        //         type: "error",
-        //     });
-        //     router.push("/login");
-        // } else {
-        //     toast("An unknown error occurred", {
-        //         toastId: "fetch-user-error",
-        //         type: "error",
-        //     });
-        // }
-      });
-    };
-
-    fetchUser();
-  }, []);
   return userState.user ? (
     <div className="flex flex-row gap-4">
       <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>

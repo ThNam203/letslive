@@ -6,7 +6,7 @@ import (
 	"sen1or/letslive/auth/config"
 	"sen1or/letslive/auth/domains"
 	"sen1or/letslive/auth/pkg/logger"
-	serviceresponse "sen1or/letslive/auth/responses"
+	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/types"
 	"time"
 
@@ -27,15 +27,15 @@ func NewJWTService(repo domains.RefreshTokenRepository, cfg config.JWT) *JWTServ
 }
 
 // generate the refresh token with access token (for login and signup)
-func (c *JWTService) GenerateTokenPair(ctx context.Context, userId string) (*types.TokenPairInformation, *serviceresponse.ServiceErrorResponse) {
+func (c *JWTService) GenerateTokenPair(ctx context.Context, userId string) (*types.TokenPairInformation, *serviceresponse.Response[any]) {
 	refreshToken, err := c.generateRefreshToken(ctx, userId)
 	if err != nil {
-		return nil, serviceresponse.ErrInternalServer
+		return nil, err
 	}
 
 	accessToken, err := c.generateAccessToken(userId)
 	if err != nil {
-		return nil, serviceresponse.ErrInternalServer
+		return nil, err
 	}
 
 	return &types.TokenPairInformation{
@@ -48,24 +48,34 @@ func (c *JWTService) GenerateTokenPair(ctx context.Context, userId string) (*typ
 
 // create a new access token for the refresh token
 // the process is called "refresh token"
-func (c *JWTService) RefreshToken(refreshToken string) (*types.AccessTokenInformation, *serviceresponse.ServiceErrorResponse) {
+func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*types.AccessTokenInformation, *serviceresponse.Response[any]) {
 	myClaims := types.MyClaims{}
 	parsedToken, err := jwt.NewParser().ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (any, error) {
 		return []byte(os.Getenv("REFRESH_TOKEN_SECRET")), nil
 	})
 
 	if err != nil {
-		logger.Errorf("token parsing failed: %s", err)
-		return nil, serviceresponse.ErrUnauthorized
+		logger.Errorf(ctx, "token parsing failed: %s", err)
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	} else if !parsedToken.Valid {
-		logger.Errorf("token not valid")
-		return nil, serviceresponse.ErrUnauthorized
+		logger.Errorf(ctx, "token not valid")
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_UNAUTHORIZED,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
-	accessToken, err := c.generateAccessToken(myClaims.UserId)
-	if err != nil {
-		logger.Errorf("failed to refresh token: %s", err)
-		return nil, serviceresponse.ErrUnauthorized
+	accessToken, genErr := c.generateAccessToken(myClaims.UserId)
+	if genErr != nil {
+		logger.Errorf(ctx, "failed to refresh token: %s", genErr)
+		return nil, genErr
 	}
 
 	return &types.AccessTokenInformation{
@@ -74,7 +84,7 @@ func (c *JWTService) RefreshToken(refreshToken string) (*types.AccessTokenInform
 	}, nil
 }
 
-func (c *JWTService) generateRefreshToken(ctx context.Context, userId string) (string, error) {
+func (c *JWTService) generateRefreshToken(ctx context.Context, userId string) (string, *serviceresponse.Response[any]) {
 	refreshTokenExpiresDuration := time.Duration(c.config.RefreshTokenMaxAge) * time.Second
 	refreshTokenExpiresAt := time.Now().Add(refreshTokenExpiresDuration)
 	myClaims := types.MyClaims{
@@ -92,7 +102,12 @@ func (c *JWTService) generateRefreshToken(ctx context.Context, userId string) (s
 
 	refreshToken, err := unsignedRefreshToken.SignedString([]byte(os.Getenv("REFRESH_TOKEN_SECRET")))
 	if err != nil {
-		return "", err
+		return "", serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	userIdUUID := uuid.FromStringOrNil(userId)
@@ -109,7 +124,7 @@ func (c *JWTService) generateRefreshToken(ctx context.Context, userId string) (s
 	return refreshToken, nil
 }
 
-func (c *JWTService) generateAccessToken(userId string) (string, error) {
+func (c *JWTService) generateAccessToken(userId string) (string, *serviceresponse.Response[any]) {
 	accessTokenDuration := time.Duration(c.config.AccessTokenMaxAge) * time.Second
 	accessTokenExpiresAt := time.Now().Add(accessTokenDuration)
 	myClaims := types.MyClaims{
@@ -127,13 +142,18 @@ func (c *JWTService) generateAccessToken(userId string) (string, error) {
 
 	accessToken, err := unsignedAccessToken.SignedString([]byte(os.Getenv("ACCESS_TOKEN_SECRET")))
 	if err != nil {
-		return "", err
+		return "", serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
 	return accessToken, nil
 }
 
-func (c *JWTService) RevokeTokenByValue(ctx context.Context, tokenValue string) error {
+func (c *JWTService) RevokeTokenByValue(ctx context.Context, tokenValue string) *serviceresponse.Response[any] {
 	token, err := c.repo.FindByValue(ctx, tokenValue)
 	if err != nil {
 		return err
@@ -146,6 +166,6 @@ func (c *JWTService) RevokeTokenByValue(ctx context.Context, tokenValue string) 
 	return err
 }
 
-func (c *JWTService) RevokeAllTokensOfUser(ctx context.Context, userID uuid.UUID) error {
+func (c *JWTService) RevokeAllTokensOfUser(ctx context.Context, userID uuid.UUID) *serviceresponse.Response[any] {
 	return c.repo.RevokeAllTokensOfUser(ctx, userID)
 }
