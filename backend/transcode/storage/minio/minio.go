@@ -40,7 +40,7 @@ func NewMinIOStorage(ctx context.Context, config config.MinIO) *MinIOStrorage {
 	}
 
 	if err := storage.SetUp(); err != nil {
-		logger.Panicf("error setting up node: %s", err)
+		logger.Panicf(ctx, "error setting up node: %s", err)
 	}
 
 	return storage

@@ -12,7 +12,7 @@ type CreateLivestreamRequestDTO struct {
 	Title        *string                       `json:"title" validate:""`
 	Description  *string                       `json:"description,omitempty" validate:"omitempty,lte=500"`
 	ThumbnailURL *string                       `json:"thumbnailUrl,omitempty" validate:"omitempty,url"`
-	Visibility   *domains.LivestreamVisibility `json:"visibility,omitempty" validate:"omitempty,oneof=public private"`
+	Visibility   *domains.LivestreamVisibility `json:"visibility,omitempty" validate:"required,oneof=public private"`
 }
 
 type UpdateLivestreamRequestDTO struct {

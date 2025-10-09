@@ -45,24 +45,24 @@ func (ws *WebServer) ListenAndServe() {
 	}
 
 	if err := ws.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		logger.Errorf("failed to start web server: %s", err.Error())
+		logger.Errorf(context.TODO(), "failed to start web server: %s", err.Error())
 	}
 }
 
 // shutdown gracefully shuts down the server without interrupting active connections.
 func (ws *WebServer) Shutdown(ctx context.Context) error {
 	if ws.httpServer == nil {
-		logger.Warnf("web server instance not found, cannot shutdown.")
+		logger.Warnf(ctx, "web server instance not found, cannot shutdown.")
 		return nil
 	}
 
-	logger.Infof("attempting graceful shutdown of web server...")
+	logger.Infof(ctx, "attempting graceful shutdown of web server...")
 	err := ws.httpServer.Shutdown(ctx)
 	if err != nil {
-		logger.Errorf("web server shutdown failed: %v", err)
+		logger.Errorf(ctx, "web server shutdown failed: %v", err)
 		return err
 	}
 
-	logger.Infof("web server shutdown completed.")
+	logger.Infof(ctx, "web server shutdown completed.")
 	return nil
 }

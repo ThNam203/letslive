@@ -60,12 +60,12 @@ func WritePlaylist(data string, filePath string) error {
 	}
 
 	f, err := os.Create(filePath)
-	defer f.Close()
-
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %s", filePath, err)
-
 	}
+
+	defer f.Close()
+
 	_, err = f.WriteString(data)
 	if err != nil {
 		return fmt.Errorf("failed to write data into %s: %s", filePath, err)
@@ -89,6 +89,9 @@ func CopyMasterFileForOtherGateway(masterFilePath, otherGatewayURL, publicPath s
 	newData := strings.ReplaceAll(string(masterFile), "stream.m3u8", gatewayServerName+"_stream.m3u8")
 
 	f, err := os.Create(filepath.Join(publicPath, filepath.Base(filepath.Dir(masterFilePath)), gatewayServerName+"_index.m3u8"))
+	if err != nil {
+		return fmt.Errorf("failed to create master m3u8 file (%s): %s", otherGatewayURL, err)
+	}
 	defer f.Close()
 
 	_, err = f.WriteString(newData)

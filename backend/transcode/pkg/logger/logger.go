@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"log"
 	"os"
 	"path/filepath"
@@ -72,42 +73,77 @@ func Init(level LogLevel) {
 	Logger = baseLogger.Sugar()
 }
 
-func Warnw(message string, keysAndValues ...interface{}) {
+func appendAdditionalFieldsFromCtx(ctx context.Context, keysAndValues []any) {
+	if ctx == nil {
+		return
+	}
+
+	var oddCtx = true
+
+	requestId, ok := ctx.Value("requestId").(string)
+	if ok && len(requestId) > 0 {
+		keysAndValues = append([]any{"requestId", requestId}, keysAndValues...)
+	}
+
+	// separate from request-specific error
+	isSystemContext, ok := ctx.Value("systemContext").(string)
+	if ok && isSystemContext == "true" {
+		oddCtx = false
+		keysAndValues = append([]any{"systemContext", "true"}, keysAndValues...)
+	}
+
+	// for debugging
+	if oddCtx {
+		keysAndValues = append([]any{"isOddContext", "true"}, keysAndValues...)
+	}
+}
+
+func Warnw(ctx context.Context, message string, keysAndValues ...any) {
+	appendAdditionalFieldsFromCtx(ctx, keysAndValues)
 	Logger.Warnw(message, keysAndValues...)
 }
 
-func Warnf(message string, keysAndValues ...interface{}) {
+func Warnf(ctx context.Context, message string, keysAndValues ...any) {
+	appendAdditionalFieldsFromCtx(ctx, keysAndValues)
 	Logger.Warnf(message, keysAndValues...)
 }
 
-func Infow(message string, keysAndValues ...interface{}) {
+func Infow(ctx context.Context, message string, keysAndValues ...any) {
+	appendAdditionalFieldsFromCtx(ctx, keysAndValues)
 	Logger.Infow(message, keysAndValues...)
 }
 
-func Panicw(message string, keysAndValues ...interface{}) {
+func Panicw(ctx context.Context, message string, keysAndValues ...any) {
+	appendAdditionalFieldsFromCtx(ctx, keysAndValues)
 	Logger.Panicw(message, keysAndValues...)
 }
 
-func Debugw(message string, keysAndValues ...interface{}) {
+func Debugw(ctx context.Context, message string, keysAndValues ...any) {
+	appendAdditionalFieldsFromCtx(ctx, keysAndValues)
 	Logger.Debugw(message, keysAndValues...)
 }
 
-func Errorw(message string, keysAndValues ...interface{}) {
+func Errorw(ctx context.Context, message string, keysAndValues ...any) {
+	appendAdditionalFieldsFromCtx(ctx, keysAndValues)
 	Logger.Errorw(message, keysAndValues...)
 }
 
-func Infof(template string, keysAndValues ...interface{}) {
+func Infof(ctx context.Context, template string, keysAndValues ...any) {
+	appendAdditionalFieldsFromCtx(ctx, keysAndValues)
 	Logger.Infof(template, keysAndValues...)
 }
 
-func Panicf(template string, keysAndValues ...interface{}) {
+func Panicf(ctx context.Context, template string, keysAndValues ...any) {
+	appendAdditionalFieldsFromCtx(ctx, keysAndValues)
 	Logger.Panicf(template, keysAndValues...)
 }
 
-func Debugf(template string, keysAndValues ...interface{}) {
+func Debugf(ctx context.Context, template string, keysAndValues ...any) {
+	appendAdditionalFieldsFromCtx(ctx, keysAndValues)
 	Logger.Debugf(template, keysAndValues...)
 }
 
-func Errorf(template string, keysAndValues ...interface{}) {
+func Errorf(ctx context.Context, template string, keysAndValues ...any) {
+	appendAdditionalFieldsFromCtx(ctx, keysAndValues)
 	Logger.Errorf(template, keysAndValues...)
 }

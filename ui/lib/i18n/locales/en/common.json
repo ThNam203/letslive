@@ -32,5 +32,23 @@
     "no_videos_description": "There are currently no videos available. Check back later for new content",
     "searching": "Searching...",
     "no_users_found": "No users found",
-    "no_description": "No description"
+    "no_description": "No description",
+    
+    "started_at": "Started {{time}}",
+    "time": {
+        "seconds_ago": "{{count}} second ago",
+        "seconds_ago_plural": "{{count}} seconds ago",
+        "minutes_ago": "{{count}} minute ago",
+        "minutes_ago_plural": "{{count}} minutes ago",
+        "hours_ago": "{{count}} hour ago",
+        "hours_ago_plural": "{{count}} hours ago",
+        "days_ago": "{{count}} day ago",
+        "days_ago_plural": "{{count}} days ago",
+        "weeks_ago": "{{count}} week ago",
+        "weeks_ago_plural": "{{count}} weeks ago",
+        "months_ago": "{{count}} month ago",
+        "months_ago_plural": "{{count}} months ago",
+        "years_ago": "{{count}} year ago",
+        "years_ago_plural": "{{count}} years ago"
+    }
 }
