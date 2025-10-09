@@ -4,6 +4,7 @@ import GLOBAL from "../../global";
 import { VOD } from "@/types/vod";
 import LiveImage from "./live-image";
 import { cn } from "@/utils/cn";
+import useT from "@/hooks/use-translation";
 
 export default function VODView({
     vod,
@@ -12,6 +13,8 @@ export default function VODView({
     vod: VOD;
     classname?: string;
 }) {
+    const { t } = useT("common");
+
     return (
         <div
             className={cn(
@@ -49,7 +52,7 @@ export default function VODView({
                     {vod.description && vod.description.length > 50
                         ? `${vod.description.substring(0, 47)}...`
                         : vod.description}{" "}
-                    • {dateDiffFromNow(vod.createdAt)} ago
+                    • {dateDiffFromNow(vod.createdAt, t)}
                 </p>
                 <div className="mt-2 flex items-center text-sm text-foreground-muted">
                     <span>

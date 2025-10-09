@@ -83,6 +83,7 @@ export function PopularVODView() {
 function VODCard({ vod }: { vod: VOD }) {
     const [user, setUser] = useState<User | null>(null);
     const router = useRouter();
+    const { t } = useT("common");
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -156,7 +157,7 @@ function VODCard({ vod }: { vod: VOD }) {
                             <div className="flex items-center gap-1">
                                 <IconClock className="h-3 w-3" />
                                 <span>
-                                    {dateDiffFromNow(vod.createdAt)} ago
+                                    {dateDiffFromNow(vod.createdAt, t)}
                                 </span>
                             </div>
                         </div>

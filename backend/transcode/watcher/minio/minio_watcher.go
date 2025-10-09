@@ -57,7 +57,7 @@ func (w *MinIOFileWatcherStrategy) OnCreate(ctx context.Context, event watcher.E
 		return errors.New("publish name must be longer than 9 (uuid)")
 	}
 	if err := os.MkdirAll(filepath.Join(w.config.Transcode.PublicHLSPath, publishName), os.ModePerm); err != nil {
-		logger.Errorw("making dir failed", "failed to create publish folder", err, "path", filepath.Join(w.config.Transcode.PublicHLSPath, publishName))
+		logger.Errorw(ctx, "making dir failed", "failed to create publish folder", err, "path", filepath.Join(w.config.Transcode.PublicHLSPath, publishName))
 		return errors.New("failed to create publish folder")
 	}
 
@@ -82,7 +82,7 @@ func (w *MinIOFileWatcherStrategy) OnMaster(ctx context.Context, event watcher.E
 	publishName := components[len(components)-2]
 
 	if err := mywatcher.CopyFile(event.Path, filepath.Join(w.config.Transcode.PublicHLSPath, publishName, w.config.Transcode.FFMpegSetting.MasterFileName)); err != nil {
-		logger.Errorf("failed to copy master file: %s", err)
+		logger.Errorf(ctx, "failed to copy master file: %s", err)
 		return errors.New("failed to copy master file")
 	}
 
@@ -92,14 +92,14 @@ func (w *MinIOFileWatcherStrategy) OnMaster(ctx context.Context, event watcher.E
 func (w *MinIOFileWatcherStrategy) OnVariant(ctx context.Context, event watcher.Event) error {
 	info, err := w.getInfoFromPath(event.Path)
 	if err != nil {
-		logger.Errorf("failed to get variant info: %s", err)
+		logger.Errorf(ctx, "failed to get variant info: %s", err)
 		return errors.New("failed to get variant info")
 	}
 
 	variant := streams[info.PublishName].Variants[info.VariantIndex]
 	newPlaylist, err := mywatcher.GenerateRemotePlaylist(w.vodHandler, event.Path, variant)
 	if err != nil {
-		logger.Errorf("error generating remote playlist: %s", err)
+		logger.Errorf(ctx, "error generating remote playlist: %s", err)
 		return errors.New("error generating remote playlist")
 	}
 
@@ -112,13 +112,13 @@ func (w *MinIOFileWatcherStrategy) OnVariant(ctx context.Context, event watcher.
 func (w *MinIOFileWatcherStrategy) OnSegment(ctx context.Context, event watcher.Event) error {
 	segment, err := getSegmentFromPath(event.Path)
 	if segment == nil {
-		logger.Errorf("error getting segment on segment: %s", err)
+		logger.Errorf(ctx, "error getting segment on segment: %s", err)
 		return errors.New("error getting segment")
 	}
 
 	stream, ok := streams[segment.PublishName]
 	if !ok {
-		logger.Errorf("missing entry for publish name on segment: %s", segment.PublishName)
+		logger.Errorf(ctx, "missing entry for publish name on segment: %s", segment.PublishName)
 		return errors.New("missing entry for publish name")
 	}
 
@@ -134,7 +134,7 @@ func (w *MinIOFileWatcherStrategy) OnSegment(ctx context.Context, event watcher.
 			newObjectPath, err = w.storage.AddSegment(ctx, event.Path, stream.PublishName, int(variant.VariantIndex))
 
 			if err != nil {
-				logger.Errorf("error while saving segments into storage", err)
+				logger.Errorf(ctx, "error while saving segments into storage", err)
 			}
 		}
 
@@ -151,7 +151,7 @@ func (w *MinIOFileWatcherStrategy) OnThumbnail(ctx context.Context, event watche
 	publishName := filepath.Base(filepath.Dir(event.Path))
 	stream, ok := streams[publishName]
 	if !ok {
-		logger.Errorf("missing entry for publish name on thumbnail: %s", publishName)
+		logger.Errorf(ctx, "missing entry for publish name on thumbnail: %s", publishName)
 		return errors.New("missing entry for publish name")
 	}
 
@@ -159,9 +159,9 @@ func (w *MinIOFileWatcherStrategy) OnThumbnail(ctx context.Context, event watche
 		savedPath, err := w.storage.AddThumbnail(ctx, event.Path, stream.PublishName, "image/jpeg")
 
 		if err != nil {
-			logger.Errorf("error while saving thumbnail into storage", err)
+			logger.Errorf(ctx, "error while saving thumbnail into storage", err)
 		} else {
-			logger.Debugf("saved thumbnail into %s", savedPath)
+			logger.Debugf(ctx, "saved thumbnail into %s", savedPath)
 		}
 	}
 

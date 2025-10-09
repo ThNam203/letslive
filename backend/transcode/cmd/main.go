@@ -31,19 +31,19 @@ var (
 )
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	logger.Init(logger.LogLevel(logger.Debug))
 	registry, err := discovery.NewConsulRegistry(os.Getenv("REGISTRY_SERVICE_ADDRESS"))
 	if err != nil {
-		logger.Panicf("failed to get a new registry")
+		logger.Panicf(ctx, "failed to get a new registry")
 	}
 
-	cfgManager, err := cfg.NewConfigManager(registry, configServiceName, configProfile)
+	cfgManager, err := cfg.NewConfigManager(ctx, registry, configServiceName, configProfile)
 	if err != nil {
-		logger.Panicf("failed to set up config manager: %s", err)
+		logger.Panicf(ctx, "failed to set up config manager: %s", err)
 	}
-
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
 
 	config := cfgManager.GetConfig()
 
@@ -62,7 +62,7 @@ func main() {
 	var vodHandler watcher.VODHandler
 
 	if !config.MinIO.Enabled {
-		logger.Warnf("minio is forced to be enable, we are ignoring minio.enabled")
+		logger.Warnf(ctx, "minio is forced to be enable, we are ignoring minio.enabled")
 	}
 
 	vodHandler = miniowatcher.GetMinIOVODStrategy()
@@ -84,7 +84,7 @@ func main() {
 	go rtmpServer.Start()
 	<-ctx.Done()
 
-	logger.Infof("starting coordinated shutdown...")
+	logger.Infof(ctx, "starting coordinated shutdown...")
 
 	// Create a shutdown context with timeout
 	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), gracefulShutdownTimeout)
@@ -117,7 +117,7 @@ func main() {
 	})()
 
 	wg.Wait()
-	logger.Infof("service shutdown complete.")
+	logger.Infof(ctx, "service shutdown complete.")
 }
 
 func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry, serviceName, instanceId string, config *cfg.Config) {
@@ -126,23 +126,23 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 
 	currentDelay := discoveryBaseDelay
 
-	logger.Infof("attempting to register service '%s' instance '%s' [%s] with discovery service...", serviceName, instanceId, serviceHostPort)
+	logger.Infof(ctx, "attempting to register service '%s' instance '%s' [%s] with discovery service...", serviceName, instanceId, serviceHostPort)
 
 	for {
 		err := registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, serviceName, instanceId, nil) // Pass metadata if needed
 		if err == nil {
-			logger.Infof("successfully registered service '%s' instance '%s'", serviceName, instanceId)
+			logger.Infof(ctx, "successfully registered service '%s' instance '%s'", serviceName, instanceId)
 			break
 		}
 
-		logger.Errorf("failed to register service '%s' instance '%s': %v - retrying in %v...", serviceName, instanceId, err, currentDelay)
+		logger.Errorf(ctx, "failed to register service '%s' instance '%s': %v - retrying in %v...", serviceName, instanceId, err, currentDelay)
 
 		// Wait for the current delay duration, but also listen for context cancellation
 		timer := time.NewTimer(currentDelay)
 		select {
 		case <-ctx.Done():
 			// context was cancelled during the wait
-			logger.Warnf("registration attempt cancelled for service '%s' instance '%s' due to context cancellation: %v", serviceName, instanceId, ctx.Err())
+			logger.Warnf(ctx, "registration attempt cancelled for service '%s' instance '%s' due to context cancellation: %v", serviceName, instanceId, ctx.Err())
 			timer.Stop()
 			return
 		case <-timer.C:
@@ -157,21 +157,21 @@ func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry
 }
 
 func DeregisterDiscoveryService(shutdownContext context.Context, registry discovery.Registry, serviceName, instanceId string) {
-	logger.Infof("attempting to deregister service")
+	logger.Infof(shutdownContext, "attempting to deregister service")
 
 	if err := registry.Deregister(shutdownContext, serviceName, instanceId); err != nil {
-		logger.Errorf("failed to deregister service '%s' instance '%s': %v", serviceName, instanceId, err)
+		logger.Errorf(shutdownContext, "failed to deregister service '%s' instance '%s': %v", serviceName, instanceId, err)
 	} else {
-		logger.Infof("successfully deregistered service '%s' instance '%s'", serviceName, instanceId)
+		logger.Infof(shutdownContext, "successfully deregistered service '%s' instance '%s'", serviceName, instanceId)
 	}
 }
 
 func setupHLSFolders(cfg cfg.Transcode) {
 	if err := os.MkdirAll(cfg.PublicHLSPath, 0777); err != nil {
-		logger.Panicf("failed to create public hls folder: %s", err)
+		logger.Panicf(context.TODO(), "failed to create public hls folder: %s", err)
 	}
 
 	if err := os.MkdirAll(cfg.PrivateHLSPath, 0777); err != nil {
-		logger.Panicf("failed to create private hls folder: %s", err)
+		logger.Panicf(context.TODO(), "failed to create private hls folder: %s", err)
 	}
 }
