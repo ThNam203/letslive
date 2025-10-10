@@ -56,7 +56,7 @@ export default function VODPage() {
                 }
             }).catch((_) => {
                 toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "vod-fetch-error",
+                    toastId: "client-fetch-error-id",
                     type: "error",
                 });
             });
@@ -82,7 +82,7 @@ export default function VODPage() {
                 }
             }).catch((_) => {
                 toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "vod-fetch-error",
+                    toastId: "client-fetch-error-id",
                     type: "error",
                 });
             });
@@ -112,7 +112,7 @@ export default function VODPage() {
             })
             .catch((_) => {
                 toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "user-fetch-error",
+                    toastId: "client-fetch-error-id",
                     type: "error",
                 });
             });

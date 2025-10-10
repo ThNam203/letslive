@@ -69,7 +69,7 @@ export default function ProfileSettings() {
             })
             .catch((_) => {
                 toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "update-background-error",
+                    toastId: "client-fetch-error-id",
                     type: "error",
                 });
                 hasError = true;
@@ -98,7 +98,7 @@ export default function ProfileSettings() {
                 })
                 .catch((_) => {
                     toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "update-profile-error",
+                        toastId: "client-fetch-error-id",
                         type: "error",
                     });
                     hasError = true;
@@ -129,7 +129,7 @@ export default function ProfileSettings() {
             })
             .catch((_) => {
                 toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "update-profile-error",
+                    toastId: "client-fetch-error-id",
                     type: "error",
                 });
                 hasError = true;
