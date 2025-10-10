@@ -22,6 +22,10 @@
         "title": "Giao diện",
         "description": "Tùy chỉnh giao diện của trang web"
     },
+    "language": {
+        "title": "Ngôn ngữ",
+        "description": "Chọn ngôn ngữ ưa thích của bạn"
+    },
     "stream": {
         "title": "Livestream",
         "description": "Thông tin livestream tiếp theo của bạn sẽ dựa trên thông tin này. Nó sẽ không thay đổi ngay cả sau khi livestream kết thúc.",
