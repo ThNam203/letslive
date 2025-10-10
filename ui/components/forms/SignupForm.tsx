@@ -118,7 +118,10 @@ export default function SignUpForm() {
                 }
             })
             .catch((_) => {
-                toast.error(t("fetch-error:client_fetch_error"));
+                toast(t("fetch-error:client_fetch_error"), {
+                    toastId: "client-fetch-error-id",
+                    type: "error",
+                });
             })
             .finally(() => {
                 setIsOtpSubmitting(false);
@@ -145,7 +148,10 @@ export default function SignUpForm() {
             }
         })
         .catch((_) => {
-            toast.error(t("fetch-error:client_fetch_error"));
+            toast(t("fetch-error:client_fetch_error"), {
+                toastId: "client-fetch-error-id",
+                type: "error",
+            });
         })
         .finally(() => {
             setIsLoading(false);

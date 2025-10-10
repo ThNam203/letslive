@@ -31,7 +31,7 @@ export default function VODsEdit() {
                 })
                 .catch((_) => {
                     toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "vod-fetch-error",
+                        toastId: "client-fetch-error-id",
                         type: "error",
                     });
                 });

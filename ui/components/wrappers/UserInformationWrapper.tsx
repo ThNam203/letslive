@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
@@ -16,24 +16,24 @@ export default function UserInformationWrapper({
 
     useEffect(() => {
         const fetchUser = async () => {
-          setIsLoading(true);
-          GetMeProfile()
-          .then(userRes => {
-            setUser(userRes.data ?? null)
-          })
-          .catch((e) => {
-            toast(t("fetch-error:client_fetch_error"), {
-              toastId: "user-fetch-error",
-              type: "error",
-            });
-          })
-          .finally(() => {
-            setIsLoading(false);
-          })
+            setIsLoading(true);
+            GetMeProfile()
+                .then((userRes) => {
+                    setUser(userRes.data ?? null);
+                })
+                .catch((e) => {
+                    toast(t("fetch-error:client_fetch_error"), {
+                        toastId: "client-fetch-error-id",
+                        type: "error",
+                    });
+                })
+                .finally(() => {
+                    setIsLoading(false);
+                });
         };
-    
+
         fetchUser();
-      }, []);
+    }, []);
 
     return <>{children}</>;
 }
