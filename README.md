@@ -16,9 +16,10 @@ The project aims to create a functioning livestreaming website from a to z like 
 - Golang, PostgresQL.
 - FFMpeg for transcoding from RTMP to HLS.
 - Consul for service discovery and Kong for API Gateway.
-- Storage: IPFS or MinIO.
+- Storage: MinIO (IPFS not supported anymore).
 - Docker and Docker Compose for up and running.
 - NextJS, ReactJS and TailwindCSS for UI.
+- Grafana Loki + Tempo for logging and tracing.
 
 ## ARCHITECTURE  
 ### WITH MINIO  
@@ -28,15 +29,14 @@ The project aims to create a functioning livestreaming website from a to z like 
 ![IPFS ARCHITECTURE](docs/ipfs_architecture.png)
 
 ## PORTS
-- 8000: The main API endpoints.
+- 8000: The main API endpoints/Gateway port.
 - 1935: The RTMP default port (for stream ingestion)  
 - 8889: The web server port (use to get the index.m3u8 and stream.m3u8 files)
-- 8888: The port to get .ts files (This port uses nginx as a reverse proxy to get file from the IPFS network)  
-- 5000: Web UI  
+- 8888: The port to get .ts files (This port uses nginx as a reverse proxy to get file from the IPFS network).  
+- 5000: Web UI/Client.
 - 4001: IPFS bootstrap node port (allows other nodes outside the network to connect in)
-- 5601: Kibana port for logging
 - 8002: Kong API gateway management.
-- 3000: Grafana for IPFS.
+- 12345: Grafana for logging and tracing.
 
 ## INSTALLATION (LOCAL)
 1. Clone the repo
@@ -46,12 +46,5 @@ The project aims to create a functioning livestreaming website from a to z like 
 5. Run "docker compose up"
 6. Access UI at localhost:5000
 
-## ROADMAP
-* Support streaming from browser.
-* gRPC support.
-* Kafka
-* Add unit tests
-* Add logging and tracing
-
-Last editted: 14/03/2025  
+Last editted: 10/10/2025  
 **[Editor: Nam Huynh](https://github.com/ThNam203)**
