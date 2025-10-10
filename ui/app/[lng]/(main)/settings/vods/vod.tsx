@@ -224,7 +224,7 @@ export default function VODEditCard({
                         {vod.description && vod.description.length > 50
                             ? `${vod.description.substring(0, 47)}...`
                             : vod.description}{" "}
-                        • {dateDiffFromNow(vod.createdAt)} ago
+                        • {dateDiffFromNow(vod.createdAt, t)}
                     </p>
                     <div className="mt-2 flex items-center text-sm text-foreground-muted">
                         <span>

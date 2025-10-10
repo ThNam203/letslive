@@ -4,6 +4,8 @@ import { dateDiffFromNow } from "@/utils/timeFormats";
 import IconClock from "../icons/clock";
 import IconEye from "../icons/eye";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import useT from "@/hooks/use-translation";
+
 const LivestreamPreviewDetailView = ({
     livestream,
     user,
@@ -11,6 +13,8 @@ const LivestreamPreviewDetailView = ({
     livestream: Livestream;
     user: User | null;
 }) => {
+    const { t } = useT("common");
+
     return (
         <div className="flex items-start gap-3">
             <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
@@ -41,8 +45,7 @@ const LivestreamPreviewDetailView = ({
                     <div className="flex items-center gap-1">
                         <IconClock className="h-3 w-3" />
                         <span>
-                            Started at {dateDiffFromNow(livestream.startedAt)}{" "}
-                            ago
+                            {t('started_at', { time: dateDiffFromNow(livestream.startedAt, t) })}
                         </span>
                     </div>
                 </div>

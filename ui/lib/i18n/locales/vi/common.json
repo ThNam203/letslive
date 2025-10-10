@@ -33,5 +33,16 @@
     "no_videos_description": "Hiện không có videos nào có sẵn, vui lòng trở lại sau để xem các content mới nhất",
     "searching": "Đang tìm kiếm...",
     "no_users_found": "Không tìm thấy người dùng",
-    "no_description": "Không có mô tả"
+    "no_description": "Không có mô tả",
+    
+    "started_at": "Bắt đầu {{time}} trước",
+    "time": {
+        "seconds_ago": "{{count}} giây",
+        "minutes_ago": "{{count}} phút",
+        "hours_ago": "{{count}} giờ",
+        "days_ago": "{{count}} ngày",
+        "weeks_ago": "{{count}} tuần",
+        "months_ago": "{{count}} tháng",
+        "years_ago": "{{count}} năm"
+    }
 }

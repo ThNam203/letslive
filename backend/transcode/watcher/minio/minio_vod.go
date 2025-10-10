@@ -1,6 +1,7 @@
 package miniowatcher
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -63,13 +64,13 @@ func (u *MinIOVODStrategy) OnStreamEnd(publishName string, publicHLSPath string,
 
 	// create the base output directory if it doesn't exist
 	if err := os.MkdirAll(outputPath, 0755); err != nil {
-		logger.Errorf("failed to create base output directory: %w", err)
+		logger.Errorf(context.TODO(), "failed to create base output directory: %w", err)
 		return
 	}
 
 	// generate and save the variant playlists
 	if err := u.generateVariantVODPlaylists(*vodData, outputPath); err != nil {
-		logger.Errorf("failed to generate variant playlists: %w", err)
+		logger.Errorf(context.TODO(), "failed to generate variant playlists: %w", err)
 		return
 	}
 

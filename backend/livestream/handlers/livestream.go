@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"sen1or/letslive/livestream/dto"
+	"sen1or/letslive/livestream/pkg/logger"
 	"sen1or/letslive/livestream/pkg/tracer"
 	response "sen1or/letslive/livestream/response"
 	"sen1or/letslive/livestream/services/livestream"
@@ -58,6 +59,7 @@ func (h *LivestreamHandler) CreateLivestreamInternalHandler(w http.ResponseWrite
 
 	var body dto.CreateLivestreamRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		logger.Debugf(ctx, "create livestream body invalid: %s", err.Error())
 		WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
 		return
 	}

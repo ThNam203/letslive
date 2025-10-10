@@ -9,15 +9,12 @@ import (
 	"sen1or/letslive/transcode/gateway"
 	dto "sen1or/letslive/transcode/gateway/livestream/dto"
 	"sen1or/letslive/transcode/pkg/discovery"
+	"sen1or/letslive/transcode/pkg/logger"
+	"sen1or/letslive/transcode/response"
 )
 
 type LivestreamGateway struct {
 	registry discovery.Registry
-}
-
-type ErrorResponse struct {
-	Message    string `json:"message"`
-	StatusCode int    `json:"statusCode"`
 }
 
 func NewLivestreamGateway(registry discovery.Registry) *LivestreamGateway {
@@ -26,119 +23,101 @@ func NewLivestreamGateway(registry discovery.Registry) *LivestreamGateway {
 	}
 }
 
-func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestreamRequestDTO) (*dto.LivestreamResponseDTO, *ErrorResponse) {
+func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestreamRequestDTO) (*dto.LivestreamResponseDTO, *response.Response[any]) {
 	addr, err := g.registry.ServiceAddress(ctx, "livestream")
 	if err != nil {
-		return nil, &ErrorResponse{
-			Message:    err.Error(),
-			StatusCode: http.StatusBadGateway,
-		}
+		logger.Debugf(ctx, "get service address from gateway failed")
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
+
 	}
 
 	url := fmt.Sprintf("http://%s/v1/internal/livestreams", addr)
 	payloadBuf := new(bytes.Buffer)
 	if err := json.NewEncoder(payloadBuf).Encode(data); err != nil {
-		return nil, &ErrorResponse{
-			Message:    err.Error(),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Debugf(ctx, "failed to encode data for request: %s", err)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 
 	}
 	req, err := http.NewRequest(http.MethodPost, url, payloadBuf)
 	if err != nil {
-		return nil, &ErrorResponse{
-			Message:    fmt.Sprintf("failed to create request: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Debugf(ctx, "failed to create request: %s", err)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
+
 	}
 
 	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
-		return nil, &ErrorResponse{
-			Message:    fmt.Sprintf("failed to create the request: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Debugf(ctx, "failed to set request id header: %s", err)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, &ErrorResponse{
-			Message:    fmt.Sprintf("failed to call request: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Debugf(ctx, "failed to call request: %s", err)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		resInfo := ErrorResponse{}
+		resInfo := response.Response[any]{}
 		if err := json.NewDecoder(resp.Body).Decode(&resInfo); err != nil {
-			return nil, &ErrorResponse{
-				Message:    fmt.Sprintf("failed to decode error response from user service: %s", err),
-				StatusCode: resp.StatusCode,
-			}
+			logger.Debugf(ctx, "failed to decode error response from user service: %s", err)
+			return nil, &resInfo
 		}
 
 		return nil, &resInfo
 	}
 
-	var livestreamResponse dto.LivestreamResponseDTO
+	var livestreamResponse response.Response[dto.LivestreamResponseDTO]
 
 	if err := json.NewDecoder(resp.Body).Decode(&livestreamResponse); err != nil {
-		return nil, &ErrorResponse{
-			Message:    fmt.Sprintf("failed to decode resp body: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Debugf(ctx, "failed to decode resp body: %s", err)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
-	return &livestreamResponse, nil
+	return livestreamResponse.Data, nil
 }
 
-func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, endDTO dto.EndLivestreamRequestDTO) *ErrorResponse {
+func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, endDTO dto.EndLivestreamRequestDTO) *response.Response[any] {
 	addr, err := g.registry.ServiceAddress(ctx, "livestream")
 	if err != nil {
-		return &ErrorResponse{
-			Message:    err.Error(),
-			StatusCode: http.StatusBadGateway,
-		}
+		logger.Debugf(ctx, "get service address from gateway failed")
+		return response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
 	url := fmt.Sprintf("http://%s/v1/internal/livestreams/%s/end", addr, streamId)
 	payloadBuf := new(bytes.Buffer)
 	if err := json.NewEncoder(payloadBuf).Encode(endDTO); err != nil {
-		return &ErrorResponse{
-			Message:    fmt.Sprintf("failed to encode end livestream body: %s", err),
-			StatusCode: 500,
-		}
+		logger.Debugf(ctx, "failed to encode data for end livestream request: %s", err)
+		return response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, payloadBuf)
 	if err != nil {
-		return &ErrorResponse{
-			Message:    fmt.Sprintf("failed to create request: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Debugf(ctx, "failed to create request: %s", err)
+		return response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
 	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
-		return &ErrorResponse{
-			Message:    fmt.Sprintf("failed to create the request: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Debugf(ctx, "failed to set request id header: %s", err)
+		return response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return &ErrorResponse{
-			Message:    fmt.Sprintf("failed to call request: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Debugf(ctx, "failed to call request: %s", err)
+		return response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		return &ErrorResponse{
-			Message:    fmt.Sprintf("failed to end livestream from livestream service with status code: %d", resp.StatusCode),
-			StatusCode: resp.StatusCode,
+		resInfo := response.Response[any]{}
+		if err := json.NewDecoder(resp.Body).Decode(&resInfo); err != nil {
+			logger.Debugf(ctx, "failed to decode error response when end user livestream: %s", err)
+			return &resInfo
 		}
+
+		logger.Debugf(ctx, "failed to end livestream from livestream service with status code: %d", resp.StatusCode)
+		return &resInfo
 	}
 
 	return nil
