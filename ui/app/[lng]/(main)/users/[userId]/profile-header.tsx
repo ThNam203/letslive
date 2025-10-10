@@ -46,7 +46,7 @@ export default function ProfileHeader({
                 }
             }).catch(err => {
                 toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "unfollow-user-error",
+                    toastId: "client-fetch-error-id",
                     type: "error",
                 });
             }).finally(() => {
@@ -68,7 +68,7 @@ export default function ProfileHeader({
                 }
             }).catch(err => {
                 toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "follow-user-error",
+                    toastId: "client-fetch-error-id",
                     type: "error",
                 });
             }).finally(() => {

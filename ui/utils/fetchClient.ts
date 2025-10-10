@@ -2,6 +2,8 @@ import { ApiResponse } from "@/types/fetch-response";
 import GLOBAL from "../global";
 import { FetchOptions } from "../types/fetch-options";
 
+const DEFAULT_TIMEOUT_MS = 15000; // 15 seconds
+
 type WithStatusCode<T> = T & { statusCode: number };
 
 // Singleton promise for token refresh
@@ -26,7 +28,6 @@ const refreshToken = async (): Promise<ApiResponse<void>> => {
     return refreshTokenPromise;
 };
 
-// handle exception outside
 export const fetchClient = async <T>(
     url: string,
     options: FetchOptions = {},
@@ -44,28 +45,48 @@ export const fetchClient = async <T>(
         ...(options.headers ?? {}),
     };
 
-    const response = await fetch(url, {
-        credentials: "include",
-        ...options,
-        headers,
-    });
+    // Setup timeout controller
+    let controller: AbortController | undefined;
+    let timeoutId: NodeJS.Timeout | undefined;
 
-    if (!response.ok) {
-        if (response.status === 401 && !shouldSkipRefresh(url)) {
-            await refreshToken();
-
-            const retryResponse = await fetch(url, {
-                ...options,
-                credentials: "include",
-                headers,
-                body: options.body,
-            });
-
-            return validateAndParseResponse<T>(retryResponse);
-        }
+    if (!options.disableTimeout) {
+        const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS; // default 15s
+        controller = new AbortController();
+        timeoutId = setTimeout(() => controller!.abort(), timeoutMs);
     }
 
-    return validateAndParseResponse<T>(response);
+    try {
+        const response = await fetch(url, {
+            credentials: "include",
+            ...options,
+            headers,
+            signal: controller?.signal,
+        });
+
+        if (!response.ok) {
+            if (response.status === 401 && !shouldSkipRefresh(url)) {
+                await refreshToken();
+
+                const retryResponse = await fetch(url, {
+                    ...options,
+                    credentials: "include",
+                    headers,
+                    signal: controller?.signal, // timeout
+                });
+
+                return validateAndParseResponse<T>(retryResponse);
+            }
+        }
+
+        return validateAndParseResponse<T>(response);
+    } catch (err: any) {
+        if (err.name === "AbortError") {
+            throw new Error(`request timed out after ${options.timeoutMs ?? DEFAULT_TIMEOUT_MS} ms`);
+        }
+        throw err;
+    } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+    }
 };
 
 async function validateAndParseResponse<T>(response: Response): Promise<WithStatusCode<T>> {
@@ -75,7 +96,6 @@ async function validateAndParseResponse<T>(response: Response): Promise<WithStat
         return { statusCode: response.status } as WithStatusCode<T>;
     }
 
-    // TODO: should not hit this if
     if (contentType.includes("text/plain")) {
         const text = await response.text();
         return { ...(text as unknown as T), statusCode: response.status };
@@ -85,7 +105,6 @@ async function validateAndParseResponse<T>(response: Response): Promise<WithStat
     return { ...data, statusCode: response.status };
 }
 
-// URLs that should NOT trigger refresh
 const REFRESH_EXCLUDE_PATHS = [
     "/auth/login",
     "/auth/register",
@@ -95,7 +114,6 @@ const REFRESH_EXCLUDE_PATHS = [
 
 function shouldSkipRefresh(url: string): boolean {
     try {
-        // Normalize relative vs absolute
         const u = url.startsWith("http")
             ? new URL(url)
             : new URL(url, GLOBAL.API_URL);
@@ -107,7 +125,6 @@ function shouldSkipRefresh(url: string): boolean {
     }
 }
 
-// TODO: better api-call handler
 function hasRefreshToken(): boolean {
     return document.cookie.match(/^(.*;)?\s*REFRESH_TOKEN\s*=\s*[^;]+(.*)?$/) != null;
 }

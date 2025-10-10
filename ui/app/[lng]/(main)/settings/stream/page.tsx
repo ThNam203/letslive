@@ -79,7 +79,7 @@ export default function StreamEdit() {
         })
         .catch((_) => {
             toast(t("fetch-error:client_fetch_error"), {
-                toastId: "stream-update-error",
+                toastId: "client-fetch-error-id",
                 type: "error",
             });
         })

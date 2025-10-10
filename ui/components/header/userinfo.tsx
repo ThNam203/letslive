@@ -32,7 +32,7 @@ export default function UserInfo() {
       })
       .catch((err) => {
         toast(t("fetch-error:client_fetch_error"), {
-          toastId: "logout-error",
+          toastId: "client-fetch-error-id",
           type: "error",
         });
       });
