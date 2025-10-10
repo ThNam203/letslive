@@ -64,18 +64,18 @@ func (s *RTMPServer) Start() {
 
 	serverAddr, err := net.ResolveTCPAddr("tcp", ":"+portStr)
 	if err != nil {
-		logger.Panicf("failed to resolve rtmp addr: %s", err)
+		logger.Panicf(s.ctx, "failed to resolve rtmp addr: %s", err)
 	}
 
 	s.listener, err = net.ListenTCP("tcp", serverAddr)
 	if err != nil {
-		logger.Panicf("rtmp failed to listen: %s", err)
+		logger.Panicf(s.ctx, "rtmp failed to listen: %s", err)
 	}
-	logger.Infow("rtmp server started")
+	logger.Infow(s.ctx, "rtmp server started")
 
 	server.LogEvent = func(c *rtmp.Conn, nc net.Conn, e int) {
 		es := rtmp.EventString[e]
-		logger.Debugf("RTMP log event: %s", es)
+		logger.Debugf(s.ctx, "RTMP log event: %s", es)
 	}
 
 	server.HandleConn = s.HandleConnection
@@ -85,23 +85,23 @@ func (s *RTMPServer) Start() {
 
 		if err != nil {
 			if errors.Is(err, net.ErrClosed) {
-				logger.Infow("RTMP listener closed, shutting down accept loop.")
+				logger.Infow(s.ctx, "RTMP listener closed, shutting down accept loop.")
 				return
 			}
 
 			select {
 			case <-s.ctx.Done():
-				logger.Infow("context cancelled - shutting down rtmp accept loop.")
+				logger.Infow(s.ctx, "context cancelled - shutting down rtmp accept loop.")
 				return
 			default:
-				logger.Errorf("rtmp failed to accept connection: %s", err)
+				logger.Errorf(s.ctx, "rtmp failed to accept connection: %s", err)
 				time.Sleep(1 * time.Second) // Prevent fast spinning on unexpected errors
 				continue
 			}
 
 		}
 
-		logger.Debugf("RTMP connection accepted from: %s", conn.RemoteAddr())
+		logger.Debugf(s.ctx, "RTMP connection accepted from: %s", conn.RemoteAddr())
 		// Launch a goroutine to handle the connection using the rtmp library's handler
 		go server.HandleNetConn(conn)
 	}
@@ -111,7 +111,7 @@ func (s *RTMPServer) Start() {
 func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	c.LogTagEvent = func(isRead bool, t flvio.Tag) {
 		if t.Type == flvio.TAG_AMF0 {
-			logger.Infof("RTMP log tag: %+v", t.DebugFields())
+			logger.Infof(s.ctx, "RTMP log tag: %+v", t.DebugFields())
 		}
 	}
 
@@ -121,7 +121,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	streamId, _, err := s.onConnect(streamingKey) // get stream id
 
 	if err != nil {
-		logger.Errorf("stream connection failed: %s", err)
+		logger.Errorf(s.ctx, "stream connection failed: %s", err)
 		nc.Close()
 		return
 	}
@@ -152,7 +152,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 		}
 
 		if err := w.WritePacket(pkt); err != nil {
-			logger.Errorf("failed to write rtmp package: %s", err)
+			logger.Errorf(s.ctx, "failed to write rtmp package: %s", err)
 			duration := int64(math.Ceil(time.Now().Sub(startTime).Seconds()) - 7)
 			pipeIn.Close()
 			pipeOut.Close()
@@ -175,10 +175,10 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 	}
 
 	streamDTO := &livestreamdto.CreateLivestreamRequestDTO{
-		Title:        userInfo.LivestreamInformationResponseDTO.Title,
-		UserId:       userInfo.Id,
-		Description:  userInfo.LivestreamInformationResponseDTO.Description,
-		ThumbnailURL: userInfo.LivestreamInformationResponseDTO.ThumbnailURL,
+		Title:        userInfo.Data.LivestreamInformationResponseDTO.Title,
+		UserId:       userInfo.Data.Id,
+		Description:  userInfo.Data.LivestreamInformationResponseDTO.Description,
+		ThumbnailURL: userInfo.Data.LivestreamInformationResponseDTO.ThumbnailURL,
 		Visibility:   "public", // TODO: add to livestream information instead of default to public
 	}
 
@@ -194,7 +194,7 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 
 	// setup the vod creation
 	s.vodHandler.OnStreamStart(livestreamId)
-	return livestreamId, userInfo.Id.String(), nil
+	return livestreamId, userInfo.Data.Id.String(), nil
 }
 
 func (s *RTMPServer) onDisconnect(streamId string, duration int64) {
@@ -212,7 +212,7 @@ func (s *RTMPServer) onDisconnect(streamId string, duration int64) {
 
 	createErrRes := s.livestreamGateway.EndLivestream(reqCtx, streamId, *endDTO)
 	if createErrRes != nil {
-		logger.Errorf("failed to end livestream: %s", createErrRes.Message)
+		logger.Errorf(s.ctx, "failed to end livestream: %s", createErrRes.Message)
 	}
 
 	var wg sync.WaitGroup
@@ -240,7 +240,7 @@ func removeLiveGeneratedFiles(streamingKey, privatePath, publicPath string) erro
 	var errList []error
 
 	for _, path := range paths {
-		logger.Infof("path is removed", path)
+		logger.Infof(context.TODO(), "path is removed", path)
 		err := os.RemoveAll(path)
 		if err != nil {
 			errList = append(errList, fmt.Errorf("failed to remove %s: %w", path, err))
@@ -255,21 +255,21 @@ func (s *RTMPServer) Shutdown(ctx context.Context) error {
 	s.listener = nil // prevent further use
 
 	if listener == nil {
-		logger.Warnf("RTMP server listener already closed or not started.")
+		logger.Warnf(ctx, "RTMP server listener already closed or not started.")
 		return nil
 	}
 
-	logger.Infow("shutting down RTMP server listener...")
+	logger.Infow(ctx, "shutting down RTMP server listener...")
 
 	// close the listener, this will cause the accept loop in Start() to unblock
 	err := listener.Close()
 
 	if err != nil && !errors.Is(err, net.ErrClosed) {
-		logger.Errorf("error closing RTMP listener: %v", err)
+		logger.Errorf(ctx, "error closing RTMP listener: %v", err)
 		return err
 	}
 
-	logger.Infow("RTMP server listener closed.")
+	logger.Infow(ctx, "RTMP server listener closed.")
 
 	// Optionally: Add waiting logic here if you need to ensure active connections are finished.
 	// This usually involves tracking active connections and waiting for them to complete.

@@ -8,15 +8,12 @@ import (
 	"sen1or/letslive/transcode/gateway"
 	dto "sen1or/letslive/transcode/gateway/user"
 	"sen1or/letslive/transcode/pkg/discovery"
+	"sen1or/letslive/transcode/pkg/logger"
+	"sen1or/letslive/transcode/response"
 )
 
 type UserGateway struct {
 	registry discovery.Registry
-}
-
-type ErrorResponse struct {
-	Message    string `json:"message"`
-	StatusCode int    `json:"statusCode"`
 }
 
 func NewUserGateway(registry discovery.Registry) *UserGateway {
@@ -25,59 +22,47 @@ func NewUserGateway(registry discovery.Registry) *UserGateway {
 	}
 }
 
-func (g *UserGateway) GetUserInformation(ctx context.Context, streamAPIKey string) (*dto.GetUserResponseDTO, *ErrorResponse) {
+func (g *UserGateway) GetUserInformation(ctx context.Context, streamAPIKey string) (res *response.Response[dto.GetUserResponseDTO], callErr *response.Response[any]) {
 	addr, err := g.registry.ServiceAddress(ctx, "user")
 	if err != nil {
-		return nil, &ErrorResponse{
-			Message:    err.Error(),
-			StatusCode: http.StatusBadGateway,
-		}
+		logger.Debugf(ctx, "get service address from gateway failed")
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
 	url := fmt.Sprintf("http://%s/v1/verify-stream-key?streamAPIKey=%s", addr, streamAPIKey)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, &ErrorResponse{
-			Message:    fmt.Sprintf("failed to create request: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Debugf(ctx, "failed to create request: %s", err)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
 	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
-		return nil, &ErrorResponse{
-			Message:    fmt.Sprintf("failed to create the request: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Debugf(ctx, "failed to set request id header: %s", err)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, &ErrorResponse{
-			Message:    fmt.Sprintf("failed to call request: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Debugf(ctx, "failed to call request: %s", err)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		resInfo := ErrorResponse{}
+		resInfo := response.Response[any]{}
 		if err := json.NewDecoder(resp.Body).Decode(&resInfo); err != nil {
-			return nil, &ErrorResponse{
-				Message:    fmt.Sprintf("failed to decode error response from user service: %s", err),
-				StatusCode: http.StatusInternalServerError,
-			}
+			logger.Debugf(ctx, "failed to decode error response from user service: %s", err)
+			return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 		}
 
 		return nil, &resInfo
 	}
 
-	var userInfo dto.GetUserResponseDTO
+	var userInfo response.Response[dto.GetUserResponseDTO]
 
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
-		return nil, &ErrorResponse{
-			Message:    fmt.Sprintf("failed to decode resp body: %s", err),
-			StatusCode: http.StatusInternalServerError,
-		}
+		logger.Debugf(ctx, "failed to decode resp body: %s", err)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
 	return &userInfo, nil

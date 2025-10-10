@@ -1,39 +1,41 @@
-export function dateDiffFromNow(pastDate: string) {
+import { TFunction } from "next-i18next";
+
+export function dateDiffFromNow(pastDate: string, t: TFunction) {
     const now = new Date();
     const past = new Date(pastDate);
     const seconds = Math.round((now.getTime() - past.getTime()) / 1000);
 
     if (seconds < 60) {
-        return `${seconds} second${seconds !== 1 ? 's' : ''}`;
+        return t('time.seconds_ago', { count: seconds });
     }
 
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) {
-        return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+        return t('time.minutes_ago', { count: minutes });
     }
 
     const hours = Math.floor(minutes / 60);
     if (hours < 24) {
-        return `${hours} hour${hours !== 1 ? 's' : ''}`;
+        return t('time.hours_ago', { count: hours });
     }
 
     const days = Math.floor(hours / 24);
     if (days < 7) {
-        return `${days} day${days !== 1 ? 's' : ''}`;
+        return t('time.days_ago', { count: days });
     }
 
     const weeks = Math.floor(days / 7);
     if (days < 30) {
-        return `${weeks} week${weeks !== 1 ? 's' : ''}`;
+        return t('time.weeks_ago', { count: weeks });
     }
 
     const months = Math.floor(days / 30);
     if (days < 365) {
-        return `${months} month${months !== 1 ? 's' : ''}`;
+        return t('time.months_ago', { count: months });
     }
 
     const years = Math.floor(days / 365);
-    return `${years} year${years !== 1 ? 's' : ''}`;
+    return t('time.years_ago', { count: years });
 }
 
 export function formatSeconds(duration: number): string {

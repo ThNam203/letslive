@@ -63,11 +63,11 @@ func (w *FFMpegFileWatcher) Watch(ctx context.Context) {
 					w.watcherStrategy.OnThumbnail(ctx, event)
 				} else {
 					if fileType != "" {
-						logger.Errorf("unknown file appeared when watching: %s", fileType)
+						logger.Errorf(ctx, "unknown file appeared when watching: %s", fileType)
 					}
 				}
 			case err := <-w.watcher.Error:
-				logger.Errorf("something failed while running watcher", err)
+				logger.Errorf(ctx, "something failed while running watcher", err)
 			case <-w.watcher.Closed:
 				return
 			}
@@ -76,17 +76,17 @@ func (w *FFMpegFileWatcher) Watch(ctx context.Context) {
 
 	// Watch the hls segment storage folder recursively for changes.
 	if err := w.watcher.AddRecursive(w.monitorPath); err != nil {
-		logger.Panicf("error while setting up watcher path: %s", err)
+		logger.Panicf(ctx, "error while setting up watcher path: %s", err)
 	}
 
 	if err := w.watcher.Start(time.Millisecond * 100); err != nil {
-		logger.Panicf("error starting watcher: %s", err)
+		logger.Panicf(ctx, "error starting watcher: %s", err)
 	}
 }
 
 func (w FFMpegFileWatcher) Shutdown() {
 	w.watcher.Close()
-	logger.Infof("watcher has closed")
+	logger.Infof(context.TODO(), "watcher has closed")
 }
 
 // getFileType should return one of the three: Master, Variant, Segment
@@ -94,7 +94,7 @@ func (_ *FFMpegFileWatcher) getEventFileType(filePath string) string {
 	pathComponents := strings.Split(filePath, "/")
 	fileExtension := filepath.Ext(filePath)
 
-	logger.Debugf("get event file type: %s", filePath)
+	logger.Debugf(context.TODO(), "get event file type: %s", filePath)
 
 	switch fileExtension {
 	case ".m3u8":

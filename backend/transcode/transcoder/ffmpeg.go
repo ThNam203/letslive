@@ -2,6 +2,7 @@ package transcoder
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"os/exec"
@@ -78,11 +79,11 @@ func (t *Transcoder) Start(publishName string) {
 
 	stderr, err := t.commandExec.StderrPipe()
 	if err != nil {
-		logger.Errorf("failed to get stderr pipe up: %v", err)
+		logger.Errorf(context.TODO(), "failed to get stderr pipe up: %v", err)
 	}
 
 	if err := t.commandExec.Start(); err != nil {
-		logger.Errorf("error while starting ffmpeg command: %s", err)
+		logger.Errorf(context.TODO(), "error while starting ffmpeg command: %s", err)
 	}
 
 	t.onStart()
@@ -94,13 +95,13 @@ func (t *Transcoder) Start(publishName string) {
 		}
 
 		if err := scanner.Err(); err != nil {
-			logger.Errorf("error in reading stderr pipe: %v", err)
+			logger.Errorf(context.TODO(), "error in reading stderr pipe: %v", err)
 		}
 	}()
 
 	err = t.commandExec.Wait()
 	if err != nil {
-		logger.Errorf("ffmpeg failed: %s", err)
+		logger.Errorf(context.TODO(), "ffmpeg failed: %s", err)
 		t.Stop()
 	}
 }
@@ -108,6 +109,6 @@ func (t *Transcoder) Start(publishName string) {
 func (t *Transcoder) Stop() {
 	err := t.commandExec.Process.Kill()
 	if err != nil {
-		logger.Errorf("transcoder error while being killed: %s", err)
+		logger.Errorf(context.TODO(), "transcoder error while being killed: %s", err)
 	}
 }
