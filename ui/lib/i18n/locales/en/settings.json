@@ -19,8 +19,12 @@
         "update_profile_picture": "Update profile picture"
     },
     "themes": {
-        "title": "Themes",
+        "title": "Theme",
         "description": "Customize the look and feel of the website"
+    },
+    "language": {
+        "title": "Language",
+        "description": "Select your preferred language"
     },
     "stream": {
         "title": "Livestream",

@@ -88,10 +88,8 @@ export default function ProfileHeader({
                         }`
                     }
                     alt="Profile Banner"
-                    className="mx-auto h-full w-auto object-cover"
-                    width="0"
-                    height="0"
-                    sizes="100vw"
+                    className="object-cover"
+                    fill={true}
                     priority={true}
                 />
             </div>
