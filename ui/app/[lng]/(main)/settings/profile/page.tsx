@@ -13,10 +13,11 @@ import TextField from "../_components/text-field";
 import ProfileBanner from "./_components/profile-banner";
 import Section from "../_components/section";
 import TextAreaField from "../_components/textarea-field";
-import ThemeList from "@/components/utils/theme-list";
+import ThemeList from "@/app/[lng]/(main)/settings/profile/_components/theme-list";
 import IconLoader from "@/components/icons/loader";
 import DisableAccountDialog from "./_components/disable-account-dialog";
 import useT from "@/hooks/use-translation";
+import LanguageList from "@/app/[lng]/(main)/settings/profile/_components/language-list";
 
 export default function ProfileSettings() {
     const { t } = useT(["settings", "common"]);
@@ -229,6 +230,15 @@ export default function ProfileSettings() {
                 contentClassName="border border-border rounded-md p-4"
             >
                 <ThemeList />
+            </Section>
+
+            <Section
+                title={t("settings:language.title")}
+                description={t("settings:language.description")}
+                className="border-t border-border pt-8"
+                contentClassName="border border-border rounded-md p-4"
+            >
+                <LanguageList />
             </Section>
 
             <Section
