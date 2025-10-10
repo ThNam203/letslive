@@ -22,7 +22,7 @@ export default function LiveImage({
 
   const tryLoadImage = () => {
     const testImg = new window.Image();
-    testImg.src = `${src}?t=${Date.now()}`; // cache-busting
+    testImg.src = `${src}?t=${Date.now()}`; // cache-busting to get new image (live refresh)
 
     testImg.onload = () => {
       setImgSrc(testImg.src);
@@ -45,7 +45,7 @@ export default function LiveImage({
     }, refreshInterval);
 
     return () => clearInterval(interval);
-  }, [src, lastFailed, refreshInterval, alwaysRefresh, tryLoadImage]);
+  }, []);
 
-  return <Image {...props} src={imgSrc} />;
+  return <Image {...props} src={imgSrc} unoptimized/>;
 }

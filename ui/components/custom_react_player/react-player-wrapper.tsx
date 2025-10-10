@@ -1,10 +1,10 @@
-import { RefObject } from "react";
-import ReactPlayer, { ReactPlayerProps } from "react-player";
+import React from 'react';
+import ReactPlayer from 'react-player';
 
-export default function ReactPlayerWrapper(
-  props: ReactPlayerProps & {
-    playerRef?: RefObject<ReactPlayer | null>;
-  }
-) {
-  return <ReactPlayer ref={props.playerRef} {...props} />;
+interface ReactPlayerWrapperProps extends React.ComponentProps<typeof ReactPlayer> {
+  playerRef?: React.Ref<ReactPlayer>;
+}
+
+export default function ReactPlayerWrapper({ playerRef, ...props }: ReactPlayerWrapperProps) {
+  return <ReactPlayer ref={playerRef} {...props} />;
 }
