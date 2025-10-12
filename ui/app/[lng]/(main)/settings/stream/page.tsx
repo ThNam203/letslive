@@ -100,7 +100,7 @@ export default function StreamEdit() {
         <Section
             title={t("settings:stream.title")}
             description={t("settings:stream.description")}
-            hasBorder
+            contentClassName="p-4"
         >
             <form onSubmit={handleSubmit} className="space-y-4">
                 <TextField

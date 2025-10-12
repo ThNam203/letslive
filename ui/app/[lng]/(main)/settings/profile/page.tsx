@@ -18,6 +18,7 @@ import IconLoader from "@/components/icons/loader";
 import DisableAccountDialog from "./_components/disable-account-dialog";
 import useT from "@/hooks/use-translation";
 import LanguageList from "@/app/[lng]/(main)/settings/profile/_components/language-list";
+import { SocialMediaEdit } from "@/app/[lng]/(main)/settings/profile/_components/socials-media-link";
 
 export default function ProfileSettings() {
     const { t } = useT(["settings", "common"]);
@@ -182,7 +183,7 @@ export default function ProfileSettings() {
             <Section
                 title={t("settings:profile.title")}
                 description={t("settings:profile.description")}
-                hasBorder
+                contentClassName="p-4"
             >
                 <form
                     className="space-y-6"
@@ -224,10 +225,19 @@ export default function ProfileSettings() {
             </Section>
 
             <Section
+                title={"Edit Social Media Links"}
+                description={"Click on a platform to add or update your profile link"}
+                className="border-t border-border pt-8"
+                contentClassName="p-4"
+            >
+                <SocialMediaEdit />
+            </Section>
+
+            <Section
                 title={t("settings:themes.title")}
                 description={t("settings:themes.description")}
                 className="border-t border-border pt-8"
-                contentClassName="border border-border rounded-md p-4"
+                contentClassName="p-4"
             >
                 <ThemeList />
             </Section>
@@ -236,7 +246,7 @@ export default function ProfileSettings() {
                 title={t("settings:language.title")}
                 description={t("settings:language.description")}
                 className="border-t border-border pt-8"
-                contentClassName="border border-border rounded-md p-4"
+                contentClassName="p-4"
             >
                 <LanguageList />
             </Section>
@@ -245,7 +255,7 @@ export default function ProfileSettings() {
                 title={t("settings:disable.title")}
                 description={t("settings:disable.description")}
                 className="border-t border-border pt-8"
-                contentClassName="border border-border rounded-md p-4"
+                contentClassName="p-4"
             >
                 <div className="flex w-full items-center justify-between">
                     <p className="w-2/3 text-sm text-destructive">
