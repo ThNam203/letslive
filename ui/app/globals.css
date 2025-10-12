@@ -44,7 +44,7 @@
     
     --primary: 276 91% 65%;
     --primary-hover: 276 91% 75%;
-    --primary-foreground: 0 0% 0%;
+    --primary-foreground: 0 0% 100%; /* same as primary */
     
     --secondary: 28 90% 60%;
     --secondary-hover: 28 90% 70%;

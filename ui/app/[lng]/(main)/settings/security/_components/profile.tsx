@@ -20,8 +20,7 @@ export default function ContactSettings({ user }: { user: User }) {
             <Section
                 title={t("settings:security.contact.title")}
                 description={t("settings:security.contact.description")}
-                hasBorder
-                contentClassName="space-y-4"
+                contentClassName="space-y-4 p-4"
             >
                 <div className="flex flex-row items-center justify-between">
                     <h2 className="text-sm font-medium">{t("settings:security.contact.email")}</h2>
