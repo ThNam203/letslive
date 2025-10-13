@@ -50,7 +50,7 @@ export default function ApiKeyTab() {
   return (
     <div>
       <div className="flex flex-row justify-between items-center mb-4">
-        <Label className="min-w-[200px]" htmlFor="api-key">
+        <Label className="min-w-48" htmlFor="api-key">
           {t("settings:security.api_key.label")}
         </Label>
         <Input

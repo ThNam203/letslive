@@ -17,6 +17,7 @@ const LanguageList = ({ className }: { className?: string }) => {
 
     const handleChange = async (option: string) => {
         const oldLanguage = String(i18n.resolvedLanguage);
+        if (oldLanguage === option) return;
         await i18n.changeLanguage(option || I18N_FALLBACK_LNG).then(() => {
             document.cookie = `${I18N_COOKIE_NAME}=${option}; path=/; max-age=${30 * 24 * 60 * 60}`;
             const newPath = pathname.replace(`/${oldLanguage}/`, `/${option}/`);

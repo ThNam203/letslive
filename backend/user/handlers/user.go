@@ -259,7 +259,6 @@ func (h *UserHandler) GenerateNewAPIStreamKeyPrivateHandler(w http.ResponseWrite
 		))
 		return
 	}
-	defer r.Body.Close()
 
 	ctx, span := tracer.MyTracer.Start(ctx, "generate_new_api_stream_key_private_hanlder.user_service.update_user_api_key")
 	newKey, err := h.userService.UpdateUserAPIKey(ctx, *userUUID)

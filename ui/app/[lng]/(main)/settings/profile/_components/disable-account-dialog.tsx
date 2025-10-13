@@ -69,6 +69,7 @@ export default function DisableAccountDialog({
             setIsDisablingAccount(false);
         }
     };
+    
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>

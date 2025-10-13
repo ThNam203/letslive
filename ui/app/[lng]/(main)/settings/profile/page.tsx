@@ -225,12 +225,12 @@ export default function ProfileSettings() {
             </Section>
 
             <Section
-                title={"Edit Social Media Links"}
-                description={"Click on a platform to add or update your profile link"}
+                title={t("settings:social_media_links.title")}
+                description={t("settings:social_media_links.description")}
                 className="border-t border-border pt-8"
                 contentClassName="p-4"
             >
-                <SocialMediaEdit />
+                <SocialMediaEdit initialLinks={user?.socialMediaLinks} />
             </Section>
 
             <Section

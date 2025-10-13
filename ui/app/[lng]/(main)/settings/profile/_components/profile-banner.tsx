@@ -8,7 +8,6 @@ import Image from "next/image";
 import { useRef } from "react";
 import DefaultBackgound from "./default-background";
 import ImageHover from "../../_components/image-hover";
-import useT from "@/hooks/use-translation";
 
 interface Props {
   className?: string;
@@ -24,7 +23,6 @@ export default function ProfileBanner({
   const updateUser = useUser((state) => state.updateUser);
   const profileImageInputRef = useRef<HTMLInputElement>(null);
   const backgroundImageInputRef = useRef<HTMLInputElement>(null);
-  const { t } = useT("settings");
 
   const handleProfileUpdateButtonClick = () => {
     profileImageInputRef.current?.click(); // Trigger file input

@@ -146,11 +146,12 @@ func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequest
 	}
 
 	finalDTO := dto.UpdateUserRequestDTO{
-		Id:          existedData.Id,
-		Status:      statusPtr,
-		PhoneNumber: existedData.PhoneNumber,
-		Bio:         existedData.Bio,
-		DisplayName: existedData.DisplayName,
+		Id:               existedData.Id,
+		Status:           statusPtr,
+		PhoneNumber:      existedData.PhoneNumber,
+		Bio:              existedData.Bio,
+		DisplayName:      existedData.DisplayName,
+		SocialMediaLinks: data.SocialMediaLinks,
 	}
 
 	updatedUser, err := s.userRepo.Update(ctx, finalDTO)

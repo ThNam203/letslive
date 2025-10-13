@@ -12,6 +12,9 @@ import IconYoutube from "@/components/icons/youtube";
 import IconGlobe from "@/components/icons/globe";
 import IconClose from "@/components/icons/close";
 import { useTheme } from "next-themes";
+import useT from "@/hooks/use-translation";
+import { toast } from "react-toastify";
+import { UpdateProfile } from "@/lib/api/user";
 
 interface SocialMediaEditProps {
     initialLinks?: Record<string, string>;
@@ -75,6 +78,7 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
         new Set(),
     );
 
+    const { t } = useT("common");
     const { resolvedTheme } = useTheme();
 
     const handleInputChange = (platform: string, value: string) => {
@@ -108,20 +112,35 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
         }
     };
 
-    const handleSave = () => {
-        const socialLinks: Record<string, string> = {};
+    const handleSave = async (platform: string, value: string) => {
+        try {
+            const trimmedValue = value.trim();
+            links[platform] = trimmedValue;
 
-        Object.entries(links)
-            .filter(([_, url]) => url.trim() !== "")
-            .forEach(([platform, url]) => {
-                // TODO: validate URL
-                try {
-                    new URL(url); // ensures it's a valid URL
-                    socialLinks[platform] = url.trim();
-                } catch {
-                    // ignore invalid URLs
-                }
-            });
+            new URL(trimmedValue); // ensures it's a valid URL
+            await UpdateProfile({
+                socialMediaLinks: { [platform]: trimmedValue },
+            })
+                .then((res) => {
+                    if (res.success) {
+                        toast.success(t(`api-response:${res.key}`), {
+                            toastId: res.requestId,
+                            type: "success",
+                        });
+                        collapseField(platform);
+                    }
+                })
+                .catch((_) => {
+                    toast(t("fetch-error:client_fetch_error"), {
+                        toastId: "client-fetch-error-id",
+                        type: "error",
+                    });
+                });
+        } catch (e) {
+            if (e instanceof TypeError) {
+                toast.error(t("settings:social_media_links.invalid_url"));
+            }
+        }
     };
 
     const extractUsername = (
@@ -142,7 +161,7 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
     };
 
     const getIconTheme = (label: string) => {
-        const mainColor = resolvedTheme === "light" ? "white" : "black";
+        const mainColor = resolvedTheme === "light" ? "white" : "transparent";
         const color = resolvedTheme === "light" ? "black" : "white";
 
         return label === "Facebook"
@@ -196,12 +215,12 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                         </div>
                                     ) : (
                                         <span className="text-muted-foreground text-sm font-medium transition-colors group-hover:text-foreground">
-                                            Add {label}
+                                            {t("common:add")} {label}
                                         </span>
                                     )}
                                 </button>
                             ) : (
-                                <div className="flex items-center gap-3 rounded-lg border border-primary/40 bg-primary/20 p-4">
+                                <div className="flex items-center gap-3 rounded-lg border border-primary/40 bg-primary/20 px-4 py-3">
                                     <Icon
                                         className="h-5 w-5 flex-shrink-0"
                                         {...getIconTheme(label)}
@@ -218,13 +237,22 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                                 )
                                             }
                                             className="h-auto w-full border-none bg-transparent p-0 pr-10 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                                            autoFocus
+                                            autoFocus={true}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    handleSave(
+                                                        value,
+                                                        links[value] || "",
+                                                    );
+                                                }
+                                            }}
                                         />
                                         <button
                                             onClick={() =>
                                                 collapseField(value, !hasValue)
                                             }
-                                            className="text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 transition-colors hover:text-foreground"
+                                            className="text-primary-foreground absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
                                             aria-label="Close field"
                                         >
                                             <IconClose className="h-4 w-4" />
