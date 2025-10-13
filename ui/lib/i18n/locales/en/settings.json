@@ -20,7 +20,8 @@
     },
     "social_media_links": {
         "title": "Edit Social Media Links",
-        "description": "Manage links to your social media profiles"
+        "description": "Manage links to your social media profiles",
+        "invalid_url": "Invalid URL, please try again"
     },
     "themes": {
         "title": "Theme",
