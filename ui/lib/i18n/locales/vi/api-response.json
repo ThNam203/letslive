@@ -30,5 +30,6 @@
     "res_err_vod_create_failed": "Không thể tạo bản ghi VOD.",
     "res_err_vod_update_failed": "Không thể cập nhật bản ghi VOD.",
 
-    "res_succ_sent_verification_email": "Email xác thực đã được gửi, vui lòng kiểm tra hộp thư"
+    "res_succ_sent_verification_email": "Email xác thực đã được gửi, vui lòng kiểm tra hộp thư",
+    "res_succ_ok": "Thành công"
 }

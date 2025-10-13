@@ -19,8 +19,8 @@ export function BaseIcon(rawProps: BaseIconComponentProps) {
             xmlns="http://www.w3.org/2000/svg"
             width={width}
             height={height}
-            className={className}
             style={{ color }}
+            className={className}
             viewBox={viewBox}
             {...rest}
         >

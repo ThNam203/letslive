@@ -18,6 +18,10 @@
         "update_background": "Update background",
         "update_profile_picture": "Update profile picture"
     },
+    "social_media_links": {
+        "title": "Edit Social Media Links",
+        "description": "Manage links to your social media profiles"
+    },
     "themes": {
         "title": "Theme",
         "description": "Customize the look and feel of the website"
