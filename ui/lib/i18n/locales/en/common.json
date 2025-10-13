@@ -33,6 +33,7 @@
     "searching": "Searching...",
     "no_users_found": "No users found",
     "no_description": "No description",
+    "add": "Add",
     
     "started_at": "Started {{time}}",
     "time": {

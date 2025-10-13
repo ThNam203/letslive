@@ -30,5 +30,6 @@
     "res_err_vod_create_failed": "Failed to create VOD record.",
     "res_err_vod_update_failed": "Failed to update VOD record.",
 
-    "res_succ_sent_verification_email": "Verification email sent, please check your inbox"
+    "res_succ_sent_verification_email": "Verification email sent, please check your inbox",
+    "res_succ_ok": "Success"
 }  

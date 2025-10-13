@@ -4,6 +4,7 @@ export type User = {
   bio?: string;
   email: string;
   status: UserStatus;
+  phoneNumber?: string;
   authProvider: AuthProvider;
   createdAt: string;
   streamAPIKey: string;
@@ -12,6 +13,7 @@ export type User = {
   profilePicture?: string;
   followerCount: number;
   livestreamInformation: LivestreamInformation;
+  socialMediaLinks?: Record<string, string>;
 
   isFollowing?: boolean; // for checking if the current user is following this user
 };
