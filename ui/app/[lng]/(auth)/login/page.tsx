@@ -31,7 +31,6 @@ export default function LogInPage() {
     }, [searchParams, router]);
 
     useEffect(() => {
-        console.log("USERSSS", user)
         if (user) router.push("/");
     }, [user]);
 

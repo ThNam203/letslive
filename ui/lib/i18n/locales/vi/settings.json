@@ -18,6 +18,11 @@
         "update_background": "Cập nhật ảnh nền",
         "update_profile_picture": "Cập nhật ảnh đại diện"
     },
+    "social_media_links": {
+        "title": "Chỉnh sửa liên kết mạng xã hội",
+        "description": "Quản lý liên kết đến các hồ sơ mạng xã hội của bạn",
+        "invalid_url": "URL không hợp lệ, vui lòng thử lại"
+    },
     "themes": {
         "title": "Giao diện",
         "description": "Tùy chỉnh giao diện của trang web"

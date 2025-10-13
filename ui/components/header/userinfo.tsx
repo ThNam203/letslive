@@ -67,7 +67,7 @@ export default function UserInfo() {
                   className="flex flex-1 flex-row gap-2 items-center"
                 >
                   <IconSettings />
-                  <span className="text-xs">{t("common:setting")}</span>
+                  <span className="text-xs text-primary-foreground">{t("common:setting")}</span>
                 </Link>
               </Button>
               <Button
@@ -76,7 +76,7 @@ export default function UserInfo() {
                 variant={"destructive"}
               >
                 <IconLogOut />
-                <span className="text-xs">{t("logout")}</span>
+                <span className="text-xs text-primary-foreground">{t("logout")}</span>
               </Button>
             </div>
           </div>

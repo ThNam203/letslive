@@ -101,7 +101,7 @@ export default function ProfileHeader({
                             {user.username[0].toUpperCase()}
                         </AvatarFallback>
                     </Avatar>
-                    {me?.id !== user.id && (
+                    {me?.id && me.id !== user.id && (
                         <Button
                             variant={user.isFollowing ? "destructive" : "default"}
                             disabled={isFetching || !me}

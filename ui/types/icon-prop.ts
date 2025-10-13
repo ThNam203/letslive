@@ -6,12 +6,14 @@ export interface BaseIconProp {
     className?: string;
 }
 
-export const defaultIconProps: BaseIconProp = {
-    color: "#000000",
-    width: "1.5rem",
-    height: "1.5rem",
-    viewBox: "0 0 24 24",
-    className: "",
-};
+export const getDefaultIconProps = (resolvedTheme: string): BaseIconProp => {
+    return {
+        color: resolvedTheme === "light" ? "#000000" : "#FFFFFF",
+        width: "1.5rem",
+        height: "1.5rem",
+        viewBox: "0 0 24 24",
+        className: ""
+    }
+}
   
 export type IconProp = React.SVGProps<SVGSVGElement> & BaseIconProp;
