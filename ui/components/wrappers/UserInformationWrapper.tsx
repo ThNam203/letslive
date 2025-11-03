@@ -12,14 +12,15 @@ export default function UserInformationWrapper({
     children: React.ReactNode;
 }) {
     const { setUser, setIsLoading } = useUser();
-    const { t } = useT(["fetch-error"]);
+    const { t } = useT(["fetch-error", "api-response"]);
 
     useEffect(() => {
         const fetchUser = async () => {
             setIsLoading(true);
             GetMeProfile()
                 .then((userRes) => {
-                    setUser(userRes.data ?? null);
+                    if (userRes.success && userRes.data) setUser(userRes.data)
+                    else toast.error(t(`api-response:${userRes.key}`), { toastId: userRes.requestId })
                 })
                 .catch((e) => {
                     toast(t("fetch-error:client_fetch_error"), {
