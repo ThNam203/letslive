@@ -49,7 +49,13 @@ export default function SignUpForm() {
     const [otpValue, setOtpValue] = useState("");
     const [isOtpSubmitting, setIsOtpSubmitting] = useState(false);
     const [otpError, setOtpError] = useState("");
-    const { t, i18n } = useT(["auth", "error", "common", "api-response", "fetch-error"]);
+    const { t, i18n } = useT([
+        "auth",
+        "error",
+        "common",
+        "api-response",
+        "fetch-error",
+    ]);
 
     const validate = () => {
         const parseResult = signUpSchema(t).safeParse({
@@ -133,29 +139,30 @@ export default function SignUpForm() {
         if (validate()) return;
 
         setIsLoading(true);
-        await RequestToSendVerification(email, turnstileToken).then(res => {
-            if (!res.success) {
-                turnstile.reset();
-                setTurnstileToken("");
-                toast.error(t(`api-response:${res.key}`), {
-                    toastId: res.requestId,
+        await RequestToSendVerification(email, turnstileToken)
+            .then((res) => {
+                if (!res.success) {
+                    turnstile.reset();
+                    setTurnstileToken("");
+                    toast.error(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
+                    });
+                } else {
+                    toast.success(t(`api-response:${res.key}`));
+                    setIsOtpDialogOpen(true);
+                    setOtpValue("");
+                    setOtpError("");
+                }
+            })
+            .catch((_) => {
+                toast(t("fetch-error:client_fetch_error"), {
+                    toastId: "client-fetch-error-id",
+                    type: "error",
                 });
-            } else {
-                toast.success(t(`api-response:${res.key}`));
-                setIsOtpDialogOpen(true);
-                setOtpValue("");
-                setOtpError("");
-            }
-        })
-        .catch((_) => {
-            toast(t("fetch-error:client_fetch_error"), {
-                toastId: "client-fetch-error-id",
-                type: "error",
+            })
+            .finally(() => {
+                setIsLoading(false);
             });
-        })
-        .finally(() => {
-            setIsLoading(false);
-        });
     };
 
     return (
@@ -250,7 +257,7 @@ export default function SignUpForm() {
                     )}
                 </div>
                 <FormErrorText textError={errors.confirmPassword} />
-                <div className="mt-4 flex flex-col items-end">
+                <div className="mt-4 flex h-[4.063rem] flex-col items-end">
                     <Turnstile
                         language={i18n.resolvedLanguage || i18n.language}
                         sitekey={

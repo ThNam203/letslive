@@ -129,7 +129,7 @@ export default function LogInForm() {
                 )}
             </div>
             <FormErrorText textError={errors.password} />
-            <div className="mt-4 flex flex-col items-end">
+            <div className="mt-4 flex h-[4.063rem] flex-col items-end">
                 <Turnstile
                     language={i18n.resolvedLanguage || i18n.language}
                     sitekey={

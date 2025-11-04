@@ -4,13 +4,13 @@ import Link from "next/link";
 
 import { useState } from "react";
 import { toast } from "react-toastify";
-import useUser from "../../hooks/user";
-import { Logout } from "../../lib/api/auth";
-import { Button } from "../ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import IconSettings from "../icons/settings";
-import IconLogOut from "../icons/log-out";
+import useUser from "../../../../../hooks/user";
+import { Logout } from "../../../../../lib/api/auth";
+import { Button } from "../../../../../components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "../../../../../components/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "../../../../../components/ui/avatar";
+import IconSettings from "../../../../../components/icons/settings";
+import IconLogOut from "../../../../../components/icons/log-out";
 import useT from "@/hooks/use-translation";
 
 export default function UserInfo() {
@@ -87,12 +87,12 @@ export default function UserInfo() {
     <div className="flex flex-row gap-2">
       <Link
         href="/login"
-        className="whitespace-nowrap bg-primary border rounded-md hover:bg-primary-hover text-primary-foreground border-border text-sm py-1 px-4"
+        className="h-8 flex items-center whitespace-nowrap bg-primary border rounded-md hover:bg-primary-hover text-primary-foreground border-border text-sm px-4"
       >
         {t("login")}
       </Link>
       <Link
-        className="whitespace-nowrap bg-primary border rounded-md hover:bg-primary-hover text-primary-foreground border-border text-sm py-1 px-4"
+        className="h-8 flex items-center whitespace-nowrap bg-primary border rounded-md hover:bg-primary-hover text-primary-foreground border-border text-sm px-4"
         href="/signup"
       >
         {t("signup")}
