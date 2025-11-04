@@ -19,8 +19,11 @@ export default function UserInformationWrapper({
             setIsLoading(true);
             GetMeProfile()
                 .then((userRes) => {
-                    if (userRes.success && userRes.data) setUser(userRes.data)
-                    else toast.error(t(`api-response:${userRes.key}`), { toastId: userRes.requestId })
+                    if (userRes.success && userRes.data) setUser(userRes.data);
+                    else if (!userRes.success && userRes.statusCode != 401)
+                        toast.error(t(`api-response:${userRes.key}`), {
+                            toastId: userRes.requestId,
+                        });
                 })
                 .catch((e) => {
                     toast(t("fetch-error:client_fetch_error"), {
