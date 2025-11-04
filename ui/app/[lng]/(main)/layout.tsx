@@ -3,7 +3,7 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { Header } from "@/components/header/header";
+import { Header } from "@/app/[lng]/(main)/_components/header/header";
 import LeftBar from "@/components/leftbar/left-bar";
 
 export default function RootLayout({
