@@ -63,7 +63,12 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate[any](
+		serviceresponse.RES_SUCC_LOGIN,
+		nil,
+		nil,
+		nil,
+	))
 }
 
 func (h *AuthHandler) RequestEmailVerificationHandler(w http.ResponseWriter, r *http.Request) {
@@ -185,7 +190,12 @@ func (h *AuthHandler) VerifyOTPAndSignUpHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate[any](
+		serviceresponse.RES_SUCC_SIGN_UP,
+		nil,
+		nil,
+		nil,
+	))
 }
 
 func (h *AuthHandler) UpdatePasswordHandler(w http.ResponseWriter, r *http.Request) {

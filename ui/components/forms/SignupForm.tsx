@@ -136,7 +136,7 @@ export default function SignUpForm() {
     };
 
     const handleBeginEmailVerification = async () => {
-        if (validate()) return;
+        if (!validate()) return;
 
         setIsLoading(true);
         await RequestToSendVerification(email, turnstileToken)
