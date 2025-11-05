@@ -94,7 +94,7 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergate
 		return nil, &resInfo
 	}
 
-	var createdUser usergateway.CreateUserResponseDTO
+	var createdUser serviceresponse.Response[usergateway.CreateUserResponseDTO]
 	defer resp.Body.Close()
 
 	if err := json.NewDecoder(resp.Body).Decode(&createdUser); err != nil {
@@ -107,5 +107,5 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergate
 		)
 	}
 
-	return &createdUser, nil
+	return createdUser.Data, nil
 }
