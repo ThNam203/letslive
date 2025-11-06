@@ -21,7 +21,8 @@
     "social_media_links": {
         "title": "Edit Social Media Links",
         "description": "Manage links to your social media profiles",
-        "invalid_url": "Invalid URL, please try again"
+        "invalid_url": "Invalid link, please try again",
+        "err_empty_url": "Link can't be empty"
     },
     "themes": {
         "title": "Theme",
@@ -98,7 +99,8 @@
             "description": "Where we send important messages about your account",
             "email": "Email",
             "phone": "Phone Number",
-            "add_phone": "Add a number"
+            "add_phone": "Add a number",
+            "phone_invalid": "Invalid phone number, please try again"
         },
         "security": {
             "title": "Security",

@@ -21,7 +21,8 @@
     "social_media_links": {
         "title": "Chỉnh sửa liên kết mạng xã hội",
         "description": "Quản lý liên kết đến các hồ sơ mạng xã hội của bạn",
-        "invalid_url": "URL không hợp lệ, vui lòng thử lại"
+        "invalid_url": "Đường dẫn không hợp lệ, vui lòng thử lại",
+        "err_empty_url": "Đường dẫn không được để trống"
     },
     "themes": {
         "title": "Giao diện",
@@ -98,7 +99,8 @@
             "description": "Nơi chúng tôi gửi tin nhắn quan trọng về tài khoản của bạn",
             "email": "Email",
             "phone": "Số điện thoại",
-            "add_phone": "Thêm số điện thoại"
+            "add_phone": "Thêm số điện thoại",
+            "phone_invalid": "Số điện thoại không hợp lệ, vui lòng thử lại"
         },
         "security": {
             "title": "Bảo mật",

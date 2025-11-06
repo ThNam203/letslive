@@ -15,6 +15,7 @@ import { useTheme } from "next-themes";
 import useT from "@/hooks/use-translation";
 import { toast } from "react-toastify";
 import { UpdateProfile } from "@/lib/api/user";
+import IconCheck from "@/components/icons/check";
 
 interface SocialMediaEditProps {
     initialLinks?: Record<string, string>;
@@ -115,6 +116,10 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
     const handleSave = async (platform: string, value: string) => {
         try {
             const trimmedValue = value.trim();
+            if (trimmedValue.length === 0) {
+                toast.error(t("settings:social_media_links.err_empty_url"));
+            }
+
             links[platform] = trimmedValue;
 
             new URL(trimmedValue); // ensures it's a valid URL
@@ -250,10 +255,22 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                         />
                                         <button
                                             onClick={() =>
+                                                handleSave(
+                                                    value,
+                                                    links[value] || "",
+                                                )
+                                            }
+                                            className="absolute right-12 top-1/2 -translate-y-1/2 text-primary-foreground transition-colors"
+                                            aria-label="Update field button"
+                                        >
+                                            <IconCheck className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            onClick={() =>
                                                 collapseField(value, !hasValue)
                                             }
-                                            className="text-primary-foreground absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                                            aria-label="Close field"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-foreground transition-colors"
+                                            aria-label="Close field button"
                                         >
                                             <IconClose className="h-4 w-4" />
                                         </button>
