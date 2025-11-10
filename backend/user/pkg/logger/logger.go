@@ -2,9 +2,7 @@ package logger
 
 import (
 	"context"
-	"log"
 	"os"
-	"path/filepath"
 	"time"
 
 	"go.uber.org/zap"
@@ -22,28 +20,11 @@ const (
 
 var Logger *zap.SugaredLogger
 
-// const dateTimeFormat = "[30/11/2024 17:30:24]"
-const LOG_FOLDER = "logs"
-const LOG_FILE = "user_log.txt"
-
 func Init(level LogLevel) {
 	// configure log option
 	var l zapcore.Level
 	config := zap.NewProductionEncoderConfig()
 	config.EncodeTime = zapcore.TimeEncoderOfLayout(time.RFC3339)
-	//config.EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-	//	enc.AppendString(t.Format(dateTimeFormat))
-	//}
-
-	e, err := os.Executable()
-	if err != nil {
-		panic("failed to get the execute path")
-	}
-	logFile, err := os.OpenFile(filepath.Join(filepath.Dir(e), LOG_FOLDER, LOG_FILE), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
-	if err != nil {
-		defer logFile.Close()
-		log.Panicf("failed to open log file: %s", err)
-	}
 
 	switch level {
 	case Debug:
@@ -62,9 +43,11 @@ func Init(level LogLevel) {
 		}
 	}
 
+	consoleWriter := zapcore.Lock(os.Stdout)
+
 	core := zapcore.NewCore(
 		zapcore.NewJSONEncoder(config),
-		zapcore.AddSync(logFile),
+		consoleWriter,
 		l,
 	)
 
