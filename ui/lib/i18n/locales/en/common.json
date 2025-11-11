@@ -34,6 +34,7 @@
     "no_users_found": "No users found",
     "no_description": "No description",
     "add": "Add",
+    "bio": "Bio",
     
     "started_at": "Started {{time}}",
     "time": {

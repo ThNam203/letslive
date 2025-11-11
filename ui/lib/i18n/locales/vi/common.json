@@ -35,6 +35,7 @@
     "no_users_found": "Không tìm thấy người dùng",
     "no_description": "Không có mô tả",
     "add": "Thêm",
+    "bio": "Tiểu sử",
     
     "started_at": "Bắt đầu {{time}} trước",
     "time": {

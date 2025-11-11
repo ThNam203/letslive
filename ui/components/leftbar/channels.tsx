@@ -108,19 +108,20 @@ export default function AllChannelsView({
                                     <h4 className="text-sm font-semibold">
                                         {user.displayName ?? user.username}
                                     </h4>
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-xs text-muted-foreground">
+                                        {t("common:bio")}:{" "}
                                         {user.livestreamInformation
                                             ?.description ?? t("common:no_description")}
                                     </p>
-                                    <div className="text-xs text-muted-foreground">
-                                        {t("common:followers_with_count", { count: user.followerCount })}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">
+                                    <p className="text-xs text-muted-foreground">
+                                        {t("common:followers_with_count", { count: user.followerCount ?? 0 })}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
                                         {t("common:joined")}:{" "}
                                         {new Date(
                                             user.createdAt,
                                         ).toLocaleDateString()}
-                                    </div>
+                                    </p>
                                 </div>
                             </div>
                         </HoverCardContent>
