@@ -2,19 +2,22 @@
 
 import { useState, useEffect } from "react";
 
-import { toast } from "react-toastify";
-import { User } from "../../../../../types/user";
-import { SearchUsersByUsername } from "../../../../../lib/api/user";
-import { Input } from "../../../../../components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "../../../../../components/ui/avatar";
 import Link from "next/link";
-import IconClose from "../../../../../components/icons/close";
 import useT from "@/hooks/use-translation";
+import { User } from "@/types/user";
+import { SearchUsersByUsername } from "@/lib/api/user";
+import { toast } from "react-toastify";
+import { Input } from "@/components/ui/input";
+import IconClose from "@/components/icons/close";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/utils/cn";
 
 export default function SearchBar({
     onSearch,
+    className,
 }: {
     onSearch?: (query: string) => void;
+    className?: string;
 }) {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<User[]>([]);
@@ -68,7 +71,7 @@ export default function SearchBar({
     };
 
     return (
-        <div className="relative w-full max-w-sm">
+        <div className={cn("relative w-full", className)}>
             <div className="relative">
                 <Input
                     type="text"
