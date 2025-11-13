@@ -81,14 +81,12 @@ func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode strin
 	}
 
 	existedRecord, err := s.repo.GetByEmail(ctx, returnedOAuthUser.Email)
-	if err != nil && err.Code == serviceresponse.RES_ERR_AUTH_NOT_FOUND_CODE {
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
-	} else if err != nil {
+	if err == nil {
+		return existedRecord, nil
+	}
+
+	// create new user if not found
+	if err.Code == serviceresponse.RES_ERR_AUTH_NOT_FOUND_CODE {
 		dto := &usergateway.CreateUserRequestDTO{
 			Username:     generateUsername(returnedOAuthUser.Email),
 			Email:        returnedOAuthUser.Email,
@@ -112,10 +110,15 @@ func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode strin
 			return nil, err
 		}
 
-		existedRecord = newlyCreatedAuthRecord
+		return newlyCreatedAuthRecord, nil
 	}
 
-	return existedRecord, nil
+	return nil, serviceresponse.NewResponseFromTemplate[any](
+		serviceresponse.RES_ERR_INTERNAL_SERVER,
+		nil,
+		nil,
+		nil,
+	)
 }
 
 func (s GoogleAuthService) getUserDataFromGoogle(ctx context.Context, code string) ([]byte, error) {

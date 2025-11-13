@@ -25,6 +25,8 @@ import { ResendOtpButton } from "./ResendButton";
 import IconLoader from "../icons/loader";
 import useT from "@/hooks/use-translation";
 import { signUpSchema } from "../../lib/validations/signUp";
+import { GetMeProfile } from "@/lib/api/user";
+import useUser from "@/hooks/user";
 
 export default function SignUpForm() {
     const [email, setEmail] = useState("");
@@ -35,6 +37,7 @@ export default function SignUpForm() {
     const [turnstileToken, setTurnstileToken] = useState("");
     const [hidingConfirmPassword, setHidingConfirmPassword] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
+    const { setUser } = useUser();
     const router = useRouter();
     const [errors, setErrors] = useState({
         email: "",
@@ -119,8 +122,13 @@ export default function SignUpForm() {
                 } else {
                     toast.success(t("account_created_success"));
                     setIsOtpDialogOpen(false);
-                    router.push("/");
-                    router.refresh();
+
+                    GetMeProfile().then((res) => {
+                        if (res.success && res.data) {
+                            setUser(res.data);
+                            router.push("/");
+                        }
+                    });
                 }
             })
             .catch((_) => {
