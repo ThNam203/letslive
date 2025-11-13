@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import { User } from "../../types/user";
 import { GetUserById } from "../../lib/api/user";
 import { dateDiffFromNow, formatSeconds } from "@/utils/timeFormats";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import GLOBAL from "../../global";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import IconFilm from "../icons/film";
@@ -25,7 +25,6 @@ export function PopularVODView() {
     const { t } = useT(["common", "api-response", "fetch-error"]);
 
     useEffect(() => {
-        setIsLoading(true);
         const fetchData = async () => {
             await GetPopularVODs()
                 .then((res) => {
@@ -49,11 +48,12 @@ export function PopularVODView() {
                 });
         };
 
+        setIsLoading(true);
         fetchData();
     }, []);
 
     if (isLoading) {
-        return <VODSkeleton />;
+        return <LoadingSkeleton />;
     }
 
     if (vods.length === 0) {
@@ -171,11 +171,11 @@ function VODCard({ vod }: { vod: VOD }) {
     );
 }
 
-function VODSkeleton() {
+function LoadingSkeleton() {
     return (
         <div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
+                {[1, 2, 3, 4].map((i) => (
                     <Card key={i} className="overflow-hidden">
                         <Skeleton className="aspect-video w-full" />
                         <CardContent className="p-4">
