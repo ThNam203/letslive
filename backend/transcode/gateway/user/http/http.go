@@ -6,23 +6,22 @@ import (
 	"fmt"
 	"net/http"
 	"sen1or/letslive/transcode/gateway"
-	dto "sen1or/letslive/transcode/gateway/user"
 	"sen1or/letslive/transcode/pkg/discovery"
 	"sen1or/letslive/transcode/pkg/logger"
 	"sen1or/letslive/transcode/response"
 )
 
-type UserGateway struct {
+type HTTPUserGateway struct {
 	registry discovery.Registry
 }
 
-func NewUserGateway(registry discovery.Registry) *UserGateway {
-	return &UserGateway{
+func NewUserGateway(registry discovery.Registry) *HTTPUserGateway {
+	return &HTTPUserGateway{
 		registry: registry,
 	}
 }
 
-func (g *UserGateway) GetUserInformation(ctx context.Context, streamAPIKey string) (res *response.Response[dto.GetUserResponseDTO], callErr *response.Response[any]) {
+func (g *HTTPUserGateway) GetUserInformation(ctx context.Context, streamAPIKey string) (res *response.Response[GetUserResponseDTO], callErr *response.Response[any]) {
 	addr, err := g.registry.ServiceAddress(ctx, "user")
 	if err != nil {
 		logger.Debugf(ctx, "get service address from gateway failed")
@@ -58,7 +57,7 @@ func (g *UserGateway) GetUserInformation(ctx context.Context, streamAPIKey strin
 		return nil, &resInfo
 	}
 
-	var userInfo response.Response[dto.GetUserResponseDTO]
+	var userInfo response.Response[GetUserResponseDTO]
 
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
 		logger.Debugf(ctx, "failed to decode resp body: %s", err)

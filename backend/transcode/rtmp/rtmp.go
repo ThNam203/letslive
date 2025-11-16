@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"sen1or/letslive/transcode/config"
-	livestreamdto "sen1or/letslive/transcode/gateway/livestream/dto"
 	livestreamgateway "sen1or/letslive/transcode/gateway/livestream/http"
 	usergateway "sen1or/letslive/transcode/gateway/user/http"
 	"sen1or/letslive/transcode/pkg/discovery"
@@ -39,14 +38,14 @@ type RTMPServer struct {
 	ctx               context.Context
 	Port              int
 	Registry          *discovery.Registry
-	userGateway       *usergateway.UserGateway
+	userGateway       *usergateway.HTTPUserGateway
 	livestreamGateway *livestreamgateway.LivestreamGateway
 	config            config.Config
 	vodHandler        watcher.VODHandler
 	listener          net.Listener
 }
 
-func NewRTMPServer(config RTMPServerConfig, userGateway *usergateway.UserGateway, livestreamgateway *livestreamgateway.LivestreamGateway) *RTMPServer {
+func NewRTMPServer(config RTMPServerConfig, userGateway *usergateway.HTTPUserGateway, livestreamgateway *livestreamgateway.LivestreamGateway) *RTMPServer {
 	return &RTMPServer{
 		ctx:               config.Context,
 		Port:              config.Port,
@@ -174,7 +173,7 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 		return "", "", fmt.Errorf("failed to get user information: %s", errRes.Message)
 	}
 
-	streamDTO := &livestreamdto.CreateLivestreamRequestDTO{
+	streamDTO := &livestreamgateway.CreateLivestreamRequestDTO{
 		Title:        userInfo.Data.LivestreamInformationResponseDTO.Title,
 		UserId:       userInfo.Data.Id,
 		Description:  userInfo.Data.LivestreamInformationResponseDTO.Description,
@@ -201,7 +200,7 @@ func (s *RTMPServer) onDisconnect(streamId string, duration int64) {
 	s.vodHandler.OnStreamEnd(streamId, s.config.Transcode.PublicHLSPath, s.config.Transcode.FFMpegSetting.MasterFileName)
 
 	playbackURL := fmt.Sprintf("%s/%s/index.m3u8", s.config.VODPlaybackUrlPrefix, streamId)
-	endDTO := &livestreamdto.EndLivestreamRequestDTO{
+	endDTO := &livestreamgateway.EndLivestreamRequestDTO{
 		PlaybackURL: &playbackURL,
 		EndedAt:     time.Now(),
 		Duration:    duration,
@@ -237,13 +236,10 @@ func removeLiveGeneratedFiles(streamingKey, privatePath, publicPath string) erro
 		filepath.Join(publicPath, streamingKey),
 	}
 
-	var errList []error
-
 	for _, path := range paths {
-		logger.Infof(context.TODO(), "path is removed", path)
 		err := os.RemoveAll(path)
 		if err != nil {
-			errList = append(errList, fmt.Errorf("failed to remove %s: %w", path, err))
+			logger.Infof(context.TODO(), "failed to remove %s: %w", path, err)
 		}
 	}
 

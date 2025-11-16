@@ -43,9 +43,27 @@ export default function ContactSettings({ user }: { user: User }) {
             >
                 <ApiKeyTab />
                 <div className="flex items-start justify-between border-t border-border pt-4">
-                    <h2 className="text-sm font-medium">
-                        {t("settings:security.security.password.title")}
-                    </h2>
+                    <div>
+                        <h2 className="text-sm font-medium">
+                            {t("settings:security.security.password.title")}
+                        </h2>
+                        <p
+                            className={cn(
+                                "text-sm",
+                                user.authProvider === AuthProvider.LOCAL
+                                    ? "text-foreground-muted"
+                                    : "text-success",
+                            )}
+                        >
+                            {user?.authProvider === AuthProvider.LOCAL
+                                ? t(
+                                      "settings:security.security.password.local_description",
+                                  )
+                                : t(
+                                      "settings:security.security.password.third_party_description",
+                                  )}
+                        </p>
+                    </div>
                     <div className="flex flex-col items-end gap-2">
                         <Dialog>
                             <DialogTrigger asChild>
@@ -71,15 +89,6 @@ export default function ContactSettings({ user }: { user: User }) {
                                 <ChangePasswordTab />
                             </DialogContent>
                         </Dialog>
-                        <span className="text-sm text-foreground-muted">
-                            {user?.authProvider === AuthProvider.LOCAL
-                                ? t(
-                                      "settings:security.security.password.local_description",
-                                  )
-                                : t(
-                                      "settings:security.security.password.third_party_description",
-                                  )}
-                        </span>
                     </div>
                 </div>
 

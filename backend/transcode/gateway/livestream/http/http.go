@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"sen1or/letslive/transcode/gateway"
-	dto "sen1or/letslive/transcode/gateway/livestream/dto"
 	"sen1or/letslive/transcode/pkg/discovery"
 	"sen1or/letslive/transcode/pkg/logger"
 	"sen1or/letslive/transcode/response"
@@ -23,7 +22,7 @@ func NewLivestreamGateway(registry discovery.Registry) *LivestreamGateway {
 	}
 }
 
-func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestreamRequestDTO) (*dto.LivestreamResponseDTO, *response.Response[any]) {
+func (g *LivestreamGateway) Create(ctx context.Context, data CreateLivestreamRequestDTO) (*LivestreamResponseDTO, *response.Response[any]) {
 	addr, err := g.registry.ServiceAddress(ctx, "livestream")
 	if err != nil {
 		logger.Debugf(ctx, "get service address from gateway failed")
@@ -67,7 +66,7 @@ func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestrea
 		return nil, &resInfo
 	}
 
-	var livestreamResponse response.Response[dto.LivestreamResponseDTO]
+	var livestreamResponse response.Response[LivestreamResponseDTO]
 
 	if err := json.NewDecoder(resp.Body).Decode(&livestreamResponse); err != nil {
 		logger.Debugf(ctx, "failed to decode resp body: %s", err)
@@ -77,7 +76,7 @@ func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestrea
 	return livestreamResponse.Data, nil
 }
 
-func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, endDTO dto.EndLivestreamRequestDTO) *response.Response[any] {
+func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, endDTO EndLivestreamRequestDTO) *response.Response[any] {
 	addr, err := g.registry.ServiceAddress(ctx, "livestream")
 	if err != nil {
 		logger.Debugf(ctx, "get service address from gateway failed")

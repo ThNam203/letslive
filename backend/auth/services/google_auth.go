@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 	"sen1or/letslive/auth/domains"
-	usergateway "sen1or/letslive/auth/gateway/user"
+	usergateway "sen1or/letslive/auth/gateway/user/http"
 	"sen1or/letslive/auth/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
 	"strconv"
@@ -21,10 +21,10 @@ import (
 
 type GoogleAuthService struct {
 	repo        domains.AuthRepository
-	userGateway usergateway.UserGateway
+	userGateway usergateway.HTTPUserGateway
 }
 
-func NewGoogleAuthService(repo domains.AuthRepository, userGateway usergateway.UserGateway) *GoogleAuthService {
+func NewGoogleAuthService(repo domains.AuthRepository, userGateway usergateway.HTTPUserGateway) *GoogleAuthService {
 	return &GoogleAuthService{
 		repo:        repo,
 		userGateway: userGateway,
