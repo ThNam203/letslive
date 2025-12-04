@@ -37,6 +37,7 @@
     "bio": "Bio",
     
     "started_at": "Started {{time}}",
+    "live": "Live",
     "time": {
         "seconds_ago": "{{count}} second ago",
         "seconds_ago_plural": "{{count}} seconds ago",

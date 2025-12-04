@@ -1,22 +1,25 @@
 "use client";
-import {
-    Check,
-    Fullscreen,
-    FullscreenExit,
-    Pause,
-    PlayArrow,
-    VolumeDown,
-    VolumeOff,
-    VolumeUp,
-} from "@mui/icons-material";
-import { Slider } from "@mui/material";
+import { Slider } from "@/components/ui/slider";
 import { ClassValue } from "clsx";
 import { useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import screenfull from "screenfull";
 import { cn } from "@/utils/cn";
+import {
+    getResolutionHeight,
+    formatResolutionForDisplay,
+} from "@/utils/resolution";
 
 import dynamic from "next/dynamic";
+import useT from "@/hooks/use-translation";
+import IconCheck from "../icons/check";
+import IconFullscreen from "../icons/fullscreen";
+import IconFullscreenExit from "../icons/fullscreen-exit";
+import IconPause from "../icons/pause";
+import IconPlay from "../icons/play";
+import IconVolumeDown from "../icons/volume-down";
+import IconVolumeOff from "../icons/volume-off";
+import IconVolumeUp from "../icons/volume-up";
 const ReactPlayerWrapper = dynamic(() => import("./react-player-wrapper"), {
     ssr: false,
 });
@@ -35,15 +38,6 @@ export const formatTime = (seconds: number) => {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 };
 
-const RESOLUTION_TO_CLASS: { [key: string]: number } = {
-    "416x234": 240,
-    "640x360": 360,
-    "768x432": 480,
-    "960x540": 576,
-    "1280x720": 720,
-    "1920x1080": 1080,
-};
-
 const playbackRates = {
     "0.5x": 0.5,
     "1x": 1.0,
@@ -56,7 +50,6 @@ export type VideoInfo = {
     videoTitle: string;
     streamer: {
         name: string;
-        // more info
     };
 };
 
@@ -169,15 +162,23 @@ export function StreamingFrame({
             playerRef.current.getInternalPlayer("hls").currentLevel = -1;
         } else {
             setResolutions((prevResolutions) => {
+                // Extract height from the selected value (e.g., "1080p" -> 1080)
+                const selectedHeight = getResolutionHeight(value);
+                if (selectedHeight === null) {
+                    return prevResolutions;
+                }
+
+                // Find the resolution that matches this height
                 const levelIndex = prevResolutions.findIndex((reso) => {
-                    return (
-                        parseInt(value.replace("p", "")) ===
-                        RESOLUTION_TO_CLASS[reso]
-                    );
+                    if (reso === "Auto") return false;
+                    const resoHeight = getResolutionHeight(reso);
+                    return resoHeight !== null && resoHeight === selectedHeight;
                 });
 
-                playerRef.current!.getInternalPlayer("hls").currentLevel =
-                    levelIndex - 1; // minus the "Auto" option
+                if (levelIndex !== -1) {
+                    playerRef.current!.getInternalPlayer("hls").currentLevel =
+                        levelIndex - 1; // minus the "Auto" option
+                }
 
                 return prevResolutions;
             });
@@ -292,9 +293,11 @@ function FrontOfVideo({
                 }}
             >
                 {!isPlaying && (
-                    <PlayArrow
-                        sx={{ fontSize: 100 }}
-                        className="cursor-pointer text-white"
+                    <IconPlay
+                        width="100px"
+                        height="100px"
+                        className="cursor-pointer"
+                        color="white"
                     />
                 )}
             </div>
@@ -334,12 +337,12 @@ function VideoControl({
     return (
         <div
             className={cn(
-                "flex h-fit w-full flex-col items-center justify-center bg-black/60 px-10 pb-4 pt-4",
+                "flex h-fit w-full flex-col items-center justify-center px-10 pb-4 pt-4",
                 className,
             )}
         >
             <VideoTracking
-                className="w-full"
+                className="w-full mb-3"
                 isPlaying={isPlaying}
                 currentTime={currentTime}
                 loaded={loaded}
@@ -385,12 +388,16 @@ function VideoTracking({
             )}
         >
             <Slider
-                value={duration !== 0 ? (currentTime / duration) * 100 : 0}
-                onChange={(e: any) => {
+                value={[duration !== 0 ? (currentTime / duration) * 100 : 0]}
+                onValueChange={(value) => {
                     if (fnControl.seekToTime)
-                        fnControl.seekToTime((e.target.value / 100) * duration);
+                        fnControl.seekToTime((value[0] / 100) * duration);
                 }}
-                size="small"
+                max={100}
+                step={0.1}
+                trackClassName="bg-gray-500/50"
+                rangeClassName="bg-white"
+                thumbClassName="border-white/50 bg-white"
             />
         </div>
     );
@@ -413,6 +420,8 @@ function VideoControlButtons({
     fnControl: FnControl;
     resolutions: string[];
 }) {
+    const { t } = useT("common");
+
     return (
         <div
             className={cn(
@@ -429,47 +438,37 @@ function VideoControlButtons({
                             if (fnControl.playVideo) fnControl.playVideo();
                         }
                     }}
+                    className="bg-black/30 rounded h-10 w-10 flex items-center justify-center hover:bg-black/50 transition-colors"
                 >
                     {isPlaying ? (
-                        <Pause
-                            sx={{ fontSize: 24 }}
-                            className="cursor-pointer text-white"
+                        <IconPause
+                            width="24px"
+                            height="24px"
+                            className="cursor-pointer"
+                            color="white"
                         />
                     ) : (
-                        <PlayArrow
-                            sx={{ fontSize: 24 }}
-                            className="cursor-pointer text-white"
+                        <IconPlay
+                            width="24px"
+                            height="24px"
+                            className="cursor-pointer"
+                            color="white"
                         />
                     )}
                 </div>
                 <VolumeButton onVolumeChange={fnControl.handleVolumeChange} />
-                {/* <span className="text-white">
-          {formatTime(currentTime)} / {formatTime(duration)}
-        </span> */}
-                <div className="font-semibold text-red-600">
+                <div className="font-semibold text-red-600 flex flex-row items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-red-600"></div>
-                    Live
+                    <span>{t("common:live")}</span>
                 </div>
             </div>
 
             <div className="flex flex-row items-center gap-4">
-                {/* <Combobox
-          options={Object.keys(playbackRates)}
-          value={config.playbackRate + "x"}
-          onChange={(value: string) =>
-            fnControl.handlePlaybackRateChange(
-              playbackRates[value as keyof typeof playbackRates]
-            )
-          }
-        /> */}
-
                 <Combobox
-                    options={resolutions.map((res) =>
-                        res === "Auto"
-                            ? "Auto"
-                            : RESOLUTION_TO_CLASS[res] + "p",
-                    )}
-                    value={config.resolution}
+                    options={resolutions
+                        .map((res) => formatResolutionForDisplay(res))
+                        .filter((res): res is string => res !== null)}
+                    value={formatResolutionForDisplay(config.resolution) || "Auto"}
                     onChange={fnControl.handleResolutionChange}
                 />
 
@@ -483,16 +482,21 @@ function VideoControlButtons({
                                 fnControl.onFullScreen();
                         }
                     }}
+                    className="bg-black/30 rounded h-10 w-10 flex items-center justify-center hover:bg-black/50 transition-colors"
                 >
                     {config.isFullscreen ? (
-                        <FullscreenExit
-                            sx={{ fontSize: 24 }}
-                            className="cursor-pointer text-white"
+                        <IconFullscreenExit
+                            width="24px"
+                            height="24px"
+                            className="cursor-pointer"
+                            color="white"
                         />
                     ) : (
-                        <Fullscreen
-                            sx={{ fontSize: 24 }}
-                            className="cursor-pointer text-white"
+                        <IconFullscreen
+                            width="24px"
+                            height="24px"
+                            className="cursor-pointer"
+                            color="white"
                         />
                     )}
                 </div>
@@ -519,25 +523,31 @@ function VolumeButton({
     }, [volumeValue]);
 
     return (
-        <div className="flex w-[120px] flex-row items-center gap-4">
+        <div className="flex w-[120px] h-10 flex-row items-center gap-2 bg-black/30 rounded px-2 hover:bg-black/50 transition-colors">
             <div
-                className="cursor-pointer text-white"
+                className="cursor-pointer text-white flex items-center justify-center"
                 onClick={() => {
                     if (volumeValue === 0) handleVolumeChange(currentVolume);
                     else handleVolumeChange(0);
                 }}
             >
-                {volumeValue === 0 && <VolumeOff sx={{ fontSize: 24 }} />}
+                {volumeValue === 0 && <IconVolumeOff width="24px" height="24px" color="white" />}
                 {volumeValue > 0 && volumeValue < 50 && (
-                    <VolumeDown sx={{ fontSize: 24 }} />
+                    <IconVolumeDown width="24px" height="24px" color="white" />
                 )}
-                {volumeValue >= 50 && <VolumeUp sx={{ fontSize: 24 }} />}
+                {volumeValue >= 50 && <IconVolumeUp width="24px" height="24px" color="white" />}
             </div>
-            <Slider
-                value={volumeValue}
-                onChange={(e: any) => handleVolumeChange(e.target.value)}
-                size="small"
-            />
+            <div className="flex-1 flex items-center">
+                <Slider
+                    value={[volumeValue]}
+                    onValueChange={(value) => handleVolumeChange(value[0])}
+                    max={100}
+                    step={1}
+                    trackClassName="bg-gray-500/50"
+                    rangeClassName="bg-white"
+                    thumbClassName="border-white/50 bg-white"
+                />
+            </div>
         </div>
     );
 }
@@ -570,7 +580,7 @@ const Combobox = ({
             className="relative flex cursor-pointer flex-row items-center justify-center gap-4"
         >
             <div
-                className={cn("cursor-pointer text-white")}
+                className={cn("cursor-pointer text-white bg-black/30 rounded h-10 flex items-center justify-center px-3 hover:bg-black/50 transition-colors")}
                 onClick={(e: any) => handleClick(e)}
             >
                 {value}
@@ -586,7 +596,7 @@ const Combobox = ({
                             onClick={() => handleValueChange(option)}
                         >
                             <span className="w-[20px]">
-                                {value === option ? <Check /> : null}
+                                {value === option ? <IconCheck color="white" /> : null}
                             </span>
                             <p className="w-[70px]">{option}</p>
                         </div>
