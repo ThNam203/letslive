@@ -25,7 +25,6 @@ i18next
             order: ["path", "cookie", "navigator", "htmlTag"],
             lookupCookie: I18N_COOKIE_NAME,
         },
-        preload: runsOnServerSide ? I18N_LANGUAGES : [],
     });
 
 export default i18next;
