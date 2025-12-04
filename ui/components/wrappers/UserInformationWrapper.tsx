@@ -37,7 +37,8 @@ export default function UserInformationWrapper({
         };
 
         fetchUser();
-    }, []);
+    }, [setUser, setIsLoading, t]);
 
+    // Render children immediately - user fetch happens in background
     return <>{children}</>;
 }
