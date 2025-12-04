@@ -38,6 +38,7 @@
     "bio": "Tiểu sử",
     
     "started_at": "Bắt đầu {{time}} trước",
+    "live": "Trực tiếp",
     "time": {
         "seconds_ago": "{{count}} giây",
         "minutes_ago": "{{count}} phút",

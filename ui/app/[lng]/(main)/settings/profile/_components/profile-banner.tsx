@@ -1,9 +1,8 @@
 "use client";
 
-import { AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import useUser from "@/hooks/user";
 import { cn } from "@/utils/cn";
-import { Avatar } from "@radix-ui/react-avatar";
 import Image from "next/image";
 import { useRef } from "react";
 import DefaultBackgound from "./default-background";
