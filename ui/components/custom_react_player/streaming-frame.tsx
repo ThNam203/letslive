@@ -20,6 +20,8 @@ import IconPlay from "../icons/play";
 import IconVolumeDown from "../icons/volume-down";
 import IconVolumeOff from "../icons/volume-off";
 import IconVolumeUp from "../icons/volume-up";
+import IconFastForward from "../icons/fast-forward";
+import IconLoader from "../icons/loader";
 const ReactPlayerWrapper = dynamic(() => import("./react-player-wrapper"), {
     ssr: false,
 });
@@ -77,10 +79,12 @@ export function StreamingFrame({
     videoInfo,
     className,
     onVideoStart,
+    enableSkipButtons = false,
 }: {
     videoInfo: VideoInfo;
     onVideoStart?: () => void;
     className?: ClassValue;
+    enableSkipButtons?: boolean;
 }) {
     const playerRef = useRef<ReactPlayer>(null);
 
@@ -216,6 +220,12 @@ export function StreamingFrame({
                         onDuration={(duration: number) => {
                             setDuration(duration);
                         }}
+                        onBuffer={() => {
+                            setIsLoading(true);
+                        }}
+                        onBufferEnd={() => {
+                            setIsLoading(false);
+                        }}
                         config={{ file: { forceHLS: true } }}
                         onReady={(reactPlayer) => {
                             setIsLoading(false);
@@ -238,6 +248,8 @@ export function StreamingFrame({
                         duration={duration}
                         videoInfo={videoInfo}
                         resolutions={resolutions}
+                        enableSkipButtons={enableSkipButtons}
+                        isLoading={isLoading}
                         className={count > 3 ? "opacity-0" : "opacity-100"}
                     />
                 </>
@@ -255,6 +267,8 @@ function FrontOfVideo({
     duration,
     videoInfo,
     resolutions,
+    enableSkipButtons,
+    isLoading,
     className,
 }: {
     isPlaying: boolean;
@@ -265,6 +279,8 @@ function FrontOfVideo({
     duration: number;
     videoInfo: VideoInfo;
     resolutions: string[];
+    enableSkipButtons: boolean;
+    isLoading: boolean;
     className?: ClassValue;
 }) {
     return (
@@ -292,13 +308,26 @@ function FrontOfVideo({
                     }
                 }}
             >
-                {!isPlaying && (
-                    <IconPlay
-                        width="100px"
-                        height="100px"
-                        className="cursor-pointer"
-                        color="white"
-                    />
+                {isLoading ? (
+                    <div className="flex h-28 w-28 items-center justify-center rounded-full bg-black/30">
+                        <IconLoader
+                            width="100px"
+                            height="100px"
+                            className="cursor-pointer"
+                            color="white"
+                        />
+                    </div>
+                ) : (
+                    !isPlaying && (
+                        <div className="flex h-28 w-28 items-center justify-center rounded-full bg-black/30">
+                            <IconPlay
+                                width="100px"
+                                height="100px"
+                                className="cursor-pointer"
+                                color="white"
+                            />
+                        </div>
+                    )
                 )}
             </div>
 
@@ -310,6 +339,7 @@ function FrontOfVideo({
                 fnControl={fnControl}
                 resolutions={resolutions}
                 duration={duration}
+                enableSkipButtons={enableSkipButtons}
             />
         </div>
     );
@@ -323,6 +353,7 @@ function VideoControl({
     fnControl,
     duration,
     resolutions,
+    enableSkipButtons,
     className,
 }: {
     isPlaying: boolean;
@@ -332,21 +363,43 @@ function VideoControl({
     fnControl: FnControl;
     duration: number;
     resolutions: string[];
+    enableSkipButtons: boolean;
     className?: ClassValue;
 }) {
+    const { t } = useT("common");
+
     return (
-        <div
-            className={cn(
-                "flex h-fit w-full flex-col items-center justify-center px-10 pb-4 pt-4",
-                className,
-            )}
-        >
+        <div className={cn("flex h-fit w-full flex-col p-4", className)}>
+            <div
+                className={cn(
+                    "mb-2 flex w-fit flex-row items-center gap-2 rounded bg-black/30 px-2 py-1 text-sm font-semibold text-red-600",
+                    duration > 0 &&
+                        duration - currentTime > 3 &&
+                        "cursor-pointer transition-opacity hover:opacity-80",
+                )}
+                onClick={() => {
+                    if (
+                        duration > 0 &&
+                        duration - currentTime > 3 &&
+                        fnControl.seekToTime
+                    ) {
+                        fnControl.seekToTime(duration);
+                    }
+                }}
+            >
+                <div
+                    className={cn(
+                        "h-2 w-2 rounded-full",
+                        duration > 0 && duration - currentTime <= 3
+                            ? "bg-red-600"
+                            : "bg-gray-600",
+                    )}
+                ></div>
+                <span>{t("common:live")}</span>
+            </div>
             <VideoTracking
-                className="w-full mb-3"
-                isPlaying={isPlaying}
+                className="mb-3 w-full"
                 currentTime={currentTime}
-                loaded={loaded}
-                config={config}
                 fnControl={fnControl}
                 duration={duration}
             />
@@ -358,6 +411,7 @@ function VideoControl({
                 config={config}
                 fnControl={fnControl}
                 resolutions={resolutions}
+                enableSkipButtons={enableSkipButtons}
             />
         </div>
     );
@@ -365,18 +419,12 @@ function VideoControl({
 
 function VideoTracking({
     className,
-    isPlaying,
     currentTime,
-    loaded,
-    config,
     duration,
     fnControl,
 }: {
     className?: ClassValue;
-    isPlaying: boolean;
     currentTime: number;
-    loaded: number;
-    config: Config;
     duration: number;
     fnControl: FnControl;
 }) {
@@ -411,6 +459,7 @@ function VideoControlButtons({
     config,
     fnControl,
     resolutions,
+    enableSkipButtons,
 }: {
     className?: ClassValue;
     isPlaying: boolean;
@@ -419,6 +468,7 @@ function VideoControlButtons({
     config: Config;
     fnControl: FnControl;
     resolutions: string[];
+    enableSkipButtons: boolean;
 }) {
     const { t } = useT("common");
 
@@ -438,7 +488,7 @@ function VideoControlButtons({
                             if (fnControl.playVideo) fnControl.playVideo();
                         }
                     }}
-                    className="bg-black/30 rounded h-10 w-10 flex items-center justify-center hover:bg-black/50 transition-colors"
+                    className="flex h-10 w-10 items-center justify-center rounded bg-black/30 transition-colors hover:bg-black/50"
                 >
                     {isPlaying ? (
                         <IconPause
@@ -457,18 +507,60 @@ function VideoControlButtons({
                     )}
                 </div>
                 <VolumeButton onVolumeChange={fnControl.handleVolumeChange} />
-                <div className="font-semibold text-red-600 flex flex-row items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-red-600"></div>
-                    <span>{t("common:live")}</span>
-                </div>
             </div>
 
             <div className="flex flex-row items-center gap-4">
+                {enableSkipButtons && (
+                    <>
+                        <div
+                            onClick={() => {
+                                if (fnControl.seekToTime) {
+                                    const newTime = Math.max(
+                                        0,
+                                        currentTime - 10,
+                                    );
+                                    fnControl.seekToTime(newTime);
+                                }
+                            }}
+                            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded bg-black/30 transition-colors hover:bg-black/50"
+                            title="-10 seconds"
+                        >
+                            <IconFastForward
+                                width="20px"
+                                height="20px"
+                                color="white"
+                                className="scale-x-[-1] text-white"
+                            />
+                        </div>
+                        <div
+                            onClick={() => {
+                                if (fnControl.seekToTime) {
+                                    const newTime = Math.min(
+                                        duration,
+                                        currentTime + 10,
+                                    );
+                                    fnControl.seekToTime(newTime);
+                                }
+                            }}
+                            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded bg-black/30 transition-colors hover:bg-black/50"
+                            title="+10 seconds"
+                        >
+                            <IconFastForward
+                                width="20px"
+                                height="20px"
+                                color="white"
+                                className="text-white"
+                            />
+                        </div>
+                    </>
+                )}
                 <Combobox
                     options={resolutions
                         .map((res) => formatResolutionForDisplay(res))
                         .filter((res): res is string => res !== null)}
-                    value={formatResolutionForDisplay(config.resolution) || "Auto"}
+                    value={
+                        formatResolutionForDisplay(config.resolution) || "Auto"
+                    }
                     onChange={fnControl.handleResolutionChange}
                 />
 
@@ -482,7 +574,7 @@ function VideoControlButtons({
                                 fnControl.onFullScreen();
                         }
                     }}
-                    className="bg-black/30 rounded h-10 w-10 flex items-center justify-center hover:bg-black/50 transition-colors"
+                    className="flex h-10 w-10 items-center justify-center rounded bg-black/30 transition-colors hover:bg-black/50"
                 >
                     {config.isFullscreen ? (
                         <IconFullscreenExit
@@ -523,21 +615,25 @@ function VolumeButton({
     }, [volumeValue]);
 
     return (
-        <div className="flex w-[120px] h-10 flex-row items-center gap-2 bg-black/30 rounded px-2 hover:bg-black/50 transition-colors">
+        <div className="flex h-10 w-[120px] flex-row items-center gap-2 rounded bg-black/30 px-2 transition-colors hover:bg-black/50">
             <div
-                className="cursor-pointer text-white flex items-center justify-center"
+                className="flex cursor-pointer items-center justify-center text-white"
                 onClick={() => {
                     if (volumeValue === 0) handleVolumeChange(currentVolume);
                     else handleVolumeChange(0);
                 }}
             >
-                {volumeValue === 0 && <IconVolumeOff width="24px" height="24px" color="white" />}
+                {volumeValue === 0 && (
+                    <IconVolumeOff width="24px" height="24px" color="white" />
+                )}
                 {volumeValue > 0 && volumeValue < 50 && (
                     <IconVolumeDown width="24px" height="24px" color="white" />
                 )}
-                {volumeValue >= 50 && <IconVolumeUp width="24px" height="24px" color="white" />}
+                {volumeValue >= 50 && (
+                    <IconVolumeUp width="24px" height="24px" color="white" />
+                )}
             </div>
-            <div className="flex-1 flex items-center">
+            <div className="flex flex-1 items-center">
                 <Slider
                     value={[volumeValue]}
                     onValueChange={(value) => handleVolumeChange(value[0])}
@@ -580,7 +676,9 @@ const Combobox = ({
             className="relative flex cursor-pointer flex-row items-center justify-center gap-4"
         >
             <div
-                className={cn("cursor-pointer text-white bg-black/30 rounded h-10 flex items-center justify-center px-3 hover:bg-black/50 transition-colors")}
+                className={cn(
+                    "flex h-10 cursor-pointer items-center justify-center rounded bg-black/30 px-3 text-white transition-colors hover:bg-black/50",
+                )}
                 onClick={(e: any) => handleClick(e)}
             >
                 {value}
@@ -596,7 +694,9 @@ const Combobox = ({
                             onClick={() => handleValueChange(option)}
                         >
                             <span className="w-[20px]">
-                                {value === option ? <IconCheck color="white" /> : null}
+                                {value === option ? (
+                                    <IconCheck color="white" />
+                                ) : null}
                             </span>
                             <p className="w-[70px]">{option}</p>
                         </div>

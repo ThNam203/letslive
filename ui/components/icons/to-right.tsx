@@ -8,7 +8,7 @@ function IconToRight(props: IconProp) {
             width="1.5rem" 
             height="1.5rem" 
             viewBox="0 0 48 48"
-            stroke="#000"
+            stroke="currentColor"
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="4"
