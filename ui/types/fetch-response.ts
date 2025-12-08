@@ -59,7 +59,7 @@ export enum ApiCode {
     RES_ERR_VOD_UPDATE_FAILED = 40008,
 }
 
-// --- i18n keys 
+// --- i18n keys
 export enum ApiKey {
     RES_ERR_INVALID_INPUT = "res_err_invalid_input",
     RES_ERR_INVALID_PAYLOAD = "res_err_invalid_payload",
@@ -93,4 +93,4 @@ export enum ApiKey {
     RES_ERR_LIVESTREAM_UPDATE_FAILED = "res_err_livestream_update_failed",
     RES_ERR_VOD_CREATE_FAILED = "res_err_vod_create_failed",
     RES_ERR_VOD_UPDATE_FAILED = "res_err_vod_update_failed",
-};
+}

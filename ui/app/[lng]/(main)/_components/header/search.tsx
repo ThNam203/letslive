@@ -42,9 +42,9 @@ export default function SearchBar({
                             }
                         })
                         .catch((_) => {
-                            toast(t("fetch-error:client_fetch_error"), { 
+                            toast(t("fetch-error:client_fetch_error"), {
                                 toastId: "client-fetch-error-id",
-                                type: "error" 
+                                type: "error",
                             });
                         })
                         .finally(() => {

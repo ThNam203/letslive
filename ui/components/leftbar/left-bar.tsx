@@ -31,7 +31,7 @@ export default function LeftBar() {
             id="1"
             order={1}
             className={cn(
-                "bg-background relative h-full w-full py-4 min-w-[18rem]",
+                "relative h-full w-full min-w-[18rem] bg-background py-4",
                 minimizedLeftBar ? "min-w-16 max-w-16" : "",
             )}
         >
@@ -61,8 +61,15 @@ const MinimizeButton = (
     };
 
     return (
-        <Button className={cn(minimizedLeftBar ? "mx-auto" : "")} onClick={handleClick}>
-            {minimizedLeftBar ? <IconToRight className="stroke-primary-foreground" /> : <IconToLeft className="stroke-primary-foreground" />}
+        <Button
+            className={cn(minimizedLeftBar ? "mx-auto" : "")}
+            onClick={handleClick}
+        >
+            {minimizedLeftBar ? (
+                <IconToRight className="stroke-primary-foreground" />
+            ) : (
+                <IconToLeft className="stroke-primary-foreground" />
+            )}
         </Button>
     );
 };

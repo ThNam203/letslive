@@ -27,29 +27,35 @@ const LivestreamPreviewView = ({
 
     useEffect(() => {
         const fetchUserInfo = async () => {
-            await GetUserById(livestream.userId).then(res => {
-                if (res.success) {
-                    setUser(res.data ?? null);
-                } else {
-                    toast(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
+            await GetUserById(livestream.userId)
+                .then((res) => {
+                    if (res.success) {
+                        setUser(res.data ?? null);
+                    } else {
+                        toast(t(`api-response:${res.key}`), {
+                            toastId: res.requestId,
+                            type: "error",
+                        });
+                    }
+                })
+                .catch((_) => {
+                    toast(t("fetch-error:client_fetch_error"), {
+                        toastId: "client-fetch-error-id",
                         type: "error",
                     });
-                }
-            })
-            .catch((_) => {
-                toast(t("fetch-error:client_fetch_error"), { 
-                    toastId: "client-fetch-error-id",
-                    type: "error"
                 });
-            });
         };
 
         fetchUserInfo();
     }, [livestream]);
 
     return (
-        <Card className={cn("w-full transition-all hover:shadow-md rounded-sm border-muted", className)}>
+        <Card
+            className={cn(
+                "w-full rounded-sm border-muted transition-all hover:shadow-md",
+                className,
+            )}
+        >
             <Hover3DBox
                 showStream={true}
                 imageSrc={
@@ -60,7 +66,7 @@ const LivestreamPreviewView = ({
                 className="cursor-pointer"
                 onClick={() => router.push(`/users/${livestream.userId}`)}
             />
-            <CardContent className="p-4 bg-muted">
+            <CardContent className="bg-muted p-4">
                 <LivestreamPreviewDetailView
                     livestream={livestream}
                     user={user}

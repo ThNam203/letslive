@@ -14,4 +14,3 @@ function IconFullscreenExit(props: IconProp) {
 }
 
 export default IconFullscreenExit;
-

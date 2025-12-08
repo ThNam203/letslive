@@ -1,4 +1,4 @@
-{   
+{
     "res_err_invalid_input": "Input invalid.",
     "res_err_invalid_payload": "Payload invalid.",
     "res_err_auth_already_exists": "Email has already been registered.",
@@ -34,4 +34,4 @@
     "res_succ_ok": "Success",
     "res_succ_login": "Login successfully",
     "res_succ_sign_up": "Sign up successfully"
-}  
+}

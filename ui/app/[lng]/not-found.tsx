@@ -7,19 +7,19 @@ export default async function NotFound() {
     const { t } = await myGetT(["common"]);
 
     return (
-        <div className="min-h-screen w-full flex flex-col items-center justify-center p-4">
-            <div className="max-w-[600px] text-center flex items-center justify-center">
+        <div className="flex min-h-screen w-full flex-col items-center justify-center p-4">
+            <div className="flex max-w-[600px] items-center justify-center text-center">
                 <Image
                     src="/images/pc-error.png"
                     alt="404 Error Illustration"
                     width={400}
                     height={300}
-                    className="w-full h-auto mb-6"
+                    className="mb-6 h-auto w-full"
                     priority
                 />
                 <div>
-                    <h1 className="text-4xl font-bold mb-3">Oops!</h1>
-                    <p className="text-muted-foreground text-lg mb-6">
+                    <h1 className="mb-3 text-4xl font-bold">Oops!</h1>
+                    <p className="text-muted-foreground mb-6 text-lg">
                         {t("common:page_not_found")}
                     </p>
                     <Button asChild>

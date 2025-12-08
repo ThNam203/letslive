@@ -31,16 +31,16 @@ export default function DisableAccountDialog({
     const { t } = useT(["settings", "api-response", "fetch-error"]);
 
     const logoutHandler = async () => {
-        await Logout().then(res => {
+        await Logout().then((res) => {
             if (res.statusCode === 204) {
                 clearUser();
             } else {
                 toast(t(`api-response:${res.key}`), {
                     toastId: res.requestId,
                     type: "error",
-                })
+                });
             }
-        })
+        });
     };
 
     const handleDisableAccount = async () => {
@@ -48,20 +48,22 @@ export default function DisableAccountDialog({
             setIsDisablingAccount(true);
             await UpdateProfile({
                 status: UserStatus.DISABLED,
-            }).then(res => {
-                if (res.success) return logoutHandler();
-                else toast.error(t(`api-response:${res.key}`), {
-                    toastId: res.requestId,
-                    type: "error",
-                });
             })
-            .catch((_) => {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-            })
-            .finally(() => setIsDisablingAccount(false));
+                .then((res) => {
+                    if (res.success) return logoutHandler();
+                    else
+                        toast.error(t(`api-response:${res.key}`), {
+                            toastId: res.requestId,
+                            type: "error",
+                        });
+                })
+                .catch((_) => {
+                    toast(t("fetch-error:client_fetch_error"), {
+                        toastId: "client-fetch-error-id",
+                        type: "error",
+                    });
+                })
+                .finally(() => setIsDisablingAccount(false));
         } catch (error) {
             toast.error(t("settings:disable.unknown_error"));
         } finally {
@@ -69,7 +71,7 @@ export default function DisableAccountDialog({
             setIsDisablingAccount(false);
         }
     };
-    
+
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
@@ -82,7 +84,9 @@ export default function DisableAccountDialog({
             </DialogTrigger>
             <DialogContent className="bg-background text-foreground">
                 <DialogHeader>
-                    <DialogTitle>{t("settings:disable.dialog.title")}</DialogTitle>
+                    <DialogTitle>
+                        {t("settings:disable.dialog.title")}
+                    </DialogTitle>
                     <DialogDescription>
                         {t("settings:disable.dialog.description")}
                     </DialogDescription>
@@ -104,4 +108,3 @@ export default function DisableAccountDialog({
         </Dialog>
     );
 }
-

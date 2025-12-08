@@ -6,7 +6,9 @@ export async function GetMessages(roomId: string): Promise<{
     messages: ReceivedMessage[];
 }> {
     try {
-        const data = await fetchClient<ReceivedMessage[]>(`/messages?roomId=${roomId}`) as any;
+        const data = (await fetchClient<ReceivedMessage[]>(
+            `/messages?roomId=${roomId}`,
+        )) as any;
         return { messages: data.data };
     } catch (error) {
         return { messages: [] };

@@ -17,7 +17,9 @@ export default async function RootLayout({
 
             <div className="flex w-full max-w-[600px] flex-col justify-center rounded-xl p-12">
                 <Link href={"/"}>
-                    <h1 className="text-lg font-bold hover:underline">LET&apos;S LIVE</h1>
+                    <h1 className="text-lg font-bold hover:underline">
+                        LET&apos;S LIVE
+                    </h1>
                 </Link>
                 {children}
             </div>

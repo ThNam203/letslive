@@ -1,18 +1,12 @@
 import { z } from "zod";
 import i18next from "@/lib/i18n/i18next";
 
-export const changePasswordSchema = function(t: typeof i18next.t) {
+export const changePasswordSchema = function (t: typeof i18next.t) {
     return z
         .object({
-            currentPassword: z
-                .string()
-                .min(8, t("error:password_too_short")),
-            newPassword: z
-                .string()
-                .min(8, t("error:password_too_short")),
-            confirmPassword: z
-                .string()
-                .min(8, t("error:password_too_short")),
+            currentPassword: z.string().min(8, t("error:password_too_short")),
+            newPassword: z.string().min(8, t("error:password_too_short")),
+            confirmPassword: z.string().min(8, t("error:password_too_short")),
         })
         .superRefine((data, ctx) => {
             if (data.newPassword === data.currentPassword) {
@@ -32,4 +26,6 @@ export const changePasswordSchema = function(t: typeof i18next.t) {
         });
 };
 
-export type ChangePasswordSchema = z.infer<ReturnType<typeof changePasswordSchema>>;
+export type ChangePasswordSchema = z.infer<
+    ReturnType<typeof changePasswordSchema>
+>;

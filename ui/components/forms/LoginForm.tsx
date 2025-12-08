@@ -77,7 +77,7 @@ export default function LogInForm() {
                             setUser(res.data);
                             router.push("/");
                         }
-                    })
+                    });
                 }
             })
             .catch((_) => {

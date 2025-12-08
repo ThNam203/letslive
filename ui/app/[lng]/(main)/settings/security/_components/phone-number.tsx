@@ -12,7 +12,7 @@ import { cn } from "@/utils/cn";
 
 export default function PhoneNumber() {
     const { t } = useT("settings");
-    const {user, updateUser} = useUser();
+    const { user, updateUser } = useUser();
     const [isUpdating, setIsUpdating] = useState(false);
     const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
     const [isEditing, setIsEditing] = useState(false);
@@ -60,7 +60,10 @@ export default function PhoneNumber() {
 
     return (
         <div className="flex items-center justify-between border-t border-border pt-4">
-            <label className="text-sm font-medium min-w-48" htmlFor="phone-number">
+            <label
+                className="min-w-48 text-sm font-medium"
+                htmlFor="phone-number"
+            >
                 {t("settings:security.contact.phone")}
             </label>
             {!isEditing ? (
@@ -72,7 +75,7 @@ export default function PhoneNumber() {
                     variant="none"
                     className={cn(
                         user?.phoneNumber
-                            ? "p-0 text-medium font-semibold italic text-foreground"
+                            ? "text-medium p-0 font-semibold italic text-foreground"
                             : "p-0 text-sm text-primary hover:text-primary-hover",
                     )}
                 >
@@ -97,7 +100,7 @@ export default function PhoneNumber() {
                     autoFocus={true}
                     onBlur={() => {
                         setPhoneNumber(user?.phoneNumber || "");
-                        setIsEditing(false)
+                        setIsEditing(false);
                     }}
                     className="flex-grow border border-border text-right"
                 />

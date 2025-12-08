@@ -53,36 +53,34 @@ export default function ProfileSettings() {
 
         if (backgroundImageFile) {
             await UpdateBackgroundPicture(backgroundImageFile)
-            .then(res => {
-                if (res.success) {
-                    setBackgroundImageFile(null);
-                    updateUser({
-                        ...user!,
-                        backgroundPicture: res.data,
-                    });
-                } else {
-                    toast.error(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
+                .then((res) => {
+                    if (res.success) {
+                        setBackgroundImageFile(null);
+                        updateUser({
+                            ...user!,
+                            backgroundPicture: res.data,
+                        });
+                    } else {
+                        toast.error(t(`api-response:${res.key}`), {
+                            toastId: res.requestId,
+                            type: "error",
+                        });
+                        hasError = true;
+                    }
+                })
+                .catch((_) => {
+                    toast(t("fetch-error:client_fetch_error"), {
+                        toastId: "client-fetch-error-id",
                         type: "error",
                     });
                     hasError = true;
-                }
-            })
-            .catch((_) => {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-                hasError = true;
-            })
-            .finally(() =>
-                setIsUpdatingProfile(false),
-            );
+                })
+                .finally(() => setIsUpdatingProfile(false));
         }
 
         if (profileImageFile) {
-                await UpdateProfilePicture(profileImageFile)
-                .then(res => {
+            await UpdateProfilePicture(profileImageFile)
+                .then((res) => {
                     if (res.success) {
                         setProfileImageFile(null);
                         updateUser({
@@ -104,9 +102,7 @@ export default function ProfileSettings() {
                     });
                     hasError = true;
                 })
-                .finally(() =>
-                    setIsUpdatingProfile(false),
-                );
+                .finally(() => setIsUpdatingProfile(false));
         }
 
         if (bio || displayName) {
@@ -114,28 +110,28 @@ export default function ProfileSettings() {
                 displayName: isDisplayNameChanged ? displayName : undefined,
                 bio: isBioChanged ? bio : undefined,
             })
-            .then(res => {
-                if (res.success) {
-                    updateUser({
-                        ...user!,
-                        ...res.data,
-                    });
-                } else {
-                    toast.error(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
+                .then((res) => {
+                    if (res.success) {
+                        updateUser({
+                            ...user!,
+                            ...res.data,
+                        });
+                    } else {
+                        toast.error(t(`api-response:${res.key}`), {
+                            toastId: res.requestId,
+                            type: "error",
+                        });
+                        hasError = true;
+                    }
+                })
+                .catch((_) => {
+                    toast(t("fetch-error:client_fetch_error"), {
+                        toastId: "client-fetch-error-id",
                         type: "error",
                     });
                     hasError = true;
-                }
-            })
-            .catch((_) => {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-                hasError = true;
-            })
-            .finally(() => setIsUpdatingProfile(false));
+                })
+                .finally(() => setIsUpdatingProfile(false));
         }
 
         if (!hasError) toast.success(t("settings:profile.update_success"));
@@ -165,11 +161,12 @@ export default function ProfileSettings() {
     useEffect(() => {
         return () => {
             try {
-                if (profileImageFile) URL.revokeObjectURL(profileImageFile?.name);
+                if (profileImageFile)
+                    URL.revokeObjectURL(profileImageFile?.name);
                 if (backgroundImageFile)
                     URL.revokeObjectURL(backgroundImageFile?.name);
             } catch (e) {}
-        }
+        };
     }, []);
 
     useEffect(() => {
@@ -218,7 +215,8 @@ export default function ProfileSettings() {
                             disabled={isUpdatingProfile || isButtonDisabled}
                             type="submit"
                         >
-                            {isUpdatingProfile && <IconLoader />} {t("common:save_changes")}
+                            {isUpdatingProfile && <IconLoader />}{" "}
+                            {t("common:save_changes")}
                         </Button>
                     </div>
                 </form>
@@ -261,7 +259,9 @@ export default function ProfileSettings() {
                     <p className="w-2/3 text-sm text-destructive">
                         {t("settings:disable.note")}
                     </p>
-                    <DisableAccountDialog isUpdatingProfile={isUpdatingProfile} />
+                    <DisableAccountDialog
+                        isUpdatingProfile={isUpdatingProfile}
+                    />
                 </div>
             </Section>
         </>

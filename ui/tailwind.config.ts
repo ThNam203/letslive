@@ -10,7 +10,7 @@ const config: Config = {
         extend: {
             colors: {
                 background: "hsl(var(--background))",
-				"background-hover": "hsl(var(--background-hover))",
+                "background-hover": "hsl(var(--background-hover))",
                 foreground: "hsl(var(--foreground))",
                 "foreground-muted": "hsl(var(--foreground-muted))",
                 primary: "hsl(var(--primary))",

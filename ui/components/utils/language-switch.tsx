@@ -10,7 +10,12 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/utils/cn";
 import useT from "@/hooks/use-translation";
-import { I18N_COOKIE_NAME, I18N_FALLBACK_LNG, I18N_LANGUAGE_COUNTRY_MAP, I18N_LANGUAGES } from "@/lib/i18n/settings";
+import {
+    I18N_COOKIE_NAME,
+    I18N_FALLBACK_LNG,
+    I18N_LANGUAGE_COUNTRY_MAP,
+    I18N_LANGUAGES,
+} from "@/lib/i18n/settings";
 import { usePathname, useRouter } from "next/navigation";
 
 const LanguageSwitch = ({ className }: { className?: string }) => {

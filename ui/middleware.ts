@@ -23,13 +23,16 @@ function setUpCookieLocale(
     else if (request.headers.has("referer")) {
         const refererUrl = new URL(request.headers.get("referer") || "");
         finalLng =
-            I18N_LANGUAGES.find((l) => refererUrl.pathname.startsWith(`/${l}`)) ||
-            "";
+            I18N_LANGUAGES.find((l) =>
+                refererUrl.pathname.startsWith(`/${l}`),
+            ) || "";
     }
 
     if (!I18N_LANGUAGES.includes(finalLng)) finalLng = I18N_FALLBACK_LNG;
 
-    response.cookies.set(I18N_COOKIE_NAME, finalLng, { maxAge: 60 * 60 * 24 * 365 });
+    response.cookies.set(I18N_COOKIE_NAME, finalLng, {
+        maxAge: 60 * 60 * 24 * 365,
+    });
     return finalLng;
 }
 

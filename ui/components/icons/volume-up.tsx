@@ -14,4 +14,3 @@ function IconVolumeUp(props: IconProp) {
 }
 
 export default IconVolumeUp;
-

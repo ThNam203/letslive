@@ -22,10 +22,10 @@ export async function Header() {
             <div className="flex flex-1 justify-center">
                 <SearchBar className="max-lg:w mx-2 lg:w-[400px]" />
             </div>
-            
+
             <div className="flex flex-1 flex-row items-center justify-end gap-4">
                 <StreamGuide />
-                <HeaderUtilsForNonLogged/>
+                <HeaderUtilsForNonLogged />
                 <UserInfo />
             </div>
         </nav>

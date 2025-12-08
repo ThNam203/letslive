@@ -4,57 +4,59 @@ import Description from "./description";
 import ImageHover from "./image-hover";
 
 type Props = {
-  label: string;
-  description?: string;
-  onImageChange?: (file: File | null) => void;
-  onResetImage?: () => void;
-  imageUrl?: string | null;
-  hoverText?: string;
-  className?: string;
-  showCloseIcon?: boolean;
+    label: string;
+    description?: string;
+    onImageChange?: (file: File | null) => void;
+    onResetImage?: () => void;
+    imageUrl?: string | null;
+    hoverText?: string;
+    className?: string;
+    showCloseIcon?: boolean;
 };
 
 export default function ImageField({
-  label,
-  description,
-  className,
-  onImageChange,
-  onResetImage,
-  imageUrl,
-  hoverText,
-  showCloseIcon = true,
+    label,
+    description,
+    className,
+    onImageChange,
+    onResetImage,
+    imageUrl,
+    hoverText,
+    showCloseIcon = true,
 }: Props) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const handleClick = () => {
-    inputRef.current?.click(); // Trigger file input
-  };
+    const inputRef = useRef<HTMLInputElement>(null);
+    const handleClick = () => {
+        inputRef.current?.click(); // Trigger file input
+    };
 
-  return (
-    <div className={className}>
-      <label className="block text-sm font-medium mb-2" htmlFor={label}>
-        {label}
-      </label>
-      <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-        <div
-          className={cn(
-            "absolute w-full h-full rounded-lg cursor-pointer bg-cover bg-center bg-no-repeat",
-            !imageUrl && "border border-dashed border-border"
-          )}
-          style={{
-            backgroundImage: `${imageUrl ? `url("${imageUrl}")` : 'none'}`,
-          }}
-        />
-        <ImageHover
-          id={label}
-          inputRef={inputRef}
-          onValueChange={onImageChange}
-          onClick={handleClick}
-          onCloseIconClick={onResetImage}
-          title={hoverText}
-          showCloseIcon={showCloseIcon}
-        />
-      </div>
-      {description && <Description content={description} className="mt-1" />}
-    </div>
-  );
+    return (
+        <div className={className}>
+            <label className="mb-2 block text-sm font-medium" htmlFor={label}>
+                {label}
+            </label>
+            <div className="relative aspect-video w-full overflow-hidden rounded-lg">
+                <div
+                    className={cn(
+                        "absolute h-full w-full cursor-pointer rounded-lg bg-cover bg-center bg-no-repeat",
+                        !imageUrl && "border border-dashed border-border",
+                    )}
+                    style={{
+                        backgroundImage: `${imageUrl ? `url("${imageUrl}")` : "none"}`,
+                    }}
+                />
+                <ImageHover
+                    id={label}
+                    inputRef={inputRef}
+                    onValueChange={onImageChange}
+                    onClick={handleClick}
+                    onCloseIconClick={onResetImage}
+                    title={hoverText}
+                    showCloseIcon={showCloseIcon}
+                />
+            </div>
+            {description && (
+                <Description content={description} className="mt-1" />
+            )}
+        </div>
+    );
 }

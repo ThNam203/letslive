@@ -35,7 +35,7 @@
     "no_description": "No description",
     "add": "Add",
     "bio": "Bio",
-    
+
     "started_at": "Started {{time}}",
     "live": "Live",
     "time": {

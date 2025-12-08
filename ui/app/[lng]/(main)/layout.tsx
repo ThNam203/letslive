@@ -21,11 +21,7 @@ export default function RootLayout({
             >
                 <LeftBar />
                 <ResizableHandle />
-                <ResizablePanel
-                    id="2"
-                    order={2}
-                    className="bg-background"
-                >
+                <ResizablePanel id="2" order={2} className="bg-background">
                     {children}
                 </ResizablePanel>
             </ResizablePanelGroup>

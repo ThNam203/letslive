@@ -9,5 +9,5 @@ const config = {
     singleQuote: false,
     plugins: ["prettier-plugin-tailwindcss"],
 };
-  
+
 module.exports = config;

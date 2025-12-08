@@ -38,9 +38,9 @@ export function PopularVODView() {
                     }
                 })
                 .catch((_) => {
-                    toast(t("fetch-error:client_fetch_error"), { 
+                    toast(t("fetch-error:client_fetch_error"), {
                         toastId: "client-fetch-error-id",
-                        type: "error" 
+                        type: "error",
                     });
                 })
                 .finally(() => {
@@ -159,9 +159,7 @@ function VODCard({ vod }: { vod: VOD }) {
                             </div>
                             <div className="flex items-center gap-1">
                                 <IconClock className="h-3 w-3" />
-                                <span>
-                                    {dateDiffFromNow(vod.createdAt, t)}
-                                </span>
+                                <span>{dateDiffFromNow(vod.createdAt, t)}</span>
                             </div>
                         </div>
                     </div>
