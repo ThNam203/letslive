@@ -17,12 +17,10 @@ const LivestreamPreviewDetailView = ({
 
     return (
         <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
+            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-muted">
                 <Avatar className="border border-border">
                     <AvatarImage
-                        src={
-                            user?.profilePicture
-                        }
+                        src={user?.profilePicture}
                         alt={`${user?.username} avatar`}
                     />
                     <AvatarFallback>
@@ -30,22 +28,27 @@ const LivestreamPreviewDetailView = ({
                     </AvatarFallback>
                 </Avatar>
             </div>
-            <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-base truncate">
+            <div className="min-w-0 flex-1">
+                <h3 className="truncate text-base font-semibold">
                     {livestream.title}
                 </h3>
-                <p className="text-sm text-muted-foreground truncate">
-                    {user ? user.displayName ?? user.username : "Unknown"}
+                <p className="text-muted-foreground truncate text-sm">
+                    {user ? (user.displayName ?? user.username) : "Unknown"}
                 </p>
-                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                <div className="text-muted-foreground mt-1 flex items-center gap-3 text-xs">
                     <div className="flex items-center gap-1">
                         <IconEye className="h-3 w-3" />
-                        <span>{livestream.viewCount} {livestream.viewCount < 2 ? "view" : "views"}</span>
+                        <span>
+                            {livestream.viewCount}{" "}
+                            {livestream.viewCount < 2 ? "view" : "views"}
+                        </span>
                     </div>
                     <div className="flex items-center gap-1">
                         <IconClock className="h-3 w-3" />
                         <span>
-                            {t('started_at', { time: dateDiffFromNow(livestream.startedAt, t) })}
+                            {t("started_at", {
+                                time: dateDiffFromNow(livestream.startedAt, t),
+                            })}
                         </span>
                     </div>
                 </div>

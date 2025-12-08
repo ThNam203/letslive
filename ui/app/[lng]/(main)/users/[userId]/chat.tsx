@@ -54,28 +54,31 @@ export default function ChatPanel({
 
         fetchMessages();
     }, [roomId]);
-    
+
     useEffect(() => {
-      const container = messageContainerRef.current;
-      if (!container) return;
-    
-      const handleScroll = () => {
-        const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-        setAtBottom(distanceFromBottom < 3); // 3px tolerance
-      };
-    
-      container.addEventListener("scroll", handleScroll);
-      return () => container.removeEventListener("scroll", handleScroll);
-    }, []);
-    
-    useEffect(() => {
-      if (atBottom) {
         const container = messageContainerRef.current;
-        if (container) {
-          container.scrollTop = container.scrollHeight;
+        if (!container) return;
+
+        const handleScroll = () => {
+            const distanceFromBottom =
+                container.scrollHeight -
+                container.scrollTop -
+                container.clientHeight;
+            setAtBottom(distanceFromBottom < 3); // 3px tolerance
+        };
+
+        container.addEventListener("scroll", handleScroll);
+        return () => container.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    useEffect(() => {
+        if (atBottom) {
+            const container = messageContainerRef.current;
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
         }
-      }
-    }, [messages, atBottom]);    
+    }, [messages, atBottom]);
 
     useEffect(() => {
         const connectWebSocket = async () => {
@@ -125,7 +128,7 @@ export default function ChatPanel({
     }, [user, roomId]);
 
     return (
-        <div className="relative flex w-full h-full flex-col">
+        <div className="relative flex h-full w-full flex-col">
             <div className="flex items-center justify-between border border-y-0 border-border px-4 py-3">
                 <h2 className="font-semibold">{t("users:chat.title")}</h2>
                 <Button
@@ -137,7 +140,10 @@ export default function ChatPanel({
                     <IconClose className="h-4 w-4" />
                 </Button>
             </div>
-            <div ref={messageContainerRef} className="overflow-y-auto flex-1 rounded-md rounded-t-none border border-t-0 border-border px-4 py-2 mb-12">
+            <div
+                ref={messageContainerRef}
+                className="mb-12 flex-1 overflow-y-auto rounded-md rounded-t-none border border-t-0 border-border px-4 py-2"
+            >
                 {messages.map((message, idx) => (
                     <div key={idx} className="mb-3">
                         <span
@@ -161,18 +167,23 @@ export default function ChatPanel({
                 ))}
             </div>
             {/* Message input form */}
-            <form onSubmit={handleSendMessage} className="absolute bottom-2 right-0 left-0 flex gap-2">
+            <form
+                onSubmit={handleSendMessage}
+                className="absolute bottom-2 left-0 right-0 flex gap-2"
+            >
                 <Input
                     type="text"
                     placeholder={
-                        !user ? t("users:chat.placeholder_login") : t("users:chat.placeholder_typing")
+                        !user
+                            ? t("users:chat.placeholder_login")
+                            : t("users:chat.placeholder_typing")
                     }
                     disabled={!user}
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     className="flex-1"
                 />
-                <Button type="submit" disabled={!user} className="p-0 w-12 h-9">
+                <Button type="submit" disabled={!user} className="h-9 w-12 p-0">
                     <IconSend className="!h-6 !w-6" />
                 </Button>
             </form>

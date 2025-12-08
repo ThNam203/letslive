@@ -9,7 +9,7 @@ module.exports = {
             {
                 protocol: "http",
                 hostname: "localhost",
-            }
+            },
         ],
     },
 };

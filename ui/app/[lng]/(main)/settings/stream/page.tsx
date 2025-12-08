@@ -58,34 +58,35 @@ export default function StreamEdit() {
             image === null ? null : user!.livestreamInformation.thumbnailUrl,
             title,
             description,
-        ).then((res) => {
-            if (res.success) {
-                if (res.data && res.data) {
-                    updateUser({
-                        ...user,
-                        livestreamInformation: {
-                            ...user.livestreamInformation,
-                            ...res.data,
-                        },
+        )
+            .then((res) => {
+                if (res.success) {
+                    if (res.data && res.data) {
+                        updateUser({
+                            ...user,
+                            livestreamInformation: {
+                                ...user.livestreamInformation,
+                                ...res.data,
+                            },
+                        });
+                        toast.success(t("settings:stream.updated_success"));
+                    }
+                } else {
+                    toast(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
+                        type: "error",
                     });
-                    toast.success(t("settings:stream.updated_success"));
                 }
-            } else {
-                toast(t(`api-response:${res.key}`), {
-                    toastId: res.requestId,
+            })
+            .catch((_) => {
+                toast(t("fetch-error:client_fetch_error"), {
+                    toastId: "client-fetch-error-id",
                     type: "error",
                 });
-            }
-        })
-        .catch((_) => {
-            toast(t("fetch-error:client_fetch_error"), {
-                toastId: "client-fetch-error-id",
-                type: "error",
+            })
+            .finally(() => {
+                setIsSubmitting(false);
             });
-        })
-        .finally(() => {
-            setIsSubmitting(false);
-        });
     };
 
     const isFormChange = useMemo(() => {

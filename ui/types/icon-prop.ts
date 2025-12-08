@@ -12,8 +12,8 @@ export const getDefaultIconProps = (resolvedTheme: string): BaseIconProp => {
         width: "1.5rem",
         height: "1.5rem",
         viewBox: "0 0 24 24",
-        className: ""
-    }
-}
-  
+        className: "",
+    };
+};
+
 export type IconProp = React.SVGProps<SVGSVGElement> & BaseIconProp;

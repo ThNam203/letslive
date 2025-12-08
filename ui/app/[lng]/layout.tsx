@@ -27,7 +27,6 @@ export async function generateMetadata() {
     };
 }
 
-
 export default async function RootLayout({
     children,
     params,
@@ -36,7 +35,7 @@ export default async function RootLayout({
     params: Params;
 }) {
     const { lng } = await params;
-    
+
     return (
         <html lang={lng} dir={dir(lng)}>
             <body className={inter.className}>

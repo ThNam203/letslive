@@ -14,4 +14,3 @@ function IconVolumeOff(props: IconProp) {
 }
 
 export default IconVolumeOff;
-

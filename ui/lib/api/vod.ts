@@ -2,9 +2,7 @@ import { ApiResponse } from "@/types/fetch-response";
 import { VOD } from "@/types/vod";
 import { fetchClient } from "@/utils/fetchClient";
 
-export async function GetAllVODsAsAuthor(): Promise<
-    ApiResponse<VOD[]>
-> {
+export async function GetAllVODsAsAuthor(): Promise<ApiResponse<VOD[]>> {
     return fetchClient<ApiResponse<VOD[]>>(`/vods/author`);
 }
 
@@ -12,9 +10,7 @@ export async function GetPublicVODsOfUser(
     userId: string,
     page: number = 0,
     limit: number = 10,
-): Promise<
-    ApiResponse<VOD[]>
-> {
+): Promise<ApiResponse<VOD[]>> {
     return fetchClient<ApiResponse<VOD[]>>(
         `/vods?userId=${userId}&page=${page}&limit=${limit}`,
     );
@@ -23,17 +19,15 @@ export async function GetPublicVODsOfUser(
 export async function GetPopularVODs(
     page: number = 0,
     limit: number = 10,
-): Promise<
-    ApiResponse<VOD[]>
-> {
+): Promise<ApiResponse<VOD[]>> {
     return fetchClient<ApiResponse<VOD[]>>(
         `/popular-vods?page=${page}&limit=${limit}`,
     );
 }
 
-export async function GetVODInformation(vodId: string): Promise<
-    ApiResponse<VOD | null>
-> {
+export async function GetVODInformation(
+    vodId: string,
+): Promise<ApiResponse<VOD | null>> {
     return fetchClient<ApiResponse<VOD | null>>(`/vods/${vodId}`);
 }
 
