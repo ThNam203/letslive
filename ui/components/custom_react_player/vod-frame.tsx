@@ -19,6 +19,8 @@ import IconPlay from "../icons/play";
 import IconVolumeDown from "../icons/volume-down";
 import IconVolumeOff from "../icons/volume-off";
 import IconVolumeUp from "../icons/volume-up";
+import IconFastForward from "../icons/fast-forward";
+import IconLoader from "../icons/loader";
 const ReactPlayerWrapper = dynamic(() => import("./react-player-wrapper"), {
     ssr: false,
 });
@@ -76,10 +78,12 @@ export function VODFrame({
     videoInfo,
     className,
     onVideoStart,
+    enableSkipButtons = true,
 }: {
     videoInfo: VideoInfo;
     onVideoStart?: () => void;
     className?: ClassValue;
+    enableSkipButtons?: boolean;
 }) {
     const playerRef = useRef<ReactPlayer>(null);
 
@@ -214,6 +218,12 @@ export function VODFrame({
                         onDuration={(duration: number) => {
                             setDuration(duration);
                         }}
+                        onBuffer={() => {
+                            setIsLoading(true);
+                        }}
+                        onBufferEnd={() => {
+                            setIsLoading(false);
+                        }}
                         config={{ file: { forceHLS: true } }}
                         onReady={(reactPlayer) => {
                             setIsLoading(false);
@@ -222,7 +232,7 @@ export function VODFrame({
                                 reactPlayer.getInternalPlayer("hls");
                             if (!hlsPlayer) return;
                             const newResolutions = hlsPlayer.levels.map(
-                                (level: any) => level.attrs.RESOLUTION
+                                (level: any) => level.attrs.RESOLUTION,
                             );
                             setResolutions(["Auto", ...newResolutions]);
                         }}
@@ -236,6 +246,8 @@ export function VODFrame({
                         duration={duration}
                         videoInfo={videoInfo}
                         resolutions={resolutions}
+                        enableSkipButtons={enableSkipButtons}
+                        isLoading={isLoading}
                         className={count > 3 ? "opacity-0" : "opacity-100"}
                     />
                 </>
@@ -253,6 +265,8 @@ function FrontOfVideo({
     duration,
     videoInfo,
     resolutions,
+    enableSkipButtons,
+    isLoading,
     className,
 }: {
     isPlaying: boolean;
@@ -263,25 +277,27 @@ function FrontOfVideo({
     duration: number;
     videoInfo: VideoInfo;
     resolutions: string[];
+    enableSkipButtons: boolean;
+    isLoading: boolean;
     className?: ClassValue;
 }) {
     return (
         <div
             className={cn(
-                "absolute top-0 w-full h-full flex flex-col items-center justify-end border border-border",
-                className
+                "absolute top-0 flex h-full w-full flex-col items-center justify-end border border-border",
+                className,
             )}
         >
-            <div className="absolute top-4 left-4 right-4 text-white  font-bold font-sans flex flex-row items-center justify-between">
-                <span className="bg-black/70 rounded px-2 py-1">
+            <div className="absolute left-4 right-4 top-4 flex flex-row items-center justify-between font-sans font-bold text-white">
+                <span className="rounded bg-black/70 px-2 py-1">
                     {videoInfo.videoTitle}
                 </span>
-                <span className="bg-black/70 rounded px-2 py-1">
+                <span className="rounded bg-black/70 px-2 py-1">
                     {videoInfo.streamer.name}
                 </span>
             </div>
             <div
-                className="h-full w-full flex items-center justify-center"
+                className="flex h-full w-full items-center justify-center"
                 onMouseUp={() => {
                     if (isPlaying) {
                         if (fnControl.pauseVideo) fnControl.pauseVideo();
@@ -290,13 +306,26 @@ function FrontOfVideo({
                     }
                 }}
             >
-                {!isPlaying && (
-                    <IconPlay
-                        width="100px"
-                        height="100px"
-                        className="cursor-pointer"
-                        color="white"
-                    />
+                {isLoading ? (
+                    <div className="flex h-28 w-28 items-center justify-center rounded-full bg-black/30">
+                        <IconLoader
+                            width="100px"
+                            height="100px"
+                            className="cursor-pointer"
+                            color="white"
+                        />
+                    </div>
+                ) : (
+                    !isPlaying && (
+                        <div className="flex h-28 w-28 items-center justify-center rounded-full bg-black/30">
+                            <IconPlay
+                                width="100px"
+                                height="100px"
+                                className="cursor-pointer"
+                                color="white"
+                            />
+                        </div>
+                    )
                 )}
             </div>
 
@@ -308,6 +337,7 @@ function FrontOfVideo({
                 fnControl={fnControl}
                 resolutions={resolutions}
                 duration={duration}
+                enableSkipButtons={enableSkipButtons}
             />
         </div>
     );
@@ -321,6 +351,7 @@ function VideoControl({
     fnControl,
     duration,
     resolutions,
+    enableSkipButtons,
     className,
 }: {
     isPlaying: boolean;
@@ -330,21 +361,14 @@ function VideoControl({
     fnControl: FnControl;
     duration: number;
     resolutions: string[];
+    enableSkipButtons: boolean;
     className?: ClassValue;
 }) {
     return (
-        <div
-            className={cn(
-                "w-full px-10 pt-4 h-fit pb-4 flex flex-col items-center justify-center",
-                className
-            )}
-        >
+        <div className={cn("flex h-fit w-full flex-col p-4", className)}>
             <VideoTracking
-                className="w-full mb-3"
-                isPlaying={isPlaying}
+                className="mb-3 w-full"
                 currentTime={currentTime}
-                loaded={loaded}
-                config={config}
                 fnControl={fnControl}
                 duration={duration}
             />
@@ -356,6 +380,7 @@ function VideoControl({
                 config={config}
                 fnControl={fnControl}
                 resolutions={resolutions}
+                enableSkipButtons={enableSkipButtons}
             />
         </div>
     );
@@ -363,26 +388,20 @@ function VideoControl({
 
 function VideoTracking({
     className,
-    isPlaying,
     currentTime,
-    loaded,
-    config,
     duration,
     fnControl,
 }: {
     className?: ClassValue;
-    isPlaying: boolean;
     currentTime: number;
-    loaded: number;
-    config: Config;
     duration: number;
     fnControl: FnControl;
 }) {
     return (
         <div
             className={cn(
-                "w-full bg-transparent flex items-center justify-center",
-                className
+                "flex w-full items-center justify-center bg-transparent",
+                className,
             )}
         >
             <Slider
@@ -409,6 +428,7 @@ function VideoControlButtons({
     config,
     fnControl,
     resolutions,
+    enableSkipButtons,
 }: {
     className?: ClassValue;
     isPlaying: boolean;
@@ -417,12 +437,13 @@ function VideoControlButtons({
     config: Config;
     fnControl: FnControl;
     resolutions: string[];
+    enableSkipButtons: boolean;
 }) {
     return (
         <div
             className={cn(
-                "w-full flex flex-row items-center justify-between text-white",
-                className
+                "flex w-full flex-row items-center justify-between text-white",
+                className,
             )}
         >
             <div className="flex flex-row items-center gap-6">
@@ -434,7 +455,7 @@ function VideoControlButtons({
                             if (fnControl.playVideo) fnControl.playVideo();
                         }
                     }}
-                    className="bg-black/30 rounded h-10 w-10 flex items-center justify-center hover:bg-black/50 transition-colors"
+                    className="flex h-10 w-10 items-center justify-center rounded bg-black/30 transition-colors hover:bg-black/50"
                 >
                     {isPlaying ? (
                         <IconPause
@@ -453,17 +474,61 @@ function VideoControlButtons({
                     )}
                 </div>
                 <VolumeButton onVolumeChange={fnControl.handleVolumeChange} />
-                <span className="text-white bg-black/30 rounded h-10 flex items-center justify-center px-3">
+                <span className="flex h-10 items-center justify-center rounded bg-black/30 px-3 text-white">
                     {formatTime(currentTime)} / {formatTime(duration)}
                 </span>
             </div>
             <div className="flex flex-row items-center gap-4">
+                {enableSkipButtons && (
+                    <>
+                        <div
+                            onClick={() => {
+                                if (fnControl.seekToTime) {
+                                    const newTime = Math.max(
+                                        0,
+                                        currentTime - 10,
+                                    );
+                                    fnControl.seekToTime(newTime);
+                                }
+                            }}
+                            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded bg-black/30 transition-colors hover:bg-black/50"
+                            title="-10 seconds"
+                        >
+                            <IconFastForward
+                                width="20px"
+                                height="20px"
+                                color="white"
+                                className="scale-x-[-1] text-white"
+                            />
+                        </div>
+                        <div
+                            onClick={() => {
+                                if (fnControl.seekToTime) {
+                                    const newTime = Math.min(
+                                        duration,
+                                        currentTime + 10,
+                                    );
+                                    fnControl.seekToTime(newTime);
+                                }
+                            }}
+                            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded bg-black/30 transition-colors hover:bg-black/50"
+                            title="+10 seconds"
+                        >
+                            <IconFastForward
+                                width="20px"
+                                height="20px"
+                                color="white"
+                                className="text-white"
+                            />
+                        </div>
+                    </>
+                )}
                 <Combobox
                     options={Object.keys(playbackRates)}
                     value={config.playbackRate + "x"}
                     onChange={(value: string) =>
                         fnControl.handlePlaybackRateChange(
-                            playbackRates[value as keyof typeof playbackRates]
+                            playbackRates[value as keyof typeof playbackRates],
                         )
                     }
                 />
@@ -472,7 +537,9 @@ function VideoControlButtons({
                     options={resolutions
                         .map((res) => formatResolutionForDisplay(res))
                         .filter((res): res is string => res !== null)}
-                    value={formatResolutionForDisplay(config.resolution) || "Auto"}
+                    value={
+                        formatResolutionForDisplay(config.resolution) || "Auto"
+                    }
                     onChange={fnControl.handleResolutionChange}
                 />
 
@@ -486,7 +553,7 @@ function VideoControlButtons({
                                 fnControl.onFullScreen();
                         }
                     }}
-                    className="bg-black/30 rounded h-10 w-10 flex items-center justify-center hover:bg-black/50 transition-colors"
+                    className="flex h-10 w-10 items-center justify-center rounded bg-black/30 transition-colors hover:bg-black/50"
                 >
                     {config.isFullscreen ? (
                         <IconFullscreenExit
@@ -527,21 +594,25 @@ function VolumeButton({
     }, [volumeValue]);
 
     return (
-        <div className="w-[120px] h-10 flex flex-row items-center gap-2 bg-black/30 rounded px-2 hover:bg-black/50 transition-colors">
+        <div className="flex h-10 w-[120px] flex-row items-center gap-2 rounded bg-black/30 px-2 transition-colors hover:bg-black/50">
             <div
-                className="text-white cursor-pointer flex items-center justify-center"
+                className="flex cursor-pointer items-center justify-center text-white"
                 onClick={() => {
                     if (volumeValue === 0) handleVolumeChange(currentVolume);
                     else handleVolumeChange(0);
                 }}
             >
-                {volumeValue === 0 && <IconVolumeOff width="24px" height="24px" color="white" />}
+                {volumeValue === 0 && (
+                    <IconVolumeOff width="24px" height="24px" color="white" />
+                )}
                 {volumeValue > 0 && volumeValue < 50 && (
                     <IconVolumeDown width="24px" height="24px" color="white" />
                 )}
-                {volumeValue >= 50 && <IconVolumeUp width="24px" height="24px" color="white" />}
+                {volumeValue >= 50 && (
+                    <IconVolumeUp width="24px" height="24px" color="white" />
+                )}
             </div>
-            <div className="flex-1 flex items-center">
+            <div className="flex flex-1 items-center">
                 <Slider
                     value={[volumeValue]}
                     onValueChange={(value) => handleVolumeChange(value[0])}
@@ -581,26 +652,30 @@ const Combobox = ({
     return (
         <div
             ref={ref}
-            className="relative flex flex-row items-center justify-center gap-4 cursor-pointer"
+            className="relative flex cursor-pointer flex-row items-center justify-center gap-4"
         >
             <div
-                className={cn("text-white cursor-pointer bg-black/30 rounded h-10 flex items-center justify-center px-3 hover:bg-black/50 transition-colors")}
+                className={cn(
+                    "flex h-10 cursor-pointer items-center justify-center rounded bg-black/30 px-3 text-white transition-colors hover:bg-black/50",
+                )}
                 onClick={(e: any) => handleClick(e)}
             >
                 {value}
             </div>
             {showOptions && (
-                <div className="absolute bottom-full w-fit h-fit px-1 py-1 bg-black/70 flex flex-col items-center rounded-md">
+                <div className="absolute bottom-full flex h-fit w-fit flex-col items-center rounded-md bg-black/70 px-1 py-1">
                     {options.map((option) => (
                         <div
                             key={option}
                             className={cn(
-                                "text-white border-0 outline-none cursor-pointer flex flex-row items-center justify-start gap-2 hover:bg-white/20 rounded"
+                                "flex cursor-pointer flex-row items-center justify-start gap-2 rounded border-0 text-white outline-none hover:bg-white/20",
                             )}
                             onClick={() => handleValueChange(option)}
                         >
                             <span className="w-[20px]">
-                                {value === option ? <IconCheck color="white" /> : null}
+                                {value === option ? (
+                                    <IconCheck color="white" />
+                                ) : null}
                             </span>
                             <p className="w-[70px]">{option}</p>
                         </div>
