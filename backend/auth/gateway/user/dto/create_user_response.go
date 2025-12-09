@@ -1,16 +1,10 @@
-package user
+package dto
 
 import (
 	"time"
 
 	"github.com/gofrs/uuid/v5"
 )
-
-type CreateUserRequestDTO struct {
-	Username     string       `json:"username"`
-	Email        string       `json:"email"`
-	AuthProvider AuthProvider `json:"authProvider"`
-}
 
 type CreateUserResponseDTO struct {
 	Id           uuid.UUID `json:"id"`
@@ -22,9 +16,3 @@ type CreateUserResponseDTO struct {
 	PhoneNumber  *string   `json:"phoneNumber,omitempty"`
 }
 
-type AuthProvider string
-
-const (
-	ProviderGoogle AuthProvider = "google"
-	ProviderLocal  AuthProvider = "local"
-)

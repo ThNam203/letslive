@@ -10,6 +10,7 @@ import (
 	"os"
 	"sen1or/letslive/auth/domains"
 	usergateway "sen1or/letslive/auth/gateway/user"
+	usergatewaydto "sen1or/letslive/auth/gateway/user/dto"
 	"sen1or/letslive/auth/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
 	"strconv"
@@ -87,13 +88,13 @@ func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode strin
 
 	// create new user if not found
 	if err.Code == serviceresponse.RES_ERR_AUTH_NOT_FOUND_CODE {
-		dto := &usergateway.CreateUserRequestDTO{
+		userDTO := &usergatewaydto.CreateUserRequestDTO{
 			Username:     generateUsername(returnedOAuthUser.Email),
 			Email:        returnedOAuthUser.Email,
-			AuthProvider: usergateway.ProviderGoogle,
+			AuthProvider: usergatewaydto.ProviderGoogle,
 		}
 
-		createdUser, errRes := s.userGateway.CreateNewUser(ctx, *dto)
+		createdUser, errRes := s.userGateway.CreateNewUser(ctx, *userDTO)
 		if errRes != nil {
 			logger.Errorf(ctx, "failed to create new user through gateway: %s", errRes.Message)
 			return nil, errRes
