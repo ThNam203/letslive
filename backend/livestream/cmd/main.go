@@ -11,13 +11,14 @@ import (
 
 	"sen1or/letslive/livestream/api"
 	cfg "sen1or/letslive/livestream/config"
-	"sen1or/letslive/livestream/handlers"
+	livestreamHandler "sen1or/letslive/livestream/handlers/livestream"
+	vodHandler "sen1or/letslive/livestream/handlers/vod"
 	"sen1or/letslive/livestream/pkg/discovery"
 	"sen1or/letslive/livestream/pkg/logger"
 	"sen1or/letslive/livestream/pkg/tracer"
 	"sen1or/letslive/livestream/repositories"
-	"sen1or/letslive/livestream/services/livestream"
-	"sen1or/letslive/livestream/services/vod"
+	livestreamService "sen1or/letslive/livestream/services/livestream"
+	vodService "sen1or/letslive/livestream/services/vod"
 	"sen1or/letslive/livestream/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -170,10 +171,10 @@ func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Con
 	var livestreamRepo = repositories.NewLivestreamRepository(dbConn)
 	var vodRepo = repositories.NewVODRepository(dbConn)
 
-	var livestreamService = livestream.NewLivestreamService(livestreamRepo, vodRepo)
-	var vodService = vod.NewVODService(vodRepo)
+	var livestreamService = livestreamService.NewLivestreamService(livestreamRepo, vodRepo)
+	var vodService = vodService.NewVODService(vodRepo)
 
-	var livestreamHandler = handlers.NewLivestreamHandler(livestreamService)
-	var vodHandler = handlers.NewVODHandler(vodService)
+	var livestreamHandler = livestreamHandler.NewLivestreamHandler(livestreamService)
+	var vodHandler = vodHandler.NewVODHandler(vodService)
 	return api.NewAPIServer(livestreamHandler, vodHandler, cfg)
 }

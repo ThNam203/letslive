@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"sen1or/letslive/auth/gateway"
 	usergateway "sen1or/letslive/auth/gateway/user"
+	"sen1or/letslive/auth/gateway/user/dto"
 	"sen1or/letslive/auth/pkg/discovery"
 	"sen1or/letslive/auth/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
@@ -23,7 +24,7 @@ func NewUserGateway(registry discovery.Registry) usergateway.UserGateway {
 	}
 }
 
-func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergateway.CreateUserRequestDTO) (*usergateway.CreateUserResponseDTO, *serviceresponse.Response[any]) {
+func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO dto.CreateUserRequestDTO) (*dto.CreateUserResponseDTO, *serviceresponse.Response[any]) {
 	addr, err := g.registry.ServiceAddress(ctx, "user")
 	if err != nil {
 		return nil, serviceresponse.NewResponseFromTemplate[any](
@@ -94,7 +95,7 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO usergate
 		return nil, &resInfo
 	}
 
-	var createdUser serviceresponse.Response[usergateway.CreateUserResponseDTO]
+	var createdUser serviceresponse.Response[dto.CreateUserResponseDTO]
 	defer resp.Body.Close()
 
 	if err := json.NewDecoder(resp.Body).Decode(&createdUser); err != nil {
