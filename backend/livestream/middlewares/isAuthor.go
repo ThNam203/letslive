@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"net/http"
-	"sen1or/letslive/livestream/handlers"
+	"sen1or/letslive/livestream/handlers/utils"
 	"sen1or/letslive/livestream/pkg/logger"
 	"sen1or/letslive/livestream/response"
 	"sen1or/letslive/livestream/types"
@@ -17,12 +17,13 @@ func IsAuthorMiddleware(next http.Handler) http.Handler {
 		userId := r.URL.Query().Get("userId")
 		if len(userId) == 0 {
 			logger.Debugf(r.Context(), "isAuthor middleware missing userId param")
-			handlers.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
+			utils.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
+			return
 		}
 
 		accessTokenCookie, err := r.Cookie("ACCESS_TOKEN")
 		if err != nil || len(accessTokenCookie.Value) == 0 {
-			handlers.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
+			utils.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_UNAUTHORIZED,
 				nil,
 				nil,
@@ -36,7 +37,7 @@ func IsAuthorMiddleware(next http.Handler) http.Handler {
 		// the signature should already been checked from the api gateway before going to this
 		_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
 		if err != nil {
-			handlers.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
+			utils.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_UNAUTHORIZED,
 				nil,
 				nil,
@@ -47,7 +48,7 @@ func IsAuthorMiddleware(next http.Handler) http.Handler {
 
 		_, err = uuid.FromString(myClaims.UserId)
 		if err != nil {
-			handlers.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
+			utils.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_UNAUTHORIZED,
 				nil,
 				nil,
@@ -57,7 +58,7 @@ func IsAuthorMiddleware(next http.Handler) http.Handler {
 		}
 
 		if myClaims.UserId == userId {
-			handlers.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
+			utils.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_FORBIDDEN,
 				nil,
 				nil,

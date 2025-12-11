@@ -1,34 +1,22 @@
-package handlers
+package livestream_information
 
 import (
 	"context"
 	"errors"
 	"net/http"
 	"sen1or/letslive/user/domains"
+	"sen1or/letslive/user/handlers/utils"
 	"sen1or/letslive/user/pkg/tracer"
 	"sen1or/letslive/user/response"
-	"sen1or/letslive/user/services"
 )
-
-type LivestreamInformationHandler struct {
-	livestreamService services.LivestreamInformationService
-	minioService      services.MinIOService
-}
-
-func NewLivestreamInformationHandler(livestreamService services.LivestreamInformationService, minioService services.MinIOService) *LivestreamInformationHandler {
-	return &LivestreamInformationHandler{
-		livestreamService: livestreamService,
-		minioService:      minioService,
-	}
-}
 
 func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 	const maxUploadSize = 11 * 1024 * 1024 // for other information outside of image
-	userUUID, err := getUserIdFromCookie(r)
+	userUUID, err := utils.GetUserIdFromCookie(r)
 	if err != nil {
-		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
+		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
@@ -43,7 +31,7 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	if err := r.ParseMultipartForm(0); err != nil {
 		var maxByteError *http.MaxBytesError
 		if errors.As(err, &maxByteError) {
-			writeResponse(w, ctx, response.NewResponseFromTemplate[any](
+			h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_IMAGE_TOO_LARGE,
 				nil,
 				nil,
@@ -52,7 +40,7 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 			return
 		}
 
-		writeResponse(w, ctx, response.NewResponseFromTemplate[any](
+		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
 			response.RES_ERR_INTERNAL_SERVER,
 			nil,
 			nil,
@@ -71,7 +59,7 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	} else {
 		savedPath, err := h.minioService.AddFile(ctx, file, fileHeader, "thumbnails")
 		if err != nil {
-			writeResponse(w, ctx, response.NewResponseFromTemplate[any](
+			h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
 				response.RES_ERR_INTERNAL_SERVER,
 				nil,
 				nil,
@@ -95,9 +83,9 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	span.End()
 
 	if updateErr != nil {
-		writeResponse(w, ctx, updateErr)
+		h.WriteResponse(w, ctx, updateErr)
 		return
 	}
 
-	writeResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, updatedData, nil, nil))
+	h.WriteResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, updatedData, nil, nil))
 }

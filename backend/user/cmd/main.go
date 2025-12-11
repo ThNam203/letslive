@@ -11,7 +11,9 @@ import (
 
 	"sen1or/letslive/user/api"
 	cfg "sen1or/letslive/user/config"
-	"sen1or/letslive/user/handlers"
+	"sen1or/letslive/user/handlers/follow"
+	"sen1or/letslive/user/handlers/livestream_information"
+	"sen1or/letslive/user/handlers/user"
 	"sen1or/letslive/user/pkg/discovery"
 	"sen1or/letslive/user/pkg/logger"
 	"sen1or/letslive/user/pkg/tracer"
@@ -176,8 +178,8 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var livestreamInfoService = services.NewLivestreamInformationService(livestreamInfoRepo)
 	var followService = services.NewFollowService(followRepo)
 
-	var userHandler = handlers.NewUserHandler(*userService)
-	var livestreamInfoHandler = handlers.NewLivestreamInformationHandler(*livestreamInfoService, *minioService)
-	var followHandler = handlers.NewFollowHandler(*followService)
+	var userHandler = user.NewUserHandler(*userService)
+	var livestreamInfoHandler = livestream_information.NewLivestreamInformationHandler(*livestreamInfoService, *minioService)
+	var followHandler = follow.NewFollowHandler(*followService)
 	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, cfg)
 }
