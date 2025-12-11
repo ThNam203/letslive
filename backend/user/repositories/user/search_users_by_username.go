@@ -22,14 +22,14 @@ func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query stri
 		    u.bio,
 		    u.profile_picture,
 		    u.background_picture,
-			l.user_id,
 			l.title, 
 			l.description, 
 			l.thumbnail_url, 
 		    COUNT(f.follower_id) AS follower_count,
 		    CASE
+		        WHEN $2::uuid IS NULL THEN false
 		        WHEN EXISTS (
-		            SELECT 1 FROM followers f2 WHERE f2.follower_id = $2 AND f2.user_id = u.id
+		            SELECT 1 FROM followers f2 WHERE f2.follower_id = $2::uuid AND f2.user_id = u.id
 		        ) THEN true
 		        ELSE false
 		    END AS is_following
@@ -52,6 +52,7 @@ func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query stri
 		    levenshtein(u.username, $1) ASC
 		LIMIT 10;
 	`, query, authenticatedUserId)
+
 	if err != nil {
 		logger.Errorf(ctx, "failed to search for users: %s", err)
 		return nil, response.NewResponseFromTemplate[any](
@@ -62,7 +63,7 @@ func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query stri
 		)
 	}
 
-	users, err := pgx.CollectRows(rows, pgx.RowToStructByName[dto.GetUserPublicResponseDTO])
+	users, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[dto.GetUserPublicResponseDTO])
 	if err != nil {
 		logger.Errorf(ctx, "failed to collect rows: %s", err)
 		return nil, response.NewResponseFromTemplate[any](
