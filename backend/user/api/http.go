@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"sen1or/letslive/user/config"
-	"sen1or/letslive/user/handlers"
+	"sen1or/letslive/user/handlers/follow"
+	"sen1or/letslive/user/handlers/general"
+	"sen1or/letslive/user/handlers/livestream_information"
+	"sen1or/letslive/user/handlers/user"
 	"sen1or/letslive/user/middlewares"
 	"sen1or/letslive/user/pkg/logger"
 
@@ -20,18 +23,18 @@ type APIServer struct {
 	logger     *zap.SugaredLogger
 	config     *config.Config
 
-	generalHandler               *handlers.GeneralHandler
-	userHandler                  *handlers.UserHandler
-	followHandler                *handlers.FollowHandler
-	livestreamInformationHandler *handlers.LivestreamInformationHandler
+	generalHandler               *general.GeneralHandler
+	userHandler                  *user.UserHandler
+	followHandler                *follow.FollowHandler
+	livestreamInformationHandler *livestream_information.LivestreamInformationHandler
 }
 
-func NewAPIServer(userHandler *handlers.UserHandler, livestreamInfoHandler *handlers.LivestreamInformationHandler, followHandler *handlers.FollowHandler, cfg *config.Config) *APIServer {
+func NewAPIServer(userHandler *user.UserHandler, livestreamInfoHandler *livestream_information.LivestreamInformationHandler, followHandler *follow.FollowHandler, cfg *config.Config) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
 
-		generalHandler:               handlers.NewGeneralHandler(),
+		generalHandler:               general.NewGeneralHandler(),
 		userHandler:                  userHandler,
 		followHandler:                followHandler,
 		livestreamInformationHandler: livestreamInfoHandler,

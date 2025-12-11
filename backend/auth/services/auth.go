@@ -5,6 +5,7 @@ import (
 	"sen1or/letslive/auth/domains"
 	"sen1or/letslive/auth/dto"
 	usergateway "sen1or/letslive/auth/gateway/user"
+	usergatewaydto "sen1or/letslive/auth/gateway/user/dto"
 	"sen1or/letslive/auth/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/utils"
@@ -100,13 +101,13 @@ func (s AuthService) CreateNewAuth(ctx context.Context, userForm dto.SignUpReque
 		)
 	}
 
-	dto := &usergateway.CreateUserRequestDTO{
+	userDTO := &usergatewaydto.CreateUserRequestDTO{
 		Username:     userForm.Username,
 		Email:        userForm.Email,
-		AuthProvider: usergateway.ProviderLocal,
+		AuthProvider: usergatewaydto.ProviderLocal,
 	}
 
-	createdUser, errRes := s.userGateway.CreateNewUser(ctx, *dto)
+	createdUser, errRes := s.userGateway.CreateNewUser(ctx, *userDTO)
 	if errRes != nil {
 		return nil, errRes
 	}
