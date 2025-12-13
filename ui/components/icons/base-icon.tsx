@@ -14,12 +14,16 @@ export function BaseIcon(rawProps: BaseIconComponentProps) {
     const { color, width, height, className, viewBox, children, ...rest } =
         props;
 
+    // apply inline color style if color prop is explicitly provided
+    // this allows Tailwind classes to work
+    const style = rawProps.color !== undefined ? { color } : undefined;
+
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"
             width={width}
             height={height}
-            style={{ color }}
+            style={style}
             className={className}
             viewBox={viewBox}
             {...rest}
