@@ -3,7 +3,6 @@ import SearchBar from "./search";
 import UserInfo from "./userinfo";
 import StreamGuide from "./stream-guide";
 import { myGetT } from "@/lib/i18n";
-import HeaderUtilsForNonLogged from "@/app/[lng]/(main)/_components/header/header_utils_for_non_logged";
 
 export async function Header() {
     const { t } = await myGetT();
@@ -25,7 +24,6 @@ export async function Header() {
 
             <div className="flex flex-1 flex-row items-center justify-end gap-4">
                 <StreamGuide />
-                <HeaderUtilsForNonLogged />
                 <UserInfo />
             </div>
         </nav>
