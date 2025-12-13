@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"sen1or/letslive/livestream/config"
-	"sen1or/letslive/livestream/handlers/general"
-	"sen1or/letslive/livestream/handlers/livestream"
-	"sen1or/letslive/livestream/handlers/vod"
+	"sen1or/letslive/livestream/handlers/http/general"
+	"sen1or/letslive/livestream/handlers/http/livestream"
+	"sen1or/letslive/livestream/handlers/http/vod"
 	"sen1or/letslive/livestream/middlewares"
 	"sen1or/letslive/livestream/pkg/logger"
 

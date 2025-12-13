@@ -11,9 +11,9 @@ import (
 
 	"sen1or/letslive/user/api"
 	cfg "sen1or/letslive/user/config"
-	"sen1or/letslive/user/handlers/follow"
-	"sen1or/letslive/user/handlers/livestream_information"
-	"sen1or/letslive/user/handlers/user"
+	"sen1or/letslive/user/handlers/http/follow"
+	"sen1or/letslive/user/handlers/http/livestream_information"
+	"sen1or/letslive/user/handlers/http/user"
 	"sen1or/letslive/user/pkg/discovery"
 	"sen1or/letslive/user/pkg/logger"
 	"sen1or/letslive/user/pkg/tracer"

@@ -1,7 +1,7 @@
 package livestream_information
 
 import (
-	"sen1or/letslive/user/handlers/basehandler"
+	"sen1or/letslive/user/handlers/http/basehandler"
 	"sen1or/letslive/user/services"
 )
 

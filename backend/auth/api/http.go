@@ -8,7 +8,7 @@ import (
 	"sen1or/letslive/auth/pkg/discovery"
 	"sen1or/letslive/auth/pkg/logger"
 
-	"sen1or/letslive/auth/handlers"
+	"sen1or/letslive/auth/handlers/http"
 	"sen1or/letslive/auth/middlewares"
 	"time"
 

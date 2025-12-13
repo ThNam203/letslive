@@ -1,7 +1,7 @@
 package general
 
 import (
-	"sen1or/letslive/user/handlers/basehandler"
+	"sen1or/letslive/livestream/handlers/http/basehandler"
 )
 
 type GeneralHandler struct {

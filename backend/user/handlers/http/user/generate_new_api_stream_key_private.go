@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 	"net/http"
-	"sen1or/letslive/user/handlers/utils"
+	"sen1or/letslive/user/handlers/http/utils"
 	"sen1or/letslive/user/pkg/tracer"
 	"sen1or/letslive/user/response"
 )

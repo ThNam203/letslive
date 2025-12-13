@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"sen1or/letslive/livestream/dto"
-	"sen1or/letslive/livestream/handlers/utils"
+	"sen1or/letslive/livestream/handlers/http/utils"
 	"sen1or/letslive/livestream/pkg/tracer"
 	response "sen1or/letslive/livestream/response"
 

@@ -1,7 +1,7 @@
 package user
 
 import (
-	"sen1or/letslive/user/handlers/basehandler"
+	"sen1or/letslive/user/handlers/http/basehandler"
 	"sen1or/letslive/user/services"
 )
 

@@ -1,7 +1,7 @@
 package vod
 
 import (
-	"sen1or/letslive/livestream/handlers/basehandler"
+	"sen1or/letslive/livestream/handlers/http/basehandler"
 	"sen1or/letslive/livestream/services/vod"
 )
 

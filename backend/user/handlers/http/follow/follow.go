@@ -3,12 +3,25 @@ package follow
 import (
 	"context"
 	"net/http"
-	"sen1or/letslive/user/handlers/utils"
+	"sen1or/letslive/user/handlers/http/basehandler"
+	"sen1or/letslive/user/handlers/http/utils"
 	"sen1or/letslive/user/pkg/tracer"
 	"sen1or/letslive/user/response"
+	"sen1or/letslive/user/services"
 )
 
-func (h *FollowHandler) UnfollowPrivateHandler(w http.ResponseWriter, r *http.Request) {
+type FollowHandler struct {
+	basehandler.BaseHandler
+	followService services.FollowService
+}
+
+func NewFollowHandler(followService services.FollowService) *FollowHandler {
+	return &FollowHandler{
+		followService: followService,
+	}
+}
+
+func (h *FollowHandler) FollowPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
@@ -24,8 +37,8 @@ func (h *FollowHandler) UnfollowPrivateHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	ctx, span := tracer.MyTracer.Start(ctx, "unfollow_private_handler.follow_service.unfollow")
-	serviceErr := h.followService.Unfollow(ctx, followerId.String(), followedId)
+	ctx, span := tracer.MyTracer.Start(ctx, "follow_private_handler.follow_service.follow")
+	serviceErr := h.followService.Follow(ctx, followerId.String(), followedId)
 	span.End()
 
 	if serviceErr != nil {

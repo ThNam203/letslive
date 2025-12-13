@@ -11,8 +11,8 @@ import (
 
 	"sen1or/letslive/livestream/api"
 	cfg "sen1or/letslive/livestream/config"
-	livestreamHandler "sen1or/letslive/livestream/handlers/livestream"
-	vodHandler "sen1or/letslive/livestream/handlers/vod"
+	livestreamHandler "sen1or/letslive/livestream/handlers/http/livestream"
+	vodHandler "sen1or/letslive/livestream/handlers/http/vod"
 	"sen1or/letslive/livestream/pkg/discovery"
 	"sen1or/letslive/livestream/pkg/logger"
 	"sen1or/letslive/livestream/pkg/tracer"

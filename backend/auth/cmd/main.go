@@ -11,7 +11,7 @@ import (
 
 	"sen1or/letslive/auth/api"
 	cfg "sen1or/letslive/auth/config"
-	"sen1or/letslive/auth/handlers"
+	"sen1or/letslive/auth/handlers/http"
 	"sen1or/letslive/auth/pkg/discovery"
 	"sen1or/letslive/auth/pkg/logger"
 	"sen1or/letslive/auth/pkg/tracer"
