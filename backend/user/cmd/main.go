@@ -11,6 +11,7 @@ import (
 
 	"sen1or/letslive/user/api"
 	cfg "sen1or/letslive/user/config"
+	usergrpc "sen1or/letslive/user/handlers/grpc/user"
 	"sen1or/letslive/user/handlers/http/follow"
 	"sen1or/letslive/user/handlers/http/livestream_information"
 	"sen1or/letslive/user/handlers/http/user"
@@ -181,5 +182,6 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var userHandler = user.NewUserHandler(*userService)
 	var livestreamInfoHandler = livestream_information.NewLivestreamInformationHandler(*livestreamInfoService, *minioService)
 	var followHandler = follow.NewFollowHandler(*followService)
-	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, cfg)
+	var userGRPCHandler = usergrpc.NewUserGRPCHandler(*userService)
+	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, userGRPCHandler, cfg)
 }

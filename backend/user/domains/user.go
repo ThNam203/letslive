@@ -47,8 +47,9 @@ const (
 type AuthProvider string
 
 const (
-	AuthProviderLocal  AuthProvider = "local"
-	AuthProviderGoogle AuthProvider = "google"
+	AuthProviderLocal   AuthProvider = "local"
+	AuthProviderGoogle  AuthProvider = "google"
+	AuthProviderUnknown AuthProvider = "unknown" // shouldn't be used at all
 )
 
 type UserRepository interface {
