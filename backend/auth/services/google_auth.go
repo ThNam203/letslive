@@ -9,7 +9,8 @@ import (
 	"net/http"
 	"os"
 	"sen1or/letslive/auth/domains"
-	usergateway "sen1or/letslive/auth/gateway/user/http"
+	usergateway "sen1or/letslive/auth/gateway/user"
+	usergatewaydto "sen1or/letslive/auth/gateway/user/dto"
 	"sen1or/letslive/auth/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
 	"strconv"
@@ -21,10 +22,10 @@ import (
 
 type GoogleAuthService struct {
 	repo        domains.AuthRepository
-	userGateway usergateway.HTTPUserGateway
+	userGateway usergateway.UserGateway
 }
 
-func NewGoogleAuthService(repo domains.AuthRepository, userGateway usergateway.HTTPUserGateway) *GoogleAuthService {
+func NewGoogleAuthService(repo domains.AuthRepository, userGateway usergateway.UserGateway) *GoogleAuthService {
 	return &GoogleAuthService{
 		repo:        repo,
 		userGateway: userGateway,
@@ -81,21 +82,19 @@ func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode strin
 	}
 
 	existedRecord, err := s.repo.GetByEmail(ctx, returnedOAuthUser.Email)
-	if err != nil && err.Code == serviceresponse.RES_ERR_AUTH_NOT_FOUND_CODE {
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
-	} else if err != nil {
-		dto := &usergateway.CreateUserRequestDTO{
+	if err == nil {
+		return existedRecord, nil
+	}
+
+	// create new user if not found
+	if err.Code == serviceresponse.RES_ERR_AUTH_NOT_FOUND_CODE {
+		userDTO := &usergatewaydto.CreateUserRequestDTO{
 			Username:     generateUsername(returnedOAuthUser.Email),
 			Email:        returnedOAuthUser.Email,
-			AuthProvider: usergateway.ProviderGoogle,
+			AuthProvider: usergatewaydto.ProviderGoogle,
 		}
 
-		createdUser, errRes := s.userGateway.CreateNewUser(ctx, *dto)
+		createdUser, errRes := s.userGateway.CreateNewUser(ctx, *userDTO)
 		if errRes != nil {
 			logger.Errorf(ctx, "failed to create new user through gateway: %s", errRes.Message)
 			return nil, errRes
@@ -112,10 +111,15 @@ func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode strin
 			return nil, err
 		}
 
-		existedRecord = newlyCreatedAuthRecord
+		return newlyCreatedAuthRecord, nil
 	}
 
-	return existedRecord, nil
+	return nil, serviceresponse.NewResponseFromTemplate[any](
+		serviceresponse.RES_ERR_INTERNAL_SERVER,
+		nil,
+		nil,
+		nil,
+	)
 }
 
 func (s GoogleAuthService) getUserDataFromGoogle(ctx context.Context, code string) ([]byte, error) {

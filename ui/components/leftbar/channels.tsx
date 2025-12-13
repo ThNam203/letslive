@@ -28,7 +28,7 @@ export default function AllChannelsView({
     useEffect(() => {
         const fetchAllUsers = async () => {
             await GetAllUsers()
-                .then(res => {
+                .then((res) => {
                     if (res.success) {
                         setUsers(res.data ?? []);
                     } else {
@@ -39,9 +39,9 @@ export default function AllChannelsView({
                     }
                 })
                 .catch((_) => {
-                    toast(t("fetch-error:client_fetch_error"), { 
+                    toast(t("fetch-error:client_fetch_error"), {
                         toastId: "client-fetch-error-id",
-                        type: "error" 
+                        type: "error",
                     });
                 });
         };
@@ -71,7 +71,7 @@ export default function AllChannelsView({
                             <Link
                                 href={`/users/${user.id}`}
                                 className={cn(
-                                    "hover:bg-background-hover flex flex-row items-center gap-2 rounded-full",
+                                    "flex flex-row items-center gap-2 rounded-full hover:bg-background-hover",
                                     isMinimized ? "" : "w-full",
                                 )}
                             >
@@ -92,7 +92,7 @@ export default function AllChannelsView({
                                 )}
                             </Link>
                         </HoverCardTrigger>
-                        <HoverCardContent className="z-10 w-80 bg-muted border-border">
+                        <HoverCardContent className="z-10 w-80 border-border bg-muted">
                             <div className="flex gap-4">
                                 <Avatar>
                                     <AvatarImage
@@ -108,19 +108,23 @@ export default function AllChannelsView({
                                     <h4 className="text-sm font-semibold">
                                         {user.displayName ?? user.username}
                                     </h4>
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-muted-foreground text-xs">
+                                        {t("common:bio")}:{" "}
                                         {user.livestreamInformation
-                                            ?.description ?? t("common:no_description")}
+                                            ?.description ??
+                                            t("common:no_description")}
                                     </p>
-                                    <div className="text-xs text-muted-foreground">
-                                        {t("common:followers_with_count", { count: user.followerCount })}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">
+                                    <p className="text-muted-foreground text-xs">
+                                        {t("common:followers_with_count", {
+                                            count: user.followerCount ?? 0,
+                                        })}
+                                    </p>
+                                    <p className="text-muted-foreground text-xs">
                                         {t("common:joined")}:{" "}
                                         {new Date(
                                             user.createdAt,
                                         ).toLocaleDateString()}
-                                    </div>
+                                    </p>
                                 </div>
                             </div>
                         </HoverCardContent>

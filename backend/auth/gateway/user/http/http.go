@@ -7,26 +7,24 @@ import (
 	"fmt"
 	"net/http"
 	"sen1or/letslive/auth/gateway"
+	usergateway "sen1or/letslive/auth/gateway/user"
+	"sen1or/letslive/auth/gateway/user/dto"
 	"sen1or/letslive/auth/pkg/discovery"
 	"sen1or/letslive/auth/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
 )
 
-type HTTPUserGateway interface {
-	CreateNewUser(ctx context.Context, userRequestDTO CreateUserRequestDTO) (*CreateUserResponseDTO, *serviceresponse.Response[any])
-}
-
 type userGateway struct {
 	registry discovery.Registry
 }
 
-func NewUserGateway(registry discovery.Registry) HTTPUserGateway {
+func NewUserGateway(registry discovery.Registry) usergateway.UserGateway {
 	return &userGateway{
 		registry: registry,
 	}
 }
 
-func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO CreateUserRequestDTO) (*CreateUserResponseDTO, *serviceresponse.Response[any]) {
+func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO dto.CreateUserRequestDTO) (*dto.CreateUserResponseDTO, *serviceresponse.Response[any]) {
 	addr, err := g.registry.ServiceAddress(ctx, "user")
 	if err != nil {
 		return nil, serviceresponse.NewResponseFromTemplate[any](
@@ -97,7 +95,7 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO CreateUs
 		return nil, &resInfo
 	}
 
-	var createdUser serviceresponse.Response[CreateUserResponseDTO]
+	var createdUser serviceresponse.Response[dto.CreateUserResponseDTO]
 	defer resp.Body.Close()
 
 	if err := json.NewDecoder(resp.Body).Decode(&createdUser); err != nil {

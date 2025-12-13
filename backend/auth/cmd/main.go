@@ -19,7 +19,7 @@ import (
 	"sen1or/letslive/auth/services"
 	"sen1or/letslive/auth/utils"
 
-	usergateway "sen1or/letslive/auth/gateway/user/http"
+	usergatewayhttp "sen1or/letslive/auth/gateway/user/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -171,7 +171,7 @@ func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Con
 	var refreshTokenRepo = repositories.NewRefreshTokenRepository(dbConn)
 	var signUpOTPRepo = repositories.NewSignUpOTPRepo(dbConn)
 
-	userGateway := usergateway.NewUserGateway(registry)
+	userGateway := usergatewayhttp.NewUserGateway(registry)
 	var authService = services.NewAuthService(userRepo, userGateway)
 	var googleAuthService = services.NewGoogleAuthService(userRepo, userGateway)
 	var jwtService = services.NewJWTService(refreshTokenRepo, cfg.JWT)

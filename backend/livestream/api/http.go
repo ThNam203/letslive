@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"sen1or/letslive/livestream/config"
-	"sen1or/letslive/livestream/handlers"
+	"sen1or/letslive/livestream/handlers/general"
+	"sen1or/letslive/livestream/handlers/livestream"
+	"sen1or/letslive/livestream/handlers/vod"
 	"sen1or/letslive/livestream/middlewares"
 	"sen1or/letslive/livestream/pkg/logger"
 
@@ -20,17 +22,17 @@ type APIServer struct {
 	logger     *zap.SugaredLogger
 	config     *config.Config
 
-	generalHandler   *handlers.GeneralHandler
-	livestreamHandler *handlers.LivestreamHandler
-	vodHandler        *handlers.VODHandler
+	generalHandler    *general.GeneralHandler
+	livestreamHandler *livestream.LivestreamHandler
+	vodHandler        *vod.VODHandler
 }
 
-func NewAPIServer(livestreamHandler *handlers.LivestreamHandler, vodHandler *handlers.VODHandler, cfg *config.Config) *APIServer {
+func NewAPIServer(livestreamHandler *livestream.LivestreamHandler, vodHandler *vod.VODHandler, cfg *config.Config) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
 
-		generalHandler:   handlers.NewGeneralHandler(),
+		generalHandler:    general.NewGeneralHandler(),
 		livestreamHandler: livestreamHandler,
 		vodHandler:        vodHandler,
 	}

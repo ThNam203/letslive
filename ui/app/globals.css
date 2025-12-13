@@ -3,115 +3,115 @@
 @tailwind utilities;
 
 @layer base {
-  :root[data-theme='light'] {
-    --background: 0 0% 100%;
-    --background-hover: 0 0% 92%;
-    --foreground: 222 47% 11%;
-    --foreground-muted: 222 10.3% 25.4%;
+    :root[data-theme="light"] {
+        --background: 0 0% 100%;
+        --background-hover: 0 0% 92%;
+        --foreground: 222 47% 11%;
+        --foreground-muted: 222 10.3% 25.4%;
 
-    --muted: 210 40% 96%;
-    --border: 210 10% 23%;
-  
-    --primary: 276 91% 38%;
-    --primary-hover: 276 91% 48%;
-    --primary-foreground: 0 0% 92%;
-  
-    --secondary: 28 80% 52%;
-    --secondary-hover: 28 80% 62%;
-    --secondary-foreground: 0 0% 100%;
-  
-    --accent: 140 70% 45%;
-    --accent-hover: 140 70% 55%;
-    --accent-foreground: 0 0% 100%;
+        --muted: 210 40% 96%;
+        --border: 210 10% 23%;
 
-    --destructive: 0 90.3% 60%;
-    --destructive-hover: 0 90.3% 55%;
-    --destructive-foreground: 0 0% 100%;
+        --primary: 276 91% 38%;
+        --primary-hover: 276 91% 48%;
+        --primary-foreground: 0 0% 92%;
 
-    --success: 142 70.6% 45.3%;
+        --secondary: 28 80% 52%;
+        --secondary-hover: 28 80% 62%;
+        --secondary-foreground: 0 0% 100%;
 
-    --radius: 0.5rem;
-  }
+        --accent: 140 70% 45%;
+        --accent-hover: 140 70% 55%;
+        --accent-foreground: 0 0% 100%;
 
-  [data-theme='dark'] {
-    --background: 222 47% 11%;
-    --background-hover: 222 30% 20%;
-    --foreground: 0 0% 100%;
-    --foreground-muted: 0 0% 80%;
-    
-    --muted: 220 20% 25%;
-    --border: 220 15% 30%;
-    
-    --primary: 276 91% 65%;
-    --primary-hover: 276 91% 75%;
-    --primary-foreground: 0 0% 100%; /* same as primary */
-    
-    --secondary: 28 90% 60%;
-    --secondary-hover: 28 90% 70%;
-    --secondary-foreground: 0 0% 0%;
-    
-    --accent: 140 70% 60%;
-    --accent-hover: 140 70% 70%;
-    --accent-foreground: 0 0% 0%;
+        --destructive: 0 90.3% 60%;
+        --destructive-hover: 0 90.3% 55%;
+        --destructive-foreground: 0 0% 100%;
 
-    --destructive: 0 90.3% 60%;
-    --destructive-hover: 0 90.3% 55%;
-    --destructive-foreground: 0 0% 90%;
-    
-    --success: 142 70.6% 45.3%;
+        --success: 142 70.6% 45.3%;
 
-    --radius: 0.5rem;
-  }
+        --radius: 0.5rem;
+    }
 
-  input:-webkit-autofill,
-  input:-webkit-autofill:hover,
-  input:-webkit-autofill:focus,
-  textarea:-webkit-autofill,
-  textarea:-webkit-autofill:hover,
-  textarea:-webkit-autofill:focus,
-  select:-webkit-autofill,
-  select:-webkit-autofill:hover,
-  select:-webkit-autofill:focus {
-    @apply border-none;
-    -webkit-text-fill-color: hsl(var(--foreground));
-    box-shadow: 0 0 0px 1000px hsl(var(--background)) inset;
-    transition: background-color 5000s ease-in-out 0s;
-  }
+    [data-theme="dark"] {
+        --background: 222 47% 11%;
+        --background-hover: 222 30% 20%;
+        --foreground: 0 0% 100%;
+        --foreground-muted: 0 0% 80%;
+
+        --muted: 220 20% 25%;
+        --border: 220 15% 30%;
+
+        --primary: 276 91% 38%;
+        --primary-hover: 276 91% 48%;
+        --primary-foreground: 0 0% 92%;
+
+        --secondary: 28 90% 60%;
+        --secondary-hover: 28 90% 70%;
+        --secondary-foreground: 0 0% 0%;
+
+        --accent: 140 70% 60%;
+        --accent-hover: 140 70% 70%;
+        --accent-foreground: 0 0% 0%;
+
+        --destructive: 0 90.3% 60%;
+        --destructive-hover: 0 90.3% 55%;
+        --destructive-foreground: 0 0% 90%;
+
+        --success: 142 70.6% 45.3%;
+
+        --radius: 0.5rem;
+    }
+
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    textarea:-webkit-autofill,
+    textarea:-webkit-autofill:hover,
+    textarea:-webkit-autofill:focus,
+    select:-webkit-autofill,
+    select:-webkit-autofill:hover,
+    select:-webkit-autofill:focus {
+        @apply border-none;
+        -webkit-text-fill-color: hsl(var(--foreground));
+        box-shadow: 0 0 0px 1000px hsl(var(--background)) inset;
+        transition: background-color 5000s ease-in-out 0s;
+    }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+    .text-balance {
+        text-wrap: balance;
+    }
 
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
 
-  /* Hide scrollbar for IE, Edge and Firefox */
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    /* IE and Edge */
-    scrollbar-width: none;
-    /* Firefox */
-  }
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        /* IE and Edge */
+        scrollbar-width: none;
+        /* Firefox */
+    }
 
-  .small-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
+    .small-scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
 
-  .small-scrollbar::-webkit-scrollbar-track {
-    /* border-radius: 100vh; */
-    background: rgba(255, 255, 255, 0);
-  }
+    .small-scrollbar::-webkit-scrollbar-track {
+        /* border-radius: 100vh; */
+        background: rgba(255, 255, 255, 0);
+    }
 
-  .small-scrollbar::-webkit-scrollbar-thumb {
-    background: gray;
-    border-radius: 100vh;
-  }
+    .small-scrollbar::-webkit-scrollbar-thumb {
+        background: gray;
+        border-radius: 100vh;
+    }
 
-  .small-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #5c5c5c;
-  }
+    .small-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #5c5c5c;
+    }
 }

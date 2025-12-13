@@ -41,25 +41,27 @@ export default function VODPage() {
 
     useEffect(() => {
         const fetchVODInfo = async () => {
-            await GetVODInformation(params.vodId).then(res => {
-                if (res.success) {
-                    setPlayerInfo((prev) => ({
-                        ...prev,
-                        videoTitle: res.data?.title ?? "",
-                        videoUrl: res.data?.playbackUrl ?? null,
-                    }));
-                } else {
-                    toast(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
+            await GetVODInformation(params.vodId)
+                .then((res) => {
+                    if (res.success) {
+                        setPlayerInfo((prev) => ({
+                            ...prev,
+                            videoTitle: res.data?.title ?? "",
+                            videoUrl: res.data?.playbackUrl ?? null,
+                        }));
+                    } else {
+                        toast(t(`api-response:${res.key}`), {
+                            toastId: res.requestId,
+                            type: "error",
+                        });
+                    }
+                })
+                .catch((_) => {
+                    toast(t("fetch-error:client_fetch_error"), {
+                        toastId: "client-fetch-error-id",
                         type: "error",
                     });
-                }
-            }).catch((_) => {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
                 });
-            });
         };
 
         fetchVODInfo();
@@ -71,21 +73,23 @@ export default function VODPage() {
         }
 
         const fetchVODs = async () => {
-            await GetPublicVODsOfUser(user.id).then(res => {
-                if (res.success) {
-                    setVods(res.data ?? []);
-                } else {
-                    toast(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
+            await GetPublicVODsOfUser(user.id)
+                .then((res) => {
+                    if (res.success) {
+                        setVods(res.data ?? []);
+                    } else {
+                        toast(t(`api-response:${res.key}`), {
+                            toastId: res.requestId,
+                            type: "error",
+                        });
+                    }
+                })
+                .catch((_) => {
+                    toast(t("fetch-error:client_fetch_error"), {
+                        toastId: "client-fetch-error-id",
                         type: "error",
                     });
-                }
-            }).catch((_) => {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
                 });
-            });
         };
 
         fetchVODs();
@@ -93,29 +97,33 @@ export default function VODPage() {
 
     useEffect(() => {
         const fetchUserInfo = async () => {
-            await GetUserById(params.userId).then(userRes => {
-                if (userRes.success) {
-                    setUser(userRes.data ?? null);
+            await GetUserById(params.userId)
+                .then((userRes) => {
+                    if (userRes.success) {
+                        setUser(userRes.data ?? null);
 
-                    setPlayerInfo((prev) => ({
-                        ...prev,
-                        streamer: {
-                            name: userRes.data?.displayName ?? userRes.data?.username ?? "Streamer",
-                        },
-                    }));
-                } else {
-                    toast(t(`api-response:${userRes.key}`), {
-                        toastId: userRes.requestId,
+                        setPlayerInfo((prev) => ({
+                            ...prev,
+                            streamer: {
+                                name:
+                                    userRes.data?.displayName ??
+                                    userRes.data?.username ??
+                                    "Streamer",
+                            },
+                        }));
+                    } else {
+                        toast(t(`api-response:${userRes.key}`), {
+                            toastId: userRes.requestId,
+                            type: "error",
+                        });
+                    }
+                })
+                .catch((_) => {
+                    toast(t("fetch-error:client_fetch_error"), {
+                        toastId: "client-fetch-error-id",
                         type: "error",
                     });
-                }
-            })
-            .catch((_) => {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
                 });
-            });
         };
 
         fetchUserInfo();

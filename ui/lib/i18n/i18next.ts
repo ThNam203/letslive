@@ -1,7 +1,12 @@
 import i18next from "i18next";
 import resourcesToBackend from "i18next-resources-to-backend";
 import { initReactI18next } from "react-i18next/initReactI18next";
-import { I18N_FALLBACK_LNG, I18N_LANGUAGES, I18N_DEFAULT_NS, I18N_COOKIE_NAME } from "./settings";
+import {
+    I18N_FALLBACK_LNG,
+    I18N_LANGUAGES,
+    I18N_DEFAULT_NS,
+    I18N_COOKIE_NAME,
+} from "./settings";
 import LanguageDetector from "i18next-browser-languagedetector";
 
 const runsOnServerSide = typeof window === "undefined";
@@ -25,7 +30,6 @@ i18next
             order: ["path", "cookie", "navigator", "htmlTag"],
             lookupCookie: I18N_COOKIE_NAME,
         },
-        preload: runsOnServerSide ? I18N_LANGUAGES : [],
     });
 
 export default i18next;

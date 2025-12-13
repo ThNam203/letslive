@@ -34,8 +34,10 @@
     "no_users_found": "No users found",
     "no_description": "No description",
     "add": "Add",
-    
+    "bio": "Bio",
+
     "started_at": "Started {{time}}",
+    "live": "Live",
     "time": {
         "seconds_ago": "{{count}} second ago",
         "seconds_ago_plural": "{{count}} seconds ago",

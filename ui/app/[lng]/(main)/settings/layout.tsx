@@ -33,24 +33,24 @@ export default function SettingsNav({
                 </div>
                 <nav className="border-b border-border">
                     <ul className="flex">
-                        {navItems.map((item) => (
-                            <li key={item.href}>
-                                <Link
-                                    href={item.href}
-                                    className={cn(
-                                        "relative inline-block w-20 py-4 text-center text-sm transition-colors hover:text-primary",
-                                        pathname === item.href
-                                            ? "text-primary"
-                                            : "text-foreground",
-                                    )}
-                                >
-                                    {item.name}
-                                    {pathname === item.href && (
-                                        <span className="absolute bottom-0 left-0 h-0.5 w-full bg-primary" />
-                                    )}
-                                </Link>
-                            </li>
-                        ))}
+                        {navItems.map((item) => {
+                            const isActive = pathname.endsWith(item.href);
+                            return (
+                                <li key={item.href}>
+                                    <Link
+                                        href={item.href}
+                                        className={cn(
+                                            "relative inline-block w-20 py-4 text-center text-sm transition-colors hover:text-primary",
+                                            isActive
+                                                ? "text-primary border-b-2 border-primary"
+                                                : "text-foreground",
+                                        )}
+                                    >
+                                        {item.name}
+                                    </Link>
+                                </li>
+                            );
+                        })}
                     </ul>
                 </nav>
             </div>

@@ -43,7 +43,7 @@ export default function VODView({
                 </div>
             </Link>
 
-            <div className="border border-border p-4 border-t-0">
+            <div className="border border-t-0 border-border p-4">
                 <h3 className="font-semibold text-foreground">{vod.title}</h3>
                 <p className="mt-1 text-sm text-foreground-muted">
                     {formatSeconds(vod.duration)}

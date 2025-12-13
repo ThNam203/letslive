@@ -6,7 +6,7 @@ export type IconFacebookProps = IconProp & {
     mainColor?: string;
 };
 
-function IconFacebook({mainColor, ...props}: IconFacebookProps) {
+function IconFacebook({ mainColor, ...props }: IconFacebookProps) {
     return (
         <BaseIcon viewBox="0 0 256 256" {...props}>
             <path

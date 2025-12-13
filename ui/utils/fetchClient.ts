@@ -81,7 +81,9 @@ export const fetchClient = async <T>(
         return validateAndParseResponse<T>(response);
     } catch (err: any) {
         if (err.name === "AbortError") {
-            throw new Error(`request timed out after ${options.timeoutMs ?? DEFAULT_TIMEOUT_MS} ms`);
+            throw new Error(
+                `request timed out after ${options.timeoutMs ?? DEFAULT_TIMEOUT_MS} ms`,
+            );
         }
         throw err;
     } finally {
@@ -89,7 +91,9 @@ export const fetchClient = async <T>(
     }
 };
 
-async function validateAndParseResponse<T>(response: Response): Promise<WithStatusCode<T>> {
+async function validateAndParseResponse<T>(
+    response: Response,
+): Promise<WithStatusCode<T>> {
     const contentType = response.headers.get("content-type");
 
     if (response.status === 204 || !contentType) {
@@ -126,9 +130,15 @@ function shouldSkipRefresh(url: string): boolean {
 }
 
 function hasRefreshToken(): boolean {
-    return document.cookie.match(/^(.*;)?\s*REFRESH_TOKEN\s*=\s*[^;]+(.*)?$/) != null;
+    return (
+        document.cookie.match(/^(.*;)?\s*REFRESH_TOKEN\s*=\s*[^;]+(.*)?$/) !=
+        null
+    );
 }
 
 function hasAccessToken(): boolean {
-    return document.cookie.match(/^(.*;)?\s*ACCESS_TOKEN\s*=\s*[^;]+(.*)?$/) != null;
+    return (
+        document.cookie.match(/^(.*;)?\s*ACCESS_TOKEN\s*=\s*[^;]+(.*)?$/) !=
+        null
+    );
 }

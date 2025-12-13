@@ -13,6 +13,8 @@ import Turnstile, { useTurnstile } from "react-turnstile";
 import IconLoader from "../icons/loader";
 import useT from "@/hooks/use-translation";
 import { loginSchema } from "@/lib/validations/login";
+import { GetMeProfile } from "@/lib/api/user";
+import useUser from "@/hooks/user";
 
 export default function LogInForm() {
     const [email, setEmail] = useState("");
@@ -28,7 +30,7 @@ export default function LogInForm() {
     const [turnstileToken, setTurnstileToken] = useState("");
     const turnstile = useTurnstile();
     const { t, i18n } = useT(["auth", "error", "api-response", "fetch-error"]);
-
+    const { setUser } = useUser();
     const validate = () => {
         const result = loginSchema(t).safeParse({
             email,
@@ -70,8 +72,12 @@ export default function LogInForm() {
                         toastId: res.requestId,
                     });
                 } else {
-                    router.push("/");
-                    router.refresh();
+                    GetMeProfile().then((res) => {
+                        if (res.success && res.data) {
+                            setUser(res.data);
+                            router.push("/");
+                        }
+                    });
                 }
             })
             .catch((_) => {

@@ -5,27 +5,32 @@ import { cn } from "@/utils/cn";
 
 type TextProps = ComponentProps<typeof Input>;
 type Props = {
-  label: string;
-  description?: string;
+    label: string;
+    description?: string;
 } & TextProps;
 
 export default function TextField({
-  label,
-  description,
-  className,
-  ...props
+    label,
+    description,
+    className,
+    ...props
 }: Props) {
-  return (
-    <div>
-      <label className="block text-sm font-medium mb-2" htmlFor={label}>
-        {label}
-      </label>
-      <Input
-        id={label}
-        className={cn("text-foreground border border-border focus:outline-none", className)}
-        {...props}
-      />
-      {description && <Description content={description} className="mt-1" />}
-    </div>
-  );
+    return (
+        <div>
+            <label className="mb-2 block text-sm font-medium" htmlFor={label}>
+                {label}
+            </label>
+            <Input
+                id={label}
+                className={cn(
+                    "border border-border text-foreground focus:outline-none",
+                    className,
+                )}
+                {...props}
+            />
+            {description && (
+                <Description content={description} className="mt-1" />
+            )}
+        </div>
+    );
 }
