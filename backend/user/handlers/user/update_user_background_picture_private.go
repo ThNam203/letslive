@@ -41,7 +41,7 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 		}
 
 		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
+			response.RES_ERR_INVALID_PAYLOAD,
 			nil,
 			nil,
 			nil,
@@ -52,13 +52,14 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 	file, fileHeader, formErr := r.FormFile("background-picture")
 	if formErr != nil {
 		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
+			response.RES_ERR_INVALID_PAYLOAD,
 			nil,
 			nil,
 			nil,
 		))
 		return
 	}
+	defer file.Close()
 
 	ctx, span := tracer.MyTracer.Start(ctx, "update_user_background_picture_private_handler.user_service.update_user_background_picture")
 	savedPath, err := h.userService.UpdateUserBackgroundPicture(ctx, file, fileHeader, *userUUID)

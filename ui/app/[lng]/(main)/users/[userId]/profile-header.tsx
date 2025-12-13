@@ -93,6 +93,7 @@ export default function ProfileHeader({
                     className="object-cover"
                     fill={true}
                     priority={true}
+                    unoptimized
                 />
             </div>
             <div className="-mt-16 px-4 sm:-mt-24">

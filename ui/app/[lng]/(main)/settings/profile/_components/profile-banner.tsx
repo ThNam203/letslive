@@ -66,6 +66,7 @@ export default function ProfileBanner({
                         alt="Profile Banner"
                         fill={true}
                         className="object-cover"
+                        unoptimized
                     />
                 ) : (
                     <DefaultBackgound />
