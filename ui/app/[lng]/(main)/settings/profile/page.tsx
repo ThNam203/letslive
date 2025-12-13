@@ -52,88 +52,83 @@ export default function ProfileSettings() {
         let hasError = false;
 
         if (backgroundImageFile) {
-            await UpdateBackgroundPicture(backgroundImageFile)
-                .then((res) => {
-                    if (res.success) {
-                        setBackgroundImageFile(null);
-                        updateUser({
-                            ...user!,
-                            backgroundPicture: res.data,
-                        });
-                    } else {
-                        toast.error(t(`api-response:${res.key}`), {
-                            toastId: res.requestId,
-                            type: "error",
-                        });
-                        hasError = true;
-                    }
-                })
-                .catch((_) => {
-                    toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "client-fetch-error-id",
+            try {
+                const res = await UpdateBackgroundPicture(backgroundImageFile);
+                if (res.success) {
+                    setBackgroundImageFile(null);
+                    updateUser({
+                        ...user!,
+                        backgroundPicture: res.data,
+                    });
+                } else {
+                    toast.error(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
                         type: "error",
                     });
                     hasError = true;
-                })
-                .finally(() => setIsUpdatingProfile(false));
+                }
+            } catch (_) {
+                toast(t("fetch-error:client_fetch_error"), {
+                    toastId: "client-fetch-error-id",
+                    type: "error",
+                });
+                hasError = true;
+            }
         }
 
         if (profileImageFile) {
-            await UpdateProfilePicture(profileImageFile)
-                .then((res) => {
-                    if (res.success) {
-                        setProfileImageFile(null);
-                        updateUser({
-                            ...user!,
-                            profilePicture: res.data,
-                        });
-                    } else {
-                        toast.error(t(`api-response:${res.key}`), {
-                            toastId: res.requestId,
-                            type: "error",
-                        });
-                        hasError = true;
-                    }
-                })
-                .catch((_) => {
-                    toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "client-fetch-error-id",
+            try {
+                const res = await UpdateProfilePicture(profileImageFile);
+                if (res.success) {
+                    setProfileImageFile(null);
+                    updateUser({
+                        ...user!,
+                        profilePicture: res.data,
+                    });
+                } else {
+                    toast.error(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
                         type: "error",
                     });
                     hasError = true;
-                })
-                .finally(() => setIsUpdatingProfile(false));
+                }
+            } catch (_) {
+                toast(t("fetch-error:client_fetch_error"), {
+                    toastId: "client-fetch-error-id",
+                    type: "error",
+                });
+                hasError = true;
+            }
         }
 
         if (bio || displayName) {
-            await UpdateProfile({
-                displayName: isDisplayNameChanged ? displayName : undefined,
-                bio: isBioChanged ? bio : undefined,
-            })
-                .then((res) => {
-                    if (res.success) {
-                        updateUser({
-                            ...user!,
-                            ...res.data,
-                        });
-                    } else {
-                        toast.error(t(`api-response:${res.key}`), {
-                            toastId: res.requestId,
-                            type: "error",
-                        });
-                        hasError = true;
-                    }
-                })
-                .catch((_) => {
-                    toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "client-fetch-error-id",
+            try {
+                const res = await UpdateProfile({
+                    displayName: isDisplayNameChanged ? displayName : undefined,
+                    bio: isBioChanged ? bio : undefined,
+                });
+                if (res.success) {
+                    updateUser({
+                        ...user!,
+                        ...res.data,
+                    });
+                } else {
+                    toast.error(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
                         type: "error",
                     });
                     hasError = true;
-                })
-                .finally(() => setIsUpdatingProfile(false));
+                }
+            } catch (_) {
+                toast(t("fetch-error:client_fetch_error"), {
+                    toastId: "client-fetch-error-id",
+                    type: "error",
+                });
+                hasError = true;
+            }
         }
 
+        setIsUpdatingProfile(false);
         if (!hasError) toast.success(t("settings:profile.update_success"));
     };
 
