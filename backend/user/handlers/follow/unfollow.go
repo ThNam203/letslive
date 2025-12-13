@@ -33,5 +33,10 @@ func (h *FollowHandler) UnfollowPrivateHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
+		response.RES_SUCC_OK,
+		nil,
+		nil,
+		nil,
+	))
 }
