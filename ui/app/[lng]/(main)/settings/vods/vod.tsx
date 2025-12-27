@@ -42,7 +42,7 @@ export default function VODEditCard({
     vod: VOD;
     setVODS: Dispatch<SetStateAction<VOD[]>>;
 }) {
-    const { t } = useT(["settings", "api-response"]);
+    const { t } = useT(["common", "settings", "api-response"]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [formData, setFormData] = useState<{
