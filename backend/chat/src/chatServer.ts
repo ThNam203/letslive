@@ -3,6 +3,7 @@ import { Message } from './models/Message'
 import { RedisService } from './services/redis'
 import { ChatEventType } from './types/chat-event'
 import { ChatMessage, ChatMessageType } from './types/chat-message'
+import logger from './lib/logger'
 
 type UserInfo = { currentRoom: string | null; id: string | null; name: string | null }
 
@@ -44,7 +45,7 @@ export class ChatServer {
                 }
                 this.connections.set(userInfo.id!, ws)
             } catch (err) {
-                console.error(err)
+                logger.error({ err }, 'failed to parse webSocket message')
                 return
             }
 
@@ -109,7 +110,7 @@ export class ChatServer {
             userInfo.currentRoom !== data.roomId ||
             !this.redisService.checkIfUserInRoom(data.userId, userInfo.currentRoom)
         ) {
-            console.error('Something went wrong')
+            logger.error({ userId: data.userId, roomId: data.roomId, currentRoom: userInfo.currentRoom }, 'invalid leave request: user not in room')
             return
         }
 
@@ -125,7 +126,7 @@ export class ChatServer {
             userInfo.currentRoom !== data.roomId ||
             !this.redisService.checkIfUserInRoom(data.userId, userInfo.currentRoom)
         ) {
-            console.error('Something went wrong')
+            logger.error({ userId: data.userId, roomId: data.roomId, currentRoom: userInfo.currentRoom }, 'invalid message request: user not in room')
             return
         }
 

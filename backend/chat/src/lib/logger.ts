@@ -1,4 +1,13 @@
-import logger from 'pino'
+import pino from 'pino'
 
-// TODO: should add configs
-export default logger();
+// ensures consistent log format across all services
+// maybe a standalone package?
+export default pino({
+    level: process.env.LOG_LEVEL || 'info',
+    formatters: {
+        level: (label) => {
+            return { level: label }
+        }
+    },
+    timestamp: pino.stdTimeFunctions.isoTime
+})

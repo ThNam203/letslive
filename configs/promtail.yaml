@@ -16,7 +16,7 @@ scrape_configs:
     relabel_configs:
       # keep only containers that match your service names
       - source_labels: ['__meta_docker_container_name']
-        regex: '/letslive-(auth|user|livestream|transcode).*'
+        regex: '/letslive-(auth|user|livestream|transcode|chat).*'
         action: keep
 
       # clean up container name (remove leading slash)
