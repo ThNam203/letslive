@@ -48,8 +48,7 @@ export async function UpdateVOD(
         updateData["thumbnailURL"] = newThumbnail;
     }
 
-    // TODO: is it livestreams or vods
-    return fetchClient<ApiResponse<void>>(`/livestreams/${vodId}`, {
+    return fetchClient<ApiResponse<void>>(`/vods/${vodId}`, {
         method: "PATCH",
         body: JSON.stringify(updateData),
     });

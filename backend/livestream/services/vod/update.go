@@ -39,6 +39,10 @@ func (s *VODService) UpdateVODMetadata(ctx context.Context, data dto.UpdateVODRe
 		currentVOD.Description = data.Description
 		updated = true
 	}
+	if data.ThumbnailURL != nil && (currentVOD.ThumbnailURL == nil || *data.ThumbnailURL != *currentVOD.ThumbnailURL) {
+		currentVOD.ThumbnailURL = data.ThumbnailURL
+		updated = true
+	}
 	if data.Visibility != nil && domains.VODVisibility(*data.Visibility) != currentVOD.Visibility {
 		currentVOD.Visibility = domains.VODVisibility(*data.Visibility)
 		updated = true

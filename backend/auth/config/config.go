@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"reflect"
 	"sen1or/letslive/auth/constants"
@@ -237,14 +238,16 @@ func (cm *ConfigManager) fetchAndParseConfig() (*Config, error) {
 		logger.Warnf(cm.ctx, "database credentials (AUTH_DB_USER, AUTH_DB_PASSWORD) not found in environment.")
 	}
 
-	config.Database.ConnectionString = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?%s",
-		dbUser,
-		dbPassword,
-		config.Database.Host,
-		config.Database.Port,
-		config.Database.Name,
-		strings.Join(config.Database.Params, "&"),
-	)
+	dbURL := &neturl.URL{
+		Scheme: "postgres",
+		User:   neturl.UserPassword(dbUser, dbPassword),
+		Host:   fmt.Sprintf("%s:%d", config.Database.Host, config.Database.Port),
+		Path:   "/" + config.Database.Name,
+	}
+	if len(config.Database.Params) > 0 {
+		dbURL.RawQuery = strings.Join(config.Database.Params, "&")
+	}
+	config.Database.ConnectionString = dbURL.String()
 
 	return &config, nil
 }
