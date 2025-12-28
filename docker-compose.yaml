@@ -230,7 +230,7 @@ services:
     ports:
       - "12345:3000"
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana_provisioning:/etc/grafana/provisioning
       - grafana_data:/var/lib/grafana
     depends_on:
       - tempo
@@ -405,3 +405,4 @@ volumes:
   minio_data:
   consul_data:
   grafana_data:
+  grafana_provisioning:
