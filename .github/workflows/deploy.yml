@@ -1,4 +1,4 @@
-name: deploy-backend
+name: deploy
 on:
   workflow_run:
     workflows: [build-and-publish-images]
@@ -8,6 +8,7 @@ on:
 jobs:
   deploy-backend-to-selfhost:
     runs-on: self-hosted
+    timeout-minutes: 30
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout code
@@ -18,11 +19,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Add access to remove old code # TODO: remove the generated folder dockervolume in transcode service
-        run: |
-          sudo chmod -R u+w /home/admin/actions-runner/_work/
-          sudo chown -R admin:docker /home/admin/actions-runner/_work/
 
       - name: Update Kong configuration
         run: |
@@ -57,13 +53,18 @@ jobs:
           # Service discovery and configuration
           REGISTRY_SERVICE_ADDRESS=${{ secrets.REGISTRY_SERVICE_ADDRESS }}
           CONFIG_SERVER_PROFILE=${{ secrets.CONFIG_SERVER_PROFILE }}
+          CONFIG_SERVER_INTERVAL=${{ secrets.CONFIG_SERVER_INTERVAL }}
 
           # Config server
-          CONFIGSERVER_GIT_URI=${{ secrets.CONFIGSERVER_GIT_URI }}
-          CONFIGSERVER_GIT_USERNAME=${{ secrets.CONFIGSERVER_GIT_USERNAME }}
-          CONFIGSERVER_GIT_PASSWORD=${{ secrets.CONFIGSERVER_GIT_PASSWORD }}
+          CONFIG_SERVER_GIT_URI=${{ secrets.CONFIGSERVER_GIT_URI }}
+          CONFIG_SERVER_GIT_USERNAME=${{ secrets.CONFIGSERVER_GIT_USERNAME }}
+          CONFIG_SERVER_GIT_PASSWORD=${{ secrets.CONFIGSERVER_GIT_PASSWORD }}
 
-          # Database credentials
+          # Main database credentials
+          MAIN_DB_USER=${{ secrets.MAIN_DB_USER }}
+          MAIN_DB_PASSWORD=${{ secrets.MAIN_DB_PASSWORD }}
+
+          # Service database credentials
           CHAT_DB_USER=${{ secrets.CHAT_DB_USER }}
           CHAT_DB_PASSWORD=${{ secrets.CHAT_DB_PASSWORD }}
           LIVESTREAM_DB_USER=${{ secrets.LIVESTREAM_DB_USER }}
@@ -76,6 +77,10 @@ jobs:
           # MinIO credentials
           MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}
           MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}
+
+          # Grafana credentials
+          GRAFANA_SECURITY_ADMIN_USER=${{ secrets.GRAFANA_SECURITY_ADMIN_USER }}
+          GRAFANA_SECURITY_ADMIN_PASSWORD=${{ secrets.GRAFANA_SECURITY_ADMIN_PASSWORD }}
           EOF
 
       - name: Deploy with Docker Compose
@@ -83,4 +88,48 @@ jobs:
           docker compose pull
           docker compose down
           docker compose up -d
+          docker image prune -f
+
+  deploy-frontend-to-selfhost:
+    runs-on: self-hosted
+    timeout-minutes: 30
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Pull frontend image
+        run: |
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/letslive-ui:latest
+
+      - name: Stop and remove existing frontend container
+        run: |
+          docker stop letslive_ui || true
+          docker rm letslive_ui || true
+
+      - name: Deploy frontend container
+        run: |
+          docker run -d \
+            --name letslive_ui \
+            --network host \
+            --restart always \
+            -e CI=true \
+            -e SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }} \
+            -e NEXT_PUBLIC_BACKEND_PROTOCOL=${{ secrets.NEXT_PUBLIC_BACKEND_PROTOCOL }} \
+            -e NEXT_PUBLIC_BACKEND_IP_ADDRESS=${{ secrets.NEXT_PUBLIC_BACKEND_IP_ADDRESS }} \
+            -e NEXT_PUBLIC_BACKEND_WS_PROTOCOL=${{ secrets.NEXT_PUBLIC_BACKEND_WS_PROTOCOL }} \
+            -e NEXT_PUBLIC_BACKEND_PORT=${{ secrets.NEXT_PUBLIC_BACKEND_PORT }} \
+            -e NEXT_PUBLIC_ENVIRONMENT=${{ secrets.NEXT_PUBLIC_ENVIRONMENT }} \
+            -e NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=${{ secrets.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY }} \
+            -p 5000:5000 \
+            ${{ secrets.DOCKERHUB_USERNAME }}/letslive-ui:latest
+
+      - name: Clean up unused images
+        run: |
           docker image prune -f

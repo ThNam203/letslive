@@ -4,9 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import useT from "@/hooks/use-translation";
+import { useEffect } from "react";
+import { captureException } from "@sentry/nextjs";
 
-export default function GlobalError() {
+export default function GlobalError({ error }: { error: Error }) {
     const { t } = useT(["error", "common"]);
+
+    useEffect(() => {
+        captureException(error);
+    }, [error]);
 
     return (
         <div className="flex min-h-screen w-full flex-col items-center justify-center p-4">
