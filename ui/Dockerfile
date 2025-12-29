@@ -5,7 +5,7 @@ RUN npm i -g npm
 EXPOSE 5000
 
 ENV PORT=5000
-ENV NODE_ENV=production
+ENV APP_ENV=production
 
 WORKDIR /home/nextjs/app
 

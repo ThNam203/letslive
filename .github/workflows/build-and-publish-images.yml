@@ -66,3 +66,11 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/letslive-ui:latest
           secrets: |
             id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN
+          build-args: |
+            NEXT_PUBLIC_BACKEND_PROTOCOL=${{ vars.NEXT_PUBLIC_BACKEND_PROTOCOL }}
+            NEXT_PUBLIC_BACKEND_IP_ADDRESS=${{ vars.NEXT_PUBLIC_BACKEND_IP_ADDRESS }}
+            NEXT_PUBLIC_BACKEND_WS_PROTOCOL=${{ vars.NEXT_PUBLIC_BACKEND_WS_PROTOCOL }}
+            NEXT_PUBLIC_BACKEND_PORT=${{ vars.NEXT_PUBLIC_BACKEND_PORT }}
+            NEXT_PUBLIC_ENVIRONMENT=${{ vars.NEXT_PUBLIC_ENVIRONMENT }}
+            NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=${{ vars.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY }}
+            CI=${{ vars.CI }}

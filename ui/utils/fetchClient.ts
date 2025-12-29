@@ -29,11 +29,11 @@ const refreshToken = async (): Promise<ApiResponse<void>> => {
 };
 
 export const fetchClient = async <T>(
-    url: string,
+    path: string,
     options: FetchOptions = {},
 ): Promise<WithStatusCode<T>> => {
-    if (!url.startsWith("http")) {
-        url = GLOBAL.API_URL + url;
+    if (!path.startsWith("http")) {
+        path = GLOBAL.API_URL + path;
     }
 
     const defaultHeaders: Record<string, string> = {
@@ -56,7 +56,7 @@ export const fetchClient = async <T>(
     }
 
     try {
-        const response = await fetch(url, {
+        const response = await fetch(path, {
             credentials: "include",
             ...options,
             headers,
@@ -64,10 +64,10 @@ export const fetchClient = async <T>(
         });
 
         if (!response.ok) {
-            if (response.status === 401 && !shouldSkipRefresh(url)) {
+            if (response.status === 401 && !shouldSkipRefresh(path)) {
                 await refreshToken();
 
-                const retryResponse = await fetch(url, {
+                const retryResponse = await fetch(path, {
                     ...options,
                     credentials: "include",
                     headers,
