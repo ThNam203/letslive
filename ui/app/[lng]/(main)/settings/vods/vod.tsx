@@ -1,18 +1,8 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import useT from "@/hooks/use-translation";
-import { dateDiffFromNow, formatSeconds } from "@/utils/timeFormats";
 import type React from "react";
 import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
@@ -24,16 +14,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { DeleteVOD, UpdateVOD } from "@/lib/api/vod";
 import { toast } from "react-toastify";
 import { UploadFile } from "@/lib/api/utils";
 import GLOBAL from "@/global";
-import IconEye from "@/components/icons/eye";
-import IconEyeOff from "@/components/icons/eye-off";
-import IconDotsVertical from "@/components/icons/dots-vertical";
 import IconSave from "@/components/icons/save";
 import { VOD } from "@/types/vod";
 import IconLoader from "@/components/icons/loader";
+import VODCard from "@/components/livestream/vod-card";
 
 export default function VODEditCard({
     vod,
@@ -188,71 +177,13 @@ export default function VODEditCard({
 
     return (
         <>
-            <div
-                className={`w-[350px] overflow-hidden rounded-sm bg-gray-200 shadow-sm`}
-            >
-                <Link
-                    className={`inline-block h-[180px] w-full hover:cursor-pointer`}
-                    href={`/users/${vod.userId}/vods/${vod.id}`}
-                >
-                    <div className="flex h-full flex-col items-center justify-center bg-black bg-opacity-50">
-                        <Image
-                            alt="vod icon"
-                            src={
-                                vod.thumbnailUrl ??
-                                `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`
-                            }
-                            width={350}
-                            height={180}
-                            className="h-full w-full"
-                        />
-                    </div>
-                </Link>
-                <div className="p-4">
-                    <h3 className="font-semibold text-foreground">
-                        {vod.title}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                        {formatSeconds(vod.duration)} -{" "}
-                        {vod.visibility === "public" ? (
-                            <IconEye className="mr-1 inline-block h-4 w-4" />
-                        ) : (
-                            <IconEyeOff className="mr-1 inline-block h-4 w-4" />
-                        )}
-                    </p>
-                    <p className="mt-1 text-sm text-foreground-muted">
-                        {vod.description && vod.description.length > 50
-                            ? `${vod.description.substring(0, 47)}...`
-                            : vod.description}{" "}
-                        • {dateDiffFromNow(vod.createdAt, t)}
-                    </p>
-                    <div className="mt-2 flex items-center text-sm text-foreground-muted">
-                        <span>
-                            {vod.viewCount}{" "}
-                            {t(
-                                `settings:vods.metadata.${vod.viewCount === 1 ? "view" : "views"}`,
-                            )}
-                        </span>
-                        <div className="flex-1" />
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <IconDotsVertical className="h-5 w-5" />
-                                    <span className="sr-only">Open menu</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={handleEdit}>
-                                    {t("settings:vods.actions.edit")}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={handleDelete}>
-                                    {t("settings:vods.actions.delete")}
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </div>
-            </div>
+            <VODCard
+                vod={vod}
+                variant="editable"
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                className="w-[350px]"
+            />
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="sm:max-w-[425px]">

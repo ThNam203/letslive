@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { VideoInfo } from "@/components/custom_react_player/streaming-frame";
 import { VODFrame } from "@/components/custom_react_player/vod-frame";
-import VODView from "@/components/livestream/vod";
+import VODCard from "@/components/livestream/vod-card";
 import { VOD } from "@/types/vod";
 import { User } from "@/types/user";
 import { GetPublicVODsOfUser, GetVODInformation } from "@/lib/api/vod";
@@ -151,7 +151,7 @@ export default function VODPage() {
                     <h2 className="p-4 font-semibold">Other streams</h2>
                     <div className="small-scrollbar h-full overflow-y-auto px-4">
                         {vods.map((vod, idx) => (
-                            <VODView key={idx} vod={vod} classname="mb-2" />
+                            <VODCard key={idx} vod={vod} variant="with-user" className="mb-2" />
                         ))}
                     </div>
                 </div>
