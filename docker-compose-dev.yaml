@@ -1,19 +1,21 @@
 services:
-  #ui:
-  #  build:
-  #    context: ./ui
-  #    dockerfile: Dockerfile
-  #  container_name: letslive_ui
-  #  network_mode: "host"
-  #  ports:
-  #    - "5000:5000"
-  #  environment:
-  #    - NEXT_PUBLIC_BACKEND_PROTOCOL=${NEXT_PUBLIC_BACKEND_PROTOCOL}
-  #    - NEXT_PUBLIC_BACKEND_IP_ADDRESS=${NEXT_PUBLIC_BACKEND_IP_ADDRESS}
-  #    - NEXT_PUBLIC_BACKEND_WS_PROTOCOL=${NEXT_PUBLIC_BACKEND_WS_PROTOCOL}
-  #    - NEXT_PUBLIC_BACKEND_PORT=${NEXT_PUBLIC_BACKEND_PORT}
-  #    - NEXT_PUBLIC_ENVIRONMENT=${NEXT_PUBLIC_ENVIRONMENT}
-  #    - NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
+  # ui:
+  #   build:
+  #     context: ./ui
+  #     dockerfile: Dockerfile
+  #     args:
+  #       - NEXT_PUBLIC_BACKEND_PROTOCOL=${NEXT_PUBLIC_BACKEND_PROTOCOL}
+  #       - NEXT_PUBLIC_BACKEND_IP_ADDRESS=${NEXT_PUBLIC_BACKEND_IP_ADDRESS}
+  #       - NEXT_PUBLIC_BACKEND_WS_PROTOCOL=${NEXT_PUBLIC_BACKEND_WS_PROTOCOL}
+  #       - NEXT_PUBLIC_BACKEND_PORT=${NEXT_PUBLIC_BACKEND_PORT}
+  #       - NEXT_PUBLIC_ENVIRONMENT=${NEXT_PUBLIC_ENVIRONMENT}
+  #       - NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
+  #       - SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
+  #       - CI=${CI}
+  #   container_name: letslive_ui
+  #   network_mode: "host"
+  #   ports:
+  #     - "5000:5000"
 
   auth:
     #image: sen1or/letslive-auth:latest

@@ -39,19 +39,19 @@
     "started_at": "Started {{time}}",
     "live": "Live",
     "time": {
-        "seconds_ago": "{{count}} second ago",
-        "seconds_ago_plural": "{{count}} seconds ago",
-        "minutes_ago": "{{count}} minute ago",
-        "minutes_ago_plural": "{{count}} minutes ago",
-        "hours_ago": "{{count}} hour ago",
-        "hours_ago_plural": "{{count}} hours ago",
-        "days_ago": "{{count}} day ago",
-        "days_ago_plural": "{{count}} days ago",
-        "weeks_ago": "{{count}} week ago",
-        "weeks_ago_plural": "{{count}} weeks ago",
-        "months_ago": "{{count}} month ago",
-        "months_ago_plural": "{{count}} months ago",
-        "years_ago": "{{count}} year ago",
-        "years_ago_plural": "{{count}} years ago"
+        "seconds_ago_one": "{{count}} second ago",
+        "seconds_ago_other": "{{count}} seconds ago",
+        "minutes_ago_one": "{{count}} minute ago",
+        "minutes_ago_other": "{{count}} minutes ago",
+        "hours_ago_one": "{{count}} hour ago",
+        "hours_ago_other": "{{count}} hours ago",
+        "days_ago_one": "{{count}} day ago",
+        "days_ago_other": "{{count}} days ago",
+        "weeks_ago_one": "{{count}} week ago",
+        "weeks_ago_other": "{{count}} weeks ago",
+        "months_ago_one": "{{count}} month ago",
+        "months_ago_other": "{{count}} months ago",
+        "years_ago_one": "{{count}} year ago",
+        "years_ago_other": "{{count}} years ago"
     }
 }

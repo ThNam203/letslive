@@ -2,7 +2,7 @@
 
 import { User } from "@/types/user";
 import ProfileHeader from "./profile-header";
-import VODView from "@/components/livestream/vod";
+import VODCard from "@/components/livestream/vod-card";
 import IconCalendar from "@/components/icons/calendar";
 import IconUsers from "@/components/icons/users";
 import { VOD } from "@/types/vod";
@@ -134,7 +134,7 @@ export default function ProfileView({
 
                               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                                   {vods.map((vod, idx) => {
-                                      return <VODView key={idx} vod={vod} />;
+                                      return <VODCard key={idx} vod={vod} />;
                                   })}
                               </div>
                           </div>

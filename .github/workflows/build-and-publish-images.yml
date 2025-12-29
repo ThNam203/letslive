@@ -64,3 +64,5 @@ jobs:
           file: ./ui/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/letslive-ui:latest
+          secrets: |
+            id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN

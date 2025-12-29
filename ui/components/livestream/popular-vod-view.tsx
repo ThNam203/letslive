@@ -2,22 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "../ui/card";
-import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
 import { GetPopularVODs } from "../../lib/api/vod";
 import { toast } from "react-toastify";
-import { User } from "../../types/user";
-import { GetUserById } from "../../lib/api/user";
-import { dateDiffFromNow, formatSeconds } from "@/utils/timeFormats";
-import { useRouter } from "next/navigation";
-import GLOBAL from "../../global";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import IconFilm from "../icons/film";
-import IconEye from "../icons/eye";
-import IconClock from "../icons/clock";
-import LiveImage from "./live-image";
 import { VOD } from "@/types/vod";
 import useT from "@/hooks/use-translation";
+import VODCard from "./vod-card";
 
 export function PopularVODView() {
     const [isLoading, setIsLoading] = useState(false);
@@ -76,96 +67,10 @@ export function PopularVODView() {
         <div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {vods.map((vod) => (
-                    <VODCard key={vod.id} vod={vod} />
+                    <VODCard key={vod.id} vod={vod} variant="with-user" />
                 ))}
             </div>
         </div>
-    );
-}
-
-function VODCard({ vod }: { vod: VOD }) {
-    const [user, setUser] = useState<User | null>(null);
-    const router = useRouter();
-    const { t } = useT("common");
-
-    useEffect(() => {
-        const fetchUser = async () => {
-            const res = await GetUserById(vod.userId);
-            if (res.success) setUser(res.data ?? null);
-        };
-
-        fetchUser();
-    }, [vod.userId]);
-
-    return (
-        <Card className="w-full overflow-hidden rounded-sm border-border transition-all hover:shadow-md">
-            <div className="relative aspect-video bg-muted">
-                <div className="absolute bottom-2 right-2">
-                    <Badge
-                        variant="secondary"
-                        className="bg-black/70 text-white"
-                    >
-                        {formatSeconds(vod.duration)}
-                    </Badge>
-                </div>
-                <LiveImage
-                    src={
-                        vod.thumbnailUrl ??
-                        `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`
-                    }
-                    alt={vod.title}
-                    className="h-full w-full hover:cursor-pointer"
-                    width={500}
-                    height={500}
-                    onClick={() =>
-                        router.push(`/users/${vod.userId}/vods/${vod.id}`)
-                    }
-                    fallbackSrc="/images/streaming.jpg"
-                    alwaysRefresh={false}
-                />
-            </div>
-            <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                    <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-muted">
-                        <Avatar>
-                            <AvatarImage
-                                src={user?.profilePicture}
-                                alt={`${user?.username} avatar`}
-                                className="h-full w-full object-cover"
-                                width={40}
-                                height={40}
-                            />
-                            <AvatarFallback>
-                                {user?.username.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <h3 className="truncate text-base font-semibold">
-                            {vod.title}
-                        </h3>
-                        <p className="text-muted-foreground truncate text-sm">
-                            {user
-                                ? (user.displayName ?? user.username)
-                                : "Unknown"}
-                        </p>
-                        <div className="text-muted-foreground mt-1 flex items-center gap-3 text-xs">
-                            <div className="flex items-center gap-1">
-                                <IconEye className="h-3 w-3" />
-                                <span>
-                                    {vod.viewCount}{" "}
-                                    {vod.viewCount < 2 ? "view" : "views"}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <IconClock className="h-3 w-3" />
-                                <span>{dateDiffFromNow(vod.createdAt, t)}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
     );
 }
 
