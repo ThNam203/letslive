@@ -2,11 +2,11 @@
     "name": "web",
     "version": "0.1.0",
     "private": true,
+    "type": "module",
     "scripts": {
-        "dev": "next dev --turbopack -p 5000",
-        "build": "next build",
-        "start": "next start -p 5000",
-        "lint": "next lint"
+        "dev": "vite dev",
+        "build": "vite build",
+        "start": "node .output/server/index.mjs"
     },
     "dependencies": {
         "@next/env": "16.0.7",
@@ -25,6 +25,8 @@
         "@radix-ui/react-tabs": "^1.1.2",
         "@radix-ui/react-tooltip": "^1.1.8",
         "@sentry/nextjs": "^10.32.1",
+        "@tanstack/react-router": "^1.150.0",
+        "@tanstack/react-start": "^1.150.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "i18next": "^25.5.2",
@@ -32,7 +34,6 @@
         "i18next-resources-to-backend": "^1.2.1",
         "input-otp": "^1.4.2",
         "libphonenumber-js": "^1.12.24",
-        "next": "16.0.7",
         "next-i18next": "^15.4.2",
         "next-themes": "^0.4.6",
         "react": "19.2.1",
@@ -50,17 +51,22 @@
         "zustand": "^5.0.3"
     },
     "devDependencies": {
+        "@tailwindcss/vite": "^4.1.18",
+        "@tanstack/eslint-config": "^0.3.4",
         "@types/node": "^20",
         "@types/npm": "^7.19.3",
         "@types/react": "19.2.7",
         "@types/react-dom": "19.2.3",
+        "@vitejs/plugin-react": "^5.1.2",
         "eslint": "^9.39.1",
         "eslint-config-next": "16.0.7",
         "postcss": "^8",
         "prettier": "^3.6.2",
         "prettier-plugin-tailwindcss": "^0.6.13",
-        "tailwindcss": "^3.4.1",
-        "typescript": "^5"
+        "tailwindcss": "^3.4.19",
+        "typescript": "^5",
+        "vite": "^7.3.1",
+        "vite-tsconfig-paths": "^6.0.4"
     },
     "overrides": {
         "@types/react": "19.2.7",

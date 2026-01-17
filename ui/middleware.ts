@@ -3,7 +3,7 @@ import {
     I18N_FALLBACK_LNG,
     I18N_HEADER_NAME,
     I18N_LANGUAGES,
-} from "@/lib/i18n/settings";
+} from "@/src/lib/i18n/settings";
 import { NextRequest, NextResponse } from "next/server";
 
 function setUpCookieLocale(
