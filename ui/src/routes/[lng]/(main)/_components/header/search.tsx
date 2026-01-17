@@ -93,7 +93,7 @@ export default function SearchBar({
             </div>
 
             {isLoading && query && (
-                <div className="absolute mt-1 w-full rounded-sm border bg-background p-4 shadow-md">
+                <div className="absolute mt-1 w-full rounded-xs border bg-background p-4 shadow-md">
                     <div className="flex items-center justify-center">
                         <p className="text-muted-foreground text-sm">
                             {t("common:searching")}
@@ -103,7 +103,7 @@ export default function SearchBar({
             )}
 
             {showResults && results.length > 0 && !isLoading && (
-                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm bg-background shadow-md">
+                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xs bg-background shadow-md">
                     {results.map((user) => (
                         <Link
                             key={user.id}
@@ -135,7 +135,7 @@ export default function SearchBar({
             )}
 
             {showResults && results.length === 0 && !isLoading && query && (
-                <div className="absolute mt-1 w-full rounded-sm border bg-background p-4 shadow-md">
+                <div className="absolute mt-1 w-full rounded-xs border bg-background p-4 shadow-md">
                     <p className="text-muted-foreground text-sm">
                         {t("common:no_users_found")}
                     </p>

@@ -225,7 +225,7 @@ export default function VODCard({
     return (
         <Card
             className={cn(
-                "w-full overflow-hidden rounded-sm border-border transition-all hover:shadow-md",
+                "w-full overflow-hidden rounded-xs border-border transition-all hover:shadow-md",
                 className,
             )}
         >

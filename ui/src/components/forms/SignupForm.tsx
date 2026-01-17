@@ -189,7 +189,7 @@ export default function SignUpForm() {
                     <input
                         id="email"
                         aria-label={t("email")}
-                        className="h-12 flex-1 bg-background focus:outline-none"
+                        className="h-12 flex-1 bg-background focus:outline-hidden"
                         placeholder={t("email")}
                         type="email"
                         value={email}
@@ -204,7 +204,7 @@ export default function SignUpForm() {
                     <input
                         id="username"
                         aria-label={t("common:username")}
-                        className="h-12 flex-1 bg-background focus:outline-none"
+                        className="h-12 flex-1 bg-background focus:outline-hidden"
                         placeholder={t("common:username")}
                         type="text"
                         value={username}
@@ -219,7 +219,7 @@ export default function SignUpForm() {
                     <input
                         id="password"
                         aria-label={t("password")}
-                        className="h-12 flex-1 bg-background focus:outline-none"
+                        className="h-12 flex-1 bg-background focus:outline-hidden"
                         placeholder={t("password")}
                         type={hidingPassword ? "password" : "text"}
                         value={password}
@@ -246,7 +246,7 @@ export default function SignUpForm() {
                     <input
                         id="confirm-password"
                         aria-label={t("confirm_password")}
-                        className="h-12 flex-1 bg-background focus:outline-none"
+                        className="h-12 flex-1 bg-background focus:outline-hidden"
                         placeholder={t("confirm_password")}
                         type={hidingConfirmPassword ? "password" : "text"}
                         value={confirmPassword}

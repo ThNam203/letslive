@@ -100,7 +100,7 @@ export default function LogInForm() {
                 <input
                     id="email"
                     aria-label="Email"
-                    className="h-12 flex-1 bg-background focus:bg-background focus:outline-none"
+                    className="h-12 flex-1 bg-background focus:bg-background focus:outline-hidden"
                     autoComplete="email"
                     placeholder={t("email")}
                     type="email"
@@ -116,7 +116,7 @@ export default function LogInForm() {
                 <input
                     id="password"
                     aria-label="Password"
-                    className="h-12 flex-1 bg-background focus:outline-none"
+                    className="h-12 flex-1 bg-background focus:outline-hidden"
                     placeholder={t("password")}
                     type={hidingPassword ? "password" : "text"}
                     value={password}

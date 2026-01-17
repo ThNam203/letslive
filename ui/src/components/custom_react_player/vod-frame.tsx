@@ -668,7 +668,7 @@ const Combobox = ({
                         <div
                             key={option}
                             className={cn(
-                                "flex cursor-pointer flex-row items-center justify-start gap-2 rounded border-0 text-white outline-none hover:bg-white/20",
+                                "flex cursor-pointer flex-row items-center justify-start gap-2 rounded border-0 text-white outline-hidden hover:bg-white/20",
                             )}
                             onClick={() => handleValueChange(option)}
                         >

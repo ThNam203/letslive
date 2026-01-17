@@ -80,7 +80,7 @@ export default function ProfileHeader({
 
     return (
         <div className="relative">
-            <div className="relative h-[300px] w-full overflow-hidden rounded-sm bg-gray-100 shadow">
+            <div className="relative h-[300px] w-full overflow-hidden rounded-xs bg-gray-100 shadow">
                 {/* Profile Banner */}
                 <Image
                     src={
