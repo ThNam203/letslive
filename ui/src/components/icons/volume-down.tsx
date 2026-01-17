@@ -1,6 +1,6 @@
 import React from "react";
 import { BaseIcon } from "./base-icon";
-import { IconProp } from "@/src/types/icon-prop";
+import { IconProp } from "@/types/icon-prop";
 
 function IconVolumeDown(props: IconProp) {
     return (

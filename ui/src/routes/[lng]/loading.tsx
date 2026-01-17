@@ -1,5 +1,5 @@
-import IconLoader from "@/src/components/icons/loader";
-import { myGetT } from "@/src/lib/i18n";
+import IconLoader from "@/components/icons/loader";
+import { myGetT } from "@/lib/i18n";
 
 export default async function LoadingPage() {
     const { t } = await myGetT("common");

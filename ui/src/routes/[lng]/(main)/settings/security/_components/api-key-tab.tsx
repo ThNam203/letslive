@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { toast } from "react-toastify";
-import useUser from "@/src/hooks/user";
-import { RequestToGenerateNewAPIKey } from "@/src/lib/api/user";
-import { Label } from "@/src/components/ui/label";
-import { Input } from "@/src/components/ui/input";
-import { Button } from "@/src/components/ui/button";
-import IconCopy from "@/src/components/icons/copy";
-import IconRefresh from "@/src/components/icons/refresh";
-import { cn } from "@/src/utils/cn";
-import useT from "@/src/hooks/use-translation";
+import useUser from "@/hooks/user";
+import { RequestToGenerateNewAPIKey } from "@/lib/api/user";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import IconCopy from "@/components/icons/copy";
+import IconRefresh from "@/components/icons/refresh";
+import { cn } from "@/utils/cn";
+import useT from "@/hooks/use-translation";
 
 export default function ApiKeyTab() {
     const { t } = useT("settings");

@@ -1,5 +1,5 @@
-import { ApiResponse } from "@/src/types/fetch-response";
-import { fetchClient } from "@/src/utils/fetchClient";
+import { ApiResponse } from "@/types/fetch-response";
+import { fetchClient } from "@/utils/fetchClient";
 
 export async function UploadFile(
     file: File,

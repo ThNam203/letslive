@@ -1,6 +1,6 @@
 "use client";
 
-import { getDefaultIconProps, IconProp } from "@/src/types/icon-prop";
+import { getDefaultIconProps, IconProp } from "@/types/icon-prop";
 import { useTheme } from "next-themes";
 
 type BaseIconComponentProps = IconProp & { children: React.ReactNode };

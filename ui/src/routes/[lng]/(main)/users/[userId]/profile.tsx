@@ -1,19 +1,19 @@
 "use client";
 
-import { User } from "@/src/types/user";
+import { User } from "@/types/user";
 import ProfileHeader from "./profile-header";
-import VODCard from "@/src/components/livestream/vod-card";
-import IconCalendar from "@/src/components/icons/calendar";
-import IconUsers from "@/src/components/icons/users";
-import { VOD } from "@/src/types/vod";
-import useT from "@/src/hooks/use-translation";
-import IconFacebook from "@/src/components/icons/facebook";
-import IconTwitter from "@/src/components/icons/twitter";
-import IconInstagram from "@/src/components/icons/instagram";
-import IconLinkedin from "@/src/components/icons/linkedin";
-import IconGithub from "@/src/components/icons/github";
-import IconYoutube from "@/src/components/icons/youtube";
-import IconGlobe from "@/src/components/icons/globe";
+import VODCard from "@/components/livestream/vod-card";
+import IconCalendar from "@/components/icons/calendar";
+import IconUsers from "@/components/icons/users";
+import { VOD } from "@/types/vod";
+import useT from "@/hooks/use-translation";
+import IconFacebook from "@/components/icons/facebook";
+import IconTwitter from "@/components/icons/twitter";
+import IconInstagram from "@/components/icons/instagram";
+import IconLinkedin from "@/components/icons/linkedin";
+import IconGithub from "@/components/icons/github";
+import IconYoutube from "@/components/icons/youtube";
+import IconGlobe from "@/components/icons/globe";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 

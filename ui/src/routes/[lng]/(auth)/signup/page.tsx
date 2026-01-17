@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
-import IconGoogle from "@/src/components/icons/google";
+import IconGoogle from "@/components/icons/google";
 import GLOBAL from "@/global";
-import SignUpForm from "@/src/components/forms/SignupForm";
-import useT from "@/src/hooks/use-translation";
+import SignUpForm from "@/components/forms/SignupForm";
+import useT from "@/hooks/use-translation";
 
 export default function SignUpPage() {
     const { t } = useT(["auth", "common"]);

@@ -1,6 +1,6 @@
 "use client";
 
-import useUser from "@/src/hooks/user";
+import useUser from "@/hooks/user";
 import ContactSettings from "./_components/profile";
 
 export default function SecurityPage() {

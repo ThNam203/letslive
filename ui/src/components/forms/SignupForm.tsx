@@ -3,13 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { RequestToSendVerification, SignUp } from "../../lib/api/auth";
-import IconEmail from "../icons/email";
+import { RequestToSendVerification, SignUp } from "@/lib/api/auth";
+import IconEmail from "@/components/icons/email";
 import FormErrorText from "./FormErrorText";
-import IconUserOutline from "../icons/user";
-import IconPasswordOutline from "../icons/password";
-import IconEye from "../icons/eye";
-import IconEyeOff from "../icons/eye-off";
+import IconUserOutline from "@/components/icons/user";
+import IconPasswordOutline from "@/components/icons/password";
+import IconEye from "@/components/icons/eye";
+import IconEyeOff from "@/components/icons/eye-off";
 import Turnstile, { useTurnstile } from "react-turnstile";
 import {
     Dialog,
@@ -18,15 +18,15 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "../ui/dialog";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
-import { Button } from "../ui/button";
+} from "@/components/ui/dialog";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Button } from "@/components/ui/button";
 import { ResendOtpButton } from "./ResendButton";
-import IconLoader from "../icons/loader";
-import useT from "@/src/hooks/use-translation";
-import { signUpSchema } from "../../lib/validations/signUp";
-import { GetMeProfile } from "@/src/lib/api/user";
-import useUser from "@/src/hooks/user";
+import IconLoader from "@/components/icons/loader";
+import useT from "@/hooks/use-translation";
+import { signUpSchema } from "@/lib/validations/signUp";
+import { GetMeProfile } from "@/lib/api/user";
+import useUser from "@/hooks/user";
 
 export default function SignUpForm() {
     const [email, setEmail] = useState("");

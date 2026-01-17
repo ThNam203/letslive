@@ -2,23 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { Button } from "@/src/components/ui/button";
-import useUser from "@/src/hooks/user";
+import { Button } from "@/components/ui/button";
+import useUser from "@/hooks/user";
 import {
     UpdateBackgroundPicture,
     UpdateProfile,
     UpdateProfilePicture,
-} from "@/src/lib/api/user";
-import TextField from "../_components/text-field";
+} from "@/lib/api/user";
+import TextField from "@/routes/[lng]/(main)/settings/_components/text-field";
 import ProfileBanner from "./_components/profile-banner";
-import Section from "../_components/section";
-import TextAreaField from "../_components/textarea-field";
-import ThemeList from "@/src/routes/[lng]/(main)/settings/profile/_components/theme-list";
-import IconLoader from "@/src/components/icons/loader";
+import Section from "@/routes/[lng]/(main)/settings/_components/section";
+import TextAreaField from "@/routes/[lng]/(main)/settings/_components/textarea-field";
+import ThemeList from "@/routes/[lng]/(main)/settings/profile/_components/theme-list";
+import IconLoader from "@/components/icons/loader";
 import DisableAccountDialog from "./_components/disable-account-dialog";
-import useT from "@/src/hooks/use-translation";
-import LanguageList from "@/src/routes/[lng]/(main)/settings/profile/_components/language-list";
-import { SocialMediaEdit } from "@/src/routes/[lng]/(main)/settings/profile/_components/socials-media-link";
+import useT from "@/hooks/use-translation";
+import LanguageList from "@/routes/[lng]/(main)/settings/profile/_components/language-list";
+import { SocialMediaEdit } from "@/routes/[lng]/(main)/settings/profile/_components/socials-media-link";
 
 export default function ProfileSettings() {
     const { t } = useT(["settings", "common"]);

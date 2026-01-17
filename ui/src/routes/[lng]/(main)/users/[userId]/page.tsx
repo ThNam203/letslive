@@ -3,22 +3,22 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { User } from "@/src/types/user";
+import { User } from "@/types/user";
 import {
     StreamingFrame,
     VideoInfo,
-} from "@/src/components/custom_react_player/streaming-frame";
-import { GetUserById } from "@/src/lib/api/user";
+} from "@/components/custom_react_player/streaming-frame";
+import { GetUserById } from "@/lib/api/user";
 import ProfileView from "./profile";
 import ChatUI from "./chat";
 import GLOBAL from "@/global";
-import { GetLivestreamOfUser } from "@/src/lib/api/livestream";
-import { Button } from "@/src/components/ui/button";
-import IconMenu from "@/src/components/icons/menu";
-import { VOD } from "@/src/types/vod";
-import { Livestream } from "@/src/types/livestream";
-import { GetPublicVODsOfUser } from "@/src/lib/api/vod";
-import useT from "@/src/hooks/use-translation";
+import { GetLivestreamOfUser } from "@/lib/api/livestream";
+import { Button } from "@/components/ui/button";
+import IconMenu from "@/components/icons/menu";
+import { VOD } from "@/types/vod";
+import { Livestream } from "@/types/livestream";
+import { GetPublicVODsOfUser } from "@/lib/api/vod";
+import useT from "@/hooks/use-translation";
 
 export default function Livestreaming() {
     const { t } = useT(["common", "users"]);

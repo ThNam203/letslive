@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/src/utils/cn";
-import useUser from "@/src/hooks/user";
-import IconLoader from "@/src/components/icons/loader";
-import useT from "@/src/hooks/use-translation";
+import { cn } from "@/utils/cn";
+import useUser from "@/hooks/user";
+import IconLoader from "@/components/icons/loader";
+import useT from "@/hooks/use-translation";
 
 const getNavItems = (t: any) => [
     { name: t("settings:navigation.profile"), href: "/settings/profile" },

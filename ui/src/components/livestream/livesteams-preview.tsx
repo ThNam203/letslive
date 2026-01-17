@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import LivestreamPreviewView from "./livestream-preview";
-import { GetPopularLivestreams } from "../../lib/api/livestream";
-import { Livestream } from "../../types/livestream";
-import IconChevronDown from "../icons/chevron-down";
-import { Separator } from "../ui/separator";
-import IconPlay from "../icons/play";
-import useT from "@/src/hooks/use-translation";
-import { Card, CardContent } from "../ui/card";
-import { Skeleton } from "../ui/skeleton";
+import { GetPopularLivestreams } from "@/lib/api/livestream";
+import { Livestream } from "@/types/livestream";
+import IconChevronDown from "@/components/icons/chevron-down";
+import { Separator } from "@/components/ui/separator";
+import IconPlay from "@/components/icons/play";
+import useT from "@/hooks/use-translation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const LivestreamsPreviewView = () => {
     const [isLoading, setIsLoading] = useState(false);

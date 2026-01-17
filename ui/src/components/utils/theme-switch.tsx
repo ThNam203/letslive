@@ -9,10 +9,10 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/src/components/ui/select";
-import { cn } from "@/src/utils/cn";
-import { THEME_COLORS } from "@/src/constant/theme";
-import useT from "@/src/hooks/use-translation";
+} from "@/components/ui/select";
+import { cn } from "@/utils/cn";
+import { THEME_COLORS } from "@/constant/theme";
+import useT from "@/hooks/use-translation";
 
 const ThemeSwitch = ({ className }: { className?: string }) => {
     const [mounted, setMounted] = useState(false);

@@ -2,15 +2,15 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { VideoInfo } from "@/src/components/custom_react_player/streaming-frame";
-import { VODFrame } from "@/src/components/custom_react_player/vod-frame";
-import VODCard from "@/src/components/livestream/vod-card";
-import { VOD } from "@/src/types/vod";
-import { User } from "@/src/types/user";
-import { GetPublicVODsOfUser, GetVODInformation } from "@/src/lib/api/vod";
-import { GetUserById } from "@/src/lib/api/user";
-import ProfileView from "@/src/routes/[lng]/(main)/users/[userId]/profile";
-import useT from "@/src/hooks/use-translation";
+import { VideoInfo } from "@/components/custom_react_player/streaming-frame";
+import { VODFrame } from "@/components/custom_react_player/vod-frame";
+import VODCard from "@/components/livestream/vod-card";
+import { VOD } from "@/types/vod";
+import { User } from "@/types/user";
+import { GetPublicVODsOfUser, GetVODInformation } from "@/lib/api/vod";
+import { GetUserById } from "@/lib/api/user";
+import ProfileView from "@/routes/[lng]/(main)/users/[userId]/profile";
+import useT from "@/hooks/use-translation";
 
 export default function VODPage() {
     const { t } = useT(["fetch-error", "api-response"]);

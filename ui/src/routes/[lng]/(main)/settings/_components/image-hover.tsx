@@ -1,10 +1,10 @@
-import IconClose from "@/src/components/icons/close";
-import { FILE_SIZE_LIMIT_MB_UNIT } from "@/src/constant/image";
-import { cn } from "@/src/utils/cn";
-import { IsValidFileSizeInMB } from "@/src/utils/file";
+import IconClose from "@/components/icons/close";
+import { FILE_SIZE_LIMIT_MB_UNIT } from "@/constant/image";
+import { cn } from "@/utils/cn";
+import { IsValidFileSizeInMB } from "@/utils/file";
 import React from "react";
 import { toast } from "react-toastify";
-import useT from "@/src/hooks/use-translation";
+import useT from "@/hooks/use-translation";
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 

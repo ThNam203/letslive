@@ -2,7 +2,7 @@ import Link from "next/link";
 import SearchBar from "./search";
 import UserInfo from "./userinfo";
 import StreamGuide from "./stream-guide";
-import { myGetT } from "@/src/lib/i18n";
+import { myGetT } from "@/lib/i18n";
 
 export async function Header() {
     const { t } = await myGetT();

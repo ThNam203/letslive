@@ -1,14 +1,14 @@
 "use client";
-import { cn } from "@/src/utils/cn";
+import { cn } from "@/utils/cn";
 import React, { useEffect } from "react";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "../../../../../components/ui/popover";
-import IconLiveStream from "../../../../../components/icons/live-stream";
-import { Button } from "../../../../../components/ui/button";
-import useT from "@/src/hooks/use-translation";
+} from "@/components/ui/popover";
+import IconLiveStream from "@/components/icons/live-stream";
+import { Button } from "@/components/ui/button";
+import useT from "@/hooks/use-translation";
 
 export default function StreamGuide() {
     const [open, setOpen] = React.useState(false);

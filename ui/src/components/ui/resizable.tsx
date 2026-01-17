@@ -2,8 +2,8 @@
 
 import * as ResizablePrimitive from "react-resizable-panels";
 
-import { cn } from "@/src/utils/cn";
-import IconGridVertical from "../icons/grid-vertical";
+import { cn } from "@/utils/cn";
+import IconGridVertical from "@/components/icons/grid-vertical";
 
 const ResizablePanelGroup = ({
     className,

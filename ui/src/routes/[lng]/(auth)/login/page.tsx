@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import IconGoogle from "@/src/components/icons/google";
-import LogInForm from "@/src/components/forms/LoginForm";
+import IconGoogle from "@/components/icons/google";
+import LogInForm from "@/components/forms/LoginForm";
 import GLOBAL from "@/global";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
-import useT from "@/src/hooks/use-translation";
-import useUser from "@/src/hooks/user";
+import useT from "@/hooks/use-translation";
+import useUser from "@/hooks/user";
 
 export default function LogInPage() {
     const { t } = useT(["auth", "common"]);

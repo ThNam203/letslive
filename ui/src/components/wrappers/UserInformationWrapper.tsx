@@ -1,8 +1,8 @@
 "use client";
 
-import useT from "@/src/hooks/use-translation";
-import useUser from "@/src/hooks/user";
-import { GetMeProfile } from "@/src/lib/api/user";
+import useT from "@/hooks/use-translation";
+import useUser from "@/hooks/user";
+import { GetMeProfile } from "@/lib/api/user";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 

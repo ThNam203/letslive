@@ -3,10 +3,10 @@
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 
-import { cn } from "@/src/utils/cn";
-import IconChevronDown from "../icons/chevron-down";
-import IconChevronUp from "../icons/chevron-up";
-import IconCheck from "../icons/check";
+import { cn } from "@/utils/cn";
+import IconChevronDown from "@/components/icons/chevron-down";
+import IconChevronUp from "@/components/icons/chevron-up";
+import IconCheck from "@/components/icons/check";
 
 const Select = SelectPrimitive.Root;
 

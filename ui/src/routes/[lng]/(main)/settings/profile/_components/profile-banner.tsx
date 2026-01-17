@@ -1,12 +1,12 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
-import useUser from "@/src/hooks/user";
-import { cn } from "@/src/utils/cn";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import useUser from "@/hooks/user";
+import { cn } from "@/utils/cn";
 import Image from "next/image";
 import { useRef } from "react";
 import DefaultBackgound from "./default-background";
-import ImageHover from "../../_components/image-hover";
+import ImageHover from "@/routes/[lng]/(main)/settings/_components/image-hover";
 
 interface Props {
     className?: string;

@@ -1,11 +1,11 @@
 "use client";
 import AllChannelsView from "./channels";
-import { ResizablePanel } from "../ui/resizable";
+import { ResizablePanel } from "@/components/ui/resizable";
 import { useEffect, useState } from "react";
-import IconToLeft from "../icons/to-left";
-import { cn } from "@/src/utils/cn";
-import IconToRight from "../icons/to-right";
-import { Button } from "../ui/button";
+import IconToLeft from "@/components/icons/to-left";
+import { cn } from "@/utils/cn";
+import IconToRight from "@/components/icons/to-right";
+import { Button } from "@/components/ui/button";
 
 export default function LeftBar() {
     const [minimizedLeftBar, setMinimizedLeftBar] = useState<boolean | null>(

@@ -3,18 +3,18 @@
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { LogIn } from "@/src/lib/api/auth";
-import IconEmail from "../icons/email";
+import { LogIn } from "@/lib/api/auth";
+import IconEmail from "@/components/icons/email";
 import FormErrorText from "./FormErrorText";
-import IconPasswordOutline from "../icons/password";
-import IconEye from "../icons/eye";
-import IconEyeOff from "../icons/eye-off";
+import IconPasswordOutline from "@/components/icons/password";
+import IconEye from "@/components/icons/eye";
+import IconEyeOff from "@/components/icons/eye-off";
 import Turnstile, { useTurnstile } from "react-turnstile";
-import IconLoader from "../icons/loader";
-import useT from "@/src/hooks/use-translation";
-import { loginSchema } from "@/src/lib/validations/login";
-import { GetMeProfile } from "@/src/lib/api/user";
-import useUser from "@/src/hooks/user";
+import IconLoader from "@/components/icons/loader";
+import useT from "@/hooks/use-translation";
+import { loginSchema } from "@/lib/validations/login";
+import { GetMeProfile } from "@/lib/api/user";
+import useUser from "@/hooks/user";
 
 export default function LogInForm() {
     const [email, setEmail] = useState("");

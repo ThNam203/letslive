@@ -1,7 +1,7 @@
 "use client";
 
 import { I18nextProvider } from "react-i18next";
-import i18next from "@/src/lib/i18n/i18next";
+import i18next from "@/lib/i18n/i18next";
 
 export default function TranslationsProvider({
     children,

@@ -1,5 +1,5 @@
-import { ReceivedMessage } from "../../types/message";
-import { fetchClient } from "@/src/utils/fetchClient";
+import { ReceivedMessage } from "@/types/message";
+import { fetchClient } from "@/utils/fetchClient";
 
 // TODO: update erorr handling
 export async function GetMessages(roomId: string): Promise<{

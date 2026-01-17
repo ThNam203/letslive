@@ -4,27 +4,27 @@ import Link from "next/link";
 
 import { useState } from "react";
 import { toast } from "react-toastify";
-import useUser from "../../../../../hooks/user";
-import { Logout } from "../../../../../lib/api/auth";
-import { Button } from "../../../../../components/ui/button";
+import useUser from "@/hooks/user";
+import { Logout } from "@/lib/api/auth";
+import { Button } from "@/components/ui/button";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "../../../../../components/ui/popover";
+} from "@/components/ui/popover";
 import {
     Avatar,
     AvatarFallback,
     AvatarImage,
-} from "../../../../../components/ui/avatar";
-import IconSettings from "../../../../../components/icons/settings";
-import IconLogOut from "../../../../../components/icons/log-out";
-import IconGlobe from "../../../../../components/icons/globe";
-import IconPaint from "../../../../../components/icons/paint";
-import useT from "@/src/hooks/use-translation";
-import LanguageSwitch from "@/src/components/utils/language-switch";
-import ThemeSwitch from "@/src/components/utils/theme-switch";
-import IconUser from "@/src/components/icons/user";
+} from "@/components/ui/avatar";
+import IconSettings from "@/components/icons/settings";
+import IconLogOut from "@/components/icons/log-out";
+import IconGlobe from "@/components/icons/globe";
+import IconPaint from "@/components/icons/paint";
+import useT from "@/hooks/use-translation";
+import LanguageSwitch from "@/components/utils/language-switch";
+import ThemeSwitch from "@/components/utils/theme-switch";
+import IconUser from "@/components/icons/user";
 
 export default function UserInfo() {
     const userState = useUser();

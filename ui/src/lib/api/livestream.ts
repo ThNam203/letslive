@@ -1,6 +1,6 @@
-import { ApiResponse } from "@/src/types/fetch-response";
-import { Livestream } from "../../types/livestream";
-import { fetchClient } from "@/src/utils/fetchClient";
+import { ApiResponse } from "@/types/fetch-response";
+import { Livestream } from "@/types/livestream";
+import { fetchClient } from "@/utils/fetchClient";
 
 export async function GetPopularLivestreams(
     page: number = 0,

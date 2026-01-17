@@ -1,4 +1,4 @@
-import { IconProp } from "@/src/types/icon-prop";
+import { IconProp } from "@/types/icon-prop";
 import { BaseIcon } from "./base-icon";
 
 const IconSettings = (props: IconProp) => {

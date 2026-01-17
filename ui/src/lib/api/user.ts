@@ -1,6 +1,6 @@
-import { ApiResponse } from "@/src/types/fetch-response";
-import { LivestreamInformation, User } from "../../types/user";
-import { fetchClient } from "@/src/utils/fetchClient";
+import { ApiResponse } from "@/types/fetch-response";
+import { LivestreamInformation, User } from "@/types/user";
+import { fetchClient } from "@/utils/fetchClient";
 
 export async function SearchUsersByUsername(
     query: string,

@@ -3,15 +3,15 @@
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "react-toastify";
-import useUser from "@/src/hooks/user";
-import { ReceivedMessage, SendMessage } from "@/src/types/message";
-import { GetMessages } from "@/src/lib/api/chat";
+import useUser from "@/hooks/user";
+import { ReceivedMessage, SendMessage } from "@/types/message";
+import { GetMessages } from "@/lib/api/chat";
 import GLOBAL from "@/global";
-import { Input } from "@/src/components/ui/input";
-import { Button } from "@/src/components/ui/button";
-import IconClose from "@/src/components/icons/close";
-import IconSend from "@/src/components/icons/send";
-import useT from "@/src/hooks/use-translation";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import IconClose from "@/components/icons/close";
+import IconSend from "@/components/icons/send";
+import useT from "@/hooks/use-translation";
 
 export default function ChatPanel({
     roomId,

@@ -1,7 +1,7 @@
 "use client";
 
-import IconLoader from "@/src/components/icons/loader";
-import { Button } from "@/src/components/ui/button";
+import IconLoader from "@/components/icons/loader";
+import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogClose,
@@ -11,14 +11,14 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "@/src/components/ui/dialog";
-import useUser from "@/src/hooks/user";
-import { Logout } from "@/src/lib/api/auth";
-import { UpdateProfile } from "@/src/lib/api/user";
-import { UserStatus } from "@/src/types/user";
+} from "@/components/ui/dialog";
+import useUser from "@/hooks/user";
+import { Logout } from "@/lib/api/auth";
+import { UpdateProfile } from "@/lib/api/user";
+import { UserStatus } from "@/types/user";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import useT from "@/src/hooks/use-translation";
+import useT from "@/hooks/use-translation";
 
 export default function DisableAccountDialog({
     isUpdatingProfile,

@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Button } from "@/src/components/ui/button"; // Adjust the import path based on your project structure
+import { Button } from "@/components/ui/button"; // Adjust the import path based on your project structure
 import { toast } from "react-toastify";
-import useT from "@/src/hooks/use-translation";
+import useT from "@/hooks/use-translation";
 
 // --- Component Props Interface ---
 interface ResendOtpButtonProps {

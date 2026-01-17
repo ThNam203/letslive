@@ -1,18 +1,18 @@
-import { cn } from "@/src/utils/cn";
-import { Button } from "@/src/components/ui/button";
-import useT from "@/src/hooks/use-translation";
+import { cn } from "@/utils/cn";
+import { Button } from "@/components/ui/button";
+import useT from "@/hooks/use-translation";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "@/src/components/ui/dialog";
-import { AuthProvider, User } from "@/src/types/user";
-import Section from "../../_components/section";
+} from "@/components/ui/dialog";
+import { AuthProvider, User } from "@/types/user";
+import Section from "@/routes/[lng]/(main)/settings/_components/section";
 import ApiKeyTab from "./api-key-tab";
 import ChangePasswordTab from "./change-password-tab";
-import PhoneNumber from "@/src/routes/[lng]/(main)/settings/security/_components/phone-number";
+import PhoneNumber from "@/routes/[lng]/(main)/settings/security/_components/phone-number";
 
 export default function ContactSettings({ user }: { user: User }) {
     const { t } = useT("settings");

@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { Button } from "@/src/components/ui/button";
-import { myGetT } from "@/src/lib/i18n";
+import { Button } from "@/components/ui/button";
+import { myGetT } from "@/lib/i18n";
 import Link from "next/link";
 
 export default async function NotFound() {

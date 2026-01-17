@@ -1,27 +1,27 @@
 "use client";
-import { Slider } from "@/src/components/ui/slider";
+import { Slider } from "@/components/ui/slider";
 import { ClassValue } from "clsx";
 import { useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import screenfull from "screenfull";
-import { cn } from "@/src/utils/cn";
+import { cn } from "@/utils/cn";
 import {
     getResolutionHeight,
     formatResolutionForDisplay,
-} from "@/src/utils/resolution";
+} from "@/utils/resolution";
 
 import dynamic from "next/dynamic";
-import useT from "@/src/hooks/use-translation";
-import IconCheck from "../icons/check";
-import IconFullscreen from "../icons/fullscreen";
-import IconFullscreenExit from "../icons/fullscreen-exit";
-import IconPause from "../icons/pause";
-import IconPlay from "../icons/play";
-import IconVolumeDown from "../icons/volume-down";
-import IconVolumeOff from "../icons/volume-off";
-import IconVolumeUp from "../icons/volume-up";
-import IconFastForward from "../icons/fast-forward";
-import IconLoader from "../icons/loader";
+import useT from "@/hooks/use-translation";
+import IconCheck from "@/components/icons/check";
+import IconFullscreen from "@/components/icons/fullscreen";
+import IconFullscreenExit from "@/components/icons/fullscreen-exit";
+import IconPause from "@/components/icons/pause";
+import IconPlay from "@/components/icons/play";
+import IconVolumeDown from "@/components/icons/volume-down";
+import IconVolumeOff from "@/components/icons/volume-off";
+import IconVolumeUp from "@/components/icons/volume-up";
+import IconFastForward from "@/components/icons/fast-forward";
+import IconLoader from "@/components/icons/loader";
 const ReactPlayerWrapper = dynamic(() => import("./react-player-wrapper"), {
     ssr: false,
 });

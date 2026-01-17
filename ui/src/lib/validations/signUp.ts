@@ -1,6 +1,6 @@
 import { z } from "zod";
-import i18next from "@/src/lib/i18n/i18next";
-import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "@/src/constant/password";
+import i18next from "@/lib/i18n/i18next";
+import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "@/constant/password";
 
 export const signUpSchema = function (t: typeof i18next.t) {
     return z

@@ -1,7 +1,7 @@
 import React from "react";
 import { BaseIcon } from "./base-icon";
-import { IconProp } from "@/src/types/icon-prop";
-import { cn } from "@/src/utils/cn";
+import { IconProp } from "@/types/icon-prop";
+import { cn } from "@/utils/cn";
 
 function IconLoader(props: IconProp) {
     return (

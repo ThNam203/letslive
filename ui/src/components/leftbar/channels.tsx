@@ -2,17 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import useUser from "../../hooks/user";
-import { User } from "../../types/user";
-import { GetAllUsers } from "../../lib/api/user";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { cn } from "@/src/utils/cn";
+import useUser from "@/hooks/user";
+import { User } from "@/types/user";
+import { GetAllUsers } from "@/lib/api/user";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/utils/cn";
 import {
     HoverCard,
     HoverCardContent,
     HoverCardTrigger,
-} from "../ui/hover-card";
-import useT from "@/src/hooks/use-translation";
+} from "@/components/ui/hover-card";
+import useT from "@/hooks/use-translation";
 import { toast } from "react-toastify";
 
 export default function AllChannelsView({

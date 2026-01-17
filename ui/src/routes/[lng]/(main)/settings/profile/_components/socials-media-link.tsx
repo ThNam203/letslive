@@ -1,21 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/src/components/ui/input";
-import { cn } from "@/src/utils/cn";
-import IconFacebook from "@/src/components/icons/facebook";
-import IconTwitter from "@/src/components/icons/twitter";
-import IconInstagram from "@/src/components/icons/instagram";
-import IconLinkedin from "@/src/components/icons/linkedin";
-import IconGithub from "@/src/components/icons/github";
-import IconYoutube from "@/src/components/icons/youtube";
-import IconGlobe from "@/src/components/icons/globe";
-import IconClose from "@/src/components/icons/close";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/utils/cn";
+import IconFacebook from "@/components/icons/facebook";
+import IconTwitter from "@/components/icons/twitter";
+import IconInstagram from "@/components/icons/instagram";
+import IconLinkedin from "@/components/icons/linkedin";
+import IconGithub from "@/components/icons/github";
+import IconYoutube from "@/components/icons/youtube";
+import IconGlobe from "@/components/icons/globe";
+import IconClose from "@/components/icons/close";
 import { useTheme } from "next-themes";
-import useT from "@/src/hooks/use-translation";
+import useT from "@/hooks/use-translation";
 import { toast } from "react-toastify";
-import { UpdateProfile } from "@/src/lib/api/user";
-import IconCheck from "@/src/components/icons/check";
+import { UpdateProfile } from "@/lib/api/user";
+import IconCheck from "@/components/icons/check";
 
 interface SocialMediaEditProps {
     initialLinks?: Record<string, string>;

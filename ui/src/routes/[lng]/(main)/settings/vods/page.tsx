@@ -1,12 +1,12 @@
 "use client";
 
-import useUser from "@/src/hooks/user";
+import useUser from "@/hooks/user";
 import { useEffect, useState } from "react";
-import { GetAllVODsAsAuthor } from "@/src/lib/api/vod";
+import { GetAllVODsAsAuthor } from "@/lib/api/vod";
 import { toast } from "react-toastify";
 import VODEditCard from "./vod";
-import { VOD } from "@/src/types/vod";
-import useT from "@/src/hooks/use-translation";
+import { VOD } from "@/types/vod";
+import useT from "@/hooks/use-translation";
 
 export default function VODsEdit() {
     const { t } = useT(["settings", "api-response", "fetch-error"]);

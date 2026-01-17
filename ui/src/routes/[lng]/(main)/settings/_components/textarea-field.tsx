@@ -1,7 +1,7 @@
-import { Textarea } from "@/src/components/ui/textarea";
+import { Textarea } from "@/components/ui/textarea";
 import { ComponentProps } from "react";
 import Description from "./description";
-import { cn } from "@/src/utils/cn";
+import { cn } from "@/utils/cn";
 
 type TextAreaProps = ComponentProps<typeof Textarea>;
 type Props = {

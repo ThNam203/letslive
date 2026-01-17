@@ -1,18 +1,18 @@
 "use client";
 
 import { ClassValue } from "clsx";
-import { useParams, useRouter } from "next/navigation";
-import { User } from "../../types/user";
+import { useRouter } from "next/navigation";
+import { User } from "@/types/user";
 import { Hover3DBox } from "./hover-3d-box";
 import LivestreamPreviewDetailView from "./livestream-preview-detail";
-import GLOBAL from "../../../global";
-import { Livestream } from "../../types/livestream";
+import { Livestream } from "@/types/livestream";
 import { useEffect, useState } from "react";
-import { GetUserById } from "../../lib/api/user";
-import { Card, CardContent } from "../ui/card";
-import { cn } from "@/src/utils/cn";
+import { GetUserById } from "@/lib/api/user";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/utils/cn";
 import { toast } from "react-toastify";
-import useT from "@/src/hooks/use-translation";
+import useT from "@/hooks/use-translation";
+import GLOBAL from "@/global";
 
 const LivestreamPreviewView = ({
     className,

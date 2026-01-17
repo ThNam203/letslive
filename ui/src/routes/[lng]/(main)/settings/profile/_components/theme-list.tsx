@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-import { cn } from "@/src/utils/cn";
-import { THEME_COLORS } from "@/src/constant/theme";
-import useT from "@/src/hooks/use-translation";
+import { cn } from "@/utils/cn";
+import { THEME_COLORS } from "@/constant/theme";
+import useT from "@/hooks/use-translation";
 
 const ThemeList = ({ className }: { className?: string }) => {
     const [mounted, setMounted] = useState(false);

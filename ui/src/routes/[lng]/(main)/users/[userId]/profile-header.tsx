@@ -1,15 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { User } from "@/src/types/user";
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
-import useUser from "@/src/hooks/user";
+import { User } from "@/types/user";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import useUser from "@/hooks/user";
 import { useState } from "react";
-import { FollowOtherUser, UnfollowOtherUser } from "@/src/lib/api/user";
+import { FollowOtherUser, UnfollowOtherUser } from "@/lib/api/user";
 import { toast } from "react-toastify";
-import { Button } from "@/src/components/ui/button";
-import IconLoader from "@/src/components/icons/loader";
-import useT from "@/src/hooks/use-translation";
+import { Button } from "@/components/ui/button";
+import IconLoader from "@/components/icons/loader";
+import useT from "@/hooks/use-translation";
 
 export default function ProfileHeader({
     user,

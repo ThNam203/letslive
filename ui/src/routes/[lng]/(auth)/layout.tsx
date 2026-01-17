@@ -1,6 +1,6 @@
 import "@/app/globals.css";
-import LanguageSwitch from "@/src/components/utils/language-switch";
-import ThemeSwitch from "@/src/components/utils/theme-switch";
+import LanguageSwitch from "@/components/utils/language-switch";
+import ThemeSwitch from "@/components/utils/theme-switch";
 import Link from "next/link";
 
 export default async function RootLayout({

@@ -1,7 +1,7 @@
-import { Input } from "@/src/components/ui/input";
+import { Input } from "@/components/ui/input";
 import React, { ComponentProps } from "react";
 import Description from "./description";
-import { cn } from "@/src/utils/cn";
+import { cn } from "@/utils/cn";
 
 type TextProps = ComponentProps<typeof Input>;
 type Props = {

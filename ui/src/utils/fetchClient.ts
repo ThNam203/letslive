@@ -1,6 +1,6 @@
-import { ApiResponse } from "@/src/types/fetch-response";
-import GLOBAL from "../../global";
-import { FetchOptions } from "../types/fetch-options";
+import { ApiResponse } from "@/types/fetch-response";
+import GLOBAL from "@/global";
+import { FetchOptions } from "@/types/fetch-options";
 
 const DEFAULT_TIMEOUT_MS = 15000; // 15 seconds
 

@@ -1,6 +1,6 @@
 "use client";
 
-import useT from "@/src/hooks/use-translation";
+import useT from "@/hooks/use-translation";
 import type React from "react";
 import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
 import {
@@ -10,19 +10,19 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/src/components/ui/dialog";
-import { Label } from "@/src/components/ui/label";
-import { Input } from "@/src/components/ui/input";
-import { Switch } from "@/src/components/ui/switch";
-import { Button } from "@/src/components/ui/button";
-import { DeleteVOD, UpdateVOD } from "@/src/lib/api/vod";
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { DeleteVOD, UpdateVOD } from "@/lib/api/vod";
 import { toast } from "react-toastify";
-import { UploadFile } from "@/src/lib/api/utils";
+import { UploadFile } from "@/lib/api/utils";
 import GLOBAL from "@/global";
-import IconSave from "@/src/components/icons/save";
-import { VOD } from "@/src/types/vod";
-import IconLoader from "@/src/components/icons/loader";
-import VODCard from "@/src/components/livestream/vod-card";
+import IconSave from "@/components/icons/save";
+import { VOD } from "@/types/vod";
+import IconLoader from "@/components/icons/loader";
+import VODCard from "@/components/livestream/vod-card";
 
 export default function VODEditCard({
     vod,

@@ -1,8 +1,8 @@
 "use client";
 
-import LanguageSwitch from "@/src/components/utils/language-switch";
-import ThemeSwitch from "@/src/components/utils/theme-switch";
-import useUser from "@/src/hooks/user";
+import LanguageSwitch from "@/components/utils/language-switch";
+import ThemeSwitch from "@/components/utils/theme-switch";
+import useUser from "@/hooks/user";
 
 export default function HeaderUtilsForNonLogged() {
     const user = useUser((state) => state.user);

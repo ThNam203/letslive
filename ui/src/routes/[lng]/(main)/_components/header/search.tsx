@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react";
 
 import Link from "next/link";
-import useT from "@/src/hooks/use-translation";
-import { User } from "@/src/types/user";
-import { SearchUsersByUsername } from "@/src/lib/api/user";
+import useT from "@/hooks/use-translation";
+import { User } from "@/types/user";
+import { SearchUsersByUsername } from "@/lib/api/user";
 import { toast } from "react-toastify";
-import { Input } from "@/src/components/ui/input";
-import IconClose from "@/src/components/icons/close";
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
-import { cn } from "@/src/utils/cn";
+import { Input } from "@/components/ui/input";
+import IconClose from "@/components/icons/close";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/utils/cn";
 
 export default function SearchBar({
     onSearch,

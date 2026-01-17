@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "../ui/card";
-import { Skeleton } from "../ui/skeleton";
-import { GetPopularVODs } from "../../lib/api/vod";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { GetPopularVODs } from "@/lib/api/vod";
 import { toast } from "react-toastify";
-import IconFilm from "../icons/film";
-import { VOD } from "@/src/types/vod";
-import useT from "@/src/hooks/use-translation";
+import IconFilm from "@/components/icons/film";
+import { VOD } from "@/types/vod";
+import useT from "@/hooks/use-translation";
 import VODCard from "./vod-card";
 
 export function PopularVODView() {

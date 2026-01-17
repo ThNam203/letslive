@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import useT from "@/src/hooks/use-translation";
-import useUser from "@/src/hooks/user";
-import { UpdateProfile } from "@/src/lib/api/user";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import useT from "@/hooks/use-translation";
+import useUser from "@/hooks/user";
+import { UpdateProfile } from "@/lib/api/user";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import { cn } from "@/src/utils/cn";
+import { cn } from "@/utils/cn";
 
 export default function PhoneNumber() {
     const { t } = useT("settings");

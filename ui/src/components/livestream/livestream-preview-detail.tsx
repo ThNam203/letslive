@@ -1,10 +1,10 @@
-import { Livestream } from "../../types/livestream";
-import { User } from "../../types/user";
-import { dateDiffFromNow } from "@/src/utils/timeFormats";
-import IconClock from "../icons/clock";
-import IconEye from "../icons/eye";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import useT from "@/src/hooks/use-translation";
+import { Livestream } from "@/types/livestream";
+import { User } from "@/types/user";
+import { dateDiffFromNow } from "@/utils/timeFormats";
+import IconClock from "@/components/icons/clock";
+import IconEye from "@/components/icons/eye";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import useT from "@/hooks/use-translation";
 
 const LivestreamPreviewDetailView = ({
     livestream,

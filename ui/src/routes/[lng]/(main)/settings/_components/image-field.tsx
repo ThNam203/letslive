@@ -1,4 +1,4 @@
-import { cn } from "@/src/utils/cn";
+import { cn } from "@/utils/cn";
 import { useRef } from "react";
 import Description from "./description";
 import ImageHover from "./image-hover";

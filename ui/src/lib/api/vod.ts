@@ -1,6 +1,6 @@
-import { ApiResponse } from "@/src/types/fetch-response";
-import { VOD } from "@/src/types/vod";
-import { fetchClient } from "@/src/utils/fetchClient";
+import { ApiResponse } from "@/types/fetch-response";
+import { VOD } from "@/types/vod";
+import { fetchClient } from "@/utils/fetchClient";
 
 export async function GetAllVODsAsAuthor(): Promise<ApiResponse<VOD[]>> {
     return fetchClient<ApiResponse<VOD[]>>(`/vods/author`);

@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/src/components/ui/button";
-import useT from "@/src/hooks/use-translation";
+import { Button } from "@/components/ui/button";
+import useT from "@/hooks/use-translation";
 import { useEffect } from "react";
 import { captureException } from "@sentry/nextjs";
 

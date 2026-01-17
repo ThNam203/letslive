@@ -3,28 +3,28 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { dateDiffFromNow, formatSeconds } from "@/src/utils/timeFormats";
-import GLOBAL from "../../../global";
-import { VOD } from "@/src/types/vod";
-import { User } from "@/src/types/user";
+import { dateDiffFromNow, formatSeconds } from "@/utils/timeFormats";
+import GLOBAL from "@/global";
+import { VOD } from "@/types/vod";
+import { User } from "@/types/user";
 import LiveImage from "./live-image";
-import { cn } from "@/src/utils/cn";
-import useT from "@/src/hooks/use-translation";
-import { Card, CardContent } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import IconEye from "../icons/eye";
-import IconEyeOff from "../icons/eye-off";
-import IconClock from "../icons/clock";
-import IconDotsVertical from "../icons/dots-vertical";
-import { Button } from "../ui/button";
+import { cn } from "@/utils/cn";
+import useT from "@/hooks/use-translation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import IconEye from "@/components/icons/eye";
+import IconEyeOff from "@/components/icons/eye-off";
+import IconClock from "@/components/icons/clock";
+import IconDotsVertical from "@/components/icons/dots-vertical";
+import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { GetUserById } from "@/src/lib/api/user";
+} from "@/components/ui/dropdown-menu";
+import { GetUserById } from "@/lib/api/user";
 
 export type VODCardVariant = "default" | "with-user" | "editable";
 

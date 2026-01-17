@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { ChangePassword } from "@/src/lib/api/auth";
-import { Label } from "@/src/components/ui/label";
-import { Input } from "@/src/components/ui/input";
-import FormErrorText from "@/src/components/forms/FormErrorText";
-import { Button } from "@/src/components/ui/button";
-import IconLoader from "@/src/components/icons/loader";
-import useT from "@/src/hooks/use-translation";
-import { changePasswordSchema } from "@/src/lib/validations/changePassword";
+import { ChangePassword } from "@/lib/api/auth";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import FormErrorText from "@/components/forms/FormErrorText";
+import { Button } from "@/components/ui/button";
+import IconLoader from "@/components/icons/loader";
+import useT from "@/hooks/use-translation";
+import { changePasswordSchema } from "@/lib/validations/changePassword";
 
 export default function ChangePasswordTab() {
     const { t } = useT(["settings", "api-response"]);

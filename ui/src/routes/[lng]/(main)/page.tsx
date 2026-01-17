@@ -1,6 +1,6 @@
-import LivestreamsPreviewView from "@/src/components/livestream/livesteams-preview";
-import { PopularVODView } from "@/src/components/livestream/popular-vod-view";
-import { myGetT } from "@/src/lib/i18n";
+import LivestreamsPreviewView from "@/components/livestream/livesteams-preview";
+import { PopularVODView } from "@/components/livestream/popular-vod-view";
+import { myGetT } from "@/lib/i18n";
 function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }

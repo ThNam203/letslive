@@ -2,9 +2,9 @@ import {
     ResizableHandle,
     ResizablePanel,
     ResizablePanelGroup,
-} from "@/src/components/ui/resizable";
-import { Header } from "@/src/routes/[lng]/(main)/_components/header/header";
-import LeftBar from "@/src/components/leftbar/left-bar";
+} from "@/components/ui/resizable";
+import { Header } from "@/routes/[lng]/(main)/_components/header/header";
+import LeftBar from "@/components/leftbar/left-bar";
 
 export default function RootLayout({
     children,
