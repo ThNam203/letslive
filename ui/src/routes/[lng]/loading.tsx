@@ -1,8 +1,10 @@
-import IconLoader from "@/components/icons/loader";
-import { myGetT } from "@/lib/i18n";
+"use client";
 
-export default async function LoadingPage() {
-    const { t } = await myGetT("common");
+import IconLoader from "@/components/icons/loader";
+import useT from "@/hooks/use-translation";
+
+export default function LoadingPage() {
+    const { t } = useT("common");
 
     return (
         <div className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-background to-muted/20 p-4">

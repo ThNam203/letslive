@@ -1,12 +1,11 @@
+"use client";
+
 import LivestreamsPreviewView from "@/components/livestream/livesteams-preview";
 import { PopularVODView } from "@/components/livestream/popular-vod-view";
-import { myGetT } from "@/lib/i18n";
-function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import useT from "@/hooks/use-translation";
 
-export default async function HomePage() {
-    const { t } = await myGetT("common");
+export default function HomePage() {
+    const { t } = useT("common");
 
     return (
         <div className="flex max-h-full w-full flex-col overflow-y-auto overflow-x-hidden px-8 py-4 text-xs">

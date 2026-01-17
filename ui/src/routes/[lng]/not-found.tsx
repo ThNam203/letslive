@@ -1,10 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { myGetT } from "@/lib/i18n";
+import useT from "@/hooks/use-translation";
 import Link from "next/link";
 
-export default async function NotFound() {
-    const { t } = await myGetT(["common"]);
+export default function NotFound() {
+    const { t } = useT(["common"]);
 
     return (
         <div className="flex min-h-screen w-full flex-col items-center justify-center p-4">

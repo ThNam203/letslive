@@ -1,9 +1,8 @@
 import {
     I18N_COOKIE_NAME,
     I18N_FALLBACK_LNG,
-    I18N_HEADER_NAME,
     I18N_LANGUAGES,
-} from "@/src/lib/i18n/settings";
+} from "@/lib/i18n/settings";
 import { NextRequest, NextResponse } from "next/server";
 
 function setUpCookieLocale(
@@ -23,7 +22,7 @@ function setUpCookieLocale(
     else if (request.headers.has("referer")) {
         const refererUrl = new URL(request.headers.get("referer") || "");
         finalLng =
-            I18N_LANGUAGES.find((l) =>
+            I18N_LANGUAGES.find((l: string) =>
                 refererUrl.pathname.startsWith(`/${l}`),
             ) || "";
     }
@@ -44,16 +43,13 @@ export async function middleware(request: NextRequest) {
     let response = NextResponse.redirect(redirectUrl, 307);
 
     const deprivedLocale = setUpCookieLocale(request, response);
-    const localeInPath = I18N_LANGUAGES.find((loc) =>
+    const localeInPath = I18N_LANGUAGES.find((loc: string) =>
         request.nextUrl.pathname.startsWith(`/${loc}`),
     );
 
     // if locale is already in pathname, use it
     // if not then use locale from cookie or accept-language header
     const locale = localeInPath || deprivedLocale;
-
-    const headers = new Headers(request.headers);
-    headers.set(I18N_HEADER_NAME, locale);
 
     if (!localeInPath && !request.nextUrl.pathname.startsWith("/_next")) {
         return NextResponse.redirect(
@@ -66,10 +62,10 @@ export async function middleware(request: NextRequest) {
 
     // check if the url is a static asset
     if (request.nextUrl.pathname.includes(".")) {
-        return NextResponse.next({ headers });
+        return NextResponse.next();
     }
 
-    return NextResponse.next({ headers });
+    return NextResponse.next();
 }
 
 export const config = {

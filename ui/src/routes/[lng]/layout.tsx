@@ -1,55 +1,21 @@
-import { Inter } from "next/font/google";
-import "@/app/globals.css";
 import React, { Suspense } from "react";
+import { Outlet, useParams } from "@tanstack/react-router";
 import Loading from "@/routes/[lng]/loading";
 import Toast from "@/components/utils/toast";
-import { I18N_LANGUAGES } from "@/lib/i18n/settings";
 import { dir } from "i18next";
-import { myGetT } from "@/lib/i18n";
-import TranslationsProvider from "@/components/utils/i18n-provider";
-import { ThemeProviderWrapper } from "@/components/utils/theme-provider-wrapper";
 import UserInformationWrapper from "@/components/wrappers/UserInformationWrapper";
 
-const inter = Inter({ subsets: ["latin"] });
-type Params = Promise<{ lng: string }>;
-
-export async function generateStaticParams() {
-    return I18N_LANGUAGES.map((language) => ({
-        lng: language,
-    }));
-}
-
-export async function generateMetadata() {
-    const { t } = await myGetT("common");
-
-    return {
-        title: t("app_title"),
-    };
-}
-
-export default async function RootLayout({
-    children,
-    params,
-}: {
-    children: React.ReactNode;
-    params: Params;
-}) {
-    const { lng } = await params;
-
+export default function LayoutComponent() {
+    const { lng } = useParams({ from: "/$lng" });
+    
     return (
-        <html lang={lng} dir={dir(lng)}>
-            <body className={inter.className}>
-                <TranslationsProvider>
-                    <ThemeProviderWrapper>
-                        <Suspense fallback={<Loading />}>
-                            <UserInformationWrapper>
-                                {children}
-                            </UserInformationWrapper>
-                            <Toast />
-                        </Suspense>
-                    </ThemeProviderWrapper>
-                </TranslationsProvider>
-            </body>
-        </html>
+        <div lang={lng} dir={dir(lng)}>
+            <Suspense fallback={<Loading />}>
+                <UserInformationWrapper>
+                    <Outlet />
+                </UserInformationWrapper>
+                <Toast />
+            </Suspense>
+        </div>
     );
 }

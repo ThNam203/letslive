@@ -1,11 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import SearchBar from "@/routes/[lng]/(main)/_components/header/search";
 import UserInfo from "@/routes/[lng]/(main)/_components/header/userinfo";
 import StreamGuide from "@/routes/[lng]/(main)/_components/header/stream-guide";
-import { myGetT } from "@/lib/i18n";
+import useT from "@/hooks/use-translation";
 
-export async function Header() {
-    const { t } = await myGetT();
+export function Header() {
+    const { t } = useT("common");
 
     return (
         <nav className="sticky flex h-14 w-full flex-row items-center border-b border-border bg-background px-4 py-2 text-xl font-semibold text-foreground">
