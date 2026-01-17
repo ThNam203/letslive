@@ -1,10 +1,10 @@
-@import 'tailwindcss';
-@import '@fontsource-variable/inter';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "tw-animate-css";
 
 @theme {
-    --font-sans: 'Inter Variable', sans-serif;
-    
+    --font-sans: "Inter Variable", sans-serif;
+
     /* Color definitions */
     --color-background: hsl(var(--background));
     --color-background-hover: hsl(var(--background-hover));
@@ -111,7 +111,7 @@
 @utility no-scrollbar {
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
-    
+
     &::-webkit-scrollbar {
         display: none;
     }
@@ -122,15 +122,15 @@
         width: 8px;
         height: 8px;
     }
-    
+
     &::-webkit-scrollbar-track {
         background: rgba(255, 255, 255, 0);
     }
-    
+
     &::-webkit-scrollbar-thumb {
         background: gray;
         border-radius: 100vh;
-        
+
         &:hover {
             background: #5c5c5c;
         }

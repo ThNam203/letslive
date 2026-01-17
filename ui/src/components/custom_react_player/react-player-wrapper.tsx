@@ -1,8 +1,9 @@
 import React from "react";
 import ReactPlayer from "react-player";
 
-interface ReactPlayerWrapperProps
-    extends React.ComponentProps<typeof ReactPlayer> {
+interface ReactPlayerWrapperProps extends React.ComponentProps<
+    typeof ReactPlayer
+> {
     playerRef?: React.Ref<ReactPlayer>;
 }
 

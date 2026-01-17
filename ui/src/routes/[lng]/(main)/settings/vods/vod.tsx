@@ -203,7 +203,7 @@ export default function VODEditCard({
                             <div className="col-span-3 w-full max-w-3xl">
                                 <label
                                     htmlFor="image-upload"
-                                    className={`group relative flex aspect-video w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border bg-cover bg-center bg-no-repeat transition-all duration-300 ease-in-out group-hover:bg-opacity-50`}
+                                    className={`border-border group relative flex aspect-video w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed bg-cover bg-center bg-no-repeat transition-all duration-300 ease-in-out group-hover:bg-opacity-50`}
                                     style={{
                                         backgroundImage: formData.selectedImage
                                             ? `url(${formData.selectedImage})`

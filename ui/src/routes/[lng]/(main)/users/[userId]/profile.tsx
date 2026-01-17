@@ -62,7 +62,7 @@ export default function ProfileView({
             <div className="mt-4 w-full px-4 pb-16">
                 <div className="flex items-start gap-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-foreground">
+                        <h1 className="text-foreground text-3xl font-bold">
                             {user.displayName ?? user.username}
                         </h1>
                         <p className="text-foreground-muted">
@@ -72,7 +72,7 @@ export default function ProfileView({
                 </div>
                 {/* Bio */}
                 <div className="mt-2">
-                    <h2 className="text-xl font-semibold text-foreground">
+                    <h2 className="text-foreground text-xl font-semibold">
                         {t("users:profile.about")}
                     </h2>
                     <p className="text-foreground-muted">{user.bio}</p>
@@ -80,7 +80,7 @@ export default function ProfileView({
 
                 {/* User Stats */}
                 <div className="mt-2 flex space-x-6">
-                    <div className="flex items-center text-foreground-muted">
+                    <div className="text-foreground-muted flex items-center">
                         <IconUsers className="mr-2" />
                         <span>
                             {user.followerCount !== undefined
@@ -88,7 +88,7 @@ export default function ProfileView({
                                 : `0 ${t("users:profile.followers_other")}`}
                         </span>
                     </div>
-                    <div className="flex items-center text-foreground-muted">
+                    <div className="text-foreground-muted flex items-center">
                         <IconCalendar className="mr-2" />
                         <span>
                             {t("users:profile.joined_prefix")}{" "}
@@ -128,7 +128,7 @@ export default function ProfileView({
                 {showRecentActivity
                     ? vods.length > 0 && (
                           <div className="mt-4">
-                              <h2 className="mb-4 text-xl font-semibold text-foreground">
+                              <h2 className="text-foreground mb-4 text-xl font-semibold">
                                   {t("users:profile.recent_streams")}
                               </h2>
 

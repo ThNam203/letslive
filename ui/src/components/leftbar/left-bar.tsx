@@ -31,7 +31,7 @@ export default function LeftBar() {
             id="1"
             order={1}
             className={cn(
-                "relative h-full w-full min-w-[18rem] bg-background py-4",
+                "bg-background relative h-full w-full min-w-[18rem] py-4",
                 minimizedLeftBar ? "min-w-16 max-w-16" : "",
             )}
         >

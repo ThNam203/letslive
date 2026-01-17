@@ -39,7 +39,7 @@ export default function StreamGuide() {
                     <IconLiveStream className="text-primary" />
                 </div>
             </PopoverTrigger>
-            <PopoverContent className="w-100 mr-4 border border-border bg-muted text-sm text-foreground">
+            <PopoverContent className="w-100 border-border bg-muted text-foreground mr-4 border text-sm">
                 <h1 className="text-xl font-semibold">
                     {t("how_to_livestream")}
                 </h1>

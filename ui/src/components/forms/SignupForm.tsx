@@ -19,7 +19,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import {
+    InputOTP,
+    InputOTPGroup,
+    InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
 import { ResendOtpButton } from "@/components/forms/ResendButton";
 import IconLoader from "@/components/icons/loader";
@@ -182,14 +186,14 @@ export default function SignUpForm() {
                     handleBeginEmailVerification();
                 }}
             >
-                <div className="flex items-center gap-4 rounded-md border border-border px-4">
+                <div className="border-border flex items-center gap-4 rounded-md border px-4">
                     <label htmlFor="email">
                         <IconEmail className="scale-125 opacity-40" />
                     </label>
                     <input
                         id="email"
                         aria-label={t("email")}
-                        className="h-12 flex-1 bg-background focus:outline-hidden"
+                        className="bg-background focus:outline-hidden h-12 flex-1"
                         placeholder={t("email")}
                         type="email"
                         value={email}
@@ -197,14 +201,14 @@ export default function SignUpForm() {
                     />
                 </div>
                 <FormErrorText textError={errors.email} />
-                <div className="mt-4 flex items-center gap-4 rounded-md border border-border px-4">
+                <div className="border-border mt-4 flex items-center gap-4 rounded-md border px-4">
                     <label htmlFor="username">
                         <IconUserOutline className="scale-125 opacity-40" />
                     </label>
                     <input
                         id="username"
                         aria-label={t("common:username")}
-                        className="h-12 flex-1 bg-background focus:outline-hidden"
+                        className="bg-background focus:outline-hidden h-12 flex-1"
                         placeholder={t("common:username")}
                         type="text"
                         value={username}
@@ -212,14 +216,14 @@ export default function SignUpForm() {
                     />
                 </div>
                 <FormErrorText textError={errors.username} />
-                <div className="mt-4 flex items-center gap-4 rounded-md border border-border px-4">
+                <div className="border-border mt-4 flex items-center gap-4 rounded-md border px-4">
                     <label htmlFor="password">
                         <IconPasswordOutline className="scale-125 opacity-40" />
                     </label>
                     <input
                         id="password"
                         aria-label={t("password")}
-                        className="h-12 flex-1 bg-background focus:outline-hidden"
+                        className="bg-background focus:outline-hidden h-12 flex-1"
                         placeholder={t("password")}
                         type={hidingPassword ? "password" : "text"}
                         value={password}
@@ -239,14 +243,14 @@ export default function SignUpForm() {
                 </div>
                 <FormErrorText textError={errors.password} />
 
-                <div className="mt-4 flex items-center gap-4 rounded-md border border-border px-4">
+                <div className="border-border mt-4 flex items-center gap-4 rounded-md border px-4">
                     <label htmlFor="confirm-password">
                         <IconPasswordOutline className="scale-125 opacity-40" />
                     </label>
                     <input
                         id="confirm-password"
                         aria-label={t("confirm_password")}
-                        className="h-12 flex-1 bg-background focus:outline-hidden"
+                        className="bg-background focus:outline-hidden h-12 flex-1"
                         placeholder={t("confirm_password")}
                         type={hidingConfirmPassword ? "password" : "text"}
                         value={confirmPassword}
@@ -353,7 +357,7 @@ export default function SignUpForm() {
                             </InputOTPGroup>
                         </InputOTP>
                         {otpError && (
-                            <p className="mt-2 text-sm text-destructive">
+                            <p className="text-destructive mt-2 text-sm">
                                 {otpError}
                             </p>
                         )}

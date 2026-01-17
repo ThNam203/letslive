@@ -12,11 +12,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import IconSettings from "@/components/icons/settings";
 import IconLogOut from "@/components/icons/log-out";
 import IconGlobe from "@/components/icons/globe";
@@ -62,7 +58,7 @@ export default function UserInfo() {
         <div className="flex flex-row gap-4">
             <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger>
-                    <Avatar className="border border-border">
+                    <Avatar className="border-border border">
                         {userState.user ? (
                             <>
                                 <AvatarImage
@@ -82,13 +78,13 @@ export default function UserInfo() {
                         )}
                     </Avatar>
                 </PopoverTrigger>
-                <PopoverContent className="w-100 mr-4 border-border bg-muted">
+                <PopoverContent className="w-100 border-border bg-muted mr-4">
                     <div className="flex w-52 flex-col gap-2 rounded-md px-2 pb-2">
                         {userState.user ? (
                             <>
                                 <Link
                                     href={`/users/${userState.user.id}`}
-                                    className="mb-2 w-fit text-lg text-foreground"
+                                    className="text-foreground mb-2 w-fit text-lg"
                                     onMouseUp={() => setIsPopoverOpen(false)}
                                 >
                                     <p>
@@ -109,7 +105,7 @@ export default function UserInfo() {
                                             className="flex flex-1 flex-row items-center gap-2"
                                         >
                                             <IconSettings />
-                                            <span className="text-xs text-primary-foreground">
+                                            <span className="text-primary-foreground text-xs">
                                                 {t("common:setting")}
                                             </span>
                                         </Link>
@@ -120,7 +116,7 @@ export default function UserInfo() {
                                         variant={"destructive"}
                                     >
                                         <IconLogOut />
-                                        <span className="text-xs text-primary-foreground">
+                                        <span className="text-primary-foreground text-xs">
                                             {t("logout")}
                                         </span>
                                     </Button>
@@ -136,7 +132,7 @@ export default function UserInfo() {
                                                 onMouseUp={() =>
                                                     setIsPopoverOpen(false)
                                                 }
-                                                className="flex h-8 items-center justify-center whitespace-nowrap rounded-md bg-primary px-4 text-sm text-primary-foreground hover:bg-primary-hover"
+                                                className="bg-primary text-primary-foreground hover:bg-primary-hover flex h-8 items-center justify-center whitespace-nowrap rounded-md px-4 text-sm"
                                             >
                                                 {t("login")}
                                             </Link>
@@ -147,7 +143,7 @@ export default function UserInfo() {
                                                 onMouseUp={() =>
                                                     setIsPopoverOpen(false)
                                                 }
-                                                className="flex h-8 items-center justify-center whitespace-nowrap rounded-md bg-primary px-4 text-sm text-primary-foreground hover:bg-primary-hover"
+                                                className="bg-primary text-primary-foreground hover:bg-primary-hover flex h-8 items-center justify-center whitespace-nowrap rounded-md px-4 text-sm"
                                             >
                                                 {t("signup")}
                                             </Link>

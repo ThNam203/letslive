@@ -145,13 +145,18 @@ export default function VODPage() {
                 )}
             </div>
             <div
-                className={`fixed right-2 top-0 z-40 h-[100%-48px] w-full bg-background transition-all duration-300 md:relative md:w-80 lg:w-96 ${isExtraOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}
+                className={`bg-background fixed right-2 top-0 z-40 h-[100%-48px] w-full transition-all duration-300 md:relative md:w-80 lg:w-96 ${isExtraOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}
             >
-                <div className="flex h-full w-full flex-col border-x border-border bg-background font-sans">
+                <div className="border-border bg-background flex h-full w-full flex-col border-x font-sans">
                     <h2 className="p-4 font-semibold">Other streams</h2>
                     <div className="small-scrollbar h-full overflow-y-auto px-4">
                         {vods.map((vod, idx) => (
-                            <VODCard key={idx} vod={vod} variant="with-user" className="mb-2" />
+                            <VODCard
+                                key={idx}
+                                vod={vod}
+                                variant="with-user"
+                                className="mb-2"
+                            />
                         ))}
                     </div>
                 </div>

@@ -5,9 +5,30 @@ import { PASSWORD_MIN_LENGTH } from "@/constant/password";
 export const changePasswordSchema = function (t: typeof i18next.t) {
     return z
         .object({
-            currentPassword: z.string().min(PASSWORD_MIN_LENGTH, t("error:password_too_short", { minLength: PASSWORD_MIN_LENGTH })),
-            newPassword: z.string().min(PASSWORD_MIN_LENGTH, t("error:password_too_short", { minLength: PASSWORD_MIN_LENGTH })),
-            confirmPassword: z.string().min(PASSWORD_MIN_LENGTH, t("error:password_too_short", { minLength: PASSWORD_MIN_LENGTH })),
+            currentPassword: z
+                .string()
+                .min(
+                    PASSWORD_MIN_LENGTH,
+                    t("error:password_too_short", {
+                        minLength: PASSWORD_MIN_LENGTH,
+                    }),
+                ),
+            newPassword: z
+                .string()
+                .min(
+                    PASSWORD_MIN_LENGTH,
+                    t("error:password_too_short", {
+                        minLength: PASSWORD_MIN_LENGTH,
+                    }),
+                ),
+            confirmPassword: z
+                .string()
+                .min(
+                    PASSWORD_MIN_LENGTH,
+                    t("error:password_too_short", {
+                        minLength: PASSWORD_MIN_LENGTH,
+                    }),
+                ),
         })
         .superRefine((data, ctx) => {
             if (data.newPassword === data.currentPassword) {

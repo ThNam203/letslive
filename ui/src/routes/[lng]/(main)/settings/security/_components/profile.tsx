@@ -28,7 +28,7 @@ export default function ContactSettings({ user }: { user: User }) {
                     <h2 className="text-sm font-medium">
                         {t("settings:security.contact.email")}
                     </h2>
-                    <p className="text-medium font-semibold italic text-foreground">
+                    <p className="text-medium text-foreground font-semibold italic">
                         {user?.email}
                     </p>
                 </div>
@@ -42,7 +42,7 @@ export default function ContactSettings({ user }: { user: User }) {
                 className="mt-4"
             >
                 <ApiKeyTab />
-                <div className="flex items-start justify-between border-t border-border pt-4">
+                <div className="border-border flex items-start justify-between border-t pt-4">
                     <h2 className="text-sm font-medium">
                         {t("settings:security.security.password.title")}
                     </h2>
@@ -71,7 +71,7 @@ export default function ContactSettings({ user }: { user: User }) {
                                 <ChangePasswordTab />
                             </DialogContent>
                         </Dialog>
-                        <span className="text-sm text-foreground-muted">
+                        <span className="text-foreground-muted text-sm">
                             {user?.authProvider === AuthProvider.LOCAL
                                 ? t(
                                       "settings:security.security.password.local_description",
@@ -83,7 +83,7 @@ export default function ContactSettings({ user }: { user: User }) {
                     </div>
                 </div>
 
-                <div className="border-t border-border pt-4">
+                <div className="border-border border-t pt-4">
                     <div className="flex flex-row justify-between space-y-2">
                         <div>
                             <h2 className="text-sm font-medium">
@@ -115,14 +115,14 @@ export default function ContactSettings({ user }: { user: User }) {
                     </div>
                 </div>
 
-                <div className="border-t border-border pt-4">
+                <div className="border-border border-t pt-4">
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <h2 className="text-sm font-medium">
                                 {t("settings:security.security.sign_out.title")}
                             </h2>
                         </div>
-                        <p className="text-sm text-foreground-muted">
+                        <p className="text-foreground-muted text-sm">
                             {t(
                                 "settings:security.security.sign_out.description",
                             )}{" "}

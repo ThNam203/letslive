@@ -16,23 +16,23 @@ export default function SignUpPage() {
                 <div className="w-full">
                     <Link
                         href={GLOBAL.API_URL + "/auth/google"}
-                        className="flex h-12 flex-1 flex-row items-center justify-center gap-4 rounded-lg border border-border bg-white py-2 text-black hover:bg-[#ebebeb]"
+                        className="border-border flex h-12 flex-1 flex-row items-center justify-center gap-4 rounded-lg border bg-white py-2 text-black hover:bg-[#ebebeb]"
                     >
                         <IconGoogle /> Google
                     </Link>
                     {process.env.NEXT_PUBLIC_ENVIRONMENT === "production" && (
-                        <p className="mt-1 text-xs italic text-destructive">
+                        <p className="text-destructive mt-1 text-xs italic">
                             {t("google_cookie_warning")}
                         </p>
                     )}
                 </div>
             </div>
             <div className="mb-4 mt-2 flex w-full items-center justify-center">
-                <hr className="h-[2px] flex-1 bg-border" />
-                <p className="mx-4 text-center text-foreground">
+                <hr className="bg-border h-[2px] flex-1" />
+                <p className="text-foreground mx-4 text-center">
                     {t("common:or")}
                 </p>
-                <hr className="h-[2px] flex-1 bg-border" />
+                <hr className="bg-border h-[2px] flex-1" />
             </div>
             <SignUpForm />
             <p className="mt-4 text-end text-sm opacity-80">

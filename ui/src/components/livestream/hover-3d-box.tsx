@@ -21,13 +21,13 @@ const Hover3DBox = ({
     return (
         <div
             className={cn(
-                "group relative z-0 aspect-video w-full bg-primary",
+                "bg-primary group relative z-0 aspect-video w-full",
                 className,
             )}
             onClick={onClick}
         >
-            <div className="absolute left-0 top-0 h-full w-2 skew-y-[0deg] bg-primary duration-100 ease-linear group-hover:top-[-0.25rem] group-hover:skew-y-[-45deg]"></div>
-            <div className="absolute bottom-0 right-0 h-2 w-full skew-x-[0deg] bg-primary duration-100 ease-linear group-hover:right-[-0.25rem] group-hover:skew-x-[-45deg]"></div>
+            <div className="bg-primary absolute left-0 top-0 h-full w-2 skew-y-[0deg] duration-100 ease-linear group-hover:top-[-0.25rem] group-hover:skew-y-[-45deg]"></div>
+            <div className="bg-primary absolute bottom-0 right-0 h-2 w-full skew-x-[0deg] duration-100 ease-linear group-hover:right-[-0.25rem] group-hover:skew-x-[-45deg]"></div>
             <LiveImage
                 width={500}
                 height={500}

@@ -26,7 +26,7 @@ const ThemeList = ({ className }: { className?: string }) => {
                     className={cn(
                         "rounded-md border px-4 py-2 text-sm capitalize transition-all",
                         "border-border",
-                        theme === color ? "font-bold ring-2 ring-border" : "",
+                        theme === color ? "ring-border font-bold ring-2" : "",
                         color === "light" ? "bg-white text-[#0f1729]" : "",
                         color === "dark" ? "bg-[#0f1729] text-white" : "",
                     )}

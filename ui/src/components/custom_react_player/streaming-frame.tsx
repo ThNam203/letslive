@@ -22,9 +22,12 @@ import IconVolumeOff from "@/components/icons/volume-off";
 import IconVolumeUp from "@/components/icons/volume-up";
 import IconFastForward from "@/components/icons/fast-forward";
 import IconLoader from "@/components/icons/loader";
-const ReactPlayerWrapper = dynamic(() => import("@/components/custom_react_player/react-player-wrapper"), {
-    ssr: false,
-});
+const ReactPlayerWrapper = dynamic(
+    () => import("@/components/custom_react_player/react-player-wrapper"),
+    {
+        ssr: false,
+    },
+);
 
 export const formatTime = (seconds: number) => {
     if (isNaN(seconds) || seconds < 0) return "00:00";
@@ -286,7 +289,7 @@ function FrontOfVideo({
     return (
         <div
             className={cn(
-                "absolute top-0 flex h-full w-full flex-col items-center justify-end border border-border",
+                "border-border absolute top-0 flex h-full w-full flex-col items-center justify-end border",
                 className,
             )}
         >
@@ -689,7 +692,7 @@ const Combobox = ({
                         <div
                             key={option}
                             className={cn(
-                                "flex cursor-pointer flex-row items-center justify-start gap-2 rounded border-0 text-white outline-hidden hover:bg-white/20",
+                                "outline-hidden flex cursor-pointer flex-row items-center justify-start gap-2 rounded border-0 text-white hover:bg-white/20",
                             )}
                             onClick={() => handleValueChange(option)}
                         >

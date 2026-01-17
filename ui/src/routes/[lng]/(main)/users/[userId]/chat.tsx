@@ -129,7 +129,7 @@ export default function ChatPanel({
 
     return (
         <div className="relative flex h-full w-full flex-col">
-            <div className="flex items-center justify-between border border-y-0 border-border px-4 py-3">
+            <div className="border-border flex items-center justify-between border border-y-0 px-4 py-3">
                 <h2 className="font-semibold">{t("users:chat.title")}</h2>
                 <Button
                     variant="ghost"
@@ -142,7 +142,7 @@ export default function ChatPanel({
             </div>
             <div
                 ref={messageContainerRef}
-                className="mb-12 flex-1 overflow-y-auto rounded-md rounded-t-none border border-t-0 border-border px-4 py-2"
+                className="border-border mb-12 flex-1 overflow-y-auto rounded-md rounded-t-none border border-t-0 px-4 py-2"
             >
                 {messages.map((message, idx) => (
                     <div key={idx} className="mb-3">

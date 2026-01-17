@@ -2,11 +2,11 @@ import React from "react";
 
 export default function DefaultBackgound() {
     return (
-        <div className="absolute inset-0 grid h-[300px] grid-cols-6 gap-2 rounded-lg border border-border bg-muted p-2">
+        <div className="border-border bg-muted absolute inset-0 grid h-[300px] grid-cols-6 gap-2 rounded-lg border p-2">
             {[...Array(18)].map((_, i) => (
                 <svg
                     key={i}
-                    className="h-8 w-8 text-foreground opacity-25"
+                    className="text-foreground h-8 w-8 opacity-25"
                     viewBox="0 0 24 24"
                     fill="currentColor"
                 >

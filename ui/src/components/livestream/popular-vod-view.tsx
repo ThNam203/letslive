@@ -50,7 +50,7 @@ export function PopularVODView() {
     if (vods.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-                <div className="mb-6 rounded-full bg-muted p-6">
+                <div className="bg-muted mb-6 rounded-full p-6">
                     <IconFilm className="text-muted-foreground h-12 w-12" />
                 </div>
                 <h2 className="mb-2 text-2xl font-semibold">

@@ -71,7 +71,7 @@ export default function AllChannelsView({
                             <Link
                                 href={`/users/${user.id}`}
                                 className={cn(
-                                    "flex flex-row items-center gap-2 rounded-full hover:bg-background-hover",
+                                    "hover:bg-background-hover flex flex-row items-center gap-2 rounded-full",
                                     isMinimized ? "" : "w-full",
                                 )}
                             >
@@ -81,7 +81,7 @@ export default function AllChannelsView({
                                         alt="User avatar"
                                         className="h-10 w-10 rounded-full"
                                     />
-                                    <AvatarFallback className="h-10 w-10 rounded-full border border-border">
+                                    <AvatarFallback className="border-border h-10 w-10 rounded-full border">
                                         {user.username.charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
@@ -92,7 +92,7 @@ export default function AllChannelsView({
                                 )}
                             </Link>
                         </HoverCardTrigger>
-                        <HoverCardContent className="z-10 w-80 border-border bg-muted">
+                        <HoverCardContent className="border-border bg-muted z-10 w-80">
                             <div className="flex gap-4">
                                 <Avatar>
                                     <AvatarImage
@@ -100,7 +100,7 @@ export default function AllChannelsView({
                                         alt="User avatar"
                                         className="h-10 w-10 rounded-full"
                                     />
-                                    <AvatarFallback className="h-10 w-10 rounded-full border border-border">
+                                    <AvatarFallback className="border-border h-10 w-10 rounded-full border">
                                         {user.username.charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>

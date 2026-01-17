@@ -13,14 +13,10 @@
         "jsx": "react-jsx",
         "incremental": true,
         "paths": {
-            "@/*": ["./src/*"],
+            "@/*": ["./src/*"]
         },
         "target": "ES2017"
     },
-    "include": [
-        "**/*.ts",
-        "**/*.tsx",
-        ".prettierrc.js"
-, "eslint.config.js"    ],
+    "include": ["**/*.ts", "**/*.tsx", ".prettierrc.js", "eslint.config.js"],
     "exclude": ["node_modules"]
 }

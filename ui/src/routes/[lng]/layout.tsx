@@ -7,7 +7,7 @@ import UserInformationWrapper from "@/components/wrappers/UserInformationWrapper
 
 export default function LayoutComponent() {
     const { lng } = useParams({ from: "/$lng" });
-    
+
     return (
         <div lang={lng} dir={dir(lng)}>
             <Suspense fallback={<Loading />}>

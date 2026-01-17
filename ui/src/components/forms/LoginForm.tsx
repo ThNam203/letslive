@@ -93,14 +93,14 @@ export default function LogInForm() {
 
     return (
         <form onSubmit={handleSubmit}>
-            <div className="flex items-center gap-4 rounded-md border border-border px-4">
+            <div className="border-border flex items-center gap-4 rounded-md border px-4">
                 <label htmlFor="email">
                     <IconEmail className="scale-125 opacity-40" />
                 </label>
                 <input
                     id="email"
                     aria-label="Email"
-                    className="h-12 flex-1 bg-background focus:bg-background focus:outline-hidden"
+                    className="bg-background focus:bg-background focus:outline-hidden h-12 flex-1"
                     autoComplete="email"
                     placeholder={t("email")}
                     type="email"
@@ -109,14 +109,14 @@ export default function LogInForm() {
                 />
             </div>
             <FormErrorText textError={errors.email} />
-            <div className="mt-4 flex items-center gap-4 rounded-md border border-border px-4">
+            <div className="border-border mt-4 flex items-center gap-4 rounded-md border px-4">
                 <label htmlFor="password">
                     <IconPasswordOutline className="scale-125 opacity-40" />
                 </label>
                 <input
                     id="password"
                     aria-label="Password"
-                    className="h-12 flex-1 bg-background focus:outline-hidden"
+                    className="bg-background focus:outline-hidden h-12 flex-1"
                     placeholder={t("password")}
                     type={hidingPassword ? "password" : "text"}
                     value={password}

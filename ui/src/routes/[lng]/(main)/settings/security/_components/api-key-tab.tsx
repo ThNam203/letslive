@@ -57,13 +57,13 @@ export default function ApiKeyTab() {
                     id="api-key"
                     value={user?.streamAPIKey}
                     readOnly={true}
-                    className="flex-grow border border-border text-right"
+                    className="border-border flex-grow border text-right"
                 />
             </div>
             <div className="flex gap-4">
                 <div className="flex-grow" />
                 <Button disabled={isGenerating} onClick={copyApiKey}>
-                    <IconCopy className="h-4 w-4 text-primary-foreground" />
+                    <IconCopy className="text-primary-foreground h-4 w-4" />
                 </Button>
 
                 <Button disabled={isGenerating} onClick={generateNewApiKey}>
