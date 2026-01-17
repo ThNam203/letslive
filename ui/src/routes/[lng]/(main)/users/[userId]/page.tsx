@@ -9,8 +9,8 @@ import {
     VideoInfo,
 } from "@/components/custom_react_player/streaming-frame";
 import { GetUserById } from "@/lib/api/user";
-import ProfileView from "./profile";
-import ChatUI from "./chat";
+import ProfileView from "@/routes/[lng]/(main)/users/[userId]/profile";
+import ChatUI from "@/routes/[lng]/(main)/users/[userId]/chat";
 import GLOBAL from "@/global";
 import { GetLivestreamOfUser } from "@/lib/api/livestream";
 import { Button } from "@/components/ui/button";

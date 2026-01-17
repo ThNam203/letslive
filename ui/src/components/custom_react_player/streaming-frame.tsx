@@ -22,7 +22,7 @@ import IconVolumeOff from "@/components/icons/volume-off";
 import IconVolumeUp from "@/components/icons/volume-up";
 import IconFastForward from "@/components/icons/fast-forward";
 import IconLoader from "@/components/icons/loader";
-const ReactPlayerWrapper = dynamic(() => import("./react-player-wrapper"), {
+const ReactPlayerWrapper = dynamic(() => import("@/components/custom_react_player/react-player-wrapper"), {
     ssr: false,
 });
 

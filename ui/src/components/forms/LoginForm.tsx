@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { LogIn } from "@/lib/api/auth";
 import IconEmail from "@/components/icons/email";
-import FormErrorText from "./FormErrorText";
+import FormErrorText from "@/components/forms/FormErrorText";
 import IconPasswordOutline from "@/components/icons/password";
 import IconEye from "@/components/icons/eye";
 import IconEyeOff from "@/components/icons/eye-off";

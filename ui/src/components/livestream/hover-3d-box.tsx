@@ -3,7 +3,7 @@
 import { ClassValue } from "clsx";
 import Link from "next/link";
 import { cn } from "@/utils/cn";
-import LiveImage from "./live-image";
+import LiveImage from "@/components/livestream/live-image";
 
 const Hover3DBox = ({
     className,

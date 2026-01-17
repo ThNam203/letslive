@@ -1,7 +1,7 @@
 import Link from "next/link";
-import SearchBar from "./search";
-import UserInfo from "./userinfo";
-import StreamGuide from "./stream-guide";
+import SearchBar from "@/routes/[lng]/(main)/_components/header/search";
+import UserInfo from "@/routes/[lng]/(main)/_components/header/userinfo";
+import StreamGuide from "@/routes/[lng]/(main)/_components/header/stream-guide";
 import { myGetT } from "@/lib/i18n";
 
 export async function Header() {

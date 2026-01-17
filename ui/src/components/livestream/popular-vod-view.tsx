@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import IconFilm from "@/components/icons/film";
 import { VOD } from "@/types/vod";
 import useT from "@/hooks/use-translation";
-import VODCard from "./vod-card";
+import VODCard from "@/components/livestream/vod-card";
 
 export function PopularVODView() {
     const [isLoading, setIsLoading] = useState(false);

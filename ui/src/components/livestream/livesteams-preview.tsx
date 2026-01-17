@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import LivestreamPreviewView from "./livestream-preview";
+import LivestreamPreviewView from "@/components/livestream/livestream-preview";
 import { GetPopularLivestreams } from "@/lib/api/livestream";
 import { Livestream } from "@/types/livestream";
 import IconChevronDown from "@/components/icons/chevron-down";

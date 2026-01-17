@@ -1,7 +1,7 @@
 import { Inter } from "next/font/google";
 import "@/app/globals.css";
 import React, { Suspense } from "react";
-import Loading from "./loading";
+import Loading from "@/routes/[lng]/loading";
 import Toast from "@/components/utils/toast";
 import { I18N_LANGUAGES } from "@/lib/i18n/settings";
 import { dir } from "i18next";

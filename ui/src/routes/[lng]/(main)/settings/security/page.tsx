@@ -1,7 +1,7 @@
 "use client";
 
 import useUser from "@/hooks/user";
-import ContactSettings from "./_components/profile";
+import ContactSettings from "@/routes/[lng]/(main)/settings/security/_components/profile";
 
 export default function SecurityPage() {
     const user = useUser((state) => state.user);

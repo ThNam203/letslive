@@ -10,12 +10,12 @@ import {
     UpdateProfilePicture,
 } from "@/lib/api/user";
 import TextField from "@/routes/[lng]/(main)/settings/_components/text-field";
-import ProfileBanner from "./_components/profile-banner";
+import ProfileBanner from "@/routes/[lng]/(main)/settings/profile/_components/profile-banner";
 import Section from "@/routes/[lng]/(main)/settings/_components/section";
 import TextAreaField from "@/routes/[lng]/(main)/settings/_components/textarea-field";
 import ThemeList from "@/routes/[lng]/(main)/settings/profile/_components/theme-list";
 import IconLoader from "@/components/icons/loader";
-import DisableAccountDialog from "./_components/disable-account-dialog";
+import DisableAccountDialog from "@/routes/[lng]/(main)/settings/profile/_components/disable-account-dialog";
 import useT from "@/hooks/use-translation";
 import LanguageList from "@/routes/[lng]/(main)/settings/profile/_components/language-list";
 import { SocialMediaEdit } from "@/routes/[lng]/(main)/settings/profile/_components/socials-media-link";

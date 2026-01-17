@@ -1,5 +1,5 @@
 "use client";
-import AllChannelsView from "./channels";
+import AllChannelsView from "@/components/leftbar/channels";
 import { ResizablePanel } from "@/components/ui/resizable";
 import { useEffect, useState } from "react";
 import IconToLeft from "@/components/icons/to-left";

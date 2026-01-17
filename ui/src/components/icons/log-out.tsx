@@ -1,5 +1,5 @@
 import { IconProp } from "@/types/icon-prop";
-import { BaseIcon } from "./base-icon";
+import { BaseIcon } from "@/components/icons/base-icon";
 
 const IconLogOut = (props: IconProp) => {
     return (

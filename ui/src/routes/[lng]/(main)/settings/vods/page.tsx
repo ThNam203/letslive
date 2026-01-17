@@ -4,7 +4,7 @@ import useUser from "@/hooks/user";
 import { useEffect, useState } from "react";
 import { GetAllVODsAsAuthor } from "@/lib/api/vod";
 import { toast } from "react-toastify";
-import VODEditCard from "./vod";
+import VODEditCard from "@/routes/[lng]/(main)/settings/vods/vod";
 import { VOD } from "@/types/vod";
 import useT from "@/hooks/use-translation";
 

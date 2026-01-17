@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { AuthProvider, User } from "@/types/user";
 import Section from "@/routes/[lng]/(main)/settings/_components/section";
-import ApiKeyTab from "./api-key-tab";
-import ChangePasswordTab from "./change-password-tab";
+import ApiKeyTab from "@/routes/[lng]/(main)/settings/security/_components/api-key-tab";
+import ChangePasswordTab from "@/routes/[lng]/(main)/settings/security/_components/change-password-tab";
 import PhoneNumber from "@/routes/[lng]/(main)/settings/security/_components/phone-number";
 
 export default function ContactSettings({ user }: { user: User }) {

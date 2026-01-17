@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { RequestToSendVerification, SignUp } from "@/lib/api/auth";
 import IconEmail from "@/components/icons/email";
-import FormErrorText from "./FormErrorText";
+import FormErrorText from "@/components/forms/FormErrorText";
 import IconUserOutline from "@/components/icons/user";
 import IconPasswordOutline from "@/components/icons/password";
 import IconEye from "@/components/icons/eye";
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
-import { ResendOtpButton } from "./ResendButton";
+import { ResendOtpButton } from "@/components/forms/ResendButton";
 import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";
 import { signUpSchema } from "@/lib/validations/signUp";

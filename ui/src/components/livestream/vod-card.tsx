@@ -7,7 +7,7 @@ import { dateDiffFromNow, formatSeconds } from "@/utils/timeFormats";
 import GLOBAL from "@/global";
 import { VOD } from "@/types/vod";
 import { User } from "@/types/user";
-import LiveImage from "./live-image";
+import LiveImage from "@/components/livestream/live-image";
 import { cn } from "@/utils/cn";
 import useT from "@/hooks/use-translation";
 import { Card, CardContent } from "@/components/ui/card";

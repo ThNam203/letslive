@@ -3,8 +3,8 @@
 import { ClassValue } from "clsx";
 import { useRouter } from "next/navigation";
 import { User } from "@/types/user";
-import { Hover3DBox } from "./hover-3d-box";
-import LivestreamPreviewDetailView from "./livestream-preview-detail";
+import { Hover3DBox } from "@/components/livestream/hover-3d-box";
+import LivestreamPreviewDetailView from "@/components/livestream/livestream-preview-detail";
 import { Livestream } from "@/types/livestream";
 import { useEffect, useState } from "react";
 import { GetUserById } from "@/lib/api/user";

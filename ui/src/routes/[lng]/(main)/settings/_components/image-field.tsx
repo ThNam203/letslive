@@ -1,7 +1,7 @@
 import { cn } from "@/utils/cn";
 import { useRef } from "react";
-import Description from "./description";
-import ImageHover from "./image-hover";
+import Description from "@/routes/[lng]/(main)/settings/_components/description";
+import ImageHover from "@/routes/[lng]/(main)/settings/_components/image-hover";
 
 type Props = {
     label: string;

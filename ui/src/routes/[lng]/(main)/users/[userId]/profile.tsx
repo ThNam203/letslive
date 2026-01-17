@@ -1,7 +1,7 @@
 "use client";
 
 import { User } from "@/types/user";
-import ProfileHeader from "./profile-header";
+import ProfileHeader from "@/routes/[lng]/(main)/users/[userId]/profile-header";
 import VODCard from "@/components/livestream/vod-card";
 import IconCalendar from "@/components/icons/calendar";
 import IconUsers from "@/components/icons/users";

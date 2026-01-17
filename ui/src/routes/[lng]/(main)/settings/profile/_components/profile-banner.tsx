@@ -5,7 +5,7 @@ import useUser from "@/hooks/user";
 import { cn } from "@/utils/cn";
 import Image from "next/image";
 import { useRef } from "react";
-import DefaultBackgound from "./default-background";
+import DefaultBackgound from "@/routes/[lng]/(main)/settings/profile/_components/default-background";
 import ImageHover from "@/routes/[lng]/(main)/settings/_components/image-hover";
 
 interface Props {

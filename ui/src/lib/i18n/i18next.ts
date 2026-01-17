@@ -6,7 +6,7 @@ import {
     I18N_LANGUAGES,
     I18N_DEFAULT_NS,
     I18N_COOKIE_NAME,
-} from "./settings";
+} from "@/lib/i18n/settings";
 import LanguageDetector from "i18next-browser-languagedetector";
 
 const runsOnServerSide = typeof window === "undefined";
@@ -17,7 +17,7 @@ i18next
     .use(
         resourcesToBackend(
             (language: string, namespace: string) =>
-                import(`./locales/${language}/${namespace}.json`),
+                import(`@/lib/i18n/locales/${language}/${namespace}.json`),
         ),
     )
     .init({

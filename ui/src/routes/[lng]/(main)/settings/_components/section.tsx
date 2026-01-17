@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
-import BorderContainer from "./border-container";
-import Description from "./description";
+import BorderContainer from "@/routes/[lng]/(main)/settings/_components/border-container";
+import Description from "@/routes/[lng]/(main)/settings/_components/description";
 
 interface Props {
     title: string;

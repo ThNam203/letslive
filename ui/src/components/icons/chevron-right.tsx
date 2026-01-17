@@ -1,5 +1,5 @@
 import React from "react";
-import { BaseIcon } from "./base-icon";
+import { BaseIcon } from "@/components/icons/base-icon";
 import { IconProp } from "@/types/icon-prop";
 
 function IconChevronRight(props: IconProp) {
