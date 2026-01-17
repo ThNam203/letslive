@@ -3,7 +3,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import useUser from "@/hooks/user";
 import { cn } from "@/utils/cn";
-import Image from "next/image";
 import { useRef } from "react";
 import DefaultBackgound from "@/routes/[lng]/(main)/settings/profile/_components/default-background";
 import ImageHover from "@/routes/[lng]/(main)/settings/_components/image-hover";
@@ -56,7 +55,7 @@ export default function ProfileBanner({
             <div className="relative z-10 h-[300px] w-full overflow-hidden rounded-lg">
                 {/* Profile Banner */}
                 {user && user.backgroundPicture ? (
-                    <Image
+                    <img
                         src={
                             user.backgroundPicture ??
                             `https://placehold.co/1200x800/F3F4F6/374151/png?font=playfair-display&text=${
@@ -64,9 +63,7 @@ export default function ProfileBanner({
                             }`
                         }
                         alt="Profile Banner"
-                        fill={true}
-                        className="object-cover"
-                        unoptimized
+                        className="absolute inset-0 h-full w-full object-cover"
                     />
                 ) : (
                     <DefaultBackgound />

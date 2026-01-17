@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { User } from "@/types/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import useUser from "@/hooks/user";
@@ -82,7 +81,7 @@ export default function ProfileHeader({
         <div className="relative">
             <div className="rounded-xs relative h-[300px] w-full overflow-hidden bg-gray-100 shadow">
                 {/* Profile Banner */}
-                <Image
+                <img
                     src={
                         user.backgroundPicture ??
                         `https://placehold.co/1200x600/F3F4F6/374151/png?font=playfair-display&text=${
@@ -90,10 +89,8 @@ export default function ProfileHeader({
                         }`
                     }
                     alt="Profile Banner"
-                    className="object-cover"
-                    fill={true}
-                    priority={true}
-                    unoptimized
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading="eager"
                 />
             </div>
             <div className="-mt-16 px-4 sm:-mt-24">

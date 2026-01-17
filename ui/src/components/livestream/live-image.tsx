@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image, { ImageProps } from "next/image";
+import { useEffect, useState, ImgHTMLAttributes } from "react";
 
-interface LiveImageProps extends Omit<ImageProps, "src"> {
+interface LiveImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> {
     src: string; // only allow string
     fallbackSrc: string;
     refreshInterval?: number; // in ms
@@ -47,5 +46,5 @@ export default function LiveImage({
         return () => clearInterval(interval);
     }, []);
 
-    return <Image {...props} src={imgSrc} unoptimized />;
+    return <img {...props} src={imgSrc} alt={props.alt || ""} />;
 }
