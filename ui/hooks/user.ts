@@ -1,12 +1,12 @@
 import { create } from "zustand";
-import { User } from "../types/user";
+import { MeUser } from "../types/user";
 
 export type UserState = {
-    user: User | null;
+    user: MeUser | null;
     isLoading: boolean;
-    setUser: (user: User | null) => void;
+    setUser: (user: MeUser | null) => void;
     clearUser: () => void;
-    updateUser: (user: User) => void;
+    updateUser: (user: Partial<MeUser>) => void;
     setIsLoading: (isLoading: boolean) => void;
 };
 
@@ -16,9 +16,9 @@ const useUser = create<UserState>((set) => ({
 
     setUser: (user) => set({ user }),
     clearUser: () => set({ user: null }),
-    updateUser: (updateUser) =>
+    updateUser: (update) =>
         set((prev) => ({
-            user: prev.user ? { ...prev.user, ...updateUser } : updateUser,
+            user: prev.user ? { ...prev.user, ...update } : null,
         })),
     setIsLoading: (isLoading) => set({ isLoading }),
 }));

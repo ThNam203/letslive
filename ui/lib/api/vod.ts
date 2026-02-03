@@ -45,7 +45,7 @@ export async function UpdateVOD(
     } as any;
 
     if (newThumbnail) {
-        updateData["thumbnailURL"] = newThumbnail;
+        updateData["thumbnailUrl"] = newThumbnail;
     }
 
     return fetchClient<ApiResponse<void>>(`/vods/${vodId}`, {

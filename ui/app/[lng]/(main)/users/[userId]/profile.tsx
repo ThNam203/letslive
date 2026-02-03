@@ -1,6 +1,6 @@
 "use client";
 
-import { User } from "@/types/user";
+import { PublicUser } from "@/types/user";
 import ProfileHeader from "./profile-header";
 import VODCard from "@/components/livestream/vod-card";
 import IconCalendar from "@/components/icons/calendar";
@@ -14,6 +14,7 @@ import IconLinkedin from "@/components/icons/linkedin";
 import IconGithub from "@/components/icons/github";
 import IconYoutube from "@/components/icons/youtube";
 import IconGlobe from "@/components/icons/globe";
+import IconTiktok from "@/components/icons/tiktok";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 
@@ -25,6 +26,7 @@ const platformOptions = {
     github: IconGithub,
     youtube: IconYoutube,
     website: IconGlobe,
+    tiktok: IconTiktok,
 };
 
 export default function ProfileView({
@@ -34,9 +36,9 @@ export default function ProfileView({
     showRecentActivity = true,
     className,
 }: {
-    user: User;
+    user: PublicUser;
     vods: VOD[];
-    updateUser: (newUserInfo: User) => void;
+    updateUser: (newUserInfo: PublicUser) => void;
     showRecentActivity?: boolean;
     className?: string;
 }) {
@@ -83,9 +85,7 @@ export default function ProfileView({
                     <div className="flex items-center text-foreground-muted">
                         <IconUsers className="mr-2" />
                         <span>
-                            {user.followerCount !== undefined
-                                ? `${user.followerCount} ${t(user.followerCount === 1 ? "users:profile.followers_one" : "users:profile.followers_other")}`
-                                : `0 ${t("users:profile.followers_other")}`}
+                            {`${user.followerCount} ${t(user.followerCount === 1 ? "users:profile.followers_one" : "users:profile.followers_other")}`}
                         </span>
                     </div>
                     <div className="flex items-center text-foreground-muted">

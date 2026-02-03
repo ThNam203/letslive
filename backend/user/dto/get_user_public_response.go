@@ -10,13 +10,15 @@ type GetUserPublicResponseDTO struct {
 	Id                uuid.UUID `json:"id"`
 	Username          string    `json:"username"`
 	Email             string    `json:"email"`
+	Status            string    `json:"status"`
+	AuthProvider      string    `json:"authProvider"`
 	CreatedAt         time.Time `json:"createdAt"`
 	PhoneNumber       *string   `json:"phoneNumber,omitempty"`
 	Bio               *string   `json:"bio,omitempty"`
 	DisplayName       *string   `json:"displayName,omitempty"`
 	ProfilePicture    *string   `json:"profilePicture,omitempty"`
 	BackgroundPicture *string   `json:"backgroundPicture,omitempty"`
-	FollowerCount     *int      `json:"followerCount,omitempty"`
+	FollowerCount     int       `json:"followerCount"`
 
 	// whether or not the current fetching user is following the fetched user
 	IsFollowing *bool `json:"isFollowing,omitempty"`

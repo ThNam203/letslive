@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { User } from "@/types/user";
+import { PublicUser } from "@/types/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import useUser from "@/hooks/user";
 import { useState } from "react";
@@ -15,8 +15,8 @@ export default function ProfileHeader({
     user,
     updateUser,
 }: {
-    user: User;
-    updateUser: (newUserInfo: User) => void;
+    user: PublicUser;
+    updateUser: (newUserInfo: PublicUser) => void;
 }) {
     const { t } = useT(["common", "users", "fetch-error", "api-response"]);
     const me = useUser((state) => state.user);

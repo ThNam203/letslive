@@ -1,8 +1,8 @@
 "use client";
 
 import { ClassValue } from "clsx";
-import { useParams, useRouter } from "next/navigation";
-import { User } from "../../types/user";
+import { useRouter } from "next/navigation";
+import { PublicUser } from "../../types/user";
 import { Hover3DBox } from "./hover-3d-box";
 import LivestreamPreviewDetailView from "./livestream-preview-detail";
 import GLOBAL from "../../global";
@@ -22,7 +22,7 @@ const LivestreamPreviewView = ({
     livestream: Livestream;
 }) => {
     const router = useRouter();
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<PublicUser | null>(null);
     const { t } = useT(["api-response", "fetch-error"]);
 
     useEffect(() => {

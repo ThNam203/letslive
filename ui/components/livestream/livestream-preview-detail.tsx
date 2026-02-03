@@ -1,5 +1,5 @@
 import { Livestream } from "../../types/livestream";
-import { User } from "../../types/user";
+import { PublicUser } from "../../types/user";
 import { dateDiffFromNow } from "@/utils/timeFormats";
 import IconClock from "../icons/clock";
 import IconEye from "../icons/eye";
@@ -11,7 +11,7 @@ const LivestreamPreviewDetailView = ({
     user,
 }: {
     livestream: Livestream;
-    user: User | null;
+    user: PublicUser | null;
 }) => {
     const { t } = useT("common");
 

@@ -27,6 +27,7 @@ func (r *postgresUserRepo) GetById(ctx context.Context, userId uuid.UUID) (*doma
 			u.bio,
 			u.profile_picture,
 			u.background_picture,
+			(SELECT (COUNT(*))::int FROM followers f WHERE f.user_id = u.id) AS follower_count,
 			l.title,
 			l.description,
 			l.thumbnail_url,
@@ -71,10 +72,12 @@ func (r *postgresUserRepo) GetById(ctx context.Context, userId uuid.UUID) (*doma
 					social.Twitter = &val
 				case "instagram":
 					social.Instagram = &val
+				case "linkedin":
+					social.LinkedIn = &val
 				case "github":
 					social.Github = &val
 				case "tiktok":
-					social.LinkedIn = &val
+					social.TikTok = &val
 				case "youtube":
 					social.Youtube = &val
 				case "website":

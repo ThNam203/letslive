@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import useUser from "../../hooks/user";
-import { User } from "../../types/user";
+import { PublicUser } from "../../types/user";
 import { GetAllUsers } from "../../lib/api/user";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { cn } from "@/utils/cn";
@@ -23,7 +23,7 @@ export default function AllChannelsView({
     minimizeLeftBarIcon?: React.ReactNode;
 }) {
     const curUser = useUser((state) => state.user);
-    const [users, setUsers] = useState<User[]>([]);
+    const [users, setUsers] = useState<PublicUser[]>([]);
     const { t } = useT(["common", "api-response", "fetch-error"]);
     useEffect(() => {
         const fetchAllUsers = async () => {
@@ -116,7 +116,7 @@ export default function AllChannelsView({
                                     </p>
                                     <p className="text-muted-foreground text-xs">
                                         {t("common:followers_with_count", {
-                                            count: user.followerCount ?? 0,
+                                            count: user.followerCount,
                                         })}
                                     </p>
                                     <p className="text-muted-foreground text-xs">

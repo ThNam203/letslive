@@ -8,5 +8,6 @@ type SocialMediaLinks struct {
 	Github    *string `json:"github,omitempty" validate:"omitempty,url"`
 	Youtube   *string `json:"youtube,omitempty" validate:"omitempty,url"`
 	Website   *string `json:"website,omitempty" validate:"omitempty,url"`
+	TikTok    *string `json:"tiktok,omitempty" validate:"omitempty,url"`
 }
 

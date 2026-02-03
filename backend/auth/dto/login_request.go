@@ -1,7 +1,7 @@
 package dto
 
 type LogInRequestDTO struct {
-	Email          string `validate:"required,email" example:"hthnam203@gmail.com"`
-	Password       string `validate:"required,password" example:"123123123"`
-	TurnstileToken string `validate:"required"`
+	Email          string `json:"email" validate:"required,email" example:"hthnam203@gmail.com"`
+	Password       string `json:"password" validate:"required,password" example:"123123123"`
+	TurnstileToken string `json:"turnstileToken" validate:"required"`
 }
