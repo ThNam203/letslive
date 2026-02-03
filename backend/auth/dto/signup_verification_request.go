@@ -1,7 +1,7 @@
 package dto
 
 type SignUpRequestVerificationRequestDTO struct {
-	Email          string `validate:"required,email" example:"hthnam203@gmail.com"`
-	TurnstileToken string `validate:"required"`
+	Email          string `json:"email" validate:"required,email" example:"hthnam203@gmail.com"`
+	TurnstileToken string `json:"turnstileToken" validate:"required"`
 }
 

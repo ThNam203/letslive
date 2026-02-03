@@ -10,4 +10,3 @@ type SocialMediaLinks struct {
 	Website   *string `json:"website,omitempty" validate:"omitempty,url"`
 	TikTok    *string `json:"tiktok,omitempty" validate:"omitempty,url"`
 }
-
