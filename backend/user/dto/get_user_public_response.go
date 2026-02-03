@@ -27,4 +27,3 @@ type GetUserPublicResponseDTO struct {
 	SocialMediaLinks      *SocialMediaLinks `json:"socialMediaLinks,omitempty"`
 	SocialLinksJSON       string            `json:"-"`
 }
-

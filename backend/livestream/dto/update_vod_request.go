@@ -6,4 +6,3 @@ type UpdateVODRequestDTO struct {
 	ThumbnailURL *string `json:"thumbnailUrl,omitempty" validate:"omitempty"`
 	Visibility   *string `json:"visibility,omitempty" validate:"omitempty,oneof=public private"`
 }
-
