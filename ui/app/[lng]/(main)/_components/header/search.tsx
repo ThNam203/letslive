@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 import Link from "next/link";
 import useT from "@/hooks/use-translation";
-import { User } from "@/types/user";
+import { PublicUser } from "@/types/user";
 import { SearchUsersByUsername } from "@/lib/api/user";
 import { toast } from "react-toastify";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ export default function SearchBar({
     className?: string;
 }) {
     const [query, setQuery] = useState("");
-    const [results, setResults] = useState<User[]>([]);
+    const [results, setResults] = useState<PublicUser[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [showResults, setShowResults] = useState(false);
     const { t } = useT(["common", "api-response", "fetch-error"]);

@@ -6,7 +6,7 @@ import { VideoInfo } from "@/components/custom_react_player/streaming-frame";
 import { VODFrame } from "@/components/custom_react_player/vod-frame";
 import VODCard from "@/components/livestream/vod-card";
 import { VOD } from "@/types/vod";
-import { User } from "@/types/user";
+import { PublicUser } from "@/types/user";
 import { GetPublicVODsOfUser, GetVODInformation } from "@/lib/api/vod";
 import { GetUserById } from "@/lib/api/user";
 import ProfileView from "@/app/[lng]/(main)/users/[userId]/profile";
@@ -14,11 +14,11 @@ import useT from "@/hooks/use-translation";
 
 export default function VODPage() {
     const { t } = useT(["fetch-error", "api-response"]);
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<PublicUser | null>(null);
     const [vods, setVods] = useState<VOD[]>([]);
     const [isExtraOpen, setIsExtraOpen] = useState(false);
 
-    const updateUser = (newUserInfo: User) => {
+    const updateUser = (newUserInfo: PublicUser) => {
         setUser((prev) => {
             if (prev)
                 return {

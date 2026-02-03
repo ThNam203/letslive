@@ -1,33 +1,39 @@
 import { ApiResponse } from "@/types/fetch-response";
-import { LivestreamInformation, User } from "../../types/user";
+import {
+    LivestreamInformation,
+    MeUser,
+    PublicUser,
+} from "../../types/user";
 import { fetchClient } from "@/utils/fetchClient";
 
 export async function SearchUsersByUsername(
     query: string,
-): Promise<ApiResponse<User[]>> {
-    return fetchClient<ApiResponse<User[]>>(
+): Promise<ApiResponse<PublicUser[]>> {
+    return fetchClient<ApiResponse<PublicUser[]>>(
         `/users/search?username=${encodeURIComponent(query)}`,
     );
 }
 
-export async function GetUserById(userId: string): Promise<ApiResponse<User>> {
-    return fetchClient<ApiResponse<User>>(`/user/${userId}`);
+export async function GetUserById(
+    userId: string,
+): Promise<ApiResponse<PublicUser>> {
+    return fetchClient<ApiResponse<PublicUser>>(`/user/${userId}`);
 }
 
 export async function GetAllUsers(
     page: number = 0,
-): Promise<ApiResponse<User[]>> {
-    return fetchClient<ApiResponse<User[]>>(`/users?page=${page}`);
+): Promise<ApiResponse<PublicUser[]>> {
+    return fetchClient<ApiResponse<PublicUser[]>>(`/users?page=${page}`);
 }
 
-export async function GetMeProfile(): Promise<ApiResponse<User>> {
-    return fetchClient<ApiResponse<User>>(`/user/me`);
+export async function GetMeProfile(): Promise<ApiResponse<MeUser>> {
+    return fetchClient<ApiResponse<MeUser>>(`/user/me`);
 }
 
 export async function UpdateProfile(
-    user: Partial<User>,
-): Promise<ApiResponse<User>> {
-    return fetchClient<ApiResponse<User>>(`/user/me`, {
+    user: Partial<MeUser>,
+): Promise<ApiResponse<MeUser>> {
+    return fetchClient<ApiResponse<MeUser>>(`/user/me`, {
         method: "PUT",
         body: JSON.stringify(user),
     });

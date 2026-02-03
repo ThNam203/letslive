@@ -17,6 +17,7 @@ type SocialMediaLinks struct {
 	Github    *string `json:"github,omitempty" validate:"omitempty,url"`
 	Youtube   *string `json:"youtube,omitempty" validate:"omitempty,url"`
 	Website   *string `json:"website,omitempty" validate:"omitempty,url"`
+	TikTok    *string `json:"tiktok,omitempty" validate:"omitempty,url"`
 }
 
 type User struct {
@@ -32,6 +33,7 @@ type User struct {
 	Bio                   *string      `json:"bio,omitempty" db:"bio"`
 	ProfilePicture        *string      `json:"profilePicture,omitempty" db:"profile_picture"`
 	BackgroundPicture     *string      `json:"backgroundPicture,omitempty" db:"background_picture"`
+	FollowerCount         int          `json:"followerCount" db:"follower_count"`
 	LivestreamInformation `json:"livestreamInformation,omitempty"`
 	SocialMediaLinks      `json:"socialMediaLinks,omitempty"`
 	SocialLinksJSON       string `json:"-"` // TODO: should i use this

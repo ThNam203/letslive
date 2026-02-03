@@ -3,14 +3,12 @@ export type Livestream = {
     userId: string;
     title: string;
     description: string | null;
-    thumbnailUrl: string;
-    status: string;
+    thumbnailUrl: string | null;
     viewCount: number;
     visibility: "public" | "private";
     startedAt: string;
-    endedAt: string;
-    playbackUrl: string;
+    endedAt: string | null;
     createdAt: string;
     updatedAt: string;
-    duration: number;
+    vodId: string | null;
 };

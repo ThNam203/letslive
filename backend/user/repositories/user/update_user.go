@@ -79,6 +79,7 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 			"linkedin":  links.LinkedIn,
 			"youtube":   links.Youtube,
 			"website":   links.Website,
+			"tiktok":    links.TikTok,
 		}
 
 		for platform, url := range platforms {

@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { dateDiffFromNow, formatSeconds } from "@/utils/timeFormats";
 import GLOBAL from "../../global";
 import { VOD } from "@/types/vod";
-import { User } from "@/types/user";
+import { PublicUser } from "@/types/user";
 import LiveImage from "./live-image";
 import { cn } from "@/utils/cn";
 import useT from "@/hooks/use-translation";
@@ -34,7 +33,7 @@ export interface VODCardProps {
     className?: string;
     onEdit?: () => void;
     onDelete?: () => void;
-    user?: User | null;
+    user?: PublicUser | null;
 }
 
 export default function VODCard({
@@ -51,7 +50,7 @@ export default function VODCard({
             : "common",
     );
     const router = useRouter();
-    const [user, setUser] = useState<User | null>(providedUser ?? null);
+    const [user, setUser] = useState<PublicUser | null>(providedUser ?? null);
 
     useEffect(() => {
         if (variant === "with-user" && !providedUser) {

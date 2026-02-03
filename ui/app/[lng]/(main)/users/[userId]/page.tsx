@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { User } from "@/types/user";
+import { PublicUser } from "@/types/user";
 import {
     StreamingFrame,
     VideoInfo,
@@ -22,12 +22,12 @@ import useT from "@/hooks/use-translation";
 
 export default function Livestreaming() {
     const { t } = useT(["common", "users"]);
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<PublicUser | null>(null);
     const [livestream, setLivestream] = useState<Livestream | null>(null);
     const [vods, setVods] = useState<VOD[]>([]);
     const [isChatOpen, setIsChatOpen] = useState(false);
 
-    const updateUser = (newUserInfo: User) => {
+    const updateUser = (newUserInfo: PublicUser) => {
         setUser((prev) => {
             if (prev) {
                 return {
