@@ -12,7 +12,6 @@ import IconYoutube from "@/components/icons/youtube";
 import IconGlobe from "@/components/icons/globe";
 import IconTiktok from "@/components/icons/tiktok";
 import IconClose from "@/components/icons/close";
-import { useTheme } from "next-themes";
 import useT from "@/hooks/use-translation";
 import { toast } from "react-toastify";
 import { UpdateProfile } from "@/lib/api/user";
@@ -88,7 +87,6 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
     );
 
     const { t } = useT("common");
-    const { resolvedTheme } = useTheme();
 
     const handleInputChange = (platform: string, value: string) => {
         setLinks((prev) => ({
@@ -173,18 +171,6 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
         return undefined;
     };
 
-    const getIconTheme = (label: string) => {
-        const mainColor = resolvedTheme === "light" ? "white" : "transparent";
-        const color = resolvedTheme === "light" ? "black" : "white";
-
-        return label === "Facebook"
-            ? {
-                  mainColor,
-                  color,
-              }
-            : { color };
-    };
-
     return (
         <div className="space-y-2">
             {platformOptions.map(
@@ -215,7 +201,6 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                                 ? "text-foreground"
                                                 : "text-muted-foreground group-hover:text-foreground",
                                         )}
-                                        {...getIconTheme(label)}
                                     />
                                     {hasValue ? (
                                         <div className="flex flex-1 items-center gap-2">
@@ -236,7 +221,6 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                 <div className="flex items-center gap-3 rounded-lg border border-primary/40 bg-primary/20 px-4 py-3">
                                     <Icon
                                         className="h-5 w-5 flex-shrink-0"
-                                        {...getIconTheme(label)}
                                     />
                                     <div className="relative flex-1">
                                         <Input
@@ -268,7 +252,7 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                                     links[value] || "",
                                                 )
                                             }
-                                            className="absolute right-12 top-1/2 -translate-y-1/2 text-primary-foreground transition-colors"
+                                            className="absolute right-12 top-1/2 -translate-y-1/2 text-foreground transition-colors"
                                             aria-label="Update field button"
                                         >
                                             <IconCheck className="h-4 w-4" />
@@ -277,7 +261,7 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                             onClick={() =>
                                                 collapseField(value, !hasValue)
                                             }
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-foreground transition-colors"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground transition-colors"
                                             aria-label="Close field button"
                                         >
                                             <IconClose className="h-4 w-4" />
