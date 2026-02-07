@@ -6,3 +6,6 @@ CREATE DATABASE letslive_livestream;
 
 -- 3. Create the 'letslive_user' database
 CREATE DATABASE letslive_user;
+
+-- 4. Create the 'letslive_finance' database
+CREATE DATABASE letslive_finance;
