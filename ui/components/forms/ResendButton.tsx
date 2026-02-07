@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button"; // Adjust the import path based on your project structure
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 
 // --- Component Props Interface ---

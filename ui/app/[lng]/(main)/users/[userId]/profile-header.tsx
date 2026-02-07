@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import useUser from "@/hooks/user";
 import { useState } from "react";
 import { FollowOtherUser, UnfollowOtherUser } from "@/lib/api/user";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import { Button } from "@/components/ui/button";
 import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";

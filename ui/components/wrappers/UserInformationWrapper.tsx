@@ -4,7 +4,7 @@ import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
 import { GetMeProfile } from "@/lib/api/user";
 import { useEffect } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 
 export default function UserInformationWrapper({
     children,

@@ -13,7 +13,7 @@ import {
     HoverCardTrigger,
 } from "../ui/hover-card";
 import useT from "@/hooks/use-translation";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 
 export default function AllChannelsView({
     isMinimized = false,

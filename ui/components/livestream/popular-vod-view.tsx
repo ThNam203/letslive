@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 import { GetPopularVODs } from "../../lib/api/vod";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import IconFilm from "../icons/film";
 import { VOD } from "@/types/vod";
 import useT from "@/hooks/use-translation";

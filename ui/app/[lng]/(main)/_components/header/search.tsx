@@ -6,7 +6,7 @@ import Link from "next/link";
 import useT from "@/hooks/use-translation";
 import { PublicUser } from "@/types/user";
 import { SearchUsersByUsername } from "@/lib/api/user";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import { Input } from "@/components/ui/input";
 import IconClose from "@/components/icons/close";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

@@ -13,7 +13,7 @@ import IconGlobe from "@/components/icons/globe";
 import IconTiktok from "@/components/icons/tiktok";
 import IconClose from "@/components/icons/close";
 import useT from "@/hooks/use-translation";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import { UpdateProfile } from "@/lib/api/user";
 import IconCheck from "@/components/icons/check";
 import { SocialMediaLinks } from "@/types/user";

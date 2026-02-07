@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import LivestreamPreviewView from "./livestream-preview";
 import { GetPopularLivestreams } from "../../lib/api/livestream";
 import { Livestream } from "../../types/livestream";

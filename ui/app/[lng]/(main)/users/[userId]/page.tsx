@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import { PublicUser } from "@/types/user";
 import {
     StreamingFrame,
@@ -98,7 +98,7 @@ export default function Livestreaming() {
                 }
             } catch (err) {
                 console.error(err);
-                toast(t("api-response:unexpected_error"), { type: "error" });
+                toast(undefined, { type: "error" });
             }
         };
 

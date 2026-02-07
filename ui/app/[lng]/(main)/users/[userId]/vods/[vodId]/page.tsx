@@ -1,7 +1,7 @@
 "use client";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import { VideoInfo } from "@/components/custom_react_player/streaming-frame";
 import { VODFrame } from "@/components/custom_react_player/vod-frame";
 import VODCard from "@/components/livestream/vod-card";

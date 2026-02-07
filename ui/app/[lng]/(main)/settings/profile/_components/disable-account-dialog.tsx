@@ -17,7 +17,7 @@ import { Logout } from "@/lib/api/auth";
 import { UpdateProfile } from "@/lib/api/user";
 import { UserStatus } from "@/types/user";
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 
 export default function DisableAccountDialog({
