@@ -74,6 +74,8 @@ jobs:
           USER_DB_PASSWORD=${{ secrets.USER_DB_PASSWORD }}
           AUTH_DB_USER=${{ secrets.AUTH_DB_USER }}
           AUTH_DB_PASSWORD=${{ secrets.AUTH_DB_PASSWORD }}
+          FINANCE_DB_USER=${{ secrets.FINANCE_DB_USER }}
+          FINANCE_DB_PASSWORD=${{ secrets.FINANCE_DB_PASSWORD }}
 
           # MinIO credentials
           MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}

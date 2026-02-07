@@ -15,6 +15,7 @@ jobs:
         dockerfile: [
           { path: './backend/auth', name: 'letslive-auth', context: './backend/auth' },
           { path: './backend/user', name: 'letslive-user', context: './backend/user' },
+          { path: './backend/finance', name: 'letslive-finance', context: './backend/finance' },
           { path: './backend/transcode', name: 'letslive-transcode', context: './backend/transcode' },
           { path: './backend/livestream', name: 'letslive-livestream', context: './backend/livestream' },
           { path: './backend/configserver', name: 'letslive-configserver', context: './backend/configserver' },

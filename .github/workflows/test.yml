@@ -30,7 +30,7 @@ jobs:
 
     strategy:
       matrix:
-        service: [auth, transcode, livestream, user]  # list of go services
+        service: [auth, transcode, livestream, user, finance]  # list of go services
 
     steps:
       - name: Checkout repository
