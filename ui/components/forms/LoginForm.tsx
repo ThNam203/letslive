@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import { LogIn } from "@/lib/api/auth";
 import IconEmail from "../icons/email";
 import FormErrorText from "./FormErrorText";

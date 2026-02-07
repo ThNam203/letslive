@@ -3,7 +3,7 @@ import { FILE_SIZE_LIMIT_MB_UNIT } from "@/constant/image";
 import { cn } from "@/utils/cn";
 import { IsValidFileSizeInMB } from "@/utils/file";
 import React from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement>;

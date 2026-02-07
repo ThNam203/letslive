@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import useUser from "../../../../../hooks/user";
 import { Logout } from "../../../../../lib/api/auth";
 import { Button } from "../../../../../components/ui/button";

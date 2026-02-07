@@ -33,5 +33,6 @@
     "res_succ_sent_verification_email": "Verification email sent, please check your inbox",
     "res_succ_ok": "Success",
     "res_succ_login": "Login successfully",
-    "res_succ_sign_up": "Sign up successfully"
+    "res_succ_sign_up": "Sign up successfully",
+    "default_error": "Something went wrong. Please try again."
 }

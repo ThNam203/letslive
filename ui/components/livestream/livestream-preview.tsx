@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import { GetUserById } from "../../lib/api/user";
 import { Card, CardContent } from "../ui/card";
 import { cn } from "@/utils/cn";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 
 const LivestreamPreviewView = ({

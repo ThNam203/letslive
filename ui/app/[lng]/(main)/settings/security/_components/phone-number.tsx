@@ -6,7 +6,7 @@ import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
 import { UpdateProfile } from "@/lib/api/user";
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { cn } from "@/utils/cn";
 

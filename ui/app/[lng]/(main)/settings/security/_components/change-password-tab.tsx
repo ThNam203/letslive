@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import { ChangePassword } from "@/lib/api/auth";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";

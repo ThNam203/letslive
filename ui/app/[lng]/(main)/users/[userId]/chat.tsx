@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import useUser from "@/hooks/user";
 import { ReceivedMessage, SendMessage } from "@/types/message";
 import { GetMessages } from "@/lib/api/chat";

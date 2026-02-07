@@ -33,5 +33,6 @@
     "res_succ_sent_verification_email": "Email xác thực đã được gửi, vui lòng kiểm tra hộp thư",
     "res_succ_ok": "Thành công",
     "res_succ_login": "Đăng nhập thành công",
-    "res_succ_sign_up": "Đăng kí thành công"
+    "res_succ_sign_up": "Đăng kí thành công",
+    "default_error": "Đã xảy ra lỗi. Vui lòng thử lại."
 }

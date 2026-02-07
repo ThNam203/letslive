@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import useUser from "@/hooks/user";
 import { RequestToGenerateNewAPIKey } from "@/lib/api/user";
 import { Label } from "@/components/ui/label";

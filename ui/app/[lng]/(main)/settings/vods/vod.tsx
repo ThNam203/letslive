@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { DeleteVOD, UpdateVOD } from "@/lib/api/vod";
-import { toast } from "react-toastify";
+import { toast } from "@/components/utils/toast";
 import { UploadFile } from "@/lib/api/utils";
 import GLOBAL from "@/global";
 import IconSave from "@/components/icons/save";
