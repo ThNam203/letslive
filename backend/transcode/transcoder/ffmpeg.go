@@ -10,105 +10,167 @@ import (
 	"sen1or/letslive/transcode/config"
 	"sen1or/letslive/transcode/pkg/logger"
 	"strings"
+	"syscall"
 )
 
 type Transcoder struct {
-	stdin       *io.PipeReader
+	inputPipe   *io.PipeReader
 	commandExec *exec.Cmd
 	config      config.Transcode
 	onStart     func()
 }
 
-func NewTranscoder(pipeOut *io.PipeReader, config config.Transcode, onStart func()) *Transcoder {
+func NewTranscoder(inputPipe *io.PipeReader, config config.Transcode, onStart func()) *Transcoder {
 	return &Transcoder{
-		stdin:   pipeOut,
-		config:  config,
-		onStart: onStart,
+		inputPipe: inputPipe,
+		config:    config,
+		onStart:   onStart,
 	}
 }
 
-func (t *Transcoder) Start(publishName string) {
+func (t *Transcoder) Start(ctx context.Context, publishName string) {
 	// if there is no remote (or external storage), just export files directly to public folder and serves
 	var outputDir = filepath.Join(t.config.PrivateHLSPath, publishName)
 
 	var videoMaps = make([]string, 0)
-	var audioMaps = make([]string, 0)
 	var streamMaps = make([]string, 0)
 
 	for index, quality := range t.config.FFMpegSetting.Qualities {
-		var g = quality.FPS * t.config.FFMpegSetting.HLSTime
-		var keyint_min = t.config.FFMpegSetting.HLSTime
+		// GOP/keyframe should be keyint_min == g == fps * hls_time
+		keyint := quality.FPS * t.config.FFMpegSetting.HLSTime
 
-		videoMaps = append(videoMaps, fmt.Sprintf("-map v:0 -s:%v %s -r:%v %v -maxrate:%v %s -bufsize:%v %s -g:%v %v -keyint_min:%v %v", index, quality.Resolution, index, quality.FPS, index, quality.MaxBitrate, index, quality.BufSize, index, g, index, keyint_min))
-		audioMaps = append(audioMaps, "-map a:0")
-		streamMaps = append(streamMaps, fmt.Sprintf("v:%v,a:%v", index, index))
+		videoMaps = append(videoMaps, fmt.Sprintf("-map v:0 -s:%v %s -r:%v %v -maxrate:%v %s -bufsize:%v %s -g:%v %v -keyint_min:%v %v", index, quality.Resolution, index, quality.FPS, index, quality.MaxBitrate, index, quality.BufSize, index, keyint, index, keyint))
+		streamMaps = append(streamMaps, fmt.Sprintf("v:%v,a:0", index))
 	}
 
-	var ffmpegFlags = []string{
+	args := []string{
 		"-hide_banner",
-		"-re",
-		"-i pipe:0",
-		fmt.Sprintf("-preset %s", t.config.FFMpegSetting.Preset),
-		"-sc_threshold 0",
-		"-c:v libx264",
-		"-pix_fmt yuv420p",
-		fmt.Sprintf("-crf %v", t.config.FFMpegSetting.CRF),
-		strings.Join(videoMaps, " "),
-		strings.Join(audioMaps, " "),
-		"-c:a aac",
-		"-b:a 128k",
-		"-ac 1",
-		"-ar 44100",
-		"-f hls",
-		fmt.Sprintf("-hls_time %v", t.config.FFMpegSetting.HLSTime),
-		fmt.Sprintf("-hls_delete_threshold %v", t.config.FFMpegSetting.HlsMaxSize-t.config.FFMpegSetting.HlsListSize),
-		fmt.Sprintf("-hls_list_size %v", t.config.FFMpegSetting.HlsListSize),
-		"-hls_flags delete_segments",
-		fmt.Sprintf("-master_pl_name %s", t.config.FFMpegSetting.MasterFileName),
-		fmt.Sprintf(`-var_stream_map "%s"`, strings.Join(streamMaps, " ")),
-		filepath.Join(outputDir, "/%v/stream.m3u8"),
-		"-vf fps=1/60 -update 1",
-		filepath.Join(outputDir, "thumbnail.jpeg"),
+		"-i", "pipe:0",
+		"-sc_threshold", "0",
+		"-preset", t.config.FFMpegSetting.Preset,
+		"-c:v", "libx264",
+		"-pix_fmt", "yuv420p",
+		"-crf", fmt.Sprintf("%v", t.config.FFMpegSetting.CRF),
 	}
+	args = append(args, strings.Fields(strings.Join(videoMaps, " "))...)
+	args = append(args, "-map", "a:0")
+	args = append(args,
+		"-c:a", "aac",
+		"-b:a", "128k",
+		"-ac", "1",
+		"-ar", "44100",
+		"-f", "hls",
+		"-hls_time", fmt.Sprintf("%v", t.config.FFMpegSetting.HLSTime),
+		"-hls_delete_threshold", fmt.Sprintf("%v", t.config.FFMpegSetting.HlsMaxSize-t.config.FFMpegSetting.HlsListSize),
+		"-hls_list_size", fmt.Sprintf("%v", t.config.FFMpegSetting.HlsListSize),
+		"-hls_flags", "delete_segments",
+		"-master_pl_name", t.config.FFMpegSetting.MasterFileName,
+		"-var_stream_map", strings.Join(streamMaps, " "),
+		filepath.Join(outputDir, "%v", "stream.m3u8"),
+	)
 
-	ffmpegFlagsString := strings.Join(ffmpegFlags, " ")
-	ffmpegCommand := t.config.FFMpegSetting.FFMpegPath + " " + ffmpegFlagsString
+	t.commandExec = exec.CommandContext(ctx, t.config.FFMpegSetting.FFMpegPath, args...)
 
-	t.commandExec = exec.Command("sh", "-c", ffmpegCommand)
-	t.commandExec.Stdin = t.stdin
+	// clone into 2 pipes, one for stream, one for thumbnail
+	r1, w1 := io.Pipe()
+	r2, w2 := io.Pipe()
+
+	go func() {
+		defer w1.Close()
+		defer w2.Close()
+		io.Copy(io.MultiWriter(w1, w2), t.inputPipe)
+	}()
+
+	t.commandExec.Stdin = r1
+	go generateThumbnail(ctx, t.config.FFMpegSetting.FFMpegPath, outputDir, r2)
 
 	stderr, err := t.commandExec.StderrPipe()
 	if err != nil {
-		logger.Errorf(context.TODO(), "failed to get stderr pipe up: %v", err)
+		logger.Errorf(ctx, "failed to get stderr pipe up: %v", err)
 	}
 
 	if err := t.commandExec.Start(); err != nil {
-		logger.Errorf(context.TODO(), "error while starting ffmpeg command: %s", err)
+		logger.Errorf(ctx, "error while starting ffmpeg command: %s", err)
 	}
 
-	t.onStart()
+	if t.onStart != nil {
+		t.onStart()
+	}
 
 	go func() {
-		scanner := bufio.NewScanner(stderr)
-		for scanner.Scan() {
-			//logger.Warnf("ffmpeg error pipe: %v", scanner.Text())
-		}
-
-		if err := scanner.Err(); err != nil {
-			logger.Errorf(context.TODO(), "error in reading stderr pipe: %v", err)
+		scanner := bufio.NewReader(stderr)
+		for {
+			_, err := scanner.ReadString('\n')
+			if err != nil {
+				if err != io.EOF {
+					logger.Errorf(ctx, "stderr read error: %v", err)
+				}
+				break
+			}
 		}
 	}()
 
-	err = t.commandExec.Wait()
+	go func() {
+		if err := t.commandExec.Wait(); err != nil {
+			logger.Errorf(ctx, "ffmpeg failed: %s", err)
+		}
+	}()
+}
+
+func (t *Transcoder) Stop(ctx context.Context) {
+	if t.commandExec == nil || t.commandExec.Process == nil {
+		return
+	}
+
+	err := t.commandExec.Process.Signal(syscall.SIGTERM)
 	if err != nil {
-		logger.Errorf(context.TODO(), "ffmpeg failed: %s", err)
-		t.Stop()
+		logger.Errorf(ctx, "transcoder error while terminating: %s", err)
 	}
 }
 
-func (t *Transcoder) Stop() {
-	err := t.commandExec.Process.Kill()
-	if err != nil {
-		logger.Errorf(context.TODO(), "transcoder error while being killed: %s", err)
+func generateThumbnail(ctx context.Context, ffmpegPath, outputDir string, inputStream io.Reader) {
+	args := []string{
+		"-hide_banner",
+		"-loglevel", "error",
+		"-i", "pipe:0",
+		"-map", "v:0",
+		"-vf", "select='eq(pict_type\\,I)*gte(t\\,5)',fps=1/60,scale=640:-1", // take only I frame, delay start 5 second, generate per 60 frames
+		"-q:v", "2", // image decoder quality
+		"-update", "1", // just one image instead of multiple
+		filepath.Join(outputDir, "thumbnail.jpg"),
 	}
+
+	cmd := exec.CommandContext(ctx, ffmpegPath, args...)
+	cmd.Stdin = inputStream
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		logger.Errorf(ctx, "failed to get thumbnail stderr pipe up: %v", err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		logger.Errorf(ctx, "error while starting thumnail command: %s", err)
+	}
+
+	// this process doesn't need a gracefully shutdown hehe
+	defer cmd.Process.Kill()
+
+	go func() {
+		scanner := bufio.NewReader(stderr)
+		for {
+			_, err := scanner.ReadString('\n')
+			if err != nil {
+				if err != io.EOF {
+					logger.Errorf(ctx, "stderr read error: %v", err)
+				}
+				break
+			}
+		}
+	}()
+
+	go func() {
+		if err := cmd.Wait(); err != nil {
+			logger.Errorf(ctx, "ffmpeg failed: %s", err)
+		}
+	}()
 }
