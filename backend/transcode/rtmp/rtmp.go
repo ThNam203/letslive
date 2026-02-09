@@ -133,10 +133,11 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 		startTime = time.Now()
 	}
 
+	// TODO: check if ctx should be from the connection or from the server
 	transcoder := transcoder.NewTranscoder(pipeOut, s.config.Transcode, startTimer)
-	defer transcoder.Stop()
+	defer transcoder.Stop(s.ctx)
 	go func() {
-		transcoder.Start(streamId)
+		transcoder.Start(s.ctx, streamId)
 	}()
 
 	w := flv.NewMuxer(pipeIn)
@@ -144,7 +145,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	for {
 		pkt, err := c.ReadPacket()
 		if err == io.EOF {
-			duration := int64(math.Ceil(time.Now().Sub(startTime).Seconds()) - 7) // TODO: proper duration calculation
+			duration := int64(math.Ceil(time.Since(startTime).Seconds()) - 7) // TODO: proper duration calculation
 			pipeOut.Close()
 			pipeIn.Close()
 			s.onDisconnect(streamId, duration)
@@ -153,7 +154,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 
 		if err := w.WritePacket(pkt); err != nil {
 			logger.Errorf(s.ctx, "failed to write rtmp package: %s", err)
-			duration := int64(math.Ceil(time.Now().Sub(startTime).Seconds()) - 7)
+			duration := int64(math.Ceil(time.Since(startTime).Seconds()) - 7)
 			pipeIn.Close()
 			pipeOut.Close()
 			s.onDisconnect(streamId, duration)
