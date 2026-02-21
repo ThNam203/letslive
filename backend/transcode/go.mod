@@ -1,11 +1,11 @@
 module sen1or/letslive/transcode
 
-go 1.25.5
+go 1.25.7
 
 require (
 	github.com/gofrs/uuid/v5 v5.4.0
 	github.com/gorilla/mux v1.8.1
-	github.com/hashicorp/consul/api v1.33.2
+	github.com/hashicorp/consul/api v1.33.3
 	github.com/minio/minio-go/v7 v7.0.85
 	github.com/nareix/joy5 v0.0.0-20210317075623-2c912ca30590
 	github.com/radovskyb/watcher v1.0.7
