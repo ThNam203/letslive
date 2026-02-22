@@ -44,7 +44,7 @@
         "react-turnstile": "^1.1.4",
         "screenfull": "^6.0.2",
         "sharp": "^0.33.5",
-        "tailwind-merge": "^2.5.5",
+        "tailwind-merge": "^3.5.0",
         "tailwindcss-animate": "^1.0.7",
         "zod": "^4.3.6",
         "zustand": "^5.0.3"
