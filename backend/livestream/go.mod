@@ -1,16 +1,16 @@
 module sen1or/letslive/livestream
 
-go 1.25.5
+go 1.26.0
 
 require (
 	github.com/go-playground/validator/v10 v10.30.1
-	github.com/gofrs/uuid/v5 v5.3.1
-	github.com/golang-jwt/jwt/v5 v5.2.1
-	github.com/hashicorp/consul/api v1.33.2
+	github.com/gofrs/uuid/v5 v5.4.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
+	github.com/hashicorp/consul/api v1.33.3
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/pressly/goose v2.7.0+incompatible
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.62.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.65.0
 	go.opentelemetry.io/otel v1.40.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.40.0
 	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.40.0
