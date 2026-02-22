@@ -44,33 +44,32 @@ func NewAPIServer(userHandler *user.UserHandler, livestreamInfoHandler *livestre
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
-	wrapHandleFuncWithOtel := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
-		handler := otelhttp.WithRouteTag(pattern, http.HandlerFunc(handlerFunc))
-		sm.Handle(pattern, handler)
+	wrap := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
+		sm.Handle(pattern, http.HandlerFunc(handlerFunc))
 	}
 
-	wrapHandleFuncWithOtel("POST /v1/upload-file", a.userHandler.UploadSingleFileToMinIOHandler) // TODO: find another way to upload file
+	wrap("POST /v1/upload-file", a.userHandler.UploadSingleFileToMinIOHandler) // TODO: find another way to upload file
 
-	wrapHandleFuncWithOtel("GET /v1/users", a.userHandler.GetAllUsersPublicHandler) // TODO: should change into get random users
-	wrapHandleFuncWithOtel("GET /v1/users/search", a.userHandler.SearchUsersPublicHandler)
-	wrapHandleFuncWithOtel("GET /v1/user/{userId}", a.userHandler.GetUserByIdPublicHandler)
+	wrap("GET /v1/users", a.userHandler.GetAllUsersPublicHandler) // TODO: should change into get random users
+	wrap("GET /v1/users/search", a.userHandler.SearchUsersPublicHandler)
+	wrap("GET /v1/user/{userId}", a.userHandler.GetUserByIdPublicHandler)
 
-	wrapHandleFuncWithOtel("POST /v1/user/{userId}/follow", a.followHandler.FollowPrivateHandler)
-	wrapHandleFuncWithOtel("DELETE /v1/user/{userId}/unfollow", a.followHandler.UnfollowPrivateHandler)
-	wrapHandleFuncWithOtel("GET /v1/user/me", a.userHandler.GetCurrentUserPrivateHandler)
-	wrapHandleFuncWithOtel("PUT /v1/user/me", a.userHandler.UpdateCurrentUserPrivateHandler)
-	wrapHandleFuncWithOtel("PATCH /v1/user/me/livestream-information", a.livestreamInformationHandler.UpdatePrivateHandler)
-	wrapHandleFuncWithOtel("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKeyPrivateHandler)
+	wrap("POST /v1/user/{userId}/follow", a.followHandler.FollowPrivateHandler)
+	wrap("DELETE /v1/user/{userId}/unfollow", a.followHandler.UnfollowPrivateHandler)
+	wrap("GET /v1/user/me", a.userHandler.GetCurrentUserPrivateHandler)
+	wrap("PUT /v1/user/me", a.userHandler.UpdateCurrentUserPrivateHandler)
+	wrap("PATCH /v1/user/me/livestream-information", a.livestreamInformationHandler.UpdatePrivateHandler)
+	wrap("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKeyPrivateHandler)
 	// TODO: change this to not include the FormData
-	wrapHandleFuncWithOtel("PATCH /v1/user/me/profile-picture", a.userHandler.UpdateUserProfilePicturePrivateHandler)
-	wrapHandleFuncWithOtel("PATCH /v1/user/me/background-picture", a.userHandler.UpdateUserBackgroundPicturePrivateHandler)
+	wrap("PATCH /v1/user/me/profile-picture", a.userHandler.UpdateUserProfilePicturePrivateHandler)
+	wrap("PATCH /v1/user/me/background-picture", a.userHandler.UpdateUserBackgroundPicturePrivateHandler)
 
-	wrapHandleFuncWithOtel("POST /v1/user", a.userHandler.CreateUserInternalHandler)                        // internal
-	wrapHandleFuncWithOtel("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                // internal
-	wrapHandleFuncWithOtel("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler) // internal
+	wrap("POST /v1/user", a.userHandler.CreateUserInternalHandler)                        // internal
+	wrap("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                // internal
+	wrap("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler) // internal
 
-	wrapHandleFuncWithOtel("GET /v1/health", a.generalHandler.RouteServiceHealth)
-	wrapHandleFuncWithOtel("GET /", a.generalHandler.RouteNotFoundHandler)
+	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)
+	wrap("GET /", a.generalHandler.RouteNotFoundHandler)
 
 	// TODO: remove filter
 	finalHandler := otelhttp.NewHandler(sm, "/", otelhttp.WithFilter(func(r *http.Request) bool {
