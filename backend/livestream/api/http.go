@@ -41,28 +41,27 @@ func NewAPIServer(livestreamHandler *livestream.LivestreamHandler, vodHandler *v
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
-	wrapHandleFuncWithOtel := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
-		handler := otelhttp.WithRouteTag(pattern, http.HandlerFunc(handlerFunc))
-		sm.Handle(pattern, handler)
+	wrap := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
+		sm.Handle(pattern, http.HandlerFunc(handlerFunc))
 	}
 
 	//TODO: change to query livestreams
-	wrapHandleFuncWithOtel("GET /v1/vods", a.vodHandler.GetVODsOfUserPublicHandler)
-	wrapHandleFuncWithOtel("GET /v1/vods/author", a.vodHandler.GetVODsOfAuthorPrivateHandler)
-	wrapHandleFuncWithOtel("GET /v1/vods/{vodId}", a.vodHandler.GetVODByIdPublicHandler)
-	wrapHandleFuncWithOtel("GET /v1/popular-livestreams", a.livestreamHandler.GetRecommendedLivestreamsPublicHandler)
-	wrapHandleFuncWithOtel("GET /v1/livestreams", a.livestreamHandler.GetLivestreamOfUserPublicHandler)
-	wrapHandleFuncWithOtel("GET /v1/popular-vods", a.vodHandler.GetRecommendedVODsPublicHandler)
+	wrap("GET /v1/vods", a.vodHandler.GetVODsOfUserPublicHandler)
+	wrap("GET /v1/vods/author", a.vodHandler.GetVODsOfAuthorPrivateHandler)
+	wrap("GET /v1/vods/{vodId}", a.vodHandler.GetVODByIdPublicHandler)
+	wrap("GET /v1/popular-livestreams", a.livestreamHandler.GetRecommendedLivestreamsPublicHandler)
+	wrap("GET /v1/livestreams", a.livestreamHandler.GetLivestreamOfUserPublicHandler)
+	wrap("GET /v1/popular-vods", a.vodHandler.GetRecommendedVODsPublicHandler)
 
-	wrapHandleFuncWithOtel("PATCH /v1/vods/{vodId}", a.vodHandler.UpdateVODMetadataPrivateHandler)
-	wrapHandleFuncWithOtel("DELETE /v1/vods/{vodId}", a.vodHandler.DeleteVODPrivateHandler)
+	wrap("PATCH /v1/vods/{vodId}", a.vodHandler.UpdateVODMetadataPrivateHandler)
+	wrap("DELETE /v1/vods/{vodId}", a.vodHandler.DeleteVODPrivateHandler)
 
-	wrapHandleFuncWithOtel("POST /v1/internal/livestreams/{livestreamId}/end", a.livestreamHandler.EndLivestreamAndCreateVODInternalHandler)
-	wrapHandleFuncWithOtel("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)
+	wrap("POST /v1/internal/livestreams/{livestreamId}/end", a.livestreamHandler.EndLivestreamAndCreateVODInternalHandler)
+	wrap("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)
 
-	wrapHandleFuncWithOtel("GET /v1/health", a.generalHandler.RouteServiceHealth)
+	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)
 
-	wrapHandleFuncWithOtel("GET /", a.generalHandler.RouteNotFoundHandler)
+	wrap("GET /", a.generalHandler.RouteNotFoundHandler)
 
 	// TODO: remove filter
 	finalHandler := otelhttp.NewHandler(sm, "/", otelhttp.WithFilter(func(r *http.Request) bool {
