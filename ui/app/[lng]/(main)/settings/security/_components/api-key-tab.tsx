@@ -55,9 +55,13 @@ export default function ApiKeyTab() {
                 </Label>
                 <Input
                     id="api-key"
-                    value={user?.streamAPIKey}
+                    value={
+                        user?.streamAPIKey
+                            ? "•".repeat(user.streamAPIKey.length)
+                            : ""
+                    }
                     readOnly={true}
-                    className="flex-grow border border-border text-right"
+                    className="flex-grow border border-border text-right font-mono"
                 />
             </div>
             <div className="flex gap-4">
