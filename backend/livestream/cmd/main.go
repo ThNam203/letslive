@@ -11,14 +11,17 @@ import (
 
 	"sen1or/letslive/livestream/api"
 	cfg "sen1or/letslive/livestream/config"
+	usergatewayhttp "sen1or/letslive/livestream/gateway/user/http"
 	livestreamHandler "sen1or/letslive/livestream/handlers/livestream"
 	vodHandler "sen1or/letslive/livestream/handlers/vod"
+	vodCommentHandler "sen1or/letslive/livestream/handlers/vod_comment"
 	"sen1or/letslive/livestream/pkg/discovery"
 	"sen1or/letslive/livestream/pkg/logger"
 	"sen1or/letslive/livestream/pkg/tracer"
 	"sen1or/letslive/livestream/repositories"
 	livestreamService "sen1or/letslive/livestream/services/livestream"
 	vodService "sen1or/letslive/livestream/services/vod"
+	vodCommentService "sen1or/letslive/livestream/services/vod_comment"
 	"sen1or/letslive/livestream/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -169,11 +172,17 @@ func DeregisterDiscoveryService(shutdownContext context.Context, registry discov
 func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
 	var livestreamRepo = repositories.NewLivestreamRepository(dbConn)
 	var vodRepo = repositories.NewVODRepository(dbConn)
+	var vodCommentRepo = repositories.NewVODCommentRepository(dbConn)
+	var vodCommentLikeRepo = repositories.NewVODCommentLikeRepository(dbConn)
+
+	var userGateway = usergatewayhttp.NewUserGateway(registry)
 
 	var livestreamService = livestreamService.NewLivestreamService(livestreamRepo, vodRepo)
 	var vodService = vodService.NewVODService(vodRepo)
+	var vodCommentService = vodCommentService.NewVODCommentService(vodCommentRepo, vodCommentLikeRepo, vodRepo, userGateway, dbConn)
 
 	var livestreamHandler = livestreamHandler.NewLivestreamHandler(livestreamService)
 	var vodHandler = vodHandler.NewVODHandler(vodService)
-	return api.NewAPIServer(livestreamHandler, vodHandler, cfg)
+	var vodCommentHandler = vodCommentHandler.NewVODCommentHandler(vodCommentService)
+	return api.NewAPIServer(livestreamHandler, vodHandler, vodCommentHandler, cfg)
 }

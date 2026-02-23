@@ -23,6 +23,11 @@ const (
 	RES_ERR_LIVESTREAM_UPDATE_FAILED_CODE      = 40006
 	RES_ERR_VOD_CREATE_FAILED_CODE             = 40007
 	RES_ERR_VOD_UPDATE_FAILED_CODE             = 40008
+	RES_ERR_VOD_COMMENT_NOT_FOUND_CODE         = 40009
+	RES_ERR_VOD_COMMENT_CREATE_FAILED_CODE     = 40010
+	RES_ERR_VOD_COMMENT_ALREADY_LIKED_CODE     = 40011
+	RES_ERR_VOD_COMMENT_NOT_LIKED_CODE         = 40012
+	RES_ERR_VOD_COMMENT_DELETE_FAILED_CODE     = 40013
 )
 
 // Error keys
@@ -45,6 +50,11 @@ const (
 	RES_ERR_LIVESTREAM_UPDATE_FAILED_KEY      = "res_err_livestream_update_failed"
 	RES_ERR_VOD_CREATE_FAILED_KEY             = "res_err_vod_create_failed"
 	RES_ERR_VOD_UPDATE_FAILED_KEY             = "res_err_vod_update_failed"
+	RES_ERR_VOD_COMMENT_NOT_FOUND_KEY         = "res_err_vod_comment_not_found"
+	RES_ERR_VOD_COMMENT_CREATE_FAILED_KEY     = "res_err_vod_comment_create_failed"
+	RES_ERR_VOD_COMMENT_ALREADY_LIKED_KEY     = "res_err_vod_comment_already_liked"
+	RES_ERR_VOD_COMMENT_NOT_LIKED_KEY         = "res_err_vod_comment_not_liked"
+	RES_ERR_VOD_COMMENT_DELETE_FAILED_KEY     = "res_err_vod_comment_delete_failed"
 )
 
 // Error templates
@@ -183,5 +193,45 @@ var (
 		Code:       RES_ERR_VOD_UPDATE_FAILED_CODE,
 		Key:        RES_ERR_VOD_UPDATE_FAILED_KEY,
 		Message:    "Failed to update vod record.",
+	}
+
+	RES_ERR_VOD_COMMENT_NOT_FOUND = ResponseTemplate{
+		Success:    false,
+		StatusCode: http.StatusNotFound,
+		Code:       RES_ERR_VOD_COMMENT_NOT_FOUND_CODE,
+		Key:        RES_ERR_VOD_COMMENT_NOT_FOUND_KEY,
+		Message:    "Comment not found.",
+	}
+
+	RES_ERR_VOD_COMMENT_CREATE_FAILED = ResponseTemplate{
+		Success:    false,
+		StatusCode: http.StatusInternalServerError,
+		Code:       RES_ERR_VOD_COMMENT_CREATE_FAILED_CODE,
+		Key:        RES_ERR_VOD_COMMENT_CREATE_FAILED_KEY,
+		Message:    "Failed to create comment.",
+	}
+
+	RES_ERR_VOD_COMMENT_ALREADY_LIKED = ResponseTemplate{
+		Success:    false,
+		StatusCode: http.StatusConflict,
+		Code:       RES_ERR_VOD_COMMENT_ALREADY_LIKED_CODE,
+		Key:        RES_ERR_VOD_COMMENT_ALREADY_LIKED_KEY,
+		Message:    "Comment already liked.",
+	}
+
+	RES_ERR_VOD_COMMENT_NOT_LIKED = ResponseTemplate{
+		Success:    false,
+		StatusCode: http.StatusBadRequest,
+		Code:       RES_ERR_VOD_COMMENT_NOT_LIKED_CODE,
+		Key:        RES_ERR_VOD_COMMENT_NOT_LIKED_KEY,
+		Message:    "Comment has not been liked.",
+	}
+
+	RES_ERR_VOD_COMMENT_DELETE_FAILED = ResponseTemplate{
+		Success:    false,
+		StatusCode: http.StatusInternalServerError,
+		Code:       RES_ERR_VOD_COMMENT_DELETE_FAILED_CODE,
+		Key:        RES_ERR_VOD_COMMENT_DELETE_FAILED_KEY,
+		Message:    "Failed to delete comment.",
 	}
 )

@@ -8,6 +8,7 @@ import (
 	"sen1or/letslive/livestream/handlers/general"
 	"sen1or/letslive/livestream/handlers/livestream"
 	"sen1or/letslive/livestream/handlers/vod"
+	vodcomment "sen1or/letslive/livestream/handlers/vod_comment"
 	"sen1or/letslive/livestream/middlewares"
 	"sen1or/letslive/livestream/pkg/logger"
 
@@ -25,9 +26,10 @@ type APIServer struct {
 	generalHandler    *general.GeneralHandler
 	livestreamHandler *livestream.LivestreamHandler
 	vodHandler        *vod.VODHandler
+	vodCommentHandler *vodcomment.VODCommentHandler
 }
 
-func NewAPIServer(livestreamHandler *livestream.LivestreamHandler, vodHandler *vod.VODHandler, cfg *config.Config) *APIServer {
+func NewAPIServer(livestreamHandler *livestream.LivestreamHandler, vodHandler *vod.VODHandler, vodCommentHandler *vodcomment.VODCommentHandler, cfg *config.Config) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
@@ -35,6 +37,7 @@ func NewAPIServer(livestreamHandler *livestream.LivestreamHandler, vodHandler *v
 		generalHandler:    general.NewGeneralHandler(),
 		livestreamHandler: livestreamHandler,
 		vodHandler:        vodHandler,
+		vodCommentHandler: vodCommentHandler,
 	}
 }
 
@@ -53,8 +56,17 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("GET /v1/livestreams", a.livestreamHandler.GetLivestreamOfUserPublicHandler)
 	wrap("GET /v1/popular-vods", a.vodHandler.GetRecommendedVODsPublicHandler)
 
+	wrap("GET /v1/vods/{vodId}/comments", a.vodCommentHandler.GetCommentsPublicHandler)
+	wrap("POST /v1/vods/{vodId}/comments", a.vodCommentHandler.CreateCommentPrivateHandler)
+
 	wrap("PATCH /v1/vods/{vodId}", a.vodHandler.UpdateVODMetadataPrivateHandler)
 	wrap("DELETE /v1/vods/{vodId}", a.vodHandler.DeleteVODPrivateHandler)
+
+	wrap("GET /v1/vod-comments/{commentId}/replies", a.vodCommentHandler.GetRepliesPublicHandler)
+	wrap("DELETE /v1/vod-comments/{commentId}", a.vodCommentHandler.DeleteCommentPrivateHandler)
+	wrap("POST /v1/vod-comments/{commentId}/like", a.vodCommentHandler.LikeCommentPrivateHandler)
+	wrap("DELETE /v1/vod-comments/{commentId}/like", a.vodCommentHandler.UnlikeCommentPrivateHandler)
+	wrap("POST /v1/vod-comments/liked-ids", a.vodCommentHandler.GetUserLikedCommentIdsPrivateHandler)
 
 	wrap("POST /v1/internal/livestreams/{livestreamId}/end", a.livestreamHandler.EndLivestreamAndCreateVODInternalHandler)
 	wrap("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)
