@@ -15,17 +15,20 @@ import (
 type UserService struct {
 	userRepo                  domains.UserRepository
 	livestreamInformationRepo domains.LivestreamInformationRepository
+	notificationRepo          domains.NotificationRepository
 	minioService              MinIOService
 }
 
 func NewUserService(
 	userRepo domains.UserRepository,
 	livestreamInformationRepo domains.LivestreamInformationRepository,
+	notificationRepo domains.NotificationRepository,
 	minioService MinIOService,
 ) *UserService {
 	return &UserService{
 		userRepo:                  userRepo,
 		livestreamInformationRepo: livestreamInformationRepo,
+		notificationRepo:          notificationRepo,
 		minioService:              minioService,
 	}
 }
@@ -103,6 +106,17 @@ func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequ
 
 	if err := s.livestreamInformationRepo.Create(ctx, createdUser.Id); err != nil {
 		return nil, err
+	}
+
+	// Create welcome notification for the new user (ignore if fails)
+	welcomeNotif := domains.Notification{
+		UserId:  createdUser.Id,
+		Type:    "system", // TODO: add system notification type enum/default values
+		Title:   "Welcome to LetsLive!",
+		Message: "Thanks for signing up. We're glad to have you here. Start by exploring streams or going live yourself.",
+	}
+	if _, err := s.notificationRepo.Create(ctx, welcomeNotif); err != nil {
+		logger.Warnf(ctx, "failed to create welcome notification for user %s: %v", createdUser.Id, err)
 	}
 
 	return createdUser, nil

@@ -1,0 +1,17 @@
+{
+    "title": "Notifications",
+    "mark_all_as_read": "Mark all as read",
+    "loading": "Loading...",
+    "no_notifications": "No notifications",
+    "view_all": "View all notifications",
+    "no_notifications_yet": "No notifications yet.",
+    "please_log_in": "Please log in to view notifications.",
+    "view": "View",
+    "mark_as_read": "Mark as read",
+    "delete": "Delete",
+    "load_more": "Load more",
+    "time_just_now": "just now",
+    "time_m_ago": "{{m}}m ago",
+    "time_h_ago": "{{h}}h ago",
+    "time_d_ago": "{{d}}d ago"
+}

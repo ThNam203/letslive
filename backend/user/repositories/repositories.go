@@ -4,6 +4,7 @@ import (
 	"sen1or/letslive/user/domains"
 	followerrepo "sen1or/letslive/user/repositories/follower"
 	livestreaminforepo "sen1or/letslive/user/repositories/livestream_information"
+	notificationrepo "sen1or/letslive/user/repositories/notification"
 	userrepo "sen1or/letslive/user/repositories/user"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,4 +20,8 @@ func NewFollowRepository(conn *pgxpool.Pool) domains.FollowRepository {
 
 func NewLivestreamInformationRepository(conn *pgxpool.Pool) domains.LivestreamInformationRepository {
 	return livestreaminforepo.NewLivestreamInformationRepository(conn)
+}
+
+func NewNotificationRepository(conn *pgxpool.Pool) domains.NotificationRepository {
+	return notificationrepo.NewNotificationRepository(conn)
 }

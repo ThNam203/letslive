@@ -8,6 +8,7 @@ import (
 	"sen1or/letslive/user/handlers/follow"
 	"sen1or/letslive/user/handlers/general"
 	"sen1or/letslive/user/handlers/livestream_information"
+	"sen1or/letslive/user/handlers/notification"
 	"sen1or/letslive/user/handlers/user"
 	"sen1or/letslive/user/middlewares"
 	"sen1or/letslive/user/pkg/logger"
@@ -27,9 +28,10 @@ type APIServer struct {
 	userHandler                  *user.UserHandler
 	followHandler                *follow.FollowHandler
 	livestreamInformationHandler *livestream_information.LivestreamInformationHandler
+	notificationHandler          *notification.NotificationHandler
 }
 
-func NewAPIServer(userHandler *user.UserHandler, livestreamInfoHandler *livestream_information.LivestreamInformationHandler, followHandler *follow.FollowHandler, cfg *config.Config) *APIServer {
+func NewAPIServer(userHandler *user.UserHandler, livestreamInfoHandler *livestream_information.LivestreamInformationHandler, followHandler *follow.FollowHandler, notificationHandler *notification.NotificationHandler, cfg *config.Config) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
@@ -38,6 +40,7 @@ func NewAPIServer(userHandler *user.UserHandler, livestreamInfoHandler *livestre
 		userHandler:                  userHandler,
 		followHandler:                followHandler,
 		livestreamInformationHandler: livestreamInfoHandler,
+		notificationHandler:          notificationHandler,
 	}
 }
 
@@ -63,6 +66,14 @@ func (a *APIServer) getHandler() http.Handler {
 	// TODO: change this to not include the FormData
 	wrap("PATCH /v1/user/me/profile-picture", a.userHandler.UpdateUserProfilePicturePrivateHandler)
 	wrap("PATCH /v1/user/me/background-picture", a.userHandler.UpdateUserBackgroundPicturePrivateHandler)
+
+	// notifications
+	wrap("GET /v1/user/me/notifications", a.notificationHandler.GetNotificationsPrivateHandler)
+	wrap("GET /v1/user/me/notifications/unread-count", a.notificationHandler.GetUnreadCountPrivateHandler)
+	wrap("PATCH /v1/user/me/notifications/{notificationId}/read", a.notificationHandler.MarkAsReadPrivateHandler)
+	wrap("PATCH /v1/user/me/notifications/read-all", a.notificationHandler.MarkAllAsReadPrivateHandler)
+	wrap("DELETE /v1/user/me/notifications/{notificationId}", a.notificationHandler.DeleteNotificationPrivateHandler)
+	wrap("POST /v1/notifications", a.notificationHandler.CreateNotificationInternalHandler) // internal
 
 	wrap("POST /v1/user", a.userHandler.CreateUserInternalHandler)                        // internal
 	wrap("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                // internal
