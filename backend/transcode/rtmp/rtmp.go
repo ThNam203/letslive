@@ -175,11 +175,17 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 		return "", "", fmt.Errorf("failed to get user information: %s", errRes.Message)
 	}
 
+	thumb := userInfo.Data.LivestreamInformationResponseDTO.ThumbnailURL
+	// empty string is invalid
+	if thumb != nil && *thumb == "" {
+		thumb = nil
+	}
+
 	streamDTO := &livestreamdto.CreateLivestreamRequestDTO{
 		Title:        userInfo.Data.LivestreamInformationResponseDTO.Title,
 		UserId:       userInfo.Data.Id,
 		Description:  userInfo.Data.LivestreamInformationResponseDTO.Description,
-		ThumbnailURL: userInfo.Data.LivestreamInformationResponseDTO.ThumbnailURL,
+		ThumbnailURL: thumb,
 		Visibility:   "public", // TODO: add to livestream information instead of default to public
 	}
 
