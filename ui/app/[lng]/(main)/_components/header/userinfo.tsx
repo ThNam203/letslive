@@ -82,7 +82,7 @@ export default function UserInfo() {
                         )}
                     </Avatar>
                 </PopoverTrigger>
-                <PopoverContent className="w-100 mr-4 border-border bg-muted">
+                <PopoverContent className="w-fit mr-4 border-border bg-muted">
                     <div className="flex w-52 flex-col gap-2 rounded-md px-2 pb-2">
                         {userState.user ? (
                             <>

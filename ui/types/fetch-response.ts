@@ -46,6 +46,7 @@ export enum ApiCode {
     // User (300xx)
     RES_ERR_USER_NOT_FOUND = 30000,
     RES_ERR_IMAGE_TOO_LARGE = 30001,
+    RES_ERR_NOTIFICATION_NOT_FOUND = 30002,
 
     // Livestream / VOD (400xx)
     RES_ERR_LIVESTREAM_UPDATE_AFTER_ENDED = 40000,
@@ -83,6 +84,7 @@ export enum ApiKey {
 
     RES_ERR_USER_NOT_FOUND = "res_err_user_not_found",
     RES_ERR_IMAGE_TOO_LARGE = "res_err_image_too_large",
+    RES_ERR_NOTIFICATION_NOT_FOUND = "res_err_notification_not_found",
 
     RES_ERR_LIVESTREAM_UPDATE_AFTER_ENDED = "res_err_livestream_update_after_ended",
     RES_ERR_LIVESTREAM_NOT_FOUND = "res_err_livestream_not_found",

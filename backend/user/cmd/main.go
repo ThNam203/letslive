@@ -13,6 +13,7 @@ import (
 	cfg "sen1or/letslive/user/config"
 	"sen1or/letslive/user/handlers/follow"
 	"sen1or/letslive/user/handlers/livestream_information"
+	notificationhandler "sen1or/letslive/user/handlers/notification"
 	"sen1or/letslive/user/handlers/user"
 	"sen1or/letslive/user/pkg/discovery"
 	"sen1or/letslive/user/pkg/logger"
@@ -172,14 +173,17 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var livestreamInfoRepo = repositories.NewLivestreamInformationRepository(dbConn)
 	var followRepo = repositories.NewFollowRepository(dbConn)
+	var notificationRepo = repositories.NewNotificationRepository(dbConn)
 
 	minioService := services.NewMinIOService(ctx, cfg.MinIO)
-	var userService = services.NewUserService(userRepo, livestreamInfoRepo, *minioService)
+	var userService = services.NewUserService(userRepo, livestreamInfoRepo, notificationRepo, *minioService)
 	var livestreamInfoService = services.NewLivestreamInformationService(livestreamInfoRepo)
 	var followService = services.NewFollowService(followRepo)
+	var notificationService = services.NewNotificationService(notificationRepo)
 
 	var userHandler = user.NewUserHandler(*userService)
 	var livestreamInfoHandler = livestream_information.NewLivestreamInformationHandler(*livestreamInfoService, *minioService)
 	var followHandler = follow.NewFollowHandler(*followService)
-	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, cfg)
+	var notifHandler = notificationhandler.NewNotificationHandler(*notificationService)
+	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, notifHandler, cfg)
 }
