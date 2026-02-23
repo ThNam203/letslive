@@ -38,7 +38,12 @@ func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestrea
 		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 
 	}
-	req, err := http.NewRequest(http.MethodPost, url, payloadBuf)
+
+	// capture payload for error logging before body is consumed by Do()
+	// for debugging purposes
+	payloadBytes := payloadBuf.Bytes()
+	payloadSent := string(payloadBytes)
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(payloadBytes))
 	if err != nil {
 		logger.Debugf(ctx, "failed to create request: %s", err)
 		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
@@ -64,10 +69,7 @@ func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestrea
 			logger.Debugf(ctx, "failed to decode error response from livestream service: %s", err)
 			return nil, &resInfo
 		}
-
-		// log payload and livestream error so transcode logs are sufficient
-		payloadSent, _ := payloadBuf.ReadString('\n')
-		logger.Warnf(ctx, "create livestream failed: status=%d message=%s payload=%s", resp.StatusCode, resInfo.Message, payloadSent)
+		logger.Warnw(ctx, "create livestream failed", "status", resp.StatusCode, "message", resInfo.Message, "payload", payloadSent)
 		return nil, &resInfo
 	}
 

@@ -32,7 +32,7 @@ export default function NotificationsPage() {
 
     return (
         <div className="small-scrollbar h-full min-h-0 overflow-auto">
-            <div className="mx-auto w-full max-w-2xl px-4 py-6">
+            <div className="mx-auto w-full px-4 py-6">
                 <NotificationPageHeader
                     hasUnread={notifications.some((n) => !n.isRead)}
                     onMarkAllAsRead={handleMarkAllAsRead}

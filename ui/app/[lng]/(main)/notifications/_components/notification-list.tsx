@@ -67,6 +67,7 @@ export function NotificationList({
                 <div className="flex justify-center py-4">
                     <Button
                         variant="outline"
+                        className="cursor-pointer"
                         onClick={onLoadMore}
                         disabled={isLoading}
                     >
