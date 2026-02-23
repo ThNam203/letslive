@@ -43,14 +43,13 @@ func main() {
 	registry, err := discovery.NewConsulRegistry(os.Getenv("REGISTRY_SERVICE_ADDRESS"))
 	if err != nil {
 		logger.Panicf(ctx, "failed to start discovery mechanism: %s", err)
-		panic(1)
 	}
 
 	cfgManager, err := cfg.NewConfigManager(ctx, registry, configServiceName, configProfile)
-	defer cfgManager.Stop()
 	if err != nil {
 		logger.Panicf(ctx, "failed to set up config manager: %s", err)
 	}
+	defer cfgManager.Stop()
 
 	config := cfgManager.GetConfig()
 	utils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
