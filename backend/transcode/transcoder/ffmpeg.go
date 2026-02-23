@@ -33,6 +33,7 @@ func (t *Transcoder) Start(ctx context.Context, publishName string) {
 	var outputDir = filepath.Join(t.config.PrivateHLSPath, publishName)
 
 	var videoMaps = make([]string, 0)
+	var audioMaps = make([]string, 0)
 	var streamMaps = make([]string, 0)
 
 	for index, quality := range t.config.FFMpegSetting.Qualities {
@@ -40,7 +41,9 @@ func (t *Transcoder) Start(ctx context.Context, publishName string) {
 		keyint := quality.FPS * t.config.FFMpegSetting.HLSTime
 
 		videoMaps = append(videoMaps, fmt.Sprintf("-map v:0 -s:%v %s -r:%v %v -maxrate:%v %s -bufsize:%v %s -g:%v %v -keyint_min:%v %v", index, quality.Resolution, index, quality.FPS, index, quality.MaxBitrate, index, quality.BufSize, index, keyint, index, keyint))
-		streamMaps = append(streamMaps, fmt.Sprintf("v:%v,a:0", index))
+		audioMaps = append(audioMaps, "-map a:0")
+		// One audio output per variant (v:i,a:i) so HLS does not see same stream in multiple variants
+		streamMaps = append(streamMaps, fmt.Sprintf("v:%v,a:%v", index, index))
 	}
 
 	args := []string{
@@ -53,7 +56,7 @@ func (t *Transcoder) Start(ctx context.Context, publishName string) {
 		"-crf", fmt.Sprintf("%v", t.config.FFMpegSetting.CRF),
 	}
 	args = append(args, strings.Fields(strings.Join(videoMaps, " "))...)
-	args = append(args, "-map", "a:0")
+	args = append(args, strings.Fields(strings.Join(audioMaps, " "))...)
 	args = append(args,
 		"-c:a", "aac",
 		"-b:a", "128k",
@@ -91,6 +94,7 @@ func (t *Transcoder) Start(ctx context.Context, publishName string) {
 
 	if err := t.commandExec.Start(); err != nil {
 		logger.Errorf(ctx, "error while starting ffmpeg command: %s", err)
+		return
 	}
 
 	if t.onStart != nil {
@@ -100,10 +104,14 @@ func (t *Transcoder) Start(ctx context.Context, publishName string) {
 	go func() {
 		scanner := bufio.NewReader(stderr)
 		for {
-			_, err := scanner.ReadString('\n')
+			line, err := scanner.ReadString('\n')
+			if line != "" {
+				line = strings.TrimSuffix(line, "\n")
+				logger.Infof(ctx, "ffmpeg stderr: %s", line)
+			}
 			if err != nil {
 				if err != io.EOF {
-					logger.Errorf(ctx, "stderr read error: %v", err)
+					logger.Errorf(ctx, "ffmpeg stderr read error: %v", err)
 				}
 				break
 			}
@@ -112,7 +120,13 @@ func (t *Transcoder) Start(ctx context.Context, publishName string) {
 
 	go func() {
 		if err := t.commandExec.Wait(); err != nil {
-			logger.Errorf(ctx, "ffmpeg failed: %s", err)
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				logger.Errorf(ctx, "ffmpeg process failed (exit code %d): %v", exitErr.ExitCode(), err)
+			} else {
+				logger.Errorf(ctx, "ffmpeg process failed: %v", err)
+			}
+		} else {
+			logger.Infof(ctx, "ffmpeg process exited successfully")
 		}
 	}()
 }
@@ -150,10 +164,8 @@ func generateThumbnail(ctx context.Context, ffmpegPath, outputDir string, inputS
 
 	if err := cmd.Start(); err != nil {
 		logger.Errorf(ctx, "error while starting thumnail command: %s", err)
+		return
 	}
-
-	// this process doesn't need a gracefully shutdown hehe
-	defer cmd.Process.Kill()
 
 	go func() {
 		scanner := bufio.NewReader(stderr)
