@@ -19,7 +19,7 @@ export function NotificationPageHeader({
             {hasUnread && (
                 <Button
                     variant="ghost"
-                    className="text-sm"
+                    className="cursor-pointer text-sm"
                     onClick={onMarkAllAsRead}
                 >
                     {t("mark_all_as_read")}
