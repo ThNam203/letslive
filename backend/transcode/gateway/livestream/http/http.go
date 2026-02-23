@@ -44,6 +44,7 @@ func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestrea
 		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 
 	}
+	req.Header.Set("Content-Type", "application/json")
 
 	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
 		logger.Debugf(ctx, "failed to set request id header: %s", err)
@@ -60,10 +61,13 @@ func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestrea
 	if resp.StatusCode/100 != 2 {
 		resInfo := response.Response[any]{}
 		if err := json.NewDecoder(resp.Body).Decode(&resInfo); err != nil {
-			logger.Debugf(ctx, "failed to decode error response from user service: %s", err)
+			logger.Debugf(ctx, "failed to decode error response from livestream service: %s", err)
 			return nil, &resInfo
 		}
 
+		// log payload and livestream error so transcode logs are sufficient
+		payloadSent, _ := payloadBuf.ReadString('\n')
+		logger.Warnf(ctx, "create livestream failed: status=%d message=%s payload=%s", resp.StatusCode, resInfo.Message, payloadSent)
 		return nil, &resInfo
 	}
 
