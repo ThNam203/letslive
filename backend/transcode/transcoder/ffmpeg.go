@@ -42,7 +42,6 @@ func (t *Transcoder) Start(ctx context.Context, publishName string) {
 
 		videoMaps = append(videoMaps, fmt.Sprintf("-map v:0 -s:%v %s -r:%v %v -maxrate:%v %s -bufsize:%v %s -g:%v %v -keyint_min:%v %v", index, quality.Resolution, index, quality.FPS, index, quality.MaxBitrate, index, quality.BufSize, index, keyint, index, keyint))
 		audioMaps = append(audioMaps, "-map a:0")
-		// One audio output per variant (v:i,a:i) so HLS does not see same stream in multiple variants
 		streamMaps = append(streamMaps, fmt.Sprintf("v:%v,a:%v", index, index))
 	}
 
