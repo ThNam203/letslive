@@ -85,6 +85,10 @@ services:
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    volumes:
+      # HLS paths: publicHLSPath and privateHLSPath in config server (transcode-{profile}.yml)
+      - transcode_hls_public:/var/lib/transcode/hls/public
+      - transcode_hls_private:/var/lib/transcode/hls/private
     networks:
       general_network:
     depends_on:
@@ -419,6 +423,8 @@ volumes:
   minio_data:
   consul_data:
   grafana_data:
+  transcode_hls_public:
+  transcode_hls_private:
 
 secrets:
   SENTRY_AUTH_TOKEN:
