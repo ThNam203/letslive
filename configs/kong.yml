@@ -151,6 +151,66 @@ services:
                 - ACCESS_TOKEN
               key_claim_name: consumer
               run_on_preflight: true
+      - name: VOD_Comments_Create_Private_Route
+        protocols:
+          - http
+          - https
+        paths:
+          - ~/vods/[^/]+/comments
+        methods:
+          - POST
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: true
+      - name: VOD_Comments_Public_Route
+        protocols:
+          - http
+          - https
+        paths:
+          - /vod-comments
+        methods:
+          - GET
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+      - name: VOD_Comments_Private_Routes
+        protocols:
+          - http
+          - https
+        paths:
+          - /vod-comments
+        methods:
+          - POST
+          - DELETE
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: true
       - name: Public_Routes
         protocols:
           - http
