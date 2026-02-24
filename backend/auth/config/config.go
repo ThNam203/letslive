@@ -214,7 +214,10 @@ func (cm *ConfigManager) fetchAndParseConfig() (*Config, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
+		bodyBytes, readErr := io.ReadAll(resp.Body)
+		if readErr != nil {
+			return nil, fmt.Errorf("config server returned non-OK status: %d - %s, and failed to read body: %w", resp.StatusCode, resp.Status, readErr)
+		}
 		return nil, fmt.Errorf("config server returned non-OK status: %d - %s, body: %s", resp.StatusCode, resp.Status, string(bodyBytes))
 	}
 

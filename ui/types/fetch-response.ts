@@ -58,6 +58,11 @@ export enum ApiCode {
     RES_ERR_LIVESTREAM_UPDATE_FAILED = 40006,
     RES_ERR_VOD_CREATE_FAILED = 40007,
     RES_ERR_VOD_UPDATE_FAILED = 40008,
+    RES_ERR_VOD_COMMENT_NOT_FOUND = 40009,
+    RES_ERR_VOD_COMMENT_CREATE_FAILED = 40010,
+    RES_ERR_VOD_COMMENT_ALREADY_LIKED = 40011,
+    RES_ERR_VOD_COMMENT_NOT_LIKED = 40012,
+    RES_ERR_VOD_COMMENT_DELETE_FAILED = 40013,
 }
 
 // --- i18n keys
@@ -95,4 +100,9 @@ export enum ApiKey {
     RES_ERR_LIVESTREAM_UPDATE_FAILED = "res_err_livestream_update_failed",
     RES_ERR_VOD_CREATE_FAILED = "res_err_vod_create_failed",
     RES_ERR_VOD_UPDATE_FAILED = "res_err_vod_update_failed",
+    RES_ERR_VOD_COMMENT_NOT_FOUND = "res_err_vod_comment_not_found",
+    RES_ERR_VOD_COMMENT_CREATE_FAILED = "res_err_vod_comment_create_failed",
+    RES_ERR_VOD_COMMENT_ALREADY_LIKED = "res_err_vod_comment_already_liked",
+    RES_ERR_VOD_COMMENT_NOT_LIKED = "res_err_vod_comment_not_liked",
+    RES_ERR_VOD_COMMENT_DELETE_FAILED = "res_err_vod_comment_delete_failed",
 }

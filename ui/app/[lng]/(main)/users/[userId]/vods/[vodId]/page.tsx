@@ -11,6 +11,7 @@ import { GetPublicVODsOfUser, GetVODInformation } from "@/lib/api/vod";
 import { GetUserById } from "@/lib/api/user";
 import ProfileView from "@/app/[lng]/(main)/users/[userId]/profile";
 import useT from "@/hooks/use-translation";
+import CommentSection from "@/components/vod-comments/comment-section";
 
 export default function VODPage() {
     const { t } = useT(["fetch-error", "api-response"]);
@@ -143,6 +144,11 @@ export default function VODPage() {
                         className="mt-2"
                     />
                 )}
+                <CommentSection
+                    vodId={params.vodId}
+                    vodOwnerId={params.userId}
+                    className="mt-4 pb-8"
+                />
             </div>
             <div
                 className={`fixed right-2 top-0 z-40 h-[100%-48px] w-full bg-background transition-all duration-300 md:relative md:w-80 lg:w-96 ${isExtraOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}

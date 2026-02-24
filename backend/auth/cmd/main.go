@@ -45,10 +45,10 @@ func main() {
 	}
 
 	cfgManager, err := cfg.NewConfigManager(ctx, registry, configServiceName, configProfile)
-	defer cfgManager.Stop()
 	if err != nil {
 		logger.Panicf(ctx, "failed to set up config manager: %s", err)
 	}
+	defer cfgManager.Stop()
 
 	config := cfgManager.GetConfig()
 
