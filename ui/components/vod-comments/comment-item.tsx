@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { VODComment } from "@/types/vod-comment";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { CommentUser, VODComment } from "@/types/vod-comment";
 import {
     GetCommentReplies,
     GetUserLikedCommentIds,
@@ -50,9 +52,13 @@ export default function CommentItem({
     onLikedChanged,
     depth = 0,
 }: CommentItemProps) {
+    const params = useParams();
+    const lng = params?.lng as string | undefined;
     const { t } = useT(["comments", "common", "fetch-error", "api-response"]);
     const currentUser = useUser((state) => state.user);
     const commentUser = comment.user ?? null;
+    const userProfileHref =
+        lng && commentUser?.id ? `/${lng}/users/${commentUser.id}` : "#";
     const [isLiked, setIsLiked] = useState(
         likedIds?.has(comment.id) ?? false,
     );
@@ -190,7 +196,21 @@ export default function CommentItem({
     };
 
     const handleReplyCreated = (newReply: VODComment) => {
-        setReplies((prev) => [...prev, newReply]);
+        const replyWithUser: VODComment =
+            !newReply.user &&
+            currentUser &&
+            currentUser.id === newReply.userId
+                ? {
+                      ...newReply,
+                      user: {
+                          id: currentUser.id,
+                          username: currentUser.username,
+                          displayName: currentUser.displayName,
+                          profilePicture: currentUser.profilePicture,
+                      } satisfies CommentUser,
+                  }
+                : newReply;
+        setReplies((prev) => [...prev, replyWithUser]);
         setReplyCount((prev) => prev + 1);
         setShowReplies(true);
         setShowReplyForm(false);
@@ -226,7 +246,7 @@ export default function CommentItem({
     if (comment.isDeleted) {
         return (
             <div className="flex items-start gap-3 opacity-60">
-                <Avatar className="h-8 w-8 flex-shrink-0">
+                <Avatar className="h-8 w-8 shrink-0">
                     <AvatarFallback>?</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
@@ -237,7 +257,7 @@ export default function CommentItem({
                         <Button
                             variant="link"
                             size="sm"
-                            className="mt-1 h-auto p-0 text-xs"
+                            className="mt-1 h-auto cursor-pointer p-0 text-xs"
                             onClick={handleLoadReplies}
                             disabled={isLoadingReplies}
                         >
@@ -264,7 +284,7 @@ export default function CommentItem({
                         <Button
                             variant="link"
                             size="sm"
-                            className="mt-1 h-auto p-0 text-xs"
+                            className="mt-1 h-auto cursor-pointer p-0 text-xs"
                             onClick={handleLoadReplies}
                             disabled={isLoadingReplies}
                         >
@@ -280,26 +300,56 @@ export default function CommentItem({
 
     return (
         <div className="flex items-start gap-3">
-            <Avatar className="h-8 w-8 flex-shrink-0">
-                <AvatarImage
-                    src={commentUser?.profilePicture}
-                    alt={commentUser?.username}
-                />
-                <AvatarFallback>
-                    {commentUser?.username?.charAt(0).toUpperCase() ?? "?"}
-                </AvatarFallback>
-            </Avatar>
+            {userProfileHref !== "#" ? (
+                <Link
+                    href={userProfileHref}
+                    className="shrink-0 cursor-pointer rounded-full ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    aria-label={commentUser?.username ?? "View profile"}
+                >
+                    <Avatar className="h-8 w-8">
+                        <AvatarImage
+                            src={commentUser?.profilePicture}
+                            alt={commentUser?.username}
+                        />
+                        <AvatarFallback>
+                            {commentUser?.username?.charAt(0).toUpperCase() ??
+                                "?"}
+                        </AvatarFallback>
+                    </Avatar>
+                </Link>
+            ) : (
+                <Avatar className="h-8 w-8 shrink-0">
+                    <AvatarImage
+                        src={commentUser?.profilePicture}
+                        alt={commentUser?.username}
+                    />
+                    <AvatarFallback>
+                        {commentUser?.username?.charAt(0).toUpperCase() ?? "?"}
+                    </AvatarFallback>
+                </Avatar>
+            )}
             <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="text-sm font-semibold">
-                        {commentUser?.displayName ??
-                            commentUser?.username ??
-                            "..."}
-                    </span>
+                    {userProfileHref !== "#" ? (
+                        <Link
+                            href={userProfileHref}
+                            className="cursor-pointer text-sm font-semibold hover:underline"
+                        >
+                            {commentUser?.displayName ??
+                                commentUser?.username ??
+                                "..."}
+                        </Link>
+                    ) : (
+                        <span className="text-sm font-semibold">
+                            {commentUser?.displayName ??
+                                commentUser?.username ??
+                                "..."}
+                        </span>
+                    )}
                     {(isOwner || isYou) && (
                         <span className="flex items-center gap-1">
                             {isOwner && (
-                                <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                                <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-amber-600 dark:text-amber-400">
                                     {t("comments:owner")}
                                 </span>
                             )}
@@ -323,7 +373,7 @@ export default function CommentItem({
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 gap-1 px-2 text-xs"
+                        className="h-7 cursor-pointer gap-1 px-2 text-xs"
                         onClick={handleLike}
                         disabled={!currentUser || isLiking}
                         aria-label={isLiked ? t("comments:unlike") : t("comments:like")}
@@ -342,7 +392,7 @@ export default function CommentItem({
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 gap-1 px-2 text-xs"
+                            className="h-7 cursor-pointer gap-1 px-2 text-xs"
                             onClick={() => setShowReplyForm(!showReplyForm)}
                         >
                             <IconReply className="h-3.5 w-3.5" />
@@ -359,7 +409,7 @@ export default function CommentItem({
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                                    className="h-7 cursor-pointer px-2 text-xs text-destructive hover:text-destructive"
                                 >
                                     {t("comments:delete")}
                                 </Button>
@@ -413,7 +463,7 @@ export default function CommentItem({
                     <Button
                         variant="link"
                         size="sm"
-                        className="mt-1 h-auto p-0 text-xs"
+                        className="mt-1 h-auto cursor-pointer p-0 text-xs"
                         onClick={handleLoadReplies}
                         disabled={isLoadingReplies}
                     >
@@ -440,7 +490,7 @@ export default function CommentItem({
                     <Button
                         variant="link"
                         size="sm"
-                        className="mt-1 h-auto p-0 text-xs"
+                        className="mt-1 h-auto cursor-pointer p-0 text-xs"
                         onClick={handleLoadReplies}
                         disabled={isLoadingReplies}
                     >

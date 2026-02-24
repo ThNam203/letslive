@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { VODComment } from "@/types/vod-comment";
+import { CommentUser, VODComment } from "@/types/vod-comment";
 import { GetVODComments, GetUserLikedCommentIds } from "@/lib/api/vod-comment";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
@@ -102,7 +102,21 @@ export default function CommentSection({
     }, [fetchComments]);
 
     const handleCommentCreated = (newComment: VODComment) => {
-        setComments((prev) => [newComment, ...prev]);
+        const commentWithUser: VODComment =
+            !newComment.user &&
+            user &&
+            user.id === newComment.userId
+                ? {
+                      ...newComment,
+                      user: {
+                          id: user.id,
+                          username: user.username,
+                          displayName: user.displayName,
+                          profilePicture: user.profilePicture,
+                      } satisfies CommentUser,
+                  }
+                : newComment;
+        setComments((prev) => [commentWithUser, ...prev]);
         setTotalComments((prev) => prev + 1);
     };
 

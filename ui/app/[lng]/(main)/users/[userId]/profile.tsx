@@ -47,7 +47,7 @@ export default function ProfileView({
         <div className={className}>
             <ProfileHeader user={user} updateUser={updateUser} />
             {/* Profile Content */}
-            <div className="flex flex-col gap-4 mt-4 w-full px-4 pb-16">
+            <div className="flex flex-col gap-4 mt-4 w-full px-4 pb-8">
                 <div className="flex items-start gap-8">
                     <div>
                         <h1 className="text-3xl font-bold text-foreground">
