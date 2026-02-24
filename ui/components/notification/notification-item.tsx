@@ -23,33 +23,33 @@ export function NotificationItemContent({
             className={cn(
                 "flex flex-col gap-1 transition-colors",
                 variant === "compact" &&
-                    "cursor-pointer border-b border-border px-4 py-3 hover:bg-background",
+                    "border-border hover:bg-background cursor-pointer border-b px-4 py-3",
             )}
         >
             <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
                     <span className="flex h-2 w-2 shrink-0 items-center justify-center">
                         {!notification.isRead && (
-                            <span className="h-2 w-2 rounded-full bg-primary" />
+                            <span className="bg-primary h-2 w-2 rounded-full" />
                         )}
                     </span>
-                    <span className="text-sm font-medium text-foreground">
+                    <span className="text-foreground text-sm font-medium">
                         {notification.title}
                     </span>
                     {variant === "full" && (
-                        <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        <span className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5 text-[10px]">
                             {notification.type}
                         </span>
                     )}
                 </div>
-                <span className="shrink-0 text-xs text-muted-foreground">
+                <span className="text-muted-foreground shrink-0 text-xs">
                     {timeAgo(notification.createdAt, t)}
                 </span>
             </div>
 
             <p
                 className={cn(
-                    "pl-4 text-muted-foreground",
+                    "text-muted-foreground pl-4",
                     variant === "compact" ? "text-xs" : "text-sm",
                 )}
             >
@@ -57,7 +57,7 @@ export function NotificationItemContent({
             </p>
 
             {notification.actionLabel && variant === "compact" && (
-                <span className="pl-4 text-xs font-medium text-primary">
+                <span className="text-primary pl-4 text-xs font-medium">
                     {notification.actionLabel}
                 </span>
             )}

@@ -16,6 +16,7 @@ type UserService struct {
 	userRepo                  domains.UserRepository
 	livestreamInformationRepo domains.LivestreamInformationRepository
 	notificationRepo          domains.NotificationRepository
+	followRepo                domains.FollowRepository
 	minioService              MinIOService
 }
 
@@ -23,12 +24,14 @@ func NewUserService(
 	userRepo domains.UserRepository,
 	livestreamInformationRepo domains.LivestreamInformationRepository,
 	notificationRepo domains.NotificationRepository,
+	followRepo domains.FollowRepository,
 	minioService MinIOService,
 ) *UserService {
 	return &UserService{
 		userRepo:                  userRepo,
 		livestreamInformationRepo: livestreamInformationRepo,
 		notificationRepo:          notificationRepo,
+		followRepo:                followRepo,
 		minioService:              minioService,
 	}
 }
@@ -60,12 +63,31 @@ func (s *UserService) GetUserById(ctx context.Context, userUUID uuid.UUID) (*dom
 	return user, nil
 }
 
-func (s *UserService) GetAllUsers(ctx context.Context, page int) ([]domains.User, *response.Response[any]) {
-	users, err := s.userRepo.GetAll(ctx, page)
+func (s *UserService) GetFollowingUsers(ctx context.Context, authenticatedUserId uuid.UUID) ([]dto.GetUserPublicResponseDTO, *response.Response[any]) {
+	ids, err := s.followRepo.GetFollowedUserIds(ctx, authenticatedUserId)
 	if err != nil {
 		return nil, err
 	}
+	users, err := s.userRepo.GetPublicInfosByIds(ctx, ids, &authenticatedUserId)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
 
+func (s *UserService) GetRecommendedUsers(ctx context.Context, authenticatedUserId *uuid.UUID, page int) ([]dto.GetUserPublicResponseDTO, *response.Response[any]) {
+	var excludeUserIds []uuid.UUID
+	if authenticatedUserId != nil {
+		ids, err := s.followRepo.GetFollowedUserIds(ctx, *authenticatedUserId)
+		if err != nil {
+			return nil, err
+		}
+		excludeUserIds = ids
+	}
+	users, err := s.userRepo.GetRecommendedPublic(ctx, authenticatedUserId, excludeUserIds, page, 10)
+	if err != nil {
+		return nil, err
+	}
 	return users, nil
 }
 

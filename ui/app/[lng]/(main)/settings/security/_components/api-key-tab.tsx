@@ -61,13 +61,13 @@ export default function ApiKeyTab() {
                             : ""
                     }
                     readOnly={true}
-                    className="flex-grow border border-border text-right font-mono"
+                    className="border-border flex-grow border text-right font-mono"
                 />
             </div>
             <div className="flex gap-4">
                 <div className="flex-grow" />
                 <Button disabled={isGenerating} onClick={copyApiKey}>
-                    <IconCopy className="h-4 w-4 text-primary-foreground" />
+                    <IconCopy className="text-primary-foreground h-4 w-4" />
                 </Button>
 
                 <Button disabled={isGenerating} onClick={generateNewApiKey}>

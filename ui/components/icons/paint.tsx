@@ -14,4 +14,3 @@ function IconPaint(props: IconProp) {
 }
 
 export default IconPaint;
-

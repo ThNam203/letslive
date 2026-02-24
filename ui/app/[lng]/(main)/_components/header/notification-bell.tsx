@@ -57,42 +57,36 @@ export default function NotificationBell() {
 
     const canShowNotifications = !!userState.user;
 
-    const handleOpenChange = useCallback(
-        async (open: boolean) => {
-            setIsOpen(open);
-            if (
-                open &&
-                Date.now() - lastFetchRef.current >= NOTIFICATION_POLL_INTERVAL_MS
-            ) {
-                useNotification.getState().setIsLoading(true);
-                try {
-                    const res = await GetNotifications(0);
-                    if (res.success && res.data) {
-                        useNotification.getState().setNotifications(res.data);
-                    }
-                } catch {
-                    // silently ignore
-                } finally {
-                    useNotification.getState().setIsLoading(false);
-                    lastFetchRef.current = Date.now();
-                }
-            }
-        },
-        [],
-    );
-
-    const handleMarkAsRead = useCallback(
-        async (notificationId: string) => {
+    const handleOpenChange = useCallback(async (open: boolean) => {
+        setIsOpen(open);
+        if (
+            open &&
+            Date.now() - lastFetchRef.current >= NOTIFICATION_POLL_INTERVAL_MS
+        ) {
+            useNotification.getState().setIsLoading(true);
             try {
-                const res = await MarkNotificationAsRead(notificationId);
-                if (res.success)
-                    useNotification.getState().markAsRead(notificationId);
+                const res = await GetNotifications(0);
+                if (res.success && res.data) {
+                    useNotification.getState().setNotifications(res.data);
+                }
             } catch {
                 // silently ignore
+            } finally {
+                useNotification.getState().setIsLoading(false);
+                lastFetchRef.current = Date.now();
             }
-        },
-        [],
-    );
+        }
+    }, []);
+
+    const handleMarkAsRead = useCallback(async (notificationId: string) => {
+        try {
+            const res = await MarkNotificationAsRead(notificationId);
+            if (res.success)
+                useNotification.getState().markAsRead(notificationId);
+        } catch {
+            // silently ignore
+        }
+    }, []);
 
     const handleMarkAllAsRead = useCallback(async () => {
         try {
@@ -116,10 +110,10 @@ export default function NotificationBell() {
     return (
         <Popover open={isOpen} onOpenChange={handleOpenChange}>
             <PopoverTrigger asChild>
-                <button className="relative cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted">
+                <button className="hover:bg-muted relative cursor-pointer rounded-md p-1.5 transition-colors">
                     <IconBell className="size-5" />
                     {notifState.unreadCount > 0 && (
-                        <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">
+                        <span className="bg-destructive absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white">
                             {notifState.unreadCount > 99
                                 ? "99+"
                                 : notifState.unreadCount}
@@ -128,7 +122,7 @@ export default function NotificationBell() {
                 </button>
             </PopoverTrigger>
             <PopoverContent
-                className="mr-4 w-80 border-border bg-muted p-0"
+                className="border-border bg-muted mr-4 w-80 p-0"
                 align="end"
             >
                 <NotificationPopupContent

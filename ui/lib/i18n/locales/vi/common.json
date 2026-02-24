@@ -36,7 +36,6 @@
     "no_description": "Không có mô tả",
     "add": "Thêm",
     "bio": "Tiểu sử",
-
     "started_at": "Bắt đầu {{time}} trước",
     "live": "Trực tiếp",
     "time": {
@@ -47,5 +46,7 @@
         "weeks_ago": "{{count}} tuần",
         "months_ago": "{{count}} tháng",
         "years_ago": "{{count}} năm"
-    }
+    },
+    "following": "Đang theo dõi",
+    "recommended": "Gợi ý"
 }

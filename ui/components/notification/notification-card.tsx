@@ -25,7 +25,7 @@ export function NotificationCard({
     return (
         <div
             className={cn(
-                "flex flex-col gap-1 rounded-lg border border-border p-4 transition-colors",
+                "border-border flex flex-col gap-1 rounded-lg border p-4 transition-colors",
                 !notification.isRead && "bg-primary/5",
             )}
         >
@@ -38,7 +38,7 @@ export function NotificationCard({
                 {notification.actionUrl && (
                     <Link
                         href={notification.actionUrl}
-                        className="cursor-pointer text-xs font-medium text-primary hover:underline"
+                        className="text-primary cursor-pointer text-xs font-medium hover:underline"
                         onClick={() => {
                             if (!notification.isRead) {
                                 onMarkAsRead(notification.id);
@@ -51,7 +51,7 @@ export function NotificationCard({
                 {!notification.isRead && (
                     <Button
                         variant="ghost"
-                        className="cursor-pointer h-auto px-2 py-0.5 text-xs"
+                        className="h-auto cursor-pointer px-2 py-0.5 text-xs"
                         onClick={() => onMarkAsRead(notification.id)}
                     >
                         {tNotif("mark_as_read")}
@@ -59,7 +59,7 @@ export function NotificationCard({
                 )}
                 <Button
                     variant="ghost"
-                    className="cursor-pointer h-auto px-2 py-0.5 text-xs text-destructive hover:text-destructive"
+                    className="text-destructive hover:text-destructive h-auto cursor-pointer px-2 py-0.5 text-xs"
                     onClick={() => onDelete(notification.id)}
                 >
                     {tNotif("delete")}

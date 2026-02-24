@@ -7,7 +7,7 @@ interface Props {
 }
 export default function Description({ content, className }: Props) {
     return (
-        <p className={cn("m-0 p-0 text-sm text-foreground-muted", className)}>
+        <p className={cn("text-foreground-muted m-0 p-0 text-sm", className)}>
             {content}
         </p>
     );

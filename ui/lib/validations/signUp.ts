@@ -16,25 +16,43 @@ export const signUpSchema = function (t: typeof i18next.t) {
             password: z
                 .string()
                 .min(1, t("error:password_required"))
-                .min(PASSWORD_MIN_LENGTH, t("error:password_too_short", { minLength: PASSWORD_MIN_LENGTH }))
-                .max(PASSWORD_MAX_LENGTH, t("error:password_too_long", { maxLength: PASSWORD_MAX_LENGTH }))
-                .refine(
-                    (val) => /[a-z]/.test(val),
-                    { message: t("error:password_missing_lowercase") }
+                .min(
+                    PASSWORD_MIN_LENGTH,
+                    t("error:password_too_short", {
+                        minLength: PASSWORD_MIN_LENGTH,
+                    }),
                 )
-                .refine(
-                    (val) => /[A-Z]/.test(val),
-                    { message: t("error:password_missing_uppercase") }
+                .max(
+                    PASSWORD_MAX_LENGTH,
+                    t("error:password_too_long", {
+                        maxLength: PASSWORD_MAX_LENGTH,
+                    }),
                 )
+                .refine((val) => /[a-z]/.test(val), {
+                    message: t("error:password_missing_lowercase"),
+                })
+                .refine((val) => /[A-Z]/.test(val), {
+                    message: t("error:password_missing_uppercase"),
+                })
                 .refine(
                     (val) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(val),
-                    { message: t("error:password_missing_special") }
+                    { message: t("error:password_missing_special") },
                 ),
             confirmPassword: z
                 .string()
                 .min(1, t("error:confirm_password_required"))
-                .min(PASSWORD_MIN_LENGTH, t("error:password_too_short", { minLength: PASSWORD_MIN_LENGTH }))
-                .max(PASSWORD_MAX_LENGTH, t("error:password_too_long", { maxLength: PASSWORD_MAX_LENGTH })),
+                .min(
+                    PASSWORD_MIN_LENGTH,
+                    t("error:password_too_short", {
+                        minLength: PASSWORD_MIN_LENGTH,
+                    }),
+                )
+                .max(
+                    PASSWORD_MAX_LENGTH,
+                    t("error:password_too_long", {
+                        maxLength: PASSWORD_MAX_LENGTH,
+                    }),
+                ),
             turnstile: z.string().min(1, t("error:turnstile_required")),
         })
         .superRefine((data, ctx) => {

@@ -17,4 +17,5 @@ type Follower struct {
 type FollowRepository interface {
 	FollowUser(ctx context.Context, followUser, followedUser uuid.UUID) *response.Response[any]
 	UnfollowUser(ctx context.Context, followUser, followedUser uuid.UUID) *response.Response[any]
+	GetFollowedUserIds(ctx context.Context, followerId uuid.UUID) ([]uuid.UUID, *response.Response[any])
 }

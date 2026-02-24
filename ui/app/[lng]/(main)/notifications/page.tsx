@@ -21,10 +21,10 @@ export default function NotificationsPage() {
 
     if (!canAccess) {
         return (
-            <div className="flex items-center justify-center py-20 text-muted-foreground">
+            <div className="text-muted-foreground flex items-center justify-center py-20">
                 <NotificationEmpty
                     message={t("notification:please_log_in")}
-                    className="py-20 text-muted-foreground"
+                    className="text-muted-foreground py-20"
                 />
             </div>
         );

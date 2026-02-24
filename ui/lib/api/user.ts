@@ -1,9 +1,5 @@
 import { ApiResponse } from "@/types/fetch-response";
-import {
-    LivestreamInformation,
-    MeUser,
-    PublicUser,
-} from "../../types/user";
+import { LivestreamInformation, MeUser, PublicUser } from "../../types/user";
 import { fetchClient } from "@/utils/fetchClient";
 
 export async function SearchUsersByUsername(
@@ -20,10 +16,18 @@ export async function GetUserById(
     return fetchClient<ApiResponse<PublicUser>>(`/user/${userId}`);
 }
 
-export async function GetAllUsers(
+export async function GetRecommendedChannels(
     page: number = 0,
 ): Promise<ApiResponse<PublicUser[]>> {
-    return fetchClient<ApiResponse<PublicUser[]>>(`/users?page=${page}`);
+    return fetchClient<ApiResponse<PublicUser[]>>(
+        `/users/recommendations?page=${page}`,
+    );
+}
+
+export async function GetFollowingChannels(): Promise<
+    ApiResponse<PublicUser[]>
+> {
+    return fetchClient<ApiResponse<PublicUser[]>>(`/user/me/following`);
 }
 
 export async function GetMeProfile(): Promise<ApiResponse<MeUser>> {

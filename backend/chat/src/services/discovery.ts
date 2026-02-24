@@ -74,7 +74,7 @@ class ConsulRegistry {
     }
 
     private generateInstanceId() {
-        const maxSafeLimit = 281474976710655;
+        const maxSafeLimit = 281474976710655
         return this.config.serviceName + '-' + crypto.randomInt(10000000, maxSafeLimit)
     }
 }

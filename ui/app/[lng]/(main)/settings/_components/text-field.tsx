@@ -23,7 +23,7 @@ export default function TextField({
             <Input
                 id={label}
                 className={cn(
-                    "border border-border text-foreground focus:outline-none",
+                    "border-border text-foreground border focus:outline-none",
                     className,
                 )}
                 {...props}

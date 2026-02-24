@@ -26,9 +26,9 @@ function CreateExpressServer() {
         logger: logger,
         autoLogging: {
             ignore: (req: Request) => {
-                return req.url === '/v1/health' || req.method === 'OPTIONS';
-            },
-        },
+                return req.url === '/v1/health' || req.method === 'OPTIONS'
+            }
+        }
     })
 
     app.use(pinoM)
@@ -118,7 +118,7 @@ if (esMain(import.meta)) {
     process.on('unhandledRejection', (reason, promise) => {
         logger.error({
             message: 'Unhandled Rejection',
-            reason: reason instanceof Error ? reason.stack : reason,
+            reason: reason instanceof Error ? reason.stack : reason
         })
         process.exit(1)
     })
@@ -141,7 +141,7 @@ const shutdown = async (signal: string, consul: ConsulRegistry) => {
     }
 }
 
-const writeResponse = function(req: Request, res: Response, resData: ServiceResponse<any>) {
-    resData.requestId = req.requestId ?? ""
+const writeResponse = function (req: Request, res: Response, resData: ServiceResponse<any>) {
+    resData.requestId = req.requestId ?? ''
     res.status(resData.statusCode).json(resData)
 }

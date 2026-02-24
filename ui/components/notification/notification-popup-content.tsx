@@ -35,8 +35,8 @@ export function NotificationPopupContent({
     const { t: tNotif } = useT(["notification"]);
     return (
         <>
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                <h3 className="text-sm font-semibold text-foreground">
+            <div className="border-border flex items-center justify-between border-b px-4 py-3">
+                <h3 className="text-foreground text-sm font-semibold">
                     {tNotif("title")}
                 </h3>
                 {unreadCount > 0 && (
@@ -57,8 +57,9 @@ export function NotificationPopupContent({
                     <NotificationEmpty message={tNotif("no_notifications")} />
                 ) : (
                     <div className="flex flex-col">
-                        {notifications.slice(0, NOTIFICATION_POPUP_LIMIT).map(
-                            (notification) => (
+                        {notifications
+                            .slice(0, NOTIFICATION_POPUP_LIMIT)
+                            .map((notification) => (
                                 <NotificationItem
                                     key={notification.id}
                                     notification={notification}
@@ -71,16 +72,15 @@ export function NotificationPopupContent({
                                         )
                                     }
                                 />
-                            ),
-                        )}
+                            ))}
                     </div>
                 )}
             </ScrollArea>
 
-            <div className="border-t border-border px-4 py-2">
+            <div className="border-border border-t px-4 py-2">
                 <Link
                     href={viewAllHref}
-                    className="block text-center text-xs font-medium text-primary hover:underline"
+                    className="text-primary block text-center text-xs font-medium hover:underline"
                     onClick={onClose}
                 >
                     {tNotif("view_all")}

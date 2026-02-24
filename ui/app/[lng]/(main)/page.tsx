@@ -9,7 +9,7 @@ export default async function HomePage() {
     const { t } = await myGetT("common");
 
     return (
-        <div className="flex max-h-full w-full flex-col overflow-y-auto overflow-x-hidden px-8 py-4 text-xs">
+        <div className="flex max-h-full w-full flex-col overflow-x-hidden overflow-y-auto px-8 py-4 text-xs">
             <h1 className="my-2 text-xl font-semibold">{t("livestreams")}</h1>
             <LivestreamsPreviewView />
 

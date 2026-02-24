@@ -59,7 +59,7 @@ export default function PhoneNumber() {
     };
 
     return (
-        <div className="flex items-center justify-between border-t border-border pt-4">
+        <div className="border-border flex items-center justify-between border-t pt-4">
             <label
                 className="min-w-48 text-sm font-medium"
                 htmlFor="phone-number"
@@ -75,8 +75,8 @@ export default function PhoneNumber() {
                     variant="none"
                     className={cn(
                         user?.phoneNumber
-                            ? "text-medium p-0 font-semibold italic text-foreground"
-                            : "p-0 text-sm text-primary hover:text-primary-hover",
+                            ? "text-medium text-foreground p-0 font-semibold italic"
+                            : "text-primary hover:text-primary-hover p-0 text-sm",
                     )}
                 >
                     {user?.phoneNumber
@@ -102,7 +102,7 @@ export default function PhoneNumber() {
                         setPhoneNumber(user?.phoneNumber || "");
                         setIsEditing(false);
                     }}
-                    className="flex-grow border border-border text-right"
+                    className="border-border flex-grow border text-right"
                 />
             )}
         </div>

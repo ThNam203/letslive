@@ -25,5 +25,5 @@ setup.kibana:
 
 setup.template:
   name: "${SERVICE_NAME}"
-  pattern: '${SERVICE_NAME}-*'
+  pattern: "${SERVICE_NAME}-*"
   enabled: false

@@ -5,7 +5,7 @@ export default function FormErrorText({
 }) {
     if (textError) {
         return (
-            <p className="text-xs font-semibold text-destructive">
+            <p className="text-destructive text-xs font-semibold">
                 {textError}
             </p>
         );

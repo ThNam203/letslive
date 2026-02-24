@@ -88,7 +88,7 @@ paths:
       summary: Check service health
       operationId: getHealth
       responses:
-        '200':
+        "200":
           description: Service is healthy
           content:
             text/plain:
@@ -105,9 +105,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateLivestreamRequest'
+              $ref: "#/components/schemas/CreateLivestreamRequest"
       responses:
-        '200':
+        "200":
           description: Livestream created successfully
           content:
             application/json:
@@ -131,18 +131,18 @@ paths:
                   createdAt:
                     type: string
                     format: date-time
-        '400':
+        "400":
           description: Invalid request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /livestreams/{livestreamId}:
     parameters:
@@ -156,7 +156,7 @@ paths:
       summary: Get livestream by ID
       operationId: getLivestreamById
       responses:
-        '200':
+        "200":
           description: Livestream retrieved successfully
           content:
             application/json:
@@ -180,18 +180,18 @@ paths:
                   createdAt:
                     type: string
                     format: date-time
-        '404':
+        "404":
           description: Livestream not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
     put:
       summary: Update livestream
       operationId: updateLivestream
@@ -200,9 +200,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateLivestreamRequest'
+              $ref: "#/components/schemas/UpdateLivestreamRequest"
       responses:
-        '200':
+        "200":
           description: Livestream updated successfully
           content:
             application/json:
@@ -234,42 +234,42 @@ paths:
                     format: date-time
                   duration:
                     type: integer
-        '400':
+        "400":
           description: Invalid request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '404':
+                $ref: "#/components/schemas/Error"
+        "404":
           description: Livestream not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
     delete:
       summary: Delete livestream
       operationId: deleteLivestream
       responses:
-        '204':
+        "204":
           description: Livestream deleted successfully
-        '404':
+        "404":
           description: Livestream not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /livestreams/user/{userId}:
     parameters:
@@ -283,7 +283,7 @@ paths:
       summary: Get livestreams of a user
       operationId: getLivestreamsOfUser
       responses:
-        '200':
+        "200":
           description: List of user's livestreams
           content:
             application/json:
@@ -309,18 +309,18 @@ paths:
                     createdAt:
                       type: string
                       format: date-time
-        '400':
+        "400":
           description: Invalid request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /livestreams/check:
     get:
@@ -334,24 +334,24 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Check result
           content:
             text/plain:
               schema:
                 type: boolean
-        '400':
+        "400":
           description: Invalid request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /livestreams/popular:
     get:
@@ -365,7 +365,7 @@ paths:
             type: integer
             minimum: 1
       responses:
-        '200':
+        "200":
           description: List of popular VODs
           content:
             application/json:
@@ -393,18 +393,18 @@ paths:
                     createdAt:
                       type: string
                       format: date-time
-        '400':
+        "400":
           description: Invalid request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /livestreams/live:
     get:
@@ -418,7 +418,7 @@ paths:
             type: integer
             minimum: 1
       responses:
-        '200':
+        "200":
           description: List of active livestreams
           content:
             application/json:
@@ -446,15 +446,15 @@ paths:
                     createdAt:
                       type: string
                       format: date-time
-        '400':
+        "400":
           description: Invalid request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '500':
+                $ref: "#/components/schemas/Error"
+        "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error' 
+                $ref: "#/components/schemas/Error"
