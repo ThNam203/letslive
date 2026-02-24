@@ -89,6 +89,7 @@ func (t *Transcoder) Start(ctx context.Context, publishName string) {
 	stderr, err := t.commandExec.StderrPipe()
 	if err != nil {
 		logger.Errorf(ctx, "failed to get stderr pipe up: %v", err)
+		return
 	}
 
 	if err := t.commandExec.Start(); err != nil {
@@ -159,6 +160,7 @@ func generateThumbnail(ctx context.Context, ffmpegPath, outputDir string, inputS
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		logger.Errorf(ctx, "failed to get thumbnail stderr pipe up: %v", err)
+		return
 	}
 
 	if err := cmd.Start(); err != nil {

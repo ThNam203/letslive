@@ -29,6 +29,11 @@
     "res_err_livestream_update_failed": "Failed to update livestream record.",
     "res_err_vod_create_failed": "Failed to create VOD record.",
     "res_err_vod_update_failed": "Failed to update VOD record.",
+    "res_err_vod_comment_not_found": "Comment not found.",
+    "res_err_vod_comment_create_failed": "Failed to create comment.",
+    "res_err_vod_comment_already_liked": "Comment already liked.",
+    "res_err_vod_comment_not_liked": "Comment has not been liked.",
+    "res_err_vod_comment_delete_failed": "Failed to delete comment.",
 
     "res_succ_sent_verification_email": "Verification email sent, please check your inbox",
     "res_succ_ok": "Success",

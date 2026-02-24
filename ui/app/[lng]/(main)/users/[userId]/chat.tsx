@@ -100,9 +100,11 @@ export default function ChatPanel({
 
             ws.onmessage = (event) => {
                 const data: ReceivedMessage = JSON.parse(event.data);
-                if (messages.length >= 100)
-                    setMessages((prev) => [...prev.slice(1), data]);
-                else setMessages((prev) => [...prev, data]);
+                setMessages((prev) =>
+                    prev.length >= 100
+                        ? [...prev.slice(1), data]
+                        : [...prev, data],
+                );
             };
 
             ws.onclose = (ev) => {};
@@ -290,15 +292,4 @@ function hue2rgb(p: number, q: number, t: number): number {
     if (t < 1 / 2) return q;
     if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
     return p;
-}
-
-function getCookie(name: string) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(";");
-    for (var i = 0; i < ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0) == " ") c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
 }

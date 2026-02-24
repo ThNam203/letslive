@@ -29,6 +29,11 @@
     "res_err_livestream_update_failed": "Không thể cập nhật bản ghi livestream.",
     "res_err_vod_create_failed": "Không thể tạo bản ghi VOD.",
     "res_err_vod_update_failed": "Không thể cập nhật bản ghi VOD.",
+    "res_err_vod_comment_not_found": "Không tìm thấy bình luận.",
+    "res_err_vod_comment_create_failed": "Không thể tạo bình luận.",
+    "res_err_vod_comment_already_liked": "Bình luận đã được thích.",
+    "res_err_vod_comment_not_liked": "Bình luận chưa được thích.",
+    "res_err_vod_comment_delete_failed": "Không thể xóa bình luận.",
 
     "res_succ_sent_verification_email": "Email xác thực đã được gửi, vui lòng kiểm tra hộp thư",
     "res_succ_ok": "Thành công",
