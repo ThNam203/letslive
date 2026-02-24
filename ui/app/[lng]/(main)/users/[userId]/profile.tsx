@@ -47,10 +47,10 @@ export default function ProfileView({
         <div className={className}>
             <ProfileHeader user={user} updateUser={updateUser} />
             {/* Profile Content */}
-            <div className="flex flex-col gap-4 mt-4 w-full px-4 pb-8">
+            <div className="mt-4 flex w-full flex-col gap-4 px-4 pb-8">
                 <div className="flex items-start gap-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-foreground">
+                        <h1 className="text-foreground text-3xl font-bold">
                             {user.displayName ?? user.username}
                         </h1>
                         <p className="text-foreground-muted">
@@ -59,19 +59,25 @@ export default function ProfileView({
                     </div>
                 </div>
                 <div className="flex flex-row gap-2">
-                    <div className="flex text-xs flex-col gap-2 text-foreground flex-1 max-w-72">
+                    <div className="text-foreground flex max-w-72 flex-1 flex-col gap-2 text-xs">
                         <div className="flex items-center gap-2">
                             <IconUsers />
                             <p>
-                                <span className="font-bold">{user.followerCount}</span>{" "}
-                                {t(user.followerCount === 1 ? "users:profile.followers_one" : "users:profile.followers_other")}
+                                <span className="font-bold">
+                                    {user.followerCount}
+                                </span>{" "}
+                                {t(
+                                    user.followerCount === 1
+                                        ? "users:profile.followers_one"
+                                        : "users:profile.followers_other",
+                                )}
                             </p>
                         </div>
                         {Object.entries(user.socialMediaLinks ?? {}).map(
                             ([platform, url]) => {
                                 const Icon =
                                     platformOptions[
-                                    platform as keyof typeof platformOptions
+                                        platform as keyof typeof platformOptions
                                     ];
                                 if (!Icon || !url) return null;
                                 return (
@@ -109,18 +115,18 @@ export default function ProfileView({
                 {/* Recent Activity */}
                 {showRecentActivity
                     ? vods.length > 0 && (
-                        <div>
-                            <h2 className="mb-4 text-xl font-semibold text-foreground">
-                                {t("users:profile.recent_streams")}
-                            </h2>
+                          <div>
+                              <h2 className="text-foreground mb-4 text-xl font-semibold">
+                                  {t("users:profile.recent_streams")}
+                              </h2>
 
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                                {vods.map((vod, idx) => {
-                                    return <VODCard key={idx} vod={vod} />;
-                                })}
-                            </div>
-                        </div>
-                    )
+                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                                  {vods.map((vod, idx) => {
+                                      return <VODCard key={idx} vod={vod} />;
+                                  })}
+                              </div>
+                          </div>
+                      )
                     : null}
             </div>
         </div>

@@ -13,24 +13,24 @@ jobs:
         node-version: [20.x, 22.x]
 
     steps:
-    - uses: actions/checkout@v6
-    - name: test chat service with Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v6
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: "./backend/chat"
-    - run: npm ci
-      working-directory: "./backend/chat"
-    - run: npm test
-      working-directory: "./backend/chat"
+      - uses: actions/checkout@v6
+      - name: test chat service with Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: "./backend/chat"
+      - run: npm ci
+        working-directory: "./backend/chat"
+      - run: npm test
+        working-directory: "./backend/chat"
 
   test-go-services:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        service: [auth, transcode, livestream, user]  # list of go services
+        service: [auth, transcode, livestream, user] # list of go services
 
     steps:
       - name: Checkout repository

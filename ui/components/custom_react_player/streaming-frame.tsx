@@ -286,11 +286,11 @@ function FrontOfVideo({
     return (
         <div
             className={cn(
-                "absolute top-0 flex h-full w-full flex-col items-center justify-end border border-border",
+                "border-border absolute top-0 flex h-full w-full flex-col items-center justify-end border",
                 className,
             )}
         >
-            <div className="absolute left-4 right-4 top-4 flex flex-row items-center justify-between font-sans font-bold text-white">
+            <div className="absolute top-4 right-4 left-4 flex flex-row items-center justify-between font-sans font-bold text-white">
                 <span className="rounded bg-black/70 px-2 py-1">
                     {videoInfo.videoTitle}
                 </span>

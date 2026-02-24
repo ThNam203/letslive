@@ -12,14 +12,39 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dockerfile: [
-          { path: './backend/auth', name: 'letslive-auth', context: './backend/auth' },
-          { path: './backend/user', name: 'letslive-user', context: './backend/user' },
-          { path: './backend/transcode', name: 'letslive-transcode', context: './backend/transcode' },
-          { path: './backend/livestream', name: 'letslive-livestream', context: './backend/livestream' },
-          { path: './backend/configserver', name: 'letslive-configserver', context: './backend/configserver' },
-          { path: './backend/chat', name: 'letslive-chat', context: './backend/chat' },
-        ]
+        dockerfile:
+          [
+            {
+              path: "./backend/auth",
+              name: "letslive-auth",
+              context: "./backend/auth",
+            },
+            {
+              path: "./backend/user",
+              name: "letslive-user",
+              context: "./backend/user",
+            },
+            {
+              path: "./backend/transcode",
+              name: "letslive-transcode",
+              context: "./backend/transcode",
+            },
+            {
+              path: "./backend/livestream",
+              name: "letslive-livestream",
+              context: "./backend/livestream",
+            },
+            {
+              path: "./backend/configserver",
+              name: "letslive-configserver",
+              context: "./backend/configserver",
+            },
+            {
+              path: "./backend/chat",
+              name: "letslive-chat",
+              context: "./backend/chat",
+            },
+          ]
 
     steps:
       - name: Checkout code

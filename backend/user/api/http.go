@@ -53,8 +53,9 @@ func (a *APIServer) getHandler() http.Handler {
 
 	wrap("POST /v1/upload-file", a.userHandler.UploadSingleFileToMinIOHandler) // TODO: find another way to upload file
 
-	wrap("GET /v1/users", a.userHandler.GetAllUsersPublicHandler) // TODO: should change into get random users
+	wrap("GET /v1/users/recommendations", a.userHandler.GetRecommendedChannelsPublicHandler)
 	wrap("GET /v1/users/search", a.userHandler.SearchUsersPublicHandler)
+	wrap("GET /v1/user/me/following", a.userHandler.GetFollowingChannelsPrivateHandler)
 	wrap("GET /v1/user/{userId}", a.userHandler.GetUserByIdPublicHandler)
 
 	wrap("POST /v1/user/{userId}/follow", a.followHandler.FollowPrivateHandler)

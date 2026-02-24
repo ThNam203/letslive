@@ -20,7 +20,7 @@ export default function Section({
     return (
         <section className={className}>
             <div className="mb-4">
-                <h2 className="text-xl font-semibold text-foreground">
+                <h2 className="text-foreground text-xl font-semibold">
                     {title}
                 </h2>
                 {description && <Description content={description} />}

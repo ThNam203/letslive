@@ -23,7 +23,7 @@ export default function SettingsNav({
     const navItems = getNavItems(t);
 
     return (
-        <div className="flex h-full flex-col bg-background text-foreground">
+        <div className="bg-background text-foreground flex h-full flex-col">
             <div className="max-w-7xl px-6">
                 <div className="mt-6 flex items-center">
                     <h1 className="text-4xl font-bold">
@@ -31,7 +31,7 @@ export default function SettingsNav({
                     </h1>
                     {isLoading && <IconLoader width="40" height="40" />}
                 </div>
-                <nav className="border-b border-border">
+                <nav className="border-border border-b">
                     <ul className="flex">
                         {navItems.map((item) => {
                             const isActive = pathname.endsWith(item.href);
@@ -40,9 +40,9 @@ export default function SettingsNav({
                                     <Link
                                         href={item.href}
                                         className={cn(
-                                            "relative inline-block w-20 py-4 text-center text-sm transition-colors hover:text-primary",
+                                            "hover:text-primary relative inline-block w-20 py-4 text-center text-sm transition-colors",
                                             isActive
-                                                ? "text-primary border-b-2 border-primary"
+                                                ? "text-primary border-primary border-b-2"
                                                 : "text-foreground",
                                         )}
                                     >
@@ -54,7 +54,7 @@ export default function SettingsNav({
                     </ul>
                 </nav>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 text-foreground">
+            <div className="text-foreground flex-1 overflow-y-auto p-6">
                 <div className="max-w-4xl space-y-8">
                     {isLoading ? null : !user ? (
                         <p>{t("settings:need_to_login")}</p>

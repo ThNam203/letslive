@@ -17,8 +17,8 @@ const LivestreamPreviewDetailView = ({
 
     return (
         <div className="flex items-start gap-3">
-            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-muted">
-                <Avatar className="border border-border">
+            <div className="bg-muted h-10 w-10 flex-shrink-0 overflow-hidden rounded-full">
+                <Avatar className="border-border border">
                     <AvatarImage
                         src={user?.profilePicture}
                         alt={`${user?.username} avatar`}

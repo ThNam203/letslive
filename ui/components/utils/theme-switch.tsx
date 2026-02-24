@@ -30,10 +30,10 @@ const ThemeSwitch = ({ className }: { className?: string }) => {
 
     return (
         <Select onValueChange={(value) => setTheme(value)} value={theme}>
-            <SelectTrigger className={cn("w-fit border-border", className)}>
+            <SelectTrigger className={cn("border-border w-fit", className)}>
                 <SelectValue defaultValue={THEME_COLORS.SYSTEM} />
             </SelectTrigger>
-            <SelectContent className="border border-border bg-background text-foreground">
+            <SelectContent className="border-border bg-background text-foreground border">
                 <SelectGroup>
                     {Object.values(THEME_COLORS).map((color) => (
                         <SelectItem key={color} value={color}>

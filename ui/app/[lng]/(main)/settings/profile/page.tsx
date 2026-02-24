@@ -220,7 +220,7 @@ export default function ProfileSettings() {
             <Section
                 title={t("settings:social_media_links.title")}
                 description={t("settings:social_media_links.description")}
-                className="border-t border-border pt-8"
+                className="border-border border-t pt-8"
                 contentClassName="p-4"
             >
                 <SocialMediaEdit initialLinks={user?.socialMediaLinks} />
@@ -229,7 +229,7 @@ export default function ProfileSettings() {
             <Section
                 title={t("settings:themes.title")}
                 description={t("settings:themes.description")}
-                className="border-t border-border pt-8"
+                className="border-border border-t pt-8"
                 contentClassName="p-4"
             >
                 <ThemeList />
@@ -238,7 +238,7 @@ export default function ProfileSettings() {
             <Section
                 title={t("settings:language.title")}
                 description={t("settings:language.description")}
-                className="border-t border-border pt-8"
+                className="border-border border-t pt-8"
                 contentClassName="p-4"
             >
                 <LanguageList />
@@ -247,11 +247,11 @@ export default function ProfileSettings() {
             <Section
                 title={t("settings:disable.title")}
                 description={t("settings:disable.description")}
-                className="border-t border-border pt-8"
+                className="border-border border-t pt-8"
                 contentClassName="p-4"
             >
                 <div className="flex w-full items-center justify-between">
-                    <p className="w-2/3 text-sm text-destructive">
+                    <p className="text-destructive w-2/3 text-sm">
                         {t("settings:disable.note")}
                     </p>
                     <DisableAccountDialog

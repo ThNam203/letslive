@@ -23,14 +23,22 @@ function toastWithDefault(
     });
 }
 
-toastWithDefault.error = (message?: string, options?: Parameters<typeof toastify>[1]) =>
-    toastify.error(resolveMessage(message), options);
-toastWithDefault.success = (message?: string, options?: Parameters<typeof toastify>[1]) =>
-    toastify.success(message ?? resolveMessage(message), options);
-toastWithDefault.info = (message?: string, options?: Parameters<typeof toastify>[1]) =>
-    toastify.info(message ?? resolveMessage(message), options);
-toastWithDefault.warning = (message?: string, options?: Parameters<typeof toastify>[1]) =>
-    toastify.warning(message ?? resolveMessage(message), options);
+toastWithDefault.error = (
+    message?: string,
+    options?: Parameters<typeof toastify>[1],
+) => toastify.error(resolveMessage(message), options);
+toastWithDefault.success = (
+    message?: string,
+    options?: Parameters<typeof toastify>[1],
+) => toastify.success(message ?? resolveMessage(message), options);
+toastWithDefault.info = (
+    message?: string,
+    options?: Parameters<typeof toastify>[1],
+) => toastify.info(message ?? resolveMessage(message), options);
+toastWithDefault.warning = (
+    message?: string,
+    options?: Parameters<typeof toastify>[1],
+) => toastify.warning(message ?? resolveMessage(message), options);
 toastWithDefault.warn = toastWithDefault.warning;
 toastWithDefault.dismiss = toastify.dismiss;
 toastWithDefault.promise = toastify.promise;

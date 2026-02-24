@@ -73,11 +73,11 @@ services:
           - /auth/verify-email
         strip_path: false
         plugins:
-        - name: rate-limiting
-          config:
-            error_message: "Verification request should only happens once a minute."
-            minute: 123 #TODO: change to one
-            policy: local
+          - name: rate-limiting
+            config:
+              error_message: "Verification request should only happens once a minute."
+              minute: 123 #TODO: change to one
+              policy: local
 
   - name: Livestream
     host: livestream.service.consul
@@ -303,7 +303,16 @@ plugins:
     enabled: true
     config:
       origins: ["*"]
-      headers: ["Content-Type", "Authorization", "Cache", "Accept", "Cache-Control", "X-Requested-With", "Set-Cookie"]
+      headers:
+        [
+          "Content-Type",
+          "Authorization",
+          "Cache",
+          "Accept",
+          "Cache-Control",
+          "X-Requested-With",
+          "Set-Cookie",
+        ]
       exposed_headers: ["Sec-WebSocket-Accept", "Upgrade", "Connection"]
       credentials: true
       max_age: 3600

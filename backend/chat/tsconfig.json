@@ -1,27 +1,23 @@
 {
     "compilerOptions": {
-      "moduleResolution": "bundler",
-      "target": "ES2023", // Target output cho code
-      "module": "ESNext", // Module output cho code
-      "outDir": "dist", // Đường dẫn output cho thư mục build
-      "rootDir": "src", // Đường dẫn root cho thư mục source
-      "esModuleInterop": true,
-      "strict": true /* Enable all strict type-checking options. */,
-      "skipLibCheck": true /* Skip type checking all .d.ts files. */,
-      "baseUrl": "src", // Đường dẫn base cho các import
-      "paths": {
-        "~/*": ["src/*"] // Đường dẫn tương đối cho các import (alias)
-      }
+        "moduleResolution": "bundler",
+        "target": "ES2023", // Target output cho code
+        "module": "ESNext", // Module output cho code
+        "outDir": "dist", // Đường dẫn output cho thư mục build
+        "rootDir": "src", // Đường dẫn root cho thư mục source
+        "esModuleInterop": true,
+        "strict": true /* Enable all strict type-checking options. */,
+        "skipLibCheck": true /* Skip type checking all .d.ts files. */,
+        "baseUrl": "src", // Đường dẫn base cho các import
+        "paths": {
+            "~/*": ["src/*"] // Đường dẫn tương đối cho các import (alias)
+        }
     },
     "files": ["src/type.d.ts"], // Các file dùng để defined global type cho dự án
     "include": ["src/**/*"], // Đường dẫn include cho các file cần build
-    "exclude": [
-        "src/**/*.test.ts",
-        "src/**/*.spec.ts",
-        "node_modules"
-    ],
+    "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts", "node_modules"],
     "tsc-alias": {
         "resolveFullPaths": true,
         "verbose": false
     }
-}  
+}

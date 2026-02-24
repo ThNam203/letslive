@@ -35,7 +35,6 @@
     "no_description": "No description",
     "add": "Add",
     "bio": "Bio",
-
     "started_at": "Started {{time}}",
     "live": "Live",
     "time": {
@@ -53,5 +52,7 @@
         "months_ago_other": "{{count}} months ago",
         "years_ago_one": "{{count}} year ago",
         "years_ago_other": "{{count}} years ago"
-    }
+    },
+    "following": "Following",
+    "recommended": "Recommended"
 }

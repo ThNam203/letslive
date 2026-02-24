@@ -59,9 +59,7 @@ export default function CommentItem({
     const commentUser = comment.user ?? null;
     const userProfileHref =
         lng && commentUser?.id ? `/${lng}/users/${commentUser.id}` : "#";
-    const [isLiked, setIsLiked] = useState(
-        likedIds?.has(comment.id) ?? false,
-    );
+    const [isLiked, setIsLiked] = useState(likedIds?.has(comment.id) ?? false);
     const [likeCount, setLikeCount] = useState(comment.likeCount);
 
     useEffect(() => {
@@ -75,9 +73,7 @@ export default function CommentItem({
     const [hasMoreReplies, setHasMoreReplies] = useState(
         comment.replyCount > 0,
     );
-    const [replyLikedIds, setReplyLikedIds] = useState<Set<string>>(
-        new Set(),
-    );
+    const [replyLikedIds, setReplyLikedIds] = useState<Set<string>>(new Set());
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [isLiking, setIsLiking] = useState(false);
     const [isLoadingReplies, setIsLoadingReplies] = useState(false);
@@ -144,9 +140,7 @@ export default function CommentItem({
     const fetchReplyLikedIds = useCallback(
         async (replyList: VODComment[]) => {
             if (!currentUser) return;
-            const ids = replyList
-                .filter((c) => !c.isDeleted)
-                .map((c) => c.id);
+            const ids = replyList.filter((c) => !c.isDeleted).map((c) => c.id);
             if (ids.length === 0) return;
             try {
                 const res = await GetUserLikedCommentIds(ids);
@@ -197,9 +191,7 @@ export default function CommentItem({
 
     const handleReplyCreated = (newReply: VODComment) => {
         const replyWithUser: VODComment =
-            !newReply.user &&
-            currentUser &&
-            currentUser.id === newReply.userId
+            !newReply.user && currentUser && currentUser.id === newReply.userId
                 ? {
                       ...newReply,
                       user: {
@@ -219,9 +211,7 @@ export default function CommentItem({
     const handleReplyDeleted = (replyId: string) => {
         setReplies((prev) =>
             prev.map((r) =>
-                r.id === replyId
-                    ? { ...r, content: "", isDeleted: true }
-                    : r,
+                r.id === replyId ? { ...r, content: "", isDeleted: true } : r,
             ),
         );
         setReplyCount((prev) => Math.max(prev - 1, 0));
@@ -250,7 +240,7 @@ export default function CommentItem({
                     <AvatarFallback>?</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                    <p className="text-sm italic text-muted-foreground">
+                    <p className="text-muted-foreground text-sm italic">
                         {t("comments:deleted_comment")}
                     </p>
                     {replyCount > 0 && !showReplies && (
@@ -303,7 +293,7 @@ export default function CommentItem({
             {userProfileHref !== "#" ? (
                 <Link
                     href={userProfileHref}
-                    className="shrink-0 cursor-pointer rounded-full ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="ring-offset-background focus-visible:ring-ring shrink-0 cursor-pointer rounded-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                     aria-label={commentUser?.username ?? "View profile"}
                 >
                     <Avatar className="h-8 w-8">
@@ -354,17 +344,17 @@ export default function CommentItem({
                                 </span>
                             )}
                             {isYou && (
-                                <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                                <span className="bg-primary/15 text-primary rounded px-1.5 py-0.5 text-[10px] font-medium">
                                     {t("comments:you")}
                                 </span>
                             )}
                         </span>
                     )}
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                         {dateDiffFromNow(comment.createdAt, t)}
                     </span>
                 </div>
-                <p className="mt-1 whitespace-pre-wrap text-sm">
+                <p className="mt-1 text-sm whitespace-pre-wrap">
                     {comment.content}
                 </p>
 
@@ -376,7 +366,9 @@ export default function CommentItem({
                         className="h-7 cursor-pointer gap-1 px-2 text-xs"
                         onClick={handleLike}
                         disabled={!currentUser || isLiking}
-                        aria-label={isLiked ? t("comments:unlike") : t("comments:like")}
+                        aria-label={
+                            isLiked ? t("comments:unlike") : t("comments:like")
+                        }
                     >
                         {isLiking ? (
                             <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -409,7 +401,7 @@ export default function CommentItem({
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-7 cursor-pointer px-2 text-xs text-destructive hover:text-destructive"
+                                    className="text-destructive hover:text-destructive h-7 cursor-pointer px-2 text-xs"
                                 >
                                     {t("comments:delete")}
                                 </Button>

@@ -204,7 +204,7 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                     />
                                     {hasValue ? (
                                         <div className="flex flex-1 items-center gap-2">
-                                            <span className="text-sm font-medium text-foreground">
+                                            <span className="text-foreground text-sm font-medium">
                                                 {label}
                                             </span>
                                             <span className="text-muted-foreground text-sm">
@@ -212,16 +212,14 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                             </span>
                                         </div>
                                     ) : (
-                                        <span className="text-muted-foreground text-sm font-medium transition-colors group-hover:text-foreground">
+                                        <span className="text-muted-foreground group-hover:text-foreground text-sm font-medium transition-colors">
                                             {t("common:add")} {label}
                                         </span>
                                     )}
                                 </button>
                             ) : (
-                                <div className="flex items-center gap-3 rounded-lg border border-primary/40 bg-primary/20 px-4 py-3">
-                                    <Icon
-                                        className="h-5 w-5 flex-shrink-0"
-                                    />
+                                <div className="border-primary/40 bg-primary/20 flex items-center gap-3 rounded-lg border px-4 py-3">
+                                    <Icon className="h-5 w-5 flex-shrink-0" />
                                     <div className="relative flex-1">
                                         <Input
                                             type="url"
@@ -252,7 +250,7 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                                     links[value] || "",
                                                 )
                                             }
-                                            className="absolute right-12 top-1/2 -translate-y-1/2 text-foreground transition-colors"
+                                            className="text-foreground absolute top-1/2 right-12 -translate-y-1/2 transition-colors"
                                             aria-label="Update field button"
                                         >
                                             <IconCheck className="h-4 w-4" />
@@ -261,7 +259,7 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                             onClick={() =>
                                                 collapseField(value, !hasValue)
                                             }
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground transition-colors"
+                                            className="text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
                                             aria-label="Close field button"
                                         >
                                             <IconClose className="h-4 w-4" />

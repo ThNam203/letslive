@@ -52,7 +52,7 @@ const LivestreamPreviewView = ({
     return (
         <Card
             className={cn(
-                "w-full rounded-sm border-muted transition-all hover:shadow-md",
+                "border-muted w-full rounded-sm transition-all hover:shadow-md",
                 className,
             )}
         >

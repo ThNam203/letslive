@@ -14,7 +14,7 @@ export function NotificationLoading({
     return (
         <div
             className={cn(
-                "flex items-center justify-center py-8 text-sm text-muted-foreground",
+                "text-muted-foreground flex items-center justify-center py-8 text-sm",
                 className,
             )}
         >

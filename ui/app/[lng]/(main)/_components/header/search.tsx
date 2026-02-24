@@ -84,7 +84,7 @@ export default function SearchBar({
                 {query && (
                     <button
                         onClick={handleClear}
-                        className="text-muted-foreground absolute right-2 top-1/2 -translate-y-1/2 hover:text-foreground"
+                        className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
                         aria-label="Clear search"
                     >
                         <IconClose className="h-4 w-4" />
@@ -93,7 +93,7 @@ export default function SearchBar({
             </div>
 
             {isLoading && query && (
-                <div className="absolute mt-1 w-full rounded-sm border bg-background p-4 shadow-md">
+                <div className="bg-background absolute mt-1 w-full rounded-sm border p-4 shadow-md">
                     <div className="flex items-center justify-center">
                         <p className="text-muted-foreground text-sm">
                             {t("common:searching")}
@@ -103,7 +103,7 @@ export default function SearchBar({
             )}
 
             {showResults && results.length > 0 && !isLoading && (
-                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm bg-background shadow-md">
+                <div className="bg-background absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm shadow-md">
                     {results.map((user) => (
                         <Link
                             key={user.id}
@@ -135,7 +135,7 @@ export default function SearchBar({
             )}
 
             {showResults && results.length === 0 && !isLoading && query && (
-                <div className="absolute mt-1 w-full rounded-sm border bg-background p-4 shadow-md">
+                <div className="bg-background absolute mt-1 w-full rounded-sm border p-4 shadow-md">
                     <p className="text-muted-foreground text-sm">
                         {t("common:no_users_found")}
                     </p>

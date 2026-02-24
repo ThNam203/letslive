@@ -103,9 +103,7 @@ export default function CommentSection({
 
     const handleCommentCreated = (newComment: VODComment) => {
         const commentWithUser: VODComment =
-            !newComment.user &&
-            user &&
-            user.id === newComment.userId
+            !newComment.user && user && user.id === newComment.userId
                 ? {
                       ...newComment,
                       user: {
@@ -123,9 +121,7 @@ export default function CommentSection({
     const handleCommentDeleted = (commentId: string) => {
         setComments((prev) =>
             prev.map((c) =>
-                c.id === commentId
-                    ? { ...c, content: "", isDeleted: true }
-                    : c,
+                c.id === commentId ? { ...c, content: "", isDeleted: true } : c,
             ),
         );
         setTotalComments((prev) => Math.max(prev - 1, 0));
@@ -154,7 +150,7 @@ export default function CommentSection({
             <h3 className="text-lg font-semibold">
                 {t("comments:title")}
                 {totalComments > 0 && (
-                    <span className="ml-2 text-sm font-normal text-muted-foreground">
+                    <span className="text-muted-foreground ml-2 text-sm font-normal">
                         ({totalComments})
                     </span>
                 )}
@@ -166,7 +162,7 @@ export default function CommentSection({
                     onCommentCreated={handleCommentCreated}
                 />
             ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                     {t("comments:login_to_comment")}
                 </p>
             )}

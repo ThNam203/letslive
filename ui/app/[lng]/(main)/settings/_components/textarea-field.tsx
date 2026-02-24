@@ -23,7 +23,7 @@ export default function TextAreaField({
             <Textarea
                 id={label}
                 className={cn(
-                    "border border-border text-foreground",
+                    "border-border text-foreground border",
                     className,
                 )}
                 {...props}

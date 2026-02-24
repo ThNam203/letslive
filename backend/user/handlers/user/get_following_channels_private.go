@@ -3,19 +3,19 @@ package user
 import (
 	"context"
 	"net/http"
+	"sen1or/letslive/user/handlers/utils"
 	"sen1or/letslive/user/pkg/tracer"
 	"sen1or/letslive/user/response"
-	"strconv"
 )
 
-func (h *UserHandler) GetAllUsersPublicHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) GetFollowingChannelsPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
-	page, err := strconv.Atoi(r.URL.Query().Get("page"))
 
-	if err != nil || page < 0 {
+	authenticatedUserId, cookieErr := utils.GetUserIdFromCookie(r)
+	if cookieErr != nil {
 		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_INPUT,
+			response.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
 			nil,
@@ -23,8 +23,8 @@ func (h *UserHandler) GetAllUsersPublicHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	ctx, span := tracer.MyTracer.Start(ctx, "get_all_users_public_handler.user_service.get_all_users")
-	users, serviceErr := h.userService.GetAllUsers(ctx, page)
+	ctx, span := tracer.MyTracer.Start(ctx, "get_following_channels_private_handler.user_service.get_following_users")
+	users, serviceErr := h.userService.GetFollowingUsers(ctx, *authenticatedUserId)
 	span.End()
 
 	if serviceErr != nil {

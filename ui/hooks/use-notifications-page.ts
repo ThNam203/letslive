@@ -47,26 +47,21 @@ export function useNotificationsPage() {
         fetchNotifications(0);
     }, [fetchNotifications]);
 
-    const handleMarkAsRead = useCallback(
-        async (notificationId: string) => {
-            try {
-                const res = await MarkNotificationAsRead(notificationId);
-                if (res.success) {
-                    setNotifications((prev) =>
-                        prev.map((n) =>
-                            n.id === notificationId
-                                ? { ...n, isRead: true }
-                                : n,
-                        ),
-                    );
-                    useNotification.getState().markAsRead(notificationId);
-                }
-            } catch {
-                // silently ignore
+    const handleMarkAsRead = useCallback(async (notificationId: string) => {
+        try {
+            const res = await MarkNotificationAsRead(notificationId);
+            if (res.success) {
+                setNotifications((prev) =>
+                    prev.map((n) =>
+                        n.id === notificationId ? { ...n, isRead: true } : n,
+                    ),
+                );
+                useNotification.getState().markAsRead(notificationId);
             }
-        },
-        [],
-    );
+        } catch {
+            // silently ignore
+        }
+    }, []);
 
     const handleMarkAllAsRead = useCallback(async () => {
         try {
@@ -82,23 +77,20 @@ export function useNotificationsPage() {
         }
     }, []);
 
-    const handleDelete = useCallback(
-        async (notificationId: string) => {
-            try {
-                const res = await DeleteNotification(notificationId);
-                if (res.success) {
-                    setNotifications((prev) =>
-                        prev.filter((n) => n.id !== notificationId),
-                    );
-                    useNotification.getState().removeNotification(notificationId);
-                    setTotal((prev) => prev - 1);
-                }
-            } catch {
-                // silently ignore
+    const handleDelete = useCallback(async (notificationId: string) => {
+        try {
+            const res = await DeleteNotification(notificationId);
+            if (res.success) {
+                setNotifications((prev) =>
+                    prev.filter((n) => n.id !== notificationId),
+                );
+                useNotification.getState().removeNotification(notificationId);
+                setTotal((prev) => prev - 1);
             }
-        },
-        [],
-    );
+        } catch {
+            // silently ignore
+        }
+    }, []);
 
     const handleLoadMore = useCallback(() => {
         const nextPage = page + 1;

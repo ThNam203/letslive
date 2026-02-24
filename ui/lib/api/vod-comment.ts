@@ -44,30 +44,25 @@ export async function DeleteVODComment(
 export async function LikeVODComment(
     commentId: string,
 ): Promise<ApiResponse<void>> {
-    return fetchClient<ApiResponse<void>>(
-        `/vod-comments/${commentId}/like`,
-        { method: "POST" },
-    );
+    return fetchClient<ApiResponse<void>>(`/vod-comments/${commentId}/like`, {
+        method: "POST",
+    });
 }
 
 export async function UnlikeVODComment(
     commentId: string,
 ): Promise<ApiResponse<void>> {
-    return fetchClient<ApiResponse<void>>(
-        `/vod-comments/${commentId}/like`,
-        { method: "DELETE" },
-    );
+    return fetchClient<ApiResponse<void>>(`/vod-comments/${commentId}/like`, {
+        method: "DELETE",
+    });
 }
 
 export async function GetUserLikedCommentIds(
     commentIds: string[],
 ): Promise<ApiResponse<string[]>> {
-    return fetchClient<ApiResponse<string[]>>(
-        `/vod-comments/liked-ids`,
-        {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ commentIds }),
-        },
-    );
+    return fetchClient<ApiResponse<string[]>>(`/vod-comments/liked-ids`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentIds }),
+    });
 }

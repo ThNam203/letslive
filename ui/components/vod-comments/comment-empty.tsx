@@ -17,12 +17,12 @@ export function CommentEmpty({ message, className }: CommentEmptyProps) {
             )}
         >
             <div
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-muted"
+                className="bg-muted flex h-12 w-12 items-center justify-center rounded-full"
                 aria-hidden
             >
                 <IconMessage className="text-muted-foreground" />
             </div>
-            <p className="text-sm text-muted-foreground max-w-[280px]">
+            <p className="text-muted-foreground max-w-[280px] text-sm">
                 {message}
             </p>
         </div>

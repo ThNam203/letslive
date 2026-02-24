@@ -61,7 +61,7 @@ export default function ImageHover({
     return (
         <div
             className={cn(
-                "absolute flex h-full w-full cursor-pointer items-center justify-center bg-background-hover/20 opacity-0 transition-all duration-300 ease-in-out hover:opacity-100",
+                "bg-background-hover/20 absolute flex h-full w-full cursor-pointer items-center justify-center opacity-0 transition-all duration-300 ease-in-out hover:opacity-100",
                 className,
             )}
             onClick={onClick}
@@ -73,10 +73,10 @@ export default function ImageHover({
                 onChange={handleValueChange}
                 {...props}
             />
-            <div className="flex flex-row gap-2 text-foreground">{title}</div>
+            <div className="text-foreground flex flex-row gap-2">{title}</div>
             <div
                 className={cn(
-                    "flex cursor-pointer items-center justify-center rounded-full bg-primary p-1",
+                    "bg-primary flex cursor-pointer items-center justify-center rounded-full p-1",
                     postions[closeIconPosition],
                     !showCloseIcon && "hidden",
                 )}

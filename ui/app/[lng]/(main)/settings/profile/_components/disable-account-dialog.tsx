@@ -77,7 +77,7 @@ export default function DisableAccountDialog({
             <DialogTrigger asChild>
                 <button
                     disabled={isUpdatingProfile || isDisablingAccount}
-                    className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive-hover"
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive-hover rounded-md px-4 py-2 text-sm font-medium"
                 >
                     {t("settings:disable.button")}
                 </button>

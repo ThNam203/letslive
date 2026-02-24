@@ -118,8 +118,8 @@ export default function Livestreaming() {
                         className="mt-1"
                     />
                 ) : (
-                    <div className="bg-opacity-9 0 mb-4 mt-1 flex aspect-video w-full items-center justify-center bg-black">
-                        <h2 className="font-mono text-3xl text-foreground-muted">
+                    <div className="bg-opacity-9 0 mt-1 mb-4 flex aspect-video w-full items-center justify-center bg-black">
+                        <h2 className="text-foreground-muted font-mono text-3xl">
                             {t("users:offline")}
                         </h2>
                     </div>
@@ -137,7 +137,7 @@ export default function Livestreaming() {
             <Button
                 variant="outline"
                 size="icon"
-                className="fixed bottom-4 right-4 z-50 md:hidden"
+                className="fixed right-4 bottom-4 z-50 md:hidden"
                 onClick={() => setIsChatOpen(!isChatOpen)}
             >
                 <IconMenu className="h-5 w-5" />
@@ -145,7 +145,7 @@ export default function Livestreaming() {
 
             {/* Chat panel - hidden on mobile unless toggled */}
             <div
-                className={`fixed right-2 top-0 z-40 h-full w-full bg-background transition-all duration-300 md:relative md:w-80 lg:w-96 ${
+                className={`bg-background fixed top-0 right-2 z-40 h-full w-full transition-all duration-300 md:relative md:w-80 lg:w-96 ${
                     isChatOpen
                         ? "translate-x-0"
                         : "translate-x-full md:translate-x-0"

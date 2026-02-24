@@ -265,7 +265,7 @@ services:
       - "3200"
       - "4318"
     ports:
-      - "3200:3200"   # Tempo HTTP endpoint
+      - "3200:3200" # Tempo HTTP endpoint
     networks:
       general_network:
         ipv4_address: 172.29.0.13
@@ -275,8 +275,7 @@ services:
     container_name: letslive-otel-collector
     volumes:
       - ./configs/otel-collector-config.yaml:/etc/otel-collector-config.yaml
-    command:
-      --config /etc/otel-collector-config.yaml
+    command: --config /etc/otel-collector-config.yaml
     expose:
       - "4318"
       - "4317"
@@ -290,7 +289,7 @@ services:
   loki:
     image: grafana/loki:latest
     container_name: letslive-loki
-    expose: 
+    expose:
       - "3100"
     ports:
       - "3100:3100"

@@ -63,10 +63,7 @@ export default function CommentForm({
     return (
         <div className="flex items-start gap-3">
             <Avatar className="h-8 w-8 flex-shrink-0">
-                <AvatarImage
-                    src={user?.profilePicture}
-                    alt={user?.username}
-                />
+                <AvatarImage src={user?.profilePicture} alt={user?.username} />
                 <AvatarFallback>
                     {user?.username?.charAt(0).toUpperCase()}
                 </AvatarFallback>
@@ -79,22 +76,24 @@ export default function CommentForm({
                     className="min-h-[60px] resize-none"
                     autoFocus={autoFocus}
                     maxLength={2000}
-                    aria-label={parentId ? t("comments:write_reply") : t("comments:write_comment")}
+                    aria-label={
+                        parentId
+                            ? t("comments:write_reply")
+                            : t("comments:write_comment")
+                    }
                 />
                 <div className="flex justify-between gap-2">
                     {content.length > 0 ? (
-                        <span className="text-xs text-muted-foreground self-center">
-                            {t("comments:char_remaining", { count: 2000 - content.length })}
+                        <span className="text-muted-foreground self-center text-xs">
+                            {t("comments:char_remaining", {
+                                count: 2000 - content.length,
+                            })}
                         </span>
                     ) : (
                         <span />
                     )}
                     {onCancel && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={onCancel}
-                        >
+                        <Button variant="ghost" size="sm" onClick={onCancel}>
                             {t("common:cancel")}
                         </Button>
                     )}

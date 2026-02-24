@@ -34,10 +34,10 @@ const LanguageSwitch = ({ className }: { className?: string }) => {
 
     return (
         <Select onValueChange={handleChange} value={i18n.resolvedLanguage}>
-            <SelectTrigger className={cn("w-fit border-border", className)}>
+            <SelectTrigger className={cn("border-border w-fit", className)}>
                 <SelectValue defaultValue={i18n.resolvedLanguage} />
             </SelectTrigger>
-            <SelectContent className="border border-border bg-background text-foreground">
+            <SelectContent className="border-border bg-background text-foreground border">
                 <SelectGroup>
                     {Object.values(I18N_LANGUAGES).map((lng) => (
                         <SelectItem key={lng} value={lng}>

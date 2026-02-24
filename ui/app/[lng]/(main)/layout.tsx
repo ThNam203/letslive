@@ -24,7 +24,7 @@ export default function RootLayout({
                 <ResizablePanel
                     id="2"
                     order={2}
-                    className="min-h-0 overflow-hidden bg-background"
+                    className="bg-background min-h-0 overflow-hidden"
                 >
                     {children}
                 </ResizablePanel>

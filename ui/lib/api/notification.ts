@@ -27,13 +27,10 @@ export async function MarkNotificationAsRead(
     );
 }
 
-export async function MarkAllNotificationsAsRead(): Promise<
-    ApiResponse<void>
-> {
-    return fetchClient<ApiResponse<void>>(
-        `/user/me/notifications/read-all`,
-        { method: "PATCH" },
-    );
+export async function MarkAllNotificationsAsRead(): Promise<ApiResponse<void>> {
+    return fetchClient<ApiResponse<void>>(`/user/me/notifications/read-all`, {
+        method: "PATCH",
+    });
 }
 
 export async function DeleteNotification(

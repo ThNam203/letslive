@@ -35,7 +35,7 @@ const LanguageList = ({ className }: { className?: string }) => {
                         "rounded-md border px-4 py-2 text-sm capitalize transition-all",
                         "border-border",
                         i18n.resolvedLanguage === lng
-                            ? "font-bold ring-2 ring-border"
+                            ? "ring-border font-bold ring-2"
                             : "",
                     )}
                 >

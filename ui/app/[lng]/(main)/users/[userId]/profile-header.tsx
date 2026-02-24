@@ -114,7 +114,7 @@ export default function ProfileHeader({
                             }
                             disabled={isFetching || !me}
                             onClick={onFollowClick}
-                            className="absolute bottom-4 right-0 flex translate-x-[50%] flex-row items-center justify-center gap-0"
+                            className="absolute right-0 bottom-4 flex translate-x-[50%] flex-row items-center justify-center gap-0"
                         >
                             {isFetching && <IconLoader className="mr-1" />}
                             {user.isFollowing

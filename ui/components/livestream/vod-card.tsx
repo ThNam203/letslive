@@ -74,12 +74,12 @@ export default function VODCard({
     const isWithUser = variant === "with-user";
 
     const renderThumbnail = () => (
-        <div className="relative aspect-video overflow-hidden bg-muted">
-            <div className="absolute bottom-2 right-2 z-10 flex items-center gap-2">
+        <div className="bg-muted relative aspect-video overflow-hidden">
+            <div className="absolute right-2 bottom-2 z-10 flex items-center gap-2">
                 {isEditable && vod.visibility !== "public" && (
                     <Badge
                         variant="secondary"
-                        className="flex h-6 items-center justify-center bg-destructive px-2.5 text-white"
+                        className="bg-destructive flex h-6 items-center justify-center px-2.5 text-white"
                     >
                         <IconEyeOff className="h-4 w-4" />
                     </Badge>
@@ -129,7 +129,7 @@ export default function VODCard({
         <div>
             {isWithUser ? (
                 <div className="flex items-start gap-3">
-                    <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-muted">
+                    <div className="bg-muted h-10 w-10 flex-shrink-0 overflow-hidden rounded-full">
                         <Avatar>
                             <AvatarImage
                                 src={user?.profilePicture}
@@ -170,7 +170,7 @@ export default function VODCard({
             ) : (
                 <>
                     <div className="flex items-center gap-2">
-                        <h3 className="line-clamp-2 flex-1 text-base font-semibold text-foreground">
+                        <h3 className="text-foreground line-clamp-2 flex-1 text-base font-semibold">
                             {vod.title}
                         </h3>
                         {isEditable && (onEdit || onDelete) && (
@@ -224,7 +224,7 @@ export default function VODCard({
     return (
         <Card
             className={cn(
-                "w-full overflow-hidden rounded-sm border-border transition-all hover:shadow-md",
+                "border-border w-full overflow-hidden rounded-sm transition-all hover:shadow-md",
                 className,
             )}
         >

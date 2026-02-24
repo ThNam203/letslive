@@ -182,14 +182,14 @@ export default function SignUpForm() {
                     handleBeginEmailVerification();
                 }}
             >
-                <div className="flex items-center gap-4 rounded-md border border-border px-4">
+                <div className="border-border flex items-center gap-4 rounded-md border px-4">
                     <label htmlFor="email">
                         <IconEmail className="scale-125 opacity-40" />
                     </label>
                     <input
                         id="email"
                         aria-label={t("email")}
-                        className="h-12 flex-1 bg-background focus:outline-none"
+                        className="bg-background h-12 flex-1 focus:outline-none"
                         placeholder={t("email")}
                         type="email"
                         value={email}
@@ -197,14 +197,14 @@ export default function SignUpForm() {
                     />
                 </div>
                 <FormErrorText textError={errors.email} />
-                <div className="mt-4 flex items-center gap-4 rounded-md border border-border px-4">
+                <div className="border-border mt-4 flex items-center gap-4 rounded-md border px-4">
                     <label htmlFor="username">
                         <IconUserOutline className="scale-125 opacity-40" />
                     </label>
                     <input
                         id="username"
                         aria-label={t("common:username")}
-                        className="h-12 flex-1 bg-background focus:outline-none"
+                        className="bg-background h-12 flex-1 focus:outline-none"
                         placeholder={t("common:username")}
                         type="text"
                         value={username}
@@ -212,14 +212,14 @@ export default function SignUpForm() {
                     />
                 </div>
                 <FormErrorText textError={errors.username} />
-                <div className="mt-4 flex items-center gap-4 rounded-md border border-border px-4">
+                <div className="border-border mt-4 flex items-center gap-4 rounded-md border px-4">
                     <label htmlFor="password">
                         <IconPasswordOutline className="scale-125 opacity-40" />
                     </label>
                     <input
                         id="password"
                         aria-label={t("password")}
-                        className="h-12 flex-1 bg-background focus:outline-none"
+                        className="bg-background h-12 flex-1 focus:outline-none"
                         placeholder={t("password")}
                         type={hidingPassword ? "password" : "text"}
                         value={password}
@@ -239,14 +239,14 @@ export default function SignUpForm() {
                 </div>
                 <FormErrorText textError={errors.password} />
 
-                <div className="mt-4 flex items-center gap-4 rounded-md border border-border px-4">
+                <div className="border-border mt-4 flex items-center gap-4 rounded-md border px-4">
                     <label htmlFor="confirm-password">
                         <IconPasswordOutline className="scale-125 opacity-40" />
                     </label>
                     <input
                         id="confirm-password"
                         aria-label={t("confirm_password")}
-                        className="h-12 flex-1 bg-background focus:outline-none"
+                        className="bg-background h-12 flex-1 focus:outline-none"
                         placeholder={t("confirm_password")}
                         type={hidingConfirmPassword ? "password" : "text"}
                         value={confirmPassword}
@@ -292,7 +292,7 @@ export default function SignUpForm() {
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="mt-4 flex h-12 w-full items-center justify-center rounded-md border border-transparent bg-blue-400 font-semibold uppercase text-white hover:bg-blue-500"
+                    className="mt-4 flex h-12 w-full items-center justify-center rounded-md border border-transparent bg-blue-400 font-semibold text-white uppercase hover:bg-blue-500"
                 >
                     {isLoading && <IconLoader className="ml-2" />}
                     {t("signup")}
@@ -353,7 +353,7 @@ export default function SignUpForm() {
                             </InputOTPGroup>
                         </InputOTP>
                         {otpError && (
-                            <p className="mt-2 text-sm text-destructive">
+                            <p className="text-destructive mt-2 text-sm">
                                 {otpError}
                             </p>
                         )}

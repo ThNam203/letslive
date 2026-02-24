@@ -110,7 +110,10 @@ export class ChatServer {
             userInfo.currentRoom !== data.roomId ||
             !this.redisService.checkIfUserInRoom(data.userId, userInfo.currentRoom)
         ) {
-            logger.error({ userId: data.userId, roomId: data.roomId, currentRoom: userInfo.currentRoom }, 'invalid leave request: user not in room')
+            logger.error(
+                { userId: data.userId, roomId: data.roomId, currentRoom: userInfo.currentRoom },
+                'invalid leave request: user not in room'
+            )
             return
         }
 
@@ -126,7 +129,10 @@ export class ChatServer {
             userInfo.currentRoom !== data.roomId ||
             !this.redisService.checkIfUserInRoom(data.userId, userInfo.currentRoom)
         ) {
-            logger.error({ userId: data.userId, roomId: data.roomId, currentRoom: userInfo.currentRoom }, 'invalid message request: user not in room')
+            logger.error(
+                { userId: data.userId, roomId: data.roomId, currentRoom: userInfo.currentRoom },
+                'invalid message request: user not in room'
+            )
             return
         }
 

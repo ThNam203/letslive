@@ -9,7 +9,7 @@ export async function Header() {
     const { t } = await myGetT();
 
     return (
-        <nav className="sticky flex h-14 w-full flex-row items-center border-b border-border bg-background px-4 py-2 text-xl font-semibold text-foreground">
+        <nav className="border-border bg-background text-foreground sticky flex h-14 w-full flex-row items-center border-b px-4 py-2 text-xl font-semibold">
             <div className="flex flex-1 flex-row items-center max-md:gap-4 md:gap-10">
                 <Link
                     href="/"

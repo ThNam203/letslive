@@ -64,7 +64,7 @@ const LivestreamsPreviewView = () => {
             )}
             {livestreams.length == 0 && (
                 <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-                    <div className="mb-6 rounded-full bg-muted p-4">
+                    <div className="bg-muted mb-6 rounded-full p-4">
                         <IconPlay className="text-muted-foreground h-16 w-16" />
                     </div>
                     <h2 className="mb-2 text-2xl font-semibold">
@@ -86,7 +86,7 @@ const StreamsSeparator = ({ onClick }: { onClick: () => void }) => {
         <div className="flex w-full flex-row items-center justify-between gap-4">
             <Separator className="flex-1" />
             <button
-                className="flex flex-row items-center justify-center text-nowrap rounded-md border-border px-2 py-1 text-xs font-semibold text-primary duration-100 ease-linear hover:text-primary-hover"
+                className="border-border text-primary hover:text-primary-hover flex flex-row items-center justify-center rounded-md px-2 py-1 text-xs font-semibold text-nowrap duration-100 ease-linear"
                 onClick={onClick}
             >
                 <span className="">{t("show_more")}</span>

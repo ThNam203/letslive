@@ -47,7 +47,7 @@ export default function VODsEdit() {
                     <h1 className="text-xl font-semibold">
                         {t("settings:vods.title")}
                     </h1>
-                    <p className="text-sm text-foreground-muted">
+                    <p className="text-foreground-muted text-sm">
                         {t("settings:vods.description")}
                     </p>
                 </div>
