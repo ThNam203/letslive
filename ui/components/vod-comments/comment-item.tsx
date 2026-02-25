@@ -30,6 +30,7 @@ import {
     DialogTrigger,
     DialogClose,
 } from "@/components/ui/dialog";
+import { cn } from "@/utils/cn";
 import CommentForm from "./comment-form";
 import CommentList from "./comment-list";
 
@@ -233,63 +234,8 @@ export default function CommentItem({
     const isOwner = Boolean(vodOwnerId && comment.userId === vodOwnerId);
     const isYou = isAuthor;
 
-    if (comment.isDeleted) {
-        return (
-            <div className="flex items-start gap-3 opacity-60">
-                <Avatar className="h-8 w-8 shrink-0">
-                    <AvatarFallback>?</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                    <p className="text-muted-foreground text-sm italic">
-                        {t("comments:deleted_comment")}
-                    </p>
-                    {replyCount > 0 && !showReplies && (
-                        <Button
-                            variant="link"
-                            size="sm"
-                            className="mt-1 h-auto cursor-pointer p-0 text-xs"
-                            onClick={handleLoadReplies}
-                            disabled={isLoadingReplies}
-                        >
-                            {isLoadingReplies
-                                ? t("common:loading")
-                                : t("comments:view_replies", {
-                                      count: replyCount,
-                                  })}
-                        </Button>
-                    )}
-                    {showReplies && replies.length > 0 && (
-                        <CommentList
-                            comments={replies}
-                            vodId={vodId}
-                            vodOwnerId={vodOwnerId}
-                            likedIds={replyLikedIds}
-                            onCommentDeleted={handleReplyDeleted}
-                            onLikedChanged={handleReplyLikedChanged}
-                            isReplyList
-                            depth={depth + 1}
-                        />
-                    )}
-                    {showReplies && hasMoreReplies && (
-                        <Button
-                            variant="link"
-                            size="sm"
-                            className="mt-1 h-auto cursor-pointer p-0 text-xs"
-                            onClick={handleLoadReplies}
-                            disabled={isLoadingReplies}
-                        >
-                            {isLoadingReplies
-                                ? t("common:loading")
-                                : t("comments:load_more_replies")}
-                        </Button>
-                    )}
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="flex items-start gap-3">
+        <div className={cn("flex items-start gap-3", comment.isDeleted && "opacity-60")}>
             {userProfileHref !== "#" ? (
                 <Link
                     href={userProfileHref}
@@ -354,11 +300,18 @@ export default function CommentItem({
                         {dateDiffFromNow(comment.createdAt, t)}
                     </span>
                 </div>
-                <p className="mt-1 text-sm whitespace-pre-wrap">
-                    {comment.content}
-                </p>
+                {comment.isDeleted ? (
+                    <p className="text-muted-foreground mt-1 text-sm italic">
+                        {t("comments:deleted_comment")}
+                    </p>
+                ) : (
+                    <p className="mt-1 text-sm whitespace-pre-wrap">
+                        {comment.content}
+                    </p>
+                )}
 
-                {/* Action buttons */}
+                {/* Action buttons (hidden for deleted comments) */}
+                {!comment.isDeleted && (
                 <div className="mt-1 flex items-center gap-3">
                     <Button
                         variant="ghost"
@@ -435,6 +388,7 @@ export default function CommentItem({
                         </Dialog>
                     )}
                 </div>
+                )}
 
                 {/* Reply form */}
                 {showReplyForm && (
