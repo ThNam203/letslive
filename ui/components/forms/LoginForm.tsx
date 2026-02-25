@@ -15,6 +15,9 @@ import useT from "@/hooks/use-translation";
 import { loginSchema } from "@/lib/validations/login";
 import { GetMeProfile } from "@/lib/api/user";
 import useUser from "@/hooks/user";
+import { Input } from "../ui/input";
+import { EMAIL_MAX_LENGTH } from "@/constant/field-limits";
+import { PASSWORD_MAX_LENGTH } from "@/constant/password";
 
 export default function LogInForm() {
     const [email, setEmail] = useState("");
@@ -97,13 +100,14 @@ export default function LogInForm() {
                 <label htmlFor="email">
                     <IconEmail className="scale-125 opacity-40" />
                 </label>
-                <input
+                <Input
                     id="email"
                     aria-label="Email"
-                    className="bg-background focus:bg-background h-12 flex-1 focus:outline-none"
+                    className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"
                     autoComplete="email"
                     placeholder={t("email")}
                     type="email"
+                    maxLength={EMAIL_MAX_LENGTH}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                 />
@@ -113,12 +117,13 @@ export default function LogInForm() {
                 <label htmlFor="password">
                     <IconPasswordOutline className="scale-125 opacity-40" />
                 </label>
-                <input
+                <Input
                     id="password"
                     aria-label="Password"
-                    className="bg-background h-12 flex-1 focus:outline-none"
+                    className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"
                     placeholder={t("password")}
                     type={hidingPassword ? "password" : "text"}
+                    maxLength={PASSWORD_MAX_LENGTH}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                 />

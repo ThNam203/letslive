@@ -6,12 +6,17 @@ import (
 	"sen1or/letslive/livestream/dto"
 	"sen1or/letslive/livestream/pkg/logger"
 	"sen1or/letslive/livestream/response"
+	"sen1or/letslive/livestream/utils"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
 )
 
 func (s *LivestreamService) EndLivestreamAndCreateVOD(ctx context.Context, streamId uuid.UUID, endReqDTO dto.EndLivestreamRequestDTO) *response.Response[any] {
+	if err := utils.Validator.Struct(&endReqDTO); err != nil {
+		return response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil)
+	}
+
 	currentLivestream, err := s.livestreamRepo.GetById(ctx, streamId)
 	if err != nil {
 		return err

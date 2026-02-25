@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import IconClose from "@/components/icons/close";
 import IconSend from "@/components/icons/send";
 import useT from "@/hooks/use-translation";
+import { CHAT_MESSAGE_MAX_LENGTH } from "@/constant/field-limits";
 
 export default function ChatPanel({
     roomId,
@@ -173,18 +174,21 @@ export default function ChatPanel({
                 onSubmit={handleSendMessage}
                 className="absolute right-0 bottom-2 left-0 flex gap-2"
             >
-                <Input
-                    type="text"
-                    placeholder={
-                        !user
-                            ? t("users:chat.placeholder_login")
-                            : t("users:chat.placeholder_typing")
-                    }
-                    disabled={!user}
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    className="flex-1"
-                />
+                <div className="relative flex-1">
+                    <Input
+                        type="text"
+                        placeholder={
+                            !user
+                                ? t("users:chat.placeholder_login")
+                                : t("users:chat.placeholder_typing")
+                        }
+                        disabled={!user}
+                        maxLength={CHAT_MESSAGE_MAX_LENGTH}
+                        showCount
+                        value={inputMessage}
+                        onChange={(e) => setInputMessage(e.target.value)}
+                    />
+                </div>
                 <Button type="submit" disabled={!user} className="h-9 w-12 p-0">
                     <IconSend className="!h-6 !w-6" />
                 </Button>

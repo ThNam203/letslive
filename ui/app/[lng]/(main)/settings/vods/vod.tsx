@@ -21,6 +21,7 @@ import { UploadFile } from "@/lib/api/utils";
 import GLOBAL from "@/global";
 import IconSave from "@/components/icons/save";
 import { VOD } from "@/types/vod";
+import { VOD_TITLE_MAX_LENGTH, VOD_DESCRIPTION_MAX_LENGTH } from "@/constant/field-limits";
 import IconLoader from "@/components/icons/loader";
 import VODCard from "@/components/livestream/vod-card";
 
@@ -236,6 +237,8 @@ export default function VODEditCard({
                             <Input
                                 id="title"
                                 name="title"
+                                maxLength={VOD_TITLE_MAX_LENGTH}
+                                showCount
                                 value={formData.title}
                                 onChange={handleChange}
                             />
@@ -250,6 +253,8 @@ export default function VODEditCard({
                                 id="description"
                                 name="description"
                                 type="textarea"
+                                maxLength={VOD_DESCRIPTION_MAX_LENGTH}
+                                showCount
                                 value={formData.description}
                                 onChange={handleChange}
                             />

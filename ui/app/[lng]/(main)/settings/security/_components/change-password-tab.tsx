@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";
 import { changePasswordSchema } from "@/lib/validations/changePassword";
+import { PASSWORD_MAX_LENGTH } from "@/constant/password";
 
 export default function ChangePasswordTab() {
     const { t } = useT(["settings", "api-response"]);
@@ -90,6 +91,7 @@ export default function ChangePasswordTab() {
                 <Input
                     id="current-password"
                     type="password"
+                    maxLength={PASSWORD_MAX_LENGTH}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder={t(
@@ -105,6 +107,7 @@ export default function ChangePasswordTab() {
                 <Input
                     id="new-password"
                     type="password"
+                    maxLength={PASSWORD_MAX_LENGTH}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder={t(
@@ -122,6 +125,7 @@ export default function ChangePasswordTab() {
                 <Input
                     id="confirm-password"
                     type="password"
+                    maxLength={PASSWORD_MAX_LENGTH}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder={t(
