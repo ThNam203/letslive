@@ -17,6 +17,7 @@ import { toast } from "@/components/utils/toast";
 import { UpdateProfile } from "@/lib/api/user";
 import IconCheck from "@/components/icons/check";
 import { SocialMediaLinks } from "@/types/user";
+import { SOCIAL_URL_MAX_LENGTH } from "@/constant/field-limits";
 
 interface SocialMediaEditProps {
     initialLinks?: SocialMediaLinks;
@@ -224,6 +225,7 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                         <Input
                                             type="url"
                                             placeholder={placeholder}
+                                            maxLength={SOCIAL_URL_MAX_LENGTH}
                                             value={links[value] || ""}
                                             onChange={(e) =>
                                                 handleInputChange(

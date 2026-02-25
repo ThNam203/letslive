@@ -44,7 +44,7 @@ function CreateExpressServer() {
         '/v1/messages',
         asyncHandler(async (req, res) => {
             const roomId = req.query.roomId as string
-            if (!roomId) {
+            if (!roomId || roomId.length > 36) {
                 writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_ROOM_NOT_FOUND))
                 return
             }

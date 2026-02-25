@@ -22,6 +22,7 @@ export default function TextField({
             </label>
             <Input
                 id={label}
+                showCount={!!props.maxLength}
                 className={cn(
                     "border-border text-foreground border focus:outline-none",
                     className,

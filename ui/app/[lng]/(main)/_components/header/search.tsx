@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import IconClose from "@/components/icons/close";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/utils/cn";
+import { SEARCH_QUERY_MAX_LENGTH } from "@/constant/field-limits";
 
 export default function SearchBar({
     onSearch,
@@ -76,6 +77,7 @@ export default function SearchBar({
                 <Input
                     type="text"
                     placeholder={t("common:search_users")}
+                    maxLength={SEARCH_QUERY_MAX_LENGTH}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     className="border-border pr-8"

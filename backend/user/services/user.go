@@ -145,6 +145,15 @@ func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequ
 }
 
 func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequestDTO) (*domains.User, *response.Response[any]) {
+	if err := utils.Validator.Struct(&data); err != nil {
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_INVALID_INPUT,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
 	existedData, err := s.userRepo.GetById(ctx, data.Id)
 	if err != nil {
 		logger.Errorf(ctx, "failed to get existedData for user id: %s", data.Id)

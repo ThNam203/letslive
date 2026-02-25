@@ -17,6 +17,7 @@ import ThemeList from "@/app/[lng]/(main)/settings/profile/_components/theme-lis
 import IconLoader from "@/components/icons/loader";
 import DisableAccountDialog from "./_components/disable-account-dialog";
 import useT from "@/hooks/use-translation";
+import { DISPLAY_NAME_MAX_LENGTH, BIO_MAX_LENGTH } from "@/constant/field-limits";
 import LanguageList from "@/app/[lng]/(main)/settings/profile/_components/language-list";
 import { SocialMediaEdit } from "@/app/[lng]/(main)/settings/profile/_components/socials-media-link";
 
@@ -193,12 +194,14 @@ export default function ProfileSettings() {
                     />
                     <TextField
                         label={t("settings:profile.display_name")}
+                        maxLength={DISPLAY_NAME_MAX_LENGTH}
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
                         disabled={isUpdatingProfile}
                     />
                     <TextAreaField
                         label={t("settings:profile.bio")}
+                        maxLength={BIO_MAX_LENGTH}
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
                         disabled={isUpdatingProfile}
