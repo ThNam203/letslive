@@ -26,33 +26,30 @@ export function NotificationItemContent({
                     "border-border hover:bg-background cursor-pointer border-b px-4 py-3",
             )}
         >
-            <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                    <span className="flex h-2 w-2 shrink-0 items-center justify-center">
+            <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-2">
+                    <span className="flex h-6 w-2 shrink-0 items-center justify-center">
                         {!notification.isRead && (
                             <span className="bg-primary h-2 w-2 rounded-full" />
                         )}
                     </span>
-                    <span className="text-foreground text-sm font-medium">
-                        {notification.title}
-                    </span>
-                    {variant === "full" && (
-                        <span className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5 text-[10px]">
-                            {notification.type}
-                        </span>
-                    )}
+
+                    <div className="text-foreground text-sm font-medium leading-relaxed">
+                        {variant === "full" && (
+                            <span className="bg-muted text-muted-foreground mr-2 inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] tracking-wide">
+                                {notification.type}
+                            </span>
+                        )}
+                        <span>{notification.title}</span>
+                    </div>
                 </div>
-                <span className="text-muted-foreground shrink-0 text-xs">
+
+                <span className="text-muted-foreground shrink-0 pt-0.5 text-xs">
                     {timeAgo(notification.createdAt, t)}
                 </span>
             </div>
 
-            <p
-                className={cn(
-                    "text-muted-foreground pl-4",
-                    variant === "compact" ? "text-xs" : "text-sm",
-                )}
-            >
+            <p className="text-muted-foreground pl-4 text-sm">
                 {notification.message}
             </p>
 

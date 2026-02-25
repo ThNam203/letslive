@@ -140,14 +140,14 @@ export function VODFrame({
         const element = document.getElementById("frame");
         if (screenfull.isEnabled && element) {
             screenfull.request(element);
-            setConfig({ ...config, isFullscreen: true });
+            setConfig((prev) => ({ ...prev, isFullscreen: true }));
         }
     };
 
     const onExitFullScreen = () => {
         if (screenfull.isEnabled) {
             screenfull.exit();
-            setConfig({ ...config, isFullscreen: false });
+            setConfig((prev) => ({ ...prev, isFullscreen: false }));
         }
     };
 
@@ -400,7 +400,7 @@ function VideoTracking({
     return (
         <div
             className={cn(
-                "flex w-full items-center justify-center bg-transparent",
+                "flex w-full cursor-pointer items-center justify-center bg-transparent",
                 className,
             )}
         >

@@ -92,20 +92,22 @@ export default function CommentForm({
                     ) : (
                         <span />
                     )}
-                    {onCancel && (
-                        <Button variant="ghost" size="sm" onClick={onCancel}>
-                            {t("common:cancel")}
+                    <div className="flex gap-2">
+                        {onCancel && (
+                            <Button variant="destructive" size="sm" onClick={onCancel}>
+                                {t("common:cancel")}
+                            </Button>
+                        )}
+                        <Button
+                            size="sm"
+                            onClick={handleSubmit}
+                            disabled={!content.trim() || isSubmitting}
+                        >
+                            {isSubmitting
+                                ? t("common:loading")
+                                : t("comments:post")}
                         </Button>
-                    )}
-                    <Button
-                        size="sm"
-                        onClick={handleSubmit}
-                        disabled={!content.trim() || isSubmitting}
-                    >
-                        {isSubmitting
-                            ? t("common:loading")
-                            : t("comments:post")}
-                    </Button>
+                    </div>
                 </div>
             </div>
         </div>
