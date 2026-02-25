@@ -235,11 +235,11 @@ export default function CommentItem({
     const isYou = isAuthor;
 
     return (
-        <div className={cn("flex items-start gap-3", comment.isDeleted && "opacity-60")}>
+        <div className="flex items-start gap-3">
             {userProfileHref !== "#" ? (
                 <Link
                     href={userProfileHref}
-                    className="ring-offset-background focus-visible:ring-ring shrink-0 cursor-pointer rounded-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                    className={cn("ring-offset-background focus-visible:ring-ring shrink-0 cursor-pointer rounded-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none", comment.isDeleted && "opacity-60")}
                     aria-label={commentUser?.username ?? "View profile"}
                 >
                     <Avatar className="h-8 w-8">
@@ -254,7 +254,7 @@ export default function CommentItem({
                     </Avatar>
                 </Link>
             ) : (
-                <Avatar className="h-8 w-8 shrink-0">
+                <Avatar className={cn("h-8 w-8 shrink-0", comment.isDeleted && "opacity-60")}>
                     <AvatarImage
                         src={commentUser?.profilePicture}
                         alt={commentUser?.username}
@@ -265,6 +265,7 @@ export default function CommentItem({
                 </Avatar>
             )}
             <div className="flex-1">
+                <div className={cn(comment.isDeleted && "opacity-60")}>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     {userProfileHref !== "#" ? (
                         <Link
@@ -309,10 +310,11 @@ export default function CommentItem({
                         {comment.content}
                     </p>
                 )}
+                </div>
 
-                {/* Action buttons (hidden for deleted comments) */}
-                {!comment.isDeleted && (
+                {/* Action buttons */}
                 <div className="mt-1 flex items-center gap-3">
+                    {!comment.isDeleted && (
                     <Button
                         variant="ghost"
                         size="sm"
@@ -332,6 +334,7 @@ export default function CommentItem({
                         )}
                         {likeCount > 0 && <span>{likeCount}</span>}
                     </Button>
+                    )}
 
                     {currentUser && (
                         <Button
@@ -345,7 +348,7 @@ export default function CommentItem({
                         </Button>
                     )}
 
-                    {isAuthor && (
+                    {!comment.isDeleted && isAuthor && (
                         <Dialog
                             open={deleteDialogOpen}
                             onOpenChange={setDeleteDialogOpen}
@@ -388,7 +391,6 @@ export default function CommentItem({
                         </Dialog>
                     )}
                 </div>
-                )}
 
                 {/* Reply form */}
                 {showReplyForm && (
