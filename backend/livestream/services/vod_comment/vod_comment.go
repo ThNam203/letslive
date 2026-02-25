@@ -42,9 +42,7 @@ func (s *VODCommentService) enrichCommentsWithUsers(ctx context.Context, comment
 	// collect unique user IDs
 	userIdSet := make(map[uuid.UUID]struct{})
 	for _, c := range comments {
-		if !c.IsDeleted {
-			userIdSet[c.UserId] = struct{}{}
-		}
+		userIdSet[c.UserId] = struct{}{}
 	}
 
 	// fetch user info for each unique user
