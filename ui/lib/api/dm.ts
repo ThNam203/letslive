@@ -1,5 +1,10 @@
 import { ApiResponse } from "@/types/fetch-response";
-import { Conversation, DmMessage } from "@/types/dm";
+import {
+    Conversation,
+    ConversationType,
+    DmMessage,
+    DmMessageType,
+} from "@/types/dm";
 import { fetchClient } from "@/utils/fetchClient";
 
 export async function GetConversations(
@@ -20,7 +25,7 @@ export async function GetConversation(
 }
 
 export async function CreateConversation(body: {
-    type: "dm" | "group";
+    type: ConversationType;
     participantIds: string[];
     participantUsernames?: Record<string, string>;
     participantDisplayNames?: Record<string, string>;
@@ -103,7 +108,7 @@ export async function SendDmMessage(
     conversationId: string,
     body: {
         text: string;
-        type?: "text" | "image";
+        type?: DmMessageType;
         senderUsername: string;
         imageUrls?: string[];
         replyTo?: string;

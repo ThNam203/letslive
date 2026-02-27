@@ -9,6 +9,7 @@ import useDmStore from "@/hooks/use-dm-store";
 import { CreateConversation } from "@/lib/api/dm";
 import { SearchUsersByUsername } from "@/lib/api/user";
 import { PublicUser } from "@/types/user";
+import { ConversationType } from "@/types/dm";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function NewConversationDialog({
@@ -84,7 +85,9 @@ export default function NewConversationDialog({
             }
 
             const res = await CreateConversation({
-                type: isGroup ? "group" : "dm",
+                type: isGroup
+                    ? ConversationType.GROUP
+                    : ConversationType.DM,
                 participantIds: selectedUsers.map((u) => u.id),
                 participantUsernames,
                 participantDisplayNames,

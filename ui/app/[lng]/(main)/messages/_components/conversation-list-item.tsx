@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Conversation } from "@/types/dm";
+import { Conversation, ConversationType } from "@/types/dm";
 import useDmStore from "@/hooks/use-dm-store";
 import useUser from "@/hooks/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,7 +10,7 @@ function getConversationDisplay(
     conversation: Conversation,
     currentUserId: string,
 ) {
-    if (conversation.type === "dm") {
+    if (conversation.type === ConversationType.DM) {
         const other = conversation.participants.find(
             (p) => p.userId !== currentUserId,
         );
@@ -63,7 +63,7 @@ export default function ConversationListItem({
 
     // Check online status for DM
     let isOnline = false;
-    if (conversation.type === "dm") {
+    if (conversation.type === ConversationType.DM) {
         const other = conversation.participants.find(
             (p) => p.userId !== user.id,
         );

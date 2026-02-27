@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { DmMessageService } from '../services/dmMessageService'
 import { RESPONSE_TEMPLATES, newResponseFromTemplate, Response as ServiceResponse } from '../types/api-response'
-import { SendDmMessageRequest, EditDmMessageRequest } from '../types/conversation'
+import { SendDmMessageRequest, EditDmMessageRequest, DmMessageType } from '../types/conversation'
 
 function writeResponse(req: Request, res: Response, resData: ServiceResponse<any>) {
     resData.requestId = req.requestId ?? ''
@@ -31,7 +31,7 @@ export class DmMessageHandler {
             return
         }
 
-        if (body.type && !['text', 'image'].includes(body.type)) {
+        if (body.type && !Object.values(DmMessageType).includes(body.type)) {
             writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_INVALID_INPUT))
             return
         }
@@ -43,7 +43,7 @@ export class DmMessageHandler {
             userId,
             senderUsername,
             body.text,
-            body.type || 'text',
+            body.type || DmMessageType.TEXT,
             body.imageUrls,
             body.replyTo
         )

@@ -2,6 +2,7 @@ import { Types } from 'mongoose'
 import { DmMessage, IDmMessage } from '../models/DmMessage'
 import { Conversation } from '../models/Conversation'
 import { RESPONSE_TEMPLATES, Response as ServiceResponse, newResponseFromTemplate } from '../types/api-response'
+import { DmMessageType } from '../types/conversation'
 import logger from 'lib/logger'
 
 export class DmMessageService {
@@ -10,7 +11,7 @@ export class DmMessageService {
         senderId: string,
         senderUsername: string,
         text: string,
-        type: 'text' | 'image' = 'text',
+        type: DmMessageType = DmMessageType.TEXT,
         imageUrls?: string[],
         replyTo?: string
     ): Promise<ServiceResponse<IDmMessage & { participantIds: string[] }>> {
@@ -42,7 +43,7 @@ export class DmMessageService {
             senderUsername,
             type,
             text: text.trim(),
-            imageUrls: type === 'image' && imageUrls ? imageUrls : [],
+            imageUrls: type === DmMessageType.IMAGE && imageUrls ? imageUrls : [],
             replyTo: replyTo && Types.ObjectId.isValid(replyTo) ? new Types.ObjectId(replyTo) : null,
             isDeleted: false,
             readBy: [{ userId: senderId, readAt: new Date() }]

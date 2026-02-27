@@ -4,6 +4,7 @@ import { PresenceService } from './services/presenceService'
 import { ConversationService } from './services/conversationService'
 import { DmMessageService } from './services/dmMessageService'
 import { DmClientEventType, DmServerEventType } from './types/dm-event'
+import { DmMessageType } from './types/conversation'
 import logger from './lib/logger'
 
 export class DmServer {
@@ -105,7 +106,7 @@ export class DmServer {
             userId,
             senderUsername,
             text,
-            messageType || 'text',
+            messageType || DmMessageType.TEXT,
             imageUrls,
             replyTo
         )

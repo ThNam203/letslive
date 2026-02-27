@@ -1,6 +1,6 @@
 "use client";
 
-import { DmMessage } from "@/types/dm";
+import { DmMessage, DmMessageType } from "@/types/dm";
 
 function formatMessageTime(dateStr: string) {
     return new Date(dateStr).toLocaleTimeString([], {
@@ -32,7 +32,7 @@ export default function MessageBubble({
         );
     }
 
-    if (message.type === "system") {
+    if (message.type === DmMessageType.SYSTEM) {
         return (
             <div className="my-2 flex justify-center">
                 <span className="text-muted-foreground text-xs">
@@ -59,7 +59,7 @@ export default function MessageBubble({
                     </p>
                 )}
 
-                {message.type === "image" &&
+                {message.type === DmMessageType.IMAGE &&
                     message.imageUrls &&
                     message.imageUrls.length > 0 && (
                         <div
