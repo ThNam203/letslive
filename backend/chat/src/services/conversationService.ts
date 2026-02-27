@@ -2,13 +2,14 @@ import { Types } from 'mongoose'
 import { Conversation, IConversation } from '../models/Conversation'
 import { DmMessage } from '../models/DmMessage'
 import { RESPONSE_TEMPLATES, Response as ServiceResponse, newResponseFromTemplate } from '../types/api-response'
+import { ConversationType, ParticipantRole } from '../types/conversation'
 import logger from 'lib/logger'
 
 const MAX_GROUP_PARTICIPANTS = 50
 
 export class ConversationService {
     async createConversation(
-        type: 'dm' | 'group',
+        type: ConversationType,
         creatorId: string,
         creatorUsername: string,
         creatorDisplayName: string | null,
@@ -21,7 +22,7 @@ export class ConversationService {
         }>,
         name?: string
     ): Promise<ServiceResponse<IConversation>> {
-        if (type === 'dm') {
+        if (type === ConversationType.DM) {
             if (participantInfos.length !== 1) {
                 return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_INVALID_INPUT)
             }
@@ -32,7 +33,7 @@ export class ConversationService {
 
             // Check if DM already exists between these two users
             const existing = await Conversation.findOne({
-                type: 'dm',
+                type: ConversationType.DM,
                 'participants.userId': { $all: [creatorId, participantInfos[0].userId] },
                 $expr: { $eq: [{ $size: '$participants' }, 2] }
             })
@@ -42,7 +43,7 @@ export class ConversationService {
             }
         }
 
-        if (type === 'group') {
+        if (type === ConversationType.GROUP) {
             if (participantInfos.length < 1) {
                 return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_INVALID_INPUT)
             }
@@ -57,7 +58,7 @@ export class ConversationService {
                 username: creatorUsername,
                 displayName: creatorDisplayName,
                 profilePicture: creatorProfilePicture,
-                role: type === 'group' ? ('owner' as const) : ('member' as const),
+                role: type === ConversationType.GROUP ? ParticipantRole.OWNER : ParticipantRole.MEMBER,
                 joinedAt: new Date(),
                 lastReadMessageId: null,
                 isMuted: false
@@ -67,7 +68,7 @@ export class ConversationService {
                 username: p.username,
                 displayName: p.displayName,
                 profilePicture: p.profilePicture,
-                role: 'member' as const,
+                role: ParticipantRole.MEMBER,
                 joinedAt: new Date(),
                 lastReadMessageId: null,
                 isMuted: false
@@ -76,7 +77,7 @@ export class ConversationService {
 
         const conversation = new Conversation({
             type,
-            name: type === 'group' ? (name || null) : null,
+            name: type === ConversationType.GROUP ? (name || null) : null,
             avatarUrl: null,
             createdBy: creatorId,
             participants,
@@ -135,7 +136,7 @@ export class ConversationService {
             return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_CONVERSATION_NOT_FOUND)
         }
 
-        if (conversation.type !== 'group') {
+        if (conversation.type !== ConversationType.GROUP) {
             return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_FORBIDDEN)
         }
 
@@ -144,7 +145,7 @@ export class ConversationService {
             return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_NOT_PARTICIPANT)
         }
 
-        if (participant.role !== 'owner' && participant.role !== 'admin') {
+        if (participant.role !== ParticipantRole.OWNER && participant.role !== ParticipantRole.ADMIN) {
             return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_INSUFFICIENT_ROLE)
         }
 
@@ -174,7 +175,7 @@ export class ConversationService {
             return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_CONVERSATION_NOT_FOUND)
         }
 
-        if (conversation.type !== 'group') {
+        if (conversation.type !== ConversationType.GROUP) {
             return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_FORBIDDEN)
         }
 
@@ -183,7 +184,7 @@ export class ConversationService {
             return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_NOT_PARTICIPANT)
         }
 
-        if (actor.role !== 'owner' && actor.role !== 'admin') {
+        if (actor.role !== ParticipantRole.OWNER && actor.role !== ParticipantRole.ADMIN) {
             return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_INSUFFICIENT_ROLE)
         }
 
@@ -201,7 +202,7 @@ export class ConversationService {
             username: newParticipant.username,
             displayName: newParticipant.displayName,
             profilePicture: newParticipant.profilePicture,
-            role: 'member',
+            role: ParticipantRole.MEMBER,
             joinedAt: new Date(),
             lastReadMessageId: null,
             isMuted: false
@@ -225,7 +226,7 @@ export class ConversationService {
             return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_CONVERSATION_NOT_FOUND)
         }
 
-        if (conversation.type !== 'group') {
+        if (conversation.type !== ConversationType.GROUP) {
             return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_FORBIDDEN)
         }
 
@@ -234,7 +235,7 @@ export class ConversationService {
             return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_NOT_PARTICIPANT)
         }
 
-        if (actor.role !== 'owner' && actor.role !== 'admin') {
+        if (actor.role !== ParticipantRole.OWNER && actor.role !== ParticipantRole.ADMIN) {
             return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_INSUFFICIENT_ROLE)
         }
 
@@ -244,7 +245,7 @@ export class ConversationService {
         }
 
         // Cannot remove the owner
-        if (conversation.participants[targetIdx].role === 'owner') {
+        if (conversation.participants[targetIdx].role === ParticipantRole.OWNER) {
             return newResponseFromTemplate<IConversation>(RESPONSE_TEMPLATES.RES_ERR_INSUFFICIENT_ROLE)
         }
 
@@ -269,7 +270,7 @@ export class ConversationService {
             return newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_NOT_PARTICIPANT)
         }
 
-        if (conversation.type === 'dm') {
+        if (conversation.type === ConversationType.DM) {
             // For DM, delete the conversation entirely
             await Conversation.deleteOne({ _id: conversation._id })
             await DmMessage.deleteMany({ conversationId: conversation._id })
@@ -283,10 +284,10 @@ export class ConversationService {
                 await DmMessage.deleteMany({ conversationId: conversation._id })
             } else {
                 // If the leaving user was owner, transfer to the next admin or oldest member
-                if (conversation.participants.every((p) => p.role !== 'owner')) {
+                if (conversation.participants.every((p) => p.role !== ParticipantRole.OWNER)) {
                     const newOwner =
-                        conversation.participants.find((p) => p.role === 'admin') || conversation.participants[0]
-                    newOwner.role = 'owner'
+                        conversation.participants.find((p) => p.role === ParticipantRole.ADMIN) || conversation.participants[0]
+                    newOwner.role = ParticipantRole.OWNER
                 }
                 await conversation.save()
             }

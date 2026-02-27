@@ -1,11 +1,12 @@
 import mongoose, { Types } from 'mongoose'
+import { ConversationType, ParticipantRole } from '../types/conversation'
 
 export interface IParticipant {
     userId: string
     username: string
     displayName: string | null
     profilePicture: string | null
-    role: 'owner' | 'admin' | 'member'
+    role: ParticipantRole
     joinedAt: Date
     lastReadMessageId: Types.ObjectId | null
     isMuted: boolean
@@ -21,7 +22,7 @@ export interface ILastMessage {
 
 export interface IConversation {
     _id: Types.ObjectId
-    type: 'dm' | 'group'
+    type: ConversationType
     name: string | null
     avatarUrl: string | null
     createdBy: string
@@ -37,7 +38,7 @@ const participantSchema = new mongoose.Schema(
         username: { type: String, required: true, maxlength: 50 },
         displayName: { type: String, default: null, maxlength: 50 },
         profilePicture: { type: String, default: null, maxlength: 2048 },
-        role: { type: String, required: true, enum: ['owner', 'admin', 'member'], default: 'member' },
+        role: { type: String, required: true, enum: Object.values(ParticipantRole), default: ParticipantRole.MEMBER },
         joinedAt: { type: Date, default: Date.now },
         lastReadMessageId: { type: mongoose.Schema.Types.ObjectId, default: null },
         isMuted: { type: Boolean, default: false }
@@ -58,7 +59,7 @@ const lastMessageSchema = new mongoose.Schema(
 
 const conversationSchema = new mongoose.Schema(
     {
-        type: { type: String, required: true, enum: ['dm', 'group'] },
+        type: { type: String, required: true, enum: Object.values(ConversationType) },
         name: { type: String, default: null, maxlength: 100 },
         avatarUrl: { type: String, default: null, maxlength: 2048 },
         createdBy: { type: String, required: true, maxlength: 36 },

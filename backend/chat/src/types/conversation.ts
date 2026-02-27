@@ -1,5 +1,22 @@
+export enum ConversationType {
+    DM = 'dm',
+    GROUP = 'group'
+}
+
+export enum DmMessageType {
+    TEXT = 'text',
+    IMAGE = 'image',
+    SYSTEM = 'system'
+}
+
+export enum ParticipantRole {
+    OWNER = 'owner',
+    ADMIN = 'admin',
+    MEMBER = 'member'
+}
+
 export type CreateConversationRequest = {
-    type: 'dm' | 'group'
+    type: ConversationType
     participantIds: string[]
     name?: string
 }
@@ -18,7 +35,7 @@ export type AddParticipantRequest = {
 
 export type SendDmMessageRequest = {
     text: string
-    type: 'text' | 'image'
+    type: DmMessageType
     imageUrls?: string[]
     replyTo?: string
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Conversation } from "@/types/dm";
+import { Conversation, ConversationType } from "@/types/dm";
 import useDmStore from "@/hooks/use-dm-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ export default function ConversationHeader({
     let isOnline = false;
     let memberCount: number | null = null;
 
-    if (conversation.type === "dm") {
+    if (conversation.type === ConversationType.DM) {
         const other = conversation.participants.find(
             (p) => p.userId !== currentUserId,
         );
@@ -68,7 +68,7 @@ export default function ConversationHeader({
             <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{name}</p>
                 <p className="text-muted-foreground text-xs">
-                    {conversation.type === "dm"
+                    {conversation.type === ConversationType.DM
                         ? isOnline
                             ? "Online"
                             : "Offline"

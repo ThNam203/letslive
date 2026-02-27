@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { ConversationService } from '../services/conversationService'
 import { RESPONSE_TEMPLATES, newResponseFromTemplate, Response as ServiceResponse } from '../types/api-response'
-import { CreateConversationRequest, UpdateConversationRequest, AddParticipantRequest } from '../types/conversation'
+import { CreateConversationRequest, UpdateConversationRequest, AddParticipantRequest, ConversationType } from '../types/conversation'
 
 function writeResponse(req: Request, res: Response, resData: ServiceResponse<any>) {
     resData.requestId = req.requestId ?? ''
@@ -15,7 +15,7 @@ export class ConversationHandler {
         const userId = req.userId!
         const body = req.body as CreateConversationRequest
 
-        if (!body.type || !['dm', 'group'].includes(body.type)) {
+        if (!body.type || !Object.values(ConversationType).includes(body.type)) {
             writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_INVALID_INPUT))
             return
         }

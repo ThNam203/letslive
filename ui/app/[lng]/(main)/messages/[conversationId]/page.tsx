@@ -15,7 +15,11 @@ import ConversationHeader from "../_components/conversation-header";
 import MessageThread from "../_components/message-thread";
 import MessageInput from "../_components/message-input";
 import TypingIndicator from "../_components/typing-indicator";
-import type { Conversation } from "@/types/dm";
+import {
+    type Conversation,
+    DmClientEventType,
+    DmMessageType,
+} from "@/types/dm";
 
 export default function ConversationPage() {
     const params = useParams();
@@ -116,11 +120,13 @@ export default function ConversationPage() {
         (text: string, imageUrls?: string[]) => {
             if (!user) return;
             send({
-                type: "dm:send_message",
+                type: DmClientEventType.SEND_MESSAGE,
                 conversationId,
                 text,
                 messageType:
-                    imageUrls && imageUrls.length > 0 ? "image" : "text",
+                    imageUrls && imageUrls.length > 0
+                        ? DmMessageType.IMAGE
+                        : DmMessageType.TEXT,
                 senderUsername: user.displayName ?? user.username,
                 imageUrls,
             });
@@ -131,7 +137,7 @@ export default function ConversationPage() {
     const handleTypingStart = useCallback(() => {
         if (!user) return;
         send({
-            type: "dm:typing_start",
+            type: DmClientEventType.TYPING_START,
             conversationId,
             username: user.displayName ?? user.username,
         });
@@ -140,7 +146,7 @@ export default function ConversationPage() {
     const handleTypingStop = useCallback(() => {
         if (!user) return;
         send({
-            type: "dm:typing_stop",
+            type: DmClientEventType.TYPING_STOP,
             conversationId,
             username: user.displayName ?? user.username,
         });

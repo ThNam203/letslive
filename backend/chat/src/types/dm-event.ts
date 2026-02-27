@@ -1,3 +1,5 @@
+import { DmMessageType } from './conversation'
+
 // Client → Server events
 export enum DmClientEventType {
     SEND_MESSAGE = 'dm:send_message',
@@ -10,7 +12,7 @@ export type DmSendMessageEvent = {
     type: DmClientEventType.SEND_MESSAGE
     conversationId: string
     text: string
-    messageType: 'text' | 'image'
+    messageType: DmMessageType.TEXT | DmMessageType.IMAGE
     imageUrls?: string[]
     replyTo?: string
 }

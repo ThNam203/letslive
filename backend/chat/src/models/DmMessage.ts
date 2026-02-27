@@ -1,4 +1,5 @@
 import mongoose, { Types } from 'mongoose'
+import { DmMessageType } from '../types/conversation'
 
 export interface IReadReceipt {
     userId: string
@@ -10,7 +11,7 @@ export interface IDmMessage {
     conversationId: Types.ObjectId
     senderId: string
     senderUsername: string
-    type: 'text' | 'image' | 'system'
+    type: DmMessageType
     text: string
     imageUrls: string[]
     replyTo: Types.ObjectId | null
@@ -33,7 +34,7 @@ const dmMessageSchema = new mongoose.Schema(
         conversationId: { type: mongoose.Schema.Types.ObjectId, required: true, index: true },
         senderId: { type: String, required: true, maxlength: 36 },
         senderUsername: { type: String, required: true, maxlength: 50 },
-        type: { type: String, required: true, enum: ['text', 'image', 'system'], default: 'text' },
+        type: { type: String, required: true, enum: Object.values(DmMessageType), default: DmMessageType.TEXT },
         text: { type: String, required: true, maxlength: 2000 },
         imageUrls: { type: [String], default: [] },
         replyTo: { type: mongoose.Schema.Types.ObjectId, default: null },

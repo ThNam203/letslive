@@ -4,7 +4,11 @@ import { useEffect, useRef, useCallback } from "react";
 import GLOBAL from "@/global";
 import useDmStore from "./use-dm-store";
 import useUser from "./user";
-import type { DmWsClientEvent, DmWsServerEvent } from "@/types/dm";
+import {
+    type DmWsClientEvent,
+    type DmWsServerEvent,
+    DmServerEventType,
+} from "@/types/dm";
 
 const MAX_RECONNECT_DELAY = 30000;
 const INITIAL_RECONNECT_DELAY = 1000;
@@ -34,7 +38,7 @@ export default function useDmWebSocket() {
     const handleServerEvent = useCallback(
         (event: DmWsServerEvent) => {
             switch (event.type) {
-                case "dm:new_message":
+                case DmServerEventType.NEW_MESSAGE:
                     addMessage(event.conversationId, event.message);
                     // Increment unread if not viewing this conversation
                     if (event.conversationId !== activeConversationId) {
@@ -53,38 +57,38 @@ export default function useDmWebSocket() {
                     });
                     break;
 
-                case "dm:message_edited":
+                case DmServerEventType.MESSAGE_EDITED:
                     updateMessage(event.conversationId, event.messageId, {
                         text: event.newText,
                         updatedAt: event.updatedAt,
                     });
                     break;
 
-                case "dm:message_deleted":
+                case DmServerEventType.MESSAGE_DELETED:
                     removeMessage(event.conversationId, event.messageId);
                     break;
 
-                case "dm:user_typing":
+                case DmServerEventType.USER_TYPING:
                     setTypingUser(event.conversationId, event.username);
                     break;
 
-                case "dm:user_stopped_typing":
+                case DmServerEventType.USER_STOPPED_TYPING:
                     removeTypingUser(event.conversationId, event.username);
                     break;
 
-                case "dm:read_receipt":
+                case DmServerEventType.READ_RECEIPT:
                     // Could be used to update read status in message bubbles
                     break;
 
-                case "dm:user_online":
+                case DmServerEventType.USER_ONLINE:
                     setUserOnline(event.userId);
                     break;
 
-                case "dm:user_offline":
+                case DmServerEventType.USER_OFFLINE:
                     setUserOffline(event.userId);
                     break;
 
-                case "dm:conversation_updated":
+                case DmServerEventType.CONVERSATION_UPDATED:
                     updateConversation(event.conversationId, event.update);
                     break;
             }
