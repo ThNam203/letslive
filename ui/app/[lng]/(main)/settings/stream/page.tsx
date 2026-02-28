@@ -11,6 +11,7 @@ import TextField from "../_components/text-field";
 import TextAreaField from "../_components/textarea-field";
 import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";
+import { STREAM_TITLE_MAX_LENGTH, STREAM_DESCRIPTION_MAX_LENGTH } from "@/constant/field-limits";
 
 export default function StreamEdit() {
     const { t } = useT(["settings", "api-response", "fetch-error"]);
@@ -107,11 +108,13 @@ export default function StreamEdit() {
                 <TextField
                     label={t("settings:stream.title_label")}
                     description={t("settings:stream.title_description")}
+                    maxLength={STREAM_TITLE_MAX_LENGTH}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                 />
                 <TextAreaField
                     label={t("settings:stream.description_label")}
+                    maxLength={STREAM_DESCRIPTION_MAX_LENGTH}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={4}

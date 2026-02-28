@@ -10,6 +10,13 @@ export const RES_ERR_DATABASE_ISSUE_CODE = 20016
 export const RES_ERR_INTERNAL_SERVER_CODE = 20017
 
 export const RES_ERR_ROOM_NOT_FOUND_CODE = 50018
+export const RES_ERR_CONVERSATION_NOT_FOUND_CODE = 50019
+export const RES_ERR_DM_ALREADY_EXISTS_CODE = 50020
+export const RES_ERR_NOT_PARTICIPANT_CODE = 50021
+export const RES_ERR_INSUFFICIENT_ROLE_CODE = 50022
+export const RES_ERR_DM_MESSAGE_NOT_FOUND_CODE = 50023
+export const RES_ERR_CANNOT_MESSAGE_SELF_CODE = 50024
+export const RES_ERR_TOO_MANY_PARTICIPANTS_CODE = 50025
 
 // --- Error Keys ---
 export const RES_ERR_INVALID_INPUT_KEY = 'res_err_invalid_input'
@@ -22,6 +29,13 @@ export const RES_ERR_DATABASE_QUERY_KEY = 'res_err_database_query'
 export const RES_ERR_DATABASE_ISSUE_KEY = 'res_err_database_issue'
 export const RES_ERR_INTERNAL_SERVER_KEY = 'res_err_internal_server'
 export const RES_ERR_ROOM_NOT_FOUND_KEY = 'res_err_room_not_found'
+export const RES_ERR_CONVERSATION_NOT_FOUND_KEY = 'res_err_conversation_not_found'
+export const RES_ERR_DM_ALREADY_EXISTS_KEY = 'res_err_dm_already_exists'
+export const RES_ERR_NOT_PARTICIPANT_KEY = 'res_err_not_participant'
+export const RES_ERR_INSUFFICIENT_ROLE_KEY = 'res_err_insufficient_role'
+export const RES_ERR_DM_MESSAGE_NOT_FOUND_KEY = 'res_err_dm_message_not_found'
+export const RES_ERR_CANNOT_MESSAGE_SELF_KEY = 'res_err_cannot_message_self'
+export const RES_ERR_TOO_MANY_PARTICIPANTS_KEY = 'res_err_too_many_participants'
 
 // --- Success Codes & Keys ---
 export const RES_SUCC_OK_CODE = 100000
@@ -34,6 +48,8 @@ export const HTTP_STATUS_UNAUTHORIZED = 401
 export const HTTP_STATUS_FORBIDDEN = 403
 export const HTTP_STATUS_NOT_FOUND = 404
 export const HTTP_STATUS_INTERNAL_SERVER_ERROR = 500
+export const HTTP_STATUS_CREATED = 201
+export const HTTP_STATUS_CONFLICT = 409
 
 export interface ResponseTemplate {
     success: boolean
@@ -113,6 +129,63 @@ export const RESPONSE_TEMPLATES = {
         code: RES_ERR_ROOM_NOT_FOUND_CODE,
         key: RES_ERR_ROOM_NOT_FOUND_KEY,
         message: 'Room not found'
+    },
+
+    // --- DM/Conversation Templates ---
+    RES_SUCC_CREATED: {
+        success: true,
+        statusCode: HTTP_STATUS_CREATED,
+        code: RES_SUCC_OK_CODE,
+        key: RES_SUCC_OK_KEY
+    },
+    RES_ERR_CONVERSATION_NOT_FOUND: {
+        success: false,
+        statusCode: HTTP_STATUS_NOT_FOUND,
+        code: RES_ERR_CONVERSATION_NOT_FOUND_CODE,
+        key: RES_ERR_CONVERSATION_NOT_FOUND_KEY,
+        message: 'Conversation not found'
+    },
+    RES_ERR_DM_ALREADY_EXISTS: {
+        success: false,
+        statusCode: HTTP_STATUS_CONFLICT,
+        code: RES_ERR_DM_ALREADY_EXISTS_CODE,
+        key: RES_ERR_DM_ALREADY_EXISTS_KEY,
+        message: 'DM conversation already exists'
+    },
+    RES_ERR_NOT_PARTICIPANT: {
+        success: false,
+        statusCode: HTTP_STATUS_FORBIDDEN,
+        code: RES_ERR_NOT_PARTICIPANT_CODE,
+        key: RES_ERR_NOT_PARTICIPANT_KEY,
+        message: 'You are not a participant of this conversation'
+    },
+    RES_ERR_INSUFFICIENT_ROLE: {
+        success: false,
+        statusCode: HTTP_STATUS_FORBIDDEN,
+        code: RES_ERR_INSUFFICIENT_ROLE_CODE,
+        key: RES_ERR_INSUFFICIENT_ROLE_KEY,
+        message: 'Insufficient permissions for this action'
+    },
+    RES_ERR_DM_MESSAGE_NOT_FOUND: {
+        success: false,
+        statusCode: HTTP_STATUS_NOT_FOUND,
+        code: RES_ERR_DM_MESSAGE_NOT_FOUND_CODE,
+        key: RES_ERR_DM_MESSAGE_NOT_FOUND_KEY,
+        message: 'Message not found'
+    },
+    RES_ERR_CANNOT_MESSAGE_SELF: {
+        success: false,
+        statusCode: HTTP_STATUS_BAD_REQUEST,
+        code: RES_ERR_CANNOT_MESSAGE_SELF_CODE,
+        key: RES_ERR_CANNOT_MESSAGE_SELF_KEY,
+        message: 'Cannot create a conversation with yourself'
+    },
+    RES_ERR_TOO_MANY_PARTICIPANTS: {
+        success: false,
+        statusCode: HTTP_STATUS_BAD_REQUEST,
+        code: RES_ERR_TOO_MANY_PARTICIPANTS_CODE,
+        key: RES_ERR_TOO_MANY_PARTICIPANTS_KEY,
+        message: 'Too many participants'
     }
 } as const
 

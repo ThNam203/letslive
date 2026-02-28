@@ -1,0 +1,15 @@
+export const EMAIL_MAX_LENGTH = 320;
+export const USERNAME_MAX_LENGTH = 50;
+export const DISPLAY_NAME_MAX_LENGTH = 50;
+export const BIO_MAX_LENGTH = 300;
+export const PHONE_NUMBER_MAX_LENGTH = 20;
+export const SEARCH_QUERY_MAX_LENGTH = 100;
+export const CHAT_MESSAGE_MAX_LENGTH = 500;
+export const SOCIAL_URL_MAX_LENGTH = 2048;
+export const STREAM_TITLE_MAX_LENGTH = 50;
+export const STREAM_DESCRIPTION_MAX_LENGTH = 500;
+export const VOD_TITLE_MAX_LENGTH = 255;
+export const VOD_DESCRIPTION_MAX_LENGTH = 1000;
+export const VOD_COMMENT_MAX_LENGTH = 2000;
+export const DM_MESSAGE_MAX_LENGTH = 2000;
+export const GROUP_NAME_MAX_LENGTH = 100;
