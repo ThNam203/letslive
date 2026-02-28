@@ -71,8 +71,7 @@ function ChannelUserCard({
                         </h4>
                         <p className="text-muted-foreground text-xs">
                             {t("common:bio")}:{" "}
-                            {user.livestreamInformation?.description ??
-                                t("common:no_description")}
+                            {user.bio ?? t("common:no_description")}
                         </p>
                         <p className="text-muted-foreground text-xs">
                             {t("common:followers_with_count", {
