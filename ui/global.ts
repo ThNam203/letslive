@@ -79,7 +79,7 @@ function getDmWebSocketUrl(): string {
         );
     }
 
-    return `${wsProtocol}://${ipAddress}:${port}/v1/dm-ws`;
+    return `${wsProtocol}://${ipAddress}:${port}/dm-ws`;
 }
 
 const GLOBAL = Object.freeze({
