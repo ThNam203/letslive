@@ -63,7 +63,7 @@ type UserRepository interface {
 	// the authenticatedUserId is used for checking if the caller is following the userId
 	GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *response.Response[any])
 	GetPublicInfosByIds(ctx context.Context, ids []uuid.UUID, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, *response.Response[any])
-	GetRecommendedPublic(ctx context.Context, excludeUserId *uuid.UUID, excludeUserIds []uuid.UUID, page, limit int) ([]dto.GetUserPublicResponseDTO, *response.Response[any])
+	GetRecommendedPublic(ctx context.Context, excludeUserId *uuid.UUID, page, limit int) ([]dto.GetUserPublicResponseDTO, *response.Response[any])
 	SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, *response.Response[any])
 
 	Create(ctx context.Context, username, email string, authProvider AuthProvider) (*User, *response.Response[any])

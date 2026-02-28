@@ -76,15 +76,7 @@ func (s *UserService) GetFollowingUsers(ctx context.Context, authenticatedUserId
 }
 
 func (s *UserService) GetRecommendedUsers(ctx context.Context, authenticatedUserId *uuid.UUID, page int) ([]dto.GetUserPublicResponseDTO, *response.Response[any]) {
-	var excludeUserIds []uuid.UUID
-	if authenticatedUserId != nil {
-		ids, err := s.followRepo.GetFollowedUserIds(ctx, *authenticatedUserId)
-		if err != nil {
-			return nil, err
-		}
-		excludeUserIds = ids
-	}
-	users, err := s.userRepo.GetRecommendedPublic(ctx, authenticatedUserId, excludeUserIds, page, 10)
+	users, err := s.userRepo.GetRecommendedPublic(ctx, authenticatedUserId, page, 10)
 	if err != nil {
 		return nil, err
 	}
