@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresUserRepo) GetRecommendedPublic(ctx context.Context, excludeUserId *uuid.UUID, excludeUserIds []uuid.UUID, page, limit int) ([]dto.GetUserPublicResponseDTO, *response.Response[any]) {
+func (r *postgresUserRepo) GetRecommendedPublic(ctx context.Context, excludeUserId *uuid.UUID, page, limit int) ([]dto.GetUserPublicResponseDTO, *response.Response[any]) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT
 			u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture,
@@ -19,7 +19,7 @@ func (r *postgresUserRepo) GetRecommendedPublic(ctx context.Context, excludeUser
 			(COUNT(f.follower_id))::int AS follower_count,
 			CASE
 				WHEN $2::uuid IS NULL THEN false
-				WHEN EXISTS (SELECT 1 FROM followers f2 WHERE f2.follower_id = $2::uuid AND f2.user_id = u.id) THEN true
+				WHEN EXISTS (SELECT 1 FROM followers f2 WHERE f2.follower_id = $2 AND f2.user_id = u.id) THEN true
 				ELSE false
 			END AS is_following,
 			COALESCE(
@@ -31,11 +31,11 @@ func (r *postgresUserRepo) GetRecommendedPublic(ctx context.Context, excludeUser
 		LEFT JOIN followers f ON u.id = f.user_id
 		LEFT JOIN user_social_links usl ON usl.user_id = u.id
 		WHERE ($1::uuid IS NULL OR u.id != $1)
-		  AND (cardinality($3::uuid[]) = 0 OR NOT (u.id = ANY($3::uuid[])))
+		  AND ($2::uuid IS NULL OR NOT EXISTS (SELECT 1 FROM followers f_ex WHERE f_ex.follower_id = $2 AND f_ex.user_id = u.id))
 		GROUP BY u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
 		ORDER BY (COUNT(f.follower_id)) DESC
-		LIMIT $4 OFFSET $5
-	`, excludeUserId, excludeUserId, excludeUserIds, limit, page*limit)
+		LIMIT $3 OFFSET $4
+	`, excludeUserId, excludeUserId, limit, page*limit)
 	if err != nil {
 		logger.Errorf(ctx, "failed to get recommended public users: %s", err)
 		return nil, response.NewResponseFromTemplate[any](
