@@ -94,7 +94,30 @@ jobs:
 
       - name: Deploy with Docker Compose
         run: |
-          docker compose pull
-          docker compose down
-          docker compose up -d
-          docker image prune -f
+          set -e
+
+          max_retries=3
+          attempt=1
+
+          until [ $attempt -gt $max_retries ]
+          do
+            echo "Deploy attempt $attempt/$max_retries"
+
+            if docker compose pull &&
+              docker compose up -d --remove-orphans &&
+              docker image prune -f
+            then
+              echo "Deploy succeeded"
+              exit 0
+            fi
+
+            echo "Attempt $attempt failed"
+            
+            if [ $attempt -eq $max_retries ]; then
+              echo "All retries failed"
+              exit 1
+            fi
+
+            attempt=$((attempt + 1))
+            sleep 10
+          done
