@@ -1,3 +1,9 @@
+-- +goose Up
 ALTER TABLE auths ALTER COLUMN email TYPE VARCHAR(320);
 ALTER TABLE auths ALTER COLUMN password_hash TYPE VARCHAR(255);
 ALTER TABLE sign_up_otps ALTER COLUMN email TYPE VARCHAR(320);
+
+-- +goose Down
+ALTER TABLE auths ALTER COLUMN email TYPE TEXT;
+ALTER TABLE auths ALTER COLUMN password_hash TYPE TEXT;
+ALTER TABLE sign_up_otps ALTER COLUMN email TYPE TEXT;
