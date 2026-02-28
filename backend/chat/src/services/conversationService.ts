@@ -77,7 +77,7 @@ export class ConversationService {
 
         const conversation = new Conversation({
             type,
-            name: type === ConversationType.GROUP ? (name || null) : null,
+            name: type === ConversationType.GROUP ? name || null : null,
             avatarUrl: null,
             createdBy: creatorId,
             participants,
@@ -286,7 +286,8 @@ export class ConversationService {
                 // If the leaving user was owner, transfer to the next admin or oldest member
                 if (conversation.participants.every((p) => p.role !== ParticipantRole.OWNER)) {
                     const newOwner =
-                        conversation.participants.find((p) => p.role === ParticipantRole.ADMIN) || conversation.participants[0]
+                        conversation.participants.find((p) => p.role === ParticipantRole.ADMIN) ||
+                        conversation.participants[0]
                     newOwner.role = ParticipantRole.OWNER
                 }
                 await conversation.save()

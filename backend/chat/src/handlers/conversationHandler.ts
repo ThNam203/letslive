@@ -1,7 +1,12 @@
 import { Request, Response } from 'express'
 import { ConversationService } from '../services/conversationService'
 import { RESPONSE_TEMPLATES, newResponseFromTemplate, Response as ServiceResponse } from '../types/api-response'
-import { CreateConversationRequest, UpdateConversationRequest, AddParticipantRequest, ConversationType } from '../types/conversation'
+import {
+    CreateConversationRequest,
+    UpdateConversationRequest,
+    AddParticipantRequest,
+    ConversationType
+} from '../types/conversation'
 
 function writeResponse(req: Request, res: Response, resData: ServiceResponse<any>) {
     resData.requestId = req.requestId ?? ''

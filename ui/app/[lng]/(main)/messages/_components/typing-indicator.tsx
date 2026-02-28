@@ -1,19 +1,29 @@
 "use client";
 
+import useT from "@/hooks/use-translation";
+
 export default function TypingIndicator({
     usernames,
 }: {
     usernames: string[];
 }) {
+    const { t } = useT("messages");
+
     if (usernames.length === 0) return null;
 
     let text: string;
     if (usernames.length === 1) {
-        text = `${usernames[0]} is typing...`;
+        text = t("typing_one", { name: usernames[0] });
     } else if (usernames.length === 2) {
-        text = `${usernames[0]} and ${usernames[1]} are typing...`;
+        text = t("typing_two", {
+            name1: usernames[0],
+            name2: usernames[1],
+        });
     } else {
-        text = `${usernames[0]} and ${usernames.length - 1} others are typing...`;
+        text = t("typing_many", {
+            name: usernames[0],
+            count: usernames.length - 1,
+        });
     }
 
     return (

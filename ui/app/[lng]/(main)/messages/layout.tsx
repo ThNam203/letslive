@@ -1,16 +1,15 @@
 "use client";
 
-import useDmWebSocket from "@/hooks/use-dm-websocket";
+import { DmWebSocketProvider } from "@/contexts/dm-websocket-context";
 
 export default function MessagesLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    // Initialize the DM WebSocket connection for all messages pages
-    useDmWebSocket();
-
     return (
-        <div className="flex h-full w-full overflow-hidden">{children}</div>
+        <DmWebSocketProvider>
+            <div className="flex h-full w-full overflow-hidden">{children}</div>
+        </DmWebSocketProvider>
     );
 }

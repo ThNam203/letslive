@@ -95,7 +95,11 @@ export default function CommentForm({
                     )}
                     <div className="flex gap-2">
                         {onCancel && (
-                            <Button variant="destructive" size="sm" onClick={onCancel}>
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={onCancel}
+                            >
                                 {t("common:cancel")}
                             </Button>
                         )}

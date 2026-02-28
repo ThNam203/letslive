@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import useDmStore from "@/hooks/use-dm-store";
-import useDmWebSocket from "@/hooks/use-dm-websocket";
+import { useDmWebSocketContext } from "@/contexts/dm-websocket-context";
 import useUser from "@/hooks/user";
 import {
     GetConversation,
@@ -15,11 +15,15 @@ import ConversationHeader from "../_components/conversation-header";
 import MessageThread from "../_components/message-thread";
 import MessageInput from "../_components/message-input";
 import TypingIndicator from "../_components/typing-indicator";
+import { Button } from "@/components/ui/button";
 import {
     type Conversation,
     DmClientEventType,
     DmMessageType,
 } from "@/types/dm";
+import { toast } from "@/components/utils/toast";
+import useT from "@/hooks/use-translation";
+import IconClose from "@/components/icons/close";
 
 export default function ConversationPage() {
     const params = useParams();
@@ -36,7 +40,9 @@ export default function ConversationPage() {
         clearUnread,
         typingUsers,
     } = useDmStore();
-    const { send } = useDmWebSocket();
+    const { send } = useDmWebSocketContext();
+    const { t } = useT("api-response");
+    const { t: tMessages } = useT("messages");
 
     const [conversation, setConversation] = useState<Conversation | null>(null);
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -62,12 +68,18 @@ export default function ConversationPage() {
             setConversation(existingConv);
         }
 
-        GetConversation(conversationId).then((res) => {
-            if (res.data) {
-                setConversation(res.data);
-            }
-        });
-    }, [conversationId, user, conversations]);
+        GetConversation(conversationId)
+            .then((res) => {
+                if (res.data) {
+                    setConversation(res.data);
+                } else if (!res.success && res.key) {
+                    toast.error(t(res.key));
+                }
+            })
+            .catch(() => {
+                toast.error(t("fetch-error:client_fetch_error"));
+            });
+    }, [conversationId, user, conversations, t]);
 
     // Fetch initial messages
     useEffect(() => {
@@ -75,14 +87,21 @@ export default function ConversationPage() {
         if (currentMessages.length > 0) return; // already loaded
 
         setIsLoadingMessages(true);
-        GetDmMessages(conversationId).then((res) => {
-            if (res.data) {
-                setMessages(conversationId, res.data);
-                setHasMore(res.data.length >= 50);
-            }
-            setIsLoadingMessages(false);
-        });
-    }, [conversationId, user, currentMessages.length, setMessages]);
+        GetDmMessages(conversationId)
+            .then((res) => {
+                if (res.data) {
+                    setMessages(conversationId, res.data);
+                    setHasMore(res.data.length >= 50);
+                } else if (!res.success && res.key) {
+                    toast.error(t(res.key));
+                }
+                setIsLoadingMessages(false);
+            })
+            .catch(() => {
+                toast.error(t("fetch-error:client_fetch_error"));
+                setIsLoadingMessages(false);
+            });
+    }, [conversationId, user, currentMessages.length, setMessages, t]);
 
     // Mark as read
     useEffect(() => {
@@ -156,7 +175,7 @@ export default function ConversationPage() {
         return (
             <div className="flex h-full w-full items-center justify-center">
                 <p className="text-muted-foreground">
-                    Please log in to view messages.
+                    {tMessages("login_required")}
                 </p>
             </div>
         );
@@ -166,8 +185,20 @@ export default function ConversationPage() {
         <div className="flex h-full w-full">
             {/* Conversation list sidebar (hidden on mobile) */}
             <div className="hidden h-full w-80 border-r md:block">
-                <div className="flex items-center border-b p-4">
-                    <h1 className="text-lg font-semibold">Messages</h1>
+                <div className="flex items-center gap-2 border-b p-4">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => router.push(`/${params.lng as string}`)}
+                        title={tMessages("close_section")}
+                        aria-label={tMessages("close_section")}
+                        className="h-9 w-9 shrink-0"
+                    >
+                        <IconClose className="h-4 w-4" />
+                    </Button>
+                    <h1 className="min-w-0 flex-1 truncate text-lg font-semibold">
+                        {tMessages("title")}
+                    </h1>
                 </div>
                 <ConversationList
                     conversations={conversations}
@@ -181,7 +212,12 @@ export default function ConversationPage() {
                 <ConversationHeader
                     conversation={conversation}
                     currentUserId={user.id}
-                    onBack={() => router.push("./messages")}
+                    onBack={() =>
+                        router.push(`/${params.lng as string}/messages`)
+                    }
+                    onCloseSection={() =>
+                        router.push(`/${params.lng as string}`)
+                    }
                 />
 
                 <MessageThread

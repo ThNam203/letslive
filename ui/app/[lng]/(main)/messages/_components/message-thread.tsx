@@ -3,6 +3,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import { DmMessage } from "@/types/dm";
 import MessageBubble from "./message-bubble";
+import useT from "@/hooks/use-translation";
 
 export default function MessageThread({
     messages,
@@ -17,6 +18,7 @@ export default function MessageThread({
     hasMore: boolean;
     onLoadMore: () => void;
 }) {
+    const { t } = useT("messages");
     const containerRef = useRef<HTMLDivElement>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
     const prevMessageCountRef = useRef(0);
@@ -64,7 +66,7 @@ export default function MessageThread({
 
             {!hasMore && messages.length > 0 && (
                 <p className="text-muted-foreground py-2 text-center text-xs">
-                    Beginning of conversation
+                    {t("beginning_of_conversation")}
                 </p>
             )}
 

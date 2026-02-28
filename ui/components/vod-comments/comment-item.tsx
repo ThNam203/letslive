@@ -239,7 +239,10 @@ export default function CommentItem({
             {userProfileHref !== "#" ? (
                 <Link
                     href={userProfileHref}
-                    className={cn("ring-offset-background focus-visible:ring-ring shrink-0 cursor-pointer rounded-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none", comment.isDeleted && "opacity-60")}
+                    className={cn(
+                        "ring-offset-background focus-visible:ring-ring shrink-0 cursor-pointer rounded-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+                        comment.isDeleted && "opacity-60",
+                    )}
                     aria-label={commentUser?.username ?? "View profile"}
                 >
                     <Avatar className="h-8 w-8">
@@ -254,7 +257,12 @@ export default function CommentItem({
                     </Avatar>
                 </Link>
             ) : (
-                <Avatar className={cn("h-8 w-8 shrink-0", comment.isDeleted && "opacity-60")}>
+                <Avatar
+                    className={cn(
+                        "h-8 w-8 shrink-0",
+                        comment.isDeleted && "opacity-60",
+                    )}
+                >
                     <AvatarImage
                         src={commentUser?.profilePicture}
                         alt={commentUser?.username}
@@ -266,74 +274,76 @@ export default function CommentItem({
             )}
             <div className="flex-1">
                 <div className={cn(comment.isDeleted && "opacity-60")}>
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    {userProfileHref !== "#" ? (
-                        <Link
-                            href={userProfileHref}
-                            className="cursor-pointer text-sm font-semibold hover:underline"
-                        >
-                            {commentUser?.displayName ??
-                                commentUser?.username ??
-                                "..."}
-                        </Link>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        {userProfileHref !== "#" ? (
+                            <Link
+                                href={userProfileHref}
+                                className="cursor-pointer text-sm font-semibold hover:underline"
+                            >
+                                {commentUser?.displayName ??
+                                    commentUser?.username ??
+                                    "..."}
+                            </Link>
+                        ) : (
+                            <span className="text-sm font-semibold">
+                                {commentUser?.displayName ??
+                                    commentUser?.username ??
+                                    "..."}
+                            </span>
+                        )}
+                        {(isOwner || isYou) && (
+                            <span className="flex items-center gap-1">
+                                {isOwner && (
+                                    <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-amber-600 dark:text-amber-400">
+                                        {t("comments:owner")}
+                                    </span>
+                                )}
+                                {isYou && (
+                                    <span className="bg-primary/15 text-primary rounded px-1.5 py-0.5 text-[10px] font-medium">
+                                        {t("comments:you")}
+                                    </span>
+                                )}
+                            </span>
+                        )}
+                        <span className="text-muted-foreground text-xs">
+                            {dateDiffFromNow(comment.createdAt, t)}
+                        </span>
+                    </div>
+                    {comment.isDeleted ? (
+                        <p className="text-muted-foreground mt-1 text-sm italic">
+                            {t("comments:deleted_comment")}
+                        </p>
                     ) : (
-                        <span className="text-sm font-semibold">
-                            {commentUser?.displayName ??
-                                commentUser?.username ??
-                                "..."}
-                        </span>
+                        <p className="mt-1 text-sm whitespace-pre-wrap">
+                            {comment.content}
+                        </p>
                     )}
-                    {(isOwner || isYou) && (
-                        <span className="flex items-center gap-1">
-                            {isOwner && (
-                                <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-amber-600 dark:text-amber-400">
-                                    {t("comments:owner")}
-                                </span>
-                            )}
-                            {isYou && (
-                                <span className="bg-primary/15 text-primary rounded px-1.5 py-0.5 text-[10px] font-medium">
-                                    {t("comments:you")}
-                                </span>
-                            )}
-                        </span>
-                    )}
-                    <span className="text-muted-foreground text-xs">
-                        {dateDiffFromNow(comment.createdAt, t)}
-                    </span>
-                </div>
-                {comment.isDeleted ? (
-                    <p className="text-muted-foreground mt-1 text-sm italic">
-                        {t("comments:deleted_comment")}
-                    </p>
-                ) : (
-                    <p className="mt-1 text-sm whitespace-pre-wrap">
-                        {comment.content}
-                    </p>
-                )}
                 </div>
 
                 {/* Action buttons */}
                 <div className="mt-1 flex items-center gap-3">
                     {!comment.isDeleted && (
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 cursor-pointer gap-1 px-2 text-xs"
-                        onClick={handleLike}
-                        disabled={!currentUser || isLiking}
-                        aria-label={
-                            isLiked ? t("comments:unlike") : t("comments:like")
-                        }
-                    >
-                        {isLiking ? (
-                            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        ) : isLiked ? (
-                            <IconHeartFilled className="h-3.5 w-3.5 text-red-500" />
-                        ) : (
-                            <IconHeart className="h-3.5 w-3.5" />
-                        )}
-                        {likeCount > 0 && <span>{likeCount}</span>}
-                    </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 cursor-pointer gap-1 px-2 text-xs"
+                            onClick={handleLike}
+                            disabled={!currentUser || isLiking}
+                            aria-label={
+                                isLiked
+                                    ? t("comments:unlike")
+                                    : t("comments:like")
+                            }
+                        >
+                            {isLiking ? (
+                                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            ) : isLiked ? (
+                                <IconHeartFilled className="h-3.5 w-3.5 text-red-500" />
+                            ) : (
+                                <IconHeart className="h-3.5 w-3.5" />
+                            )}
+                            {likeCount > 0 && <span>{likeCount}</span>}
+                        </Button>
                     )}
 
                     {currentUser && (

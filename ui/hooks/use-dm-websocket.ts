@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import GLOBAL from "@/global";
 import useDmStore from "./use-dm-store";
 import useUser from "./user";
@@ -9,9 +9,12 @@ import {
     type DmWsServerEvent,
     DmServerEventType,
 } from "@/types/dm";
+import { toast } from "@/components/utils/toast";
+import useT from "./use-translation";
 
 const MAX_RECONNECT_DELAY = 30000;
 const INITIAL_RECONNECT_DELAY = 1000;
+const TYPING_INDICATOR_TIMEOUT_MS = 5000;
 
 export default function useDmWebSocket() {
     const wsRef = useRef<WebSocket | null>(null);
@@ -20,7 +23,11 @@ export default function useDmWebSocket() {
     );
     const reconnectDelayRef = useRef(INITIAL_RECONNECT_DELAY);
     const isConnectingRef = useRef(false);
+    const typingTimeoutsRef = useRef<
+        Map<string, ReturnType<typeof setTimeout>>
+    >(new Map());
 
+    const [isConnected, setIsConnected] = useState(false);
     const user = useUser((state) => state.user);
     const {
         addMessage,
@@ -31,20 +38,22 @@ export default function useDmWebSocket() {
         setUserOnline,
         setUserOffline,
         incrementUnread,
-        activeConversationId,
         updateConversation,
     } = useDmStore();
+    const { t } = useT("api-response");
 
     const handleServerEvent = useCallback(
         (event: DmWsServerEvent) => {
             switch (event.type) {
                 case DmServerEventType.NEW_MESSAGE:
                     addMessage(event.conversationId, event.message);
-                    // Increment unread if not viewing this conversation
-                    if (event.conversationId !== activeConversationId) {
-                        incrementUnread(event.conversationId);
+                    {
+                        const activeId =
+                            useDmStore.getState().activeConversationId;
+                        if (event.conversationId !== activeId) {
+                            incrementUnread(event.conversationId);
+                        }
                     }
-                    // Update conversation's lastMessage
                     updateConversation(event.conversationId, {
                         lastMessage: {
                             _id: event.message._id,
@@ -70,14 +79,34 @@ export default function useDmWebSocket() {
 
                 case DmServerEventType.USER_TYPING:
                     setTypingUser(event.conversationId, event.username);
+                    {
+                        const key = `${event.conversationId}:${event.username}`;
+                        const existing = typingTimeoutsRef.current.get(key);
+                        if (existing) clearTimeout(existing);
+                        const timeout = setTimeout(() => {
+                            removeTypingUser(
+                                event.conversationId,
+                                event.username,
+                            );
+                            typingTimeoutsRef.current.delete(key);
+                        }, TYPING_INDICATOR_TIMEOUT_MS);
+                        typingTimeoutsRef.current.set(key, timeout);
+                    }
                     break;
 
                 case DmServerEventType.USER_STOPPED_TYPING:
                     removeTypingUser(event.conversationId, event.username);
+                    {
+                        const key = `${event.conversationId}:${event.username}`;
+                        const existing = typingTimeoutsRef.current.get(key);
+                        if (existing) {
+                            clearTimeout(existing);
+                            typingTimeoutsRef.current.delete(key);
+                        }
+                    }
                     break;
 
                 case DmServerEventType.READ_RECEIPT:
-                    // Could be used to update read status in message bubbles
                     break;
 
                 case DmServerEventType.USER_ONLINE:
@@ -91,6 +120,14 @@ export default function useDmWebSocket() {
                 case DmServerEventType.CONVERSATION_UPDATED:
                     updateConversation(event.conversationId, event.update);
                     break;
+
+                case DmServerEventType.SEND_FAILED:
+                    toast.error(
+                        t(event.key) ||
+                            event.message ||
+                            "Failed to send message",
+                    );
+                    break;
             }
         },
         [
@@ -102,20 +139,18 @@ export default function useDmWebSocket() {
             setUserOnline,
             setUserOffline,
             incrementUnread,
-            activeConversationId,
             updateConversation,
+            t,
         ],
     );
 
     const connect = useCallback(() => {
         if (!user || isConnectingRef.current) return;
-        if (
-            wsRef.current &&
-            wsRef.current.readyState === WebSocket.OPEN
-        )
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN)
             return;
 
         isConnectingRef.current = true;
+        setIsConnected(false);
 
         const ws = new WebSocket(GLOBAL.DM_WS_SERVER_URL);
 
@@ -123,6 +158,7 @@ export default function useDmWebSocket() {
             wsRef.current = ws;
             reconnectDelayRef.current = INITIAL_RECONNECT_DELAY;
             isConnectingRef.current = false;
+            setIsConnected(true);
         };
 
         ws.onmessage = (event) => {
@@ -137,7 +173,7 @@ export default function useDmWebSocket() {
         ws.onclose = () => {
             wsRef.current = null;
             isConnectingRef.current = false;
-            // Auto-reconnect with exponential backoff
+            setIsConnected(false);
             reconnectTimeoutRef.current = setTimeout(() => {
                 reconnectDelayRef.current = Math.min(
                     reconnectDelayRef.current * 2,
@@ -159,6 +195,8 @@ export default function useDmWebSocket() {
     }, []);
 
     const disconnect = useCallback(() => {
+        typingTimeoutsRef.current.forEach((t) => clearTimeout(t));
+        typingTimeoutsRef.current.clear();
         if (reconnectTimeoutRef.current) {
             clearTimeout(reconnectTimeoutRef.current);
             reconnectTimeoutRef.current = null;
@@ -167,6 +205,7 @@ export default function useDmWebSocket() {
             wsRef.current.close();
             wsRef.current = null;
         }
+        setIsConnected(false);
     }, []);
 
     useEffect(() => {
@@ -178,5 +217,5 @@ export default function useDmWebSocket() {
         };
     }, [user, connect, disconnect]);
 
-    return { send, disconnect, isConnected: !!wsRef.current };
+    return { send, disconnect, isConnected };
 }

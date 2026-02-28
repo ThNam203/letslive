@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useUser from "@/hooks/user";
@@ -11,6 +11,8 @@ import { SearchUsersByUsername } from "@/lib/api/user";
 import { PublicUser } from "@/types/user";
 import { ConversationType } from "@/types/dm";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "@/components/utils/toast";
+import useT from "@/hooks/use-translation";
 
 export default function NewConversationDialog({
     onClose,
@@ -18,8 +20,11 @@ export default function NewConversationDialog({
     onClose: () => void;
 }) {
     const router = useRouter();
+    const params = useParams();
     const user = useUser((state) => state.user);
     const { addConversation } = useDmStore();
+    const { t } = useT("api-response");
+    const { t: tMessages } = useT("messages");
 
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<PublicUser[]>([]);
@@ -85,9 +90,7 @@ export default function NewConversationDialog({
             }
 
             const res = await CreateConversation({
-                type: isGroup
-                    ? ConversationType.GROUP
-                    : ConversationType.DM,
+                type: isGroup ? ConversationType.GROUP : ConversationType.DM,
                 participantIds: selectedUsers.map((u) => u.id),
                 participantUsernames,
                 participantDisplayNames,
@@ -101,8 +104,13 @@ export default function NewConversationDialog({
             if (res.data) {
                 addConversation(res.data);
                 onClose();
-                router.push(`./messages/${res.data._id}`);
+                const lng = (params.lng as string) ?? "en";
+                router.push(`/${lng}/messages/${res.data._id}`);
+            } else if (!res.success && res.key) {
+                toast.error(t(res.key));
             }
+        } catch {
+            toast.error(t("fetch-error:client_fetch_error"));
         } finally {
             setIsLoading(false);
         }
@@ -112,7 +120,9 @@ export default function NewConversationDialog({
         <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
             <div className="bg-background w-full max-w-md rounded-lg border p-6 shadow-lg">
                 <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-lg font-semibold">New Conversation</h2>
+                    <h2 className="text-lg font-semibold">
+                        {tMessages("new_conversation")}
+                    </h2>
                     <Button variant="ghost" size="sm" onClick={onClose}>
                         &times;
                     </Button>
@@ -127,20 +137,20 @@ export default function NewConversationDialog({
                             setSelectedUsers(selectedUsers.slice(0, 1));
                         }}
                     >
-                        Direct Message
+                        {tMessages("direct_message")}
                     </Button>
                     <Button
                         variant={isGroup ? "default" : "outline"}
                         size="sm"
                         onClick={() => setIsGroup(true)}
                     >
-                        Group
+                        {tMessages("group")}
                     </Button>
                 </div>
 
                 {isGroup && (
                     <Input
-                        placeholder="Group name (optional)"
+                        placeholder={tMessages("group_name_placeholder")}
                         value={groupName}
                         onChange={(e) => setGroupName(e.target.value)}
                         className="mb-3"
@@ -169,7 +179,7 @@ export default function NewConversationDialog({
 
                 {/* Search */}
                 <Input
-                    placeholder="Search users..."
+                    placeholder={tMessages("search_users_placeholder")}
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
                     className="mb-3"
@@ -179,7 +189,7 @@ export default function NewConversationDialog({
                 <div className="max-h-48 overflow-y-auto">
                     {isSearching && (
                         <p className="text-muted-foreground py-2 text-center text-sm">
-                            Searching...
+                            {tMessages("searching")}
                         </p>
                     )}
                     {searchResults.map((result) => (
@@ -210,13 +220,15 @@ export default function NewConversationDialog({
 
                 <div className="mt-4 flex justify-end gap-2">
                     <Button variant="outline" onClick={onClose}>
-                        Cancel
+                        {tMessages("cancel")}
                     </Button>
                     <Button
                         disabled={selectedUsers.length === 0 || isLoading}
                         onClick={handleCreate}
                     >
-                        {isLoading ? "Creating..." : "Create"}
+                        {isLoading
+                            ? tMessages("creating")
+                            : tMessages("create")}
                     </Button>
                 </div>
             </div>

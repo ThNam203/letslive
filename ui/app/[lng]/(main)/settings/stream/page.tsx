@@ -11,7 +11,10 @@ import TextField from "../_components/text-field";
 import TextAreaField from "../_components/textarea-field";
 import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";
-import { STREAM_TITLE_MAX_LENGTH, STREAM_DESCRIPTION_MAX_LENGTH } from "@/constant/field-limits";
+import {
+    STREAM_TITLE_MAX_LENGTH,
+    STREAM_DESCRIPTION_MAX_LENGTH,
+} from "@/constant/field-limits";
 
 export default function StreamEdit() {
     const { t } = useT(["settings", "api-response", "fetch-error"]);

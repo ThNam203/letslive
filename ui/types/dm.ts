@@ -32,6 +32,7 @@ export enum DmServerEventType {
     USER_ONLINE = "dm:user_online",
     USER_OFFLINE = "dm:user_offline",
     CONVERSATION_UPDATED = "dm:conversation_updated",
+    SEND_FAILED = "dm:send_failed",
 }
 
 export type ConversationParticipant = {
@@ -157,6 +158,12 @@ export type DmWsConversationUpdated = {
     update: Partial<Conversation>;
 };
 
+export type DmWsSendFailed = {
+    type: DmServerEventType.SEND_FAILED;
+    key: string;
+    message?: string;
+};
+
 export type DmWsServerEvent =
     | DmWsNewMessage
     | DmWsMessageEdited
@@ -164,4 +171,5 @@ export type DmWsServerEvent =
     | DmWsUserTyping
     | DmWsReadReceipt
     | DmWsPresence
-    | DmWsConversationUpdated;
+    | DmWsConversationUpdated
+    | DmWsSendFailed;
