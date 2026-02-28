@@ -27,6 +27,9 @@ import useT from "@/hooks/use-translation";
 import { signUpSchema } from "../../lib/validations/signUp";
 import { GetMeProfile } from "@/lib/api/user";
 import useUser from "@/hooks/user";
+import { Input } from "../ui/input";
+import { EMAIL_MAX_LENGTH, USERNAME_MAX_LENGTH } from "@/constant/field-limits";
+import { PASSWORD_MAX_LENGTH } from "@/constant/password";
 
 export default function SignUpForm() {
     const [email, setEmail] = useState("");
@@ -186,12 +189,13 @@ export default function SignUpForm() {
                     <label htmlFor="email">
                         <IconEmail className="scale-125 opacity-40" />
                     </label>
-                    <input
+                    <Input
                         id="email"
                         aria-label={t("email")}
-                        className="bg-background h-12 flex-1 focus:outline-none"
+                        className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"
                         placeholder={t("email")}
                         type="email"
+                        maxLength={EMAIL_MAX_LENGTH}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
@@ -201,12 +205,14 @@ export default function SignUpForm() {
                     <label htmlFor="username">
                         <IconUserOutline className="scale-125 opacity-40" />
                     </label>
-                    <input
+                    <Input
                         id="username"
                         aria-label={t("common:username")}
-                        className="bg-background h-12 flex-1 focus:outline-none"
+                        className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"
                         placeholder={t("common:username")}
                         type="text"
+                        maxLength={USERNAME_MAX_LENGTH}
+                        showCount
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                     />
@@ -216,12 +222,13 @@ export default function SignUpForm() {
                     <label htmlFor="password">
                         <IconPasswordOutline className="scale-125 opacity-40" />
                     </label>
-                    <input
+                    <Input
                         id="password"
                         aria-label={t("password")}
-                        className="bg-background h-12 flex-1 focus:outline-none"
+                        className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"
                         placeholder={t("password")}
                         type={hidingPassword ? "password" : "text"}
+                        maxLength={PASSWORD_MAX_LENGTH}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
@@ -243,12 +250,13 @@ export default function SignUpForm() {
                     <label htmlFor="confirm-password">
                         <IconPasswordOutline className="scale-125 opacity-40" />
                     </label>
-                    <input
+                    <Input
                         id="confirm-password"
                         aria-label={t("confirm_password")}
-                        className="bg-background h-12 flex-1 focus:outline-none"
+                        className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"
                         placeholder={t("confirm_password")}
                         type={hidingConfirmPassword ? "password" : "text"}
+                        maxLength={PASSWORD_MAX_LENGTH}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                     />

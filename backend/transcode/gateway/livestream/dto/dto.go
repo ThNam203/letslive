@@ -10,14 +10,14 @@ type CreateLivestreamRequestDTO struct {
 	UserId       uuid.UUID `json:"userId" validate:"required,uuid"`
 	Title        *string   `json:"title" validate:"required,gte=3,lte=256"`
 	Description  *string   `json:"description,omitempty" validate:"omitempty,lte=1000"`
-	ThumbnailURL *string   `json:"thumbnailUrl,omitempty" validate:"omitempty,url"`
+	ThumbnailURL *string   `json:"thumbnailUrl,omitempty" validate:"omitempty,url,lte=2048"`
 	Visibility   string    `json:"visibility" validate:"oneof=public private,required"`
 }
 
 type GetLivestreamRequestDTO struct{}
 
 type EndLivestreamRequestDTO struct {
-	PlaybackURL *string   `json:"playbackUrl,omitempty" validate:"omitempty,url"`
+	PlaybackURL *string   `json:"playbackUrl,omitempty" validate:"omitempty,url,lte=2048"`
 	EndedAt     time.Time `json:"endedAt" validate:"omitempty"`
 	Duration    int64     `json:"duration" validate:"omitempty"`
 }

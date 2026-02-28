@@ -2,8 +2,16 @@ import Redis from 'ioredis'
 import mongoose from 'mongoose'
 import { WebSocketServer } from 'ws'
 import { ChatServer } from './chatServer'
+import { DmServer } from './dmServer'
 import { Message } from './models/Message'
 import { RedisService } from './services/redis'
+import { DmRedisService } from './services/dmRedis'
+import { PresenceService } from './services/presenceService'
+import { ConversationService } from './services/conversationService'
+import { DmMessageService } from './services/dmMessageService'
+import { ConversationHandler } from './handlers/conversationHandler'
+import { DmMessageHandler } from './handlers/dmMessageHandler'
+import { authMiddleware, extractUserIdFromCookie } from './middlewares/auth'
 import esMain from 'es-main'
 import { createServer, Server } from 'http'
 import ConsulRegistry from 'services/discovery'
@@ -33,29 +41,57 @@ function CreateExpressServer() {
 
     app.use(pinoM)
     app.use(requestIdMiddleware)
+    app.use(express.json())
     // app.use(loggingMiddleware) replaced by pinohttp
 
     app.get('/v1/health', (req, res) => {
         res.json({ status: 'ok' })
     })
 
-    // TODO: update response
+    // --- Live Chat Messages (existing) ---
     app.get(
         '/v1/messages',
         asyncHandler(async (req, res) => {
             const roomId = req.query.roomId as string
-            if (!roomId) {
+            if (!roomId || roomId.length > 36) {
                 writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_ROOM_NOT_FOUND))
                 return
             }
 
             const messages = await Message.find({ roomId }).sort({ timestamp: 1 }).limit(50)
-            // TODO: shouldn't be any
             writeResponse(req, res, newResponseFromTemplate<any>(RESPONSE_TEMPLATES.RES_SUCC_OK, messages))
         })
     )
 
-    app.get('*', (req: Request, res: Response) => {
+    // --- DM/Group Conversation Routes ---
+    const conversationService = new ConversationService()
+    const dmMessageService = new DmMessageService()
+    const conversationHandler = new ConversationHandler(conversationService)
+    const dmMessageHandler = new DmMessageHandler(dmMessageService)
+
+    // Conversations
+    app.get('/v1/conversations/unread-counts', authMiddleware, asyncHandler(conversationHandler.getUnreadCounts))
+    app.get('/v1/conversations', authMiddleware, asyncHandler(conversationHandler.getConversations))
+    app.post('/v1/conversations', authMiddleware, asyncHandler(conversationHandler.createConversation))
+    app.get('/v1/conversations/:id', authMiddleware, asyncHandler(conversationHandler.getConversation))
+    app.put('/v1/conversations/:id', authMiddleware, asyncHandler(conversationHandler.updateConversation))
+    app.delete('/v1/conversations/:id', authMiddleware, asyncHandler(conversationHandler.leaveConversation))
+    app.post('/v1/conversations/:id/participants', authMiddleware, asyncHandler(conversationHandler.addParticipant))
+    app.delete(
+        '/v1/conversations/:id/participants/:userId',
+        authMiddleware,
+        asyncHandler(conversationHandler.removeParticipant)
+    )
+
+    // Messages
+    app.get('/v1/conversations/:id/messages', authMiddleware, asyncHandler(dmMessageHandler.getMessages))
+    app.post('/v1/conversations/:id/messages', authMiddleware, asyncHandler(dmMessageHandler.sendMessage))
+    app.patch('/v1/conversations/:id/messages/:msgId', authMiddleware, asyncHandler(dmMessageHandler.editMessage))
+    app.delete('/v1/conversations/:id/messages/:msgId', authMiddleware, asyncHandler(dmMessageHandler.deleteMessage))
+    app.post('/v1/conversations/:id/read', authMiddleware, asyncHandler(dmMessageHandler.markAsRead))
+
+    // --- Catch-all ---
+    app.all('*', (req: Request, res: Response) => {
         writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_ROUTE_NOT_FOUND))
     })
 
@@ -76,10 +112,38 @@ async function SetupWebSocketServer(server: Server) {
         `mongodb://${process.env.CHAT_DB_USER}:${process.env.CHAT_DB_PASSWORD}@chat_db:27017/chat?authSource=admin`
     )
 
+    // Live chat WebSocket
     const redisService = new RedisService(pub, sub, roomManager)
     const wss = new WebSocketServer({ server, path: '/v1/ws' })
+    const chatServer = new ChatServer(redisService, Message, wss)
 
-    return new ChatServer(redisService, Message, wss)
+    // DM WebSocket
+    const dmPub = new Redis(6379, 'chat_pubsub')
+    const dmSub = new Redis(6379, 'chat_pubsub')
+    const dmManager = new Redis(6379, 'chat_pubsub')
+
+    const dmRedisService = new DmRedisService(dmPub, dmSub, dmManager)
+    const presenceService = new PresenceService(dmManager)
+    const conversationService = new ConversationService()
+    const dmMessageService = new DmMessageService()
+
+    const dmWss = new WebSocketServer({
+        server,
+        path: '/v1/dm-ws',
+        verifyClient: (info, callback) => {
+            const userId = extractUserIdFromCookie(info.req.headers.cookie)
+            if (!userId) {
+                callback(false, 401, 'Unauthorized')
+                return
+            }
+            ;(info.req as any).userId = userId
+            callback(true)
+        }
+    })
+
+    const dmServer = new DmServer(dmRedisService, presenceService, conversationService, dmMessageService, dmWss)
+
+    return { chatServer, dmServer }
 }
 
 // TODO: add config instead of hard-coded

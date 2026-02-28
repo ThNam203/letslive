@@ -1,6 +1,6 @@
 import { z } from "zod";
 import i18next from "@/lib/i18n/i18next";
-import { PASSWORD_MIN_LENGTH } from "@/constant/password";
+import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "@/constant/password";
 
 export const changePasswordSchema = function (t: typeof i18next.t) {
     return z
@@ -12,6 +12,12 @@ export const changePasswordSchema = function (t: typeof i18next.t) {
                     t("error:password_too_short", {
                         minLength: PASSWORD_MIN_LENGTH,
                     }),
+                )
+                .max(
+                    PASSWORD_MAX_LENGTH,
+                    t("error:password_too_long", {
+                        maxLength: PASSWORD_MAX_LENGTH,
+                    }),
                 ),
             newPassword: z
                 .string()
@@ -20,6 +26,12 @@ export const changePasswordSchema = function (t: typeof i18next.t) {
                     t("error:password_too_short", {
                         minLength: PASSWORD_MIN_LENGTH,
                     }),
+                )
+                .max(
+                    PASSWORD_MAX_LENGTH,
+                    t("error:password_too_long", {
+                        maxLength: PASSWORD_MAX_LENGTH,
+                    }),
                 ),
             confirmPassword: z
                 .string()
@@ -27,6 +39,12 @@ export const changePasswordSchema = function (t: typeof i18next.t) {
                     PASSWORD_MIN_LENGTH,
                     t("error:password_too_short", {
                         minLength: PASSWORD_MIN_LENGTH,
+                    }),
+                )
+                .max(
+                    PASSWORD_MAX_LENGTH,
+                    t("error:password_too_long", {
+                        maxLength: PASSWORD_MAX_LENGTH,
                     }),
                 ),
         })

@@ -22,6 +22,7 @@ export default function TextAreaField({
             </label>
             <Textarea
                 id={label}
+                showCount={!!props.maxLength}
                 className={cn(
                     "border-border text-foreground border",
                     className,

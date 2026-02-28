@@ -9,6 +9,7 @@ import { useState } from "react";
 import { toast } from "@/components/utils/toast";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { cn } from "@/utils/cn";
+import { PHONE_NUMBER_MAX_LENGTH } from "@/constant/field-limits";
 
 export default function PhoneNumber() {
     const { t } = useT("settings");
@@ -86,6 +87,7 @@ export default function PhoneNumber() {
             ) : (
                 <Input
                     id="phone-number"
+                    maxLength={PHONE_NUMBER_MAX_LENGTH}
                     value={phoneNumber ?? ""}
                     disabled={isUpdating}
                     onChange={(e) => {

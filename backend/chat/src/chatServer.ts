@@ -35,9 +35,26 @@ export class ChatServer {
         }
 
         ws.on('message', async (rawMessage) => {
+            const raw = rawMessage.toString()
+            if (raw.length > 4096) {
+                logger.error('webSocket message too large, dropping')
+                return
+            }
+
             let data: ChatMessage
             try {
-                data = JSON.parse(rawMessage.toString())
+                data = JSON.parse(raw)
+
+                if (
+                    typeof data.roomId !== 'string' || data.roomId.length > 36 ||
+                    typeof data.userId !== 'string' || data.userId.length > 36 ||
+                    typeof data.username !== 'string' || data.username.length > 50 ||
+                    (data.text !== undefined && (typeof data.text !== 'string' || data.text.length > 500))
+                ) {
+                    logger.error('webSocket message fields exceed length limits, dropping')
+                    return
+                }
+
                 userInfo = {
                     currentRoom: data.roomId,
                     id: data.userId,

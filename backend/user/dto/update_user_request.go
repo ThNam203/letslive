@@ -9,8 +9,8 @@ type UpdateUserRequestDTO struct {
 	Id               uuid.UUID         `json:"id" validate:"uuid"`
 	Username         *string           `json:"username,omitempty" validate:"omitempty,gte=6,lte=20"`
 	Status           *string           `json:"status,omitempty" validate:"oneof=normal disabled"`
-	PhoneNumber      *string           `json:"phoneNumber,omitempty"`
-	Bio              *string           `json:"bio,omitempty"`
+	PhoneNumber      *string           `json:"phoneNumber,omitempty" validate:"omitempty,lte=20"`
+	Bio              *string           `json:"bio,omitempty" validate:"omitempty,lte=300"`
 	DisplayName      *string           `json:"displayName,omitempty" validate:"omitempty,gte=6,lte=20"`
 	SocialMediaLinks *SocialMediaLinks `json:"socialMediaLinks,omitempty"`
 }

@@ -9,6 +9,7 @@ import useUser from "@/hooks/user";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { VOD_COMMENT_MAX_LENGTH } from "@/constant/field-limits";
 
 interface CommentFormProps {
     vodId: string;
@@ -75,7 +76,7 @@ export default function CommentForm({
                     placeholder={placeholder ?? t("comments:write_comment")}
                     className="min-h-[60px] resize-none"
                     autoFocus={autoFocus}
-                    maxLength={2000}
+                    maxLength={VOD_COMMENT_MAX_LENGTH}
                     aria-label={
                         parentId
                             ? t("comments:write_reply")
@@ -86,7 +87,7 @@ export default function CommentForm({
                     {content.length > 0 ? (
                         <span className="text-muted-foreground self-center text-xs">
                             {t("comments:char_remaining", {
-                                count: 2000 - content.length,
+                                count: VOD_COMMENT_MAX_LENGTH - content.length,
                             })}
                         </span>
                     ) : (

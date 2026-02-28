@@ -256,6 +256,44 @@ services:
         https_redirect_status_code: 426
         request_buffering: true
         response_buffering: true
+      - name: DM_Socket
+        paths:
+          - /dm-ws
+        strip_path: false
+        protocols:
+          - http
+          - https
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: true
+      - name: DM_Conversations
+        protocols:
+          - http
+          - https
+        paths:
+          - /conversations
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: true
 
   - name: MinIO
     host: minio.service.consul
