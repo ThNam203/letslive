@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/gofrs/uuid/v5 v5.4.0
 	github.com/gorilla/mux v1.8.1
-	github.com/hashicorp/consul/api v1.33.3
+	github.com/hashicorp/consul/api v1.33.4
 	github.com/minio/minio-go/v7 v7.0.98
 	github.com/nareix/joy5 v0.0.0-20210317075623-2c912ca30590
 	github.com/radovskyb/watcher v1.0.7
