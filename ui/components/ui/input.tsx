@@ -24,8 +24,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
         if (!showCount || maxLength === undefined) return inputElement;
 
-        const currentLength =
-            typeof value === "string" ? value.length : 0;
+        const currentLength = typeof value === "string" ? value.length : 0;
 
         return (
             <div className="w-full">

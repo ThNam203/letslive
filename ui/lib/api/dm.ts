@@ -12,7 +12,7 @@ export async function GetConversations(
     limit: number = 20,
 ): Promise<ApiResponse<Conversation[]>> {
     return fetchClient<ApiResponse<Conversation[]>>(
-        `/conversations?page=${page}&limit=${limit}`,
+        `/v1/conversations?page=${page}&limit=${limit}`,
     );
 }
 
@@ -20,7 +20,7 @@ export async function GetConversation(
     conversationId: string,
 ): Promise<ApiResponse<Conversation>> {
     return fetchClient<ApiResponse<Conversation>>(
-        `/conversations/${conversationId}`,
+        `/v1/conversations/${conversationId}`,
     );
 }
 
@@ -35,7 +35,7 @@ export async function CreateConversation(body: {
     creatorProfilePicture?: string;
     name?: string;
 }): Promise<ApiResponse<Conversation>> {
-    return fetchClient<ApiResponse<Conversation>>(`/conversations`, {
+    return fetchClient<ApiResponse<Conversation>>(`/v1/conversations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -47,7 +47,7 @@ export async function UpdateConversation(
     body: { name?: string; avatarUrl?: string },
 ): Promise<ApiResponse<Conversation>> {
     return fetchClient<ApiResponse<Conversation>>(
-        `/conversations/${conversationId}`,
+        `/v1/conversations/${conversationId}`,
         {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -60,7 +60,7 @@ export async function LeaveConversation(
     conversationId: string,
 ): Promise<ApiResponse<void>> {
     return fetchClient<ApiResponse<void>>(
-        `/conversations/${conversationId}`,
+        `/v1/conversations/${conversationId}`,
         { method: "DELETE" },
     );
 }
@@ -75,7 +75,7 @@ export async function AddParticipant(
     },
 ): Promise<ApiResponse<Conversation>> {
     return fetchClient<ApiResponse<Conversation>>(
-        `/conversations/${conversationId}/participants`,
+        `/v1/conversations/${conversationId}/participants`,
         {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -89,7 +89,7 @@ export async function RemoveParticipant(
     userId: string,
 ): Promise<ApiResponse<Conversation>> {
     return fetchClient<ApiResponse<Conversation>>(
-        `/conversations/${conversationId}/participants/${userId}`,
+        `/v1/conversations/${conversationId}/participants/${userId}`,
         { method: "DELETE" },
     );
 }
@@ -99,7 +99,7 @@ export async function GetDmMessages(
     before?: string,
     limit: number = 50,
 ): Promise<ApiResponse<DmMessage[]>> {
-    let url = `/conversations/${conversationId}/messages?limit=${limit}`;
+    let url = `/v1/conversations/${conversationId}/messages?limit=${limit}`;
     if (before) url += `&before=${before}`;
     return fetchClient<ApiResponse<DmMessage[]>>(url);
 }
@@ -115,7 +115,7 @@ export async function SendDmMessage(
     },
 ): Promise<ApiResponse<DmMessage>> {
     return fetchClient<ApiResponse<DmMessage>>(
-        `/conversations/${conversationId}/messages`,
+        `/v1/conversations/${conversationId}/messages`,
         {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -130,7 +130,7 @@ export async function EditDmMessage(
     text: string,
 ): Promise<ApiResponse<DmMessage>> {
     return fetchClient<ApiResponse<DmMessage>>(
-        `/conversations/${conversationId}/messages/${messageId}`,
+        `/v1/conversations/${conversationId}/messages/${messageId}`,
         {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -144,7 +144,7 @@ export async function DeleteDmMessage(
     messageId: string,
 ): Promise<ApiResponse<void>> {
     return fetchClient<ApiResponse<void>>(
-        `/conversations/${conversationId}/messages/${messageId}`,
+        `/v1/conversations/${conversationId}/messages/${messageId}`,
         { method: "DELETE" },
     );
 }
@@ -154,7 +154,7 @@ export async function MarkConversationRead(
     messageId?: string,
 ): Promise<ApiResponse<void>> {
     return fetchClient<ApiResponse<void>>(
-        `/conversations/${conversationId}/read`,
+        `/v1/conversations/${conversationId}/read`,
         {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -167,6 +167,6 @@ export async function GetUnreadCounts(): Promise<
     ApiResponse<Record<string, number>>
 > {
     return fetchClient<ApiResponse<Record<string, number>>>(
-        `/conversations/unread-counts`,
+        `/v1/conversations/unread-counts`,
     );
 }

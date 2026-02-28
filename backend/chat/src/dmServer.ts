@@ -112,6 +112,16 @@ export class DmServer {
         )
 
         if (!result.success || !result.data) {
+            const ws = this.connections.get(userId)
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(
+                    JSON.stringify({
+                        type: DmServerEventType.SEND_FAILED,
+                        key: result.key ?? 'res_err_invalid_input',
+                        message: result.message
+                    })
+                )
+            }
             return
         }
 
@@ -197,8 +207,7 @@ export class DmServer {
         const contactIds = new Set<string>()
 
         // Find all conversations this user is part of
-        const { data: conversations } =
-            await this.conversationService.getConversations(userId, 0, 100)
+        const { data: conversations } = await this.conversationService.getConversations(userId, 0, 100)
 
         if (conversations) {
             for (const conv of conversations) {

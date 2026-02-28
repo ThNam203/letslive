@@ -23,8 +23,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 
         if (!showCount || maxLength === undefined) return textareaElement;
 
-        const currentLength =
-            typeof value === "string" ? value.length : 0;
+        const currentLength = typeof value === "string" ? value.length : 0;
 
         return (
             <div className="w-full">

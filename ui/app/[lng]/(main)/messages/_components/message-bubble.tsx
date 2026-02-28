@@ -1,6 +1,7 @@
 "use client";
 
 import { DmMessage, DmMessageType } from "@/types/dm";
+import useT from "@/hooks/use-translation";
 
 function formatMessageTime(dateStr: string) {
     return new Date(dateStr).toLocaleTimeString([], {
@@ -18,6 +19,8 @@ export default function MessageBubble({
     isOwn: boolean;
     showSender: boolean;
 }) {
+    const { t } = useT("messages");
+
     if (message.isDeleted) {
         return (
             <div
@@ -25,7 +28,7 @@ export default function MessageBubble({
             >
                 <div className="bg-muted max-w-[70%] rounded-lg px-3 py-1.5 opacity-60">
                     <p className="text-muted-foreground text-sm italic">
-                        This message was deleted
+                        {t("message_deleted")}
                     </p>
                 </div>
             </div>
@@ -78,7 +81,7 @@ export default function MessageBubble({
                                 >
                                     <img
                                         src={url}
-                                        alt={`Image ${i + 1}`}
+                                        alt={t("image_alt", { number: i + 1 })}
                                         className="max-h-60 w-full cursor-pointer rounded object-cover transition-opacity hover:opacity-90"
                                     />
                                 </a>
@@ -86,13 +89,21 @@ export default function MessageBubble({
                         </div>
                     )}
 
-                {/* Hide default text for image-only messages */}
-                {!(
-                    message.type === "image" &&
-                    (message.text === "Sent an image" ||
-                        message.text.match(/^Sent \d+ images$/))
-                ) && (
-                    <p className="break-words text-sm">{message.text}</p>
+                {/* Show translated caption for image-only messages */}
+                {message.type === DmMessageType.IMAGE &&
+                message.imageUrls &&
+                message.imageUrls.length > 0 &&
+                (message.text === "Sent an image" ||
+                    message.text.match(/^Sent \d+ images$/)) ? (
+                    <p className="text-sm break-words">
+                        {message.imageUrls.length === 1
+                            ? t("sent_an_image")
+                            : t("sent_images_count", {
+                                  count: message.imageUrls.length,
+                              })}
+                    </p>
+                ) : (
+                    <p className="text-sm break-words">{message.text}</p>
                 )}
 
                 <div className="mt-0.5 flex items-center justify-end gap-1">

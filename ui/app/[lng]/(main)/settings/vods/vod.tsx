@@ -21,7 +21,10 @@ import { UploadFile } from "@/lib/api/utils";
 import GLOBAL from "@/global";
 import IconSave from "@/components/icons/save";
 import { VOD } from "@/types/vod";
-import { VOD_TITLE_MAX_LENGTH, VOD_DESCRIPTION_MAX_LENGTH } from "@/constant/field-limits";
+import {
+    VOD_TITLE_MAX_LENGTH,
+    VOD_DESCRIPTION_MAX_LENGTH,
+} from "@/constant/field-limits";
 import IconLoader from "@/components/icons/loader";
 import VODCard from "@/components/livestream/vod-card";
 

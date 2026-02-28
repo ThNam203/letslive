@@ -1,28 +1,31 @@
 "use client";
 
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { Conversation, ConversationType } from "@/types/dm";
 import useDmStore from "@/hooks/use-dm-store";
 import useUser from "@/hooks/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import useT from "@/hooks/use-translation";
 
 function getConversationDisplay(
     conversation: Conversation,
     currentUserId: string,
+    t: (key: string) => string,
 ) {
     if (conversation.type === ConversationType.DM) {
         const other = conversation.participants.find(
             (p) => p.userId !== currentUserId,
         );
         return {
-            name: other?.displayName || other?.username || "Unknown",
+            name: other?.displayName || other?.username || t("unknown"),
             avatar: other?.profilePicture || null,
             initials: (other?.username || "U").charAt(0).toUpperCase(),
         };
     }
 
     return {
-        name: conversation.name || "Group",
+        name: conversation.name || t("group"),
         avatar: conversation.avatarUrl,
         initials: (conversation.name || "G").charAt(0).toUpperCase(),
     };
@@ -53,12 +56,15 @@ export default function ConversationListItem({
     conversation: Conversation;
     isActive?: boolean;
 }) {
+    const params = useParams();
     const user = useUser((state) => state.user);
     const { unreadCounts, onlineUsers } = useDmStore();
+    const { t } = useT("messages");
+    const lng = (params.lng as string) ?? "en";
 
     if (!user) return null;
 
-    const display = getConversationDisplay(conversation, user.id);
+    const display = getConversationDisplay(conversation, user.id, t);
     const unreadCount = unreadCounts[conversation._id] || 0;
 
     // Check online status for DM
@@ -74,8 +80,8 @@ export default function ConversationListItem({
 
     return (
         <Link
-            href={`./messages/${conversation._id}`}
-            className={`flex items-center gap-3 px-4 py-3 transition-colors hover:bg-accent ${
+            href={`/${lng}/messages/${conversation._id}`}
+            className={`hover:bg-accent flex items-center gap-3 px-4 py-3 transition-colors ${
                 isActive ? "bg-accent" : ""
             }`}
         >
@@ -103,7 +109,7 @@ export default function ConversationListItem({
                     <p className="text-muted-foreground truncate text-xs">
                         {conversation.lastMessage
                             ? conversation.lastMessage.text
-                            : "No messages yet"}
+                            : t("no_messages_yet")}
                     </p>
                     {unreadCount > 0 && (
                         <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1.5 text-xs text-white">

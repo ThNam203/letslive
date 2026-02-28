@@ -5,17 +5,21 @@ import useDmStore from "@/hooks/use-dm-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import IconClose from "@/components/icons/close";
+import useT from "@/hooks/use-translation";
 
 export default function ConversationHeader({
     conversation,
     currentUserId,
     onBack,
+    onCloseSection,
 }: {
     conversation: Conversation | null;
     currentUserId: string;
     onBack: () => void;
+    onCloseSection?: () => void;
 }) {
     const { onlineUsers } = useDmStore();
+    const { t } = useT("messages");
 
     if (!conversation) {
         return <div className="border-b p-4" />;
@@ -31,18 +35,24 @@ export default function ConversationHeader({
         const other = conversation.participants.find(
             (p) => p.userId !== currentUserId,
         );
-        name = other?.displayName || other?.username || "Unknown";
+        name = other?.displayName || other?.username || t("unknown");
         avatar = other?.profilePicture || null;
         initials = (other?.username || "U").charAt(0).toUpperCase();
         if (other) {
             isOnline = onlineUsers.has(other.userId);
         }
     } else {
-        name = conversation.name || "Group";
+        name = conversation.name || t("group");
         avatar = conversation.avatarUrl;
         initials = (conversation.name || "G").charAt(0).toUpperCase();
         memberCount = conversation.participants.length;
     }
+    const statusText =
+        conversation.type === ConversationType.DM
+            ? isOnline
+                ? t("online")
+                : t("offline")
+            : t("members_count", { count: memberCount ?? 0 });
 
     return (
         <div className="flex items-center gap-3 border-b px-4 py-3">
@@ -51,9 +61,23 @@ export default function ConversationHeader({
                 size="icon"
                 onClick={onBack}
                 className="md:hidden"
+                aria-label={t("back_to_list")}
             >
                 <IconClose className="h-4 w-4" />
             </Button>
+
+            {onCloseSection && (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onCloseSection}
+                    className="hidden md:flex"
+                    title={t("close_section")}
+                    aria-label={t("close_section")}
+                >
+                    <IconClose className="h-4 w-4" />
+                </Button>
+            )}
 
             <div className="relative">
                 <Avatar className="h-9 w-9">
@@ -67,13 +91,7 @@ export default function ConversationHeader({
 
             <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{name}</p>
-                <p className="text-muted-foreground text-xs">
-                    {conversation.type === ConversationType.DM
-                        ? isOnline
-                            ? "Online"
-                            : "Offline"
-                        : `${memberCount} members`}
-                </p>
+                <p className="text-muted-foreground text-xs">{statusText}</p>
             </div>
         </div>
     );

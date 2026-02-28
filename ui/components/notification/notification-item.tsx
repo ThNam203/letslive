@@ -34,7 +34,7 @@ export function NotificationItemContent({
                         )}
                     </span>
 
-                    <div className="text-foreground text-sm font-medium leading-relaxed">
+                    <div className="text-foreground text-sm leading-relaxed font-medium">
                         {variant === "full" && (
                             <span className="bg-muted text-muted-foreground mr-2 inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] tracking-wide">
                                 {notification.type}

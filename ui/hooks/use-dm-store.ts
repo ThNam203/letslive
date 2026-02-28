@@ -11,6 +11,7 @@ export type DmState = {
     isLoading: boolean;
 
     setConversations: (conversations: Conversation[]) => void;
+    appendConversations: (conversations: Conversation[]) => void;
     addConversation: (conversation: Conversation) => void;
     updateConversation: (
         conversationId: string,
@@ -53,6 +54,10 @@ const useDmStore = create<DmState>((set) => ({
     isLoading: false,
 
     setConversations: (conversations) => set({ conversations }),
+    appendConversations: (conversations) =>
+        set((state) => ({
+            conversations: [...state.conversations, ...conversations],
+        })),
     addConversation: (conversation) =>
         set((state) => ({
             conversations: [conversation, ...state.conversations],
@@ -99,21 +104,20 @@ const useDmStore = create<DmState>((set) => ({
         set((state) => ({
             messages: {
                 ...state.messages,
-                [conversationId]: (
-                    state.messages[conversationId] || []
-                ).map((m) => (m._id === messageId ? { ...m, ...update } : m)),
+                [conversationId]: (state.messages[conversationId] || []).map(
+                    (m) => (m._id === messageId ? { ...m, ...update } : m),
+                ),
             },
         })),
     removeMessage: (conversationId, messageId) =>
         set((state) => ({
             messages: {
                 ...state.messages,
-                [conversationId]: (
-                    state.messages[conversationId] || []
-                ).map((m) =>
-                    m._id === messageId
-                        ? { ...m, isDeleted: true, text: "" }
-                        : m,
+                [conversationId]: (state.messages[conversationId] || []).map(
+                    (m) =>
+                        m._id === messageId
+                            ? { ...m, isDeleted: true, text: "" }
+                            : m,
                 ),
             },
         })),
@@ -144,8 +148,7 @@ const useDmStore = create<DmState>((set) => ({
         set((state) => ({
             unreadCounts: {
                 ...state.unreadCounts,
-                [conversationId]:
-                    (state.unreadCounts[conversationId] || 0) + 1,
+                [conversationId]: (state.unreadCounts[conversationId] || 0) + 1,
             },
         })),
     clearUnread: (conversationId) =>

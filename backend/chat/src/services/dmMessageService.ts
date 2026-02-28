@@ -104,14 +104,13 @@ export class DmMessageService {
         // Return in chronological order
         messages.reverse()
 
-        return newResponseFromTemplate<IDmMessage[]>(RESPONSE_TEMPLATES.RES_SUCC_OK, messages.map((m) => m.toObject()))
+        return newResponseFromTemplate<IDmMessage[]>(
+            RESPONSE_TEMPLATES.RES_SUCC_OK,
+            messages.map((m) => m.toObject())
+        )
     }
 
-    async deleteMessage(
-        conversationId: string,
-        messageId: string,
-        userId: string
-    ): Promise<ServiceResponse<void>> {
+    async deleteMessage(conversationId: string, messageId: string, userId: string): Promise<ServiceResponse<void>> {
         if (!Types.ObjectId.isValid(conversationId) || !Types.ObjectId.isValid(messageId)) {
             return newResponseFromTemplate(RESPONSE_TEMPLATES.RES_ERR_DM_MESSAGE_NOT_FOUND)
         }
@@ -173,11 +172,7 @@ export class DmMessageService {
         return newResponseFromTemplate<IDmMessage>(RESPONSE_TEMPLATES.RES_SUCC_OK, message.toObject())
     }
 
-    async markAsRead(
-        conversationId: string,
-        userId: string,
-        messageId?: string
-    ): Promise<ServiceResponse<void>> {
+    async markAsRead(conversationId: string, userId: string, messageId?: string): Promise<ServiceResponse<void>> {
         if (!Types.ObjectId.isValid(conversationId)) {
             return newResponseFromTemplate(RESPONSE_TEMPLATES.RES_ERR_CONVERSATION_NOT_FOUND)
         }

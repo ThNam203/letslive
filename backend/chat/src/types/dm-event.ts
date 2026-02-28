@@ -40,5 +40,6 @@ export enum DmServerEventType {
     READ_RECEIPT = 'dm:read_receipt',
     USER_ONLINE = 'dm:user_online',
     USER_OFFLINE = 'dm:user_offline',
-    CONVERSATION_UPDATED = 'dm:conversation_updated'
+    CONVERSATION_UPDATED = 'dm:conversation_updated',
+    SEND_FAILED = 'dm:send_failed'
 }

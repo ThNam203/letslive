@@ -13,6 +13,7 @@ import {
     FILE_SIZE_LIMIT_MB_UNIT,
 } from "@/constant/image";
 import { UploadFile } from "@/lib/api/utils";
+import useT from "@/hooks/use-translation";
 
 const ACCEPTED_FILE_TYPES = "image/png,image/jpeg,image/gif,image/webp";
 const MAX_FILES = 10;
@@ -38,6 +39,7 @@ export default function MessageInput({
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isTypingRef = useRef(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { t } = useT("messages");
 
     const handleTyping = useCallback(() => {
         if (!isTypingRef.current) {
@@ -66,7 +68,7 @@ export default function MessageInput({
             const remaining = MAX_FILES - selectedFiles.length;
 
             if (files.length > remaining) {
-                setUploadError(`You can attach up to ${MAX_FILES} images`);
+                setUploadError(t("attach_images_limit", { max: MAX_FILES }));
             }
 
             const count = Math.min(files.length, remaining);
@@ -74,7 +76,10 @@ export default function MessageInput({
                 const file = files[i];
                 if (file.size > FILE_SIZE_LIMIT_BYTES_UNIT) {
                     setUploadError(
-                        `"${file.name}" exceeds ${FILE_SIZE_LIMIT_MB_UNIT}MB limit`,
+                        t("file_exceeds_limit", {
+                            name: file.name,
+                            size: FILE_SIZE_LIMIT_MB_UNIT,
+                        }),
                     );
                     continue;
                 }
@@ -162,12 +167,12 @@ export default function MessageInput({
                 }
 
                 if (hasError && uploadedUrls.length === 0) {
-                    setUploadError("Failed to upload files");
+                    setUploadError(t("upload_failed"));
                 } else if (hasError) {
-                    setUploadError("Some files failed to upload");
+                    setUploadError(t("upload_some_failed"));
                 }
             } catch {
-                setUploadError("Failed to upload files");
+                setUploadError(t("upload_failed"));
             } finally {
                 setIsUploading(false);
             }
@@ -186,7 +191,7 @@ export default function MessageInput({
                         <div key={sf.previewUrl} className="relative">
                             <img
                                 src={sf.previewUrl}
-                                alt={`Preview ${index + 1}`}
+                                alt={t("preview_alt", { number: index + 1 })}
                                 className="h-20 w-20 rounded-lg border object-cover"
                             />
                             <button
@@ -230,7 +235,7 @@ export default function MessageInput({
                 <div className="relative flex-1">
                     <Input
                         type="text"
-                        placeholder="Type a message..."
+                        placeholder={t("placeholder_type_message")}
                         maxLength={DM_MESSAGE_MAX_LENGTH}
                         showCount
                         value={text}

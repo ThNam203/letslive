@@ -46,9 +46,12 @@ export class ChatServer {
                 data = JSON.parse(raw)
 
                 if (
-                    typeof data.roomId !== 'string' || data.roomId.length > 36 ||
-                    typeof data.userId !== 'string' || data.userId.length > 36 ||
-                    typeof data.username !== 'string' || data.username.length > 50 ||
+                    typeof data.roomId !== 'string' ||
+                    data.roomId.length > 36 ||
+                    typeof data.userId !== 'string' ||
+                    data.userId.length > 36 ||
+                    typeof data.username !== 'string' ||
+                    data.username.length > 50 ||
                     (data.text !== undefined && (typeof data.text !== 'string' || data.text.length > 500))
                 ) {
                     logger.error('webSocket message fields exceed length limits, dropping')
