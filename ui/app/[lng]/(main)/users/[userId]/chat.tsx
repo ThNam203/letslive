@@ -145,7 +145,7 @@ export default function ChatPanel({
             </div>
             <div
                 ref={messageContainerRef}
-                className="border-border mb-12 flex-1 overflow-y-auto rounded-md rounded-t-none border border-t-0 px-4 py-2"
+                className="border-border mb-14 flex-1 overflow-y-auto rounded-md rounded-t-none border border-t-0 px-4 py-2"
             >
                 {messages.map((message, idx) => (
                     <div key={idx} className="mb-3">
