@@ -310,6 +310,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errorUsernameRequired => 'Tên người dùng là bắt buộc';
 
   @override
+  String get errorTitleRequired => 'Tiêu đề là bắt buộc';
+
+  @override
   String get errorUsernameTooShort => 'Tên người dùng phải >= 6 ký tự';
 
   @override
@@ -834,4 +837,114 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get accessibilityOpenMenu => 'Mở menu';
+
+  @override
+  String get navHome => 'Trang chủ';
+
+  @override
+  String get navMessages => 'Tin nhắn';
+
+  @override
+  String get navNotifications => 'Thông báo';
+
+  @override
+  String get navSettings => 'Cài đặt';
+
+  @override
+  String get homeTabLivestreams => 'Đang phát';
+
+  @override
+  String get homeTabVods => 'Videos';
+
+  @override
+  String get homeNoContent => 'Chưa có nội dung';
+
+  @override
+  String get homeNoContentDescription =>
+      'Vui lòng quay lại sau để xem nội dung mới';
+
+  @override
+  String homeViewerCount(int count) {
+    return '$count người xem';
+  }
+
+  @override
+  String homeViewCount(int count) {
+    return '$count lượt xem';
+  }
+
+  @override
+  String get settingsStreamTitle => 'Cài đặt Stream';
+
+  @override
+  String get settingsStreamDescription => 'Cấu hình cài đặt livestream của bạn';
+
+  @override
+  String get settingsStreamStreamTitle => 'Tiêu đề Stream';
+
+  @override
+  String get settingsStreamStreamDescription => 'Mô tả Stream';
+
+  @override
+  String get settingsStreamThumbnail => 'Ảnh thu nhỏ';
+
+  @override
+  String get settingsStreamChangeThumbnail => 'Đổi ảnh thu nhỏ';
+
+  @override
+  String get settingsStreamUpdateSuccess =>
+      'Cập nhật thông tin livestream thành công!';
+
+  @override
+  String get settingsVodsTitle => 'VODs của bạn';
+
+  @override
+  String get settingsVodsDescription => 'Quản lý video theo yêu cầu của bạn';
+
+  @override
+  String get settingsVodsNoVods => 'Chưa có VOD nào';
+
+  @override
+  String get settingsVodsNoVodsDescription =>
+      'Các bản ghi livestream của bạn sẽ xuất hiện ở đây';
+
+  @override
+  String get settingsVodsEditTitle => 'Chỉnh sửa VOD';
+
+  @override
+  String get settingsVodsDeleteTitle => 'Xóa VOD';
+
+  @override
+  String get settingsVodsDeleteConfirm =>
+      'Bạn có chắc muốn xóa VOD này? Hành động này không thể hoàn tác.';
+
+  @override
+  String get settingsVodsDeleteSuccess => 'Đã xóa VOD thành công';
+
+  @override
+  String get settingsVodsUpdateSuccess => 'Đã cập nhật VOD thành công';
+
+  @override
+  String get settingsVodsVisibility => 'Hiển thị';
+
+  @override
+  String get settingsVodsPublic => 'Công khai';
+
+  @override
+  String get settingsVodsPrivate => 'Riêng tư';
+
+  @override
+  String get retry => 'Thử lại';
+
+  @override
+  String get delete => 'Xóa';
+
+  @override
+  String get confirm => 'Xác nhận';
+
+  @override
+  String get edit => 'Sửa';
+
+  @override
+  String get copyToClipboard => 'Sao chép vào clipboard';
 }

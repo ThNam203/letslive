@@ -318,6 +318,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorUsernameRequired => 'Username is required';
 
   @override
+  String get errorTitleRequired => 'Title is required';
+
+  @override
   String get errorUsernameTooShort => 'Username must be >= 6 characters';
 
   @override
@@ -841,4 +844,113 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accessibilityOpenMenu => 'Open menu';
+
+  @override
+  String get navHome => 'Home';
+
+  @override
+  String get navMessages => 'Messages';
+
+  @override
+  String get navNotifications => 'Notifications';
+
+  @override
+  String get navSettings => 'Settings';
+
+  @override
+  String get homeTabLivestreams => 'Live Now';
+
+  @override
+  String get homeTabVods => 'Videos';
+
+  @override
+  String get homeNoContent => 'Nothing here yet';
+
+  @override
+  String get homeNoContentDescription => 'Check back later for new content';
+
+  @override
+  String homeViewerCount(int count) {
+    return '$count viewers';
+  }
+
+  @override
+  String homeViewCount(int count) {
+    return '$count views';
+  }
+
+  @override
+  String get settingsStreamTitle => 'Stream Settings';
+
+  @override
+  String get settingsStreamDescription => 'Configure your livestream settings';
+
+  @override
+  String get settingsStreamStreamTitle => 'Stream Title';
+
+  @override
+  String get settingsStreamStreamDescription => 'Stream Description';
+
+  @override
+  String get settingsStreamThumbnail => 'Thumbnail';
+
+  @override
+  String get settingsStreamChangeThumbnail => 'Change thumbnail';
+
+  @override
+  String get settingsStreamUpdateSuccess =>
+      'Livestream information updated successfully!';
+
+  @override
+  String get settingsVodsTitle => 'Your VODs';
+
+  @override
+  String get settingsVodsDescription => 'Manage your videos on demand';
+
+  @override
+  String get settingsVodsNoVods => 'No VODs yet';
+
+  @override
+  String get settingsVodsNoVodsDescription =>
+      'Your recorded livestreams will appear here';
+
+  @override
+  String get settingsVodsEditTitle => 'Edit VOD';
+
+  @override
+  String get settingsVodsDeleteTitle => 'Delete VOD';
+
+  @override
+  String get settingsVodsDeleteConfirm =>
+      'Are you sure you want to delete this VOD? This action cannot be undone.';
+
+  @override
+  String get settingsVodsDeleteSuccess => 'VOD deleted successfully';
+
+  @override
+  String get settingsVodsUpdateSuccess => 'VOD updated successfully';
+
+  @override
+  String get settingsVodsVisibility => 'Visibility';
+
+  @override
+  String get settingsVodsPublic => 'Public';
+
+  @override
+  String get settingsVodsPrivate => 'Private';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get copyToClipboard => 'Copy to clipboard';
 }

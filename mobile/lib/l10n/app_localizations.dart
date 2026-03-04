@@ -566,6 +566,12 @@ abstract class AppLocalizations {
   /// **'Username is required'**
   String get errorUsernameRequired;
 
+  /// No description provided for @errorTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Title is required'**
+  String get errorTitleRequired;
+
   /// No description provided for @errorUsernameTooShort.
   ///
   /// In en, this message translates to:
@@ -1513,6 +1519,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open menu'**
   String get accessibilityOpenMenu;
+
+  /// No description provided for @navHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get navHome;
+
+  /// No description provided for @navMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get navMessages;
+
+  /// No description provided for @navNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get navNotifications;
+
+  /// No description provided for @navSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get navSettings;
+
+  /// No description provided for @homeTabLivestreams.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Now'**
+  String get homeTabLivestreams;
+
+  /// No description provided for @homeTabVods.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get homeTabVods;
+
+  /// No description provided for @homeNoContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here yet'**
+  String get homeNoContent;
+
+  /// No description provided for @homeNoContentDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Check back later for new content'**
+  String get homeNoContentDescription;
+
+  /// No description provided for @homeViewerCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} viewers'**
+  String homeViewerCount(int count);
+
+  /// No description provided for @homeViewCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} views'**
+  String homeViewCount(int count);
+
+  /// No description provided for @settingsStreamTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stream Settings'**
+  String get settingsStreamTitle;
+
+  /// No description provided for @settingsStreamDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure your livestream settings'**
+  String get settingsStreamDescription;
+
+  /// No description provided for @settingsStreamStreamTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stream Title'**
+  String get settingsStreamStreamTitle;
+
+  /// No description provided for @settingsStreamStreamDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Stream Description'**
+  String get settingsStreamStreamDescription;
+
+  /// No description provided for @settingsStreamThumbnail.
+  ///
+  /// In en, this message translates to:
+  /// **'Thumbnail'**
+  String get settingsStreamThumbnail;
+
+  /// No description provided for @settingsStreamChangeThumbnail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change thumbnail'**
+  String get settingsStreamChangeThumbnail;
+
+  /// No description provided for @settingsStreamUpdateSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Livestream information updated successfully!'**
+  String get settingsStreamUpdateSuccess;
+
+  /// No description provided for @settingsVodsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your VODs'**
+  String get settingsVodsTitle;
+
+  /// No description provided for @settingsVodsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your videos on demand'**
+  String get settingsVodsDescription;
+
+  /// No description provided for @settingsVodsNoVods.
+  ///
+  /// In en, this message translates to:
+  /// **'No VODs yet'**
+  String get settingsVodsNoVods;
+
+  /// No description provided for @settingsVodsNoVodsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recorded livestreams will appear here'**
+  String get settingsVodsNoVodsDescription;
+
+  /// No description provided for @settingsVodsEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit VOD'**
+  String get settingsVodsEditTitle;
+
+  /// No description provided for @settingsVodsDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete VOD'**
+  String get settingsVodsDeleteTitle;
+
+  /// No description provided for @settingsVodsDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this VOD? This action cannot be undone.'**
+  String get settingsVodsDeleteConfirm;
+
+  /// No description provided for @settingsVodsDeleteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'VOD deleted successfully'**
+  String get settingsVodsDeleteSuccess;
+
+  /// No description provided for @settingsVodsUpdateSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'VOD updated successfully'**
+  String get settingsVodsUpdateSuccess;
+
+  /// No description provided for @settingsVodsVisibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Visibility'**
+  String get settingsVodsVisibility;
+
+  /// No description provided for @settingsVodsPublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get settingsVodsPublic;
+
+  /// No description provided for @settingsVodsPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get settingsVodsPrivate;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @copyToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy to clipboard'**
+  String get copyToClipboard;
 }
 
 class _AppLocalizationsDelegate

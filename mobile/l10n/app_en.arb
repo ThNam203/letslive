@@ -147,6 +147,7 @@
         }
     },
     "errorUsernameRequired": "Username is required",
+    "errorTitleRequired": "Title is required",
     "errorUsernameTooShort": "Username must be >= 6 characters",
     "errorUsernameTooLong": "Username must be at most {maxLength} characters",
     "@errorUsernameTooLong": {
@@ -353,5 +354,54 @@
     "usersProfileJoinedPrefix": "Joined",
     "usersProfileRecentStreams": "Recent Streams",
 
-    "accessibilityOpenMenu": "Open menu"
+    "accessibilityOpenMenu": "Open menu",
+
+    "navHome": "Home",
+    "navMessages": "Messages",
+    "navNotifications": "Notifications",
+    "navSettings": "Settings",
+
+    "homeTabLivestreams": "Live Now",
+    "homeTabVods": "Videos",
+    "homeNoContent": "Nothing here yet",
+    "homeNoContentDescription": "Check back later for new content",
+    "homeViewerCount": "{count} viewers",
+    "@homeViewerCount": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "homeViewCount": "{count} views",
+    "@homeViewCount": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+
+    "settingsStreamTitle": "Stream Settings",
+    "settingsStreamDescription": "Configure your livestream settings",
+    "settingsStreamStreamTitle": "Stream Title",
+    "settingsStreamStreamDescription": "Stream Description",
+    "settingsStreamThumbnail": "Thumbnail",
+    "settingsStreamChangeThumbnail": "Change thumbnail",
+    "settingsStreamUpdateSuccess": "Livestream information updated successfully!",
+
+    "settingsVodsTitle": "Your VODs",
+    "settingsVodsDescription": "Manage your videos on demand",
+    "settingsVodsNoVods": "No VODs yet",
+    "settingsVodsNoVodsDescription": "Your recorded livestreams will appear here",
+    "settingsVodsEditTitle": "Edit VOD",
+    "settingsVodsDeleteTitle": "Delete VOD",
+    "settingsVodsDeleteConfirm": "Are you sure you want to delete this VOD? This action cannot be undone.",
+    "settingsVodsDeleteSuccess": "VOD deleted successfully",
+    "settingsVodsUpdateSuccess": "VOD updated successfully",
+    "settingsVodsVisibility": "Visibility",
+    "settingsVodsPublic": "Public",
+    "settingsVodsPrivate": "Private",
+
+    "retry": "Retry",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "edit": "Edit",
+    "copyToClipboard": "Copy to clipboard"
 }

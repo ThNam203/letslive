@@ -37,6 +37,32 @@ class Vod {
 
   bool get isPublic => visibility == 'public';
 
+  Vod copyWith({
+    String? title,
+    String? description,
+    String? thumbnailUrl,
+    String? visibility,
+    int? viewCount,
+  }) {
+    return Vod(
+      id: id,
+      livestreamId: livestreamId,
+      userId: userId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      visibility: visibility ?? this.visibility,
+      viewCount: viewCount ?? this.viewCount,
+      duration: duration,
+      playbackUrl: playbackUrl,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      username: username,
+      displayName: displayName,
+      profilePicture: profilePicture,
+    );
+  }
+
   factory Vod.fromJson(Map<String, dynamic> json) {
     return Vod(
       id: json['id'] as String,
