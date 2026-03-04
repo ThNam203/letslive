@@ -140,9 +140,20 @@
     "errorPasswordMissingLowercase": "Password must contain at least one lowercase letter",
     "errorPasswordMissingUppercase": "Password must contain at least one uppercase letter",
     "errorPasswordMissingSpecial": "Password must contain at least one special character",
+    "errorEmailTooLong": "Email must be at most {maxLength} characters",
+    "@errorEmailTooLong": {
+        "placeholders": {
+            "maxLength": {"type": "int"}
+        }
+    },
     "errorUsernameRequired": "Username is required",
     "errorUsernameTooShort": "Username must be >= 6 characters",
-    "errorUsernameTooLong": "Username must be <= 20 characters",
+    "errorUsernameTooLong": "Username must be at most {maxLength} characters",
+    "@errorUsernameTooLong": {
+        "placeholders": {
+            "maxLength": {"type": "int"}
+        }
+    },
     "errorConfirmPasswordRequired": "Please confirm your password",
     "errorPasswordsDoNotMatch": "Passwords do not match",
     "errorNewPasswordMustBeDifferent": "New password must be different from current password",

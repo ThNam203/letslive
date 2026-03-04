@@ -335,7 +335,7 @@ DONE:
   [x] flutter analyze passes with 0 issues
 
 TODO:
-  [ ] Wire up login/signup screens to AuthRepository
+  [X] Wire up login/signup screens to AuthRepository
   [ ] Add repositories for: user, livestream, vod, notification, messages
   [ ] Implement home screen (fetch & display livestreams/VODs)
   [ ] Implement messages screen (WebSocket DM)

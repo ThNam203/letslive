@@ -554,6 +554,12 @@ abstract class AppLocalizations {
   /// **'Password must contain at least one special character'**
   String get errorPasswordMissingSpecial;
 
+  /// No description provided for @errorEmailTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Email must be at most {maxLength} characters'**
+  String errorEmailTooLong(int maxLength);
+
   /// No description provided for @errorUsernameRequired.
   ///
   /// In en, this message translates to:
@@ -569,8 +575,8 @@ abstract class AppLocalizations {
   /// No description provided for @errorUsernameTooLong.
   ///
   /// In en, this message translates to:
-  /// **'Username must be <= 20 characters'**
-  String get errorUsernameTooLong;
+  /// **'Username must be at most {maxLength} characters'**
+  String errorUsernameTooLong(int maxLength);
 
   /// No description provided for @errorConfirmPasswordRequired.
   ///
