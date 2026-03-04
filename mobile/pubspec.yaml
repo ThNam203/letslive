@@ -33,6 +33,7 @@ dependencies:
   # UI
   forui: ^0.19.0
   cached_network_image: ^3.4.1
+  image_picker: ^1.1.2
 
   # Utils
   flutter_dotenv: ^6.0.0

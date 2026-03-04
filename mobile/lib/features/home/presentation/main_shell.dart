@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../l10n/app_localizations.dart';
 
 class MainShell extends StatelessWidget {
   final Widget child;
@@ -20,6 +21,7 @@ class MainShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selectedIndex = _currentIndex(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       body: child,
@@ -37,22 +39,22 @@ class MainShell extends StatelessWidget {
               context.go(AppRoutes.settings);
           }
         },
-        children: const [
+        children: [
           FBottomNavigationBarItem(
-            icon: Icon(FIcons.house),
-            label: Text('Home'),
+            icon: const Icon(FIcons.house),
+            label: Text(l10n.navHome),
           ),
           FBottomNavigationBarItem(
-            icon: Icon(FIcons.messageCircle),
-            label: Text('Messages'),
+            icon: const Icon(FIcons.messageCircle),
+            label: Text(l10n.navMessages),
           ),
           FBottomNavigationBarItem(
-            icon: Icon(FIcons.bell),
-            label: Text('Notifications'),
+            icon: const Icon(FIcons.bell),
+            label: Text(l10n.navNotifications),
           ),
           FBottomNavigationBarItem(
-            icon: Icon(FIcons.settings),
-            label: Text('Settings'),
+            icon: const Icon(FIcons.settings),
+            label: Text(l10n.navSettings),
           ),
         ],
       ),

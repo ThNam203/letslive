@@ -2,6 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/network/api_client.dart';
 import 'features/auth/data/auth_repository.dart';
+import 'features/livestream/data/livestream_repository.dart';
+import 'features/messages/data/message_repository.dart';
+import 'features/notifications/data/notification_repository.dart';
+import 'features/user/data/user_repository.dart';
+import 'features/vod/data/vod_repository.dart';
 import 'models/user.dart';
 
 /// Global API client singleton.
@@ -12,6 +17,31 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 /// Auth repository.
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.watch(apiClientProvider));
+});
+
+/// User repository.
+final userRepositoryProvider = Provider<UserRepository>((ref) {
+  return UserRepository(ref.watch(apiClientProvider));
+});
+
+/// Livestream repository.
+final livestreamRepositoryProvider = Provider<LivestreamRepository>((ref) {
+  return LivestreamRepository(ref.watch(apiClientProvider));
+});
+
+/// VOD repository.
+final vodRepositoryProvider = Provider<VodRepository>((ref) {
+  return VodRepository(ref.watch(apiClientProvider));
+});
+
+/// Notification repository.
+final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
+  return NotificationRepository(ref.watch(apiClientProvider));
+});
+
+/// Message repository.
+final messageRepositoryProvider = Provider<MessageRepository>((ref) {
+  return MessageRepository(ref.watch(apiClientProvider));
 });
 
 /// Current authenticated user (null when not logged in).

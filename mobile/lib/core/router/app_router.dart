@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/login_screen.dart';
@@ -9,6 +10,11 @@ import '../../features/messages/presentation/messages_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/settings/presentation/profile_settings_screen.dart';
+import '../../features/settings/presentation/security_settings_screen.dart';
+import '../../features/settings/presentation/stream_settings_screen.dart';
+import '../../features/settings/presentation/vods_settings_screen.dart';
+import '../../providers.dart';
 
 abstract final class AppRoutes {
   static const login = '/login';
@@ -17,11 +23,23 @@ abstract final class AppRoutes {
   static const messages = '/messages';
   static const notifications = '/notifications';
   static const settings = '/settings';
+  static const settingsProfile = '/settings/profile';
+  static const settingsSecurity = '/settings/security';
+  static const settingsStream = '/settings/stream';
+  static const settingsVods = '/settings/vods';
   static String userProfile(String userId) => '/users/$userId';
 }
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 final shellNavigatorKey = GlobalKey<NavigatorState>();
+
+/// Redirect to login if the user is not authenticated.
+String? _requireAuth(BuildContext context, GoRouterState state) {
+  final container = ProviderScope.containerOf(context);
+  final user = container.read(currentUserProvider);
+  if (user == null) return AppRoutes.login;
+  return null;
+}
 
 final appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
@@ -67,6 +85,29 @@ final appRouter = GoRouter(
           ),
         ),
       ],
+    ),
+
+    // Settings sub-screens (outside shell for full-screen view)
+    // Require authentication — redirect to login if not logged in.
+    GoRoute(
+      path: AppRoutes.settingsProfile,
+      redirect: _requireAuth,
+      builder: (context, state) => const ProfileSettingsScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.settingsSecurity,
+      redirect: _requireAuth,
+      builder: (context, state) => const SecuritySettingsScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.settingsStream,
+      redirect: _requireAuth,
+      builder: (context, state) => const StreamSettingsScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.settingsVods,
+      redirect: _requireAuth,
+      builder: (context, state) => const VodsSettingsScreen(),
     ),
 
     // Profile (outside shell for full-screen view)

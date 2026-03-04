@@ -82,6 +82,7 @@
     "errorPasswordMissingSpecial": "Mật khẩu phải chứa ít nhất một ký tự đặc biệt",
     "errorEmailTooLong": "Email phải có tối đa {maxLength} ký tự",
     "errorUsernameRequired": "Tên người dùng là bắt buộc",
+    "errorTitleRequired": "Tiêu đề là bắt buộc",
     "errorUsernameTooShort": "Tên người dùng phải >= 6 ký tự",
     "errorUsernameTooLong": "Tên người dùng phải có tối đa {maxLength} ký tự",
     "errorConfirmPasswordRequired": "Vui lòng xác nhận mật khẩu của bạn",
@@ -248,5 +249,44 @@
     "usersProfileJoinedPrefix": "Tham gia",
     "usersProfileRecentStreams": "Luồng gần đây",
 
-    "accessibilityOpenMenu": "Mở menu"
+    "accessibilityOpenMenu": "Mở menu",
+
+    "navHome": "Trang chủ",
+    "navMessages": "Tin nhắn",
+    "navNotifications": "Thông báo",
+    "navSettings": "Cài đặt",
+
+    "homeTabLivestreams": "Đang phát",
+    "homeTabVods": "Videos",
+    "homeNoContent": "Chưa có nội dung",
+    "homeNoContentDescription": "Vui lòng quay lại sau để xem nội dung mới",
+    "homeViewerCount": "{count} người xem",
+    "homeViewCount": "{count} lượt xem",
+
+    "settingsStreamTitle": "Cài đặt Stream",
+    "settingsStreamDescription": "Cấu hình cài đặt livestream của bạn",
+    "settingsStreamStreamTitle": "Tiêu đề Stream",
+    "settingsStreamStreamDescription": "Mô tả Stream",
+    "settingsStreamThumbnail": "Ảnh thu nhỏ",
+    "settingsStreamChangeThumbnail": "Đổi ảnh thu nhỏ",
+    "settingsStreamUpdateSuccess": "Cập nhật thông tin livestream thành công!",
+
+    "settingsVodsTitle": "VODs của bạn",
+    "settingsVodsDescription": "Quản lý video theo yêu cầu của bạn",
+    "settingsVodsNoVods": "Chưa có VOD nào",
+    "settingsVodsNoVodsDescription": "Các bản ghi livestream của bạn sẽ xuất hiện ở đây",
+    "settingsVodsEditTitle": "Chỉnh sửa VOD",
+    "settingsVodsDeleteTitle": "Xóa VOD",
+    "settingsVodsDeleteConfirm": "Bạn có chắc muốn xóa VOD này? Hành động này không thể hoàn tác.",
+    "settingsVodsDeleteSuccess": "Đã xóa VOD thành công",
+    "settingsVodsUpdateSuccess": "Đã cập nhật VOD thành công",
+    "settingsVodsVisibility": "Hiển thị",
+    "settingsVodsPublic": "Công khai",
+    "settingsVodsPrivate": "Riêng tư",
+
+    "retry": "Thử lại",
+    "delete": "Xóa",
+    "confirm": "Xác nhận",
+    "edit": "Sửa",
+    "copyToClipboard": "Sao chép vào clipboard"
 }
