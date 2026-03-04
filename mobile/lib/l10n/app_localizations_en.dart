@@ -310,13 +310,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password must contain at least one special character';
 
   @override
+  String errorEmailTooLong(int maxLength) {
+    return 'Email must be at most $maxLength characters';
+  }
+
+  @override
   String get errorUsernameRequired => 'Username is required';
 
   @override
   String get errorUsernameTooShort => 'Username must be >= 6 characters';
 
   @override
-  String get errorUsernameTooLong => 'Username must be <= 20 characters';
+  String errorUsernameTooLong(int maxLength) {
+    return 'Username must be at most $maxLength characters';
+  }
 
   @override
   String get errorConfirmPasswordRequired => 'Please confirm your password';

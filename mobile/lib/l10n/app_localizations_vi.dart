@@ -302,13 +302,20 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mật khẩu phải chứa ít nhất một ký tự đặc biệt';
 
   @override
+  String errorEmailTooLong(int maxLength) {
+    return 'Email phải có tối đa $maxLength ký tự';
+  }
+
+  @override
   String get errorUsernameRequired => 'Tên người dùng là bắt buộc';
 
   @override
   String get errorUsernameTooShort => 'Tên người dùng phải >= 6 ký tự';
 
   @override
-  String get errorUsernameTooLong => 'Tên người dùng phải <= 20 ký tự';
+  String errorUsernameTooLong(int maxLength) {
+    return 'Tên người dùng phải có tối đa $maxLength ký tự';
+  }
 
   @override
   String get errorConfirmPasswordRequired =>

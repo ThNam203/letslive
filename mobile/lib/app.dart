@@ -37,7 +37,7 @@ class App extends StatelessWidget {
       // Wrap with FTheme + FToaster for Forui widgets
       builder: (_, child) => FTheme(
         data: theme,
-        child: child!,
+        child: FToaster(child: child!),
       ),
 
       // Router
