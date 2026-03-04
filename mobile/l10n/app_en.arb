@@ -1,0 +1,346 @@
+{
+    "@@locale": "en",
+
+    "appTitle": "Let's Live",
+    "loading": "Loading...",
+    "setting": "Setting",
+    "save": "Save",
+    "cancel": "Cancel",
+    "or": "or",
+    "goHome": "Go home",
+    "pageNotFound": "We couldn't find the page you were looking for",
+    "saveChanges": "Save changes",
+    "username": "Username",
+    "livestreams": "Livestreams",
+    "channels": "Channels",
+    "videos": "Videos",
+    "home": "Home",
+    "searchUsers": "Search users",
+    "gotIt": "Got it",
+    "howToLivestream": "How to livestream",
+    "startYourLivestream": "Start your livestream",
+    "liveStreaming": "Live Streaming",
+    "follow": "Follow",
+    "unfollow": "Unfollow",
+    "followersWithCount": "Followers: {count}",
+    "@followersWithCount": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "joined": "Joined",
+    "showMore": "Show more",
+    "pleaseWaitWhileLoading": "Please wait while we load the content",
+    "noLivestreams": "No livestreams",
+    "noLivestreamsDescription": "There is currently no one streaming, check back later or explore our video on demand content",
+    "noVideos": "No Videos Available",
+    "noVideosDescription": "There are currently no videos available. Check back later for new content",
+    "searching": "Searching...",
+    "noUsersFound": "No users found",
+    "noDescription": "No description",
+    "add": "Add",
+    "bio": "Bio",
+    "startedAt": "Started {time}",
+    "@startedAt": {
+        "placeholders": {
+            "time": {"type": "String"}
+        }
+    },
+    "live": "Live",
+    "following": "Following",
+    "recommended": "Recommended",
+
+    "timeSecondsAgo": "{count, plural, one{{count} second ago} other{{count} seconds ago}}",
+    "@timeSecondsAgo": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "timeMinutesAgo": "{count, plural, one{{count} minute ago} other{{count} minutes ago}}",
+    "@timeMinutesAgo": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "timeHoursAgo": "{count, plural, one{{count} hour ago} other{{count} hours ago}}",
+    "@timeHoursAgo": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "timeDaysAgo": "{count, plural, one{{count} day ago} other{{count} days ago}}",
+    "@timeDaysAgo": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "timeWeeksAgo": "{count, plural, one{{count} week ago} other{{count} weeks ago}}",
+    "@timeWeeksAgo": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "timeMonthsAgo": "{count, plural, one{{count} month ago} other{{count} months ago}}",
+    "@timeMonthsAgo": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "timeYearsAgo": "{count, plural, one{{count} year ago} other{{count} years ago}}",
+    "@timeYearsAgo": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+
+    "authLogin": "Log in",
+    "authLoginTitle": "Welcome back!",
+    "authLoginSubtitle": "Gain access to the world right now.",
+    "authEmail": "Email",
+    "authPassword": "Password",
+    "authForgotPassword": "Forgot password?",
+    "authSignup": "Sign up",
+    "authSignupTitle": "Welcome! Sign up for a new world?",
+    "authSignupSubtitle": "Choose a method below to begin",
+    "authLogout": "Log out",
+    "authNoAccount": "Don't have an account?",
+    "authHaveAccount": "Already have an account?",
+    "authConfirmPassword": "Confirm password",
+    "authAccountCreatedSuccess": "Account created successfully",
+    "authEnterVerificationCode": "Enter Verification Code",
+    "authOtpDialogDescriptionPart1": "A 6-digit code has been sent to",
+    "authOtpDialogDescriptionPart2": ". Please enter it below to verify your email address.",
+    "authVerifyOtp": "Verify OTP",
+    "authResendOtp": "Resend OTP",
+    "authSendingOtp": "Sending OTP...",
+    "authOtpResendCountDown": "Resend in {countdown}s",
+    "@authOtpResendCountDown": {
+        "placeholders": {
+            "countdown": {"type": "int"}
+        }
+    },
+
+    "errorGeneralTitle": "Oops!",
+    "errorGeneralDescription": "Something has gone wrong, please try again later",
+    "errorEmailRequired": "Email is required",
+    "errorEmailInvalid": "Email is invalid",
+    "errorPasswordRequired": "Password is required",
+    "errorPasswordTooShort": "Password must be at least {minLength} characters",
+    "@errorPasswordTooShort": {
+        "placeholders": {
+            "minLength": {"type": "int"}
+        }
+    },
+    "errorPasswordTooLong": "Password must be at most {maxLength} characters",
+    "@errorPasswordTooLong": {
+        "placeholders": {
+            "maxLength": {"type": "int"}
+        }
+    },
+    "errorPasswordMissingLowercase": "Password must contain at least one lowercase letter",
+    "errorPasswordMissingUppercase": "Password must contain at least one uppercase letter",
+    "errorPasswordMissingSpecial": "Password must contain at least one special character",
+    "errorUsernameRequired": "Username is required",
+    "errorUsernameTooShort": "Username must be >= 6 characters",
+    "errorUsernameTooLong": "Username must be <= 20 characters",
+    "errorConfirmPasswordRequired": "Please confirm your password",
+    "errorPasswordsDoNotMatch": "Passwords do not match",
+    "errorNewPasswordMustBeDifferent": "New password must be different from current password",
+    "errorOtpRequired": "Please enter OTP code",
+    "errorOtpSendFail": "Failed to send OTP",
+
+    "apiResErrInvalidInput": "Input invalid.",
+    "apiResErrInvalidPayload": "Payload invalid.",
+    "apiResErrAuthAlreadyExists": "Email has already been registered.",
+    "apiResErrCaptchaFailed": "Failed to verify CAPTCHA, please try again.",
+    "apiResErrPasswordNotMatch": "Old password does not match.",
+    "apiResErrUnauthorized": "Unauthorized.",
+    "apiResErrSignUpOtpExpired": "OTP code has expired, please issue a new one.",
+    "apiResErrEmailOrPasswordIncorrect": "Username or password incorrect.",
+    "apiResErrForbidden": "Forbidden.",
+    "apiResErrAuthNotFound": "Authentication credentials not found.",
+    "apiResErrRefreshTokenNotFound": "Refresh token not found.",
+    "apiResErrSignUpOtpNotFound": "OTP code not found.",
+    "apiResErrRouteNotFound": "Requested endpoint not found.",
+    "apiResErrSignUpOtpAlreadyUsed": "The OTP has already been used.",
+    "apiResErrFailedToCreateSignUpOtp": "Failed to generate the OTP, please try again later.",
+    "apiResErrDatabaseQuery": "Error querying database, please try again.",
+    "apiResErrDatabaseIssue": "Database issue, please try again.",
+    "apiResErrInternalServer": "Something went wrong.",
+    "apiResErrFailedToSendVerification": "Failed to send email verification, please try again later.",
+    "apiResErrUserNotFound": "User not found.",
+    "apiResErrImageTooLarge": "Image exceeds 10mb limit.",
+    "apiResErrLivestreamUpdateAfterEnded": "Failed to update, the livestream has ended.",
+    "apiResErrLivestreamNotFound": "Livestream not found.",
+    "apiResErrVodNotFound": "VOD not found.",
+    "apiResErrEndAlreadyEndedLivestream": "The livestream has already been ended.",
+    "apiResErrVodCommentNotFound": "Comment not found.",
+    "apiResErrVodCommentCreateFailed": "Failed to create comment.",
+    "apiResErrVodCommentAlreadyLiked": "Comment already liked.",
+    "apiResErrVodCommentNotLiked": "Comment has not been liked.",
+    "apiResErrVodCommentDeleteFailed": "Failed to delete comment.",
+    "apiResSuccSentVerificationEmail": "Verification email sent, please check your inbox",
+    "apiResSuccOk": "Success",
+    "apiResSuccLogin": "Login successfully",
+    "apiResSuccSignUp": "Sign up successfully",
+    "apiDefaultError": "Something went wrong. Please try again.",
+
+    "fetchError": "Failed to fetch data, please try again.",
+
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+
+    "settingsTitle": "Settings",
+    "settingsNeedToLogin": "You need to log in to configure your settings",
+    "settingsNavProfile": "Profile",
+    "settingsNavSecurity": "Security",
+    "settingsNavStream": "Stream",
+    "settingsNavVods": "VODs",
+    "settingsProfileTitle": "Profile Settings",
+    "settingsProfileDescription": "Change identifying details for your account",
+    "settingsProfileUsername": "Username",
+    "settingsProfileDisplayName": "Display Name",
+    "settingsProfileBio": "Bio",
+    "settingsProfileUpdateSuccess": "Profile information updated successfully!",
+    "settingsProfileUpdateBackground": "Update background",
+    "settingsProfileUpdateProfilePicture": "Update profile picture",
+    "settingsSocialMediaTitle": "Edit Social Media Links",
+    "settingsSocialMediaDescription": "Manage links to your social media profiles",
+    "settingsSocialMediaInvalidUrl": "Invalid link, please try again",
+    "settingsSocialMediaErrEmptyUrl": "Link can't be empty",
+    "settingsThemesTitle": "Theme",
+    "settingsThemesDescription": "Customize the look and feel of the app",
+    "settingsLanguageTitle": "Language",
+    "settingsLanguageDescription": "Select your preferred language",
+    "settingsSaveChanges": "Save Changes",
+    "settingsFileSizeExceeds": "File size exceeds {size} MB",
+    "@settingsFileSizeExceeds": {
+        "placeholders": {
+            "size": {"type": "int"}
+        }
+    },
+    "settingsSecurityApiKeyLabel": "Your API Key",
+    "settingsSecurityApiKeyGenerate": "Generate New API Key",
+    "settingsSecurityApiKeyCopied": "API Key copied to clipboard",
+    "settingsSecurityContactTitle": "Contact",
+    "settingsSecurityContactDescription": "Where we send important messages about your account",
+    "settingsSecurityContactEmail": "Email",
+    "settingsSecurityContactPhone": "Phone Number",
+    "settingsSecurityContactAddPhone": "Add a number",
+    "settingsSecurityContactPhoneInvalid": "Invalid phone number, please try again",
+    "settingsSecurityTitle": "Security",
+    "settingsSecurityDescription": "Keep your account safe and sound",
+    "settingsSecurityPasswordTitle": "Password",
+    "settingsSecurityPasswordChange": "Change password",
+    "settingsSecurityPasswordDialogTitle": "Change Password",
+    "settingsSecurityPasswordLocalDescription": "Improve your security with a strong password.",
+    "settingsSecurityPasswordUpdatedSuccess": "Password updated successfully",
+    "settingsSecurityPasswordFormCurrentLabel": "Current Password",
+    "settingsSecurityPasswordFormCurrentPlaceholder": "Enter your current password",
+    "settingsSecurityPasswordFormNewLabel": "New Password",
+    "settingsSecurityPasswordFormNewPlaceholder": "Enter your new password",
+    "settingsSecurityPasswordFormConfirmLabel": "Confirm New Password",
+    "settingsSecurityPasswordFormConfirmPlaceholder": "Confirm your new password",
+    "settingsSecurityPasswordFormSubmit": "Confirm",
+
+    "messagesTitle": "Messages",
+    "messagesSelectConversation": "Select a conversation",
+    "messagesLoginRequired": "Please log in to view messages.",
+    "messagesUnknown": "Unknown",
+    "messagesGroup": "Group",
+    "messagesOnline": "Online",
+    "messagesOffline": "Offline",
+    "messagesMembersCount": "{count} members",
+    "@messagesMembersCount": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "messagesNoConversationsYet": "No conversations yet",
+    "messagesLoadMore": "Load more",
+    "messagesNoMessagesYet": "No messages yet",
+    "messagesNewConversation": "New Conversation",
+    "messagesDirectMessage": "Direct Message",
+    "messagesGroupNamePlaceholder": "Group name (optional)",
+    "messagesSearchUsersPlaceholder": "Search users...",
+    "messagesSearching": "Searching...",
+    "messagesCreating": "Creating...",
+    "messagesCreate": "Create",
+    "messagesSentAnImage": "Sent an image",
+    "messagesSentImagesCount": "Sent {count} images",
+    "@messagesSentImagesCount": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "messagesUploadFailed": "Failed to upload files",
+    "messagesPlaceholderTypeMessage": "Type a message...",
+    "messagesMessageDeleted": "This message was deleted",
+    "messagesBeginningOfConversation": "Beginning of conversation",
+    "messagesTypingOne": "{name} is typing...",
+    "@messagesTypingOne": {
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+
+    "notificationsTitle": "Notifications",
+    "notificationsMarkAllAsRead": "Mark all as read",
+    "notificationsLoading": "Loading...",
+    "notificationsNoNotifications": "No notifications",
+    "notificationsViewAll": "View all notifications",
+    "notificationsNoNotificationsYet": "No notifications yet.",
+    "notificationsPleaseLogIn": "Please log in to view notifications.",
+    "notificationsView": "View",
+    "notificationsMarkAsRead": "Mark as read",
+    "notificationsDelete": "Delete",
+    "notificationsLoadMore": "Load more",
+
+    "commentsTitle": "Comments",
+    "commentsWriteComment": "Write a comment...",
+    "commentsWriteReply": "Write a reply...",
+    "commentsPost": "Post",
+    "commentsReply": "Reply",
+    "commentsDelete": "Delete",
+    "commentsDeletedComment": "This comment has been deleted.",
+    "commentsViewReplies": "{count, plural, one{View {count} reply} other{View {count} replies}}",
+    "@commentsViewReplies": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "commentsLoadMoreReplies": "Load more replies",
+    "commentsNoComments": "No comments yet. Be the first to comment!",
+    "commentsLoginToComment": "Log in to leave a comment.",
+    "commentsOwner": "Owner",
+    "commentsYou": "You",
+    "commentsDeleteConfirmTitle": "Delete comment?",
+    "commentsDeleteConfirmDescription": "This action cannot be undone.",
+    "commentsLike": "Like",
+    "commentsUnlike": "Unlike",
+    "commentsCharRemaining": "{count} characters remaining",
+    "@commentsCharRemaining": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+
+    "usersChatTitle": "Chat",
+    "usersChatJoined": "joined the chat",
+    "usersChatLeft": "left the chat",
+    "usersChatPlaceholderLogin": "Login to start messaging",
+    "usersChatPlaceholderTyping": "Type a message...",
+    "usersOffline": "Offline",
+    "usersProfileAbout": "About",
+    "usersProfileFollowers": "{count, plural, one{follower} other{followers}}",
+    "@usersProfileFollowers": {
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "usersProfileJoinedPrefix": "Joined",
+    "usersProfileRecentStreams": "Recent Streams",
+
+    "accessibilityOpenMenu": "Open menu"
+}
