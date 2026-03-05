@@ -9,7 +9,7 @@ class LivestreamRepository {
   LivestreamRepository(this._client);
 
   Future<ApiResponse<List<Livestream>>> getLivestreams({
-    int page = 1,
+    int page = 0,
     int pageSize = 20,
   }) {
     return _client.get(
@@ -25,7 +25,7 @@ class LivestreamRepository {
   }
 
   Future<ApiResponse<List<Livestream>>> getPopularLivestreams({
-    int page = 1,
+    int page = 0,
     int pageSize = 20,
   }) {
     return _client.get(
