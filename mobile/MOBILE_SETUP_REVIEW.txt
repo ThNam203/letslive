@@ -336,12 +336,12 @@ DONE:
 
 TODO:
   [X] Wire up login/signup screens to AuthRepository
-  [ ] Add repositories for: user, livestream, vod, notification, messages
-  [ ] Implement home screen (fetch & display livestreams/VODs)
+  [X] Add repositories for: user, livestream, vod, notification, messages
+  [X] Implement home screen (fetch & display livestreams/VODs)
   [ ] Implement messages screen (WebSocket DM)
-  [ ] Implement notifications screen (fetch & display)
+  [X] Implement notifications screen (fetch & display)
   [ ] Implement profile screen (user details, follow/unfollow)
-  [ ] Implement settings sub-screens (profile, security, stream, VODs)
+  [X] Implement settings sub-screens (profile, security, stream, VODs)
   [ ] Manual theme toggle (currently system-only)
   [ ] Language picker (currently system-only)
   [ ] OTP verification dialog for signup

@@ -1,14 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../providers.dart';
 
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerStatefulWidget {
   final Widget child;
 
   const MainShell({super.key, required this.child});
+
+  @override
+  ConsumerState<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends ConsumerState<MainShell> {
+  @override
+  void initState() {
+    super.initState();
+    ref.read(unreadNotificationCountProvider.notifier).fetch();
+  }
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
@@ -22,9 +35,10 @@ class MainShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedIndex = _currentIndex(context);
     final l10n = AppLocalizations.of(context);
+    final unreadCount = ref.watch(unreadNotificationCountProvider);
 
     return Scaffold(
-      body: child,
+      body: widget.child,
       bottomNavigationBar: FBottomNavigationBar(
         index: selectedIndex,
         onChange: (index) {
@@ -49,7 +63,11 @@ class MainShell extends StatelessWidget {
             label: Text(l10n.navMessages),
           ),
           FBottomNavigationBarItem(
-            icon: const Icon(FIcons.bell),
+            icon: Badge(
+              isLabelVisible: unreadCount > 0,
+              label: Text(unreadCount > 99 ? '99+' : '$unreadCount'),
+              child: const Icon(FIcons.bell),
+            ),
             label: Text(l10n.navNotifications),
           ),
           FBottomNavigationBarItem(

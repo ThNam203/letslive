@@ -44,6 +44,36 @@ final messageRepositoryProvider = Provider<MessageRepository>((ref) {
   return MessageRepository(ref.watch(apiClientProvider));
 });
 
+/// Unread notification count.
+final unreadNotificationCountProvider =
+    NotifierProvider<UnreadNotificationCountNotifier, int>(
+        UnreadNotificationCountNotifier.new);
+
+class UnreadNotificationCountNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  Future<void> fetch() async {
+    try {
+      final repo = ref.read(notificationRepositoryProvider);
+      final response = await repo.getUnreadCount();
+      if (response.success && response.data != null) {
+        state = response.data!;
+      }
+    } catch (_) {
+      // Keep current count on failure
+    }
+  }
+
+  void decrement() {
+    if (state > 0) state--;
+  }
+
+  void clear() {
+    state = 0;
+  }
+}
+
 /// Current authenticated user (null when not logged in).
 final currentUserProvider =
     NotifierProvider<CurrentUserNotifier, User?>(CurrentUserNotifier.new);

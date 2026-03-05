@@ -19,7 +19,7 @@ class UserRepository {
 
   Future<ApiResponse<List<User>>> searchUsers({
     required String query,
-    int page = 1,
+    int page = 0,
     int pageSize = 20,
   }) {
     return _client.get(
@@ -36,7 +36,7 @@ class UserRepository {
   }
 
   Future<ApiResponse<List<User>>> getRecommendations({
-    int page = 1,
+    int page = 0,
     int pageSize = 20,
   }) {
     return _client.get(
@@ -60,7 +60,7 @@ class UserRepository {
   }
 
   Future<ApiResponse<List<User>>> getFollowing({
-    int page = 1,
+    int page = 0,
     int pageSize = 20,
   }) {
     return _client.get(

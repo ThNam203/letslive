@@ -9,7 +9,7 @@ class VodRepository {
   VodRepository(this._client);
 
   Future<ApiResponse<List<Vod>>> getVods({
-    int page = 1,
+    int page = 0,
     int pageSize = 20,
   }) {
     return _client.get(
@@ -32,7 +32,7 @@ class VodRepository {
   }
 
   Future<ApiResponse<List<Vod>>> getAuthorVods({
-    int page = 1,
+    int page = 0,
     int pageSize = 20,
   }) {
     return _client.get(
@@ -48,7 +48,7 @@ class VodRepository {
   }
 
   Future<ApiResponse<List<Vod>>> getPopularVods({
-    int page = 1,
+    int page = 0,
     int pageSize = 20,
   }) {
     return _client.get(
