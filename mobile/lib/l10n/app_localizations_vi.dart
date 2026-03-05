@@ -947,4 +947,16 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get copyToClipboard => 'Sao chép vào clipboard';
+
+  @override
+  String get livestreamWatchLive => 'Xem trực tiếp';
+
+  @override
+  String get livestreamVideoError => 'Không thể tải luồng video';
+
+  @override
+  String get vodWatchVideo => 'Xem';
+
+  @override
+  String get vodVideoError => 'Không thể tải video';
 }

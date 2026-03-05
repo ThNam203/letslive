@@ -10,6 +10,7 @@ import 'features/messages/data/message_repository.dart';
 import 'features/notifications/data/notification_repository.dart';
 import 'features/user/data/user_repository.dart';
 import 'features/vod/data/vod_repository.dart';
+import 'features/livestream/data/chat_repository.dart';
 import 'models/user.dart';
 
 // ---------------------------------------------------------------------------
@@ -117,6 +118,11 @@ final vodRepositoryProvider = Provider<VodRepository>((ref) {
 /// Notification repository.
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   return NotificationRepository(ref.watch(apiClientProvider));
+});
+
+/// Chat repository (live chat messages).
+final chatRepositoryProvider = Provider<ChatRepository>((ref) {
+  return ChatRepository(ref.watch(apiClientProvider));
 });
 
 /// Message repository.

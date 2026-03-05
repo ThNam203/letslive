@@ -35,6 +35,13 @@ dependencies:
   cached_network_image: ^3.4.1
   image_picker: ^1.1.2
 
+  # Video player
+  video_player: ^2.9.2
+  chewie: ^1.8.5
+
+  # WebSocket
+  web_socket_channel: ^3.0.2
+
   # Utils
   flutter_dotenv: ^6.0.0
   json_annotation: ^4.11.0

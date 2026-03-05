@@ -288,5 +288,10 @@
     "delete": "Xóa",
     "confirm": "Xác nhận",
     "edit": "Sửa",
-    "copyToClipboard": "Sao chép vào clipboard"
+    "copyToClipboard": "Sao chép vào clipboard",
+
+    "livestreamWatchLive": "Xem trực tiếp",
+    "livestreamVideoError": "Không thể tải luồng video",
+    "vodWatchVideo": "Xem",
+    "vodVideoError": "Không thể tải video"
 }

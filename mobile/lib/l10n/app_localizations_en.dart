@@ -953,4 +953,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get copyToClipboard => 'Copy to clipboard';
+
+  @override
+  String get livestreamWatchLive => 'Watch Live';
+
+  @override
+  String get livestreamVideoError => 'Unable to load video stream';
+
+  @override
+  String get vodWatchVideo => 'Watch';
+
+  @override
+  String get vodVideoError => 'Unable to load video';
 }

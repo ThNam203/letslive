@@ -36,6 +36,8 @@ abstract final class ApiEndpoints {
   // Livestream
   static const livestreams = '/livestreams';
   static const popularLivestreams = '/popular-livestreams';
+  static String livestreamTranscode(String livestreamId) =>
+      '/transcode/$livestreamId/index.m3u8';
 
   // VOD
   static const vods = '/vods';

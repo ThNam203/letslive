@@ -38,7 +38,8 @@ mobile/
 │   │   ├── network/
 │   │   │   ├── api_client.dart          #   Dio wrapper + auth interceptor
 │   │   │   ├── api_endpoints.dart       #   All API endpoint paths
-│   │   │   └── api_response.dart        #   ApiResponse<T>, Meta, ApiCode
+│   │   │   ├── api_response.dart        #   ApiResponse<T>, Meta, ApiCode
+│   │   │   └── websocket_service.dart   #   LiveChatService (WS + auto-reconnect)
 │   │   ├── router/
 │   │   │   └── app_router.dart          #   GoRouter config with ShellRoute
 │   │   └── theme/
@@ -55,6 +56,12 @@ mobile/
 │   │   │   └── presentation/
 │   │   │       ├── home_screen.dart     #   FScaffold + FHeader
 │   │   │       └── main_shell.dart      #   FBottomNavigationBar shell
+│   │   ├── livestream/
+│   │   │   ├── data/
+│   │   │   │   ├── livestream_repository.dart #  Livestream API calls
+│   │   │   │   └── chat_repository.dart       #  Chat history API calls
+│   │   │   └── presentation/
+│   │   │       └── livestream_screen.dart      #  HLS player + live chat UI
 │   │   ├── messages/
 │   │   │   └── presentation/
 │   │   │       └── messages_screen.dart #   FScaffold + FHeader
@@ -64,6 +71,9 @@ mobile/
 │   │   ├── profile/
 │   │   │   └── presentation/
 │   │   │       └── profile_screen.dart  #   FScaffold + FHeader.nested
+│   │   ├── vod/
+│   │   │   └── presentation/
+│   │   │       └── vod_player_screen.dart     #  VOD playback with Chewie
 │   │   └── settings/
 │   │       └── presentation/
 │   │           └── settings_screen.dart #   FScaffold + FTile list
@@ -71,7 +81,8 @@ mobile/
 │   │   ├── user.dart                    #   User, AuthProvider, UserStatus, etc.
 │   │   ├── livestream.dart              #   Livestream model
 │   │   ├── vod.dart                     #   VOD model
-│   │   └── notification.dart            #   Notification model
+│   │   ├── notification.dart            #   Notification model
+│   │   └── chat_message.dart            #   ChatMessage model (WS + REST)
 │   ├── shared/
 │   │   └── widgets/
 │   │       ├── error_display.dart       #   FButton + FIcons.circleAlert
@@ -96,6 +107,8 @@ Production:
   flutter_secure_storage, shared_preferences  — Local storage
   forui                                       — UI components (shadcn/ui style)
   cached_network_image                        — Image caching
+  video_player, chewie                        — Video/HLS playback
+  web_socket_channel                           — WebSocket (live chat)
   flutter_dotenv                              — .env loading
   json_annotation, freezed_annotation         — Code generation annotations
   equatable                                   — Value equality
@@ -216,6 +229,8 @@ Routes:
   /notifications  → NotificationsScreen (ShellRoute with bottom nav)
   /settings       → SettingsScreen    (ShellRoute with bottom nav)
   /users/:userId  → ProfileScreen     (full screen, outside shell)
+  /livestream/:userId → LivestreamScreen (full screen, HLS player + chat)
+  /vods/:vodId/watch  → VodPlayerScreen  (full screen, VOD playback)
 
 MainShell wraps the ShellRoute children with FBottomNavigationBar.
 NoTransitionPage used for tab switching (no animation).
@@ -285,12 +300,15 @@ Notification (lib/models/notification.dart):
   - isRead, createdAt, data
   - fromJson() factory
 
+ChatMessage (lib/models/chat_message.dart):
+  - id, type, userId, username, text, timestamp
+  - isJoin, isLeave, isMessage getters
+  - fromJson() factory, toSendJson(roomId)
+
 
 ================================================================================
   10. FEATURE REPOSITORIES
 ================================================================================
-
-Only auth has a repository so far:
 
 AuthRepository (lib/features/auth/data/auth_repository.dart):
   - login(email, password)
@@ -301,7 +319,18 @@ AuthRepository (lib/features/auth/data/auth_repository.dart):
   - verifyOtp(email, otp)
   - getMe()
 
-TODO: Repositories needed for user, livestream, vod, notification, messages.
+LivestreamRepository (lib/features/livestream/data/livestream_repository.dart):
+  - getLivestreams(), getVods(), getUserVods()
+  - getUser(), followUser(), unfollowUser()
+  - updateProfile(), updateStreamInfo(), etc.
+
+ChatRepository (lib/features/livestream/data/chat_repository.dart):
+  - getChatHistory(roomId) — fetches messages via REST
+
+LiveChatService (lib/core/network/websocket_service.dart):
+  - connect(roomId), sendMessage(), disconnect()
+  - Auto-reconnect with 3s interval
+  - Streams: messages (ChatMessage)
 
 
 ================================================================================
@@ -352,8 +381,8 @@ TODO:
   [X] Language picker (currently system-only)
   [X] OTP verification dialog for signup
   [X] Search functionality
-  [ ] Video player integration
-  [ ] Live chat via WebSocket
+  [X] Video player integration
+  [X] Live chat via WebSocket
   [ ] Push notifications
 
 
