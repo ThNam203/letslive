@@ -15,6 +15,8 @@ import '../../features/settings/presentation/profile_settings_screen.dart';
 import '../../features/settings/presentation/security_settings_screen.dart';
 import '../../features/settings/presentation/stream_settings_screen.dart';
 import '../../features/settings/presentation/vods_settings_screen.dart';
+import '../../features/livestream/presentation/livestream_screen.dart';
+import '../../features/vod/presentation/vod_player_screen.dart';
 import '../../providers.dart';
 
 abstract final class AppRoutes {
@@ -30,6 +32,8 @@ abstract final class AppRoutes {
   static const settingsVods = '/settings/vods';
   static const search = '/search';
   static String userProfile(String userId) => '/users/$userId';
+  static String livestream(String userId) => '/livestream/$userId';
+  static String vodPlayer(String vodId) => '/vods/$vodId/watch';
 }
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -124,6 +128,28 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final userId = state.pathParameters['userId']!;
         return ProfileScreen(userId: userId);
+      },
+    ),
+
+    // Livestream viewer (video player + live chat)
+    GoRoute(
+      path: '/livestream/:userId',
+      builder: (context, state) {
+        final userId = state.pathParameters['userId']!;
+        final livestreamId = state.uri.queryParameters['livestreamId'] ?? '';
+        return LivestreamScreen(
+          userId: userId,
+          livestreamId: livestreamId,
+        );
+      },
+    ),
+
+    // VOD player
+    GoRoute(
+      path: '/vods/:vodId/watch',
+      builder: (context, state) {
+        final vodId = state.pathParameters['vodId']!;
+        return VodPlayerScreen(vodId: vodId);
       },
     ),
   ],

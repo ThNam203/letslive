@@ -24,6 +24,18 @@ class LivestreamRepository {
     );
   }
 
+  Future<ApiResponse<List<Livestream>>> getLivestreamOfUser(
+    String userId,
+  ) {
+    return _client.get(
+      ApiEndpoints.livestreams,
+      queryParameters: {'userId': userId},
+      fromJsonT: (json) => (json as List<dynamic>)
+          .map((e) => Livestream.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
   Future<ApiResponse<List<Livestream>>> getPopularLivestreams({
     int page = 0,
     int pageSize = 20,

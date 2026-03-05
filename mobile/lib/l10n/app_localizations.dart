@@ -1723,6 +1723,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy to clipboard'**
   String get copyToClipboard;
+
+  /// No description provided for @livestreamWatchLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch Live'**
+  String get livestreamWatchLive;
+
+  /// No description provided for @livestreamVideoError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load video stream'**
+  String get livestreamVideoError;
+
+  /// No description provided for @vodWatchVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch'**
+  String get vodWatchVideo;
+
+  /// No description provided for @vodVideoError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load video'**
+  String get vodVideoError;
 }
 
 class _AppLocalizationsDelegate

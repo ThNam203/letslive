@@ -651,5 +651,14 @@
     "edit": "Edit",
     "@edit": {},
     "copyToClipboard": "Copy to clipboard",
-    "@copyToClipboard": {}
+    "@copyToClipboard": {},
+
+    "livestreamWatchLive": "Watch Live",
+    "@livestreamWatchLive": {},
+    "livestreamVideoError": "Unable to load video stream",
+    "@livestreamVideoError": {},
+    "vodWatchVideo": "Watch",
+    "@vodWatchVideo": {},
+    "vodVideoError": "Unable to load video",
+    "@vodVideoError": {}
 }

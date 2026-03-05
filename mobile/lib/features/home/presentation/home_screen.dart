@@ -190,7 +190,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           final stream = _livestreams[index];
           return _LivestreamCard(
             livestream: stream,
-            onTap: () => context.push(AppRoutes.userProfile(stream.userId)),
+            onTap: () => context.push(
+              '${AppRoutes.livestream(stream.userId)}?livestreamId=${stream.id}',
+            ),
           );
         },
       ),
@@ -237,7 +239,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           final vod = _vods[index];
           return _VodCard(
             vod: vod,
-            onTap: () => context.push(AppRoutes.userProfile(vod.userId)),
+            onTap: () => context.push(AppRoutes.vodPlayer(vod.id)),
           );
         },
       ),

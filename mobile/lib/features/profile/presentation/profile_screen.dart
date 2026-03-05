@@ -3,9 +3,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/config/app_config.dart';
+import '../../../core/router/app_router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../models/livestream.dart';
 import '../../../models/user.dart';
 import '../../../models/vod.dart';
 import '../../../providers.dart';
@@ -24,6 +27,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   User? _user;
   List<Vod> _vods = [];
+  Livestream? _livestream;
   bool _isLoading = true;
   bool _isFollowLoading = false;
   String? _error;
@@ -43,21 +47,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     try {
       final userRepo = ref.read(userRepositoryProvider);
       final vodRepo = ref.read(vodRepositoryProvider);
+      final livestreamRepo = ref.read(livestreamRepositoryProvider);
 
-      // Fire both requests in parallel.
+      // Fire all requests in parallel.
       final userFuture = userRepo.getUser(widget.userId);
       final vodsFuture = vodRepo.getUserVods(widget.userId);
+      final livestreamFuture = livestreamRepo.getLivestreamOfUser(widget.userId);
 
       final userResponse = await userFuture;
       if (!mounted) return;
 
       if (userResponse.success && userResponse.data != null) {
         final vodsResponse = await vodsFuture;
+        final livestreamResponse = await livestreamFuture;
         if (!mounted) return;
+
+        Livestream? activeLivestream;
+        if (livestreamResponse.success &&
+            livestreamResponse.data != null &&
+            livestreamResponse.data!.isNotEmpty) {
+          final ls = livestreamResponse.data!.first;
+          if (ls.isLive) activeLivestream = ls;
+        }
 
         setState(() {
           _user = userResponse.data;
           _vods = vodsResponse.data ?? [];
+          _livestream = activeLivestream;
           _isLoading = false;
         });
       } else {
@@ -148,6 +164,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           children: [
             _buildHeader(context, user),
             _buildUserInfo(context, user),
+            if (_livestream != null) _buildWatchLiveBanner(context),
             if (_vods.isNotEmpty) _buildRecentStreams(context),
           ],
         ),
@@ -355,6 +372,71 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   // ---------------------------------------------------------------------------
+  // Watch Live banner
+  // ---------------------------------------------------------------------------
+
+  Widget _buildWatchLiveBanner(BuildContext context) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final l10n = AppLocalizations.of(context);
+    final livestream = _livestream!;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: GestureDetector(
+        onTap: () => context.push(
+          '${AppRoutes.livestream(livestream.userId)}?livestreamId=${livestream.id}',
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: colors.destructive.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colors.destructive.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: colors.destructive,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  l10n.live,
+                  style: typography.xs.copyWith(
+                    color: colors.destructiveForeground,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      livestream.title,
+                      style: typography.sm.copyWith(fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      l10n.homeViewerCount(livestream.viewCount),
+                      style: typography.xs.copyWith(color: colors.mutedForeground),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(FIcons.play, size: 20, color: colors.destructive),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
   // Recent streams (VODs)
   // ---------------------------------------------------------------------------
 
@@ -383,8 +465,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               childAspectRatio: 0.75,
             ),
             itemCount: _vods.length,
-            itemBuilder: (context, index) =>
-                _ProfileVodCard(vod: _vods[index]),
+            itemBuilder: (context, index) => GestureDetector(
+                onTap: () => context.push(AppRoutes.vodPlayer(_vods[index].id)),
+                child: _ProfileVodCard(vod: _vods[index]),
+              ),
           ),
         ],
       ),
