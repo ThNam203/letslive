@@ -24,6 +24,7 @@ class ApiClient {
         headers: {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-store',
+          'User-Agent': 'letslive-mobile/1.0 (Dart/Flutter)',
         },
       ),
     );
@@ -81,6 +82,19 @@ class ApiClient {
     T Function(dynamic)? fromJsonT,
   }) async {
     final response = await _dio.post(path, data: data);
+    return ApiResponse.fromJson(
+      response.data as Map<String, dynamic>,
+      response.statusCode ?? 0,
+      fromJsonT: fromJsonT,
+    );
+  }
+
+  Future<ApiResponse<T>> put<T>(
+    String path, {
+    dynamic data,
+    T Function(dynamic)? fromJsonT,
+  }) async {
+    final response = await _dio.put(path, data: data);
     return ApiResponse.fromJson(
       response.data as Map<String, dynamic>,
       response.statusCode ?? 0,

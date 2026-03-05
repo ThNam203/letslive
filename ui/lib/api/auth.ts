@@ -63,13 +63,3 @@ export async function RequestToSendVerification(
         body: JSON.stringify({ email, turnstileToken }),
     });
 }
-
-export async function VerifyOTP(
-    email: string,
-    otpCode: string,
-): Promise<ApiResponse<void>> {
-    return fetchClient<ApiResponse<void>>("/auth/verify-otp", {
-        method: "POST",
-        body: JSON.stringify({ email, otpCode }),
-    });
-}

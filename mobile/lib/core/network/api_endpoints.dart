@@ -22,7 +22,7 @@ abstract final class ApiEndpoints {
   static const userFollowing = '/user/me/following';
   static const userLivestreamInformation = '/user/me/livestream-information';
   static const userApiKey = '/user/me/api-key';
-  static String userVods(String id) => '/user/$id/vods';
+  // User VODs are fetched via /vods?userId={id} (see ApiEndpoints.vods)
 
   // Notifications (nested under /user/me/)
   static const notifications = '/user/me/notifications';

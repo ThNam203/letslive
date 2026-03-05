@@ -25,9 +25,7 @@ class UserRepository {
     return _client.get(
       ApiEndpoints.usersSearch,
       queryParameters: {
-        'query': query,
-        'page': page,
-        'page_size': pageSize,
+        'username': query,
       },
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => User.fromJson(e as Map<String, dynamic>))
@@ -89,7 +87,7 @@ class UserRepository {
       data['socialMediaLinks'] = socialMediaLinks.toJson();
     }
 
-    return _client.patch(
+    return _client.put(
       ApiEndpoints.userMe,
       data: data,
       fromJsonT: (json) => User.fromJson(json as Map<String, dynamic>),

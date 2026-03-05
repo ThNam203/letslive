@@ -10,13 +10,13 @@ class MessageRepository {
 
   Future<ApiResponse<List<Conversation>>> getConversations({
     int page = 0,
-    int pageSize = 20,
+    int limit = 20,
   }) {
     return _client.get(
       ApiEndpoints.conversations,
       queryParameters: {
         'page': page,
-        'page_size': pageSize,
+        'limit': limit,
       },
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => Conversation.fromJson(e as Map<String, dynamic>))
@@ -41,14 +41,14 @@ class MessageRepository {
 
   Future<ApiResponse<List<DmMessage>>> getConversationMessages(
     String id, {
-    int page = 0,
-    int pageSize = 50,
+    String? before,
+    int limit = 50,
   }) {
     return _client.get(
       ApiEndpoints.conversationMessages(id),
       queryParameters: {
-        'page': page,
-        'page_size': pageSize,
+        'limit': limit,
+        if (before != null) 'before': before,
       },
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => DmMessage.fromJson(e as Map<String, dynamic>))
@@ -71,6 +71,6 @@ class MessageRepository {
   }
 
   Future<ApiResponse<void>> markConversationRead(String id) {
-    return _client.patch(ApiEndpoints.conversationRead(id));
+    return _client.post(ApiEndpoints.conversationRead(id));
   }
 }
