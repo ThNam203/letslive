@@ -9,6 +9,7 @@ import 'features/livestream/data/livestream_repository.dart';
 import 'features/messages/data/message_repository.dart';
 import 'features/notifications/data/notification_repository.dart';
 import 'features/user/data/user_repository.dart';
+import 'features/vod/data/vod_comment_repository.dart';
 import 'features/vod/data/vod_repository.dart';
 import 'features/livestream/data/chat_repository.dart';
 import 'models/user.dart';
@@ -113,6 +114,11 @@ final livestreamRepositoryProvider = Provider<LivestreamRepository>((ref) {
 /// VOD repository.
 final vodRepositoryProvider = Provider<VodRepository>((ref) {
   return VodRepository(ref.watch(apiClientProvider));
+});
+
+/// VOD comment repository.
+final vodCommentRepositoryProvider = Provider<VodCommentRepository>((ref) {
+  return VodCommentRepository(ref.watch(apiClientProvider));
 });
 
 /// Notification repository.

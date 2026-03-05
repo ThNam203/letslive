@@ -17,6 +17,7 @@ import '../../../core/router/app_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/chat_message.dart';
 import '../../../models/livestream.dart';
+import '../../../models/user.dart';
 import '../../../providers.dart';
 import '../../../shared/widgets/error_display.dart';
 import '../../../shared/widgets/loading_indicator.dart';
@@ -43,6 +44,7 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
   final _scrollController = ScrollController();
 
   Livestream? _livestream;
+  User? _streamer;
   List<ChatMessage> _messages = [];
   bool _isLoading = true;
   bool _isVideoLoading = true;
@@ -92,6 +94,7 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
         });
         _initVideoPlayer(livestream);
         _initChat(livestream);
+        _fetchStreamer(livestream.userId);
       } else {
         setState(() {
           _error = AppLocalizations.of(context).usersOffline;
@@ -106,6 +109,16 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
         });
       }
     }
+  }
+
+  Future<void> _fetchStreamer(String userId) async {
+    try {
+      final userRepo = ref.read(userRepositoryProvider);
+      final response = await userRepo.getUser(userId);
+      if (mounted && response.success && response.data != null) {
+        setState(() => _streamer = response.data);
+      }
+    } catch (_) {}
   }
 
   void _initVideoPlayer(Livestream livestream) {
@@ -253,11 +266,11 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundImage: livestream.profilePicture != null
+              backgroundImage: _streamer?.profilePicture != null
                   ? CachedNetworkImageProvider(
-                      '${AppConfig.apiUrl}/${livestream.profilePicture}')
+                      '${AppConfig.apiUrl}/${_streamer!.profilePicture}')
                   : null,
-              child: livestream.profilePicture == null
+              child: _streamer?.profilePicture == null
                   ? const Icon(FIcons.user, size: 18)
                   : null,
             ),
@@ -274,7 +287,7 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    livestream.displayName ?? livestream.username ?? '',
+                    _streamer?.displayName ?? _streamer?.username ?? '',
                     style: typography.xs.copyWith(color: colors.mutedForeground),
                   ),
                 ],

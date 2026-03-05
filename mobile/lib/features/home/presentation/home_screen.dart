@@ -9,6 +9,7 @@ import '../../../core/config/app_config.dart';
 import '../../../core/router/app_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/livestream.dart';
+import '../../../models/user.dart';
 import '../../../models/vod.dart';
 import '../../../providers.dart';
 import '../../../shared/widgets/error_display.dart';
@@ -27,6 +28,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   List<Livestream> _livestreams = [];
   List<Vod> _vods = [];
+  final Map<String, User> _userCache = {};
   bool _isLoadingLivestreams = true;
   bool _isLoadingVods = true;
   String? _livestreamError;
@@ -58,10 +60,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       if (!mounted) return;
 
       if (response.success) {
+        final streams = response.data ?? [];
         setState(() {
-          _livestreams = response.data ?? [];
+          _livestreams = streams;
           _isLoadingLivestreams = false;
         });
+        _fetchUsersFor(streams.map((s) => s.userId).toSet());
       } else {
         setState(() {
           _livestreamError = response.message;
@@ -90,10 +94,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       if (!mounted) return;
 
       if (response.success) {
+        final vods = response.data ?? [];
         setState(() {
-          _vods = response.data ?? [];
+          _vods = vods;
           _isLoadingVods = false;
         });
+        _fetchUsersFor(vods.map((v) => v.userId).toSet());
       } else {
         setState(() {
           _vodError = response.message;
@@ -107,6 +113,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           _isLoadingVods = false;
         });
       }
+    }
+  }
+
+  Future<void> _fetchUsersFor(Set<String> userIds) async {
+    final toFetch = userIds.where((id) => !_userCache.containsKey(id));
+    if (toFetch.isEmpty) return;
+
+    final userRepo = ref.read(userRepositoryProvider);
+    for (final userId in toFetch) {
+      try {
+        final response = await userRepo.getUser(userId);
+        if (mounted && response.success && response.data != null) {
+          setState(() => _userCache[userId] = response.data!);
+        }
+      } catch (_) {}
     }
   }
 
@@ -190,6 +211,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           final stream = _livestreams[index];
           return _LivestreamCard(
             livestream: stream,
+            user: _userCache[stream.userId],
             onTap: () => context.push(
               '${AppRoutes.livestream(stream.userId)}?livestreamId=${stream.id}',
             ),
@@ -239,6 +261,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           final vod = _vods[index];
           return _VodCard(
             vod: vod,
+            user: _userCache[vod.userId],
             onTap: () => context.push(AppRoutes.vodPlayer(vod.id)),
           );
         },
@@ -249,9 +272,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
 class _LivestreamCard extends StatelessWidget {
   final Livestream livestream;
+  final User? user;
   final VoidCallback onTap;
 
-  const _LivestreamCard({required this.livestream, required this.onTap});
+  const _LivestreamCard({required this.livestream, this.user, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -354,11 +378,11 @@ class _LivestreamCard extends StatelessWidget {
                     // Profile picture
                     CircleAvatar(
                       radius: 18,
-                      backgroundImage: livestream.profilePicture != null
+                      backgroundImage: user?.profilePicture != null
                           ? CachedNetworkImageProvider(
-                              '${AppConfig.apiUrl}/${livestream.profilePicture}')
+                              '${AppConfig.apiUrl}/${user!.profilePicture}')
                           : null,
-                      child: livestream.profilePicture == null
+                      child: user?.profilePicture == null
                           ? const Icon(FIcons.user, size: 18)
                           : null,
                     ),
@@ -376,8 +400,8 @@ class _LivestreamCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            livestream.displayName ??
-                                livestream.username ??
+                            user?.displayName ??
+                                user?.username ??
                                 '',
                             style: typography.xs.copyWith(
                               color: colors.mutedForeground,
@@ -401,9 +425,10 @@ class _LivestreamCard extends StatelessWidget {
 
 class _VodCard extends StatelessWidget {
   final Vod vod;
+  final User? user;
   final VoidCallback onTap;
 
-  const _VodCard({required this.vod, required this.onTap});
+  const _VodCard({required this.vod, this.user, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -489,7 +514,7 @@ class _VodCard extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      vod.displayName ?? vod.username ?? '',
+                      user?.displayName ?? user?.username ?? '',
                       style: typography.xs.copyWith(
                         color: colors.mutedForeground,
                       ),

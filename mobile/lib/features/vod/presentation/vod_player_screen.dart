@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chewie/chewie.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -10,10 +11,12 @@ import 'package:video_player/video_player.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/router/app_router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../models/user.dart';
 import '../../../models/vod.dart';
 import '../../../providers.dart';
 import '../../../shared/widgets/error_display.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import 'vod_comment_section.dart';
 
 class VodPlayerScreen extends ConsumerStatefulWidget {
   final String vodId;
@@ -29,6 +32,7 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
   ChewieController? _chewieController;
 
   Vod? _vod;
+  User? _vodOwner;
   bool _isLoading = true;
   bool _isVideoLoading = true;
   String? _error;
@@ -69,6 +73,7 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
           _isLoading = false;
         });
         _initVideoPlayer(response.data!);
+        _fetchVodOwner(response.data!.userId);
       } else {
         setState(() {
           _error = response.message;
@@ -83,6 +88,16 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
         });
       }
     }
+  }
+
+  Future<void> _fetchVodOwner(String userId) async {
+    try {
+      final userRepo = ref.read(userRepositoryProvider);
+      final response = await userRepo.getUser(userId);
+      if (mounted && response.success && response.data != null) {
+        setState(() => _vodOwner = response.data);
+      }
+    } catch (_) {}
   }
 
   void _initVideoPlayer(Vod vod) {
@@ -145,6 +160,10 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
         children: [
           _buildVideoPlayer(context),
           _buildVodInfo(context, vod),
+          VodCommentSection(
+            vodId: vod.id,
+            vodOwnerId: vod.userId,
+          ),
         ],
       ),
     );
@@ -170,6 +189,8 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
     final colors = context.theme.colors;
     final typography = context.theme.typography;
     final l10n = AppLocalizations.of(context);
+    final owner = _vodOwner;
+    final ownerName = owner?.displayName ?? owner?.username ?? '';
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -204,13 +225,19 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
             onTap: () => context.push(AppRoutes.userProfile(vod.userId)),
             child: Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 16,
-                  child: Icon(FIcons.user, size: 16),
+                  backgroundImage: owner?.profilePicture != null
+                      ? CachedNetworkImageProvider(
+                          '${AppConfig.apiUrl}/${owner!.profilePicture}')
+                      : null,
+                  child: owner?.profilePicture == null
+                      ? const Icon(FIcons.user, size: 16)
+                      : null,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  vod.displayName ?? vod.username ?? '',
+                  ownerName,
                   style: typography.sm.copyWith(fontWeight: FontWeight.w500),
                 ),
               ],
