@@ -9,6 +9,7 @@ import (
 	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/services"
 	"sen1or/letslive/auth/utils"
+	"strings"
 )
 
 // TODO: put verificationGateway into config
@@ -36,6 +37,11 @@ func NewAuthHandler(
 	}
 }
 
+func isMobileClient(r *http.Request) bool {
+	ua := strings.ToLower(r.Header.Get("User-Agent"))
+	return strings.Contains(ua, "dart") || strings.Contains(ua, "flutter") || strings.Contains(ua, "okhttp") || strings.Contains(ua, "letslive-mobile")
+}
+
 func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
@@ -46,10 +52,12 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ip := r.Header.Get("CF-Connecting-IP")
-	if err := utils.CheckCAPTCHA(userCredentials.TurnstileToken, ip); err != nil {
-		writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_CAPTCHA_FAILED, nil, nil, nil))
-		return
+	if !isMobileClient(r) {
+		ip := r.Header.Get("CF-Connecting-IP")
+		if err := utils.CheckCAPTCHA(userCredentials.TurnstileToken, ip); err != nil {
+			writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_CAPTCHA_FAILED, nil, nil, nil))
+			return
+		}
 	}
 
 	auth, err := h.authService.GetUserFromCredentials(ctx, userCredentials)
@@ -86,10 +94,12 @@ func (h *AuthHandler) RequestEmailVerificationHandler(w http.ResponseWriter, r *
 		return
 	}
 
-	ip := r.Header.Get("CF-Connecting-IP")
-	if err := utils.CheckCAPTCHA(requestDTO.TurnstileToken, ip); err != nil {
-		writeResponse(w, ctx, err)
-		return
+	if !isMobileClient(r) {
+		ip := r.Header.Get("CF-Connecting-IP")
+		if err := utils.CheckCAPTCHA(requestDTO.TurnstileToken, ip); err != nil {
+			writeResponse(w, ctx, err)
+			return
+		}
 	}
 
 	// if an auth is already existed with the email, no point to continue

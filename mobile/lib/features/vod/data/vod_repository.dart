@@ -37,10 +37,11 @@ class VodRepository {
     int pageSize = 20,
   }) {
     return _client.get(
-      ApiEndpoints.userVods(userId),
+      ApiEndpoints.vods,
       queryParameters: {
+        'userId': userId,
         'page': page,
-        'page_size': pageSize,
+        'limit': pageSize,
       },
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => Vod.fromJson(e as Map<String, dynamic>))

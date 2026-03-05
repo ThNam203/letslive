@@ -11,12 +11,14 @@ class AuthRepository {
   Future<ApiResponse<void>> login({
     required String email,
     required String password,
+    String turnstileToken = '',
   }) {
     return _client.post(
       ApiEndpoints.authLogin,
       data: {
         'email': email,
         'password': password,
+        'turnstileToken': turnstileToken,
       },
     );
   }
@@ -57,22 +59,13 @@ class AuthRepository {
 
   Future<ApiResponse<void>> requestVerification({
     required String email,
+    String turnstileToken = '',
   }) {
     return _client.post(
       ApiEndpoints.authVerifyEmail,
-      data: {'email': email},
-    );
-  }
-
-  Future<ApiResponse<void>> verifyOtp({
-    required String email,
-    required String otpCode,
-  }) {
-    return _client.post(
-      ApiEndpoints.authVerifyOtp,
       data: {
         'email': email,
-        'otpCode': otpCode,
+        'turnstileToken': turnstileToken,
       },
     );
   }

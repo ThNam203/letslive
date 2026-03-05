@@ -316,7 +316,6 @@ AuthRepository (lib/features/auth/data/auth_repository.dart):
   - logout()
   - changePassword(oldPassword, newPassword)
   - requestVerification(email)
-  - verifyOtp(email, otp)
   - getMe()
 
 LivestreamRepository (lib/features/livestream/data/livestream_repository.dart):
