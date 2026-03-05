@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/network/api_client.dart';
 import 'features/auth/data/auth_repository.dart';
@@ -8,6 +11,83 @@ import 'features/notifications/data/notification_repository.dart';
 import 'features/user/data/user_repository.dart';
 import 'features/vod/data/vod_repository.dart';
 import 'models/user.dart';
+
+// ---------------------------------------------------------------------------
+// SharedPreferences – must be overridden in main().
+// ---------------------------------------------------------------------------
+
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError('Must be overridden in main');
+});
+
+// ---------------------------------------------------------------------------
+// Theme mode
+// ---------------------------------------------------------------------------
+
+enum AppThemeMode { light, dark, system }
+
+final themeModeProvider =
+    NotifierProvider<ThemeModeNotifier, AppThemeMode>(ThemeModeNotifier.new);
+
+class ThemeModeNotifier extends Notifier<AppThemeMode> {
+  static const _key = 'app_theme_mode';
+
+  @override
+  AppThemeMode build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final value = prefs.getString(_key);
+    if (value != null) {
+      return AppThemeMode.values.firstWhere(
+        (e) => e.name == value,
+        orElse: () => AppThemeMode.system,
+      );
+    }
+    return AppThemeMode.system;
+  }
+
+  Future<void> setThemeMode(AppThemeMode mode) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setString(_key, mode.name);
+    state = mode;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Locale (null = follow system)
+// ---------------------------------------------------------------------------
+
+/// Display names for supported languages (always in native form).
+const supportedLanguageNames = <String, String>{
+  'en': 'English',
+  'vi': 'Tiếng Việt',
+};
+
+final localeProvider =
+    NotifierProvider<LocaleNotifier, Locale?>(LocaleNotifier.new);
+
+class LocaleNotifier extends Notifier<Locale?> {
+  static const _key = 'app_locale';
+
+  @override
+  Locale? build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final value = prefs.getString(_key);
+    if (value != null) {
+      return Locale(value);
+    }
+    return null;
+  }
+
+  Future<void> setLocale(Locale? locale) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (locale != null) {
+      await prefs.setString(_key, locale.languageCode);
+    } else {
+      await prefs.remove(_key);
+    }
+    state = locale;
+  }
+}
 
 /// Global API client singleton.
 final apiClientProvider = Provider<ApiClient>((ref) {

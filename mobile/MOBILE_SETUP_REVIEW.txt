@@ -133,10 +133,13 @@ Dark Theme Colors:
   border:         #3B4A5C
 
 How it works (app.dart):
-  - MediaQuery.platformBrightnessOf picks light/dark FThemeData
+  - App is a ConsumerWidget watching themeModeProvider & localeProvider
+  - AppThemeMode (light/dark/system) resolves effective brightness
   - MaterialApp.theme receives theme.toApproximateMaterialTheme()
+  - MaterialApp.locale set from localeProvider (null = follow system)
   - MaterialApp.builder wraps child with FTheme(data: theme, child: child)
   - All screens access colors/typography via context.theme.colors / .typography
+  - User preference persisted via SharedPreferences
 
 
 ================================================================================
@@ -223,6 +226,9 @@ NoTransitionPage used for tab switching (no animation).
 ================================================================================
 
 Global providers (lib/providers.dart):
+  sharedPreferencesProvider → Provider<SharedPreferences> (overridden in main)
+  themeModeProvider        → NotifierProvider<ThemeModeNotifier, AppThemeMode>
+  localeProvider           → NotifierProvider<LocaleNotifier, Locale?>
   apiClientProvider        → Provider<ApiClient> (singleton)
   authRepositoryProvider   → Provider<AuthRepository>
   currentUserProvider      → NotifierProvider<CurrentUserNotifier, User?>
@@ -322,11 +328,11 @@ DONE:
   [x] Project scaffolding with clean architecture
   [x] Forui as main UI library (replaces raw Material widgets)
   [x] Custom theme matching web app colors via FColors/FThemeData
-  [x] Light/dark mode (system-based)
+  [x] Light/dark mode (system + manual toggle via settings)
   [x] API client with cookie auth + auto token refresh
   [x] All API endpoints defined
   [x] GoRouter with bottom navigation shell
-  [x] i18n setup (en + vi) with ARB codegen
+  [x] i18n setup (en + vi) with ARB codegen + manual language picker
   [x] Data models (User, Livestream, VOD, Notification)
   [x] Auth repository (login, signup, logout, etc.)
   [x] Riverpod global state (currentUser)
@@ -342,8 +348,8 @@ TODO:
   [X] Implement notifications screen (fetch & display)
   [ ] Implement profile screen (user details, follow/unfollow)
   [X] Implement settings sub-screens (profile, security, stream, VODs)
-  [ ] Manual theme toggle (currently system-only)
-  [ ] Language picker (currently system-only)
+  [X] Manual theme toggle (currently system-only)
+  [X] Language picker (currently system-only)
   [ ] OTP verification dialog for signup
   [ ] Search functionality
   [ ] Video player integration
