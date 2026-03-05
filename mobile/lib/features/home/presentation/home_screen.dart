@@ -121,9 +121,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         title: Text(l10n.appTitle),
         suffixes: [
           FButton.icon(
-            onPress: () {
-              // TODO: Navigate to search
-            },
+            onPress: () => context.push(AppRoutes.search),
             child: const Icon(FIcons.search),
           ),
         ],

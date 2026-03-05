@@ -346,12 +346,12 @@ TODO:
   [X] Implement home screen (fetch & display livestreams/VODs)
   [ ] Implement messages screen (WebSocket DM)
   [X] Implement notifications screen (fetch & display)
-  [ ] Implement profile screen (user details, follow/unfollow)
+  [X] Implement profile screen (user details, follow/unfollow)
   [X] Implement settings sub-screens (profile, security, stream, VODs)
   [X] Manual theme toggle (currently system-only)
   [X] Language picker (currently system-only)
-  [ ] OTP verification dialog for signup
-  [ ] Search functionality
+  [X] OTP verification dialog for signup
+  [X] Search functionality
   [ ] Video player integration
   [ ] Live chat via WebSocket
   [ ] Push notifications

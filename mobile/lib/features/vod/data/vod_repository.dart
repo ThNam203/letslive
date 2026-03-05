@@ -31,6 +31,23 @@ class VodRepository {
     );
   }
 
+  Future<ApiResponse<List<Vod>>> getUserVods(
+    String userId, {
+    int page = 0,
+    int pageSize = 20,
+  }) {
+    return _client.get(
+      ApiEndpoints.userVods(userId),
+      queryParameters: {
+        'page': page,
+        'page_size': pageSize,
+      },
+      fromJsonT: (json) => (json as List<dynamic>)
+          .map((e) => Vod.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
   Future<ApiResponse<List<Vod>>> getAuthorVods({
     int page = 0,
     int pageSize = 20,

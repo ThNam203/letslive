@@ -139,6 +139,45 @@ class User {
 
   bool get isMe => streamAPIKey != null;
 
+  User copyWith({
+    String? id,
+    String? username,
+    String? email,
+    UserStatus? status,
+    AuthProvider? authProvider,
+    String? createdAt,
+    String? displayName,
+    String? bio,
+    String? backgroundPicture,
+    String? profilePicture,
+    int? followerCount,
+    LivestreamInformation? livestreamInformation,
+    SocialMediaLinks? socialMediaLinks,
+    bool? isFollowing,
+    String? phoneNumber,
+    String? streamAPIKey,
+  }) {
+    return User(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      email: email ?? this.email,
+      status: status ?? this.status,
+      authProvider: authProvider ?? this.authProvider,
+      createdAt: createdAt ?? this.createdAt,
+      displayName: displayName ?? this.displayName,
+      bio: bio ?? this.bio,
+      backgroundPicture: backgroundPicture ?? this.backgroundPicture,
+      profilePicture: profilePicture ?? this.profilePicture,
+      followerCount: followerCount ?? this.followerCount,
+      livestreamInformation:
+          livestreamInformation ?? this.livestreamInformation,
+      socialMediaLinks: socialMediaLinks ?? this.socialMediaLinks,
+      isFollowing: isFollowing ?? this.isFollowing,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      streamAPIKey: streamAPIKey ?? this.streamAPIKey,
+    );
+  }
+
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] as String,

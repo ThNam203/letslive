@@ -9,6 +9,7 @@ import '../../features/home/presentation/main_shell.dart';
 import '../../features/messages/presentation/messages_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/search/presentation/search_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/settings/presentation/profile_settings_screen.dart';
 import '../../features/settings/presentation/security_settings_screen.dart';
@@ -27,6 +28,7 @@ abstract final class AppRoutes {
   static const settingsSecurity = '/settings/security';
   static const settingsStream = '/settings/stream';
   static const settingsVods = '/settings/vods';
+  static const search = '/search';
   static String userProfile(String userId) => '/users/$userId';
 }
 
@@ -108,6 +110,12 @@ final appRouter = GoRouter(
       path: AppRoutes.settingsVods,
       redirect: _requireAuth,
       builder: (context, state) => const VodsSettingsScreen(),
+    ),
+
+    // Search (outside shell for full-screen view)
+    GoRoute(
+      path: AppRoutes.search,
+      builder: (context, state) => const SearchScreen(),
     ),
 
     // Profile (outside shell for full-screen view)
