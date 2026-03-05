@@ -73,4 +73,95 @@ class MessageRepository {
   Future<ApiResponse<void>> markConversationRead(String id) {
     return _client.post(ApiEndpoints.conversationRead(id));
   }
+
+  Future<ApiResponse<DmMessage>> sendMessage(
+    String conversationId, {
+    required String text,
+    required String senderUsername,
+    String type = 'text',
+    List<String>? imageUrls,
+    String? replyTo,
+  }) {
+    return _client.post(
+      ApiEndpoints.conversationMessages(conversationId),
+      data: {
+        'text': text,
+        'type': type,
+        'senderUsername': senderUsername,
+        if (imageUrls != null) 'imageUrls': imageUrls,
+        if (replyTo != null) 'replyTo': replyTo,
+      },
+      fromJsonT: (json) =>
+          DmMessage.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  Future<ApiResponse<DmMessage>> editMessage(
+    String conversationId,
+    String messageId, {
+    required String text,
+  }) {
+    return _client.patch(
+      '${ApiEndpoints.conversationMessages(conversationId)}/$messageId',
+      data: {'text': text},
+      fromJsonT: (json) =>
+          DmMessage.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  Future<ApiResponse<void>> deleteMessage(
+    String conversationId,
+    String messageId,
+  ) {
+    return _client.delete(
+      '${ApiEndpoints.conversationMessages(conversationId)}/$messageId',
+    );
+  }
+
+  Future<ApiResponse<Conversation>> updateConversation(
+    String id, {
+    String? name,
+    String? avatarUrl,
+  }) {
+    return _client.put(
+      ApiEndpoints.conversationById(id),
+      data: {
+        if (name != null) 'name': name,
+        if (avatarUrl != null) 'avatarUrl': avatarUrl,
+      },
+      fromJsonT: (json) =>
+          Conversation.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  Future<ApiResponse<void>> leaveConversation(String id) {
+    return _client.delete(ApiEndpoints.conversationById(id));
+  }
+
+  Future<ApiResponse<void>> addParticipant(
+    String conversationId, {
+    required String userId,
+    required String username,
+    String? displayName,
+    String? profilePicture,
+  }) {
+    return _client.post(
+      ApiEndpoints.conversationParticipants(conversationId),
+      data: {
+        'userId': userId,
+        'username': username,
+        if (displayName != null) 'displayName': displayName,
+        if (profilePicture != null) 'profilePicture': profilePicture,
+      },
+    );
+  }
+
+  Future<ApiResponse<void>> removeParticipant(
+    String conversationId,
+    String userId,
+  ) {
+    return _client.delete(
+      ApiEndpoints.conversationRemoveParticipant(conversationId, userId),
+    );
+  }
 }
