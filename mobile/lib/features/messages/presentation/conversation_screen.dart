@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 
+import '../../../core/network/dm_websocket_service.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/conversation.dart';
 import '../../../providers.dart';
@@ -33,19 +36,109 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   // For edit mode
   DmMessage? _editingMessage;
 
+  // Typing indicators (remote users typing in this conversation)
+  final Set<String> _typingUsernames = {};
+
+  // WebSocket subscription
+  StreamSubscription<DmServerEvent>? _wsSubscription;
+
   @override
   void initState() {
     super.initState();
     _fetchConversation();
     _fetchMessages();
     _markAsRead();
+    _connectWebSocket();
   }
 
   @override
   void dispose() {
+    _wsSubscription?.cancel();
+    // Stop local typing indicator on leave
+    final currentUser = ref.read(currentUserProvider);
+    if (currentUser != null) {
+      final dmWs = ref.read(dmWebSocketServiceProvider);
+      dmWs.stopTyping(
+        conversationId: widget.conversationId,
+        username: currentUser.displayName ?? currentUser.username,
+      );
+    }
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _connectWebSocket() {
+    final dmWs = ref.read(dmWebSocketServiceProvider);
+    if (!dmWs.isConnected) {
+      dmWs.connect();
+    }
+
+    _wsSubscription = dmWs.events.listen(_handleWsEvent);
+  }
+
+  void _handleWsEvent(DmServerEvent event) {
+    if (!mounted) return;
+
+    switch (event) {
+      case DmNewMessageEvent():
+        if (event.conversationId == widget.conversationId) {
+          // Avoid duplicates (message we just sent via REST)
+          final exists = _messages.any((m) => m.id == event.message.id);
+          if (!exists) {
+            setState(() => _messages.add(event.message));
+            _scrollToBottom();
+            _markAsRead();
+          }
+        }
+      case DmMessageEditedEvent():
+        if (event.conversationId == widget.conversationId) {
+          setState(() {
+            final idx =
+                _messages.indexWhere((m) => m.id == event.messageId);
+            if (idx != -1) {
+              final old = _messages[idx];
+              _messages[idx] = DmMessage(
+                id: old.id,
+                conversationId: old.conversationId,
+                senderId: old.senderId,
+                senderUsername: old.senderUsername,
+                type: old.type,
+                text: event.newText,
+                imageUrls: old.imageUrls,
+                replyTo: old.replyTo,
+                isDeleted: old.isDeleted,
+                readBy: old.readBy,
+                createdAt: old.createdAt,
+                updatedAt: event.updatedAt,
+              );
+            }
+          });
+        }
+      case DmMessageDeletedEvent():
+        if (event.conversationId == widget.conversationId) {
+          setState(
+              () => _messages.removeWhere((m) => m.id == event.messageId));
+        }
+      case DmUserTypingEvent():
+        if (event.conversationId == widget.conversationId) {
+          final currentUser = ref.read(currentUserProvider);
+          // Don't show our own typing indicator
+          if (event.userId == currentUser?.id) break;
+
+          setState(() {
+            if (event.type == DmServerEventType.userTyping) {
+              _typingUsernames.add(event.username);
+            } else {
+              _typingUsernames.remove(event.username);
+            }
+          });
+        }
+      case DmSendFailedEvent():
+        _showError(event.message ?? event.key);
+      default:
+        break;
+    }
   }
 
   Future<void> _fetchConversation() async {
@@ -134,6 +227,13 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
     final currentUser = ref.read(currentUserProvider);
     if (currentUser == null) return;
+
+    // Stop typing indicator on send
+    final dmWs = ref.read(dmWebSocketServiceProvider);
+    dmWs.stopTyping(
+      conversationId: widget.conversationId,
+      username: currentUser.displayName ?? currentUser.username,
+    );
 
     // If editing
     if (_editingMessage != null) {
@@ -267,6 +367,17 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     );
   }
 
+  void _handleInputChanged(String _) {
+    final currentUser = ref.read(currentUserProvider);
+    if (currentUser == null) return;
+
+    final dmWs = ref.read(dmWebSocketServiceProvider);
+    dmWs.handleTyping(
+      conversationId: widget.conversationId,
+      username: currentUser.displayName ?? currentUser.username,
+    );
+  }
+
   String _conversationTitle() {
     final conv = _conversation;
     if (conv == null) return '';
@@ -378,6 +489,22 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                 ),
         ),
 
+        // Typing indicator
+        if (_typingUsernames.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              _typingUsernames.length == 1
+                  ? l10n.messagesTypingOne(_typingUsernames.first)
+                  : '${_typingUsernames.join(', ')} ...',
+              style: typography.xs.copyWith(
+                color: colors.mutedForeground,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+
         // Edit indicator
         if (_editingMessage != null)
           Container(
@@ -416,6 +543,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                   controller: _messageController,
                   maxLines: 4,
                   minLines: 1,
+                  onChanged: _handleInputChanged,
                   decoration: InputDecoration(
                     hintText: l10n.messagesPlaceholderTypeMessage,
                     hintStyle: typography.sm

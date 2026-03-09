@@ -57,6 +57,15 @@ class AuthRepository {
     );
   }
 
+  Future<ApiResponse<void>> loginWithGoogle({
+    required String idToken,
+  }) {
+    return _client.post(
+      ApiEndpoints.authGoogleMobile,
+      data: {'idToken': idToken},
+    );
+  }
+
   Future<ApiResponse<void>> requestVerification({
     required String email,
     String turnstileToken = '',

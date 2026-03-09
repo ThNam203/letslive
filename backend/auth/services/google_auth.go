@@ -81,7 +81,73 @@ func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode strin
 		)
 	}
 
-	existedRecord, err := s.repo.GetByEmail(ctx, returnedOAuthUser.Email)
+	return s.findOrCreateGoogleUser(ctx, returnedOAuthUser)
+}
+
+// VerifyIDTokenAndGetUser verifies a Google ID token (from mobile's google_sign_in)
+// by calling Google's tokeninfo endpoint, then finds or creates the user.
+func (s GoogleAuthService) VerifyIDTokenAndGetUser(ctx context.Context, idToken string) (*domains.Auth, *serviceresponse.Response[any]) {
+	tokenInfoURL := "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken
+	resp, err := http.Get(tokenInfoURL)
+	if err != nil {
+		logger.Errorf(ctx, "failed to verify google id token: %s", err)
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER, nil, nil, nil,
+		)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		logger.Errorf(ctx, "google tokeninfo returned status %d", resp.StatusCode)
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_UNAUTHORIZED, nil, nil, nil,
+		)
+	}
+
+	var tokenInfo struct {
+		Email         string `json:"email"`
+		EmailVerified string `json:"email_verified"`
+		Name          string `json:"name"`
+		Picture       string `json:"picture"`
+		Aud           string `json:"aud"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenInfo); err != nil {
+		logger.Errorf(ctx, "failed to decode google tokeninfo: %s", err)
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER, nil, nil, nil,
+		)
+	}
+
+	// Verify the token was issued for our client
+	expectedClientID := os.Getenv("GOOGLE_OAUTH_CLIENT_ID")
+	if tokenInfo.Aud != expectedClientID {
+		// Also check the mobile-specific client ID (iOS/Android may differ)
+		mobileClientID := os.Getenv("GOOGLE_OAUTH_MOBILE_CLIENT_ID")
+		if mobileClientID == "" || tokenInfo.Aud != mobileClientID {
+			logger.Errorf(ctx, "google id token audience mismatch: got %s", tokenInfo.Aud)
+			return nil, serviceresponse.NewResponseFromTemplate[any](
+				serviceresponse.RES_ERR_UNAUTHORIZED, nil, nil, nil,
+			)
+		}
+	}
+
+	if tokenInfo.Email == "" || tokenInfo.EmailVerified != "true" {
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_UNAUTHORIZED, nil, nil, nil,
+		)
+	}
+
+	return s.findOrCreateGoogleUser(ctx, googleOAuthUser{
+		Email:         tokenInfo.Email,
+		VerifiedEmail: true,
+		Name:          tokenInfo.Name,
+		Picture:       tokenInfo.Picture,
+	})
+}
+
+// findOrCreateGoogleUser looks up a user by email; if not found, creates a new one.
+func (s GoogleAuthService) findOrCreateGoogleUser(ctx context.Context, oauthUser googleOAuthUser) (*domains.Auth, *serviceresponse.Response[any]) {
+	existedRecord, err := s.repo.GetByEmail(ctx, oauthUser.Email)
 	if err == nil {
 		return existedRecord, nil
 	}
@@ -89,8 +155,8 @@ func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode strin
 	// create new user if not found
 	if err.Code == serviceresponse.RES_ERR_AUTH_NOT_FOUND_CODE {
 		userDTO := &usergatewaydto.CreateUserRequestDTO{
-			Username:     generateUsername(returnedOAuthUser.Email),
-			Email:        returnedOAuthUser.Email,
+			Username:     generateUsername(oauthUser.Email),
+			Email:        oauthUser.Email,
 			AuthProvider: usergatewaydto.ProviderGoogle,
 		}
 
@@ -101,7 +167,7 @@ func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode strin
 		}
 
 		newOAuthUserRecord := &domains.Auth{
-			Email:  returnedOAuthUser.Email,
+			Email:  oauthUser.Email,
 			UserId: &createdUser.Id,
 		}
 

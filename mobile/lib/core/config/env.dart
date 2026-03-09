@@ -7,6 +7,9 @@ abstract final class Env {
   static String get backendWsProtocol => dotenv.env['BACKEND_WS_PROTOCOL'] ?? 'ws';
   static String get environment => dotenv.env['ENVIRONMENT'] ?? 'development';
 
+  static String? get googleOAuthServerClientId =>
+      dotenv.env['GOOGLE_OAUTH_SERVER_CLIENT_ID'];
+
   static bool get isDevelopment => environment == 'development';
   static bool get isProduction => environment == 'production';
 }

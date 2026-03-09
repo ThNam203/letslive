@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/network/api_client.dart';
+import 'core/network/dm_websocket_service.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/livestream/data/livestream_repository.dart';
 import 'features/messages/data/message_repository.dart';
@@ -134,6 +135,13 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
 /// Message repository.
 final messageRepositoryProvider = Provider<MessageRepository>((ref) {
   return MessageRepository(ref.watch(apiClientProvider));
+});
+
+/// DM WebSocket service singleton.
+final dmWebSocketServiceProvider = Provider<DmWebSocketService>((ref) {
+  final service = DmWebSocketService();
+  ref.onDispose(() => service.dispose());
+  return service;
 });
 
 /// Unread notification count.

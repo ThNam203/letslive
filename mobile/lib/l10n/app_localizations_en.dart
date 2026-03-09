@@ -239,6 +239,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authNoAccount => 'Don\'t have an account?';
 
   @override
+  String get authContinueWithGoogle => 'Continue with Google';
+
+  @override
+  String get authGoogleSignInFailed => 'Google sign-in failed, please try again';
+
+  @override
+  String get authGoogleSignInCancelled => 'Google sign-in was cancelled';
+
+  @override
   String get authHaveAccount => 'Already have an account?';
 
   @override
