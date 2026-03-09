@@ -17,6 +17,7 @@ import '../../features/settings/presentation/stream_settings_screen.dart';
 import '../../features/settings/presentation/vods_settings_screen.dart';
 import '../../features/livestream/presentation/livestream_screen.dart';
 import '../../features/messages/presentation/conversation_screen.dart';
+import '../../features/vod/presentation/upload_vod_screen.dart';
 import '../../features/vod/presentation/vod_player_screen.dart';
 import '../../providers.dart';
 
@@ -36,6 +37,7 @@ abstract final class AppRoutes {
   static String livestream(String userId) => '/livestream/$userId';
   static String vodPlayer(String vodId) => '/vods/$vodId/watch';
   static String conversation(String id) => '/conversations/$id';
+  static const uploadVod = '/upload-vod';
 }
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -116,6 +118,11 @@ final appRouter = GoRouter(
       path: AppRoutes.settingsVods,
       redirect: _requireAuth,
       builder: (context, state) => const VodsSettingsScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.uploadVod,
+      redirect: _requireAuth,
+      builder: (context, state) => const UploadVodScreen(),
     ),
 
     // Search (outside shell for full-screen view)

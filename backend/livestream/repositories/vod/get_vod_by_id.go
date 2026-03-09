@@ -13,7 +13,7 @@ import (
 
 func (r postgresVODRepo) GetById(ctx context.Context, id uuid.UUID) (*domains.VOD, *response.Response[any]) {
 	query := `
-        select id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, created_at, updated_at
+        select id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, status, original_file_url, created_at, updated_at
         from vods
         where id = $1
     `

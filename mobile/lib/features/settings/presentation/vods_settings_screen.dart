@@ -12,6 +12,7 @@ import '../../../models/vod.dart';
 import '../../../providers.dart';
 import '../../../shared/widgets/error_display.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../vod/presentation/upload_vod_screen.dart';
 
 class VodsSettingsScreen extends ConsumerStatefulWidget {
   const VodsSettingsScreen({super.key});
@@ -316,6 +317,19 @@ class _VodsSettingsScreenState extends ConsumerState<VodsSettingsScreen> {
     return FScaffold(
       header: FHeader.nested(
         title: Text(l10n.settingsVodsTitle),
+        suffixes: [
+          FButton.icon(
+            onPress: () async {
+              final result = await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const UploadVodScreen(),
+                ),
+              );
+              if (result == true) _fetchVods();
+            },
+            child: const Icon(FIcons.upload),
+          ),
+        ],
       ),
       child: _buildContent(l10n),
     );

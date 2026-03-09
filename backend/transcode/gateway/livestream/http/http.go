@@ -128,3 +128,50 @@ func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, 
 
 	return nil
 }
+
+func (g *LivestreamGateway) UpdateVODStatus(ctx context.Context, vodId string, status string, playbackUrl string, thumbnailUrl string) error {
+	addr, err := g.registry.ServiceAddress(ctx, "livestream")
+	if err != nil {
+		logger.Debugf(ctx, "get service address from gateway failed for UpdateVODStatus")
+		return fmt.Errorf("failed to get livestream service address: %w", err)
+	}
+
+	url := fmt.Sprintf("http://%s/v1/internal/vods/%s/status", addr, vodId)
+
+	payload := map[string]string{
+		"status": status,
+	}
+	if playbackUrl != "" {
+		payload["playbackUrl"] = playbackUrl
+	}
+	if thumbnailUrl != "" {
+		payload["thumbnailUrl"] = thumbnailUrl
+	}
+
+	payloadBuf := new(bytes.Buffer)
+	if err := json.NewEncoder(payloadBuf).Encode(payload); err != nil {
+		return fmt.Errorf("failed to encode UpdateVODStatus payload: %w", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, url, payloadBuf)
+	if err != nil {
+		return fmt.Errorf("failed to create UpdateVODStatus request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	if setErr := gateway.SetRequestIDHeader(ctx, req); setErr != nil {
+		logger.Debugf(ctx, "failed to set request id header: %s", setErr)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to call UpdateVODStatus: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 != 2 {
+		return fmt.Errorf("UpdateVODStatus returned status %d", resp.StatusCode)
+	}
+
+	return nil
+}

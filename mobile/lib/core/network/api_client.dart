@@ -143,6 +143,27 @@ class ApiClient {
       fromJsonT: fromJsonT,
     );
   }
+
+  Future<ApiResponse<T>> uploadWithProgress<T>(
+    String path, {
+    required FormData formData,
+    T Function(dynamic)? fromJsonT,
+    void Function(int sent, int total)? onSendProgress,
+    CancelToken? cancelToken,
+  }) async {
+    final response = await _dio.post(
+      path,
+      data: formData,
+      options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+      onSendProgress: onSendProgress,
+      cancelToken: cancelToken,
+    );
+    return ApiResponse.fromJson(
+      response.data as Map<String, dynamic>,
+      response.statusCode ?? 0,
+      fromJsonT: fromJsonT,
+    );
+  }
 }
 
 class _AuthInterceptor extends Interceptor {

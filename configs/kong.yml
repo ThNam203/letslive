@@ -131,6 +131,30 @@ services:
                 - ACCESS_TOKEN
               key_claim_name: consumer
               run_on_preflight: true
+      - name: VOD_Upload_Private_Route
+        paths:
+          - /vods/upload
+        methods:
+          - POST
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: true
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 2048
+              size_unit: megabytes
       - name: VOD_Author_Private_Route
         paths:
           - ~/vods/author

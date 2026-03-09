@@ -38,8 +38,9 @@ func (s *LivestreamService) EndLivestreamAndCreateVOD(ctx context.Context, strea
 		return err
 	}
 
+	livestreamId := currentLivestream.Id
 	vodData := &domains.VOD{
-		LivestreamId: currentLivestream.Id,
+		LivestreamId: &livestreamId,
 		UserId:       currentLivestream.UserId,
 		Title:        currentLivestream.Title,
 		Description:  currentLivestream.Description,
@@ -48,6 +49,7 @@ func (s *LivestreamService) EndLivestreamAndCreateVOD(ctx context.Context, strea
 		ViewCount:    0,
 		Duration:     endReqDTO.Duration,
 		PlaybackURL:  endReqDTO.PlaybackURL,
+		Status:       domains.VODStatusReady,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}

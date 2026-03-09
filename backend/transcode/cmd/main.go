@@ -15,9 +15,12 @@ import (
 	"sen1or/letslive/transcode/watcher"
 	miniowatcher "sen1or/letslive/transcode/watcher/minio"
 	"sen1or/letslive/transcode/webserver"
+	"sen1or/letslive/transcode/worker"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
@@ -74,6 +77,27 @@ func main() {
 	userGateway := usergateway.NewUserGateway(registry)
 	livestreamGateway := livestreamgateway.NewLivestreamGateway(registry)
 
+	// Initialize transcode worker for uploaded video processing
+	var transcodeWorker *worker.TranscodeWorker
+	if config.Database.ConnectionString != "" {
+		dbConn, dbErr := pgxpool.New(ctx, config.Database.ConnectionString)
+		if dbErr != nil {
+			logger.Errorf(ctx, "failed to connect to database for transcode worker: %v", dbErr)
+		} else {
+			rawMinioClient := worker.NewRawMinIOClient(config.MinIO)
+			transcodeWorker = worker.NewTranscodeWorker(
+				dbConn,
+				minioStorage,
+				rawMinioClient,
+				config.MinIO.BucketName,
+				config,
+				livestreamGateway,
+			)
+			go transcodeWorker.Start(ctx)
+			logger.Infof(ctx, "transcode worker started")
+		}
+	}
+
 	// TODO: find a way to remove the vodHandler from the rtmp, or change the design or config
 	//Use kafka
 	rtmpServer := rtmp.NewRTMPServer(
@@ -109,6 +133,14 @@ func main() {
 		watcher.Shutdown()
 		wg.Done()
 	}()
+
+	if transcodeWorker != nil {
+		wg.Add(1)
+		go func() {
+			transcodeWorker.Shutdown()
+			wg.Done()
+		}()
+	}
 
 	wg.Add(1)
 	go (func() {
