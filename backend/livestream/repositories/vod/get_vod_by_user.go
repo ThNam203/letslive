@@ -13,7 +13,7 @@ import (
 func (r *postgresVODRepo) GetByUser(ctx context.Context, userId uuid.UUID, page int, limit int) ([]domains.VOD, *response.Response[any]) {
 	offset := limit * page
 	query := `
-        select id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, created_at, updated_at
+        select id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, status, original_file_url, created_at, updated_at
         from vods
         where user_id = $1
         order by created_at desc

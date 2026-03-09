@@ -12,9 +12,9 @@ import (
 func (r *postgresVODRepo) GetPopular(ctx context.Context, page int, limit int) ([]domains.VOD, *response.Response[any]) {
 	offset := limit * page
 	query := `
-        select id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, created_at, updated_at
+        select id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, status, original_file_url, created_at, updated_at
         from vods
-        where visibility = 'public'
+        where visibility = 'public' and status = 'ready'
         order by view_count desc
         offset $1 limit $2
     `

@@ -44,6 +44,7 @@ abstract final class ApiEndpoints {
   static String vodById(String id) => '/vods/$id';
   static const vodsAuthor = '/vods/author';
   static const popularVods = '/popular-vods';
+  static const vodUpload = '/vods/upload';
 
   // VOD Comments
   static String vodComments(String vodId) => '/vods/$vodId/comments';

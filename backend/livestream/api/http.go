@@ -59,6 +59,7 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("GET /v1/vods/{vodId}/comments", a.vodCommentHandler.GetCommentsPublicHandler)
 	wrap("POST /v1/vods/{vodId}/comments", a.vodCommentHandler.CreateCommentPrivateHandler)
 
+	wrap("POST /v1/vods/upload", a.vodHandler.UploadVODPrivateHandler)
 	wrap("PATCH /v1/vods/{vodId}", a.vodHandler.UpdateVODMetadataPrivateHandler)
 	wrap("DELETE /v1/vods/{vodId}", a.vodHandler.DeleteVODPrivateHandler)
 
@@ -70,6 +71,7 @@ func (a *APIServer) getHandler() http.Handler {
 
 	wrap("POST /v1/internal/livestreams/{livestreamId}/end", a.livestreamHandler.EndLivestreamAndCreateVODInternalHandler)
 	wrap("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)
+	wrap("PATCH /v1/internal/vods/{vodId}/status", a.vodHandler.UpdateVODStatusInternalHandler)
 
 	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)
 
@@ -94,8 +96,8 @@ func (a *APIServer) ListenAndServe(ctx context.Context, useTLS bool) error { // 
 	a.httpServer = &http.Server{
 		Addr:         addr,
 		Handler:      a.getHandler(),
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  10 * time.Minute,
+		WriteTimeout: 10 * time.Minute,
 	}
 
 	// start the server (this will block)

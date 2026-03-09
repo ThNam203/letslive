@@ -293,5 +293,25 @@
     "livestreamWatchLive": "Xem trực tiếp",
     "livestreamVideoError": "Không thể tải luồng video",
     "vodWatchVideo": "Xem",
-    "vodVideoError": "Không thể tải video"
+    "vodVideoError": "Không thể tải video",
+
+    "uploadVideoTitle": "Tải lên video",
+    "uploadSelectVideo": "Chọn video",
+    "uploadVideoSelected": "Đã chọn video",
+    "uploadTapToChange": "Nhấn để thay đổi",
+    "uploadSupportedFormats": "MP4, MOV, AVI, MKV, WebM",
+    "uploadTitle": "Tiêu đề",
+    "uploadTitleHint": "Nhập tiêu đề video",
+    "uploadDescription": "Mô tả",
+    "uploadDescriptionHint": "Nhập mô tả video",
+    "uploadButton": "Tải lên",
+    "uploadUploading": "Đang tải lên video",
+    "uploadProcessing": "Đang xử lý",
+    "uploadProcessingOnServer": "Đang xử lý trên máy chủ...",
+    "uploadComplete": "Tải lên thành công!",
+    "uploadDone": "Hoàn tất",
+    "uploadFailed": "Tải lên thất bại",
+    "uploadFailedGeneric": "Tải lên thất bại",
+    "uploadDismiss": "Đóng",
+    "uploadClose": "Đóng"
 }

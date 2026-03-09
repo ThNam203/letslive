@@ -232,15 +232,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get authNoAccount => 'Chưa có tài khoản?';
 
   @override
-  String get authContinueWithGoogle => 'Tiếp tục với Google';
-
-  @override
-  String get authGoogleSignInFailed => 'Đăng nhập Google thất bại, vui lòng thử lại';
-
-  @override
-  String get authGoogleSignInCancelled => 'Đăng nhập Google đã bị hủy';
-
-  @override
   String get authHaveAccount => 'Đã có tài khoản?';
 
   @override
@@ -968,4 +959,61 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get vodVideoError => 'Không thể tải video';
+
+  @override
+  String get uploadVideoTitle => 'Tải lên video';
+
+  @override
+  String get uploadSelectVideo => 'Chọn video';
+
+  @override
+  String get uploadVideoSelected => 'Đã chọn video';
+
+  @override
+  String get uploadTapToChange => 'Nhấn để thay đổi';
+
+  @override
+  String get uploadSupportedFormats => 'MP4, MOV, AVI, MKV, WebM';
+
+  @override
+  String get uploadTitle => 'Tiêu đề';
+
+  @override
+  String get uploadTitleHint => 'Nhập tiêu đề video';
+
+  @override
+  String get uploadDescription => 'Mô tả';
+
+  @override
+  String get uploadDescriptionHint => 'Nhập mô tả video';
+
+  @override
+  String get uploadButton => 'Tải lên';
+
+  @override
+  String get uploadUploading => 'Đang tải lên video';
+
+  @override
+  String get uploadProcessing => 'Đang xử lý';
+
+  @override
+  String get uploadProcessingOnServer => 'Đang xử lý trên máy chủ...';
+
+  @override
+  String get uploadComplete => 'Tải lên thành công!';
+
+  @override
+  String get uploadDone => 'Hoàn tất';
+
+  @override
+  String get uploadFailed => 'Tải lên thất bại';
+
+  @override
+  String get uploadFailedGeneric => 'Tải lên thất bại';
+
+  @override
+  String get uploadDismiss => 'Đóng';
+
+  @override
+  String get uploadClose => 'Đóng';
 }

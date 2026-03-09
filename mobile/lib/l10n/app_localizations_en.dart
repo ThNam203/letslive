@@ -239,15 +239,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authNoAccount => 'Don\'t have an account?';
 
   @override
-  String get authContinueWithGoogle => 'Continue with Google';
-
-  @override
-  String get authGoogleSignInFailed => 'Google sign-in failed, please try again';
-
-  @override
-  String get authGoogleSignInCancelled => 'Google sign-in was cancelled';
-
-  @override
   String get authHaveAccount => 'Already have an account?';
 
   @override
@@ -974,4 +965,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vodVideoError => 'Unable to load video';
+
+  @override
+  String get uploadVideoTitle => 'Upload Video';
+
+  @override
+  String get uploadSelectVideo => 'Select a video';
+
+  @override
+  String get uploadVideoSelected => 'Video selected';
+
+  @override
+  String get uploadTapToChange => 'Tap to change';
+
+  @override
+  String get uploadSupportedFormats => 'MP4, MOV, AVI, MKV, WebM';
+
+  @override
+  String get uploadTitle => 'Title';
+
+  @override
+  String get uploadTitleHint => 'Enter video title';
+
+  @override
+  String get uploadDescription => 'Description';
+
+  @override
+  String get uploadDescriptionHint => 'Enter video description';
+
+  @override
+  String get uploadButton => 'Upload';
+
+  @override
+  String get uploadUploading => 'Uploading Video';
+
+  @override
+  String get uploadProcessing => 'Processing';
+
+  @override
+  String get uploadProcessingOnServer => 'Processing on server...';
+
+  @override
+  String get uploadComplete => 'Upload complete!';
+
+  @override
+  String get uploadDone => 'Done';
+
+  @override
+  String get uploadFailed => 'Upload Failed';
+
+  @override
+  String get uploadFailedGeneric => 'Upload failed';
+
+  @override
+  String get uploadDismiss => 'Dismiss';
+
+  @override
+  String get uploadClose => 'Close';
 }

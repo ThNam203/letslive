@@ -15,7 +15,7 @@ func (r *postgresVODRepo) Update(ctx context.Context, vod domains.VOD) (*domains
         update vods
         set title = $1, description = $2, thumbnail_url = $3, visibility = $4, duration = $5, playback_url = $6, updated_at = now()
         where id = $7
-        returning id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, created_at, updated_at
+        returning id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, status, original_file_url, created_at, updated_at
     `
 	rows, err := r.dbConn.Query(ctx, query,
 		vod.Title, vod.Description, vod.ThumbnailURL, vod.Visibility,

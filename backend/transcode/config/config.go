@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"reflect"
 	"sen1or/letslive/transcode/constants"
 	"sen1or/letslive/transcode/pkg/discovery"
 	"sen1or/letslive/transcode/pkg/logger"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -59,11 +61,20 @@ type Transcode struct {
 	} `yaml:"ffmpegSetting"`
 }
 
+type Database struct {
+	Host             string   `yaml:"host"`
+	Port             int      `yaml:"port"`
+	Name             string   `yaml:"name"`
+	Params           []string `yaml:"params"`
+	ConnectionString string
+}
+
 type Config struct {
 	Service   `yaml:"service"`
 	RTMP      `yaml:"rtmp"`
 	Transcode `yaml:"transcode"`
 	MinIO     `yaml:"minio"`
+	Database  `yaml:"database"`
 	Webserver struct {
 		Port int `yaml:"port"`
 	} `yaml:"webserver"`
@@ -241,6 +252,23 @@ func (cm *ConfigManager) fetchAndParseConfig() (*Config, error) {
 	err = yaml.Unmarshal(body, &config)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshaling config YAML: %w", err)
+	}
+
+	// Build database connection string if database config is present
+	if config.Database.Host != "" {
+		dbUser := os.Getenv("LIVESTREAM_DB_USER")
+		dbPassword := os.Getenv("LIVESTREAM_DB_PASSWORD")
+
+		dbURL := &neturl.URL{
+			Scheme: "postgres",
+			User:   neturl.UserPassword(dbUser, dbPassword),
+			Host:   fmt.Sprintf("%s:%d", config.Database.Host, config.Database.Port),
+			Path:   "/" + config.Database.Name,
+		}
+		if len(config.Database.Params) > 0 {
+			dbURL.RawQuery = strings.Join(config.Database.Params, "&")
+		}
+		config.Database.ConnectionString = dbURL.String()
 	}
 
 	return &config, nil

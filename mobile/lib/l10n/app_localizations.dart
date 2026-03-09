@@ -434,24 +434,6 @@ abstract class AppLocalizations {
   /// **'Don\'t have an account?'**
   String get authNoAccount;
 
-  /// No description provided for @authContinueWithGoogle.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue with Google'**
-  String get authContinueWithGoogle;
-
-  /// No description provided for @authGoogleSignInFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Google sign-in failed, please try again'**
-  String get authGoogleSignInFailed;
-
-  /// No description provided for @authGoogleSignInCancelled.
-  ///
-  /// In en, this message translates to:
-  /// **'Google sign-in was cancelled'**
-  String get authGoogleSignInCancelled;
-
   /// No description provided for @authHaveAccount.
   ///
   /// In en, this message translates to:
@@ -1765,6 +1747,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to load video'**
   String get vodVideoError;
+
+  /// No description provided for @uploadVideoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Video'**
+  String get uploadVideoTitle;
+
+  /// No description provided for @uploadSelectVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a video'**
+  String get uploadSelectVideo;
+
+  /// No description provided for @uploadVideoSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Video selected'**
+  String get uploadVideoSelected;
+
+  /// No description provided for @uploadTapToChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to change'**
+  String get uploadTapToChange;
+
+  /// No description provided for @uploadSupportedFormats.
+  ///
+  /// In en, this message translates to:
+  /// **'MP4, MOV, AVI, MKV, WebM'**
+  String get uploadSupportedFormats;
+
+  /// No description provided for @uploadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get uploadTitle;
+
+  /// No description provided for @uploadTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter video title'**
+  String get uploadTitleHint;
+
+  /// No description provided for @uploadDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get uploadDescription;
+
+  /// No description provided for @uploadDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter video description'**
+  String get uploadDescriptionHint;
+
+  /// No description provided for @uploadButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get uploadButton;
+
+  /// No description provided for @uploadUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading Video'**
+  String get uploadUploading;
+
+  /// No description provided for @uploadProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing'**
+  String get uploadProcessing;
+
+  /// No description provided for @uploadProcessingOnServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing on server...'**
+  String get uploadProcessingOnServer;
+
+  /// No description provided for @uploadComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload complete!'**
+  String get uploadComplete;
+
+  /// No description provided for @uploadDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get uploadDone;
+
+  /// No description provided for @uploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Failed'**
+  String get uploadFailed;
+
+  /// No description provided for @uploadFailedGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed'**
+  String get uploadFailedGeneric;
+
+  /// No description provided for @uploadDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get uploadDismiss;
+
+  /// No description provided for @uploadClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get uploadClose;
 }
 
 class _AppLocalizationsDelegate

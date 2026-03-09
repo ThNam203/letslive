@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
+
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../../../core/network/api_response.dart';
@@ -102,5 +106,28 @@ class VodRepository {
 
   Future<ApiResponse<void>> deleteVod(String vodId) {
     return _client.delete(ApiEndpoints.vodById(vodId));
+  }
+
+  Future<ApiResponse<Vod>> uploadVod({
+    required File videoFile,
+    required String title,
+    String description = '',
+    String visibility = 'public',
+    void Function(int sent, int total)? onSendProgress,
+    CancelToken? cancelToken,
+  }) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(videoFile.path),
+      'title': title,
+      'description': description,
+      'visibility': visibility,
+    });
+    return _client.uploadWithProgress(
+      ApiEndpoints.vodUpload,
+      formData: formData,
+      fromJsonT: (json) => Vod.fromJson(json as Map<String, dynamic>),
+      onSendProgress: onSendProgress,
+      cancelToken: cancelToken,
+    );
   }
 }

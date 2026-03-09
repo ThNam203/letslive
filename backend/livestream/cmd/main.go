@@ -19,6 +19,7 @@ import (
 	"sen1or/letslive/livestream/pkg/logger"
 	"sen1or/letslive/livestream/pkg/tracer"
 	"sen1or/letslive/livestream/repositories"
+	miniostorage "sen1or/letslive/livestream/storage/minio"
 	livestreamService "sen1or/letslive/livestream/services/livestream"
 	vodService "sen1or/letslive/livestream/services/vod"
 	vodCommentService "sen1or/letslive/livestream/services/vod_comment"
@@ -70,7 +71,7 @@ func main() {
 	dbConn := ConnectDB(ctx, config)
 	defer dbConn.Close()
 
-	server := SetupServer(dbConn, registry, config)
+	server := SetupServer(ctx, dbConn, registry, config)
 	go func() {
 		logger.Infof(ctx, "starting server on %s:%d...", config.Service.Hostname, config.Service.APIPort)
 		// ListenAndServe should ideally block until an error occurs (e.g., server stopped)
@@ -169,16 +170,20 @@ func DeregisterDiscoveryService(shutdownContext context.Context, registry discov
 	}
 }
 
-func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
+func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
 	var livestreamRepo = repositories.NewLivestreamRepository(dbConn)
 	var vodRepo = repositories.NewVODRepository(dbConn)
 	var vodCommentRepo = repositories.NewVODCommentRepository(dbConn)
 	var vodCommentLikeRepo = repositories.NewVODCommentLikeRepository(dbConn)
+	var transcodeJobRepo = repositories.NewTranscodeJobRepository(dbConn)
 
 	var userGateway = usergatewayhttp.NewUserGateway(registry)
 
+	// Initialize MinIO storage for raw video uploads
+	var minio = miniostorage.NewMinIOStorage(ctx, cfg.MinIO)
+
 	var livestreamService = livestreamService.NewLivestreamService(livestreamRepo, vodRepo)
-	var vodService = vodService.NewVODService(vodRepo)
+	var vodService = vodService.NewVODService(vodRepo, transcodeJobRepo, minio)
 	var vodCommentService = vodCommentService.NewVODCommentService(vodCommentRepo, vodCommentLikeRepo, vodRepo, userGateway, dbConn)
 
 	var livestreamHandler = livestreamHandler.NewLivestreamHandler(livestreamService)

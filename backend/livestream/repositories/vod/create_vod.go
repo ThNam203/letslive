@@ -11,13 +11,13 @@ import (
 
 func (r *postgresVODRepo) Create(ctx context.Context, vod domains.VOD) (*domains.VOD, *response.Response[any]) {
 	query := `
-        insert into vods (livestream_id, user_id, title, description, thumbnail_url, visibility, duration, playback_url, view_count, created_at)
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        returning id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, created_at, updated_at
+        insert into vods (livestream_id, user_id, title, description, thumbnail_url, visibility, duration, playback_url, view_count, status, original_file_url, created_at)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        returning id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, status, original_file_url, created_at, updated_at
     `
 	rows, err := r.dbConn.Query(ctx, query,
 		vod.LivestreamId, vod.UserId, vod.Title, vod.Description, vod.ThumbnailURL,
-		vod.Visibility, vod.Duration, vod.PlaybackURL, vod.ViewCount, vod.CreatedAt,
+		vod.Visibility, vod.Duration, vod.PlaybackURL, vod.ViewCount, vod.Status, vod.OriginalFileURL, vod.CreatedAt,
 	)
 
 	if err != nil {

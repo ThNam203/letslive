@@ -1,6 +1,6 @@
 class Vod {
   final String id;
-  final String livestreamId;
+  final String? livestreamId;
   final String userId;
   final String title;
   final String? description;
@@ -8,7 +8,9 @@ class Vod {
   final String visibility;
   final int viewCount;
   final int duration;
-  final String playbackUrl;
+  final String? playbackUrl;
+  final String status;
+  final String? originalFileUrl;
   final String createdAt;
   final String updatedAt;
 
@@ -19,7 +21,7 @@ class Vod {
 
   const Vod({
     required this.id,
-    required this.livestreamId,
+    this.livestreamId,
     required this.userId,
     required this.title,
     this.description,
@@ -27,7 +29,9 @@ class Vod {
     this.visibility = 'public',
     this.viewCount = 0,
     this.duration = 0,
-    required this.playbackUrl,
+    this.playbackUrl,
+    this.status = 'ready',
+    this.originalFileUrl,
     required this.createdAt,
     required this.updatedAt,
     this.username,
@@ -36,6 +40,9 @@ class Vod {
   });
 
   bool get isPublic => visibility == 'public';
+  bool get isReady => status == 'ready';
+  bool get isProcessing => status == 'processing';
+  bool get isFailed => status == 'failed';
 
   Vod copyWith({
     String? title,
@@ -43,6 +50,7 @@ class Vod {
     String? thumbnailUrl,
     String? visibility,
     int? viewCount,
+    String? status,
   }) {
     return Vod(
       id: id,
@@ -55,6 +63,8 @@ class Vod {
       viewCount: viewCount ?? this.viewCount,
       duration: duration,
       playbackUrl: playbackUrl,
+      status: status ?? this.status,
+      originalFileUrl: originalFileUrl,
       createdAt: createdAt,
       updatedAt: updatedAt,
       username: username,
@@ -66,7 +76,7 @@ class Vod {
   factory Vod.fromJson(Map<String, dynamic> json) {
     return Vod(
       id: json['id'] as String,
-      livestreamId: json['livestreamId'] as String,
+      livestreamId: json['livestreamId'] as String?,
       userId: json['userId'] as String,
       title: json['title'] as String,
       description: json['description'] as String?,
@@ -74,7 +84,9 @@ class Vod {
       visibility: json['visibility'] as String? ?? 'public',
       viewCount: json['viewCount'] as int? ?? 0,
       duration: json['duration'] as int? ?? 0,
-      playbackUrl: json['playbackUrl'] as String,
+      playbackUrl: json['playbackUrl'] as String?,
+      status: json['status'] as String? ?? 'ready',
+      originalFileUrl: json['originalFileUrl'] as String?,
       createdAt: json['createdAt'] as String,
       updatedAt: json['updatedAt'] as String,
       username: json['username'] as String?,
