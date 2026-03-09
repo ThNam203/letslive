@@ -232,6 +232,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get authNoAccount => 'Chưa có tài khoản?';
 
   @override
+  String get authContinueWithGoogle => 'Tiếp tục với Google';
+
+  @override
+  String get authGoogleSignInFailed => 'Đăng nhập Google thất bại, vui lòng thử lại';
+
+  @override
+  String get authGoogleSignInCancelled => 'Đăng nhập Google đã bị hủy';
+
+  @override
   String get authHaveAccount => 'Đã có tài khoản?';
 
   @override

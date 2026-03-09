@@ -7,7 +7,7 @@ abstract final class ApiEndpoints {
   static const authRefreshToken = '/auth/refresh-token';
   static const authPassword = '/auth/password';
   static const authVerifyEmail = '/auth/verify-email';
-  static const authVerifyOtp = '/auth/verify-otp';
+  static const authGoogleMobile = '/auth/google/mobile';
 
   // User – singular "/user" for specific-user operations,
   //         plural "/users" for collection queries (matches backend).

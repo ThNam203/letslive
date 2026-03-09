@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../../core/config/env.dart';
 import '../../../core/constants/field_limits.dart';
 import '../../../core/constants/password.dart';
 import '../../../core/router/app_router.dart';
@@ -23,6 +25,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
 
   @override
   void dispose() {
@@ -67,6 +70,80 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isGoogleLoading = true);
+
+    try {
+      final googleSignIn = GoogleSignIn(
+        serverClientId: Env.googleOAuthServerClientId,
+        scopes: ['email', 'profile'],
+      );
+      final account = await googleSignIn.signIn();
+      if (account == null) {
+        if (mounted) {
+          final l10n = AppLocalizations.of(context);
+          showFToast(
+            context: context,
+            title: Text(l10n.authGoogleSignInCancelled),
+            icon: const Icon(FIcons.circleAlert),
+          );
+        }
+        return;
+      }
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null) {
+        if (mounted) {
+          final l10n = AppLocalizations.of(context);
+          showFToast(
+            context: context,
+            title: Text(l10n.authGoogleSignInFailed),
+            icon: const Icon(FIcons.circleAlert),
+          );
+        }
+        return;
+      }
+
+      final authRepo = ref.read(authRepositoryProvider);
+      final response = await authRepo.loginWithGoogle(idToken: idToken);
+
+      if (!mounted) return;
+
+      if (response.success) {
+        await ref.read(currentUserProvider.notifier).fetchMe();
+        if (mounted) context.go(AppRoutes.home);
+      } else {
+        final errorMsg = getLocalizedApiMessage(context, response.key);
+        showFToast(
+          context: context,
+          title: Text(errorMsg),
+          icon: const Icon(FIcons.circleAlert),
+        );
+      }
+    } on DioException catch (_) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        showFToast(
+          context: context,
+          title: Text(l10n.authGoogleSignInFailed),
+          icon: const Icon(FIcons.circleAlert),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        showFToast(
+          context: context,
+          title: Text(l10n.authGoogleSignInFailed),
+          icon: const Icon(FIcons.circleAlert),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
     }
   }
 
@@ -164,6 +241,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 CircularProgressIndicator(strokeWidth: 2),
                           )
                         : Text(l10n.authLogin),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: colors.border)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(l10n.or,
+                            style: typography.xs
+                                .copyWith(color: colors.mutedForeground)),
+                      ),
+                      Expanded(child: Divider(color: colors.border)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  FButton(
+                    variant: FButtonVariant.outline,
+                    onPress: _isGoogleLoading ? null : _handleGoogleSignIn,
+                    child: _isGoogleLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child:
+                                CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.g_mobiledata, size: 24),
+                              const SizedBox(width: 8),
+                              Text(l10n.authContinueWithGoogle),
+                            ],
+                          ),
                   ),
                   const SizedBox(height: 16),
                   Row(

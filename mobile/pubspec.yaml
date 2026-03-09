@@ -42,6 +42,9 @@ dependencies:
   # WebSocket
   web_socket_channel: ^3.0.2
 
+  # Google Sign-In
+  google_sign_in: ^6.2.2
+
   # Utils
   flutter_dotenv: ^6.0.0
   json_annotation: ^4.11.0
