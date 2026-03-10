@@ -272,6 +272,30 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get authContinueWithGoogle => 'Continue with Google';
+
+  @override
+  String get authGoogleSignInCancelled => 'Google sign-in was cancelled';
+
+  @override
+  String get authGoogleSignInFailed => 'Google sign-in failed';
+
+  @override
+  String get authEmailHint => 'Enter your email';
+
+  @override
+  String get authPasswordHint => 'Enter your password';
+
+  @override
+  String get authUsernameHint => 'Choose a username';
+
+  @override
+  String get authCreatePasswordHint => 'Create a password';
+
+  @override
+  String get authConfirmPasswordHint => 'Re-enter your password';
+
+  @override
   String get errorGeneralTitle => 'Oops!';
 
   @override

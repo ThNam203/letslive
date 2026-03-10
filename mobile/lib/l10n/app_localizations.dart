@@ -494,6 +494,54 @@ abstract class AppLocalizations {
   /// **'Resend in {countdown}s'**
   String authOtpResendCountDown(int countdown);
 
+  /// No description provided for @authContinueWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get authContinueWithGoogle;
+
+  /// No description provided for @authGoogleSignInCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in was cancelled'**
+  String get authGoogleSignInCancelled;
+
+  /// No description provided for @authGoogleSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in failed'**
+  String get authGoogleSignInFailed;
+
+  /// No description provided for @authEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email'**
+  String get authEmailHint;
+
+  /// No description provided for @authPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password'**
+  String get authPasswordHint;
+
+  /// No description provided for @authUsernameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a username'**
+  String get authUsernameHint;
+
+  /// No description provided for @authCreatePasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a password'**
+  String get authCreatePasswordHint;
+
+  /// No description provided for @authConfirmPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter your password'**
+  String get authConfirmPasswordHint;
+
   /// No description provided for @errorGeneralTitle.
   ///
   /// In en, this message translates to:

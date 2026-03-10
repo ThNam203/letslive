@@ -265,6 +265,30 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get authContinueWithGoogle => 'Tiếp tục với Google';
+
+  @override
+  String get authGoogleSignInCancelled => 'Đăng nhập Google đã bị hủy';
+
+  @override
+  String get authGoogleSignInFailed => 'Đăng nhập Google thất bại';
+
+  @override
+  String get authEmailHint => 'Nhập email của bạn';
+
+  @override
+  String get authPasswordHint => 'Nhập mật khẩu của bạn';
+
+  @override
+  String get authUsernameHint => 'Chọn tên người dùng';
+
+  @override
+  String get authCreatePasswordHint => 'Tạo mật khẩu';
+
+  @override
+  String get authConfirmPasswordHint => 'Nhập lại mật khẩu';
+
+  @override
   String get errorGeneralTitle => 'Oops!';
 
   @override

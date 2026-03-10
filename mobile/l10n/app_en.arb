@@ -175,6 +175,22 @@
             "countdown": {"type": "int"}
         }
     },
+    "authContinueWithGoogle": "Continue with Google",
+    "@authContinueWithGoogle": {},
+    "authGoogleSignInCancelled": "Google sign-in was cancelled",
+    "@authGoogleSignInCancelled": {},
+    "authGoogleSignInFailed": "Google sign-in failed",
+    "@authGoogleSignInFailed": {},
+    "authEmailHint": "Enter your email",
+    "@authEmailHint": {},
+    "authPasswordHint": "Enter your password",
+    "@authPasswordHint": {},
+    "authUsernameHint": "Choose a username",
+    "@authUsernameHint": {},
+    "authCreatePasswordHint": "Create a password",
+    "@authCreatePasswordHint": {},
+    "authConfirmPasswordHint": "Re-enter your password",
+    "@authConfirmPasswordHint": {},
 
     "errorGeneralTitle": "Oops!",
     "@errorGeneralTitle": {},
