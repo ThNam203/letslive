@@ -1,7 +1,6 @@
 "use client";
 
 import { Bounce, ToastContainer, toast as toastify } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import i18next from "@/lib/i18n/i18next";
 
 const DEFAULT_ERROR_KEY = "api-response:default_error";
