@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -153,7 +154,7 @@ func (w *TranscodeWorker) doTranscode(ctx context.Context, jobId, vodId, rawFile
 	if objectName == "" {
 		errMsg := "failed to extract object name from URL"
 		w.markJobFailed(ctx, jobId, vodId, errMsg, currentAttempt, maxAttempts)
-		return fmt.Errorf(errMsg)
+		return errors.New(errMsg)
 	}
 
 	// Create temp directory for this job
@@ -161,7 +162,7 @@ func (w *TranscodeWorker) doTranscode(ctx context.Context, jobId, vodId, rawFile
 	if err != nil {
 		errMsg := fmt.Sprintf("failed to create temp dir: %v", err)
 		w.markJobFailed(ctx, jobId, vodId, errMsg, currentAttempt, maxAttempts)
-		return fmt.Errorf(errMsg)
+		return errors.New(errMsg)
 	}
 	defer os.RemoveAll(tempDir)
 
@@ -170,7 +171,7 @@ func (w *TranscodeWorker) doTranscode(ctx context.Context, jobId, vodId, rawFile
 	if err := w.downloadFromMinIO(ctx, objectName, rawFilePath); err != nil {
 		errMsg := fmt.Sprintf("failed to download raw file: %v", err)
 		w.markJobFailed(ctx, jobId, vodId, errMsg, currentAttempt, maxAttempts)
-		return fmt.Errorf(errMsg)
+		return errors.New(errMsg)
 	}
 
 	// Transcode to HLS
@@ -178,14 +179,14 @@ func (w *TranscodeWorker) doTranscode(ctx context.Context, jobId, vodId, rawFile
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		errMsg := fmt.Sprintf("failed to create output dir: %v", err)
 		w.markJobFailed(ctx, jobId, vodId, errMsg, currentAttempt, maxAttempts)
-		return fmt.Errorf(errMsg)
+		return errors.New(errMsg)
 	}
 
 	_, thumbnailPath, err := transcoder.TranscodeFile(ctx, w.config.Transcode, rawFilePath, outputDir)
 	if err != nil {
 		errMsg := fmt.Sprintf("ffmpeg transcode failed: %v", err)
 		w.markJobFailed(ctx, jobId, vodId, errMsg, currentAttempt, maxAttempts)
-		return fmt.Errorf(errMsg)
+		return errors.New(errMsg)
 	}
 
 	// Upload HLS segments and playlists to MinIO
@@ -193,7 +194,7 @@ func (w *TranscodeWorker) doTranscode(ctx context.Context, jobId, vodId, rawFile
 	if err != nil {
 		errMsg := fmt.Sprintf("failed to upload HLS segments: %v", err)
 		w.markJobFailed(ctx, jobId, vodId, errMsg, currentAttempt, maxAttempts)
-		return fmt.Errorf(errMsg)
+		return errors.New(errMsg)
 	}
 
 	// Upload thumbnail
@@ -211,7 +212,7 @@ func (w *TranscodeWorker) doTranscode(ctx context.Context, jobId, vodId, rawFile
 	if err := w.livestreamGateway.UpdateVODStatus(ctx, vodId, "ready", playbackURL, thumbnailURL); err != nil {
 		errMsg := fmt.Sprintf("failed to update VOD status: %v", err)
 		w.markJobFailed(ctx, jobId, vodId, errMsg, currentAttempt, maxAttempts)
-		return fmt.Errorf(errMsg)
+		return errors.New(errMsg)
 	}
 
 	// Mark job completed
