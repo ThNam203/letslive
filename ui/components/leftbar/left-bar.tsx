@@ -29,7 +29,6 @@ export default function LeftBar() {
             defaultSize={15}
             maxSize={25}
             id="1"
-            order={1}
             className={cn(
                 "bg-background relative h-full w-full min-w-[18rem] py-4",
                 minimizedLeftBar ? "max-w-16 min-w-16" : "",
