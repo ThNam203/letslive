@@ -1,0 +1,24 @@
+# STAGE 1
+FROM golang:1.26.0-alpine AS builder
+
+WORKDIR /usr/src/app
+
+COPY ./go.mod ./go.sum ./
+
+RUN go mod download
+RUN go mod verify
+
+COPY . .
+
+RUN CGO_ENABLED=0 go build -ldflags="-w -s" -v -o /app ./cmd/
+
+# STAGE 2
+FROM alpine:latest AS final
+
+WORKDIR /usr/src/app
+COPY --from=builder /usr/src/app/migrations /usr/src/app/migrations
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /app /usr/local/bin/app
+
+CMD ["app"]

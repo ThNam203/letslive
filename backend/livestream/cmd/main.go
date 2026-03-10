@@ -11,18 +11,13 @@ import (
 
 	"sen1or/letslive/livestream/api"
 	cfg "sen1or/letslive/livestream/config"
-	usergatewayhttp "sen1or/letslive/livestream/gateway/user/http"
+	vodgatewayhttp "sen1or/letslive/livestream/gateway/vod/http"
 	livestreamHandler "sen1or/letslive/livestream/handlers/livestream"
-	vodHandler "sen1or/letslive/livestream/handlers/vod"
-	vodCommentHandler "sen1or/letslive/livestream/handlers/vod_comment"
 	"sen1or/letslive/livestream/pkg/discovery"
 	"sen1or/letslive/livestream/pkg/logger"
 	"sen1or/letslive/livestream/pkg/tracer"
 	"sen1or/letslive/livestream/repositories"
-	miniostorage "sen1or/letslive/livestream/storage/minio"
 	livestreamService "sen1or/letslive/livestream/services/livestream"
-	vodService "sen1or/letslive/livestream/services/vod"
-	vodCommentService "sen1or/letslive/livestream/services/vod_comment"
 	"sen1or/letslive/livestream/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -172,22 +167,11 @@ func DeregisterDiscoveryService(shutdownContext context.Context, registry discov
 
 func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
 	var livestreamRepo = repositories.NewLivestreamRepository(dbConn)
-	var vodRepo = repositories.NewVODRepository(dbConn)
-	var vodCommentRepo = repositories.NewVODCommentRepository(dbConn)
-	var vodCommentLikeRepo = repositories.NewVODCommentLikeRepository(dbConn)
-	var transcodeJobRepo = repositories.NewTranscodeJobRepository(dbConn)
 
-	var userGateway = usergatewayhttp.NewUserGateway(registry)
+	var vodGateway = vodgatewayhttp.NewVODGateway(registry)
 
-	// Initialize MinIO storage for raw video uploads
-	var minio = miniostorage.NewMinIOStorage(ctx, cfg.MinIO)
-
-	var livestreamService = livestreamService.NewLivestreamService(livestreamRepo, vodRepo)
-	var vodService = vodService.NewVODService(vodRepo, transcodeJobRepo, minio)
-	var vodCommentService = vodCommentService.NewVODCommentService(vodCommentRepo, vodCommentLikeRepo, vodRepo, userGateway, dbConn)
+	var livestreamService = livestreamService.NewLivestreamService(livestreamRepo, vodGateway)
 
 	var livestreamHandler = livestreamHandler.NewLivestreamHandler(livestreamService)
-	var vodHandler = vodHandler.NewVODHandler(vodService)
-	var vodCommentHandler = vodCommentHandler.NewVODCommentHandler(vodCommentService)
-	return api.NewAPIServer(livestreamHandler, vodHandler, vodCommentHandler, cfg)
+	return api.NewAPIServer(livestreamHandler, cfg)
 }
