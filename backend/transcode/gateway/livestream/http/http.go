@@ -130,10 +130,10 @@ func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, 
 }
 
 func (g *LivestreamGateway) UpdateVODStatus(ctx context.Context, vodId string, status string, playbackUrl string, thumbnailUrl string) error {
-	addr, err := g.registry.ServiceAddress(ctx, "livestream")
+	addr, err := g.registry.ServiceAddress(ctx, "vod")
 	if err != nil {
 		logger.Debugf(ctx, "get service address from gateway failed for UpdateVODStatus")
-		return fmt.Errorf("failed to get livestream service address: %w", err)
+		return fmt.Errorf("failed to get vod service address: %w", err)
 	}
 
 	url := fmt.Sprintf("http://%s/v1/internal/vods/%s/status", addr, vodId)

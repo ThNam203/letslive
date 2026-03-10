@@ -109,6 +109,31 @@ services:
                 - ACCESS_TOKEN
               key_claim_name: consumer
               run_on_preflight: true
+      - name: Public_Routes
+        protocols:
+          - http
+          - https
+        paths:
+          - /livestreams
+          - ~/livestreams/[^/]+$
+          - /livestreamings
+          - /popular-livestreams
+          - /is-streaming
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+
+  - name: VOD
+    host: vod.service.consul
+    port: 7782
+    path: /v1
+    retries: 5
+    connect_timeout: 60000
+    read_timeout: 60000
+    write_timeout: 60000
+    routes:
       - name: VOD_Private_Routes
         paths:
           - ~/vods/[^/]+$
@@ -236,17 +261,12 @@ services:
                 - ACCESS_TOKEN
               key_claim_name: consumer
               run_on_preflight: true
-      - name: Public_Routes
+      - name: VOD_Public_Routes
         protocols:
           - http
           - https
         paths:
-          - /livestreams
-          - ~/livestreams/[^/]+$
-          - /livestreamings
           - /popular-vods
-          - /popular-livestreams
-          - /is-streaming
           - /vods
         strip_path: false
         preserve_host: false
