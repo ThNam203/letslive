@@ -404,7 +404,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       controller: _emailController,
                     ),
                     label: Text(l10n.authEmail),
-                    hint: 'Enter your email',
+                    hint: l10n.authEmailHint,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -430,7 +430,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       controller: _usernameController,
                     ),
                     label: Text(l10n.username),
-                    hint: 'Choose a username',
+                    hint: l10n.authUsernameHint,
                     textInputAction: TextInputAction.next,
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     validator: (value) {
@@ -453,7 +453,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       controller: _passwordController,
                     ),
                     label: Text(l10n.authPassword),
-                    hint: 'Create a password',
+                    hint: l10n.authCreatePasswordHint,
                     textInputAction: TextInputAction.next,
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     validator: (value) {
@@ -487,7 +487,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       controller: _confirmPasswordController,
                     ),
                     label: Text(l10n.authConfirmPassword),
-                    hint: 'Re-enter your password',
+                    hint: l10n.authConfirmPasswordHint,
                     textInputAction: TextInputAction.done,
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     validator: (value) {

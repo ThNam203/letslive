@@ -186,7 +186,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       controller: _emailController,
                     ),
                     label: Text(l10n.authEmail),
-                    hint: 'Enter your email',
+                    hint: l10n.authEmailHint,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -212,7 +212,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       controller: _passwordController,
                     ),
                     label: Text(l10n.authPassword),
-                    hint: 'Enter your password',
+                    hint: l10n.authPasswordHint,
                     textInputAction: TextInputAction.done,
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     validator: (value) {
