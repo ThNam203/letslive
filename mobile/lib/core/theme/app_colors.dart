@@ -18,6 +18,9 @@ abstract final class AppColors {
   static const lightSecondary = Color(0xFFE07B1A); // 28 80% 52%
   static const lightSecondaryForeground = Color(0xFFFFFFFF); // 0 0% 100%
 
+  static const lightAccent = Color(0xFF22C358); // 140 70% 45%
+  static const lightAccentForeground = Color(0xFFFFFFFF); // 0 0% 100%
+
   static const lightDestructive = Color(0xFFEF4444); // 0 90.3% 60%
   static const lightDestructiveForeground = Color(0xFFFFFFFF);
 
@@ -36,6 +39,9 @@ abstract final class AppColors {
 
   static const darkSecondary = Color(0xFFF59E0B); // 28 90% 60%
   static const darkSecondaryForeground = Color(0xFF000000); // 0 0% 0%
+
+  static const darkAccent = Color(0xFF52E081); // 140 70% 60%
+  static const darkAccentForeground = Color(0xFF000000); // 0 0% 0%
 
   static const darkDestructive = Color(0xFFEF4444); // 0 90.3% 60%
   static const darkDestructiveForeground = Color(0xFFE5E5E5);
