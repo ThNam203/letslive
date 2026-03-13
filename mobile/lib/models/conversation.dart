@@ -97,7 +97,7 @@ class LastMessage {
 
   factory LastMessage.fromJson(Map<String, dynamic> json) {
     return LastMessage(
-      id: json['_id'] as String? ?? json['id'] as String,
+      id: json['_id'] as String,
       senderId: json['senderId'] as String,
       senderUsername: json['senderUsername'] as String,
       text: json['text'] as String,
@@ -131,7 +131,7 @@ class Conversation {
 
   factory Conversation.fromJson(Map<String, dynamic> json) {
     return Conversation(
-      id: json['_id'] as String? ?? json['id'] as String,
+      id: json['_id'] as String,
       type: ConversationType.fromString(json['type'] as String? ?? 'dm'),
       name: json['name'] as String?,
       avatarUrl: json['avatarUrl'] as String?,
@@ -199,7 +199,7 @@ class DmMessage {
 
   factory DmMessage.fromJson(Map<String, dynamic> json) {
     return DmMessage(
-      id: json['_id'] as String? ?? json['id'] as String,
+      id: json['_id'] as String,
       conversationId: json['conversationId'] as String,
       senderId: json['senderId'] as String,
       senderUsername: json['senderUsername'] as String,

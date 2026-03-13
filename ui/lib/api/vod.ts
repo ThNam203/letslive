@@ -59,3 +59,22 @@ export async function DeleteVOD(vodId: string): Promise<ApiResponse<void>> {
         method: "DELETE",
     });
 }
+
+export async function UploadVOD(
+    file: File,
+    title: string,
+    description: string,
+    visibility: string,
+): Promise<ApiResponse<VOD>> {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("visibility", visibility);
+
+    return fetchClient<ApiResponse<VOD>>(`/vods/upload`, {
+        method: "POST",
+        body: formData,
+        disableTimeout: true,
+    });
+}
