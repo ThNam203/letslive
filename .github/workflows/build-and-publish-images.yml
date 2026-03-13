@@ -85,10 +85,10 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
-          context: ./ui
-          file: ./ui/Dockerfile
+          context: ./web
+          file: ./web/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/letslive-ui:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/letslive-web:latest
           secrets: |
             id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN
           build-args: |

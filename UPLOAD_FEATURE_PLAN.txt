@@ -383,7 +383,7 @@ PHASE 5: MOBILE APP - UPLOAD SCREEN WITH PROGRESS DIALOG
 PHASE 6: WEB UI (OPTIONAL - CAN BE DONE LATER)
 ================================================================================
 
-File: ui/app/[lng]/(main)/settings/vods/upload/page.tsx (new)
+File: web/app/[lng]/(main)/settings/vods/upload/page.tsx (new)
 - Drag-and-drop or file picker
 - Title, description, visibility form
 - Upload progress bar (XMLHttpRequest or fetch with ReadableStream)

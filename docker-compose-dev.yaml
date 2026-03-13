@@ -1,9 +1,9 @@
 services:
-  # ui:
+  # web:
   #   build:
-  #     context: ./ui
+  #     context: ./web
   #     dockerfile: Dockerfile
-  #   container_name: letslive_ui
+  #   container_name: letslive_web
   #   network_mode: "host"
   #   ports:
   #     - "5000:5000"
