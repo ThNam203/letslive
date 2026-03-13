@@ -6,7 +6,8 @@
         "profile": "Profile",
         "security": "Security",
         "stream": "Stream",
-        "vods": "VODs"
+        "vods": "VODs",
+        "upload": "Upload"
     },
     "profile": {
         "title": "Profile Settings",
@@ -75,6 +76,25 @@
             "view": "view",
             "views": "views"
         }
+    },
+    "upload": {
+        "title": "Upload VOD",
+        "description": "Upload a new video on demand to your channel.",
+        "select_video": "Select Video",
+        "select_video_description": "Supported formats: MP4, MOV, AVI, MKV, WebM. Max size: 2 GB.",
+        "change_video": "Change video",
+        "selected_file": "Selected: {{filename}} ({{size}})",
+        "title_label": "Title",
+        "title_description": "Give your video a descriptive title.",
+        "description_label": "Description",
+        "visibility_label": "Public",
+        "upload_button": "Upload Video",
+        "uploading": "Uploading...",
+        "upload_success": "Video uploaded successfully! It will be available after processing.",
+        "error_no_file": "Please select a video file.",
+        "error_no_title": "Please enter a title.",
+        "error_invalid_format": "Invalid file format. Supported: MP4, MOV, AVI, MKV, WebM.",
+        "error_file_too_large": "File is too large. Maximum size is 2 GB."
     },
     "disable": {
         "title": "Disabling your Let's Live account",

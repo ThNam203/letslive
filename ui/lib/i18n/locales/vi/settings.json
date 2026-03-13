@@ -6,7 +6,8 @@
         "profile": "Hồ sơ",
         "security": "Bảo mật",
         "stream": "Stream",
-        "vods": "VODs"
+        "vods": "VODs",
+        "upload": "Tải lên"
     },
     "profile": {
         "title": "Cài đặt hồ sơ",
@@ -75,6 +76,25 @@
             "view": "lượt xem",
             "views": "lượt xem"
         }
+    },
+    "upload": {
+        "title": "Tải lên VOD",
+        "description": "Tải lên video theo yêu cầu mới lên kênh của bạn.",
+        "select_video": "Chọn video",
+        "select_video_description": "Định dạng hỗ trợ: MP4, MOV, AVI, MKV, WebM. Kích thước tối đa: 2 GB.",
+        "change_video": "Đổi video",
+        "selected_file": "Đã chọn: {{filename}} ({{size}})",
+        "title_label": "Tiêu đề",
+        "title_description": "Đặt tiêu đề mô tả cho video của bạn.",
+        "description_label": "Mô tả",
+        "visibility_label": "Công khai",
+        "upload_button": "Tải lên video",
+        "uploading": "Đang tải lên...",
+        "upload_success": "Tải lên video thành công! Video sẽ khả dụng sau khi xử lý.",
+        "error_no_file": "Vui lòng chọn một tệp video.",
+        "error_no_title": "Vui lòng nhập tiêu đề.",
+        "error_invalid_format": "Định dạng tệp không hợp lệ. Hỗ trợ: MP4, MOV, AVI, MKV, WebM.",
+        "error_file_too_large": "Tệp quá lớn. Kích thước tối đa là 2 GB."
     },
     "disable": {
         "title": "Vô hiệu hóa tài khoản của bạn",
