@@ -41,19 +41,10 @@ type Tracer struct {
 	BatchTimeout int    `yaml:"batchTimeout"` /// in milli-second
 }
 
-type MinIO struct {
-	Enabled    bool   `yaml:"enabled"`
-	Host       string `yaml:"host"`
-	Port       int    `yaml:"port"`
-	BucketName string `yaml:"bucketName"`
-	ReturnURL  string `yaml:"returnURL"`
-}
-
 type Config struct {
 	Service  `yaml:"service"`
 	Database `yaml:"database"`
 	Tracer   `yaml:"tracer"`
-	MinIO    `yaml:"minio"`
 }
 
 type ConfigManager struct {

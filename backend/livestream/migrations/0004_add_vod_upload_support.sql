@@ -1,3 +1,4 @@
+-- +goose Up
 -- Add status field to vods table
 -- 'ready' default preserves backward compat for existing livestream VODs
 -- Possible values: 'uploading', 'processing', 'ready', 'failed'
@@ -24,3 +25,10 @@ CREATE TABLE IF NOT EXISTS transcode_jobs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_transcode_jobs_status ON transcode_jobs(status, created_at);
+
+-- +goose Down
+DROP INDEX IF EXISTS idx_transcode_jobs_status;
+DROP TABLE IF EXISTS transcode_jobs;
+ALTER TABLE vods ALTER COLUMN livestream_id SET NOT NULL;
+ALTER TABLE vods DROP COLUMN IF EXISTS original_file_url;
+ALTER TABLE vods DROP COLUMN IF EXISTS status;
