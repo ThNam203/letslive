@@ -1,5 +1,5 @@
 import { Header } from "@/app/[lng]/(main)/_components/header/header";
-import { ResizableLayoutClient } from "@/app/[lng]/(main)/_components/resizable-layout-client";
+import { MainBodyLayout } from "@/app/[lng]/(main)/_components/main-body-layout";
 
 export default function RootLayout({
     children,
@@ -9,7 +9,7 @@ export default function RootLayout({
     return (
         <div className="flex h-screen w-screen flex-col overflow-hidden">
             <Header />
-            <ResizableLayoutClient>{children}</ResizableLayoutClient>
+            <MainBodyLayout>{children}</MainBodyLayout>
         </div>
     );
 }

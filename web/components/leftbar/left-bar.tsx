@@ -1,4 +1,5 @@
 "use client";
+
 import AllChannelsView from "./channels";
 import { ResizablePanel } from "../ui/resizable";
 import { useEffect, useState } from "react";
@@ -7,32 +8,28 @@ import { cn } from "@/utils/cn";
 import IconToRight from "../icons/to-right";
 import { Button } from "../ui/button";
 
+const MINIMIZED_LEFT_BAR_STATE_KEY = "isLeftBarMinimized";
+const MINIMIZED_LEFT_BAR_STATE_DEFAULT = false;
+
 export default function LeftBar() {
-    const [minimizedLeftBar, setMinimizedLeftBar] = useState<boolean | null>(
-        null,
-    );
+    const [minimizedLeftBar, setMinimizedLeftBar] = useState<boolean>(MINIMIZED_LEFT_BAR_STATE_DEFAULT);
 
     useEffect(() => {
-        const stored = localStorage.getItem("minimizeLeftBar");
-        if (stored === "true") {
-            setMinimizedLeftBar(true);
-        } else {
-            setMinimizedLeftBar(false);
-        }
+        const stored = localStorage.getItem(MINIMIZED_LEFT_BAR_STATE_KEY);
+        setMinimizedLeftBar(stored === "true");
     }, []);
-
-    if (minimizedLeftBar === null) return null;
 
     return (
         <ResizablePanel
-            minSize={15}
-            defaultSize={15}
-            maxSize={25}
+            {...(minimizedLeftBar
+                ? { minSize: 64, maxSize: 64, defaultSize: 64 }
+                : {
+                      minSize: "15%",
+                      defaultSize: "20%",
+                      maxSize: "35%",
+                  })}
             id="1"
-            className={cn(
-                "bg-background relative h-full w-full min-w-[18rem] py-4",
-                minimizedLeftBar ? "max-w-16 min-w-16" : "",
-            )}
+            className={"bg-background py-4"}
         >
             <AllChannelsView
                 isMinimized={minimizedLeftBar}
@@ -54,8 +51,8 @@ const MinimizeButton = (
         e.stopPropagation();
         setMinimizeLeftBar(!minimizedLeftBar);
         localStorage.setItem(
-            "minimizeLeftBar",
-            JSON.stringify(!minimizedLeftBar),
+            MINIMIZED_LEFT_BAR_STATE_KEY,
+            !minimizedLeftBar ? "true" : "false",
         );
     };
 
