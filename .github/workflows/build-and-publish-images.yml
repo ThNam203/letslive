@@ -44,6 +44,11 @@ jobs:
               name: "letslive-chat",
               context: "./backend/chat",
             },
+            {
+              path: "./backend/vod",
+              name: "letslive-vod",
+              context: "./backend/vod",
+            },
           ]
 
     steps:
