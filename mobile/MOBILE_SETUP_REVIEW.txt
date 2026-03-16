@@ -1,0 +1,407 @@
+================================================================================
+  LET'S LIVE — MOBILE APP SETUP REVIEW
+================================================================================
+
+Framework:        Flutter 3.41.0+ / Dart 3.8.0+
+UI Library:       Forui 0.19.0 (shadcn/ui-inspired, matching the web app)
+State Management: Flutter Riverpod 3.2.1
+Routing:          GoRouter 17.1.0
+HTTP Client:      Dio 5.7.0 (cookie-based auth)
+i18n:             intl + flutter_localizations (ARB format)
+Icons:            Lucide Icons (bundled with Forui via FIcons)
+Font:             Inter (bundled with Forui)
+
+================================================================================
+  1. DIRECTORY STRUCTURE
+================================================================================
+
+mobile/
+├── pubspec.yaml                         # Dependencies & project config
+├── forui.yaml                           # Forui CLI config (style/theme output paths)
+├── l10n.yaml                            # i18n code generation config
+├── analysis_options.yaml                # Dart linting rules
+├── .env / .env.example                  # Environment variables
+├── l10n/                                # i18n source files (ARB format)
+│   ├── app_en.arb                       #   English translations
+│   └── app_vi.arb                       #   Vietnamese translations
+├── lib/
+│   ├── main.dart                        # Entry point (dotenv + ProviderScope)
+│   ├── app.dart                         # MaterialApp.router + FTheme wrapping
+│   ├── providers.dart                   # Global Riverpod providers
+│   ├── core/
+│   │   ├── config/
+│   │   │   ├── app_config.dart          #   API/WS URL derivation from env
+│   │   │   └── env.dart                 #   Static env variable accessors
+│   │   ├── constants/
+│   │   │   ├── field_limits.dart        #   Input field max lengths
+│   │   │   └── password.dart            #   Password validation rules
+│   │   ├── network/
+│   │   │   ├── api_client.dart          #   Dio wrapper + auth interceptor
+│   │   │   ├── api_endpoints.dart       #   All API endpoint paths
+│   │   │   ├── api_response.dart        #   ApiResponse<T>, Meta, ApiCode
+│   │   │   └── websocket_service.dart   #   LiveChatService (WS + auto-reconnect)
+│   │   ├── router/
+│   │   │   └── app_router.dart          #   GoRouter config with ShellRoute
+│   │   └── theme/
+│   │       ├── app_colors.dart          #   Color constants (web CSS → ARGB)
+│   │       └── app_theme.dart           #   FThemeData light/dark using FColors
+│   ├── features/
+│   │   ├── auth/
+│   │   │   ├── data/
+│   │   │   │   └── auth_repository.dart #   Auth API calls via ApiClient
+│   │   │   └── presentation/
+│   │   │       ├── login_screen.dart    #   FScaffold + FTextField + FButton
+│   │   │       └── signup_screen.dart   #   FScaffold + FTextField.password
+│   │   ├── home/
+│   │   │   └── presentation/
+│   │   │       ├── home_screen.dart     #   FScaffold + FHeader
+│   │   │       └── main_shell.dart      #   FBottomNavigationBar shell
+│   │   ├── livestream/
+│   │   │   ├── data/
+│   │   │   │   ├── livestream_repository.dart #  Livestream API calls
+│   │   │   │   └── chat_repository.dart       #  Chat history API calls
+│   │   │   └── presentation/
+│   │   │       └── livestream_screen.dart      #  HLS player + live chat UI
+│   │   ├── messages/
+│   │   │   └── presentation/
+│   │   │       └── messages_screen.dart #   FScaffold + FHeader
+│   │   ├── notifications/
+│   │   │   └── presentation/
+│   │   │       └── notifications_screen.dart
+│   │   ├── profile/
+│   │   │   └── presentation/
+│   │   │       └── profile_screen.dart  #   FScaffold + FHeader.nested
+│   │   ├── vod/
+│   │   │   └── presentation/
+│   │   │       └── vod_player_screen.dart     #  VOD playback with Chewie
+│   │   └── settings/
+│   │       └── presentation/
+│   │           └── settings_screen.dart #   FScaffold + FTile list
+│   ├── models/
+│   │   ├── user.dart                    #   User, AuthProvider, UserStatus, etc.
+│   │   ├── livestream.dart              #   Livestream model
+│   │   ├── vod.dart                     #   VOD model
+│   │   ├── notification.dart            #   Notification model
+│   │   └── chat_message.dart            #   ChatMessage model (WS + REST)
+│   ├── shared/
+│   │   └── widgets/
+│   │       ├── error_display.dart       #   FButton + FIcons.circleAlert
+│   │       └── loading_indicator.dart   #   FCircularProgress
+│   └── l10n/                            #   Generated i18n files
+│       ├── app_localizations.dart
+│       ├── app_localizations_en.dart
+│       └── app_localizations_vi.dart
+└── test/
+    └── widget_test.dart                 # Basic smoke test
+
+
+================================================================================
+  2. DEPENDENCIES (pubspec.yaml)
+================================================================================
+
+Production:
+  flutter, flutter_localizations, intl        — Framework + i18n
+  flutter_riverpod, riverpod_annotation       — State management
+  go_router                                   — Declarative routing
+  dio, dio_cookie_manager, cookie_jar         — HTTP + cookie auth
+  flutter_secure_storage, shared_preferences  — Local storage
+  forui                                       — UI components (shadcn/ui style)
+  cached_network_image                        — Image caching
+  video_player, chewie                        — Video/HLS playback
+  web_socket_channel                           — WebSocket (live chat)
+  flutter_dotenv                              — .env loading
+  json_annotation, freezed_annotation         — Code generation annotations
+  equatable                                   — Value equality
+
+Dev:
+  flutter_test, flutter_lints                 — Testing + linting
+  build_runner                                — Code generation runner
+  json_serializable, freezed                  — JSON/immutable codegen
+  riverpod_generator, riverpod_lint           — Riverpod codegen + lint
+
+
+================================================================================
+  3. THEMING (Forui)
+================================================================================
+
+The theme uses Forui's FThemeData with custom FColors mapped from the web app's
+CSS variables. Both platforms share the same color palette.
+
+Light Theme Colors:
+  background:     #FFFFFF (white)
+  foreground:     #0F172A (dark slate)
+  primary:        #6209B5 (purple — matches web's hsl(276, 91%, 38%))
+  secondary:      #F1F5F9 (light gray muted)
+  destructive:    #EF4444 (red)
+  muted:          #F1F5F9
+  border:         #2D3748
+
+Dark Theme Colors:
+  background:     #0F172A (dark slate)
+  foreground:     #FFFFFF (white)
+  primary:        #6209B5 (same purple)
+  secondary:      #334155 (dark muted)
+  destructive:    #EF4444 (red)
+  card:           #1E293B (elevated surface)
+  border:         #3B4A5C
+
+How it works (app.dart):
+  - App is a ConsumerWidget watching themeModeProvider & localeProvider
+  - AppThemeMode (light/dark/system) resolves effective brightness
+  - MaterialApp.theme receives theme.toApproximateMaterialTheme()
+  - MaterialApp.locale set from localeProvider (null = follow system)
+  - MaterialApp.builder wraps child with FTheme(data: theme, child: child)
+  - All screens access colors/typography via context.theme.colors / .typography
+  - User preference persisted via SharedPreferences
+
+
+================================================================================
+  4. UI LIBRARY WIDGET MAPPING (Material → Forui)
+================================================================================
+
+  Material Widget              →  Forui Widget
+  ─────────────────────────────────────────────────────────────
+  Scaffold + AppBar            →  FScaffold + FHeader (suffixes:)
+  Scaffold + AppBar (back)     →  FScaffold + FHeader.nested
+  TextFormField                →  FTextField (control: FTextFieldControl.managed())
+  Password field               →  FTextField.password (built-in eye toggle)
+  FilledButton                 →  FButton (default = primary variant)
+  OutlinedButton               →  FButton(variant: FButtonVariant.outline)
+  TextButton                   →  FButton(variant: FButtonVariant.ghost)
+  IconButton                   →  FButton.icon(child: Icon(FIcons.xxx))
+  NavigationBar                →  FBottomNavigationBar + FBottomNavigationBarItem
+  ListTile                     →  FTile (prefix:, suffix:, title:, subtitle:)
+  CircularProgressIndicator    →  FCircularProgress
+  Icons.xxx                    →  FIcons.xxx (Lucide icons)
+
+Icon mapping:
+  Icons.home                   →  FIcons.house
+  Icons.search                 →  FIcons.search
+  Icons.chat_bubble            →  FIcons.messageCircle
+  Icons.notifications          →  FIcons.bell
+  Icons.settings               →  FIcons.settings
+  Icons.person                 →  FIcons.user
+  Icons.security               →  FIcons.shield
+  Icons.videocam               →  FIcons.video
+  Icons.video_library          →  FIcons.film
+  Icons.palette                →  FIcons.palette
+  Icons.language               →  FIcons.globe
+  Icons.logout                 →  FIcons.logOut
+  Icons.edit_square            →  FIcons.squarePen
+  Icons.chevron_right          →  FIcons.chevronRight
+  Icons.error_outline          →  FIcons.circleAlert
+  Icons.refresh                →  FIcons.refreshCw
+
+
+================================================================================
+  5. API CLIENT
+================================================================================
+
+Location: lib/core/network/
+
+api_client.dart:
+  - Dio-based HTTP client with cookie jar for session management
+  - _AuthInterceptor: auto-refreshes token on 401 responses
+  - Deduplicates concurrent refresh requests
+  - Methods: get<T>(), post<T>(), patch<T>(), delete<T>(), upload<T>()
+  - Returns ApiResponse<T> for all calls
+
+api_endpoints.dart:
+  - Static const paths for all endpoints (~70+)
+  - Grouped by domain: auth, user, livestreams, vods, notifications, messages
+  - refreshExcludePaths: endpoints that skip token refresh
+
+api_response.dart:
+  - ApiResponse<T>: success, statusCode, code, key, message, data, meta
+  - Meta: page, pageSize, total (pagination)
+  - ApiCode: ~30 business error codes (200xx=Auth, 300xx=User, etc.)
+
+
+================================================================================
+  6. ROUTING (GoRouter)
+================================================================================
+
+Routes:
+  /login          → LoginScreen      (no bottom nav)
+  /signup         → SignupScreen      (no bottom nav)
+  /               → HomeScreen        (ShellRoute with bottom nav)
+  /messages       → MessagesScreen    (ShellRoute with bottom nav)
+  /notifications  → NotificationsScreen (ShellRoute with bottom nav)
+  /settings       → SettingsScreen    (ShellRoute with bottom nav)
+  /users/:userId  → ProfileScreen     (full screen, outside shell)
+  /livestream/:userId → LivestreamScreen (full screen, HLS player + chat)
+  /vods/:vodId/watch  → VodPlayerScreen  (full screen, VOD playback)
+
+MainShell wraps the ShellRoute children with FBottomNavigationBar.
+NoTransitionPage used for tab switching (no animation).
+
+
+================================================================================
+  7. STATE MANAGEMENT (Riverpod)
+================================================================================
+
+Global providers (lib/providers.dart):
+  sharedPreferencesProvider → Provider<SharedPreferences> (overridden in main)
+  themeModeProvider        → NotifierProvider<ThemeModeNotifier, AppThemeMode>
+  localeProvider           → NotifierProvider<LocaleNotifier, Locale?>
+  apiClientProvider        → Provider<ApiClient> (singleton)
+  authRepositoryProvider   → Provider<AuthRepository>
+  currentUserProvider      → NotifierProvider<CurrentUserNotifier, User?>
+
+CurrentUserNotifier methods:
+  fetchMe()   — GET /user/me → sets user state
+  setUser()   — manually set user
+  logout()    — POST /auth/logout → clears user state
+
+
+================================================================================
+  8. INTERNATIONALIZATION (i18n)
+================================================================================
+
+Languages:        English (en), Vietnamese (vi)
+Source format:    ARB files in l10n/
+Generated to:    lib/l10n/app_localizations*.dart
+Config:           l10n.yaml (nullable-getter: false)
+
+Also includes Forui's FLocalizations.localizationsDelegates for its 115
+language support.
+
+Access pattern:   AppLocalizations.of(context).keyName
+
+
+================================================================================
+  9. DATA MODELS
+================================================================================
+
+User (lib/models/user.dart):
+  - id, username, email, displayName, bio, profilePicture
+  - followerCount, followingCount
+  - authProvider (enum: google, local)
+  - userStatus (enum: normal, disabled)
+  - livestreamInformation (nested: title, description, thumbnailUrl)
+  - socialMediaLinks (nested)
+  - isMe getter (checks if streamAPIKey exists)
+  - fromJson() factory
+
+Livestream (lib/models/livestream.dart):
+  - id, userId, title, description, thumbnailUrl, status
+  - viewerCount, startedAt
+  - user (nested User)
+  - fromJson() factory
+
+VOD (lib/models/vod.dart):
+  - id, userId, title, description, thumbnailUrl
+  - duration, viewCount, createdAt
+  - user (nested User)
+  - fromJson() factory
+
+Notification (lib/models/notification.dart):
+  - id, userId, type, title, message
+  - isRead, createdAt, data
+  - fromJson() factory
+
+ChatMessage (lib/models/chat_message.dart):
+  - id, type, userId, username, text, timestamp
+  - isJoin, isLeave, isMessage getters
+  - fromJson() factory, toSendJson(roomId)
+
+
+================================================================================
+  10. FEATURE REPOSITORIES
+================================================================================
+
+AuthRepository (lib/features/auth/data/auth_repository.dart):
+  - login(email, password)
+  - signup(email, username, password)
+  - logout()
+  - changePassword(oldPassword, newPassword)
+  - requestVerification(email)
+  - getMe()
+
+LivestreamRepository (lib/features/livestream/data/livestream_repository.dart):
+  - getLivestreams(), getVods(), getUserVods()
+  - getUser(), followUser(), unfollowUser()
+  - updateProfile(), updateStreamInfo(), etc.
+
+ChatRepository (lib/features/livestream/data/chat_repository.dart):
+  - getChatHistory(roomId) — fetches messages via REST
+
+LiveChatService (lib/core/network/websocket_service.dart):
+  - connect(roomId), sendMessage(), disconnect()
+  - Auto-reconnect with 3s interval
+  - Streams: messages (ChatMessage)
+
+
+================================================================================
+  11. ENVIRONMENT CONFIG
+================================================================================
+
+.env variables:
+  BACKEND_PROTOCOL        (http/https)
+  BACKEND_IP_ADDRESS      (server host)
+  BACKEND_PORT            (server port)
+  BACKEND_WS_PROTOCOL     (ws/wss)
+  ENVIRONMENT             (development/production)
+
+Derived URLs (app_config.dart):
+  apiBaseUrl    = $PROTOCOL://$IP:$PORT
+  wsBaseUrl     = $WS_PROTOCOL://$IP:$PORT
+
+
+================================================================================
+  12. WHAT'S DONE vs WHAT'S TODO
+================================================================================
+
+DONE:
+  [x] Project scaffolding with clean architecture
+  [x] Forui as main UI library (replaces raw Material widgets)
+  [x] Custom theme matching web app colors via FColors/FThemeData
+  [x] Light/dark mode (system + manual toggle via settings)
+  [x] API client with cookie auth + auto token refresh
+  [x] All API endpoints defined
+  [x] GoRouter with bottom navigation shell
+  [x] i18n setup (en + vi) with ARB codegen + manual language picker
+  [x] Data models (User, Livestream, VOD, Notification)
+  [x] Auth repository (login, signup, logout, etc.)
+  [x] Riverpod global state (currentUser)
+  [x] All screens scaffolded with Forui widgets
+  [x] Shared widgets (ErrorDisplay, LoadingIndicator)
+  [x] flutter analyze passes with 0 issues
+
+TODO:
+  [X] Wire up login/signup screens to AuthRepository
+  [X] Add repositories for: user, livestream, vod, notification, messages
+  [X] Implement home screen (fetch & display livestreams/VODs)
+  [ ] Implement messages screen (WebSocket DM)
+  [X] Implement notifications screen (fetch & display)
+  [X] Implement profile screen (user details, follow/unfollow)
+  [X] Implement settings sub-screens (profile, security, stream, VODs)
+  [X] Manual theme toggle (currently system-only)
+  [X] Language picker (currently system-only)
+  [X] OTP verification dialog for signup
+  [X] Search functionality
+  [X] Video player integration
+  [X] Live chat via WebSocket
+  [ ] Push notifications
+
+
+================================================================================
+  13. WEB ↔ MOBILE ALIGNMENT
+================================================================================
+
+  Aspect          Web (Next.js)                  Mobile (Flutter)
+  ────────────────────────────────────────────────────────────────
+  UI Library      shadcn/ui (Radix + Tailwind)   Forui (shadcn/ui-inspired)
+  Colors          CSS HSL variables              FColors (same values, ARGB)
+  Primary         hsl(276,91%,38%) = #6209B5     #6209B5
+  Font            Inter (system/Tailwind)        Inter (Forui bundled)
+  Icons           Lucide (via React)             Lucide (via FIcons)
+  i18n            i18next (12 JSON namespaces)   intl (flat ARB per locale)
+  Languages       en, vi                         en, vi
+  Auth            Cookie-based, auto refresh     Cookie-based, auto refresh
+  API Response    Typed (fetch-response.ts)      Typed (ApiResponse<T>)
+  API Client      fetchClient.ts (native fetch)  api_client.dart (Dio)
+  State           Zustand + React Context        Riverpod
+  Routing         Next.js App Router             GoRouter
+
+================================================================================

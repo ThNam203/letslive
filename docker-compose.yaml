@@ -1,7 +1,7 @@
 services:
-  ui:
-    image: sen1or/letslive-ui:latest
-    container_name: letslive_ui
+  web:
+    image: sen1or/letslive-web:latest
+    container_name: letslive_web
     network_mode: "host"
     ports:
       - "5000:5000"

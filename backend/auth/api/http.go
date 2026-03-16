@@ -55,6 +55,7 @@ func (a *APIServer) getHandler() http.Handler {
 
 	wrap("GET /v1/auth/google", a.authHandler.OAuthGoogleLoginHandler)
 	wrap("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBackHandler)
+	wrap("POST /v1/auth/google/mobile", a.authHandler.OAuthGoogleMobileHandler)
 
 	sm.HandleFunc("GET /v1/health", a.generalHandler.RouteServiceHealth)
 	wrap("GET /", a.generalHandler.RouteNotFoundHandler)
