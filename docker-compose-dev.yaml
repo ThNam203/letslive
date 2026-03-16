@@ -1,9 +1,9 @@
 services:
-  # ui:
+  # web:
   #   build:
-  #     context: ./ui
+  #     context: ./web
   #     dockerfile: Dockerfile
-  #   container_name: letslive_ui
+  #   container_name: letslive_web
   #   network_mode: "host"
   #   ports:
   #     - "5000:5000"
@@ -112,6 +112,30 @@ services:
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
       - LIVESTREAM_DB_USER=${LIVESTREAM_DB_USER}
       - LIVESTREAM_DB_PASSWORD=${LIVESTREAM_DB_PASSWORD}
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+
+  vod:
+    build:
+      context: ./backend/vod/
+      dockerfile: Dockerfile
+    container_name: letslive-vod
+    restart: always
+    ports:
+      - "7782:7782"
+    expose:
+      - "7782"
+    environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
+      - VOD_DB_USER=${VOD_DB_USER}
+      - VOD_DB_PASSWORD=${VOD_DB_PASSWORD}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     networks:
       general_network:
     depends_on:

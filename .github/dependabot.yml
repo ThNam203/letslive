@@ -2,9 +2,9 @@
 
 version: 2
 updates:
-  # npm (UI)
+  # npm (Web)
   - package-ecosystem: "npm"
-    directory: "/ui"
+    directory: "/web"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5

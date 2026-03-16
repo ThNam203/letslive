@@ -1,0 +1,36 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Generated
+*.g.dart
+*.freezed.dart
+.dart_tool/
+
+# Platform
+android/.gradle/
+android/local.properties
+android/app/debug
+android/app/profile
+android/app/release
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# Env (keep .env.example, ignore actual .env in production)
+# .env
+
+# Misc
+.DS_Store
+pubspec.lock

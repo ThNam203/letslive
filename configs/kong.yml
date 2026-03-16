@@ -109,6 +109,31 @@ services:
                 - ACCESS_TOKEN
               key_claim_name: consumer
               run_on_preflight: true
+      - name: Public_Routes
+        protocols:
+          - http
+          - https
+        paths:
+          - /livestreams
+          - ~/livestreams/[^/]+$
+          - /livestreamings
+          - /popular-livestreams
+          - /is-streaming
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+
+  - name: VOD
+    host: vod.service.consul
+    port: 7782
+    path: /v1
+    retries: 5
+    connect_timeout: 60000
+    read_timeout: 60000
+    write_timeout: 60000
+    routes:
       - name: VOD_Private_Routes
         paths:
           - ~/vods/[^/]+$
@@ -131,6 +156,30 @@ services:
                 - ACCESS_TOKEN
               key_claim_name: consumer
               run_on_preflight: true
+      - name: VOD_Upload_Private_Route
+        paths:
+          - /vods/upload
+        methods:
+          - POST
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: true
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 2048
+              size_unit: megabytes
       - name: VOD_Author_Private_Route
         paths:
           - ~/vods/author
@@ -212,17 +261,12 @@ services:
                 - ACCESS_TOKEN
               key_claim_name: consumer
               run_on_preflight: true
-      - name: Public_Routes
+      - name: VOD_Public_Routes
         protocols:
           - http
           - https
         paths:
-          - /livestreams
-          - ~/livestreams/[^/]+$
-          - /livestreamings
           - /popular-vods
-          - /popular-livestreams
-          - /is-streaming
           - /vods
         strip_path: false
         preserve_host: false
