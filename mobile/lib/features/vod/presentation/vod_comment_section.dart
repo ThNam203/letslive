@@ -26,7 +26,7 @@ class VodCommentSection extends ConsumerStatefulWidget {
 class _VodCommentSectionState extends ConsumerState<VodCommentSection> {
   final _commentController = TextEditingController();
   List<VodComment> _comments = [];
-  Set<String> _likedIds = {};
+  final Set<String> _likedIds = {};
   bool _isLoading = true;
   bool _isLoadingMore = false;
   bool _isPosting = false;

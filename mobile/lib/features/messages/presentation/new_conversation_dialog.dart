@@ -25,7 +25,7 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
   Timer? _debounce;
 
   List<User> _searchResults = [];
-  List<User> _selectedUsers = [];
+  final List<User> _selectedUsers = [];
   bool _isSearching = false;
   bool _isCreating = false;
 

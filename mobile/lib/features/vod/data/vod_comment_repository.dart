@@ -51,7 +51,7 @@ class VodCommentRepository {
       ApiEndpoints.vodComments(vodId),
       data: {
         'content': content,
-        if (parentId != null) 'parentId': parentId,
+        'parentId': ?parentId,
       },
       fromJsonT: (json) =>
           VodComment.fromJson(json as Map<String, dynamic>),

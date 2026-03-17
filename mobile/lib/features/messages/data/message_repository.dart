@@ -48,7 +48,7 @@ class MessageRepository {
       ApiEndpoints.conversationMessages(id),
       queryParameters: {
         'limit': limit,
-        if (before != null) 'before': before,
+        'before': ?before,
       },
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => DmMessage.fromJson(e as Map<String, dynamic>))
@@ -88,8 +88,8 @@ class MessageRepository {
         'text': text,
         'type': type,
         'senderUsername': senderUsername,
-        if (imageUrls != null) 'imageUrls': imageUrls,
-        if (replyTo != null) 'replyTo': replyTo,
+        'imageUrls': ?imageUrls,
+        'replyTo': ?replyTo,
       },
       fromJsonT: (json) =>
           DmMessage.fromJson(json as Map<String, dynamic>),
@@ -126,8 +126,8 @@ class MessageRepository {
     return _client.put(
       ApiEndpoints.conversationById(id),
       data: {
-        if (name != null) 'name': name,
-        if (avatarUrl != null) 'avatarUrl': avatarUrl,
+        'name': ?name,
+        'avatarUrl': ?avatarUrl,
       },
       fromJsonT: (json) =>
           Conversation.fromJson(json as Map<String, dynamic>),
@@ -150,8 +150,8 @@ class MessageRepository {
       data: {
         'userId': userId,
         'username': username,
-        if (displayName != null) 'displayName': displayName,
-        if (profilePicture != null) 'profilePicture': profilePicture,
+        'displayName': ?displayName,
+        'profilePicture': ?profilePicture,
       },
     );
   }
