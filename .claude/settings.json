@@ -4,7 +4,6 @@
       "Bash(cat:*)",
       "Bash(go build:*)",
       "Bash(npx next build:*)",
-      "Read(//Users/ictsaigon.vn/mywork/letslive/backend/**)",
       "Bash(done)"
     ]
   }

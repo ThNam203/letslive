@@ -1,4 +1,4 @@
-package com.example.letslive
+package sen1or.letslive
 
 import io.flutter.embedding.android.FlutterActivity
 
