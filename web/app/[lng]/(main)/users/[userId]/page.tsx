@@ -21,7 +21,7 @@ import { GetPublicVODsOfUser } from "@/lib/api/vod";
 import useT from "@/hooks/use-translation";
 
 export default function Livestreaming() {
-    const { t } = useT(["common", "users"]);
+    const { t } = useT(["common", "users", "fetch-error"]);
     const [user, setUser] = useState<PublicUser | null>(null);
     const [livestream, setLivestream] = useState<Livestream | null>(null);
     const [vods, setVods] = useState<VOD[]>([]);
@@ -98,7 +98,7 @@ export default function Livestreaming() {
                 }
             } catch (err) {
                 console.error(err);
-                toast(undefined, { type: "error" });
+                toast(t("fetch-error:client_fetch_error"), { type: "error" });
             }
         };
 

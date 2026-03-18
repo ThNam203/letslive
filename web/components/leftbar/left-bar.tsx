@@ -12,7 +12,9 @@ const MINIMIZED_LEFT_BAR_STATE_KEY = "isLeftBarMinimized";
 const MINIMIZED_LEFT_BAR_STATE_DEFAULT = false;
 
 export default function LeftBar() {
-    const [minimizedLeftBar, setMinimizedLeftBar] = useState<boolean>(MINIMIZED_LEFT_BAR_STATE_DEFAULT);
+    const [minimizedLeftBar, setMinimizedLeftBar] = useState<boolean>(
+        MINIMIZED_LEFT_BAR_STATE_DEFAULT,
+    );
 
     useEffect(() => {
         const stored = localStorage.getItem(MINIMIZED_LEFT_BAR_STATE_KEY);

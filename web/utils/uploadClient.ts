@@ -3,6 +3,23 @@ import GLOBAL from "../global";
 
 export type UploadProgressCallback = (loaded: number, total: number) => void;
 
+/** Error codes for client-side upload failures; used by UI for i18n. */
+export const UPLOAD_ERROR_CODES = {
+    PARSE_RESPONSE: "manager_parse_error",
+    FAILED: "manager_failed",
+    CANCELLED: "manager_cancelled",
+} as const;
+
+export class UploadClientError extends Error {
+    constructor(
+        message: string,
+        public readonly code: (typeof UPLOAD_ERROR_CODES)[keyof typeof UPLOAD_ERROR_CODES],
+    ) {
+        super(message);
+        this.name = "UploadClientError";
+    }
+}
+
 /**
  * Upload a file with progress tracking using XMLHttpRequest.
  * Returns a promise that resolves with the parsed API response,
@@ -34,16 +51,31 @@ export function uploadWithProgress<T = ApiResponse<unknown>>(
                 const data = JSON.parse(xhr.responseText);
                 resolve(data as T);
             } catch {
-                reject(new Error("Failed to parse response"));
+                reject(
+                    new UploadClientError(
+                        "Failed to parse response",
+                        UPLOAD_ERROR_CODES.PARSE_RESPONSE,
+                    ),
+                );
             }
         });
 
         xhr.addEventListener("error", () => {
-            reject(new Error("Upload failed"));
+            reject(
+                new UploadClientError(
+                    "Upload failed",
+                    UPLOAD_ERROR_CODES.FAILED,
+                ),
+            );
         });
 
         xhr.addEventListener("abort", () => {
-            reject(new Error("Upload cancelled"));
+            reject(
+                new UploadClientError(
+                    "Upload cancelled",
+                    UPLOAD_ERROR_CODES.CANCELLED,
+                ),
+            );
         });
 
         xhr.send(formData);
