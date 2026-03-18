@@ -1,3 +1,8 @@
 {
-    "open_menu": "Open menu"
+    "open_menu": "Open menu",
+    "clear_search": "Clear search",
+    "update_field_button": "Update field",
+    "close_field_button": "Close field",
+    "seek_back_10": "Rewind 10 seconds",
+    "seek_forward_10": "Forward 10 seconds"
 }

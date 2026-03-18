@@ -83,9 +83,11 @@ export default function UploadVODPage() {
         if (activeCount >= MAX_CONCURRENT) {
             toast(
                 t("settings:upload.error_max_concurrent", {
-                    defaultValue: `Maximum ${MAX_CONCURRENT} concurrent uploads allowed. Your video will be queued.`,
+                    max: MAX_CONCURRENT,
                 }),
-                { type: "info" },
+                {
+                    type: "info",
+                },
             );
         }
 
@@ -96,9 +98,7 @@ export default function UploadVODPage() {
             isPublic ? "public" : "private",
         );
 
-        toast(t("settings:upload.upload_queued", {
-            defaultValue: "Video added to upload queue",
-        }), { type: "success" });
+        toast(t("settings:upload.upload_queued"), { type: "success" });
 
         // Reset form for next upload
         setFile(null);
@@ -185,6 +185,10 @@ export default function UploadVODPage() {
                         {t("settings:upload.visibility_label")}
                     </Label>
                 </div>
+
+                <p className="text-muted-foreground text-xs">
+                    {t("settings:upload.note_max_time")}
+                </p>
 
                 <div className="flex items-center justify-end">
                     <Button disabled={!file || !title.trim()} type="submit">

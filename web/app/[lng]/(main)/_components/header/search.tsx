@@ -24,7 +24,12 @@ export default function SearchBar({
     const [results, setResults] = useState<PublicUser[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [showResults, setShowResults] = useState(false);
-    const { t } = useT(["common", "api-response", "fetch-error"]);
+    const { t } = useT([
+        "common",
+        "api-response",
+        "fetch-error",
+        "accessibility",
+    ]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -87,7 +92,7 @@ export default function SearchBar({
                     <button
                         onClick={handleClear}
                         className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-                        aria-label="Clear search"
+                        aria-label={t("accessibility:clear_search")}
                     >
                         <IconClose className="h-4 w-4" />
                     </button>

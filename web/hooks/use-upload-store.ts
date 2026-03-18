@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { ApiResponse } from "@/types/fetch-response";
 import { VOD } from "@/types/vod";
-import { uploadWithProgress } from "@/utils/uploadClient";
+import { uploadWithProgress, UploadClientError } from "@/utils/uploadClient";
 
 const MAX_CONCURRENT = 3;
 
@@ -12,6 +12,15 @@ export type UploadStatus =
     | "completed"
     | "failed"
     | "cancelled";
+
+export const UPLOAD_STATUS = {
+    QUEUED: "queued",
+    UPLOADING: "uploading",
+    PROCESSING: "processing",
+    COMPLETED: "completed",
+    FAILED: "failed",
+    CANCELLED: "cancelled",
+} as const satisfies Record<string, UploadStatus>;
 
 export type UploadItem = {
     id: string;
@@ -24,6 +33,8 @@ export type UploadItem = {
     loaded: number;
     total: number;
     error?: string;
+    /** Client-side error code for i18n (settings:upload.<errorCode>) */
+    errorCode?: string;
     vod?: VOD;
     abort?: () => void;
 };
@@ -59,7 +70,7 @@ const useUploadStore = create<UploadState>((set, get) => ({
             title,
             description,
             visibility,
-            status: "queued",
+            status: UPLOAD_STATUS.QUEUED,
             progress: 0,
             loaded: 0,
             total: file.size,
@@ -75,7 +86,7 @@ const useUploadStore = create<UploadState>((set, get) => ({
 
         set((state) => ({
             items: state.items.map((i) =>
-                i.id === id ? { ...i, status: "cancelled" as const } : i,
+                i.id === id ? { ...i, status: UPLOAD_STATUS.CANCELLED } : i,
             ),
         }));
         processQueue(get, set);
@@ -87,7 +98,7 @@ const useUploadStore = create<UploadState>((set, get) => ({
                 i.id === id
                     ? {
                           ...i,
-                          status: "queued" as const,
+                          status: UPLOAD_STATUS.QUEUED,
                           progress: 0,
                           loaded: 0,
                           error: undefined,
@@ -108,9 +119,9 @@ const useUploadStore = create<UploadState>((set, get) => ({
         set((state) => ({
             items: state.items.filter(
                 (i) =>
-                    i.status !== "completed" &&
-                    i.status !== "failed" &&
-                    i.status !== "cancelled",
+                    i.status !== UPLOAD_STATUS.COMPLETED &&
+                    i.status !== UPLOAD_STATUS.FAILED &&
+                    i.status !== UPLOAD_STATUS.CANCELLED,
             ),
         }));
     },
@@ -126,19 +137,17 @@ const useUploadStore = create<UploadState>((set, get) => ({
 
 function processQueue(
     get: () => UploadState,
-    set: (
-        updater: (state: UploadState) => Partial<UploadState>,
-    ) => void,
+    set: (updater: (state: UploadState) => Partial<UploadState>) => void,
 ) {
     const state = get();
     const activeCount = state.items.filter(
-        (i) => i.status === "uploading",
+        (i) => i.status === UPLOAD_STATUS.UPLOADING,
     ).length;
     const availableSlots = MAX_CONCURRENT - activeCount;
 
     if (availableSlots <= 0) return;
 
-    const queued = state.items.filter((i) => i.status === "queued");
+    const queued = state.items.filter((i) => i.status === UPLOAD_STATUS.QUEUED);
     const toStart = queued.slice(0, availableSlots);
 
     for (const item of toStart) {
@@ -149,9 +158,7 @@ function processQueue(
 function startUpload(
     item: UploadItem,
     get: () => UploadState,
-    set: (
-        updater: (state: UploadState) => Partial<UploadState>,
-    ) => void,
+    set: (updater: (state: UploadState) => Partial<UploadState>) => void,
 ) {
     const formData = new FormData();
     formData.append("file", item.file);
@@ -185,7 +192,7 @@ function startUpload(
     set((state) => ({
         items: state.items.map((i) =>
             i.id === item.id
-                ? { ...i, status: "uploading" as const, abort }
+                ? { ...i, status: UPLOAD_STATUS.UPLOADING, abort }
                 : i,
         ),
     }));
@@ -193,7 +200,7 @@ function startUpload(
     promise
         .then((res) => {
             const currentItem = get().items.find((i) => i.id === item.id);
-            if (currentItem?.status === "cancelled") return;
+            if (currentItem?.status === UPLOAD_STATUS.CANCELLED) return;
 
             if (res.success) {
                 set((state) => ({
@@ -201,7 +208,7 @@ function startUpload(
                         i.id === item.id
                             ? {
                                   ...i,
-                                  status: "completed" as const,
+                                  status: UPLOAD_STATUS.COMPLETED,
                                   progress: 100,
                                   vod: res.data,
                               }
@@ -214,8 +221,9 @@ function startUpload(
                         i.id === item.id
                             ? {
                                   ...i,
-                                  status: "failed" as const,
-                                  error: res.message || "Upload failed",
+                                  status: UPLOAD_STATUS.FAILED,
+                                  error: res.message,
+                                  errorCode: undefined,
                               }
                             : i,
                     ),
@@ -224,15 +232,17 @@ function startUpload(
         })
         .catch((err) => {
             const currentItem = get().items.find((i) => i.id === item.id);
-            if (currentItem?.status === "cancelled") return;
+            if (currentItem?.status === UPLOAD_STATUS.CANCELLED) return;
 
+            const isClientError = err instanceof UploadClientError;
             set((state) => ({
                 items: state.items.map((i) =>
                     i.id === item.id
                         ? {
                               ...i,
-                              status: "failed" as const,
-                              error: err.message || "Upload failed",
+                              status: UPLOAD_STATUS.FAILED,
+                              error: isClientError ? err.message : err.message,
+                              errorCode: isClientError ? err.code : undefined,
                           }
                         : i,
                 ),

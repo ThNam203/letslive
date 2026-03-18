@@ -89,10 +89,12 @@ func (a *APIServer) ListenAndServe(ctx context.Context, useTLS bool) error {
 	addr := fmt.Sprintf("%s:%d", a.config.Service.APIBindAddress, a.config.Service.APIPort)
 
 	a.httpServer = &http.Server{
-		Addr:         addr,
-		Handler:      a.getHandler(),
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		Addr:              addr,
+		Handler:           a.getHandler(),
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       3 * time.Hour,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       2 * time.Minute,
 	}
 
 	var err error

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import screenfull from "screenfull";
 import { cn } from "@/utils/cn";
+import useT from "@/hooks/use-translation";
 import {
     getResolutionHeight,
     formatResolutionForDisplay,
@@ -439,6 +440,8 @@ function VideoControlButtons({
     resolutions: string[];
     enableSkipButtons: boolean;
 }) {
+    const { t } = useT(["accessibility"]);
+
     return (
         <div
             className={cn(
@@ -492,7 +495,7 @@ function VideoControlButtons({
                                 }
                             }}
                             className="flex h-10 w-10 cursor-pointer items-center justify-center rounded bg-black/30 transition-colors hover:bg-black/50"
-                            title="-10 seconds"
+                            title={t("accessibility:seek_back_10")}
                         >
                             <IconFastForward
                                 width="20px"
@@ -512,7 +515,7 @@ function VideoControlButtons({
                                 }
                             }}
                             className="flex h-10 w-10 cursor-pointer items-center justify-center rounded bg-black/30 transition-colors hover:bg-black/50"
-                            title="+10 seconds"
+                            title={t("accessibility:seek_forward_10")}
                         >
                             <IconFastForward
                                 width="20px"

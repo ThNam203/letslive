@@ -1,3 +1,8 @@
 {
-    "open_menu": "Mở menu"
+    "open_menu": "Mở menu",
+    "clear_search": "Xóa tìm kiếm",
+    "update_field_button": "Cập nhật trường",
+    "close_field_button": "Đóng trường",
+    "seek_back_10": "Lùi 10 giây",
+    "seek_forward_10": "Tua 10 giây"
 }

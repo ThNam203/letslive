@@ -102,7 +102,7 @@ export default function LogInForm() {
                 </label>
                 <Input
                     id="email"
-                    aria-label="Email"
+                    aria-label={t("email")}
                     className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"
                     autoComplete="email"
                     placeholder={t("email")}
@@ -119,7 +119,7 @@ export default function LogInForm() {
                 </label>
                 <Input
                     id="password"
-                    aria-label="Password"
+                    aria-label={t("password")}
                     className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"
                     placeholder={t("password")}
                     type={hidingPassword ? "password" : "text"}

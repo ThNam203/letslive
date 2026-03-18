@@ -59,10 +59,9 @@ export async function UpdateConversation(
 export async function LeaveConversation(
     conversationId: string,
 ): Promise<ApiResponse<void>> {
-    return fetchClient<ApiResponse<void>>(
-        `/conversations/${conversationId}`,
-        { method: "DELETE" },
-    );
+    return fetchClient<ApiResponse<void>>(`/conversations/${conversationId}`, {
+        method: "DELETE",
+    });
 }
 
 export async function AddParticipant(

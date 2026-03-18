@@ -87,7 +87,7 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
         new Set(),
     );
 
-    const { t } = useT("common");
+    const { t } = useT(["common", "accessibility"]);
 
     const handleInputChange = (platform: string, value: string) => {
         setLinks((prev) => ({
@@ -253,7 +253,9 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                                 )
                                             }
                                             className="text-foreground absolute top-1/2 right-12 -translate-y-1/2 transition-colors"
-                                            aria-label="Update field button"
+                                            aria-label={t(
+                                                "accessibility:update_field_button",
+                                            )}
                                         >
                                             <IconCheck className="h-4 w-4" />
                                         </button>
@@ -262,7 +264,9 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
                                                 collapseField(value, !hasValue)
                                             }
                                             className="text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
-                                            aria-label="Close field button"
+                                            aria-label={t(
+                                                "accessibility:close_field_button",
+                                            )}
                                         >
                                             <IconClose className="h-4 w-4" />
                                         </button>
