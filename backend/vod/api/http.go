@@ -48,6 +48,7 @@ func (a *APIServer) getHandler() http.Handler {
 	// Public VOD routes
 	wrap("GET /v1/vods", a.vodHandler.GetVODsOfUserPublicHandler)
 	wrap("GET /v1/vods/{vodId}", a.vodHandler.GetVODByIdPublicHandler)
+	wrap("POST /v1/vods/{vodId}/view", a.vodHandler.RegisterViewPublicHandler)
 	wrap("GET /v1/popular-vods", a.vodHandler.GetRecommendedVODsPublicHandler)
 
 	// Private VOD routes (require JWT via Kong)

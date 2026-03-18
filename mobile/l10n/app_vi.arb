@@ -321,5 +321,12 @@
     "uploadFailed": "Tải lên thất bại",
     "uploadFailedGeneric": "Tải lên thất bại",
     "uploadDismiss": "Đóng",
-    "uploadClose": "Đóng"
+    "uploadClose": "Đóng",
+
+    "uploadManagerUploading": "Đang tải lên {count} video",
+    "uploadManagerFailed": "{count} video tải lên thất bại",
+    "uploadManagerComplete": "{count} video đã tải lên",
+    "uploadManagerClear": "Xóa",
+    "uploadManagerWaiting": "Đang chờ...",
+    "uploadManagerQueued": "Đã thêm vào hàng đợi tải lên"
 }

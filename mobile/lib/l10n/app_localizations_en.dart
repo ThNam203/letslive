@@ -1046,4 +1046,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uploadClose => 'Close';
+
+  @override
+  String uploadManagerUploading(int count) {
+    return 'Uploading $count video(s)';
+  }
+
+  @override
+  String uploadManagerFailed(int count) {
+    return '$count upload(s) failed';
+  }
+
+  @override
+  String uploadManagerComplete(int count) {
+    return '$count upload(s) complete';
+  }
+
+  @override
+  String get uploadManagerClear => 'Clear';
+
+  @override
+  String get uploadManagerWaiting => 'Waiting...';
+
+  @override
+  String get uploadManagerQueued => 'Added to upload queue';
 }
