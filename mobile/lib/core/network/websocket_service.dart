@@ -49,12 +49,14 @@ class LiveChatService {
       );
 
       // Send join message
-      _send(ChatMessage(
-        type: 'join',
-        userId: _userId!,
-        username: _username!,
-        text: '',
-      ));
+      _send(
+        ChatMessage(
+          type: 'join',
+          userId: _userId!,
+          username: _username!,
+          text: '',
+        ),
+      );
     } catch (_) {
       _scheduleReconnect();
     }
@@ -63,12 +65,14 @@ class LiveChatService {
   void sendMessage(String text) {
     if (_roomId == null || _userId == null || _username == null) return;
 
-    _send(ChatMessage(
-      type: 'message',
-      userId: _userId!,
-      username: _username!,
-      text: text,
-    ));
+    _send(
+      ChatMessage(
+        type: 'message',
+        userId: _userId!,
+        username: _username!,
+        text: text,
+      ),
+    );
   }
 
   void _send(ChatMessage message) {
@@ -89,12 +93,14 @@ class LiveChatService {
 
   void disconnect() {
     if (_roomId != null && _userId != null && _username != null) {
-      _send(ChatMessage(
-        type: 'leave',
-        userId: _userId!,
-        username: _username!,
-        text: '',
-      ));
+      _send(
+        ChatMessage(
+          type: 'leave',
+          userId: _userId!,
+          username: _username!,
+          text: '',
+        ),
+      );
     }
 
     _reconnectTimer?.cancel();

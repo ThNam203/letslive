@@ -141,8 +141,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
       if (response.success) {
         setState(() {
-          final index =
-              _notifications.indexWhere((n) => n.id == notification.id);
+          final index = _notifications.indexWhere(
+            (n) => n.id == notification.id,
+          );
           if (index != -1) {
             _notifications[index] = notification.copyWith(isRead: true);
           }
@@ -251,14 +252,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(FIcons.bell,
-                  size: 48,
-                  color: context.theme.colors.mutedForeground),
+              Icon(
+                FIcons.bell,
+                size: 48,
+                color: context.theme.colors.mutedForeground,
+              ),
               const SizedBox(height: 16),
               Text(
                 l10n.notificationsNoNotifications,
-                style: context.theme.typography.lg
-                    .copyWith(fontWeight: FontWeight.w600),
+                style: context.theme.typography.lg.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -354,10 +358,10 @@ class _NotificationTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: notification.isRead ? null : colors.primary.withValues(alpha: 0.05),
-          border: Border(
-            bottom: BorderSide(color: colors.border, width: 0.5),
-          ),
+          color: notification.isRead
+              ? null
+              : colors.primary.withValues(alpha: 0.05),
+          border: Border(bottom: BorderSide(color: colors.border, width: 0.5)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,8 +378,9 @@ class _NotificationTile extends StatelessWidget {
               child: Icon(
                 _iconForType(notification.type),
                 size: 18,
-                color:
-                    notification.isRead ? colors.mutedForeground : colors.primary,
+                color: notification.isRead
+                    ? colors.mutedForeground
+                    : colors.primary,
               ),
             ),
             const SizedBox(width: 12),
@@ -387,8 +392,9 @@ class _NotificationTile extends StatelessWidget {
                   Text(
                     notification.title,
                     style: typography.sm.copyWith(
-                      fontWeight:
-                          notification.isRead ? FontWeight.normal : FontWeight.w600,
+                      fontWeight: notification.isRead
+                          ? FontWeight.normal
+                          : FontWeight.w600,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -396,21 +402,29 @@ class _NotificationTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     notification.message,
-                    style: typography.xs.copyWith(color: colors.mutedForeground),
+                    style: typography.xs.copyWith(
+                      color: colors.mutedForeground,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     timeAgo,
-                    style: typography.xs.copyWith(color: colors.mutedForeground),
+                    style: typography.xs.copyWith(
+                      color: colors.mutedForeground,
+                    ),
                   ),
                 ],
               ),
             ),
             // Actions
             PopupMenuButton<String>(
-              icon: Icon(FIcons.ellipsis, size: 18, color: colors.mutedForeground),
+              icon: Icon(
+                FIcons.ellipsis,
+                size: 18,
+                color: colors.mutedForeground,
+              ),
               onSelected: (value) {
                 if (value == 'read') onMarkAsRead();
                 if (value == 'delete') onDelete();

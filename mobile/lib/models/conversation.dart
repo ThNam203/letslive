@@ -136,14 +136,16 @@ class Conversation {
       name: json['name'] as String?,
       avatarUrl: json['avatarUrl'] as String?,
       createdBy: json['createdBy'] as String,
-      participants: (json['participants'] as List<dynamic>?)
-              ?.map((e) => ConversationParticipant.fromJson(
-                  e as Map<String, dynamic>))
+      participants:
+          (json['participants'] as List<dynamic>?)
+              ?.map(
+                (e) =>
+                    ConversationParticipant.fromJson(e as Map<String, dynamic>),
+              )
               .toList() ??
           [],
       lastMessage: json['lastMessage'] != null
-          ? LastMessage.fromJson(
-              json['lastMessage'] as Map<String, dynamic>)
+          ? LastMessage.fromJson(json['lastMessage'] as Map<String, dynamic>)
           : null,
       createdAt: json['createdAt'] as String,
       updatedAt: json['updatedAt'] as String,
@@ -155,10 +157,7 @@ class ReadReceipt {
   final String userId;
   final String readAt;
 
-  const ReadReceipt({
-    required this.userId,
-    required this.readAt,
-  });
+  const ReadReceipt({required this.userId, required this.readAt});
 
   factory ReadReceipt.fromJson(Map<String, dynamic> json) {
     return ReadReceipt(
@@ -210,9 +209,9 @@ class DmMessage {
           .toList(),
       replyTo: json['replyTo'] as String?,
       isDeleted: json['isDeleted'] as bool? ?? false,
-      readBy: (json['readBy'] as List<dynamic>?)
-              ?.map(
-                  (e) => ReadReceipt.fromJson(e as Map<String, dynamic>))
+      readBy:
+          (json['readBy'] as List<dynamic>?)
+              ?.map((e) => ReadReceipt.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
       createdAt: json['createdAt'] as String,

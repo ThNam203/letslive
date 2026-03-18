@@ -46,16 +46,12 @@ final Map<String, String Function(AppLocalizations)> _apiKeyMap = {
   'res_err_end_already_ended_livestream': (l) =>
       l.apiResErrEndAlreadyEndedLivestream,
   'res_err_vod_comment_not_found': (l) => l.apiResErrVodCommentNotFound,
-  'res_err_vod_comment_create_failed': (l) =>
-      l.apiResErrVodCommentCreateFailed,
-  'res_err_vod_comment_already_liked': (l) =>
-      l.apiResErrVodCommentAlreadyLiked,
+  'res_err_vod_comment_create_failed': (l) => l.apiResErrVodCommentCreateFailed,
+  'res_err_vod_comment_already_liked': (l) => l.apiResErrVodCommentAlreadyLiked,
   'res_err_vod_comment_not_liked': (l) => l.apiResErrVodCommentNotLiked,
-  'res_err_vod_comment_delete_failed': (l) =>
-      l.apiResErrVodCommentDeleteFailed,
+  'res_err_vod_comment_delete_failed': (l) => l.apiResErrVodCommentDeleteFailed,
   // Success keys
-  'res_succ_sent_verification_email': (l) =>
-      l.apiResSuccSentVerificationEmail,
+  'res_succ_sent_verification_email': (l) => l.apiResSuccSentVerificationEmail,
   'res_succ_ok': (l) => l.apiResSuccOk,
   'res_succ_login': (l) => l.apiResSuccLogin,
   'res_succ_sign_up': (l) => l.apiResSuccSignUp,

@@ -72,27 +72,23 @@ final appRouter = GoRouter(
       routes: [
         GoRoute(
           path: AppRoutes.home,
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: HomeScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: HomeScreen()),
         ),
         GoRoute(
           path: AppRoutes.messages,
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: MessagesScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: MessagesScreen()),
         ),
         GoRoute(
           path: AppRoutes.notifications,
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: NotificationsScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: NotificationsScreen()),
         ),
         GoRoute(
           path: AppRoutes.settings,
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: SettingsScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: SettingsScreen()),
         ),
       ],
     ),
@@ -146,10 +142,7 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final userId = state.pathParameters['userId']!;
         final livestreamId = state.uri.queryParameters['livestreamId'] ?? '';
-        return LivestreamScreen(
-          userId: userId,
-          livestreamId: livestreamId,
-        );
+        return LivestreamScreen(userId: userId, livestreamId: livestreamId);
       },
     ),
 

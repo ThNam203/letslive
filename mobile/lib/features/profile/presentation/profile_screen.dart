@@ -52,7 +52,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       // Fire all requests in parallel.
       final userFuture = userRepo.getUser(widget.userId);
       final vodsFuture = vodRepo.getUserVods(widget.userId);
-      final livestreamFuture = livestreamRepo.getLivestreamOfUser(widget.userId);
+      final livestreamFuture = livestreamRepo.getLivestreamOfUser(
+        widget.userId,
+      );
 
       final userResponse = await userFuture;
       if (!mounted) return;
@@ -136,18 +138,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final l10n = AppLocalizations.of(context);
 
     return FScaffold(
-      header: FHeader.nested(
-        title: Text(l10n.settingsNavProfile),
-      ),
+      header: FHeader.nested(title: Text(l10n.settingsNavProfile)),
       child: _isLoading
           ? LoadingIndicator(message: l10n.loading)
           : _error != null
-              ? ErrorDisplay(
-                  title: l10n.errorGeneralTitle,
-                  message: _error,
-                  onRetry: _fetchUserData,
-                )
-              : _buildContent(context),
+          ? ErrorDisplay(
+              title: l10n.errorGeneralTitle,
+              message: _error,
+              onRetry: _fetchUserData,
+            )
+          : _buildContent(context),
     );
   }
 
@@ -188,8 +188,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           width: double.infinity,
           child: user.backgroundPicture != null
               ? CachedNetworkImage(
-                  imageUrl:
-                      '${AppConfig.apiUrl}/${user.backgroundPicture}',
+                  imageUrl: '${AppConfig.apiUrl}/${user.backgroundPicture}',
                   fit: BoxFit.cover,
                   placeholder: (_, _) => ColoredBox(color: colors.muted),
                   errorWidget: (_, _, _) => ColoredBox(color: colors.muted),
@@ -210,7 +209,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               backgroundColor: colors.muted,
               backgroundImage: user.profilePicture != null
                   ? CachedNetworkImageProvider(
-                      '${AppConfig.apiUrl}/${user.profilePicture}')
+                      '${AppConfig.apiUrl}/${user.profilePicture}',
+                    )
                   : null,
               child: user.profilePicture == null
                   ? const Icon(FIcons.user, size: 32)
@@ -245,13 +245,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   children: [
                     Text(
                       user.displayName ?? user.username,
-                      style: typography.xl2
-                          .copyWith(fontWeight: FontWeight.bold),
+                      style: typography.xl2.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Text(
                       '@${user.username}',
-                      style: typography.sm
-                          .copyWith(color: colors.mutedForeground),
+                      style: typography.sm.copyWith(
+                        color: colors.mutedForeground,
+                      ),
                     ),
                   ],
                 ),
@@ -268,9 +270,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           width: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(user.isFollowing == true
-                          ? l10n.unfollow
-                          : l10n.follow),
+                      : Text(
+                          user.isFollowing == true
+                              ? l10n.unfollow
+                              : l10n.follow,
+                        ),
                 ),
             ],
           ),
@@ -283,8 +287,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(width: 6),
               Text(
                 '${user.followerCount} ${l10n.usersProfileFollowers(user.followerCount)}',
-                style:
-                    typography.sm.copyWith(color: colors.mutedForeground),
+                style: typography.sm.copyWith(color: colors.mutedForeground),
               ),
             ],
           ),
@@ -297,9 +300,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            user.bio?.isNotEmpty == true
-                ? user.bio!
-                : l10n.noDescription,
+            user.bio?.isNotEmpty == true ? user.bio! : l10n.noDescription,
             style: typography.sm.copyWith(
               color: user.bio?.isNotEmpty == true
                   ? colors.foreground
@@ -316,13 +317,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           // Joined date
           Row(
             children: [
-              Icon(FIcons.calendar, size: 16,
-                  color: colors.mutedForeground),
+              Icon(FIcons.calendar, size: 16, color: colors.mutedForeground),
               const SizedBox(width: 6),
               Text(
                 '${l10n.usersProfileJoinedPrefix} ${_formatDate(user.createdAt)}',
-                style:
-                    typography.sm.copyWith(color: colors.mutedForeground),
+                style: typography.sm.copyWith(color: colors.mutedForeground),
               ),
             ],
           ),
@@ -335,21 +334,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // Social media links
   // ---------------------------------------------------------------------------
 
-  Widget _buildSocialMediaLinks(
-      BuildContext context, SocialMediaLinks links) {
+  Widget _buildSocialMediaLinks(BuildContext context, SocialMediaLinks links) {
     final colors = context.theme.colors;
 
     final entries = <MapEntry<IconData, String>>[
       if (links.website != null) MapEntry(FIcons.globe, links.website!),
       if (links.github != null) MapEntry(FIcons.github, links.github!),
       if (links.youtube != null) MapEntry(FIcons.youtube, links.youtube!),
-      if (links.facebook != null)
-        MapEntry(FIcons.facebook, links.facebook!),
+      if (links.facebook != null) MapEntry(FIcons.facebook, links.facebook!),
       if (links.twitter != null) MapEntry(FIcons.twitter, links.twitter!),
-      if (links.instagram != null)
-        MapEntry(FIcons.instagram, links.instagram!),
-      if (links.linkedin != null)
-        MapEntry(FIcons.linkedin, links.linkedin!),
+      if (links.instagram != null) MapEntry(FIcons.instagram, links.instagram!),
+      if (links.linkedin != null) MapEntry(FIcons.linkedin, links.linkedin!),
       if (links.tiktok != null) MapEntry(FIcons.music, links.tiktok!),
     ];
 
@@ -363,8 +358,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         children: entries.map((entry) {
           return Tooltip(
             message: entry.value,
-            child: Icon(entry.key, size: 20,
-                color: colors.mutedForeground),
+            child: Icon(entry.key, size: 20, color: colors.mutedForeground),
           );
         }).toList(),
       ),
@@ -392,7 +386,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           decoration: BoxDecoration(
             color: colors.destructive.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colors.destructive.withValues(alpha: 0.3)),
+            border: Border.all(
+              color: colors.destructive.withValues(alpha: 0.3),
+            ),
           ),
           child: Row(
             children: [
@@ -417,13 +413,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   children: [
                     Text(
                       livestream.title,
-                      style: typography.sm.copyWith(fontWeight: FontWeight.w600),
+                      style: typography.sm.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       l10n.homeViewerCount(livestream.viewCount),
-                      style: typography.xs.copyWith(color: colors.mutedForeground),
+                      style: typography.xs.copyWith(
+                        color: colors.mutedForeground,
+                      ),
                     ),
                   ],
                 ),
@@ -457,8 +457,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
@@ -466,9 +465,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             itemCount: _vods.length,
             itemBuilder: (context, index) => GestureDetector(
-                onTap: () => context.push(AppRoutes.vodPlayer(_vods[index].id)),
-                child: _ProfileVodCard(vod: _vods[index]),
-              ),
+              onTap: () => context.push(AppRoutes.vodPlayer(_vods[index].id)),
+              child: _ProfileVodCard(vod: _vods[index]),
+            ),
           ),
         ],
       ),
@@ -483,8 +482,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     try {
       final date = DateTime.parse(dateStr);
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       return '${months[date.month - 1]} ${date.year}';
     } catch (_) {
@@ -519,8 +528,7 @@ class _ProfileVodCard extends StatelessWidget {
         children: [
           // Thumbnail
           ClipRRect(
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             child: AspectRatio(
               aspectRatio: 16 / 9,
               child: Stack(
@@ -528,25 +536,21 @@ class _ProfileVodCard extends StatelessWidget {
                 children: [
                   if (vod.thumbnailUrl != null)
                     CachedNetworkImage(
-                      imageUrl:
-                          '${AppConfig.apiUrl}/${vod.thumbnailUrl}',
+                      imageUrl: '${AppConfig.apiUrl}/${vod.thumbnailUrl}',
                       fit: BoxFit.cover,
                       placeholder: (_, _) => ColoredBox(
                         color: colors.muted,
-                        child: const Center(
-                            child: Icon(FIcons.film, size: 24)),
+                        child: const Center(child: Icon(FIcons.film, size: 24)),
                       ),
                       errorWidget: (_, _, _) => ColoredBox(
                         color: colors.muted,
-                        child: const Center(
-                            child: Icon(FIcons.film, size: 24)),
+                        child: const Center(child: Icon(FIcons.film, size: 24)),
                       ),
                     )
                   else
                     ColoredBox(
                       color: colors.muted,
-                      child: const Center(
-                          child: Icon(FIcons.film, size: 24)),
+                      child: const Center(child: Icon(FIcons.film, size: 24)),
                     ),
                   // Duration badge
                   Positioned(
@@ -554,15 +558,16 @@ class _ProfileVodCard extends StatelessWidget {
                     right: 4,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         _formatDuration(vod.duration),
-                        style: typography.xs
-                            .copyWith(color: Colors.white),
+                        style: typography.xs.copyWith(color: Colors.white),
                       ),
                     ),
                   ),
@@ -579,16 +584,16 @@ class _ProfileVodCard extends StatelessWidget {
                 children: [
                   Text(
                     vod.title,
-                    style: typography.xs
-                        .copyWith(fontWeight: FontWeight.w600),
+                    style: typography.xs.copyWith(fontWeight: FontWeight.w600),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const Spacer(),
                   Text(
                     l10n.homeViewCount(vod.viewCount),
-                    style: typography.xs
-                        .copyWith(color: colors.mutedForeground),
+                    style: typography.xs.copyWith(
+                      color: colors.mutedForeground,
+                    ),
                   ),
                 ],
               ),

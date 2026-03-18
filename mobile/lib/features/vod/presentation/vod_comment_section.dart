@@ -13,11 +13,7 @@ class VodCommentSection extends ConsumerStatefulWidget {
   final String vodId;
   final String? vodOwnerId;
 
-  const VodCommentSection({
-    super.key,
-    required this.vodId,
-    this.vodOwnerId,
-  });
+  const VodCommentSection({super.key, required this.vodId, this.vodOwnerId});
 
   @override
   ConsumerState<VodCommentSection> createState() => _VodCommentSectionState();
@@ -91,8 +87,7 @@ class _VodCommentSectionState extends ConsumerState<VodCommentSection> {
     try {
       final repo = ref.read(vodCommentRepositoryProvider);
       final nextPage = _currentPage + 1;
-      final response =
-          await repo.getComments(widget.vodId, page: nextPage);
+      final response = await repo.getComments(widget.vodId, page: nextPage);
       if (!mounted) return;
 
       if (response.success) {
@@ -103,7 +98,8 @@ class _VodCommentSectionState extends ConsumerState<VodCommentSection> {
           _currentPage = nextPage;
           _comments.addAll(newComments);
           _isLoadingMore = false;
-          _hasMore = (_comments.length < total) && (newComments.length >= pageSize);
+          _hasMore =
+              (_comments.length < total) && (newComments.length >= pageSize);
         });
         _fetchLikedIds(newComments);
       } else {
@@ -136,8 +132,7 @@ class _VodCommentSectionState extends ConsumerState<VodCommentSection> {
 
     try {
       final repo = ref.read(vodCommentRepositoryProvider);
-      final response =
-          await repo.createComment(widget.vodId, content: text);
+      final response = await repo.createComment(widget.vodId, content: text);
       if (!mounted) return;
 
       if (response.success && response.data != null) {
@@ -172,8 +167,10 @@ class _VodCommentSectionState extends ConsumerState<VodCommentSection> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.delete,
-                style: TextStyle(color: context.theme.colors.destructive)),
+            child: Text(
+              l10n.delete,
+              style: TextStyle(color: context.theme.colors.destructive),
+            ),
           ),
         ],
       ),
@@ -370,9 +367,12 @@ class _VodCommentSectionState extends ConsumerState<VodCommentSection> {
             child: Center(
               child: Column(
                 children: [
-                  Text(_error!,
-                      style:
-                          typography.sm.copyWith(color: colors.mutedForeground)),
+                  Text(
+                    _error!,
+                    style: typography.sm.copyWith(
+                      color: colors.mutedForeground,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   FButton(
                     variant: FButtonVariant.outline,
@@ -466,8 +466,10 @@ class _CommentTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Text(
           l10n.commentsDeletedComment,
-          style: typography.sm
-              .copyWith(color: colors.mutedForeground, fontStyle: FontStyle.italic),
+          style: typography.sm.copyWith(
+            color: colors.mutedForeground,
+            fontStyle: FontStyle.italic,
+          ),
         ),
       );
     }
@@ -481,7 +483,8 @@ class _CommentTile extends StatelessWidget {
             radius: 16,
             backgroundImage: comment.user?.profilePicture != null
                 ? CachedNetworkImageProvider(
-                    '${AppConfig.apiUrl}/${comment.user!.profilePicture}')
+                    '${AppConfig.apiUrl}/${comment.user!.profilePicture}',
+                  )
                 : null,
             child: comment.user?.profilePicture == null
                 ? const Icon(FIcons.user, size: 16)
@@ -495,17 +498,18 @@ class _CommentTile extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      comment.user?.displayName ??
-                          comment.user?.username ??
-                          '',
-                      style: typography.xs
-                          .copyWith(fontWeight: FontWeight.w600),
+                      comment.user?.displayName ?? comment.user?.username ?? '',
+                      style: typography.xs.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     if (comment.userId == comment.vodId) ...[
                       const SizedBox(width: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 4, vertical: 1),
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
                         decoration: BoxDecoration(
                           color: colors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
@@ -522,8 +526,9 @@ class _CommentTile extends StatelessWidget {
                     const Spacer(),
                     Text(
                       timeAgo,
-                      style:
-                          typography.xs.copyWith(color: colors.mutedForeground),
+                      style: typography.xs.copyWith(
+                        color: colors.mutedForeground,
+                      ),
                     ),
                   ],
                 ),
@@ -561,13 +566,17 @@ class _CommentTile extends StatelessWidget {
                         onTap: onDelete,
                         child: Row(
                           children: [
-                            Icon(FIcons.trash,
-                                size: 14, color: colors.mutedForeground),
+                            Icon(
+                              FIcons.trash,
+                              size: 14,
+                              color: colors.mutedForeground,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               l10n.commentsDelete,
-                              style: typography.xs
-                                  .copyWith(color: colors.mutedForeground),
+                              style: typography.xs.copyWith(
+                                color: colors.mutedForeground,
+                              ),
                             ),
                           ],
                         ),

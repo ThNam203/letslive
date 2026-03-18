@@ -184,7 +184,9 @@ class User {
       username: json['username'] as String,
       email: json['email'] as String? ?? '',
       status: UserStatus.fromString(json['status'] as String? ?? 'normal'),
-      authProvider: AuthProvider.fromString(json['authProvider'] as String? ?? 'local'),
+      authProvider: AuthProvider.fromString(
+        json['authProvider'] as String? ?? 'local',
+      ),
       createdAt: json['createdAt'] as String,
       displayName: json['displayName'] as String?,
       bio: json['bio'] as String?,
@@ -193,11 +195,13 @@ class User {
       followerCount: json['followerCount'] as int? ?? 0,
       livestreamInformation: json['livestreamInformation'] != null
           ? LivestreamInformation.fromJson(
-              json['livestreamInformation'] as Map<String, dynamic>)
+              json['livestreamInformation'] as Map<String, dynamic>,
+            )
           : const LivestreamInformation(),
       socialMediaLinks: json['socialMediaLinks'] != null
           ? SocialMediaLinks.fromJson(
-              json['socialMediaLinks'] as Map<String, dynamic>)
+              json['socialMediaLinks'] as Map<String, dynamic>,
+            )
           : null,
       isFollowing: json['isFollowing'] as bool?,
       phoneNumber: json['phoneNumber'] as String?,

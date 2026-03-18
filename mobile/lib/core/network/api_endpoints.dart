@@ -26,8 +26,7 @@ abstract final class ApiEndpoints {
 
   // Notifications (nested under /user/me/)
   static const notifications = '/user/me/notifications';
-  static const notificationsUnreadCount =
-      '/user/me/notifications/unread-count';
+  static const notificationsUnreadCount = '/user/me/notifications/unread-count';
   static String notificationRead(String id) =>
       '/user/me/notifications/$id/read';
   static const notificationsReadAll = '/user/me/notifications/read-all';
@@ -49,8 +48,7 @@ abstract final class ApiEndpoints {
 
   // VOD Comments
   static String vodComments(String vodId) => '/vods/$vodId/comments';
-  static String vodCommentById(String commentId) =>
-      '/vod-comments/$commentId';
+  static String vodCommentById(String commentId) => '/vod-comments/$commentId';
   static String vodCommentReplies(String commentId) =>
       '/vod-comments/$commentId/replies';
   static String vodCommentLike(String commentId) =>

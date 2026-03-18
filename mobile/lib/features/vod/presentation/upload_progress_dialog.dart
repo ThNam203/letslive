@@ -66,8 +66,9 @@ class _UploadProgressDialogState extends ConsumerState<UploadProgressDialog> {
       );
       if (!mounted) return;
       setState(() {
-        _status =
-            response.success ? UploadStatus.processing : UploadStatus.failed;
+        _status = response.success
+            ? UploadStatus.processing
+            : UploadStatus.failed;
         if (!response.success) {
           _errorMessage = response.message;
         }
@@ -142,10 +143,7 @@ class _UploadProgressDialogState extends ConsumerState<UploadProgressDialog> {
           if (_status == UploadStatus.processing) ...[
             const LinearProgressIndicator(),
             const SizedBox(height: 12),
-            Text(
-              l10n.uploadProcessingOnServer,
-              style: typography.sm,
-            ),
+            Text(l10n.uploadProcessingOnServer, style: typography.sm),
           ],
           if (_status == UploadStatus.complete) ...[
             Icon(FIcons.circleCheck, color: colors.primary, size: 48),
@@ -176,10 +174,7 @@ class _UploadProgressDialogState extends ConsumerState<UploadProgressDialog> {
             onPress: () => Navigator.of(context).pop(false),
             child: Text(l10n.uploadClose),
           ),
-          FButton(
-            onPress: _retry,
-            child: Text(l10n.retry),
-          ),
+          FButton(onPress: _retry, child: Text(l10n.retry)),
         ],
         if (_status == UploadStatus.processing)
           FButton(

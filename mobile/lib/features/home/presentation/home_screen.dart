@@ -275,7 +275,11 @@ class _LivestreamCard extends StatelessWidget {
   final User? user;
   final VoidCallback onTap;
 
-  const _LivestreamCard({required this.livestream, this.user, required this.onTap});
+  const _LivestreamCard({
+    required this.livestream,
+    this.user,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -298,8 +302,9 @@ class _LivestreamCard extends StatelessWidget {
             children: [
               // Thumbnail
               ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
                   child: Stack(
@@ -313,19 +318,22 @@ class _LivestreamCard extends StatelessWidget {
                           placeholder: (_, _) => ColoredBox(
                             color: colors.muted,
                             child: const Center(
-                                child: Icon(FIcons.video, size: 32)),
+                              child: Icon(FIcons.video, size: 32),
+                            ),
                           ),
                           errorWidget: (_, _, _) => ColoredBox(
                             color: colors.muted,
                             child: const Center(
-                                child: Icon(FIcons.video, size: 32)),
+                              child: Icon(FIcons.video, size: 32),
+                            ),
                           ),
                         )
                       else
                         ColoredBox(
                           color: colors.muted,
-                          child:
-                              const Center(child: Icon(FIcons.video, size: 32)),
+                          child: const Center(
+                            child: Icon(FIcons.video, size: 32),
+                          ),
                         ),
                       // LIVE badge
                       if (livestream.isLive)
@@ -334,7 +342,9 @@ class _LivestreamCard extends StatelessWidget {
                           left: 8,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: colors.destructive,
                               borderRadius: BorderRadius.circular(4),
@@ -354,15 +364,16 @@ class _LivestreamCard extends StatelessWidget {
                         right: 8,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.7),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             l10n.homeViewerCount(livestream.viewCount),
-                            style: typography.xs
-                                .copyWith(color: Colors.white),
+                            style: typography.xs.copyWith(color: Colors.white),
                           ),
                         ),
                       ),
@@ -380,7 +391,8 @@ class _LivestreamCard extends StatelessWidget {
                       radius: 18,
                       backgroundImage: user?.profilePicture != null
                           ? CachedNetworkImageProvider(
-                              '${AppConfig.apiUrl}/${user!.profilePicture}')
+                              '${AppConfig.apiUrl}/${user!.profilePicture}',
+                            )
                           : null,
                       child: user?.profilePicture == null
                           ? const Icon(FIcons.user, size: 18)
@@ -393,16 +405,15 @@ class _LivestreamCard extends StatelessWidget {
                         children: [
                           Text(
                             livestream.title,
-                            style: typography.sm
-                                .copyWith(fontWeight: FontWeight.w600),
+                            style: typography.sm.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            user?.displayName ??
-                                user?.username ??
-                                '',
+                            user?.displayName ?? user?.username ?? '',
                             style: typography.xs.copyWith(
                               color: colors.mutedForeground,
                             ),
@@ -449,8 +460,9 @@ class _VodCard extends StatelessWidget {
           children: [
             // Thumbnail
             ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
               child: AspectRatio(
                 aspectRatio: 16 / 9,
                 child: Stack(
@@ -462,20 +474,21 @@ class _VodCard extends StatelessWidget {
                         fit: BoxFit.cover,
                         placeholder: (_, _) => ColoredBox(
                           color: colors.muted,
-                          child:
-                              const Center(child: Icon(FIcons.film, size: 24)),
+                          child: const Center(
+                            child: Icon(FIcons.film, size: 24),
+                          ),
                         ),
                         errorWidget: (_, _, _) => ColoredBox(
                           color: colors.muted,
-                          child:
-                              const Center(child: Icon(FIcons.film, size: 24)),
+                          child: const Center(
+                            child: Icon(FIcons.film, size: 24),
+                          ),
                         ),
                       )
                     else
                       ColoredBox(
                         color: colors.muted,
-                        child:
-                            const Center(child: Icon(FIcons.film, size: 24)),
+                        child: const Center(child: Icon(FIcons.film, size: 24)),
                       ),
                     // Duration
                     Positioned(
@@ -483,7 +496,9 @@ class _VodCard extends StatelessWidget {
                       right: 4,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(4),
@@ -507,8 +522,9 @@ class _VodCard extends StatelessWidget {
                   children: [
                     Text(
                       vod.title,
-                      style:
-                          typography.xs.copyWith(fontWeight: FontWeight.w600),
+                      style: typography.xs.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),

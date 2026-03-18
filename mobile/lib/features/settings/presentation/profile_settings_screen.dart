@@ -31,8 +31,9 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   void initState() {
     super.initState();
     final user = ref.read(currentUserProvider);
-    _displayNameController =
-        TextEditingController(text: user?.displayName ?? '');
+    _displayNameController = TextEditingController(
+      text: user?.displayName ?? '',
+    );
     _bioController = TextEditingController(text: user?.bio ?? '');
   }
 
@@ -177,15 +178,15 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     final user = ref.watch(currentUserProvider);
 
     return FScaffold(
-      header: FHeader.nested(
-        title: Text(l10n.settingsProfileTitle),
-      ),
+      header: FHeader.nested(title: Text(l10n.settingsProfileTitle)),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // Background picture
           GestureDetector(
-            onTap: _isUploadingBackground ? null : _pickAndUploadBackgroundPicture,
+            onTap: _isUploadingBackground
+                ? null
+                : _pickAndUploadBackgroundPicture,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: SizedBox(
@@ -211,13 +212,17 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                           : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(FIcons.camera,
-                                    color: Colors.white, size: 24),
+                                const Icon(
+                                  FIcons.camera,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
                                 const SizedBox(height: 4),
                                 Text(
                                   l10n.settingsProfileUpdateBackground,
-                                  style: typography.xs
-                                      .copyWith(color: Colors.white),
+                                  style: typography.xs.copyWith(
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ],
                             ),
@@ -239,7 +244,8 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                     radius: 48,
                     backgroundImage: user?.profilePicture != null
                         ? CachedNetworkImageProvider(
-                            '${AppConfig.apiUrl}/${user!.profilePicture}')
+                            '${AppConfig.apiUrl}/${user!.profilePicture}',
+                          )
                         : null,
                     child: user?.profilePicture == null
                         ? const Icon(FIcons.user, size: 32)

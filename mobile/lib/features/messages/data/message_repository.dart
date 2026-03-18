@@ -14,10 +14,7 @@ class MessageRepository {
   }) {
     return _client.get(
       ApiEndpoints.conversations,
-      queryParameters: {
-        'page': page,
-        'limit': limit,
-      },
+      queryParameters: {'page': page, 'limit': limit},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => Conversation.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -34,8 +31,7 @@ class MessageRepository {
   Future<ApiResponse<Conversation>> getConversation(String id) {
     return _client.get(
       ApiEndpoints.conversationById(id),
-      fromJsonT: (json) =>
-          Conversation.fromJson(json as Map<String, dynamic>),
+      fromJsonT: (json) => Conversation.fromJson(json as Map<String, dynamic>),
     );
   }
 
@@ -46,10 +42,7 @@ class MessageRepository {
   }) {
     return _client.get(
       ApiEndpoints.conversationMessages(id),
-      queryParameters: {
-        'limit': limit,
-        'before': ?before,
-      },
+      queryParameters: {'limit': limit, 'before': ?before},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => DmMessage.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -91,8 +84,7 @@ class MessageRepository {
         'imageUrls': ?imageUrls,
         'replyTo': ?replyTo,
       },
-      fromJsonT: (json) =>
-          DmMessage.fromJson(json as Map<String, dynamic>),
+      fromJsonT: (json) => DmMessage.fromJson(json as Map<String, dynamic>),
     );
   }
 
@@ -104,8 +96,7 @@ class MessageRepository {
     return _client.patch(
       '${ApiEndpoints.conversationMessages(conversationId)}/$messageId',
       data: {'text': text},
-      fromJsonT: (json) =>
-          DmMessage.fromJson(json as Map<String, dynamic>),
+      fromJsonT: (json) => DmMessage.fromJson(json as Map<String, dynamic>),
     );
   }
 
@@ -125,12 +116,8 @@ class MessageRepository {
   }) {
     return _client.put(
       ApiEndpoints.conversationById(id),
-      data: {
-        'name': ?name,
-        'avatarUrl': ?avatarUrl,
-      },
-      fromJsonT: (json) =>
-          Conversation.fromJson(json as Map<String, dynamic>),
+      data: {'name': ?name, 'avatarUrl': ?avatarUrl},
+      fromJsonT: (json) => Conversation.fromJson(json as Map<String, dynamic>),
     );
   }
 

@@ -24,9 +24,7 @@ class UserRepository {
   }) {
     return _client.get(
       ApiEndpoints.usersSearch,
-      queryParameters: {
-        'username': query,
-      },
+      queryParameters: {'username': query},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => User.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -39,10 +37,7 @@ class UserRepository {
   }) {
     return _client.get(
       ApiEndpoints.usersRecommendations,
-      queryParameters: {
-        'page': page,
-        'page_size': pageSize,
-      },
+      queryParameters: {'page': page, 'page_size': pageSize},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => User.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -63,10 +58,7 @@ class UserRepository {
   }) {
     return _client.get(
       ApiEndpoints.userFollowing,
-      queryParameters: {
-        'page': page,
-        'page_size': pageSize,
-      },
+      queryParameters: {'page': page, 'page_size': pageSize},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => User.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -122,10 +114,7 @@ class UserRepository {
     String? thumbnailFilePath,
     String? thumbnailUrl,
   }) async {
-    final map = <String, dynamic>{
-      'title': title,
-      'description': description,
-    };
+    final map = <String, dynamic>{'title': title, 'description': description};
     if (thumbnailFilePath != null) {
       map['thumbnail'] = await MultipartFile.fromFile(thumbnailFilePath);
     }

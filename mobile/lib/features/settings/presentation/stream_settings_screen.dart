@@ -32,10 +32,12 @@ class _StreamSettingsScreenState extends ConsumerState<StreamSettingsScreen> {
   void initState() {
     super.initState();
     final user = ref.read(currentUserProvider);
-    _titleController =
-        TextEditingController(text: user?.livestreamInformation.title ?? '');
+    _titleController = TextEditingController(
+      text: user?.livestreamInformation.title ?? '',
+    );
     _descriptionController = TextEditingController(
-        text: user?.livestreamInformation.description ?? '');
+      text: user?.livestreamInformation.description ?? '',
+    );
   }
 
   @override
@@ -116,9 +118,7 @@ class _StreamSettingsScreenState extends ConsumerState<StreamSettingsScreen> {
     final existingThumbnail = user?.livestreamInformation.thumbnailUrl;
 
     return FScaffold(
-      header: FHeader.nested(
-        title: Text(l10n.settingsStreamTitle),
-      ),
+      header: FHeader.nested(title: Text(l10n.settingsStreamTitle)),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -164,13 +164,15 @@ class _StreamSettingsScreenState extends ConsumerState<StreamSettingsScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(FIcons.camera,
-                              color: Colors.white, size: 32),
+                          const Icon(
+                            FIcons.camera,
+                            color: Colors.white,
+                            size: 32,
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             l10n.settingsStreamChangeThumbnail,
-                            style:
-                                typography.sm.copyWith(color: Colors.white),
+                            style: typography.sm.copyWith(color: Colors.white),
                           ),
                         ],
                       ),

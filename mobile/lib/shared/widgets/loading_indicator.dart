@@ -20,9 +20,7 @@ class LoadingIndicator extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               message!,
-              style: typography.sm.copyWith(
-                color: colors.mutedForeground,
-              ),
+              style: typography.sm.copyWith(color: colors.mutedForeground),
             ),
           ],
         ],

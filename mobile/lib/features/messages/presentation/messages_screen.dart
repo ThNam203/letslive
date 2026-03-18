@@ -159,8 +159,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(FIcons.messageCircle,
-                size: 48, color: colors.mutedForeground),
+            Icon(FIcons.messageCircle, size: 48, color: colors.mutedForeground),
             const SizedBox(height: 16),
             Text(
               l10n.messagesLoginRequired,
@@ -174,7 +173,10 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
   }
 
   Widget _buildContent(
-      BuildContext context, AppLocalizations l10n, String currentUserId) {
+    BuildContext context,
+    AppLocalizations l10n,
+    String currentUserId,
+  ) {
     if (_isLoading) {
       return LoadingIndicator(message: l10n.loading);
     }
@@ -194,14 +196,17 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(FIcons.messageCircle,
-                  size: 48,
-                  color: context.theme.colors.mutedForeground),
+              Icon(
+                FIcons.messageCircle,
+                size: 48,
+                color: context.theme.colors.mutedForeground,
+              ),
               const SizedBox(height: 16),
               Text(
                 l10n.messagesNoConversationsYet,
-                style: context.theme.typography.lg
-                    .copyWith(fontWeight: FontWeight.w600),
+                style: context.theme.typography.lg.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -268,9 +273,7 @@ class _ConversationTile extends StatelessWidget {
         .where((p) => p.userId != currentUserId)
         .toList();
     if (others.isEmpty) return l10n.messagesUnknown;
-    return others
-        .map((p) => p.displayName ?? p.username)
-        .join(', ');
+    return others.map((p) => p.displayName ?? p.username).join(', ');
   }
 
   String? _avatarUrl() {
@@ -296,17 +299,14 @@ class _ConversationTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: colors.border, width: 0.5),
-          ),
+          border: Border(bottom: BorderSide(color: colors.border, width: 0.5)),
         ),
         child: Row(
           children: [
             CircleAvatar(
               radius: 24,
               backgroundImage: avatar != null
-                  ? CachedNetworkImageProvider(
-                      '${AppConfig.apiUrl}/$avatar')
+                  ? CachedNetworkImageProvider('${AppConfig.apiUrl}/$avatar')
                   : null,
               child: avatar == null
                   ? Icon(
@@ -327,8 +327,9 @@ class _ConversationTile extends StatelessWidget {
                       Expanded(
                         child: Text(
                           _displayName(l10n),
-                          style: typography.sm
-                              .copyWith(fontWeight: FontWeight.w600),
+                          style: typography.sm.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -336,8 +337,9 @@ class _ConversationTile extends StatelessWidget {
                       if (timeAgo.isNotEmpty)
                         Text(
                           timeAgo,
-                          style: typography.xs
-                              .copyWith(color: colors.mutedForeground),
+                          style: typography.xs.copyWith(
+                            color: colors.mutedForeground,
+                          ),
                         ),
                     ],
                   ),
@@ -345,8 +347,9 @@ class _ConversationTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${conversation.lastMessage!.senderUsername}: ${conversation.lastMessage!.text}',
-                      style: typography.xs
-                          .copyWith(color: colors.mutedForeground),
+                      style: typography.xs.copyWith(
+                        color: colors.mutedForeground,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

@@ -46,11 +46,9 @@ sealed class DmServerEvent {
       DmServerEventType.messageEdited => DmMessageEditedEvent.fromJson(json),
       DmServerEventType.messageDeleted => DmMessageDeletedEvent.fromJson(json),
       DmServerEventType.userTyping ||
-      DmServerEventType.userStoppedTyping =>
-        DmUserTypingEvent.fromJson(json),
+      DmServerEventType.userStoppedTyping => DmUserTypingEvent.fromJson(json),
       DmServerEventType.userOnline ||
-      DmServerEventType.userOffline =>
-        DmPresenceEvent.fromJson(json),
+      DmServerEventType.userOffline => DmPresenceEvent.fromJson(json),
       DmServerEventType.conversationUpdated =>
         DmConversationUpdatedEvent.fromJson(json),
       DmServerEventType.sendFailed => DmSendFailedEvent.fromJson(json),
@@ -63,12 +61,11 @@ class DmNewMessageEvent extends DmServerEvent {
   final String conversationId;
   final DmMessage message;
   DmNewMessageEvent({required this.conversationId, required this.message})
-      : super(DmServerEventType.newMessage);
+    : super(DmServerEventType.newMessage);
   factory DmNewMessageEvent.fromJson(Map<String, dynamic> json) {
     return DmNewMessageEvent(
       conversationId: json['conversationId'] as String,
-      message:
-          DmMessage.fromJson(json['message'] as Map<String, dynamic>),
+      message: DmMessage.fromJson(json['message'] as Map<String, dynamic>),
     );
   }
 }
@@ -97,9 +94,8 @@ class DmMessageEditedEvent extends DmServerEvent {
 class DmMessageDeletedEvent extends DmServerEvent {
   final String conversationId;
   final String messageId;
-  DmMessageDeletedEvent(
-      {required this.conversationId, required this.messageId})
-      : super(DmServerEventType.messageDeleted);
+  DmMessageDeletedEvent({required this.conversationId, required this.messageId})
+    : super(DmServerEventType.messageDeleted);
   factory DmMessageDeletedEvent.fromJson(Map<String, dynamic> json) {
     return DmMessageDeletedEvent(
       conversationId: json['conversationId'] as String,
@@ -142,9 +138,10 @@ class DmPresenceEvent extends DmServerEvent {
 class DmConversationUpdatedEvent extends DmServerEvent {
   final String conversationId;
   final Map<String, dynamic> update;
-  DmConversationUpdatedEvent(
-      {required this.conversationId, required this.update})
-      : super(DmServerEventType.conversationUpdated);
+  DmConversationUpdatedEvent({
+    required this.conversationId,
+    required this.update,
+  }) : super(DmServerEventType.conversationUpdated);
   factory DmConversationUpdatedEvent.fromJson(Map<String, dynamic> json) {
     return DmConversationUpdatedEvent(
       conversationId: json['conversationId'] as String,
@@ -157,7 +154,7 @@ class DmSendFailedEvent extends DmServerEvent {
   final String key;
   final String? message;
   DmSendFailedEvent({required this.key, this.message})
-      : super(DmServerEventType.sendFailed);
+    : super(DmServerEventType.sendFailed);
   factory DmSendFailedEvent.fromJson(Map<String, dynamic> json) {
     return DmSendFailedEvent(
       key: json['key'] as String? ?? '',
@@ -209,8 +206,7 @@ class DmWebSocketService {
       _channel!.stream.listen(
         (data) {
           try {
-            final json =
-                jsonDecode(data as String) as Map<String, dynamic>;
+            final json = jsonDecode(data as String) as Map<String, dynamic>;
             final event = DmServerEvent.fromJson(json);
             _handleTypingTimeouts(event);
             _eventController.add(event);
@@ -270,10 +266,7 @@ class DmWebSocketService {
   }
 
   /// Stop the local typing indicator immediately (e.g. on message send).
-  void stopTyping({
-    required String conversationId,
-    required String username,
-  }) {
+  void stopTyping({required String conversationId, required String username}) {
     if (_isLocalTyping) {
       _isLocalTyping = false;
       _localTypingStopTimer?.cancel();
@@ -295,12 +288,14 @@ class DmWebSocketService {
           const Duration(milliseconds: _typingTimeoutMs),
           () {
             _typingTimeouts.remove(key);
-            _eventController.add(DmUserTypingEvent(
-              type: DmServerEventType.userStoppedTyping,
-              conversationId: event.conversationId,
-              userId: event.userId,
-              username: event.username,
-            ));
+            _eventController.add(
+              DmUserTypingEvent(
+                type: DmServerEventType.userStoppedTyping,
+                conversationId: event.conversationId,
+                userId: event.userId,
+                username: event.username,
+              ),
+            );
           },
         );
       } else {
@@ -314,14 +309,10 @@ class DmWebSocketService {
   void _scheduleReconnect() {
     if (_disposed) return;
     _reconnectTimer?.cancel();
-    _reconnectTimer = Timer(
-      Duration(milliseconds: _reconnectDelay),
-      () {
-        _reconnectDelay =
-            min(_reconnectDelay * 2, _maxReconnectDelay);
-        if (!_disposed) connect();
-      },
-    );
+    _reconnectTimer = Timer(Duration(milliseconds: _reconnectDelay), () {
+      _reconnectDelay = min(_reconnectDelay * 2, _maxReconnectDelay);
+      if (!_disposed) connect();
+    });
   }
 
   void disconnect() {

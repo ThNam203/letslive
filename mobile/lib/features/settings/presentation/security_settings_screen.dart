@@ -109,8 +109,10 @@ class _SecuritySettingsScreenState
                   );
                   Navigator.of(context).pop();
                 } else {
-                  final errorMsg =
-                      getLocalizedApiMessage(context, response.key);
+                  final errorMsg = getLocalizedApiMessage(
+                    context,
+                    response.key,
+                  );
                   showFToast(
                     context: context,
                     title: Text(errorMsg),
@@ -143,9 +145,9 @@ class _SecuritySettingsScreenState
                         controller: currentPasswordController,
                       ),
                       label: Text(
-                          l10n.settingsSecurityPasswordFormCurrentLabel),
-                      hint: l10n
-                          .settingsSecurityPasswordFormCurrentPlaceholder,
+                        l10n.settingsSecurityPasswordFormCurrentLabel,
+                      ),
+                      hint: l10n.settingsSecurityPasswordFormCurrentPlaceholder,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       textInputAction: TextInputAction.next,
                       validator: (value) {
@@ -160,10 +162,8 @@ class _SecuritySettingsScreenState
                       control: FTextFieldControl.managed(
                         controller: newPasswordController,
                       ),
-                      label:
-                          Text(l10n.settingsSecurityPasswordFormNewLabel),
-                      hint: l10n
-                          .settingsSecurityPasswordFormNewPlaceholder,
+                      label: Text(l10n.settingsSecurityPasswordFormNewLabel),
+                      hint: l10n.settingsSecurityPasswordFormNewPlaceholder,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       textInputAction: TextInputAction.next,
                       validator: (value) {
@@ -172,11 +172,13 @@ class _SecuritySettingsScreenState
                         }
                         if (value.length < PasswordConstants.minLength) {
                           return l10n.errorPasswordTooShort(
-                              PasswordConstants.minLength);
+                            PasswordConstants.minLength,
+                          );
                         }
                         if (value.length > PasswordConstants.maxLength) {
                           return l10n.errorPasswordTooLong(
-                              PasswordConstants.maxLength);
+                            PasswordConstants.maxLength,
+                          );
                         }
                         if (value == currentPasswordController.text) {
                           return l10n.errorNewPasswordMustBeDifferent;
@@ -190,9 +192,9 @@ class _SecuritySettingsScreenState
                         controller: confirmPasswordController,
                       ),
                       label: Text(
-                          l10n.settingsSecurityPasswordFormConfirmLabel),
-                      hint: l10n
-                          .settingsSecurityPasswordFormConfirmPlaceholder,
+                        l10n.settingsSecurityPasswordFormConfirmLabel,
+                      ),
+                      hint: l10n.settingsSecurityPasswordFormConfirmPlaceholder,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       textInputAction: TextInputAction.done,
                       validator: (value) {
@@ -240,9 +242,7 @@ class _SecuritySettingsScreenState
     final user = ref.watch(currentUserProvider);
 
     return FScaffold(
-      header: FHeader.nested(
-        title: Text(l10n.settingsSecurityTitle),
-      ),
+      header: FHeader.nested(title: Text(l10n.settingsSecurityTitle)),
       child: ListView(
         children: [
           // Contact section
@@ -255,7 +255,9 @@ class _SecuritySettingsScreenState
           FTile(
             prefix: const Icon(FIcons.phone),
             title: Text(l10n.settingsSecurityContactPhone),
-            subtitle: Text(user?.phoneNumber ?? l10n.settingsSecurityContactAddPhone),
+            subtitle: Text(
+              user?.phoneNumber ?? l10n.settingsSecurityContactAddPhone,
+            ),
           ),
 
           // Password section
@@ -288,8 +290,10 @@ class _SecuritySettingsScreenState
                 border: Border.all(color: colors.border, width: 0.5),
               ),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -297,8 +301,7 @@ class _SecuritySettingsScreenState
                         user?.streamAPIKey != null
                             ? '${'*' * 16}${user!.streamAPIKey!.substring(user.streamAPIKey!.length > 4 ? user.streamAPIKey!.length - 4 : 0)}'
                             : '—',
-                        style: typography.sm
-                            .copyWith(fontFamily: 'monospace'),
+                        style: typography.sm.copyWith(fontFamily: 'monospace'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -359,4 +362,3 @@ class _SectionHeader extends StatelessWidget {
     );
   }
 }
-

@@ -80,9 +80,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final l10n = AppLocalizations.of(context);
 
     return FScaffold(
-      header: FHeader.nested(
-        title: Text(l10n.searchUsers),
-      ),
+      header: FHeader.nested(title: Text(l10n.searchUsers)),
       child: Column(
         children: [
           // Search input
@@ -96,14 +94,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               style: typography.sm,
               decoration: InputDecoration(
                 hintText: l10n.messagesSearchUsersPlaceholder,
-                hintStyle:
-                    typography.sm.copyWith(color: colors.mutedForeground),
-                prefixIcon:
-                    Icon(FIcons.search, color: colors.mutedForeground),
+                hintStyle: typography.sm.copyWith(
+                  color: colors.mutedForeground,
+                ),
+                prefixIcon: Icon(FIcons.search, color: colors.mutedForeground),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: Icon(FIcons.x,
-                            color: colors.mutedForeground, size: 18),
+                        icon: Icon(
+                          FIcons.x,
+                          color: colors.mutedForeground,
+                          size: 18,
+                        ),
                         onPressed: () {
                           _searchController.clear();
                           _onSearchChanged('');
@@ -112,7 +113,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     : null,
                 counterText: '',
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: colors.border),
@@ -155,13 +158,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(FIcons.searchX, size: 48,
-                color: colors.mutedForeground),
+            Icon(FIcons.searchX, size: 48, color: colors.mutedForeground),
             const SizedBox(height: 16),
             Text(
               l10n.noUsersFound,
-              style: typography.base
-                  .copyWith(color: colors.mutedForeground),
+              style: typography.base.copyWith(color: colors.mutedForeground),
             ),
           ],
         ),
@@ -175,10 +176,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: _results.length,
-      separatorBuilder: (_, _) => Divider(
-        height: 1,
-        color: colors.border,
-      ),
+      separatorBuilder: (_, _) => Divider(height: 1, color: colors.border),
       itemBuilder: (context, index) {
         final user = _results[index];
         return _UserResultTile(
@@ -214,16 +212,16 @@ class _UserResultTile extends StatelessWidget {
               backgroundColor: colors.muted,
               backgroundImage: user.profilePicture != null
                   ? CachedNetworkImageProvider(
-                      '${AppConfig.apiUrl}/${user.profilePicture}')
+                      '${AppConfig.apiUrl}/${user.profilePicture}',
+                    )
                   : null,
               child: user.profilePicture == null
                   ? Text(
-                      (user.displayName ?? user.username)
-                          .characters
-                          .first
+                      (user.displayName ?? user.username).characters.first
                           .toUpperCase(),
-                      style: typography.sm
-                          .copyWith(fontWeight: FontWeight.w600),
+                      style: typography.sm.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     )
                   : null,
             ),
@@ -235,23 +233,22 @@ class _UserResultTile extends StatelessWidget {
                 children: [
                   Text(
                     user.displayName ?? user.username,
-                    style: typography.sm
-                        .copyWith(fontWeight: FontWeight.w600),
+                    style: typography.sm.copyWith(fontWeight: FontWeight.w600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     '@${user.username}',
-                    style: typography.xs
-                        .copyWith(color: colors.mutedForeground),
+                    style: typography.xs.copyWith(
+                      color: colors.mutedForeground,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-            Icon(FIcons.chevronRight, size: 16,
-                color: colors.mutedForeground),
+            Icon(FIcons.chevronRight, size: 16, color: colors.mutedForeground),
           ],
         ),
       ),

@@ -8,7 +8,14 @@ import 'vod_repository.dart';
 
 const _maxConcurrent = 3;
 
-enum UploadItemStatus { queued, uploading, processing, completed, failed, cancelled }
+enum UploadItemStatus {
+  queued,
+  uploading,
+  processing,
+  completed,
+  failed,
+  cancelled,
+}
 
 class UploadItem {
   final String id;
@@ -65,23 +72,22 @@ class UploadQueueState {
   final List<UploadItem> items;
   final bool isCollapsed;
 
-  const UploadQueueState({
-    this.items = const [],
-    this.isCollapsed = false,
-  });
+  const UploadQueueState({this.items = const [], this.isCollapsed = false});
 
-  UploadQueueState copyWith({
-    List<UploadItem>? items,
-    bool? isCollapsed,
-  }) {
+  UploadQueueState copyWith({List<UploadItem>? items, bool? isCollapsed}) {
     return UploadQueueState(
       items: items ?? this.items,
       isCollapsed: isCollapsed ?? this.isCollapsed,
     );
   }
 
-  int get activeCount =>
-      items.where((i) => i.status == UploadItemStatus.uploading || i.status == UploadItemStatus.queued).length;
+  int get activeCount => items
+      .where(
+        (i) =>
+            i.status == UploadItemStatus.uploading ||
+            i.status == UploadItemStatus.queued,
+      )
+      .length;
 
   int get completedCount =>
       items.where((i) => i.status == UploadItemStatus.completed).length;
@@ -118,7 +124,10 @@ class UploadQueueNotifier extends Notifier<UploadQueueState> {
     item?.cancelToken?.cancel();
     state = state.copyWith(
       items: state.items
-          .map((i) => i.id == id ? i.copyWith(status: UploadItemStatus.cancelled) : i)
+          .map(
+            (i) =>
+                i.id == id ? i.copyWith(status: UploadItemStatus.cancelled) : i,
+          )
           .toList(),
     );
     _processQueue();
@@ -127,15 +136,17 @@ class UploadQueueNotifier extends Notifier<UploadQueueState> {
   void retry(String id) {
     state = state.copyWith(
       items: state.items
-          .map((i) => i.id == id
-              ? UploadItem(
-                  id: i.id,
-                  file: i.file,
-                  title: i.title,
-                  description: i.description,
-                  visibility: i.visibility,
-                )
-              : i)
+          .map(
+            (i) => i.id == id
+                ? UploadItem(
+                    id: i.id,
+                    file: i.file,
+                    title: i.title,
+                    description: i.description,
+                    visibility: i.visibility,
+                  )
+                : i,
+          )
           .toList(),
     );
     _processQueue();
@@ -150,10 +161,12 @@ class UploadQueueNotifier extends Notifier<UploadQueueState> {
   void dismissCompleted() {
     state = state.copyWith(
       items: state.items
-          .where((i) =>
-              i.status != UploadItemStatus.completed &&
-              i.status != UploadItemStatus.failed &&
-              i.status != UploadItemStatus.cancelled)
+          .where(
+            (i) =>
+                i.status != UploadItemStatus.completed &&
+                i.status != UploadItemStatus.failed &&
+                i.status != UploadItemStatus.cancelled,
+          )
           .toList(),
     );
   }
@@ -163,11 +176,15 @@ class UploadQueueNotifier extends Notifier<UploadQueueState> {
   }
 
   void _processQueue() {
-    final activeCount = state.items.where((i) => i.status == UploadItemStatus.uploading).length;
+    final activeCount = state.items
+        .where((i) => i.status == UploadItemStatus.uploading)
+        .length;
     final availableSlots = _maxConcurrent - activeCount;
     if (availableSlots <= 0) return;
 
-    final queued = state.items.where((i) => i.status == UploadItemStatus.queued).toList();
+    final queued = state.items
+        .where((i) => i.status == UploadItemStatus.queued)
+        .toList();
     final toStart = queued.take(availableSlots);
 
     for (final item in toStart) {
@@ -178,10 +195,13 @@ class UploadQueueNotifier extends Notifier<UploadQueueState> {
   Future<void> _startUpload(UploadItem item) async {
     final cancelToken = CancelToken();
 
-    _updateItem(item.id, (i) => i.copyWith(
-      status: UploadItemStatus.uploading,
-      cancelToken: cancelToken,
-    ));
+    _updateItem(
+      item.id,
+      (i) => i.copyWith(
+        status: UploadItemStatus.uploading,
+        cancelToken: cancelToken,
+      ),
+    );
 
     try {
       final response = await _repo.uploadVod(
@@ -191,11 +211,14 @@ class UploadQueueNotifier extends Notifier<UploadQueueState> {
         visibility: item.visibility,
         cancelToken: cancelToken,
         onSendProgress: (sent, total) {
-          _updateItem(item.id, (i) => i.copyWith(
-            loaded: sent,
-            total: total,
-            progress: total > 0 ? sent / total : 0,
-          ));
+          _updateItem(
+            item.id,
+            (i) => i.copyWith(
+              loaded: sent,
+              total: total,
+              progress: total > 0 ? sent / total : 0,
+            ),
+          );
         },
       );
 
@@ -204,27 +227,33 @@ class UploadQueueNotifier extends Notifier<UploadQueueState> {
       if (current?.status == UploadItemStatus.cancelled) return;
 
       if (response.success) {
-        _updateItem(item.id, (i) => i.copyWith(
-          status: UploadItemStatus.completed,
-          progress: 1.0,
-        ));
+        _updateItem(
+          item.id,
+          (i) => i.copyWith(status: UploadItemStatus.completed, progress: 1.0),
+        );
       } else {
-        _updateItem(item.id, (i) => i.copyWith(
-          status: UploadItemStatus.failed,
-          error: response.message,
-        ));
+        _updateItem(
+          item.id,
+          (i) => i.copyWith(
+            status: UploadItemStatus.failed,
+            error: response.message,
+          ),
+        );
       }
     } on DioException catch (e) {
       if (e.type == DioExceptionType.cancel) return;
-      _updateItem(item.id, (i) => i.copyWith(
-        status: UploadItemStatus.failed,
-        error: e.message ?? 'Upload failed',
-      ));
+      _updateItem(
+        item.id,
+        (i) => i.copyWith(
+          status: UploadItemStatus.failed,
+          error: e.message ?? 'Upload failed',
+        ),
+      );
     } catch (e) {
-      _updateItem(item.id, (i) => i.copyWith(
-        status: UploadItemStatus.failed,
-        error: e.toString(),
-      ));
+      _updateItem(
+        item.id,
+        (i) => i.copyWith(status: UploadItemStatus.failed, error: e.toString()),
+      );
     } finally {
       _processQueue();
     }
@@ -232,13 +261,12 @@ class UploadQueueNotifier extends Notifier<UploadQueueState> {
 
   void _updateItem(String id, UploadItem Function(UploadItem) updater) {
     state = state.copyWith(
-      items: state.items
-          .map((i) => i.id == id ? updater(i) : i)
-          .toList(),
+      items: state.items.map((i) => i.id == id ? updater(i) : i).toList(),
     );
   }
 }
 
 final uploadQueueProvider =
     NotifierProvider<UploadQueueNotifier, UploadQueueState>(
-        UploadQueueNotifier.new);
+      UploadQueueNotifier.new,
+    );

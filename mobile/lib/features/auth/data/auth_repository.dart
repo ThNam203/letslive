@@ -50,16 +50,11 @@ class AuthRepository {
   }) {
     return _client.patch(
       ApiEndpoints.authPassword,
-      data: {
-        'oldPassword': oldPassword,
-        'newPassword': newPassword,
-      },
+      data: {'oldPassword': oldPassword, 'newPassword': newPassword},
     );
   }
 
-  Future<ApiResponse<void>> loginWithGoogle({
-    required String idToken,
-  }) {
+  Future<ApiResponse<void>> loginWithGoogle({required String idToken}) {
     return _client.post(
       ApiEndpoints.authGoogleMobile,
       data: {'idToken': idToken},
@@ -72,10 +67,7 @@ class AuthRepository {
   }) {
     return _client.post(
       ApiEndpoints.authVerifyEmail,
-      data: {
-        'email': email,
-        'turnstileToken': turnstileToken,
-      },
+      data: {'email': email, 'turnstileToken': turnstileToken},
     );
   }
 

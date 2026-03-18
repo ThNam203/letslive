@@ -15,10 +15,7 @@ class VodCommentRepository {
   }) {
     return _client.get(
       ApiEndpoints.vodComments(vodId),
-      queryParameters: {
-        'page': page,
-        'limit': limit,
-      },
+      queryParameters: {'page': page, 'limit': limit},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => VodComment.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -32,10 +29,7 @@ class VodCommentRepository {
   }) {
     return _client.get(
       ApiEndpoints.vodCommentReplies(commentId),
-      queryParameters: {
-        'page': page,
-        'limit': limit,
-      },
+      queryParameters: {'page': page, 'limit': limit},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => VodComment.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -49,12 +43,8 @@ class VodCommentRepository {
   }) {
     return _client.post(
       ApiEndpoints.vodComments(vodId),
-      data: {
-        'content': content,
-        'parentId': ?parentId,
-      },
-      fromJsonT: (json) =>
-          VodComment.fromJson(json as Map<String, dynamic>),
+      data: {'content': content, 'parentId': ?parentId},
+      fromJsonT: (json) => VodComment.fromJson(json as Map<String, dynamic>),
     );
   }
 

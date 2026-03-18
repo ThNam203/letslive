@@ -29,8 +29,9 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
 
 enum AppThemeMode { light, dark, system }
 
-final themeModeProvider =
-    NotifierProvider<ThemeModeNotifier, AppThemeMode>(ThemeModeNotifier.new);
+final themeModeProvider = NotifierProvider<ThemeModeNotifier, AppThemeMode>(
+  ThemeModeNotifier.new,
+);
 
 class ThemeModeNotifier extends Notifier<AppThemeMode> {
   static const _key = 'app_theme_mode';
@@ -65,8 +66,9 @@ const supportedLanguageNames = <String, String>{
   'vi': 'Tiếng Việt',
 };
 
-final localeProvider =
-    NotifierProvider<LocaleNotifier, Locale?>(LocaleNotifier.new);
+final localeProvider = NotifierProvider<LocaleNotifier, Locale?>(
+  LocaleNotifier.new,
+);
 
 class LocaleNotifier extends Notifier<Locale?> {
   static const _key = 'app_locale';
@@ -147,7 +149,8 @@ final dmWebSocketServiceProvider = Provider<DmWebSocketService>((ref) {
 /// Unread notification count.
 final unreadNotificationCountProvider =
     NotifierProvider<UnreadNotificationCountNotifier, int>(
-        UnreadNotificationCountNotifier.new);
+      UnreadNotificationCountNotifier.new,
+    );
 
 class UnreadNotificationCountNotifier extends Notifier<int> {
   @override
@@ -175,8 +178,9 @@ class UnreadNotificationCountNotifier extends Notifier<int> {
 }
 
 /// Current authenticated user (null when not logged in).
-final currentUserProvider =
-    NotifierProvider<CurrentUserNotifier, User?>(CurrentUserNotifier.new);
+final currentUserProvider = NotifierProvider<CurrentUserNotifier, User?>(
+  CurrentUserNotifier.new,
+);
 
 class CurrentUserNotifier extends Notifier<User?> {
   @override
