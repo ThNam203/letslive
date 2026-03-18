@@ -715,5 +715,30 @@
     "uploadDismiss": "Dismiss",
     "@uploadDismiss": {},
     "uploadClose": "Close",
-    "@uploadClose": {}
+    "@uploadClose": {},
+
+    "uploadManagerUploading": "Uploading {count} video(s)",
+    "@uploadManagerUploading": {
+        "placeholders": {
+            "count": { "type": "int" }
+        }
+    },
+    "uploadManagerFailed": "{count} upload(s) failed",
+    "@uploadManagerFailed": {
+        "placeholders": {
+            "count": { "type": "int" }
+        }
+    },
+    "uploadManagerComplete": "{count} upload(s) complete",
+    "@uploadManagerComplete": {
+        "placeholders": {
+            "count": { "type": "int" }
+        }
+    },
+    "uploadManagerClear": "Clear",
+    "@uploadManagerClear": {},
+    "uploadManagerWaiting": "Waiting...",
+    "@uploadManagerWaiting": {},
+    "uploadManagerQueued": "Added to upload queue",
+    "@uploadManagerQueued": {}
 }

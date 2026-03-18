@@ -23,6 +23,7 @@ const (
 	RES_ERR_VOD_COMMENT_ALREADY_LIKED_CODE = 40011
 	RES_ERR_VOD_COMMENT_NOT_LIKED_CODE     = 40012
 	RES_ERR_VOD_COMMENT_DELETE_FAILED_CODE = 40013
+	RES_ERR_VOD_VIEW_THRESHOLD_CODE        = 40015
 )
 
 // Error keys
@@ -45,6 +46,7 @@ const (
 	RES_ERR_VOD_COMMENT_ALREADY_LIKED_KEY = "res_err_vod_comment_already_liked"
 	RES_ERR_VOD_COMMENT_NOT_LIKED_KEY     = "res_err_vod_comment_not_liked"
 	RES_ERR_VOD_COMMENT_DELETE_FAILED_KEY = "res_err_vod_comment_delete_failed"
+	RES_ERR_VOD_VIEW_THRESHOLD_KEY        = "res_err_vod_view_threshold"
 )
 
 // Error templates
@@ -183,5 +185,13 @@ var (
 		Code:       RES_ERR_VOD_COMMENT_DELETE_FAILED_CODE,
 		Key:        RES_ERR_VOD_COMMENT_DELETE_FAILED_KEY,
 		Message:    "Failed to delete comment.",
+	}
+
+	RES_ERR_VOD_VIEW_THRESHOLD = ResponseTemplate{
+		Success:    false,
+		StatusCode: http.StatusBadRequest,
+		Code:       RES_ERR_VOD_VIEW_THRESHOLD_CODE,
+		Key:        RES_ERR_VOD_VIEW_THRESHOLD_KEY,
+		Message:    "Watch time threshold not met.",
 	}
 )

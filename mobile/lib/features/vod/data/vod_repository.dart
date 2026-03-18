@@ -108,6 +108,16 @@ class VodRepository {
     return _client.delete(ApiEndpoints.vodById(vodId));
   }
 
+  Future<ApiResponse<void>> registerView({
+    required String vodId,
+    required int watchedSeconds,
+  }) {
+    return _client.post(
+      ApiEndpoints.vodView(vodId),
+      data: {'watchedSeconds': watchedSeconds},
+    );
+  }
+
   Future<ApiResponse<Vod>> uploadVod({
     required File videoFile,
     required String title,

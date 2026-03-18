@@ -7,6 +7,7 @@ import 'package:letslive_mobile/l10n/app_localizations.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/vod/presentation/upload_manager_overlay.dart';
 import 'providers.dart';
 
 class App extends ConsumerWidget {
@@ -46,10 +47,17 @@ class App extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
 
-      // Wrap with FTheme + FToaster for Forui widgets
+      // Wrap with FTheme + FToaster for Forui widgets, plus upload overlay
       builder: (_, child) => FTheme(
         data: theme,
-        child: FToaster(child: child!),
+        child: FToaster(
+          child: Stack(
+            children: [
+              child!,
+              const UploadManagerOverlay(),
+            ],
+          ),
+        ),
       ),
 
       // Router

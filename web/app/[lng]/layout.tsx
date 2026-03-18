@@ -3,6 +3,7 @@ import "@/app/globals.css";
 import React, { Suspense } from "react";
 import Loading from "./loading";
 import Toast from "@/components/utils/toast";
+import UploadManager from "@/components/upload-manager/upload-manager";
 import { I18N_LANGUAGES } from "@/lib/i18n/settings";
 import { dir } from "i18next";
 import { myGetT } from "@/lib/i18n";
@@ -46,6 +47,7 @@ export default async function RootLayout({
                                 {children}
                             </UserInformationWrapper>
                             <Toast />
+                            <UploadManager />
                         </Suspense>
                     </ThemeProviderWrapper>
                 </TranslationsProvider>

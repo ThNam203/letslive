@@ -1909,6 +1909,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get uploadClose;
+
+  /// No description provided for @uploadManagerUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading {count} video(s)'**
+  String uploadManagerUploading(int count);
+
+  /// No description provided for @uploadManagerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} upload(s) failed'**
+  String uploadManagerFailed(int count);
+
+  /// No description provided for @uploadManagerComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} upload(s) complete'**
+  String uploadManagerComplete(int count);
+
+  /// No description provided for @uploadManagerClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get uploadManagerClear;
+
+  /// No description provided for @uploadManagerWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting...'**
+  String get uploadManagerWaiting;
+
+  /// No description provided for @uploadManagerQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to upload queue'**
+  String get uploadManagerQueued;
 }
 
 class _AppLocalizationsDelegate

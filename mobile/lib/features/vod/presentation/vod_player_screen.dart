@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chewie/chewie.dart';
 import 'package:dio/dio.dart';
@@ -37,6 +39,9 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
   bool _isVideoLoading = true;
   String? _error;
 
+  bool _viewRegistered = false;
+  Timer? _watchTimer;
+
   @override
   void initState() {
     super.initState();
@@ -45,6 +50,7 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
 
   @override
   void dispose() {
+    _watchTimer?.cancel();
     _chewieController?.dispose();
     _videoController?.dispose();
     SystemChrome.setPreferredOrientations([
@@ -123,11 +129,52 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
           },
         );
         setState(() => _isVideoLoading = false);
+        _startWatchTracking();
       }).catchError((_) {
         if (mounted) {
           setState(() => _isVideoLoading = false);
         }
       });
+  }
+
+  void _startWatchTracking() {
+    _watchTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_viewRegistered || !mounted) return;
+
+      final controller = _videoController;
+      if (controller == null || !controller.value.isPlaying) return;
+
+      final position = controller.value.position.inSeconds;
+      final duration = _vod?.duration ?? 0;
+
+      // Threshold: at least 15 seconds OR 10% of video duration (whichever is smaller)
+      int threshold = 15;
+      if (duration > 0) {
+        final tenPercent = (duration * 0.1).ceil();
+        if (tenPercent < threshold) threshold = tenPercent;
+      }
+      if (threshold < 1) threshold = 1;
+
+      if (position >= threshold) {
+        _registerView(position);
+      }
+    });
+  }
+
+  Future<void> _registerView(int watchedSeconds) async {
+    if (_viewRegistered) return;
+    _viewRegistered = true;
+    _watchTimer?.cancel();
+
+    try {
+      final repo = ref.read(vodRepositoryProvider);
+      await repo.registerView(
+        vodId: widget.vodId,
+        watchedSeconds: watchedSeconds,
+      );
+    } catch (_) {
+      // View registration is best-effort; don't disrupt playback
+    }
   }
 
   @override

@@ -1040,4 +1040,28 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get uploadClose => 'Đóng';
+
+  @override
+  String uploadManagerUploading(int count) {
+    return 'Đang tải lên $count video';
+  }
+
+  @override
+  String uploadManagerFailed(int count) {
+    return '$count video tải lên thất bại';
+  }
+
+  @override
+  String uploadManagerComplete(int count) {
+    return '$count video đã tải lên';
+  }
+
+  @override
+  String get uploadManagerClear => 'Xóa';
+
+  @override
+  String get uploadManagerWaiting => 'Đang chờ...';
+
+  @override
+  String get uploadManagerQueued => 'Đã thêm vào hàng đợi tải lên';
 }

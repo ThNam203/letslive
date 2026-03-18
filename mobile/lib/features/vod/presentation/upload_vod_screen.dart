@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/constants/field_limits.dart';
 import '../../../l10n/app_localizations.dart';
-import 'upload_progress_dialog.dart';
+import '../data/upload_queue_notifier.dart';
 
 class UploadVodScreen extends ConsumerStatefulWidget {
   const UploadVodScreen({super.key});
@@ -47,28 +47,31 @@ class _UploadVodScreenState extends ConsumerState<UploadVodScreen> {
     });
   }
 
-  void _showUploadProgress() {
+  void _enqueueUpload() {
     if (_selectedFile == null) return;
     if (!_formKey.currentState!.validate()) return;
 
-    final title = _titleController.text.trim();
+    final l10n = AppLocalizations.of(context);
 
-    showFDialog(
-      context: context,
-      builder: (dialogContext, style, animation) {
-        return UploadProgressDialog(
-          animation: animation,
-          videoFile: _selectedFile!,
-          title: title,
+    ref.read(uploadQueueProvider.notifier).enqueue(
+          file: _selectedFile!,
+          title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           visibility: _visibility,
         );
-      },
-    ).then((result) {
-      if (result == true && mounted) {
-        Navigator.of(context).pop(true);
-      }
+
+    // Show confirmation and reset form
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.uploadManagerQueued)),
+    );
+
+    setState(() {
+      _selectedFile = null;
+      _fileName = null;
+      _fileSize = null;
     });
+    _titleController.clear();
+    _descriptionController.clear();
   }
 
   @override
@@ -247,7 +250,7 @@ class _UploadVodScreenState extends ConsumerState<UploadVodScreen> {
 
               // Upload button
               FButton(
-                onPress: _selectedFile != null ? _showUploadProgress : null,
+                onPress: _selectedFile != null ? _enqueueUpload : null,
                 prefix: const Icon(FIcons.upload, size: 16),
                 child: Text(l10n.uploadButton),
               ),
