@@ -131,9 +131,7 @@ class SettingsScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
                 l10n.settingsThemesTitle,
-                style: typography.lg.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: typography.lg.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
             for (final mode in AppThemeMode.values)
@@ -165,7 +163,8 @@ class SettingsScreen extends ConsumerWidget {
     final typography = context.theme.typography;
     final savedLocale = ref.read(localeProvider);
     final effectiveCode =
-        savedLocale?.languageCode ?? Localizations.localeOf(context).languageCode;
+        savedLocale?.languageCode ??
+        Localizations.localeOf(context).languageCode;
 
     showModalBottomSheet(
       context: context,
@@ -178,9 +177,7 @@ class SettingsScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
                 l10n.settingsLanguageTitle,
-                style: typography.lg.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: typography.lg.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
             for (final entry in supportedLanguageNames.entries)
@@ -209,10 +206,7 @@ class _SettingsSection extends StatelessWidget {
   final String title;
   final List<Widget> children;
 
-  const _SettingsSection({
-    required this.title,
-    required this.children,
-  });
+  const _SettingsSection({required this.title, required this.children});
 
   @override
   Widget build(BuildContext context) {

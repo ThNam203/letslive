@@ -196,10 +196,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       }
                       if (value.length > FieldLimits.emailMaxLength) {
                         return l10n.errorEmailTooLong(
-                            FieldLimits.emailMaxLength);
+                          FieldLimits.emailMaxLength,
+                        );
                       }
-                      final emailRegex =
-                          RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                      final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
                       if (!emailRegex.hasMatch(value)) {
                         return l10n.errorEmailInvalid;
                       }
@@ -221,11 +221,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       }
                       if (value.length < PasswordConstants.minLength) {
                         return l10n.errorPasswordTooShort(
-                            PasswordConstants.minLength);
+                          PasswordConstants.minLength,
+                        );
                       }
                       if (value.length > PasswordConstants.maxLength) {
                         return l10n.errorPasswordTooLong(
-                            PasswordConstants.maxLength);
+                          PasswordConstants.maxLength,
+                        );
                       }
                       return null;
                     },
@@ -237,8 +239,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child:
-                                CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : Text(l10n.authLogin),
                   ),
@@ -248,9 +249,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Expanded(child: Divider(color: colors.border)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(l10n.or,
-                            style: typography.xs
-                                .copyWith(color: colors.mutedForeground)),
+                        child: Text(
+                          l10n.or,
+                          style: typography.xs.copyWith(
+                            color: colors.mutedForeground,
+                          ),
+                        ),
                       ),
                       Expanded(child: Divider(color: colors.border)),
                     ],
@@ -263,8 +267,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child:
-                                CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -279,10 +282,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        '${l10n.authNoAccount} ',
-                        style: typography.sm,
-                      ),
+                      Text('${l10n.authNoAccount} ', style: typography.sm),
                       GestureDetector(
                         onTap: () => context.go(AppRoutes.signup),
                         child: Text(

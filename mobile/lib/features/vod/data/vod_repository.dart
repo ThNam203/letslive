@@ -12,16 +12,10 @@ class VodRepository {
 
   VodRepository(this._client);
 
-  Future<ApiResponse<List<Vod>>> getVods({
-    int page = 0,
-    int pageSize = 20,
-  }) {
+  Future<ApiResponse<List<Vod>>> getVods({int page = 0, int pageSize = 20}) {
     return _client.get(
       ApiEndpoints.vods,
-      queryParameters: {
-        'page': page,
-        'page_size': pageSize,
-      },
+      queryParameters: {'page': page, 'page_size': pageSize},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => Vod.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -42,11 +36,7 @@ class VodRepository {
   }) {
     return _client.get(
       ApiEndpoints.vods,
-      queryParameters: {
-        'userId': userId,
-        'page': page,
-        'limit': pageSize,
-      },
+      queryParameters: {'userId': userId, 'page': page, 'limit': pageSize},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => Vod.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -59,10 +49,7 @@ class VodRepository {
   }) {
     return _client.get(
       ApiEndpoints.vodsAuthor,
-      queryParameters: {
-        'page': page,
-        'page_size': pageSize,
-      },
+      queryParameters: {'page': page, 'page_size': pageSize},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => Vod.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -75,10 +62,7 @@ class VodRepository {
   }) {
     return _client.get(
       ApiEndpoints.popularVods,
-      queryParameters: {
-        'page': page,
-        'page_size': pageSize,
-      },
+      queryParameters: {'page': page, 'page_size': pageSize},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => Vod.fromJson(e as Map<String, dynamic>))
           .toList(),

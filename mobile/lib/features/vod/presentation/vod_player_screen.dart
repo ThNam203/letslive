@@ -110,31 +110,33 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
     final videoUrl = '${AppConfig.apiUrl}/${vod.playbackUrl}';
 
     _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl))
-      ..initialize().then((_) {
-        if (!mounted) return;
-        _chewieController = ChewieController(
-          videoPlayerController: _videoController!,
-          autoPlay: true,
-          allowFullScreen: true,
-          allowMuting: true,
-          allowPlaybackSpeedChanging: true,
-          showControlsOnInitialize: false,
-          errorBuilder: (context, errorMessage) {
-            return Center(
-              child: Text(
-                errorMessage,
-                style: const TextStyle(color: Colors.white),
-              ),
+      ..initialize()
+          .then((_) {
+            if (!mounted) return;
+            _chewieController = ChewieController(
+              videoPlayerController: _videoController!,
+              autoPlay: true,
+              allowFullScreen: true,
+              allowMuting: true,
+              allowPlaybackSpeedChanging: true,
+              showControlsOnInitialize: false,
+              errorBuilder: (context, errorMessage) {
+                return Center(
+                  child: Text(
+                    errorMessage,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                );
+              },
             );
-          },
-        );
-        setState(() => _isVideoLoading = false);
-        _startWatchTracking();
-      }).catchError((_) {
-        if (mounted) {
-          setState(() => _isVideoLoading = false);
-        }
-      });
+            setState(() => _isVideoLoading = false);
+            _startWatchTracking();
+          })
+          .catchError((_) {
+            if (mounted) {
+              setState(() => _isVideoLoading = false);
+            }
+          });
   }
 
   void _startWatchTracking() {
@@ -182,18 +184,16 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
     final l10n = AppLocalizations.of(context);
 
     return FScaffold(
-      header: FHeader.nested(
-        title: Text(_vod?.title ?? l10n.videos),
-      ),
+      header: FHeader.nested(title: Text(_vod?.title ?? l10n.videos)),
       child: _isLoading
           ? LoadingIndicator(message: l10n.loading)
           : _error != null
-              ? ErrorDisplay(
-                  title: l10n.errorGeneralTitle,
-                  message: _error,
-                  onRetry: _fetchVod,
-                )
-              : _buildContent(context),
+          ? ErrorDisplay(
+              title: l10n.errorGeneralTitle,
+              message: _error,
+              onRetry: _fetchVod,
+            )
+          : _buildContent(context),
     );
   }
 
@@ -207,10 +207,7 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
         children: [
           _buildVideoPlayer(context),
           _buildVodInfo(context, vod),
-          VodCommentSection(
-            vodId: vod.id,
-            vodOwnerId: vod.userId,
-          ),
+          VodCommentSection(vodId: vod.id, vodOwnerId: vod.userId),
         ],
       ),
     );
@@ -276,7 +273,8 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
                   radius: 16,
                   backgroundImage: owner?.profilePicture != null
                       ? CachedNetworkImageProvider(
-                          '${AppConfig.apiUrl}/${owner!.profilePicture}')
+                          '${AppConfig.apiUrl}/${owner!.profilePicture}',
+                        )
                       : null,
                   child: owner?.profilePicture == null
                       ? const Icon(FIcons.user, size: 16)

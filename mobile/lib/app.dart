@@ -24,8 +24,9 @@ class App extends ConsumerWidget {
       AppThemeMode.dark => Brightness.dark,
       AppThemeMode.system => MediaQuery.platformBrightnessOf(context),
     };
-    final theme =
-        brightness == Brightness.dark ? AppTheme.dark : AppTheme.light;
+    final theme = brightness == Brightness.dark
+        ? AppTheme.dark
+        : AppTheme.light;
 
     return MaterialApp.router(
       title: "Let's Live",
@@ -51,12 +52,7 @@ class App extends ConsumerWidget {
       builder: (_, child) => FTheme(
         data: theme,
         child: FToaster(
-          child: Stack(
-            children: [
-              child!,
-              const UploadManagerOverlay(),
-            ],
-          ),
+          child: Stack(children: [child!, const UploadManagerOverlay()]),
         ),
       ),
 

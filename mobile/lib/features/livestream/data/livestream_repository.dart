@@ -14,19 +14,14 @@ class LivestreamRepository {
   }) {
     return _client.get(
       ApiEndpoints.livestreams,
-      queryParameters: {
-        'page': page,
-        'page_size': pageSize,
-      },
+      queryParameters: {'page': page, 'page_size': pageSize},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => Livestream.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
   }
 
-  Future<ApiResponse<List<Livestream>>> getLivestreamOfUser(
-    String userId,
-  ) {
+  Future<ApiResponse<List<Livestream>>> getLivestreamOfUser(String userId) {
     return _client.get(
       ApiEndpoints.livestreams,
       queryParameters: {'userId': userId},
@@ -42,10 +37,7 @@ class LivestreamRepository {
   }) {
     return _client.get(
       ApiEndpoints.popularLivestreams,
-      queryParameters: {
-        'page': page,
-        'page_size': pageSize,
-      },
+      queryParameters: {'page': page, 'page_size': pageSize},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => Livestream.fromJson(e as Map<String, dynamic>))
           .toList(),

@@ -132,8 +132,9 @@ class _VodsSettingsScreenState extends ConsumerState<VodsSettingsScreen> {
 
   void _showEditDialog(Vod vod) {
     final titleController = TextEditingController(text: vod.title);
-    final descriptionController =
-        TextEditingController(text: vod.description ?? '');
+    final descriptionController = TextEditingController(
+      text: vod.description ?? '',
+    );
     final formKey = GlobalKey<FormState>();
     var visibility = vod.visibility;
     var isSaving = false;
@@ -169,8 +170,9 @@ class _VodsSettingsScreenState extends ConsumerState<VodsSettingsScreen> {
                     visibility: visibility,
                   );
                   setState(() {
-                    final index =
-                        _vods.indexWhere((v) => v.id == updatedVod.id);
+                    final index = _vods.indexWhere(
+                      (v) => v.id == updatedVod.id,
+                    );
                     if (index != -1) {
                       _vods[index] = updatedVod;
                     }
@@ -182,8 +184,10 @@ class _VodsSettingsScreenState extends ConsumerState<VodsSettingsScreen> {
                   );
                   Navigator.of(context).pop();
                 } else {
-                  final errorMsg =
-                      getLocalizedApiMessage(context, response.key);
+                  final errorMsg = getLocalizedApiMessage(
+                    context,
+                    response.key,
+                  );
                   showFToast(
                     context: context,
                     title: Text(errorMsg),
@@ -239,16 +243,19 @@ class _VodsSettingsScreenState extends ConsumerState<VodsSettingsScreen> {
                       children: [
                         Text(
                           l10n.settingsVodsVisibility,
-                          style: typography.sm
-                              .copyWith(fontWeight: FontWeight.w600),
+                          style: typography.sm.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const Spacer(),
                         if (visibility == 'public')
                           FButton(
                             onPress: () {},
-                            prefix: Icon(FIcons.eye,
-                                size: 14,
-                                color: colors.primaryForeground),
+                            prefix: Icon(
+                              FIcons.eye,
+                              size: 14,
+                              color: colors.primaryForeground,
+                            ),
                             child: Text(l10n.settingsVodsPublic),
                           )
                         else
@@ -257,17 +264,22 @@ class _VodsSettingsScreenState extends ConsumerState<VodsSettingsScreen> {
                             onPress: () {
                               setDialogState(() => visibility = 'public');
                             },
-                            prefix: Icon(FIcons.eye,
-                                size: 14, color: colors.primary),
+                            prefix: Icon(
+                              FIcons.eye,
+                              size: 14,
+                              color: colors.primary,
+                            ),
                             child: Text(l10n.settingsVodsPublic),
                           ),
                         const SizedBox(width: 8),
                         if (visibility == 'private')
                           FButton(
                             onPress: () {},
-                            prefix: Icon(FIcons.eyeOff,
-                                size: 14,
-                                color: colors.primaryForeground),
+                            prefix: Icon(
+                              FIcons.eyeOff,
+                              size: 14,
+                              color: colors.primaryForeground,
+                            ),
                             child: Text(l10n.settingsVodsPrivate),
                           )
                         else
@@ -276,9 +288,11 @@ class _VodsSettingsScreenState extends ConsumerState<VodsSettingsScreen> {
                             onPress: () {
                               setDialogState(() => visibility = 'private');
                             },
-                            prefix: Icon(FIcons.eyeOff,
-                                size: 14,
-                                color: colors.mutedForeground),
+                            prefix: Icon(
+                              FIcons.eyeOff,
+                              size: 14,
+                              color: colors.mutedForeground,
+                            ),
                             child: Text(l10n.settingsVodsPrivate),
                           ),
                       ],
@@ -321,9 +335,7 @@ class _VodsSettingsScreenState extends ConsumerState<VodsSettingsScreen> {
           FButton.icon(
             onPress: () async {
               final result = await Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const UploadVodScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const UploadVodScreen()),
               );
               if (result == true) _fetchVods();
             },
@@ -355,14 +367,17 @@ class _VodsSettingsScreenState extends ConsumerState<VodsSettingsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(FIcons.film,
-                  size: 48,
-                  color: context.theme.colors.mutedForeground),
+              Icon(
+                FIcons.film,
+                size: 48,
+                color: context.theme.colors.mutedForeground,
+              ),
               const SizedBox(height: 16),
               Text(
                 l10n.settingsVodsNoVods,
-                style: context.theme.typography.lg
-                    .copyWith(fontWeight: FontWeight.w600),
+                style: context.theme.typography.lg.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -425,8 +440,9 @@ class _VodManageCard extends StatelessWidget {
           children: [
             // Thumbnail
             ClipRRect(
-              borderRadius:
-                  const BorderRadius.horizontal(left: Radius.circular(12)),
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(12),
+              ),
               child: SizedBox(
                 width: 120,
                 height: 80,
@@ -454,8 +470,9 @@ class _VodManageCard extends StatelessWidget {
                   children: [
                     Text(
                       vod.title,
-                      style:
-                          typography.sm.copyWith(fontWeight: FontWeight.w600),
+                      style: typography.sm.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -464,7 +481,9 @@ class _VodManageCard extends StatelessWidget {
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: vod.isPublic
                                 ? colors.primary.withValues(alpha: 0.1)
@@ -485,8 +504,9 @@ class _VodManageCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           l10n.homeViewCount(vod.viewCount),
-                          style: typography.xs
-                              .copyWith(color: colors.mutedForeground),
+                          style: typography.xs.copyWith(
+                            color: colors.mutedForeground,
+                          ),
                         ),
                       ],
                     ),
@@ -513,4 +533,3 @@ class _VodManageCard extends StatelessWidget {
     );
   }
 }
-

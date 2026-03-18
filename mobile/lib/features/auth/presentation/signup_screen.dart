@@ -194,14 +194,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text.rich(
-                    TextSpan(children: [
-                      TextSpan(text: l10n.authOtpDialogDescriptionPart1),
-                      TextSpan(
-                        text: ' ${_emailController.text.trim()} ',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(text: l10n.authOtpDialogDescriptionPart2),
-                    ]),
+                    TextSpan(
+                      children: [
+                        TextSpan(text: l10n.authOtpDialogDescriptionPart1),
+                        TextSpan(
+                          text: ' ${_emailController.text.trim()} ',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(text: l10n.authOtpDialogDescriptionPart2),
+                      ],
+                    ),
                     style: typography.sm,
                   ),
                   const SizedBox(height: 24),
@@ -210,9 +212,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     keyboardType: TextInputType.number,
                     maxLength: 6,
                     textAlign: TextAlign.center,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     style: typography.xl2.copyWith(
                       letterSpacing: 12,
                       fontWeight: FontWeight.bold,
@@ -231,13 +231,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ),
                     onChanged: (value) {
                       if (value.length == 6) {
-                        _submitOtp(setDialogState, () {
-                          isOtpSubmitting = true;
-                        }, (v) {
-                          isOtpSubmitting = v;
-                        }, (v) {
-                          otpError = v;
-                        });
+                        _submitOtp(
+                          setDialogState,
+                          () {
+                            isOtpSubmitting = true;
+                          },
+                          (v) {
+                            isOtpSubmitting = v;
+                          },
+                          (v) {
+                            otpError = v;
+                          },
+                        );
                       }
                     },
                   ),
@@ -247,13 +252,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 FButton(
                   onPress: isOtpSubmitting
                       ? null
-                      : () => _submitOtp(setDialogState, () {
+                      : () => _submitOtp(
+                          setDialogState,
+                          () {
                             isOtpSubmitting = true;
-                          }, (v) {
+                          },
+                          (v) {
                             isOtpSubmitting = v;
-                          }, (v) {
+                          },
+                          (v) {
                             otpError = v;
-                          }),
+                          },
+                        ),
                   child: isOtpSubmitting
                       ? const SizedBox(
                           height: 20,
@@ -414,10 +424,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       }
                       if (value.length > FieldLimits.emailMaxLength) {
                         return l10n.errorEmailTooLong(
-                            FieldLimits.emailMaxLength);
+                          FieldLimits.emailMaxLength,
+                        );
                       }
-                      final emailRegex =
-                          RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                      final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
                       if (!emailRegex.hasMatch(value)) {
                         return l10n.errorEmailInvalid;
                       }
@@ -442,7 +452,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       }
                       if (value.length > FieldLimits.usernameMaxLength) {
                         return l10n.errorUsernameTooLong(
-                            FieldLimits.usernameMaxLength);
+                          FieldLimits.usernameMaxLength,
+                        );
                       }
                       return null;
                     },
@@ -462,11 +473,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       }
                       if (value.length < PasswordConstants.minLength) {
                         return l10n.errorPasswordTooShort(
-                            PasswordConstants.minLength);
+                          PasswordConstants.minLength,
+                        );
                       }
                       if (value.length > PasswordConstants.maxLength) {
                         return l10n.errorPasswordTooLong(
-                            PasswordConstants.maxLength);
+                          PasswordConstants.maxLength,
+                        );
                       }
                       if (!RegExp(r'[a-z]').hasMatch(value)) {
                         return l10n.errorPasswordMissingLowercase;
@@ -474,8 +487,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       if (!RegExp(r'[A-Z]').hasMatch(value)) {
                         return l10n.errorPasswordMissingUppercase;
                       }
-                      if (!RegExp(r'''[!@#$%^&*()\-_+=\[\]{};':"\\|,.<>/?]''')
-                          .hasMatch(value)) {
+                      if (!RegExp(
+                        r'''[!@#$%^&*()\-_+=\[\]{};':"\\|,.<>/?]''',
+                      ).hasMatch(value)) {
                         return l10n.errorPasswordMissingSpecial;
                       }
                       return null;
@@ -507,8 +521,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child:
-                                CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : Text(l10n.authSignup),
                   ),
@@ -518,9 +531,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       Expanded(child: Divider(color: colors.border)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(l10n.or,
-                            style: typography.xs
-                                .copyWith(color: colors.mutedForeground)),
+                        child: Text(
+                          l10n.or,
+                          style: typography.xs.copyWith(
+                            color: colors.mutedForeground,
+                          ),
+                        ),
                       ),
                       Expanded(child: Divider(color: colors.border)),
                     ],
@@ -533,8 +549,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child:
-                                CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -549,10 +564,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        '${l10n.authHaveAccount} ',
-                        style: typography.sm,
-                      ),
+                      Text('${l10n.authHaveAccount} ', style: typography.sm),
                       GestureDetector(
                         onTap: () => context.go(AppRoutes.login),
                         child: Text(

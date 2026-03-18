@@ -23,9 +23,7 @@ class AppNotification {
     required this.createdAt,
   });
 
-  AppNotification copyWith({
-    bool? isRead,
-  }) {
+  AppNotification copyWith({bool? isRead}) {
     return AppNotification(
       id: id,
       userId: userId,

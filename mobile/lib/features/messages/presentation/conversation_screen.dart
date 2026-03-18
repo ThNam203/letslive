@@ -94,8 +94,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       case DmMessageEditedEvent():
         if (event.conversationId == widget.conversationId) {
           setState(() {
-            final idx =
-                _messages.indexWhere((m) => m.id == event.messageId);
+            final idx = _messages.indexWhere((m) => m.id == event.messageId);
             if (idx != -1) {
               final old = _messages[idx];
               _messages[idx] = DmMessage(
@@ -117,8 +116,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         }
       case DmMessageDeletedEvent():
         if (event.conversationId == widget.conversationId) {
-          setState(
-              () => _messages.removeWhere((m) => m.id == event.messageId));
+          setState(() => _messages.removeWhere((m) => m.id == event.messageId));
         }
       case DmUserTypingEvent():
         if (event.conversationId == widget.conversationId) {
@@ -159,8 +157,9 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
     try {
       final repo = ref.read(messageRepositoryProvider);
-      final response =
-          await repo.getConversationMessages(widget.conversationId);
+      final response = await repo.getConversationMessages(
+        widget.conversationId,
+      );
       if (!mounted) return;
 
       if (response.success) {
@@ -317,8 +316,10 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.delete,
-                style: TextStyle(color: context.theme.colors.destructive)),
+            child: Text(
+              l10n.delete,
+              style: TextStyle(color: context.theme.colors.destructive),
+            ),
           ),
         ],
       ),
@@ -327,8 +328,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
     try {
       final repo = ref.read(messageRepositoryProvider);
-      final response =
-          await repo.deleteMessage(widget.conversationId, msg.id);
+      final response = await repo.deleteMessage(widget.conversationId, msg.id);
       if (mounted && response.success) {
         setState(() => _messages.removeWhere((m) => m.id == msg.id));
       }
@@ -388,9 +388,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         .where((p) => p.userId != currentUser?.id)
         .toList();
     if (others.isEmpty) return AppLocalizations.of(context).messagesUnknown;
-    return others
-        .map((p) => p.displayName ?? p.username)
-        .join(', ');
+    return others.map((p) => p.displayName ?? p.username).join(', ');
   }
 
   String _formatTimeAgo(String createdAt, AppLocalizations l10n) {
@@ -412,18 +410,16 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     final l10n = AppLocalizations.of(context);
 
     return FScaffold(
-      header: FHeader.nested(
-        title: Text(_conversationTitle()),
-      ),
+      header: FHeader.nested(title: Text(_conversationTitle())),
       child: _isLoading
           ? LoadingIndicator(message: l10n.loading)
           : _error != null
-              ? ErrorDisplay(
-                  title: l10n.errorGeneralTitle,
-                  message: _error,
-                  onRetry: _fetchMessages,
-                )
-              : _buildContent(context),
+          ? ErrorDisplay(
+              title: l10n.errorGeneralTitle,
+              message: _error,
+              onRetry: _fetchMessages,
+            )
+          : _buildContent(context),
     );
   }
 
@@ -440,14 +436,17 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
               ? Center(
                   child: Text(
                     l10n.messagesNoMessagesYet,
-                    style: typography.sm
-                        .copyWith(color: colors.mutedForeground),
+                    style: typography.sm.copyWith(
+                      color: colors.mutedForeground,
+                    ),
                   ),
                 )
               : ListView.builder(
                   controller: _scrollController,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   itemCount: _messages.length + (_hasMore ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (_hasMore && index == 0) {
@@ -462,7 +461,8 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                                     height: 16,
                                     width: 16,
                                     child: CircularProgressIndicator(
-                                        strokeWidth: 2),
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : Text(l10n.messagesLoadMore),
                           ),
@@ -524,7 +524,11 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                 ),
                 GestureDetector(
                   onTap: _cancelEdit,
-                  child: Icon(FIcons.x, size: 16, color: colors.mutedForeground),
+                  child: Icon(
+                    FIcons.x,
+                    size: 16,
+                    color: colors.mutedForeground,
+                  ),
                 ),
               ],
             ),
@@ -546,8 +550,9 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                   onChanged: _handleInputChanged,
                   decoration: InputDecoration(
                     hintText: l10n.messagesPlaceholderTypeMessage,
-                    hintStyle: typography.sm
-                        .copyWith(color: colors.mutedForeground),
+                    hintStyle: typography.sm.copyWith(
+                      color: colors.mutedForeground,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
                       borderSide: BorderSide(color: colors.border),
@@ -557,7 +562,9 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                       borderSide: BorderSide(color: colors.border),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     isDense: true,
                   ),
                   style: typography.sm,
@@ -607,8 +614,9 @@ class _MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment:
-            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
@@ -630,14 +638,16 @@ class _MessageBubble extends StatelessWidget {
                   ? () => _showActions(context)
                   : null,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: message.isDeleted
                       ? colors.muted
                       : isMe
-                          ? colors.primary
-                          : colors.card,
+                      ? colors.primary
+                      : colors.card,
                   borderRadius: BorderRadius.circular(16),
                   border: isMe
                       ? null
@@ -665,8 +675,8 @@ class _MessageBubble extends StatelessWidget {
                         color: message.isDeleted
                             ? colors.mutedForeground
                             : isMe
-                                ? colors.primaryForeground
-                                : colors.foreground,
+                            ? colors.primaryForeground
+                            : colors.foreground,
                         fontStyle: message.isDeleted
                             ? FontStyle.italic
                             : FontStyle.normal,
@@ -679,9 +689,8 @@ class _MessageBubble extends StatelessWidget {
                         color: message.isDeleted
                             ? colors.mutedForeground
                             : isMe
-                                ? colors.primaryForeground
-                                    .withValues(alpha: 0.7)
-                                : colors.mutedForeground,
+                            ? colors.primaryForeground.withValues(alpha: 0.7)
+                            : colors.mutedForeground,
                         fontSize: 10,
                       ),
                     ),
@@ -717,8 +726,10 @@ class _MessageBubble extends StatelessWidget {
             if (onDelete != null)
               ListTile(
                 leading: Icon(FIcons.trash, color: colors.destructive),
-                title: Text(l10n.delete,
-                    style: TextStyle(color: colors.destructive)),
+                title: Text(
+                  l10n.delete,
+                  style: TextStyle(color: colors.destructive),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   onDelete!();

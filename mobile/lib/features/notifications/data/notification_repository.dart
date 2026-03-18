@@ -14,10 +14,7 @@ class NotificationRepository {
   }) {
     return _client.get(
       ApiEndpoints.notifications,
-      queryParameters: {
-        'page': page,
-        'page_size': pageSize,
-      },
+      queryParameters: {'page': page, 'page_size': pageSize},
       fromJsonT: (json) => (json as List<dynamic>)
           .map((e) => AppNotification.fromJson(e as Map<String, dynamic>))
           .toList(),

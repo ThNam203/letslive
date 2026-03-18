@@ -90,8 +90,8 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
         participantIds: _selectedUsers.map((u) => u.id).toList(),
         name: _selectedUsers.length > 1
             ? _groupNameController.text.trim().isNotEmpty
-                ? _groupNameController.text.trim()
-                : null
+                  ? _groupNameController.text.trim()
+                  : null
             : null,
       );
       if (!mounted) return;
@@ -149,14 +149,17 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
                   spacing: 6,
                   runSpacing: 6,
                   children: _selectedUsers
-                      .map((u) => Chip(
-                            label: Text(u.displayName ?? u.username,
-                                style: typography.xs),
-                            deleteIcon:
-                                const Icon(FIcons.x, size: 14),
-                            onDeleted: () => _toggleUser(u),
-                            visualDensity: VisualDensity.compact,
-                          ))
+                      .map(
+                        (u) => Chip(
+                          label: Text(
+                            u.displayName ?? u.username,
+                            style: typography.xs,
+                          ),
+                          deleteIcon: const Icon(FIcons.x, size: 14),
+                          onDeleted: () => _toggleUser(u),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      )
                       .toList(),
                 ),
                 const SizedBox(height: 8),
@@ -168,14 +171,17 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
                   controller: _groupNameController,
                   decoration: InputDecoration(
                     hintText: l10n.messagesGroupNamePlaceholder,
-                    hintStyle:
-                        typography.sm.copyWith(color: colors.mutedForeground),
+                    hintStyle: typography.sm.copyWith(
+                      color: colors.mutedForeground,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(color: colors.border),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     isDense: true,
                   ),
                   style: typography.sm,
@@ -189,15 +195,18 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
                 onChanged: _onSearchChanged,
                 decoration: InputDecoration(
                   hintText: l10n.messagesSearchUsersPlaceholder,
-                  hintStyle:
-                      typography.sm.copyWith(color: colors.mutedForeground),
+                  hintStyle: typography.sm.copyWith(
+                    color: colors.mutedForeground,
+                  ),
                   prefixIcon: const Icon(FIcons.search, size: 16),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: colors.border),
                   ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   isDense: true,
                 ),
                 style: typography.sm,
@@ -208,16 +217,20 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
               Expanded(
                 child: _isSearching
                     ? Center(
-                        child: Text(l10n.messagesSearching,
-                            style: typography.sm
-                                .copyWith(color: colors.mutedForeground)),
+                        child: Text(
+                          l10n.messagesSearching,
+                          style: typography.sm.copyWith(
+                            color: colors.mutedForeground,
+                          ),
+                        ),
                       )
                     : ListView.builder(
                         itemCount: _searchResults.length,
                         itemBuilder: (context, index) {
                           final user = _searchResults[index];
-                          final isSelected =
-                              _selectedUsers.any((u) => u.id == user.id);
+                          final isSelected = _selectedUsers.any(
+                            (u) => u.id == user.id,
+                          );
                           return ListTile(
                             dense: true,
                             leading: CircleAvatar(
@@ -234,12 +247,18 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
                               user.displayName ?? user.username,
                               style: typography.sm,
                             ),
-                            subtitle: Text('@${user.username}',
-                                style: typography.xs
-                                    .copyWith(color: colors.mutedForeground)),
+                            subtitle: Text(
+                              '@${user.username}',
+                              style: typography.xs.copyWith(
+                                color: colors.mutedForeground,
+                              ),
+                            ),
                             trailing: isSelected
-                                ? Icon(FIcons.check,
-                                    size: 16, color: colors.primary)
+                                ? Icon(
+                                    FIcons.check,
+                                    size: 16,
+                                    color: colors.primary,
+                                  )
                                 : null,
                             onTap: () => _toggleUser(user),
                           );

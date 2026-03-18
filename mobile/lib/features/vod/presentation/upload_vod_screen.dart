@@ -53,7 +53,9 @@ class _UploadVodScreenState extends ConsumerState<UploadVodScreen> {
 
     final l10n = AppLocalizations.of(context);
 
-    ref.read(uploadQueueProvider.notifier).enqueue(
+    ref
+        .read(uploadQueueProvider.notifier)
+        .enqueue(
           file: _selectedFile!,
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
@@ -61,9 +63,9 @@ class _UploadVodScreenState extends ConsumerState<UploadVodScreen> {
         );
 
     // Show confirmation and reset form
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.uploadManagerQueued)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.uploadManagerQueued)));
 
     setState(() {
       _selectedFile = null;
@@ -81,9 +83,7 @@ class _UploadVodScreenState extends ConsumerState<UploadVodScreen> {
     final typography = context.theme.typography;
 
     return FScaffold(
-      header: FHeader.nested(
-        title: Text(l10n.uploadVideoTitle),
-      ),
+      header: FHeader.nested(title: Text(l10n.uploadVideoTitle)),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -99,23 +99,18 @@ class _UploadVodScreenState extends ConsumerState<UploadVodScreen> {
                   decoration: BoxDecoration(
                     color: colors.muted,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: colors.border,
-                    ),
+                    border: Border.all(color: colors.border),
                   ),
                   child: _selectedFile != null
                       ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              FIcons.video,
-                              size: 48,
-                              color: colors.primary,
-                            ),
+                            Icon(FIcons.video, size: 48, color: colors.primary),
                             const SizedBox(height: 8),
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               child: Text(
                                 _fileName ?? l10n.uploadVideoSelected,
                                 style: typography.sm,
@@ -205,15 +200,17 @@ class _UploadVodScreenState extends ConsumerState<UploadVodScreen> {
                 children: [
                   Text(
                     l10n.settingsVodsVisibility,
-                    style:
-                        typography.sm.copyWith(fontWeight: FontWeight.w600),
+                    style: typography.sm.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const Spacer(),
                   if (_visibility == 'public')
                     FButton(
                       onPress: () {},
-                      prefix: Icon(FIcons.eye,
-                          size: 14, color: colors.primaryForeground),
+                      prefix: Icon(
+                        FIcons.eye,
+                        size: 14,
+                        color: colors.primaryForeground,
+                      ),
                       child: Text(l10n.settingsVodsPublic),
                     )
                   else
@@ -222,16 +219,18 @@ class _UploadVodScreenState extends ConsumerState<UploadVodScreen> {
                       onPress: () {
                         setState(() => _visibility = 'public');
                       },
-                      prefix:
-                          Icon(FIcons.eye, size: 14, color: colors.primary),
+                      prefix: Icon(FIcons.eye, size: 14, color: colors.primary),
                       child: Text(l10n.settingsVodsPublic),
                     ),
                   const SizedBox(width: 8),
                   if (_visibility == 'private')
                     FButton(
                       onPress: () {},
-                      prefix: Icon(FIcons.eyeOff,
-                          size: 14, color: colors.primaryForeground),
+                      prefix: Icon(
+                        FIcons.eyeOff,
+                        size: 14,
+                        color: colors.primaryForeground,
+                      ),
                       child: Text(l10n.settingsVodsPrivate),
                     )
                   else
@@ -240,8 +239,11 @@ class _UploadVodScreenState extends ConsumerState<UploadVodScreen> {
                       onPress: () {
                         setState(() => _visibility = 'private');
                       },
-                      prefix: Icon(FIcons.eyeOff,
-                          size: 14, color: colors.mutedForeground),
+                      prefix: Icon(
+                        FIcons.eyeOff,
+                        size: 14,
+                        color: colors.mutedForeground,
+                      ),
                       child: Text(l10n.settingsVodsPrivate),
                     ),
                 ],

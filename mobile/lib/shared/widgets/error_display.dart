@@ -24,26 +24,18 @@ class ErrorDisplay extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              FIcons.circleAlert,
-              size: 48,
-              color: colors.error,
-            ),
+            Icon(FIcons.circleAlert, size: 48, color: colors.error),
             const SizedBox(height: 16),
             Text(
               title,
-              style: typography.lg.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: typography.lg.copyWith(fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
             if (message != null) ...[
               const SizedBox(height: 8),
               Text(
                 message!,
-                style: typography.sm.copyWith(
-                  color: colors.mutedForeground,
-                ),
+                style: typography.sm.copyWith(color: colors.mutedForeground),
                 textAlign: TextAlign.center,
               ),
             ],

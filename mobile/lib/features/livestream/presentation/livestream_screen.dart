@@ -86,7 +86,9 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
       final response = await repo.getLivestreamOfUser(widget.userId);
       if (!mounted) return;
 
-      if (response.success && response.data != null && response.data!.isNotEmpty) {
+      if (response.success &&
+          response.data != null &&
+          response.data!.isNotEmpty) {
         final livestream = response.data!.first;
         setState(() {
           _livestream = livestream;
@@ -126,30 +128,32 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
         '${AppConfig.apiUrl}${ApiEndpoints.livestreamTranscode(livestream.id)}';
 
     _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl))
-      ..initialize().then((_) {
-        if (!mounted) return;
-        _chewieController = ChewieController(
-          videoPlayerController: _videoController!,
-          autoPlay: true,
-          isLive: true,
-          allowFullScreen: true,
-          allowMuting: true,
-          showControlsOnInitialize: false,
-          errorBuilder: (context, errorMessage) {
-            return Center(
-              child: Text(
-                errorMessage,
-                style: const TextStyle(color: Colors.white),
-              ),
+      ..initialize()
+          .then((_) {
+            if (!mounted) return;
+            _chewieController = ChewieController(
+              videoPlayerController: _videoController!,
+              autoPlay: true,
+              isLive: true,
+              allowFullScreen: true,
+              allowMuting: true,
+              showControlsOnInitialize: false,
+              errorBuilder: (context, errorMessage) {
+                return Center(
+                  child: Text(
+                    errorMessage,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                );
+              },
             );
-          },
-        );
-        setState(() => _isVideoLoading = false);
-      }).catchError((_) {
-        if (mounted) {
-          setState(() => _isVideoLoading = false);
-        }
-      });
+            setState(() => _isVideoLoading = false);
+          })
+          .catchError((_) {
+            if (mounted) {
+              setState(() => _isVideoLoading = false);
+            }
+          });
   }
 
   void _initChat(Livestream livestream) {
@@ -210,19 +214,21 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
         suffixes: [
           FButton.icon(
             onPress: () => setState(() => _isChatVisible = !_isChatVisible),
-            child: Icon(_isChatVisible ? FIcons.messageSquare : FIcons.messageSquareOff),
+            child: Icon(
+              _isChatVisible ? FIcons.messageSquare : FIcons.messageSquareOff,
+            ),
           ),
         ],
       ),
       child: _isLoading
           ? LoadingIndicator(message: l10n.loading)
           : _error != null
-              ? ErrorDisplay(
-                  title: l10n.errorGeneralTitle,
-                  message: _error,
-                  onRetry: _fetchLivestreamData,
-                )
-              : _buildContent(context),
+          ? ErrorDisplay(
+              title: l10n.errorGeneralTitle,
+              message: _error,
+              onRetry: _fetchLivestreamData,
+            )
+          : _buildContent(context),
     );
   }
 
@@ -268,7 +274,8 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
               radius: 18,
               backgroundImage: _streamer?.profilePicture != null
                   ? CachedNetworkImageProvider(
-                      '${AppConfig.apiUrl}/${_streamer!.profilePicture}')
+                      '${AppConfig.apiUrl}/${_streamer!.profilePicture}',
+                    )
                   : null,
               child: _streamer?.profilePicture == null
                   ? const Icon(FIcons.user, size: 18)
@@ -281,14 +288,15 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
                 children: [
                   Text(
                     livestream.title,
-                    style:
-                        typography.sm.copyWith(fontWeight: FontWeight.w600),
+                    style: typography.sm.copyWith(fontWeight: FontWeight.w600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     _streamer?.displayName ?? _streamer?.username ?? '',
-                    style: typography.xs.copyWith(color: colors.mutedForeground),
+                    style: typography.xs.copyWith(
+                      color: colors.mutedForeground,
+                    ),
                   ),
                 ],
               ),
@@ -302,7 +310,11 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(FIcons.radio, size: 12, color: colors.destructiveForeground),
+                  Icon(
+                    FIcons.radio,
+                    size: 12,
+                    color: colors.destructiveForeground,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     l10n.live,
@@ -338,7 +350,11 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: [
-              Icon(FIcons.messageSquare, size: 16, color: colors.mutedForeground),
+              Icon(
+                FIcons.messageSquare,
+                size: 16,
+                color: colors.mutedForeground,
+              ),
               const SizedBox(width: 6),
               Text(
                 l10n.usersChatTitle,
@@ -396,18 +412,17 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide(color: colors.border),
                 ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 isDense: true,
               ),
               onSubmitted: (_) => _sendMessage(),
             ),
           ),
           const SizedBox(width: 8),
-          FButton.icon(
-            onPress: _sendMessage,
-            child: const Icon(FIcons.send),
-          ),
+          FButton.icon(onPress: _sendMessage, child: const Icon(FIcons.send)),
         ],
       ),
     );

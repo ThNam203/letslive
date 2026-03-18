@@ -8,9 +8,7 @@ class ChatRepository {
 
   ChatRepository(this._client);
 
-  Future<ApiResponse<List<ChatMessage>>> getMessages({
-    required String roomId,
-  }) {
+  Future<ApiResponse<List<ChatMessage>>> getMessages({required String roomId}) {
     return _client.get(
       ApiEndpoints.chatMessages,
       queryParameters: {'roomId': roomId},
