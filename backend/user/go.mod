@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/consul/api v1.33.4
 	github.com/jackc/pgx v3.6.2+incompatible
-	github.com/jackc/pgx/v5 v5.8.0
+	github.com/jackc/pgx/v5 v5.9.0
 	github.com/minio/minio-go/v7 v7.0.99
 	github.com/pressly/goose v2.7.0+incompatible
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.67.0
