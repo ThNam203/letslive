@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sen1or/letslive/transcode/config"
-	"sen1or/letslive/transcode/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/transcode/storage"
 	"sen1or/letslive/transcode/transcoder"
 	"strconv"

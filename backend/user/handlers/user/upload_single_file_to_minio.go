@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"sen1or/letslive/user/pkg/tracer"
+	"sen1or/letslive/shared/pkg/tracer"
 	"sen1or/letslive/user/response"
 )
 

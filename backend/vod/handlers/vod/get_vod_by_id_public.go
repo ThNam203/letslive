@@ -3,7 +3,7 @@ package vod
 import (
 	"context"
 	"net/http"
-	"sen1or/letslive/vod/pkg/tracer"
+	"sen1or/letslive/shared/pkg/tracer"
 	response "sen1or/letslive/vod/response"
 
 	"github.com/gofrs/uuid/v5"

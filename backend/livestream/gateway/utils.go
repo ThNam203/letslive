@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"sen1or/letslive/livestream/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
 )

@@ -3,7 +3,7 @@ package sign_up_otp
 import (
 	"context"
 	"errors"
-	"sen1or/letslive/auth/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
 	"time"
 

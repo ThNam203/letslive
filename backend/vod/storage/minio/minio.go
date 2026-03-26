@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 	"sen1or/letslive/vod/config"
-	"sen1or/letslive/vod/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"

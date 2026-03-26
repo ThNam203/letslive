@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 	"sen1or/letslive/vod/handlers/utils"
-	"sen1or/letslive/vod/pkg/tracer"
+	"sen1or/letslive/shared/pkg/tracer"
 	response "sen1or/letslive/vod/response"
 )
 

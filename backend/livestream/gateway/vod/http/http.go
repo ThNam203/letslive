@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"sen1or/letslive/livestream/gateway"
 	vodgateway "sen1or/letslive/livestream/gateway/vod"
-	"sen1or/letslive/livestream/pkg/discovery"
-	"sen1or/letslive/livestream/pkg/logger"
+	"sen1or/letslive/shared/pkg/discovery"
+	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
 )

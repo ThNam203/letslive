@@ -7,11 +7,12 @@ import (
 	"sen1or/letslive/livestream/config"
 	"sen1or/letslive/livestream/handlers/general"
 	"sen1or/letslive/livestream/handlers/livestream"
-	"sen1or/letslive/livestream/middlewares"
-	"sen1or/letslive/livestream/pkg/logger"
+	"sen1or/letslive/shared/middlewares"
+	"sen1or/letslive/shared/pkg/logger"
 
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
@@ -25,12 +26,12 @@ type APIServer struct {
 	livestreamHandler *livestream.LivestreamHandler
 }
 
-func NewAPIServer(livestreamHandler *livestream.LivestreamHandler, cfg *config.Config) *APIServer {
+func NewAPIServer(livestreamHandler *livestream.LivestreamHandler, cfg *config.Config, db *pgxpool.Pool) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
 
-		generalHandler:    general.NewGeneralHandler(),
+		generalHandler:    general.NewGeneralHandler(db),
 		livestreamHandler: livestreamHandler,
 	}
 }

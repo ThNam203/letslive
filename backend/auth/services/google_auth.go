@@ -11,7 +11,7 @@ import (
 	"sen1or/letslive/auth/domains"
 	usergateway "sen1or/letslive/auth/gateway/user"
 	usergatewaydto "sen1or/letslive/auth/gateway/user/dto"
-	"sen1or/letslive/auth/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
 	"strconv"
 	"strings"

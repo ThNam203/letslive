@@ -17,22 +17,22 @@ jobs:
             {
               path: "./backend/auth",
               name: "letslive-auth",
-              context: "./backend/auth",
+              context: "./backend",
             },
             {
               path: "./backend/user",
               name: "letslive-user",
-              context: "./backend/user",
+              context: "./backend",
             },
             {
               path: "./backend/transcode",
               name: "letslive-transcode",
-              context: "./backend/transcode",
+              context: "./backend",
             },
             {
               path: "./backend/livestream",
               name: "letslive-livestream",
-              context: "./backend/livestream",
+              context: "./backend",
             },
             {
               path: "./backend/configserver",
@@ -47,7 +47,7 @@ jobs:
             {
               path: "./backend/vod",
               name: "letslive-vod",
-              context: "./backend/vod",
+              context: "./backend",
             },
           ]
 

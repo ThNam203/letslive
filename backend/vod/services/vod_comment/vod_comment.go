@@ -5,7 +5,7 @@ import (
 	"sen1or/letslive/vod/domains"
 	"sen1or/letslive/vod/dto"
 	usergateway "sen1or/letslive/vod/gateway/user"
-	"sen1or/letslive/vod/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5/pgxpool"

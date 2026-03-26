@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"sen1or/letslive/transcode/config"
 	"sen1or/letslive/transcode/domains"
-	"sen1or/letslive/transcode/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/transcode/storage"
 	mywatcher "sen1or/letslive/transcode/watcher"
 	"strconv"

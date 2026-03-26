@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"sen1or/letslive/transcode/gateway"
 	dto "sen1or/letslive/transcode/gateway/livestream/dto"
-	"sen1or/letslive/transcode/pkg/discovery"
-	"sen1or/letslive/transcode/pkg/logger"
+	"sen1or/letslive/shared/pkg/discovery"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/transcode/response"
 )
 

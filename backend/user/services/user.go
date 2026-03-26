@@ -5,7 +5,7 @@ import (
 	"mime/multipart"
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/dto"
-	"sen1or/letslive/user/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/user/response"
 	"sen1or/letslive/user/utils"
 

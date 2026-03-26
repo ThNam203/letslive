@@ -4,7 +4,7 @@ import (
 	"context"
 	"sen1or/letslive/livestream/domains"
 	"sen1or/letslive/livestream/dto"
-	"sen1or/letslive/livestream/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	response "sen1or/letslive/livestream/response"
 	"sen1or/letslive/livestream/utils"
 	"time"

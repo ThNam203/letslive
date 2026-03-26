@@ -11,8 +11,8 @@ services:
   auth:
     #image: sen1or/letslive-auth:latest
     build:
-      context: ./backend/auth/
-      dockerfile: Dockerfile
+      context: ./backend/
+      dockerfile: auth/Dockerfile
     restart: always
     container_name: letslive-auth
     ports:
@@ -42,8 +42,8 @@ services:
   user:
     #image: sen1or/letslive-user:latest
     build:
-      context: ./backend/user/
-      dockerfile: Dockerfile
+      context: ./backend/
+      dockerfile: user/Dockerfile
     container_name: letslive-user
     restart: always
     ports:
@@ -67,8 +67,8 @@ services:
   transcode:
     #image: sen1or/letslive-transcode:latest
     build:
-      context: ./backend/transcode/
-      dockerfile: Dockerfile
+      context: ./backend/
+      dockerfile: transcode/Dockerfile
     container_name: letslive-transcode
     restart: always
     ports:
@@ -98,8 +98,8 @@ services:
   livestream:
     #image: sen1or/letslive-livestream:latest
     build:
-      context: ./backend/livestream/
-      dockerfile: Dockerfile
+      context: ./backend/
+      dockerfile: livestream/Dockerfile
     container_name: letslive-livestream
     restart: always
     ports:
@@ -120,8 +120,8 @@ services:
 
   vod:
     build:
-      context: ./backend/vod/
-      dockerfile: Dockerfile
+      context: ./backend/
+      dockerfile: vod/Dockerfile
     container_name: letslive-vod
     restart: always
     ports:
