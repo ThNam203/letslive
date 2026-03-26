@@ -2,7 +2,7 @@ package utils
 
 import (
 	"net/http"
-	"sen1or/letslive/vod/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/vod/response"
 	"sen1or/letslive/vod/types"
 

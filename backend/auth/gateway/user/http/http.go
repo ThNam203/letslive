@@ -9,8 +9,8 @@ import (
 	"sen1or/letslive/auth/gateway"
 	usergateway "sen1or/letslive/auth/gateway/user"
 	"sen1or/letslive/auth/gateway/user/dto"
-	"sen1or/letslive/auth/pkg/discovery"
-	"sen1or/letslive/auth/pkg/logger"
+	"sen1or/letslive/shared/pkg/discovery"
+	"sen1or/letslive/shared/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
 )
 

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"sen1or/letslive/vod/domains"
-	"sen1or/letslive/vod/pkg/tracer"
+	"sen1or/letslive/shared/pkg/tracer"
 	response "sen1or/letslive/vod/response"
 	"time"
 

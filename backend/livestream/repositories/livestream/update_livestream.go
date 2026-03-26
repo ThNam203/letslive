@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"sen1or/letslive/livestream/domains"
-	"sen1or/letslive/livestream/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/livestream/response"
 
 	"github.com/jackc/pgx/v5"

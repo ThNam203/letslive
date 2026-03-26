@@ -4,7 +4,7 @@ import (
 	"context"
 	"sen1or/letslive/livestream/dto"
 	vodgateway "sen1or/letslive/livestream/gateway/vod"
-	"sen1or/letslive/livestream/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/livestream/response"
 	"sen1or/letslive/livestream/utils"
 	"time"

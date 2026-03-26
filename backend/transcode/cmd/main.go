@@ -2,14 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	cfg "sen1or/letslive/transcode/config"
 	livestreamgateway "sen1or/letslive/transcode/gateway/livestream/http"
 	usergateway "sen1or/letslive/transcode/gateway/user/http"
-	"sen1or/letslive/transcode/pkg/discovery"
-	"sen1or/letslive/transcode/pkg/logger"
 	"sen1or/letslive/transcode/rtmp"
 	miniostorage "sen1or/letslive/transcode/storage/minio"
 	"sen1or/letslive/transcode/watcher"
@@ -20,15 +17,17 @@ import (
 	"syscall"
 	"time"
 
+	sharedconfig "sen1or/letslive/shared/config"
+	"sen1or/letslive/shared/pkg/discovery"
+	"sen1or/letslive/shared/pkg/logger"
+	sharedutils "sen1or/letslive/shared/utils"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
 	configServiceName = "transcode_service"
 	configProfile     = os.Getenv("CONFIG_SERVER_PROFILE")
-
-	discoveryBaseDelay = 1 * time.Second
-	discoveryMaxDelay  = 1 * time.Minute
 
 	gracefulShutdownTimeout = 10 * time.Second
 )
@@ -43,7 +42,7 @@ func main() {
 		logger.Panicf(ctx, "failed to get a new registry")
 	}
 
-	cfgManager, err := cfg.NewConfigManager(ctx, registry, configServiceName, configProfile)
+	cfgManager, err := sharedconfig.NewConfigManager[cfg.Config](ctx, registry, configServiceName, configProfile, cfg.PostProcess)
 	if err != nil {
 		logger.Panicf(ctx, "failed to set up config manager: %s", err)
 	}
@@ -53,7 +52,7 @@ func main() {
 	// service discovery
 	serviceName := config.Service.Name
 	instanceId := discovery.GenerateInstanceID(serviceName)
-	go RegisterToDiscoveryService(ctx, registry, serviceName, instanceId, config)
+	go sharedutils.RegisterToDiscoveryService(ctx, registry, serviceName, instanceId, config.Service.Hostname, config.Webserver.Port)
 
 	setupHLSFolders(config.Transcode)
 
@@ -80,21 +79,34 @@ func main() {
 	// Initialize transcode worker for uploaded video processing
 	var transcodeWorker *worker.TranscodeWorker
 	if config.Database.ConnectionString != "" {
-		dbConn, dbErr := pgxpool.New(ctx, config.Database.ConnectionString)
-		if dbErr != nil {
-			logger.Errorf(ctx, "failed to connect to database for transcode worker: %v", dbErr)
-		} else {
-			rawMinioClient := worker.NewRawMinIOClient(config.MinIO)
-			transcodeWorker = worker.NewTranscodeWorker(
-				dbConn,
-				minioStorage,
-				rawMinioClient,
-				config.MinIO.BucketName,
-				config,
-				livestreamGateway,
-			)
-			go transcodeWorker.Start(ctx)
-			logger.Infof(ctx, "transcode worker started")
+		poolConfig, parseErr := pgxpool.ParseConfig(config.Database.ConnectionString)
+		if parseErr != nil {
+			logger.Errorf(ctx, "failed to parse database connection string: %v", parseErr)
+		}
+
+		if poolConfig != nil {
+			poolConfig.MaxConns = 10
+			poolConfig.MinConns = 1
+			poolConfig.MaxConnLifetime = 30 * time.Minute
+			poolConfig.MaxConnIdleTime = 5 * time.Minute
+			poolConfig.HealthCheckPeriod = 30 * time.Second
+
+			dbConn, dbErr := pgxpool.NewWithConfig(ctx, poolConfig)
+			if dbErr != nil {
+				logger.Errorf(ctx, "failed to connect to database for transcode worker: %v", dbErr)
+			} else {
+				rawMinioClient := worker.NewRawMinIOClient(config.MinIO)
+				transcodeWorker = worker.NewTranscodeWorker(
+					dbConn,
+					minioStorage,
+					rawMinioClient,
+					config.MinIO.BucketName,
+					config,
+					livestreamGateway,
+				)
+				go transcodeWorker.Start(ctx)
+				logger.Infof(ctx, "transcode worker started")
+			}
 		}
 	}
 
@@ -144,58 +156,12 @@ func main() {
 
 	wg.Add(1)
 	go (func() {
-		DeregisterDiscoveryService(shutdownCtx, registry, serviceName, instanceId)
+		sharedutils.DeregisterDiscoveryService(shutdownCtx, registry, serviceName, instanceId)
 		wg.Done()
 	})()
 
 	wg.Wait()
 	logger.Infof(ctx, "service shutdown complete.")
-}
-
-func RegisterToDiscoveryService(ctx context.Context, registry discovery.Registry, serviceName, instanceId string, config *cfg.Config) {
-	serviceHostPort := fmt.Sprintf("%s:%d", config.Service.Hostname, config.Webserver.Port)
-	serviceHealthCheckURL := fmt.Sprintf("http://%s/v1/health", serviceHostPort)
-
-	currentDelay := discoveryBaseDelay
-
-	logger.Infof(ctx, "attempting to register service '%s' instance '%s' [%s] with discovery service...", serviceName, instanceId, serviceHostPort)
-
-	for {
-		err := registry.Register(ctx, serviceHostPort, serviceHealthCheckURL, serviceName, instanceId, nil) // Pass metadata if needed
-		if err == nil {
-			logger.Infof(ctx, "successfully registered service '%s' instance '%s'", serviceName, instanceId)
-			break
-		}
-
-		logger.Errorf(ctx, "failed to register service '%s' instance '%s': %v - retrying in %v...", serviceName, instanceId, err, currentDelay)
-
-		// Wait for the current delay duration, but also listen for context cancellation
-		timer := time.NewTimer(currentDelay)
-		select {
-		case <-ctx.Done():
-			// context was cancelled during the wait
-			logger.Warnf(ctx, "registration attempt cancelled for service '%s' instance '%s' due to context cancellation: %v", serviceName, instanceId, ctx.Err())
-			timer.Stop()
-			return
-		case <-timer.C:
-			// Timer fired, continue to the next retry attempt
-		}
-
-		currentDelay *= 2
-		if currentDelay > discoveryMaxDelay {
-			currentDelay = discoveryMaxDelay
-		}
-	}
-}
-
-func DeregisterDiscoveryService(shutdownContext context.Context, registry discovery.Registry, serviceName, instanceId string) {
-	logger.Infof(shutdownContext, "attempting to deregister service")
-
-	if err := registry.Deregister(shutdownContext, serviceName, instanceId); err != nil {
-		logger.Errorf(shutdownContext, "failed to deregister service '%s' instance '%s': %v", serviceName, instanceId, err)
-	} else {
-		logger.Infof(shutdownContext, "successfully deregistered service '%s' instance '%s'", serviceName, instanceId)
-	}
 }
 
 func setupHLSFolders(cfg cfg.Transcode) {

@@ -5,7 +5,7 @@ import (
 	"net/smtp"
 	"os"
 	"sen1or/letslive/auth/domains"
-	"sen1or/letslive/auth/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/utils"
 	"time"

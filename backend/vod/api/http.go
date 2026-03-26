@@ -8,11 +8,12 @@ import (
 	"sen1or/letslive/vod/handlers/general"
 	"sen1or/letslive/vod/handlers/vod"
 	vodcomment "sen1or/letslive/vod/handlers/vod_comment"
-	"sen1or/letslive/vod/middlewares"
-	"sen1or/letslive/vod/pkg/logger"
+	"sen1or/letslive/shared/middlewares"
+	"sen1or/letslive/shared/pkg/logger"
 
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
@@ -27,12 +28,12 @@ type APIServer struct {
 	vodCommentHandler *vodcomment.VODCommentHandler
 }
 
-func NewAPIServer(vodHandler *vod.VODHandler, vodCommentHandler *vodcomment.VODCommentHandler, cfg *config.Config) *APIServer {
+func NewAPIServer(vodHandler *vod.VODHandler, vodCommentHandler *vodcomment.VODCommentHandler, cfg *config.Config, db *pgxpool.Pool) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
 
-		generalHandler:    general.NewGeneralHandler(),
+		generalHandler:    general.NewGeneralHandler(db),
 		vodHandler:        vodHandler,
 		vodCommentHandler: vodCommentHandler,
 	}

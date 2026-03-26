@@ -6,7 +6,7 @@ import (
 	"mime/multipart"
 	"os"
 	"sen1or/letslive/user/config"
-	"sen1or/letslive/user/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"

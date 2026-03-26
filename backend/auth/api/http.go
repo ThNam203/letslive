@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"sen1or/letslive/auth/config"
-	"sen1or/letslive/auth/pkg/discovery"
-	"sen1or/letslive/auth/pkg/logger"
+	"sen1or/letslive/shared/pkg/discovery"
+	"sen1or/letslive/shared/pkg/logger"
 
 	"sen1or/letslive/auth/handlers"
-	"sen1or/letslive/auth/middlewares"
+	"sen1or/letslive/shared/middlewares"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
@@ -29,13 +30,14 @@ func NewAPIServer(
 	authHandler *handlers.AuthHandler,
 	registry discovery.Registry,
 	cfg *config.Config,
+	db *pgxpool.Pool,
 ) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
 
 		authHandler:    authHandler,
-		generalHandler: handlers.NewGeneralHandler(),
+		generalHandler: handlers.NewGeneralHandler(db),
 	}
 }
 

@@ -3,7 +3,7 @@ package vod
 import (
 	"context"
 	"sen1or/letslive/vod/domains"
-	"sen1or/letslive/vod/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/vod/response"
 
 	"github.com/gofrs/uuid/v5"

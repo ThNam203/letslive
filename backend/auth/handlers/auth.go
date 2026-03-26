@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"sen1or/letslive/auth/dto"
-	"sen1or/letslive/auth/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/services"
 	"sen1or/letslive/auth/utils"

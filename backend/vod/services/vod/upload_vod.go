@@ -6,7 +6,7 @@ import (
 	"io"
 	"path/filepath"
 	"sen1or/letslive/vod/domains"
-	"sen1or/letslive/vod/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/vod/response"
 	"strings"
 	"time"

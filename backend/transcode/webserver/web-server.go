@@ -3,8 +3,8 @@ package webserver
 import (
 	"context"
 	"net/http"
-	"sen1or/letslive/transcode/middlewares"
-	"sen1or/letslive/transcode/pkg/logger"
+	"sen1or/letslive/shared/middlewares"
+	"sen1or/letslive/shared/pkg/logger"
 	"strconv"
 	"time"
 
@@ -33,7 +33,8 @@ func (ws *WebServer) ListenAndServe() {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	router.Use(middlewares.CORSMiddleware)
+	corsMiddleware := middlewares.NewCORSMiddleware()
+	router.Use(corsMiddleware.GetMiddleware)
 	router.Use(middlewares.RequestIDMiddleware)
 	router.Use(middlewares.LoggingMiddleware)
 

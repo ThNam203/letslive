@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"sen1or/letslive/user/dto"
-	"sen1or/letslive/user/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/user/response"
 
 	"github.com/gofrs/uuid/v5"

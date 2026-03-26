@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	"sen1or/letslive/auth/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
 )
 
