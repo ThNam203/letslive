@@ -1,0 +1,710 @@
+================================================================================
+              LETS LIVE - IMPROVEMENT PROPOSAL & TECHNICAL DEBT REPORT
+                           Generated: 2026-03-19
+================================================================================
+
+TABLE OF CONTENTS
+-----------------
+  1.  Executive Summary
+  2.  CRITICAL: Security Vulnerabilities
+  3.  Backend Improvements
+  4.  Web Frontend Improvements
+  5.  Mobile App Improvements
+  6.  Infrastructure & DevOps Improvements
+  7.  Observability & Monitoring Improvements
+  8.  Prioritized Roadmap
+
+================================================================================
+1. EXECUTIVE SUMMARY
+================================================================================
+
+After a thorough audit of the entire codebase — backend services, web frontend,
+mobile app, and infrastructure — this proposal identifies 40+ improvement areas
+organized by severity and effort. The most urgent items are security-related
+(exposed credentials, missing input sanitization). Beyond security, the biggest
+wins come from: extracting shared backend code, adding tests, implementing
+caching on the frontend, and hardening the infrastructure for production.
+
+  CRITICAL (fix immediately)  : 5 items  — security, data loss risk
+  HIGH     (fix within 1 week): 8 items  — reliability, correctness
+  MEDIUM   (fix within 1 month): 15 items — quality, performance
+  LOW      (backlog)          : 12+ items — polish, optimization
+
+================================================================================
+2. CRITICAL: SECURITY VULNERABILITIES
+================================================================================
+
+[ ] 2.1  EXPOSED CREDENTIALS IN .env FILE
+    ─────────────────────────────────────
+    Problem:  Real credentials committed to git repository:
+              - GOOGLE_OAUTH_CLIENT_SECRET
+              - SENTRY_AUTH_TOKEN
+              - CONFIG_SERVER_GIT_PASSWORD (GitHub token)
+              - GMAIL_APP_PASSWORD
+              - All database passwords set to "postgres"
+
+    Impact:   Anyone with repo access has full credentials.
+              Tokens can be scraped from git history even after deletion.
+
+    Fix:
+      1. Immediately rotate ALL exposed credentials
+      2. Remove .env from git history:
+         git filter-branch --force --index-filter \
+           'git rm --cached --ignore-unmatch .env' HEAD
+      3. Add .env to .gitignore (if not already)
+      4. Use GitHub Secrets (already partially done in CI/CD)
+      5. Use unique, strong passwords per service/database
+
+    Effort: 1-2 hours
+
+[ ] 2.2  OVERLY PERMISSIVE CORS CONFIGURATION
+    ──────────────────────────────────────────
+    Problem:  Kong CORS allows origin: ["*"] (all origins)
+              Backend services have inconsistent CORS:
+              - auth service: hardcoded http://localhost:5000
+              - transcode service: wildcard "*"
+
+    Impact:   Cross-site request forgery, credential theft
+
+    Fix:
+      1. Kong: restrict origins to actual frontend domains
+      2. Remove CORS from individual services (Kong handles it)
+      3. Set SameSite=Strict on auth cookies
+
+    File: configs/kong.yml (CORS plugin config)
+    Effort: 30 minutes
+
+[ ] 2.3  NO INPUT SANITIZATION FOR USER-GENERATED CONTENT
+    ─────────────────────────────────────────────────────
+    Problem:  Comments, bios, display names, chat messages have no
+              XSS sanitization. Content rendered in React (auto-escaped)
+              but mobile/API consumers are vulnerable.
+
+    Impact:   Stored XSS attacks via comments, chat, profile fields
+
+    Fix:
+      1. Backend: sanitize HTML on write (strip tags or allowlist)
+      2. Web: add DOMPurify for rendering user content
+      3. Add Content-Security-Policy headers via Kong
+
+    Effort: 2-4 hours
+
+[ ] 2.4  NO DATABASE BACKUP STRATEGY
+    ────────────────────────────────
+    Problem:  Zero backup procedures for PostgreSQL, MongoDB, or MinIO.
+              A single disk failure or bad migration = total data loss.
+
+    Impact:   Catastrophic — all user data, videos, chats lost
+
+    Fix:
+      1. Schedule pg_dump daily backups (cron + S3/remote storage)
+      2. Configure mongodump for chat database
+      3. Enable MinIO versioning or cross-region replication
+      4. Test restore procedures quarterly
+      5. Document disaster recovery runbook
+
+    Effort: 1-2 days
+
+[ ] 2.5  KONG OTP RATE LIMIT NOT SET
+    ────────────────────────────────
+    Problem:  configs/kong.yml has a TODO comment: rate limit for OTP
+              endpoint set to minute: 123 with note "TODO: change to one"
+
+    Impact:   Brute-force OTP guessing, account takeover
+
+    Fix:    Set OTP rate limit to 1 request/minute per IP + user
+    Effort: 15 minutes
+
+================================================================================
+3. BACKEND IMPROVEMENTS
+================================================================================
+
+HIGH PRIORITY
+─────────────
+
+[ ] 3.1  EXTRACT SHARED CODE INTO COMMON LIBRARY
+    ─────────────────────────────────────────────
+    Problem:  ~200 lines of identical code duplicated across 5 Go services:
+              - ConfigManager (config loading, hot reload, retry)
+              - Consul service discovery client
+              - Logging + RequestID middleware
+              - Response templates (Response[T], error formatting)
+              - Main.go bootstrap pattern (DB, Consul, OTEL, shutdown)
+
+    Fix:      Create shared Go module: github.com/sen1or/letslive/common
+              Packages:
+                common/config/     - ConfigManager
+                common/discovery/  - Consul client
+                common/middleware/ - Logging, RequestID, CORS
+                common/response/   - Response[T], error templates
+                common/server/     - Graceful server lifecycle
+
+    Impact:   Reduces ~1000 lines of duplication, single place to fix bugs
+    Effort:   2-3 days
+
+[ ] 3.2  ADD COMPREHENSIVE TEST SUITE
+    ─────────────────────────────────
+    Problem:  ZERO test files across the entire backend. No unit tests,
+              integration tests, or end-to-end tests.
+
+    Fix:      Start with critical paths:
+              Phase 1 (1 week):
+                - Auth service: signup, login, token refresh, OAuth
+                - Worker: job claiming, transcoding, retry logic
+                - JWT: generation, validation, expiry
+              Phase 2 (2 weeks):
+                - User service: profile CRUD, follow/unfollow
+                - VOD service: upload, comments, view tracking
+                - Repository layer: SQL query correctness
+              Phase 3 (ongoing):
+                - Integration tests with test database
+                - API contract tests
+
+    Tools:    Go testing + testify + pgxmock + httptest
+    Effort:   2-4 weeks for Phase 1-2
+
+[ ] 3.3  IMPLEMENT REAL HEALTH CHECKS
+    ─────────────────────────────────
+    Problem:  All health endpoints return 200 OK without checking
+              dependencies. Consul marks services healthy even when
+              their database or MinIO is down.
+
+    Current:  func RouteServiceHealth(w, r) { w.WriteHeader(200) }
+
+    Fix:      Check actual dependencies:
+              - Auth:      PostgreSQL ping
+              - User:      PostgreSQL ping + MinIO ping
+              - Livestream: PostgreSQL ping
+              - VOD:       PostgreSQL ping + MinIO ping
+              - Transcode: FFmpeg availability + MinIO ping
+              - Chat:      MongoDB ping + Redis ping
+
+    Effort:   2-4 hours
+
+[ ] 3.4  ADD RATE LIMITING MIDDLEWARE
+    ────────────────────────────────
+    Problem:  Kong provides global rate limiting, but services have zero
+              protection. If Kong is bypassed (internal network), all
+              endpoints are wide open. Auth endpoints especially vulnerable.
+
+    Fix:      Add per-endpoint rate limiting middleware:
+              - Login:        5/minute per IP
+              - Signup:       3/minute per IP
+              - OTP verify:   1/minute per email
+              - Password reset: 3/hour per email
+              - File upload:  10/hour per user
+
+    Effort:   1 day
+
+[ ] 3.5  CONFIGURE DATABASE CONNECTION POOLS
+    ───────────────────────────────────────
+    Problem:  All services use pgxpool.New() with default settings.
+              No MaxConns, MinConns, MaxConnLifetime, or health checks.
+
+    Fix:      Add explicit pool configuration per service:
+              MaxConns:         25 (auth), 50 (user), 25 (livestream/vod)
+              MinConns:         5
+              MaxConnLifetime:  1 hour
+              MaxConnIdleTime:  30 minutes
+              HealthCheckPeriod: 1 minute
+
+    Effort:   1-2 hours
+
+MEDIUM PRIORITY
+───────────────
+
+[ ] 3.6  IMPROVE TRANSCODE WORKER RELIABILITY
+    ────────────────────────────────────────
+    Problems:
+      a) No exponential backoff between retries
+      b) No dead letter queue — failed jobs just sit with status='failed'
+      c) Single-threaded — one job at a time, 5-second polling
+      d) No job timeout — FFmpeg could hang indefinitely
+      e) Raw file cleanup failure silently ignored (file orphaned)
+
+    Fix:
+      a) Add backoff: attempt 1 = immediate, 2 = 5min, 3 = 30min
+      b) Add dead_letter_jobs table or alerting on max retries
+      c) Add configurable concurrency (worker pool, default 2-3)
+      d) Add FFmpeg process timeout (e.g., 2x expected duration)
+      e) Add cleanup retry or scheduled orphan scan
+
+    Effort: 2-3 days
+
+[ ] 3.7  ADD MISSING DATABASE INDEXES
+    ─────────────────────────────────
+    Problem:  Several queries scan without optimal indexes:
+      - livestreams WHERE ended_at IS NULL (active streams)
+      - followers WHERE user_id = ? (follower count subquery)
+      - vod_comments WHERE vod_id = ? (comment listing)
+      - transcode_jobs WHERE status = 'pending' (worker polling)
+
+    Fix:      Add migration with indexes:
+              CREATE INDEX idx_livestreams_active ON livestreams(ended_at)
+                WHERE ended_at IS NULL;
+              CREATE INDEX idx_followers_user ON followers(user_id);
+              CREATE INDEX idx_followers_follower ON followers(follower_id);
+              CREATE INDEX idx_vod_comments_vod ON vod_comments(vod_id)
+                WHERE deleted_at IS NULL;
+              CREATE INDEX idx_transcode_jobs_pending ON transcode_jobs(status)
+                WHERE status = 'pending';
+
+    Effort: 1-2 hours
+
+[ ] 3.8  FIX INCONSISTENT ERROR HANDLING
+    ───────────────────────────────────
+    Problems:
+      - Some handlers log errors and return response; others only return
+      - No distinction between retriable vs non-retriable errors
+      - Database error details leak to API responses (email in error msg)
+      - Captcha validation has inverted condition in utils/captcha.go
+
+    Fix:
+      - Standardize: log + return sanitized error (never leak DB details)
+      - Create error types: ValidationError, NotFoundError, InternalError
+      - Fix captcha condition: if len(userIPAddress) > 0 (not == 0)
+      - Add error classification for monitoring/alerting
+
+    Effort: 1-2 days
+
+[ ] 3.9  PROTECT INTERNAL API ENDPOINTS
+    ──────────────────────────────────
+    Problem:  Internal endpoints (POST /v1/internal/vods, POST /v1/user,
+              GET /v1/verify-stream-key) rely solely on network isolation.
+              No authentication or API key verification.
+
+    Fix:      Add internal service authentication:
+              Option A: Shared secret header (X-Internal-Key)
+              Option B: mTLS between services
+              Option C: Consul Connect (service mesh)
+
+    Effort: 1-2 days (Option A), 1 week (Option B/C)
+
+LOW PRIORITY
+────────────
+
+[ ] 3.10 REMOVE SENSITIVE DATA FROM LOGS
+    ────────────────────────────────────
+    Problem:  User email addresses logged in error contexts.
+              Example: auth/repositories/auth/get_by_email.go line 25
+
+    Fix:      Mask emails in log output: u***@example.com
+              Add log sanitization middleware
+
+    Effort: 2-4 hours
+
+[ ] 3.11 STANDARDIZE API ENDPOINT NAMING
+    ────────────────────────────────────
+    Problem:  Inconsistent patterns:
+              /v1/auth/verify-email (kebab-case)
+              /v1/livestreamings (no separator)
+              /v1/user/me vs /v1/users/search (singular vs plural)
+
+    Fix:      Adopt consistent convention:
+              - Plural nouns for collections: /v1/users, /v1/vods
+              - Kebab-case for multi-word: /v1/stream-keys
+              - Nested resources: /v1/users/{id}/followers
+
+    Effort: 1-2 days (breaking change, needs API versioning)
+
+================================================================================
+4. WEB FRONTEND IMPROVEMENTS
+================================================================================
+
+HIGH PRIORITY
+─────────────
+
+[ ] 4.1  IMPLEMENT DATA CACHING (React Query / SWR)
+    ───────────────────────────────────────────────
+    Problem:  All API calls use raw fetch() with Cache-Control: no-store.
+              Every navigation re-fetches data. No stale-while-revalidate.
+              Poor UX on slow connections.
+
+    Fix:      Adopt TanStack Query (React Query):
+              - Automatic caching with configurable stale times
+              - Background refetching
+              - Optimistic updates for mutations
+              - Deduplication of concurrent requests
+              - Offline support
+
+    Impact:   ~50% reduction in API calls, instant navigation feel
+    Effort:   3-5 days (gradual migration)
+
+[ ] 4.2  ADD FRONTEND TESTS
+    ──────────────────────
+    Problem:  Zero test files in web frontend
+
+    Fix:      Phase 1: Vitest + Testing Library
+              - Auth forms (login, signup, OTP verification)
+              - Upload manager state logic
+              - API client utilities
+              - Zod validation schemas
+              Phase 2: Playwright E2E
+              - Login -> home -> watch stream flow
+              - Upload -> process -> view VOD flow
+
+    Effort: 1-2 weeks
+
+[ ] 4.3  ADD ERROR BOUNDARIES AT FEATURE LEVEL
+    ──────────────────────────────────────────
+    Problem:  Only root-level error.tsx exists. A crash in the comment
+              section takes down the entire page instead of just comments.
+
+    Fix:      Add error boundaries for:
+              - Video player component
+              - Chat component
+              - Comment section
+              - Upload manager
+              - Settings forms
+
+    Effort: 1 day
+
+MEDIUM PRIORITY
+───────────────
+
+[ ] 4.4  IMPLEMENT SEO FOR VIDEO CONTENT
+    ───────────────────────────────────
+    Problem:  No Open Graph tags, no JSON-LD structured data, no sitemap.
+              Video content is invisible to search engines and social shares.
+
+    Fix:
+      - Add OG meta tags per VOD page (title, description, thumbnail, duration)
+      - Implement VideoObject JSON-LD schema
+      - Generate dynamic sitemap.xml with VOD URLs
+      - Add robots.txt
+      - Add breadcrumb navigation with BreadcrumbList schema
+
+    Impact:   Discoverability, social media sharing previews
+    Effort:   2-3 days
+
+[ ] 4.5  ADD SKELETON LOADING STATES
+    ────────────────────────────────
+    Problem:  No skeleton loaders. Users see blank screens while data loads.
+
+    Fix:      Add skeleton components for:
+              - Livestream card grid (home page)
+              - VOD card grid
+              - User profile header
+              - Comment list
+              - Conversation list
+
+    Effort: 1-2 days
+
+[ ] 4.6  IMPLEMENT CODE SPLITTING & LAZY LOADING
+    ────────────────────────────────────────────
+    Problem:  No dynamic() imports. Large components (streaming-frame 24KB,
+              vod-frame 23KB, upload-manager 8.5KB) loaded upfront.
+
+    Fix:      Use next/dynamic for:
+              - Video players (only needed on stream/VOD pages)
+              - Upload manager (only needed in settings)
+              - Settings forms (only needed on settings pages)
+              - Comment section (can lazy load below fold)
+
+    Effort: 1 day
+
+[ ] 4.7  ADD CONTENT SECURITY POLICY HEADERS
+    ───────────────────────────────────────
+    Problem:  No CSP headers. Vulnerable to XSS via injected scripts.
+
+    Fix:      Add via Kong or Next.js middleware:
+              Content-Security-Policy:
+                default-src 'self';
+                script-src 'self' 'unsafe-inline' challenges.cloudflare.com;
+                img-src 'self' blob: data: {minio-domain};
+                media-src 'self' blob: {minio-domain} {transcode-domain};
+                connect-src 'self' {api-domain} {ws-domain};
+
+    Effort: 2-4 hours
+
+================================================================================
+5. MOBILE APP IMPROVEMENTS
+================================================================================
+
+HIGH PRIORITY
+─────────────
+
+[ ] 5.1  CONFIGURE DEEP LINKING
+    ──────────────────────────
+    Problem:  GoRouter configured but no platform-level deep link handling.
+              No intent-filter in AndroidManifest.xml, no associated
+              domains in iOS.
+
+    Fix:
+      Android: Add intent-filter for https://letslive.app/* and
+               letslive:// custom scheme
+      iOS:     Add associated domains entitlement + apple-app-site-association
+      Router:  Map deep link paths to GoRouter routes
+
+    Impact:   Users can share links that open directly in app
+    Effort:   1-2 days
+
+[ ] 5.2  ADD OFFLINE SUPPORT & ERROR RECOVERY
+    ─────────────────────────────────────────
+    Problem:  No offline handling. Network failures show raw errors.
+              No retry logic for failed requests.
+
+    Fix:
+      - Add connectivity listener (connectivity_plus package)
+      - Show offline banner when disconnected
+      - Cache critical data locally (SharedPreferences / Hive)
+      - Add automatic retry with exponential backoff for uploads
+      - Global error snackbar for API failures
+
+    Effort: 2-3 days
+
+MEDIUM PRIORITY
+───────────────
+
+[ ] 5.3  ADD MOBILE TESTS
+    ────────────────────
+    Problem:  Only 1 smoke test file exists
+
+    Fix:
+      - Unit tests for repositories (mock Dio responses)
+      - Widget tests for screens (mock providers)
+      - Integration tests for auth flow
+      - Golden tests for critical UI components
+
+    Tools: mockito, flutter_test, integration_test
+    Effort: 1-2 weeks
+
+[ ] 5.4  OPTIMIZE LIST PERFORMANCE
+    ─────────────────────────────
+    Problem:  Long lists (VODs, comments, conversations) may not use
+              efficient virtualization patterns.
+
+    Fix:
+      - Ensure all lists use ListView.builder (lazy construction)
+      - Add pagination with infinite scroll
+      - Implement pull-to-refresh
+      - Set image cache limits (100MB max)
+
+    Effort: 1-2 days
+
+[ ] 5.5  ADD PUSH NOTIFICATIONS
+    ──────────────────────────
+    Problem:  Notifications only visible in-app. Users miss events
+              when app is backgrounded.
+
+    Fix:
+      - Integrate Firebase Cloud Messaging (FCM)
+      - Backend: send push on follow, chat message, VOD ready
+      - Handle notification taps with deep links
+      - Add notification preferences in settings
+
+    Effort: 3-5 days
+
+================================================================================
+6. INFRASTRUCTURE & DEVOPS IMPROVEMENTS
+================================================================================
+
+HIGH PRIORITY
+─────────────
+
+[ ] 6.1  OPTIMIZE DOCKER BUILDS
+    ──────────────────────────
+    Problem:  Web Dockerfile uses single-stage build. All dev dependencies
+              included in production image. No layer caching optimization.
+
+    Fix:      Multi-stage build for web:
+              Stage 1 (builder): npm ci + next build
+              Stage 2 (runner):  node:22-alpine + copy .next/standalone
+              Expected image size reduction: ~60%
+
+    Fix:      All services: pin base image digests for reproducibility
+    Effort:   2-4 hours
+
+[ ] 6.2  IMPLEMENT DEPLOYMENT STRATEGIES
+    ───────────────────────────────────
+    Problem:  Current deploy = docker compose pull + up. Zero downtime
+              not guaranteed. No rollback mechanism.
+
+    Fix:
+      Short-term: Docker Compose rolling updates with health checks
+      Medium-term: Migrate to Docker Swarm with rolling deployments
+      Long-term: Kubernetes with HPA + rolling updates + canary
+
+    Effort: 1-3 days (short-term), 1-2 weeks (medium-term)
+
+[ ] 6.3  FIX KONG HTTPS REDIRECT
+    ────────────────────────────
+    Problem:  https_redirect_status_code: 426 (Upgrade Required)
+              This is non-standard. Browsers may not handle it correctly.
+
+    Fix:      Change to 301 (Permanent Redirect) for better browser/SEO
+    File:     configs/kong.yml
+    Effort:   5 minutes
+
+MEDIUM PRIORITY
+───────────────
+
+[ ] 6.4  ADD AUTOMATED SECURITY SCANNING
+    ───────────────────────────────────
+    Problem:  No SAST/DAST in CI/CD pipeline
+
+    Fix:      Add to GitHub Actions:
+              - Trivy: container image vulnerability scanning
+              - gosec: Go static analysis for security
+              - npm audit: Node.js dependency vulnerabilities
+              - gitleaks: credential scanning in commits
+
+    Effort: 1 day
+
+[ ] 6.5  IMPLEMENT DATABASE MIGRATIONS CI CHECK
+    ──────────────────────────────────────────
+    Problem:  Migrations run on startup with no CI validation.
+              A bad migration could break production.
+
+    Fix:
+      - Add CI step: spin up test DB, run all migrations, validate
+      - Add migration linting (check for destructive operations)
+      - Require review for migration files
+
+    Effort: 1 day
+
+[ ] 6.6  ADD MONITORING & ALERTING RULES
+    ───────────────────────────────────
+    Problem:  Grafana/Loki/Tempo deployed but no alerting configured.
+              Team won't know about outages until users report them.
+
+    Fix:      Configure Grafana alerts for:
+              - Service health check failures (5 min window)
+              - API error rate > 5% (1 min window)
+              - P99 latency > 2s
+              - Transcode job failure rate
+              - Disk usage > 80%
+              - Database connection pool exhaustion
+
+    Effort: 1-2 days
+
+[ ] 6.7  VERSION DOCKER IMAGES PROPERLY
+    ──────────────────────────────────
+    Problem:  CI/CD pushes images tagged "latest" only. No version tags.
+              Cannot rollback to specific version.
+
+    Fix:      Tag images with: git SHA, semantic version, "latest"
+              Example: letslive/auth:v1.2.3, letslive/auth:abc1234
+              Keep last 10 versions in registry
+
+    Effort: 1-2 hours
+
+================================================================================
+7. OBSERVABILITY & MONITORING IMPROVEMENTS
+================================================================================
+
+[ ] 7.1  REDUCE OTEL SAMPLING IN PRODUCTION
+    ──────────────────────────────────────
+    Problem:  Sampling rate = 1.0 (100% of traces). Will generate
+              massive volume in production and increase costs.
+
+    Fix:      Set sampling to 0.1-0.5 for production.
+              Keep 1.0 for development/staging.
+
+    File:     configs/otel-collector-config.yaml
+    Effort:   15 minutes
+
+[ ] 7.2  ADD APPLICATION-LEVEL METRICS
+    ─────────────────────────────────
+    Problem:  Only traces and logs. No custom metrics (Prometheus).
+
+    Fix:      Export metrics for:
+              - Active livestream count
+              - Concurrent WebSocket connections
+              - Upload queue depth
+              - Transcode job backlog
+              - API request latency histograms
+              - Cache hit rates
+
+    Effort: 2-3 days
+
+[ ] 7.3  IMPLEMENT STRUCTURED ERROR TRACKING
+    ──────────────────────────────────────
+    Problem:  Errors logged but no aggregation or trending.
+              Sentry only on web frontend, not backend.
+
+    Fix:
+      - Add Sentry to Go services (sentry-go SDK)
+      - Or: configure Loki alert rules for error patterns
+      - Group errors by type, service, endpoint
+      - Track error rate trends
+
+    Effort: 1-2 days
+
+================================================================================
+8. PRIORITIZED ROADMAP
+================================================================================
+
+PHASE 1: SECURITY HARDENING (Week 1)
+─────────────────────────────────────
+  [!] Rotate all exposed credentials                     (2.1)  — 1-2 hours
+  [!] Remove .env from git history                       (2.1)  — 30 min
+  [!] Fix CORS to specific domains                       (2.2)  — 30 min
+  [!] Fix OTP rate limit in Kong                         (2.5)  — 15 min
+  [!] Add input sanitization (backend + frontend)        (2.3)  — 4 hours
+  [!] Set up database backups                            (2.4)  — 1 day
+  [ ] Fix captcha validation bug                         (3.8)  — 15 min
+  [ ] Fix HTTPS redirect status code                     (6.3)  — 5 min
+
+PHASE 2: RELIABILITY (Weeks 2-3)
+────────────────────────────────
+  [ ] Implement real health checks                       (3.3)  — 4 hours
+  [ ] Configure database connection pools                (3.5)  — 2 hours
+  [ ] Add missing database indexes                       (3.7)  — 2 hours
+  [ ] Add rate limiting middleware to services            (3.4)  — 1 day
+  [ ] Add error boundaries (web)                         (4.3)  — 1 day
+  [ ] Fix inconsistent error handling                    (3.8)  — 2 days
+  [ ] Improve transcode worker reliability               (3.6)  — 3 days
+  [ ] Protect internal API endpoints                     (3.9)  — 2 days
+
+PHASE 3: QUALITY & TESTING (Weeks 3-6)
+──────────────────────────────────────
+  [ ] Extract shared backend code library                (3.1)  — 3 days
+  [ ] Backend tests: auth + worker + JWT                 (3.2)  — 1 week
+  [ ] Web frontend tests: forms + hooks + API            (4.2)  — 1 week
+  [ ] Mobile tests: repositories + widgets               (5.3)  — 1 week
+  [ ] Add automated security scanning (CI)               (6.4)  — 1 day
+  [ ] Add migration CI validation                        (6.5)  — 1 day
+
+PHASE 4: PERFORMANCE & UX (Weeks 6-8)
+─────────────────────────────────────
+  [ ] Implement React Query caching (web)                (4.1)  — 5 days
+  [ ] Add skeleton loading states (web)                  (4.5)  — 2 days
+  [ ] Implement code splitting & lazy loading (web)      (4.6)  — 1 day
+  [ ] Configure deep linking (mobile)                    (5.1)  — 2 days
+  [ ] Add offline support (mobile)                       (5.2)  — 3 days
+  [ ] Optimize list performance (mobile)                 (5.4)  — 2 days
+
+PHASE 5: GROWTH & SCALE (Weeks 8-12)
+────────────────────────────────────
+  [ ] Implement SEO for video content                    (4.4)  — 3 days
+  [ ] Add CSP headers                                    (4.7)  — 4 hours
+  [ ] Optimize Docker builds                             (6.1)  — 4 hours
+  [ ] Version Docker images properly                     (6.7)  — 2 hours
+  [ ] Add monitoring & alerting rules                    (6.6)  — 2 days
+  [ ] Add application-level metrics                      (7.2)  — 3 days
+  [ ] Reduce OTEL sampling for production                (7.1)  — 15 min
+  [ ] Add push notifications (mobile)                    (5.5)  — 5 days
+  [ ] Implement deployment strategies                    (6.2)  — 1 week
+
+================================================================================
+                        SUMMARY OF IMPROVEMENTS
+================================================================================
+
+  Category            Critical  High  Medium  Low   Total
+  ──────────────────────────────────────────────────────
+  Security                 5     2      2      1     10
+  Backend                  -     3      4      2      9
+  Web Frontend             -     3      4      -      7
+  Mobile                   -     2      3      -      5
+  Infrastructure           -     3      4      -      7
+  Observability            -     -      3      -      3
+  ──────────────────────────────────────────────────────
+  TOTAL                    5    13     20      3     41
+
+  Estimated total effort: ~8-12 weeks for one developer
+  Recommended team size:  2-3 developers working in parallel
+
+================================================================================
+                           END OF PROPOSAL
+================================================================================

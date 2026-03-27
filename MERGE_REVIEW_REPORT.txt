@@ -1,0 +1,548 @@
+================================================================================
+                    MERGE REVIEW REPORT: feat/mobile -> main
+                    Date: 2026-03-17
+                    Reviewer: Claude Code
+================================================================================
+
+TABLE OF CONTENTS
+-----------------
+1. Executive Summary
+2. VOD Service Review
+3. Mobile App Review
+4. Cross-Cutting Concerns
+5. Recommendations
+
+================================================================================
+1. EXECUTIVE SUMMARY
+================================================================================
+
+The feat/mobile branch introduced two major additions:
+  - A Flutter/Dart mobile application (./mobile)
+  - A VOD (Video on Demand) microservice (./backend/vod)
+
+Overall verdict: Both additions are well-structured and follow the existing
+project conventions closely. The VOD service mirrors the architecture of the
+auth, user, and livestream services. The mobile app follows clean architecture
+with modern Flutter patterns. There are no critical blockers, but several
+areas need attention (detailed below).
+
+Key stats:
+  - Mobile app: ~14,864 lines of Dart across ~80+ files
+  - VOD service: ~94 Go files with 16 API endpoints
+  - Test coverage: 0% for VOD service, near-0% for mobile app
+  - No hardcoded secrets found in either codebase
+
+================================================================================
+2. VOD SERVICE REVIEW (./backend/vod)
+================================================================================
+
+2.1 ARCHITECTURE & STRUCTURE
+-----------------------------
+VERDICT: GOOD - Follows project conventions
+
+The VOD service follows the exact same layered architecture as the other Go
+backend services (auth, user, livestream):
+
+  cmd/main.go          -> Entry point, dependency wiring
+  api/http.go          -> HTTP server setup
+  handlers/            -> HTTP request handlers
+  services/            -> Business logic layer
+  repositories/        -> Data access layer (PostgreSQL via pgx/v5)
+  domains/             -> Domain models & interfaces
+  dto/                 -> Data transfer objects
+  config/              -> Config management (Spring Cloud Config Server)
+  migrations/          -> Goose database migrations
+  middlewares/         -> Logging, RequestID, OTEL instrumentation
+  pkg/                 -> Shared packages (logger/Zap, tracer/OTEL, discovery/Consul)
+  storage/minio/       -> MinIO S3 integration
+  gateway/user/        -> Inter-service HTTP gateway to user service
+
+This is consistent with the user service and livestream service patterns.
+
+2.2 API ENDPOINTS
+-----------------
+VERDICT: GOOD - Well-organized with proper access control
+
+16 total endpoints, properly separated by visibility:
+
+  Public (no auth):
+    GET  /v1/vods                           - List public VODs by user
+    GET  /v1/vods/{vodId}                   - Get VOD details
+    GET  /v1/popular-vods                   - Get recommended VODs
+    GET  /v1/vods/{vodId}/comments          - List comments
+    GET  /v1/vod-comments/{commentId}/replies - Get replies
+
+  Private (JWT required):
+    GET  /v1/vods/author                    - Get own VODs
+    POST /v1/vods/upload                    - Upload VOD
+    PATCH /v1/vods/{vodId}                  - Update VOD
+    DELETE /v1/vods/{vodId}                 - Delete VOD
+    POST /v1/vods/{vodId}/comments          - Create comment
+    DELETE /v1/vod-comments/{commentId}     - Delete comment
+    POST /v1/vod-comments/{commentId}/like  - Like comment
+    DELETE /v1/vod-comments/{commentId}/like - Unlike comment
+    POST /v1/vod-comments/liked-ids         - Get liked comment IDs
+
+  Internal (service-to-service):
+    POST  /v1/internal/vods                 - Create VOD from livestream
+    PATCH /v1/internal/vods/{vodId}/status  - Update transcoding status
+
+Kong gateway configuration has been updated to route VOD endpoints correctly.
+
+2.3 DATABASE SCHEMA
+-------------------
+VERDICT: GOOD - Properly normalized with appropriate indexes
+
+4 tables created via Goose migrations:
+
+  vods                - Core VOD table with status tracking
+  transcode_jobs      - Background transcoding job management
+  vod_comments        - Threaded comments (parent_id for replies, soft delete)
+  vod_comment_likes   - Like tracking with unique constraint (comment_id, user_id)
+
+All tables have appropriate indexes (user_id, vod_id, parent_id, etc.)
+Foreign keys with ON DELETE CASCADE are properly set up.
+
+2.4 CONFIGURATION & SECRETS
+----------------------------
+VERDICT: GOOD - No hardcoded secrets
+
+  - DB credentials sourced from VOD_DB_USER / VOD_DB_PASSWORD env vars
+  - MinIO credentials from MINIO_ROOT_USER / MINIO_ROOT_PASSWORD env vars
+  - Config fetched from Spring Cloud Config Server via Consul discovery
+  - Periodic config reload via background goroutine
+
+2.5 ERROR HANDLING
+------------------
+VERDICT: GOOD - Consistent with other services
+
+  - Standardized ApiResponse[T] format with requestId, success, code, key, message
+  - Business error codes properly defined (40002-40013 range for VOD)
+  - Validation errors return field-level details
+  - Snake_case error keys enable frontend localization
+
+2.6 MIDDLEWARE & OBSERVABILITY
+------------------------------
+VERDICT: GOOD - Matches other services exactly
+
+  - LoggingMiddleware with Zap structured logging
+  - RequestIDMiddleware for distributed tracing correlation
+  - OTEL HTTP instrumentation for distributed traces
+  - Health check endpoint at /v1/health
+  - Consul service registration with health checks
+
+2.7 DOCKER & CI/CD INTEGRATION
+-------------------------------
+VERDICT: GOOD - Properly integrated
+
+  - Multi-stage Dockerfile (golang:1.26-alpine -> alpine:latest)
+  - Added to docker-compose.yaml and docker-compose-dev.yaml
+  - Added to CI/CD workflows (test.yml and build-and-publish-images.yml)
+  - Port 7782 assigned, no conflicts
+
+2.8 VOD SERVICE ISSUES & CONCERNS
+-----------------------------------
+
+  ISSUE #1: No test coverage (MEDIUM)
+  - Zero *_test.go files in the entire VOD service
+  - Consistent with other services (they also lack tests) but still a gap
+  - Recommendation: Add at minimum handler-level tests
+
+  ISSUE #2: 6 TODO comments indicate incomplete features (MEDIUM)
+  - handlers/vod/get_recommended_vods_public.go: "TODO: recommendation system"
+    -> Popular VODs endpoint returns empty/basic results
+  - services/vod/update.go: "TODO: Mapper" - Missing DTO-to-domain mapping
+  - services/vod/get_by_id.go: "TODO: this should not be the logic to
+    increase view count" - View count incremented on metadata fetch
+  - services/vod/increase_view_count.go: "TODO: Add rate limiting"
+    -> View count can be inflated without rate limiting
+  - repositories/vod/create_vod.go: "TODO: check for specific db errors"
+  - context.TODO() calls should use proper request context
+
+  ISSUE #3: View count logic is incorrect (LOW-MEDIUM)
+  - View count increments on every GET /v1/vods/{vodId} call
+  - Should be tied to video player actions instead
+  - No rate limiting means easy inflation
+
+  ISSUE #4: Recommendation system not implemented (LOW)
+  - GET /v1/popular-vods is a placeholder
+  - Not a blocker but the endpoint exists in Kong routes
+
+  ISSUE #5: Upload size hardcoded to 2GB (LOW)
+  - maxUploadSize = 2 << 30 in upload handler
+  - Consider making this configurable
+
+================================================================================
+3. MOBILE APP REVIEW (./mobile)
+================================================================================
+
+3.1 ARCHITECTURE & STRUCTURE
+-----------------------------
+VERDICT: GOOD - Clean Architecture with Feature-First organization
+
+  lib/
+  ├── main.dart              - Entry point (loads .env, initializes providers)
+  ├── app.dart               - Root MaterialApp with Riverpod + GoRouter
+  ├── providers.dart         - Global Riverpod provider definitions
+  ├── core/
+  │   ├── config/            - Environment config (dotenv)
+  │   ├── constants/         - Field limits, password rules
+  │   ├── network/           - ApiClient (Dio), endpoints, WebSocket
+  │   ├── router/            - GoRouter navigation (AppRoutes)
+  │   ├── theme/             - Forui light/dark themes
+  │   └── utils/             - Error localization helpers
+  ├── features/              - Feature modules
+  │   ├── auth/              - Login, signup, password reset, Google OAuth
+  │   ├── home/              - Livestream + VOD feeds (tabbed)
+  │   ├── livestream/        - Watch live streams + live chat
+  │   ├── messages/          - DM with WebSocket support
+  │   ├── notifications/     - Notification management
+  │   ├── profile/           - User profile viewing
+  │   ├── search/            - User search
+  │   ├── settings/          - Profile, security, stream, VOD settings
+  │   ├── user/              - User data operations
+  │   └── vod/               - VOD upload, viewing, commenting
+  ├── models/                - Shared data models
+  ├── shared/widgets/        - Reusable UI components
+  └── l10n/                  - Generated localization files
+
+Each feature folder follows:
+  feature/
+  ├── data/           - Repository classes (API interactions)
+  └── presentation/   - Screens and widgets
+
+3.2 STATE MANAGEMENT
+--------------------
+VERDICT: GOOD - Modern Riverpod approach
+
+  - flutter_riverpod ^3.2.1 for reactive state management
+  - Global providers in providers.dart for cross-cutting concerns:
+    * sharedPreferencesProvider (persistent storage)
+    * themeModeProvider (light/dark/system)
+    * localeProvider (en/vi language)
+    * apiClientProvider (Dio HTTP singleton)
+    * currentUserProvider (logged-in user)
+    * unreadNotificationCountProvider
+    * Per-feature repository providers
+  - ConsumerStatefulWidget / ConsumerWidget for UI consumption
+  - Local setState() for simple UI-only state (loading flags, form state)
+
+3.3 NETWORKING
+--------------
+VERDICT: GOOD - Well-structured API layer
+
+  ApiClient (Dio wrapper):
+    - Cookie jar management for session persistence
+    - 401 token refresh interceptor
+    - Methods: get, post, put, patch, delete, upload, uploadWithProgress
+    - Centralized endpoint definitions in api_endpoints.dart
+
+  ApiResponse<T> wrapper:
+    - requestId, success, statusCode, code, key, message, data, meta
+    - Matches backend response structure exactly
+
+  WebSocket:
+    - DM WebSocket service with auto-reconnect (exponential backoff 1s->30s)
+    - Supports: new_message, message_edited, message_deleted,
+      typing_start/stop, user_online/offline, read_receipt
+
+3.4 NAVIGATION
+--------------
+VERDICT: GOOD - GoRouter with ShellRoute for persistent bottom nav
+
+  - GoRouter v17.1.0 with declarative route definitions
+  - ShellRoute wraps main app shell (bottom nav bar)
+  - AppRoutes abstract class with static helper methods for type-safe paths
+  - Authentication redirect (_requireAuth) for protected routes
+  - NoTransitionPage for bottom nav tab switches
+
+3.5 UI FRAMEWORK
+----------------
+VERDICT: ACCEPTABLE - Forui instead of standard Material/Cupertino
+
+  - Uses Forui (v0.19.0) component library as primary UI framework
+  - Custom theme matching web app's color scheme
+  - Light and dark theme support with persistence
+  - Mixed with some Material widgets (TabBar for Home screen tabs)
+
+  NOTE: Forui is a less common choice. It limits community support and may
+  create maintenance burden if the library becomes unmaintained. However,
+  the current implementation is clean.
+
+3.6 LOCALIZATION
+----------------
+VERDICT: GOOD - Proper i18n setup
+
+  - Flutter's built-in ARB system (l10n.yaml config)
+  - English (app_en.arb) and Vietnamese (app_vi.arb) supported
+  - API error keys mapped to localized messages
+  - Language preference persisted in SharedPreferences
+
+3.7 DATA MODELS
+---------------
+VERDICT: ACCEPTABLE - Manual JSON parsing works but has risks
+
+  All models use manual fromJson() factory constructors:
+    - User, Livestream, Vod, VodComment, DmMessage
+    - Conversation, ChatMessage, AppNotification
+
+  Concern: json_serializable, freezed, and riverpod_generator are all
+  installed as dev dependencies but NOT actually used. All JSON parsing
+  and providers are written manually. This creates two issues:
+    1. Unused dependencies bloat the project
+    2. Manual JSON parsing is error-prone when API changes
+
+3.8 CODE STYLE & CONVENTIONS
+-----------------------------
+VERDICT: GOOD - Consistent Dart conventions
+
+  File naming: lowercase_with_underscores.dart
+  Class naming: PascalCase (LoginScreen, AuthRepository, ApiClient)
+  Variable naming: camelCase with _ prefix for private members
+  Imports: Dart -> packages -> relative (mostly consistent)
+  One class per file (mostly)
+
+  Mix of relative imports (../../../core/) and package imports
+  (package:letslive/...) - should standardize on one approach.
+
+3.9 MOBILE APP ISSUES & CONCERNS
+----------------------------------
+
+  ISSUE #6: Near-zero test coverage (MEDIUM)
+  - Single smoke test in test/widget_test.dart
+  - No unit tests for repositories, notifiers, or models
+  - No widget tests for screens
+  - No integration tests
+
+  ISSUE #7: Unused dependencies (LOW)
+  - freezed / freezed_annotation - installed but never used (@freezed)
+  - equatable - installed but never used
+  - json_serializable - installed but never used (@JsonSerializable)
+  - riverpod_annotation / riverpod_generator - installed but never used
+  - These add to build time and pubspec bloat
+
+  ISSUE #8: Silent error swallowing (LOW-MEDIUM)
+  - Multiple places catch exceptions with empty catch blocks:
+      } catch (_) {}  // Error silently ignored
+  - Particularly in home_screen.dart _fetchUsersFor()
+  - WebSocket reconnection catches all errors without differentiation
+  - Should at minimum log errors for debugging
+
+  ISSUE #9: Inconsistent pagination parameter naming (LOW)
+  - livestream_repository.dart uses 'page_size'
+  - message_repository.dart uses 'limit'
+  - vod_repository.dart uses both 'page_size' and 'limit'
+  - This likely mirrors the backend API inconsistency but should
+    be standardized
+
+  ISSUE #10: Import style inconsistency (LOW)
+  - Some files use relative imports: import '../../../core/network/...'
+  - Some files use package imports: import 'package:letslive/core/...'
+  - Dart lint recommendation: prefer one consistent approach
+  - Package imports are generally preferred for clarity
+
+  ISSUE #11: No offline/connectivity handling (LOW)
+  - No connectivity plugin integration
+  - App cannot gracefully detect or handle offline state
+  - API calls fail silently or show generic errors when offline
+
+  ISSUE #12: Manual JSON deserialization risk (LOW)
+  - All models parse JSON manually without codegen
+  - If backend API fields change, mobile app will silently break
+  - No compile-time safety for JSON structure
+  - Since json_serializable is already installed, it should be used
+
+================================================================================
+4. CROSS-CUTTING CONCERNS
+================================================================================
+
+4.1 DOCKER COMPOSE INTEGRATION
+-------------------------------
+VERDICT: GOOD
+
+  - VOD service properly added to both docker-compose.yaml and
+    docker-compose-dev.yaml
+  - Correct port mapping (7782)
+  - Proper network configuration (general_network)
+  - Database initialization script creates 'vod' database
+  - Environment variables properly passed
+
+4.2 KONG API GATEWAY
+---------------------
+VERDICT: GOOD
+
+  VOD routes properly configured in configs/kong.yml:
+    /vods, /popular-vods, /vod-comments, /vods/upload
+  JWT authentication applied to private endpoints
+  Rate limiting and CORS configured
+
+4.3 CI/CD PIPELINES
+--------------------
+VERDICT: GOOD
+
+  - test.yml updated: VOD service included in Go test matrix
+  - build-and-publish-images.yml updated: VOD Docker image built/published
+  - Consistent with other services' CI/CD patterns
+
+4.4 MOBILE-BACKEND API ALIGNMENT
+---------------------------------
+VERDICT: GOOD with minor issues
+
+  The mobile app's API endpoints match the backend routes:
+    - Auth endpoints -> auth service
+    - User endpoints -> user service
+    - Livestream endpoints -> livestream service
+    - VOD endpoints -> vod service
+    - Chat/DM endpoints -> chat service
+    - Notification endpoints -> user service (notifications)
+
+  The mobile app's ApiResponse model matches the backend's response
+  structure (requestId, success, statusCode, code, key, message, data, meta).
+
+  Error codes and keys are properly mapped for localization.
+
+  ISSUE #13: MOBILE_VS_WEB_MISMATCHES.md exists (INFO)
+  - The mobile team is tracking feature differences between web and mobile
+  - This suggests some API features may not be fully implemented in mobile yet
+  - Good practice to track, should be reviewed periodically
+
+4.5 SERVICE CONSISTENCY MATRIX
+------------------------------
+
+  | Aspect                  | auth | user | livestream | vod    | chat      |
+  |-------------------------|------|------|------------|--------|-----------|
+  | Language                | Go   | Go   | Go         | Go     | Node/TS   |
+  | Framework               | std  | std  | std        | std    | Express   |
+  | DB                      | pgx  | pgx  | pgx        | pgx    | Mongoose  |
+  | Config Server           | Yes  | Yes  | Yes        | Yes    | Yes       |
+  | Consul Discovery        | Yes  | Yes  | Yes        | Yes    | Yes       |
+  | OTEL Tracing            | Yes  | Yes  | Yes        | Yes    | Yes       |
+  | Zap Logging             | Yes  | Yes  | Yes        | Yes    | N/A       |
+  | Goose Migrations        | Yes  | Yes  | Yes        | Yes    | N/A       |
+  | Error Response Format   | Yes  | Yes  | Yes        | Yes    | Yes       |
+  | Middleware Stack         | Yes  | Yes  | Yes        | Yes    | Yes       |
+  | Docker Multi-stage      | Yes  | Yes  | Yes        | Yes    | Yes       |
+  | CI/CD                   | Yes  | Yes  | Yes        | Yes    | Yes       |
+  | Tests                   | No   | No   | No         | No     | No        |
+
+  The VOD service is fully consistent with the existing Go services.
+
+================================================================================
+5. RECOMMENDATIONS
+================================================================================
+
+PRIORITY: HIGH
+--------------
+
+  H1. Add test coverage for VOD service
+      - At minimum: handler tests with mock services
+      - Repository tests against test database
+      - Service layer unit tests
+      - This is a project-wide problem, not just VOD
+
+  H2. Fix view count logic in VOD service
+      - Move view count increment from GET /vods/{vodId} to a dedicated
+        endpoint called by the video player
+      - Add rate limiting (per user/IP) to prevent inflation
+      - File: backend/vod/services/vod/get_by_id.go
+
+  H3. Address silent error swallowing in mobile app
+      - Replace empty catch blocks with at least error logging
+      - Especially in: home_screen.dart, dm_websocket_service.dart
+      - Silent failures make debugging nearly impossible
+
+PRIORITY: MEDIUM
+----------------
+
+  M1. Remove unused mobile dependencies
+      - Remove from pubspec.yaml: freezed, freezed_annotation, equatable,
+        json_serializable, riverpod_annotation, riverpod_generator
+      - Or actually use them (recommended: adopt json_serializable for
+        type-safe JSON parsing)
+
+  M2. Standardize pagination parameters
+      - Choose either 'page_size' or 'limit' across all endpoints
+      - Update both backend services and mobile repositories
+      - Current inconsistency: livestream uses page_size, messages uses limit
+
+  M3. Resolve VOD service TODO items
+      - Implement recommendation system or remove the endpoint
+      - Fix view count logic (also H2)
+      - Add rate limiting for view count
+      - Add proper DB error checking in repository layer
+      - Replace context.TODO() with request context
+
+  M4. Add mobile app test coverage
+      - Repository unit tests (mock ApiClient)
+      - Model fromJson() tests (critical for catching API changes)
+      - Key screen widget tests
+
+PRIORITY: LOW
+-------------
+
+  L1. Standardize mobile import style
+      - Choose either relative or package imports consistently
+      - Dart style guide recommends package imports for libraries
+      - Add lint rule: prefer_relative_imports or always_use_package_imports
+
+  L2. Add offline/connectivity handling to mobile app
+      - Use connectivity_plus package
+      - Show offline banner/indicator
+      - Queue failed requests for retry
+
+  L3. Add code documentation
+      - Both VOD service and mobile app have minimal comments
+      - Public API functions/methods should have doc comments
+      - Complex business logic should be documented
+
+  L4. Make VOD upload size configurable
+      - Currently hardcoded to 2GB in upload handler
+      - Move to configuration (config server or env var)
+
+  L5. Evaluate Forui dependency for mobile app
+      - Forui is a less mainstream Flutter UI library
+      - Consider migration path if library becomes unmaintained
+      - Document why Forui was chosen over Material/Cupertino
+
+================================================================================
+ISSUE SUMMARY TABLE
+================================================================================
+
+  #   | Severity | Component | Description
+  ----|----------|-----------|--------------------------------------------
+  1   | MEDIUM   | VOD       | No test coverage (0 test files)
+  2   | MEDIUM   | VOD       | 6 TODO items indicate incomplete features
+  3   | LOW-MED  | VOD       | View count logic incorrect (inflatable)
+  4   | LOW      | VOD       | Recommendation system not implemented
+  5   | LOW      | VOD       | Upload size hardcoded to 2GB
+  6   | MEDIUM   | Mobile    | Near-zero test coverage
+  7   | LOW      | Mobile    | 5+ unused dependencies in pubspec.yaml
+  8   | LOW-MED  | Mobile    | Silent error swallowing in catch blocks
+  9   | LOW      | Mobile    | Inconsistent pagination parameter naming
+  10  | LOW      | Mobile    | Mixed relative/package import styles
+  11  | LOW      | Mobile    | No offline/connectivity handling
+  12  | LOW      | Mobile    | Manual JSON parsing without codegen safety
+  13  | INFO     | Cross     | MOBILE_VS_WEB_MISMATCHES.md tracks gaps
+
+================================================================================
+CONCLUSION
+================================================================================
+
+The merge is clean and both additions follow project conventions well:
+
+  - The VOD service is architecturally consistent with existing Go services
+  - The mobile app is well-structured with modern Flutter patterns
+  - Docker, CI/CD, and Kong gateway are properly configured
+  - No hardcoded secrets or critical security issues found
+  - API alignment between mobile and backend is correct
+
+The main areas needing attention are: test coverage (project-wide problem),
+incomplete VOD features (TODOs), and mobile app code quality improvements
+(unused deps, silent errors, import consistency).
+
+None of the issues found are merge-blocking. They represent technical debt
+that should be addressed in upcoming sprints.
+
+================================================================================
+END OF REPORT
+================================================================================

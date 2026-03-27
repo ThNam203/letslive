@@ -67,6 +67,7 @@ func (a *APIServer) getHandler() http.Handler {
 	finalHandler := otelhttp.NewHandler(sm, "/", otelhttp.WithFilter(func(r *http.Request) bool {
 		return r.URL.Path != "/v1/health" // exclude this path from tracing
 	}))
+	finalHandler = middlewares.MaxBodySizeMiddleware(1<<20)(finalHandler) // 1MB for JSON auth payloads
 	finalHandler = middlewares.LoggingMiddleware(finalHandler)
 	finalHandler = middlewares.RequestIDMiddleware(finalHandler)
 
@@ -82,8 +83,9 @@ func (a *APIServer) ListenAndServe(ctx context.Context, useTLS bool) error { // 
 	a.httpServer = &http.Server{
 		Addr:         addr,
 		Handler:      a.getHandler(),
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20, // 1MB
 	}
 
 	// start the server (this will block)

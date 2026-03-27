@@ -3,16 +3,19 @@ package services
 import (
 	"context"
 	"mime/multipart"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/dto"
-	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/user/response"
 	"sen1or/letslive/user/utils"
 
 	"github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type UserService struct {
+	dbPool                    *pgxpool.Pool
 	userRepo                  domains.UserRepository
 	livestreamInformationRepo domains.LivestreamInformationRepository
 	notificationRepo          domains.NotificationRepository
@@ -21,6 +24,7 @@ type UserService struct {
 }
 
 func NewUserService(
+	dbPool *pgxpool.Pool,
 	userRepo domains.UserRepository,
 	livestreamInformationRepo domains.LivestreamInformationRepository,
 	notificationRepo domains.NotificationRepository,
@@ -28,6 +32,7 @@ func NewUserService(
 	minioService MinIOService,
 ) *UserService {
 	return &UserService{
+		dbPool:                    dbPool,
 		userRepo:                  userRepo,
 		livestreamInformationRepo: livestreamInformationRepo,
 		notificationRepo:          notificationRepo,
@@ -112,17 +117,65 @@ func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequ
 		)
 	}
 
-	// TODO: transaction please
-	createdUser, err := s.userRepo.Create(ctx, data.Username, data.Email, domains.AuthProvider(data.AuthProvider))
-	if err != nil {
-		return nil, err
+	tx, txErr := s.dbPool.BeginTx(ctx, pgx.TxOptions{})
+	if txErr != nil {
+		logger.Errorf(ctx, "failed to begin transaction: %v", txErr)
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+	defer tx.Rollback(ctx)
+
+	// Create user within transaction
+	params := pgx.NamedArgs{
+		"username":      data.Username,
+		"email":         data.Email,
+		"auth_provider": domains.AuthProvider(data.AuthProvider),
+	}
+	row, queryErr := tx.Query(ctx, "INSERT INTO users (username, email, auth_provider) VALUES (@username, @email, @auth_provider) RETURNING *", params)
+	if queryErr != nil {
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
+	}
+	createdUser, collectErr := pgx.CollectOneRow(row, pgx.RowToStructByNameLax[domains.User])
+	if collectErr != nil {
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_ISSUE,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
-	if err := s.livestreamInformationRepo.Create(ctx, createdUser.Id); err != nil {
-		return nil, err
+	// Create livestream information within the same transaction
+	result, execErr := tx.Exec(ctx, "INSERT INTO livestream_information (user_id) VALUES ($1)", createdUser.Id)
+	if execErr != nil || result.RowsAffected() == 0 {
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_QUERY,
+			nil,
+			nil,
+			nil,
+		)
 	}
 
-	// Create welcome notification for the new user (ignore if fails)
+	if commitErr := tx.Commit(ctx); commitErr != nil {
+		logger.Errorf(ctx, "failed to commit transaction: %v", commitErr)
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
+	// Create welcome notification outside the transaction (best-effort)
 	welcomeNotif := domains.Notification{
 		UserId:  createdUser.Id,
 		Type:    "system", // TODO: add system notification type enum/default values
@@ -133,7 +186,7 @@ func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequ
 		logger.Warnf(ctx, "failed to create welcome notification for user %s: %v", createdUser.Id, err)
 	}
 
-	return createdUser, nil
+	return &createdUser, nil
 }
 
 func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequestDTO) (*domains.User, *response.Response[any]) {

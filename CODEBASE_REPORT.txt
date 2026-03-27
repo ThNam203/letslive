@@ -1,0 +1,823 @@
+================================================================================
+                    LETS LIVE - CODEBASE STRUCTURE & DESIGN REPORT
+                           Generated: 2026-03-19
+================================================================================
+
+TABLE OF CONTENTS
+-----------------
+1.  Project Overview
+2.  Technology Stack
+3.  Top-Level Directory Structure
+4.  Backend Microservices Architecture
+    4.1  Auth Service
+    4.2  User Service
+    4.3  Livestream Service
+    4.4  VOD Service
+    4.5  Transcode Service
+    4.6  Chat Service
+    4.7  Config Server
+5.  Web Frontend (Next.js)
+6.  Mobile App (Flutter/Dart)
+7.  Infrastructure & Deployment
+8.  Database Schemas
+9.  API Gateway (Kong) Routes
+10. Observability Stack
+11. Feature Comparison (Web vs Mobile)
+12. Key Design Decisions
+
+================================================================================
+1. PROJECT OVERVIEW
+================================================================================
+
+"Lets Live" is a full-featured live streaming and video-on-demand (VOD) platform
+built with a microservices architecture. It supports:
+
+  - Live streaming via RTMP (OBS-compatible) with real-time HLS transcoding
+  - Video-on-demand uploads with background transcoding
+  - Real-time live chat via WebSocket
+  - Direct messaging (1-on-1 and group conversations)
+  - User profiles with follow/unfollow system
+  - Notifications system
+  - Google OAuth and email/password authentication
+  - Multi-language support (English, Vietnamese)
+  - Cross-platform clients (Web + Mobile)
+
+================================================================================
+2. TECHNOLOGY STACK
+================================================================================
+
+BACKEND:
+  - Go 1.26.0           : Auth, User, Livestream, VOD, Transcode services
+  - Node.js + TypeScript : Chat service (Express + WebSocket)
+  - Spring Boot (Java)   : Config Server
+  - PostgreSQL 17.4      : Primary relational database
+  - MongoDB              : Chat message storage
+  - Redis 7.4.2          : Chat pub/sub system
+  - MinIO                : S3-compatible object storage (HLS segments, uploads)
+  - FFmpeg               : Video transcoding (RTMP -> HLS)
+
+WEB FRONTEND:
+  - Next.js 16.1.6       : React framework
+  - React 19.2.1         : UI library
+  - TypeScript 5         : Type safety
+  - TailwindCSS 4.2.1    : Utility-first CSS
+  - Radix UI             : Headless UI components
+  - Zustand 5.0.3        : State management
+  - next-i18next         : Internationalization
+  - react-player         : Video playback
+  - Sentry               : Error tracking
+
+MOBILE:
+  - Flutter 3.41.0+      : Cross-platform framework
+  - Dart 3.8.0+          : Programming language
+  - Riverpod 3.2.1       : State management
+  - GoRouter 17.1.0      : Navigation/routing
+  - Dio 5.7.0            : HTTP client with cookie management
+  - Forui 0.19.0         : UI component library
+  - Chewie 1.8.5         : Video player wrapper
+  - google_sign_in 6.2.2 : Google OAuth
+
+INFRASTRUCTURE:
+  - Docker Compose       : Container orchestration
+  - Consul 1.22.3        : Service discovery & configuration
+  - Kong                 : API Gateway (JWT, rate limiting, CORS)
+  - Grafana              : Dashboards & visualization
+  - Loki                 : Log aggregation
+  - Tempo                : Distributed tracing
+  - OpenTelemetry        : Telemetry SDK integration
+  - Promtail             : Log shipping
+
+================================================================================
+3. TOP-LEVEL DIRECTORY STRUCTURE
+================================================================================
+
+  letslive/
+  ├── backend/                     # All microservices
+  │   ├── auth/                    # Authentication service (Go)
+  │   ├── user/                    # User profile service (Go)
+  │   ├── livestream/              # Livestream management service (Go)
+  │   ├── vod/                     # Video-on-demand service (Go)
+  │   ├── transcode/               # RTMP/HLS transcoding service (Go)
+  │   ├── chat/                    # Real-time chat service (Node.js/TS)
+  │   └── configserver/            # Spring Cloud Config Server (Java)
+  ├── web/                         # Next.js web frontend
+  ├── mobile/                      # Flutter mobile app
+  ├── configs/                     # Infrastructure config files
+  │   ├── kong.yml                 # API Gateway routes & plugins
+  │   ├── consul.json              # Service discovery config
+  │   ├── loki.yaml                # Log aggregation config
+  │   ├── tempo.yaml               # Distributed tracing config
+  │   └── otel-collector-config.yaml
+  ├── docs/                        # Architecture diagrams
+  ├── docker-entrypoint-initdb.d/  # Database init scripts
+  ├── docker-compose.yaml          # Production orchestration
+  ├── docker-compose-dev.yaml      # Development setup
+  └── .env                         # Environment variables
+
+================================================================================
+4. BACKEND MICROSERVICES ARCHITECTURE
+================================================================================
+
+All Go services follow a consistent structure:
+
+  service/
+  ├── cmd/main.go          # Entry point
+  ├── api/http.go          # Route definitions
+  ├── handlers/            # HTTP request handlers
+  ├── services/            # Business logic layer
+  ├── repositories/        # Database access layer
+  ├── models/              # Data models
+  ├── migrations/          # SQL migration files
+  ├── middlewares/          # HTTP middleware
+  ├── gateway/             # Inter-service HTTP clients
+  ├── config/              # Configuration management
+  └── pkg/                 # Shared packages (discovery, etc.)
+
+Inter-service communication uses synchronous HTTP/JSON calls with Consul
+service discovery. Request IDs propagate across services for tracing.
+
+--------------------------------------------------------------------------------
+4.1 AUTH SERVICE (port 7777)
+--------------------------------------------------------------------------------
+
+Purpose: Authentication, authorization, JWT token management
+
+Features:
+  - Email/password signup with OTP verification
+  - Login with Cloudflare Turnstile CAPTCHA
+  - JWT access + refresh token management (HS256)
+  - Google OAuth integration (web redirect + mobile ID token)
+  - Password reset via email
+  - Automatic user creation in User Service on signup
+
+API Endpoints:
+  POST   /v1/auth/signup           - Verify OTP and create account
+  POST   /v1/auth/login            - Email/password login
+  POST   /v1/auth/refresh-token    - Refresh JWT access token
+  PATCH  /v1/auth/password         - Change password
+  DELETE /v1/auth/logout           - Logout (revoke tokens)
+  POST   /v1/auth/verify-email     - Request OTP for email verification
+  GET    /v1/auth/google           - Google OAuth redirect (web)
+  GET    /v1/auth/google/callback  - Google OAuth callback (web)
+  POST   /v1/auth/google/mobile    - Google sign-in with ID token (mobile)
+  GET    /v1/health                - Health check
+
+Database Tables:
+  - auths           : email, password_hash, user_id
+  - refresh_tokens  : token value, user_id, expiry
+  - sign_up_otps    : OTP codes for email verification
+
+Key Files:
+  - backend/auth/services/jwt.go          : JWT generation & refresh
+  - backend/auth/services/google_auth.go  : Google OAuth logic
+  - backend/auth/handlers/auth.go         : Auth request handlers
+
+--------------------------------------------------------------------------------
+4.2 USER SERVICE (port 7778)
+--------------------------------------------------------------------------------
+
+Purpose: User profiles, followers, livestream info, notifications, file uploads
+
+Features:
+  - User profile CRUD (avatar, bio, display name, social links)
+  - Follow/unfollow system with follower counts
+  - Stream API key generation and validation
+  - User search by username
+  - Recommended channels discovery
+  - Notification system (follow events, etc.)
+  - File uploads to MinIO (profile pictures, background images)
+
+API Endpoints:
+  PUBLIC:
+    GET    /v1/users/recommendations         - Recommended channels
+    GET    /v1/users/search                   - Search users by username
+    GET    /v1/user/{userId}                  - Get user profile
+    GET    /v1/user/me/following              - Get followed channels
+
+  PRIVATE (JWT required):
+    POST   /v1/upload-file                    - Upload file to MinIO
+    POST   /v1/user/{userId}/follow           - Follow user
+    DELETE /v1/user/{userId}/unfollow         - Unfollow user
+    GET    /v1/user/me                        - Current user profile
+    PUT    /v1/user/me                        - Update profile
+    PATCH  /v1/user/me/livestream-information - Update stream settings
+    PATCH  /v1/user/me/api-key               - Generate new stream key
+    PATCH  /v1/user/me/profile-picture        - Update profile picture
+    PATCH  /v1/user/me/background-picture     - Update background picture
+    GET    /v1/user/me/notifications          - Get notifications
+    GET    /v1/user/me/notifications/unread-count - Unread count
+    PATCH  /v1/user/me/notifications/{id}/read    - Mark read
+    PATCH  /v1/user/me/notifications/read-all     - Mark all read
+    DELETE /v1/user/me/notifications/{id}         - Delete notification
+
+  INTERNAL:
+    POST   /v1/user                           - Create user
+    PUT    /v1/user/{userId}                  - Update user
+    GET    /v1/verify-stream-key              - Verify stream API key
+    POST   /v1/notifications                  - Create notification
+
+Database Tables:
+  - users                   : username, email, display_name, stream_api_key,
+                              profile_picture, background_picture, auth_provider
+  - followers               : follower_id, followed_id
+  - livestream_information  : user_id, title, description, thumbnail_url
+  - notifications           : user_id, type, content, read status
+  - social_links            : user_id, platform, url
+
+--------------------------------------------------------------------------------
+4.3 LIVESTREAM SERVICE (port 7781)
+--------------------------------------------------------------------------------
+
+Purpose: Manage live streaming sessions, popular streams discovery
+
+Features:
+  - Create/end livestream records
+  - Popular livestreams by view count
+  - List livestreams by user
+  - Trigger VOD creation when stream ends
+
+API Endpoints:
+  PUBLIC:
+    GET    /v1/popular-livestreams             - Get popular livestreams
+    GET    /v1/livestreams                     - Get livestreams by user
+
+  INTERNAL:
+    POST   /v1/internal/livestreams           - Create livestream
+    POST   /v1/internal/livestreams/{id}/end  - End livestream & create VOD
+
+Database Tables:
+  - livestreams : title, description, user_id, view_count, started_at, ended_at
+  - vods        : livestream_id, user_id, playback_url, visibility, view_count
+
+--------------------------------------------------------------------------------
+4.4 VOD SERVICE (port 7782)
+--------------------------------------------------------------------------------
+
+Purpose: Video-on-demand management with uploads, transcoding queue, comments
+
+Features:
+  - Upload pre-recorded videos (max 2GB)
+  - Background transcoding job queue
+  - VOD metadata management (title, description, visibility)
+  - Threaded comment system with likes
+  - View count tracking with watch duration
+  - VOD status tracking (processing -> ready/failed)
+
+API Endpoints:
+  PUBLIC:
+    GET    /v1/vods                           - List VODs by user
+    GET    /v1/vods/{id}                      - Get VOD details
+    POST   /v1/vods/{id}/view                 - Register view
+    GET    /v1/popular-vods                   - Recommended VODs
+    GET    /v1/vods/{id}/comments             - Get VOD comments
+    GET    /v1/vod-comments/{id}/replies      - Get comment replies
+
+  PRIVATE (JWT required):
+    GET    /v1/vods/author                    - Get user's own VODs
+    POST   /v1/vods/upload                    - Upload video file
+    PATCH  /v1/vods/{id}                      - Update VOD metadata
+    DELETE /v1/vods/{id}                      - Delete VOD
+    POST   /v1/vods/{id}/comments             - Post comment
+    DELETE /v1/vod-comments/{id}              - Delete comment
+    POST   /v1/vod-comments/{id}/like         - Like comment
+    DELETE /v1/vod-comments/{id}/like         - Unlike comment
+    POST   /v1/vod-comments/liked-ids         - Get user's liked IDs
+
+  INTERNAL:
+    POST   /v1/internal/vods                  - Create VOD
+    PATCH  /v1/internal/vods/{id}/status      - Update VOD status
+
+Database Tables:
+  - vods               : title, description, user_id, playback_url, status,
+                          original_file_url, duration, visibility, view_count
+  - transcode_jobs     : vod_id, status (pending/processing/completed/failed),
+                          attempts, max_attempts
+  - vod_comments       : vod_id, user_id, content, parent_id (for threading)
+  - vod_comment_likes  : comment_id, user_id
+
+Accepted Upload Formats: .mp4, .mov, .avi, .mkv, .webm
+
+--------------------------------------------------------------------------------
+4.5 TRANSCODE SERVICE (ports: 1935 RTMP, 7779 health, 8889 webserver)
+--------------------------------------------------------------------------------
+
+Purpose: RTMP stream ingestion, real-time HLS transcoding, VOD transcoding
+
+Features:
+  - RTMP server for OBS/streaming software ingestion
+  - Real-time FFmpeg transcoding to adaptive bitrate HLS
+  - Quality variants: 360p, 480p, 720p (configurable)
+  - HLS segment file watching and MinIO upload
+  - Webserver for .m3u8 and .ts file serving
+  - Background VOD transcoding worker (poll-based job queue)
+  - Thumbnail extraction from video
+
+RTMP Connection Flow:
+  1. Streamer connects via rtmp://host:1935/live/{stream_key}
+  2. Stream key verified via User Service
+  3. Livestream record created via Livestream Service
+  4. Raw RTMP piped to FFmpeg for HLS transcoding
+  5. HLS segments uploaded to MinIO in real-time
+  6. On disconnect: livestream ended, VOD created, files cleaned up
+
+HLS Output Structure:
+  /{streamId}/
+  ├── 0/stream.m3u8      (720p variant)
+  ├── 1/stream.m3u8      (480p variant)
+  ├── 2/stream.m3u8      (360p variant)
+  ├── segments/           (.ts files)
+  ├── index.m3u8          (master playlist)
+  └── thumbnail.jpg
+
+VOD Transcoding Worker:
+  - Polls transcode_jobs table every 5 seconds
+  - Downloads raw file from MinIO
+  - Transcodes to HLS with adaptive bitrate
+  - Uploads segments & playlists to MinIO
+  - Extracts thumbnail
+  - Updates VOD status to "ready"
+  - Deletes raw file
+  - Retry: max 3 attempts with exponential backoff
+
+Key Files:
+  - backend/transcode/rtmp/rtmp.go            : RTMP server
+  - backend/transcode/transcoder/ffmpeg.go    : FFmpeg transcoding
+  - backend/transcode/worker/worker.go        : VOD transcode worker
+
+--------------------------------------------------------------------------------
+4.6 CHAT SERVICE (port 7780)
+--------------------------------------------------------------------------------
+
+Purpose: Real-time live chat and direct messaging via WebSocket
+
+Tech: Node.js 20+, TypeScript, Express, ws (WebSocket), MongoDB, Redis
+
+Features:
+  - WebSocket-based live chat for livestreams
+  - Redis pub/sub for multi-instance message distribution
+  - MongoDB for message persistence
+  - Direct messaging (1-on-1 and group conversations)
+  - Presence tracking (online/offline status)
+  - Typing indicators
+  - Read receipts
+  - Message editing and deletion
+  - JWT authentication
+
+WebSocket Endpoints:
+  ws://host/v1/ws       - Live chat (room-based, join/leave/message)
+  ws://host/v1/dm-ws    - Direct messages (authenticated, presence tracking)
+
+HTTP Endpoints:
+  GET    /v1/health                              - Health check
+  GET    /v1/messages                            - Get live chat messages
+  GET    /v1/conversations                       - Get user conversations
+  POST   /v1/conversations                       - Create conversation
+  GET    /v1/conversations/{id}                  - Get conversation
+  PUT    /v1/conversations/{id}                  - Update conversation
+  DELETE /v1/conversations/{id}                  - Leave conversation
+  POST   /v1/conversations/{id}/participants     - Add participant
+  DELETE /v1/conversations/{id}/participants/{u}  - Remove participant
+  GET    /v1/conversations/{id}/messages         - Get conversation messages
+  POST   /v1/conversations/{id}/messages         - Send message
+  PATCH  /v1/conversations/{id}/messages/{m}     - Edit message
+  DELETE /v1/conversations/{id}/messages/{m}     - Delete message
+  POST   /v1/conversations/{id}/read             - Mark conversation read
+
+DM WebSocket Events:
+  - NewMessage, MessageEdited, MessageDeleted
+  - UserTyping, ReadReceipt
+  - Presence (online/offline)
+  - ConversationUpdated, SendFailed
+
+Key Files:
+  - backend/chat/src/index.ts         : Service entry point
+  - backend/chat/src/chatServer.ts    : Live chat WebSocket server
+  - backend/chat/src/dmServer.ts      : DM WebSocket server
+
+--------------------------------------------------------------------------------
+4.7 CONFIG SERVER (port 8181)
+--------------------------------------------------------------------------------
+
+Purpose: Centralized configuration management (Spring Cloud Config)
+
+Tech: Spring Boot, Java
+
+Features:
+  - Git-backed configuration (GitHub repository)
+  - Dynamic reload (default 30 minute interval)
+  - Per-service, per-profile configs: {service}-{profile}.yml
+  - Health check endpoint
+  - All Go services poll config server for hot reload
+
+================================================================================
+5. WEB FRONTEND (Next.js)
+================================================================================
+
+Location: /web
+Tech: Next.js 16.1.6 + React 19.2.1 + TypeScript + TailwindCSS + Radix UI
+
+ROUTING STRUCTURE (app/[lng]/):
+
+  AUTH PAGES:
+    /[lng]/login                    - Login (email/password + Google OAuth + Turnstile)
+    /[lng]/signup                   - Signup with OTP email verification
+
+  MAIN PAGES:
+    /[lng]/                         - Home (livestreams grid + popular VODs)
+    /[lng]/messages                 - DM conversations list
+    /[lng]/messages/[conversationId] - Individual conversation chat
+    /[lng]/notifications            - Notifications feed
+    /[lng]/users/[userId]           - Public user profile
+    /[lng]/users/[userId]/vods/[vodId] - VOD player with comments
+
+  SETTINGS PAGES:
+    /[lng]/settings/profile         - Display name, bio, pictures, social links
+    /[lng]/settings/security        - Password change, phone management
+    /[lng]/settings/stream          - Livestream title, description, thumbnail, API key
+    /[lng]/settings/upload          - VOD upload interface
+    /[lng]/settings/vods            - VOD management list
+
+COMPONENT ARCHITECTURE:
+
+  components/
+  ├── ui/                 - Base UI (Button, Input, Dialog, Select, Tabs, etc.)
+  ├── livestream/         - Livestream cards, VOD cards, popular VODs
+  ├── custom_react_player/
+  │   ├── streaming-frame.tsx  - Livestream player with controls
+  │   └── vod-frame.tsx        - VOD player with comments
+  ├── vod-comments/       - Comment section with nested replies & likes
+  ├── upload-manager/     - Upload queue UI with progress tracking
+  ├── forms/              - LoginForm, SignupForm
+  ├── leftbar/            - Navigation sidebar
+  ├── notification/       - Notification components
+  ├── wrappers/           - Context/provider wrappers
+  └── icons/              - 56 SVG icon components
+
+STATE MANAGEMENT:
+
+  Zustand Stores:
+  - use-upload-store.ts   - VOD upload queue (max 3 concurrent, progress tracking,
+                            abort/retry/cancel, states: queued/uploading/processing/
+                            completed/failed/cancelled)
+  - use-dm-store.ts       - DM conversations, messages, typing indicators
+
+  Custom Hooks:
+  - use-dm-websocket.ts   - WebSocket for real-time DM with auto-reconnect
+  - use-notifications-page.ts - Notification pagination
+  - use-translation.ts    - i18n wrapper
+  - user.ts               - User auth state persistence
+
+API CLIENT LAYER (lib/api/):
+  - auth.ts               - Login, signup, logout, password, email verification
+  - user.ts               - Profile, follow/unfollow, pictures
+  - dm.ts                 - Conversations, messages, participants
+  - vod.ts                - VOD queries, upload, view registration
+  - vod-comment.ts        - Comments CRUD, likes, replies
+  - chat.ts               - Live chat messages
+  - livestream.ts         - Livestream data
+  - notification.ts       - Notifications
+
+VALIDATION (Zod schemas):
+  - Email: max 255 chars
+  - Username: max 50 chars
+  - Display name: max 100 chars
+  - Bio: max 500 chars
+  - VOD title: max 255 chars
+  - VOD description: max 5000 chars
+  - Password: max 255 chars
+
+INTERNATIONALIZATION:
+  - Supported: English (en), Vietnamese (vi)
+  - Dynamically loaded translations
+  - Middleware handles language detection
+
+THEME: Dark/Light mode via next-themes
+
+================================================================================
+6. MOBILE APP (Flutter/Dart)
+================================================================================
+
+Location: /mobile
+Tech: Flutter 3.41.0+ / Dart 3.8.0+ / Riverpod / GoRouter / Forui
+
+ROUTING STRUCTURE:
+
+  UNAUTHENTICATED:
+    /login                          - Email/password + Google Sign-In
+    /signup                         - Registration with OTP
+
+  MAIN SHELL (bottom navigation, 4 tabs):
+    /                               - Home (livestreams + popular VODs)
+    /messages                       - DM conversations list
+    /notifications                  - Notifications feed
+    /settings                       - Settings menu
+
+  AUTHENTICATED ROUTES:
+    /settings/profile               - Profile settings
+    /settings/security              - Security settings
+    /settings/stream                - Livestream settings
+    /settings/vods                  - VOD management
+    /upload-vod                     - Video upload form
+    /conversations/:conversationId  - Conversation chat
+
+  PUBLIC ROUTES:
+    /search                         - User search
+    /users/:userId                  - User profile
+    /livestream/:userId             - Livestream player + live chat
+    /vods/:vodId/watch              - VOD player
+
+APP ARCHITECTURE:
+
+  lib/
+  ├── main.dart            - Bootstrap (SharedPreferences init)
+  ├── app.dart             - MaterialApp.router with theming & locale
+  ├── providers.dart       - Global Riverpod providers
+  ├── core/
+  │   ├── api_client.dart      - Dio HTTP client with auth interceptor
+  │   ├── api_endpoints.dart   - All API route constants
+  │   ├── api_response.dart    - Generic API response wrapper
+  │   ├── websocket_service.dart   - LiveChat WebSocket
+  │   ├── dm_websocket_service.dart - DM WebSocket (typed events,
+  │   │                               exponential backoff, presence)
+  │   ├── router/app_router.dart   - GoRouter route definitions
+  │   ├── app_config.dart      - API/WS URLs from environment
+  │   └── app_theme.dart       - Light/dark Forui themes
+  ├── features/
+  │   ├── auth/            - Login/signup screens + auth repository
+  │   ├── home/            - Home screen + main shell (bottom nav)
+  │   ├── livestream/      - Livestream player + chat + repository
+  │   ├── vod/             - VOD player, upload, comments, upload manager
+  │   ├── messages/        - DM conversations, chat, new conversation dialog
+  │   ├── notifications/   - Notification list screen
+  │   ├── settings/        - Profile, security, stream, VODs settings
+  │   ├── search/          - User search screen
+  │   ├── user/            - Public user profile screen
+  │   └── profile/         - (shared profile components)
+  ├── models/
+  │   ├── user.dart            - User, SocialMediaLinks, LivestreamInformation
+  │   ├── conversation.dart    - Conversation, DmMessage, ReadReceipt
+  │   ├── vod.dart             - Vod model (status, visibility, owner)
+  │   ├── vod_comment.dart     - VodComment model
+  │   ├── chat_message.dart    - ChatMessage model
+  │   ├── livestream.dart      - Livestream model
+  │   └── notification.dart    - Notification model
+  ├── shared/widgets/      - Loading indicator, error display
+  └── l10n/                - Generated localization files
+
+STATE MANAGEMENT (Riverpod):
+  - themeModeProvider          - App theme persistence
+  - localeProvider             - Language preference
+  - currentUserProvider        - Authenticated user state
+  - unreadNotificationCountProvider - Badge count
+  - dmWebSocketServiceProvider - DM WebSocket singleton
+  - API repository providers (auth, user, livestream, vod, chat, dm, notifications)
+  - uploadQueueNotifier        - Upload queue with progress
+
+NETWORKING:
+  - Dio HTTP client with cookie jar
+  - Auth interceptor (automatic token refresh on 401)
+  - Deduplication of concurrent token refresh requests
+  - Upload with progress callback
+
+VIDEO FEATURES:
+  - HLS livestream playback via video_player + Chewie
+  - VOD playback with view registration (15 sec or 10% threshold)
+  - Upload with format validation and progress tracking
+
+================================================================================
+7. INFRASTRUCTURE & DEPLOYMENT
+================================================================================
+
+DOCKER COMPOSE SERVICES:
+
+  Application Services:
+    web              - Next.js frontend          (port 5000)
+    auth             - Auth service              (port 7777)
+    user             - User service              (port 7778)
+    livestream       - Livestream service         (port 7781)
+    vod              - VOD service               (port 7782)
+    transcode        - Transcode service         (port 1935, 7779, 8889)
+    chat             - Chat service              (port 7780)
+    configserver     - Config server             (port 8181)
+
+  Data Stores:
+    main_db          - PostgreSQL 17.4           (port 9999)
+    chat_db          - MongoDB                   (port 9993)
+    chat_pubsub      - Redis 7.4.2              (for pub/sub)
+    minio            - MinIO object storage      (port 9000, console 9090)
+
+  Infrastructure:
+    consul           - Service discovery         (port 8500)
+    kong             - API Gateway               (port 8000, admin 8001, UI 8002)
+    grafana          - Dashboards                (port 12345)
+    tempo            - Distributed tracing
+    otel-collector   - OpenTelemetry collector
+    loki             - Log aggregation
+    promtail         - Log shipping
+
+SERVICE DISCOVERY (Consul):
+  - All services register with Consul on startup
+  - Health checks via GET /v1/health endpoints
+  - Service lookup by name (returns random healthy instance)
+  - Kong routes use Consul DNS (e.g., auth.service.consul:7777)
+  - Graceful deregistration on shutdown
+
+CONFIGURATION MANAGEMENT:
+  - Spring Cloud Config Server (Git-backed)
+  - Per-service, per-profile YAML configs
+  - Hot reload polling (configurable interval)
+  - Retry with exponential backoff
+
+================================================================================
+8. DATABASE SCHEMAS
+================================================================================
+
+POSTGRESQL (main_db):
+
+  Auth Service:
+  ┌─────────────────────────────────────────────────────────────────┐
+  │ auths           : id, email, password_hash, user_id, timestamps│
+  │ refresh_tokens  : id, token, user_id, expires_at, timestamps   │
+  │ sign_up_otps    : id, email, otp_code, expires_at, timestamps  │
+  └─────────────────────────────────────────────────────────────────┘
+
+  User Service:
+  ┌─────────────────────────────────────────────────────────────────┐
+  │ users           : id, username, email, display_name,           │
+  │                   stream_api_key, profile_picture,             │
+  │                   background_picture, bio, auth_provider,      │
+  │                   status, timestamps                           │
+  │ followers       : id, follower_id, followed_id, timestamps     │
+  │ livestream_info : id, user_id, title, description,             │
+  │                   thumbnail_url, timestamps                    │
+  │ notifications   : id, user_id, type, content, read, timestamps │
+  │ social_links    : id, user_id, platform, url, timestamps       │
+  └─────────────────────────────────────────────────────────────────┘
+
+  Livestream Service:
+  ┌─────────────────────────────────────────────────────────────────┐
+  │ livestreams     : id, title, description, user_id, view_count, │
+  │                   started_at, ended_at, timestamps             │
+  │ vods            : id, livestream_id, user_id, playback_url,    │
+  │                   visibility, view_count, duration, timestamps │
+  └─────────────────────────────────────────────────────────────────┘
+
+  VOD Service:
+  ┌─────────────────────────────────────────────────────────────────┐
+  │ vods            : id, livestream_id, user_id, title,           │
+  │                   description, playback_url, status,           │
+  │                   original_file_url, duration, visibility,     │
+  │                   view_count, timestamps                       │
+  │ transcode_jobs  : id, vod_id, status, attempts, max_attempts,  │
+  │                   timestamps                                   │
+  │ vod_comments    : id, vod_id, user_id, content, parent_id,    │
+  │                   timestamps                                   │
+  │ vod_comment_likes: id, comment_id, user_id, timestamps        │
+  └─────────────────────────────────────────────────────────────────┘
+
+  Custom Enums:
+    vod_visibility    : public, private
+    vod_status        : ready, processing, failed
+    user_status       : normal, disabled
+    user_auth_provider: google, local
+
+MONGODB (chat_db):
+  ┌─────────────────────────────────────────────────────────────────┐
+  │ messages        : live chat messages (room-based)              │
+  │ conversations   : DM conversation metadata                     │
+  │ dm_messages     : direct message content                       │
+  └─────────────────────────────────────────────────────────────────┘
+
+================================================================================
+9. API GATEWAY (Kong) ROUTES
+================================================================================
+
+  All traffic flows through Kong at port 8000.
+
+  Route                  -> Service                          Auth
+  ─────────────────────────────────────────────────────────────────
+  /v1/auth/*             -> auth.service.consul:7777         None
+  /v1/user/*             -> user.service.consul:7778         JWT (cookie)
+  /v1/users/*            -> user.service.consul:7778         None
+  /v1/upload-file        -> user.service.consul:7778         JWT (cookie)
+  /v1/livestreams/*      -> livestream.service.consul:7781   None
+  /v1/livestreamings/*   -> livestream.service.consul:7781   None
+  /v1/popular-livestreams-> livestream.service.consul:7781   None
+  /v1/vods/*             -> vod.service.consul:7782          Mixed
+  /v1/popular-vods       -> vod.service.consul:7782          None
+  /v1/vod-comments/*     -> vod.service.consul:7782          JWT (cookie)
+  /v1/ws                 -> chat.service.consul:7780         None (WS)
+  /v1/dm-ws              -> chat.service.consul:7780         JWT (WS)
+  /v1/messages           -> chat.service.consul:7780         None
+  /v1/conversations/*    -> chat.service.consul:7780         JWT (cookie)
+  /files/*               -> minio.service.consul:9000        None
+  /transcode/*           -> transcode.service.consul:8889    None
+
+  Rate Limiting: 100/second, 6000/minute, 360000/hour
+  CORS: Configured for frontend origins
+  JWT: Extracted from ACCESS_TOKEN cookie
+
+================================================================================
+10. OBSERVABILITY STACK
+================================================================================
+
+  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+  │  Go Services │────>│ OTEL         │────>│ Tempo        │
+  │  (OTEL SDK)  │     │ Collector    │     │ (Tracing)    │
+  └──────────────┘     └──────────────┘     └──────────────┘
+                              │
+                              v
+                       ┌──────────────┐
+                       │ Grafana      │
+                       │ (Dashboards) │
+                       └──────────────┘
+                              ^
+  ┌──────────────┐     ┌──────────────┐
+  │ Docker       │────>│ Promtail     │────>│ Loki         │
+  │ Containers   │     │ (Log Ship)   │     │ (Logs)       │
+  └──────────────┘     └──────────────┘     └──────────────┘
+
+  - All Go services integrate OpenTelemetry SDK
+  - Request IDs propagated across service boundaries
+  - Health check endpoints excluded from tracing
+  - Structured logging with Zap (Go) and Pino (Node.js)
+  - Grafana accessible at port 12345
+
+================================================================================
+11. FEATURE COMPARISON (WEB vs MOBILE)
+================================================================================
+
+  Feature               Web                      Mobile
+  ──────────────────────────────────────────────────────────────────
+  Auth                  Email/Pass + Google      Email/Pass + Google
+                        + Turnstile CAPTCHA      (no CAPTCHA)
+  State Management      Zustand                  Riverpod
+  UI Framework          Radix UI + Tailwind      Forui (Material)
+  Video Player          react-player (HLS)       Chewie + video_player
+  VOD Upload            Drag-drop, queue mgr,    Form-based, queue mgr,
+                        max 3 concurrent         progress tracking
+  Live Chat             WebSocket real-time      WebSocket real-time
+  Direct Messages       WebSocket + typing       WebSocket + typing
+                        indicators               indicators + presence
+  Comments              Nested + likes           Nested + likes
+  Theme                 Light/Dark/System        Light/Dark/System
+  i18n                  next-i18next (en, vi)    intl (en, vi)
+  Routing               Next.js App Router       GoRouter
+  HTTP Client           fetch (native)           Dio + cookie jar
+
+================================================================================
+12. KEY DESIGN DECISIONS
+================================================================================
+
+  1. MICROSERVICES ARCHITECTURE
+     Each domain (Auth, User, Livestream, VOD, Chat) is an independent service
+     for independent scaling and deployment.
+
+  2. API GATEWAY PATTERN
+     Kong centralizes routing, authentication (JWT), rate limiting, and CORS.
+     Services don't handle auth directly - Kong injects user claims.
+
+  3. SERVICE DISCOVERY
+     Consul enables dynamic service registration. Services find each other
+     via Consul DNS rather than hardcoded addresses.
+
+  4. CENTRALIZED CONFIGURATION
+     Spring Cloud Config Server provides Git-backed, versionable configuration
+     with hot reload capability across all services.
+
+  5. OBJECT STORAGE
+     MinIO (S3-compatible) stores HLS segments, user uploads, thumbnails.
+     Decouples file storage from application services.
+
+  6. SIMPLE JOB QUEUE
+     PostgreSQL-based transcode job queue (transcode_jobs table) instead of
+     a dedicated message broker. Sufficient for current scale, upgradeable
+     to Kafka/RabbitMQ later.
+
+  7. DUAL DATABASE STRATEGY
+     PostgreSQL for structured relational data (users, streams, VODs).
+     MongoDB for schema-flexible chat messages.
+
+  8. REAL-TIME WITH REDIS PUB/SUB
+     Redis enables multi-instance chat message distribution without tight
+     coupling between WebSocket server instances.
+
+  9. OBSERVABILITY-FIRST
+     Full OTEL integration with Grafana/Loki/Tempo from the start.
+     Request IDs propagate across all service boundaries.
+
+  10. CROSS-PLATFORM CLIENTS
+      Web (Next.js) and Mobile (Flutter) share the same backend API.
+      Both implement the same feature set with platform-appropriate UX.
+
+  11. ADAPTIVE BITRATE STREAMING
+      FFmpeg transcodes to multiple quality variants (360p, 480p, 720p).
+      Master HLS playlist enables client-side quality adaptation.
+
+  12. COOKIE-BASED AUTH
+      JWT tokens stored in HTTP-only secure cookies (not localStorage).
+      Kong extracts tokens from cookies for API authentication.
+
+================================================================================
+                              END OF REPORT
+================================================================================

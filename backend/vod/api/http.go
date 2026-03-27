@@ -80,6 +80,7 @@ func (a *APIServer) getHandler() http.Handler {
 	finalHandler := otelhttp.NewHandler(sm, "/", otelhttp.WithFilter(func(r *http.Request) bool {
 		return r.URL.Path != "/v1/health"
 	}))
+	finalHandler = middlewares.MaxBodySizeMiddleware(1<<20)(finalHandler) // 1MB default; upload handler overrides with its own 2GB limit
 	finalHandler = middlewares.LoggingMiddleware(finalHandler)
 	finalHandler = middlewares.RequestIDMiddleware(finalHandler)
 
@@ -93,9 +94,10 @@ func (a *APIServer) ListenAndServe(ctx context.Context, useTLS bool) error {
 		Addr:              addr,
 		Handler:           a.getHandler(),
 		ReadHeaderTimeout: 10 * time.Second,
-		ReadTimeout:       3 * time.Hour,
-		WriteTimeout:      30 * time.Second,
+		ReadTimeout:       10 * time.Minute,
+		WriteTimeout:      5 * time.Minute,
 		IdleTimeout:       2 * time.Minute,
+		MaxHeaderBytes:    1 << 20, // 1MB
 	}
 
 	var err error
