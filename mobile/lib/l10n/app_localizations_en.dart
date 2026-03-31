@@ -1070,4 +1070,146 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uploadManagerQueued => 'Added to upload queue';
+
+  @override
+  String get walletTitle => 'Wallet';
+
+  @override
+  String get walletDescription => 'View your balances and transactions';
+
+  @override
+  String get walletDeposit => 'Deposit';
+
+  @override
+  String get walletCurrencySpark => 'Spark';
+
+  @override
+  String get walletCurrencySparkDescription =>
+      'Standard currency for tips and purchases';
+
+  @override
+  String get walletCurrencyFlare => 'Flare';
+
+  @override
+  String get walletCurrencyFlareDescription =>
+      'Premium currency with exclusive benefits';
+
+  @override
+  String get walletRecentTransactions => 'Recent Transactions';
+
+  @override
+  String get walletViewAll => 'View all';
+
+  @override
+  String get walletNoTransactions => 'No transactions yet';
+
+  @override
+  String get walletTransactionsTitle => 'Transaction History';
+
+  @override
+  String get walletLoadMore => 'Load more';
+
+  @override
+  String get walletTxnReward => 'Reward';
+
+  @override
+  String get walletTxnPurchase => 'Purchase';
+
+  @override
+  String get walletTxnTrade => 'Trade';
+
+  @override
+  String get walletTxnDonate => 'Donation';
+
+  @override
+  String get walletTxnRefund => 'Refund';
+
+  @override
+  String get walletTxnFee => 'Fee';
+
+  @override
+  String get walletTxnAdjustment => 'Adjustment';
+
+  @override
+  String get walletStatusCreated => 'Created';
+
+  @override
+  String get walletStatusProcessing => 'Processing';
+
+  @override
+  String get walletStatusCompleted => 'Completed';
+
+  @override
+  String get walletStatusFailed => 'Failed';
+
+  @override
+  String get walletStatusCancelled => 'Cancelled';
+
+  @override
+  String get walletDepositTitle => 'Deposit Funds';
+
+  @override
+  String get walletDepositSelectCurrency => 'Select Currency';
+
+  @override
+  String get walletDepositAmount => 'Amount';
+
+  @override
+  String get walletDepositAmountPlaceholder => 'Enter amount';
+
+  @override
+  String get walletDepositSelectProvider => 'Payment Method';
+
+  @override
+  String get walletDepositProviderStripe => 'Credit / Debit Card';
+
+  @override
+  String get walletDepositProviderPaypal => 'PayPal';
+
+  @override
+  String get walletDepositConfirm => 'Proceed to Payment';
+
+  @override
+  String get walletDepositErrorInvalidAmount => 'Please enter a valid amount';
+
+  @override
+  String get walletDepositErrorMinAmount => 'Amount must be at least 1';
+
+  @override
+  String get walletPaymentPending => 'Pending';
+
+  @override
+  String get walletPaymentCompleted => 'Completed';
+
+  @override
+  String get walletPaymentFailed => 'Failed';
+
+  @override
+  String get apiResErrAccountNotFound => 'Wallet account not found.';
+
+  @override
+  String get apiResErrAccountFrozen =>
+      'Your wallet account is currently frozen.';
+
+  @override
+  String get apiResErrInsufficientBalance => 'Insufficient balance.';
+
+  @override
+  String get apiResErrInvalidAmount => 'Invalid amount.';
+
+  @override
+  String get apiResErrTransactionFailed =>
+      'Transaction failed, please try again.';
+
+  @override
+  String get apiResErrPaymentFailed => 'Payment failed, please try again.';
+
+  @override
+  String get apiResErrPaymentNotFound => 'Payment not found.';
+
+  @override
+  String get apiResErrUnsupportedCurrency => 'Unsupported currency.';
+
+  @override
+  String get apiResErrDepositLimitExceeded => 'Deposit limit exceeded.';
 }

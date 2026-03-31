@@ -1064,4 +1064,146 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get uploadManagerQueued => 'Đã thêm vào hàng đợi tải lên';
+
+  @override
+  String get walletTitle => 'Ví';
+
+  @override
+  String get walletDescription => 'Xem số dư và giao dịch của bạn';
+
+  @override
+  String get walletDeposit => 'Nạp tiền';
+
+  @override
+  String get walletCurrencySpark => 'Spark';
+
+  @override
+  String get walletCurrencySparkDescription =>
+      'Đơn vị tiền tệ tiêu chuẩn cho tip và mua hàng';
+
+  @override
+  String get walletCurrencyFlare => 'Flare';
+
+  @override
+  String get walletCurrencyFlareDescription =>
+      'Đơn vị tiền tệ cao cấp với quyền lợi đặc biệt';
+
+  @override
+  String get walletRecentTransactions => 'Giao dịch gần đây';
+
+  @override
+  String get walletViewAll => 'Xem tất cả';
+
+  @override
+  String get walletNoTransactions => 'Chưa có giao dịch nào';
+
+  @override
+  String get walletTransactionsTitle => 'Lịch sử giao dịch';
+
+  @override
+  String get walletLoadMore => 'Tải thêm';
+
+  @override
+  String get walletTxnReward => 'Phần thưởng';
+
+  @override
+  String get walletTxnPurchase => 'Mua hàng';
+
+  @override
+  String get walletTxnTrade => 'Trao đổi';
+
+  @override
+  String get walletTxnDonate => 'Quyên góp';
+
+  @override
+  String get walletTxnRefund => 'Hoàn tiền';
+
+  @override
+  String get walletTxnFee => 'Phí';
+
+  @override
+  String get walletTxnAdjustment => 'Điều chỉnh';
+
+  @override
+  String get walletStatusCreated => 'Đã tạo';
+
+  @override
+  String get walletStatusProcessing => 'Đang xử lý';
+
+  @override
+  String get walletStatusCompleted => 'Hoàn thành';
+
+  @override
+  String get walletStatusFailed => 'Thất bại';
+
+  @override
+  String get walletStatusCancelled => 'Đã hủy';
+
+  @override
+  String get walletDepositTitle => 'Nạp tiền';
+
+  @override
+  String get walletDepositSelectCurrency => 'Chọn loại tiền';
+
+  @override
+  String get walletDepositAmount => 'Số tiền';
+
+  @override
+  String get walletDepositAmountPlaceholder => 'Nhập số tiền';
+
+  @override
+  String get walletDepositSelectProvider => 'Phương thức thanh toán';
+
+  @override
+  String get walletDepositProviderStripe => 'Thẻ tín dụng / ghi nợ';
+
+  @override
+  String get walletDepositProviderPaypal => 'PayPal';
+
+  @override
+  String get walletDepositConfirm => 'Tiến hành thanh toán';
+
+  @override
+  String get walletDepositErrorInvalidAmount => 'Vui lòng nhập số tiền hợp lệ';
+
+  @override
+  String get walletDepositErrorMinAmount => 'Số tiền phải ít nhất 1';
+
+  @override
+  String get walletPaymentPending => 'Đang chờ';
+
+  @override
+  String get walletPaymentCompleted => 'Hoàn thành';
+
+  @override
+  String get walletPaymentFailed => 'Thất bại';
+
+  @override
+  String get apiResErrAccountNotFound => 'Không tìm thấy tài khoản ví.';
+
+  @override
+  String get apiResErrAccountFrozen =>
+      'Tài khoản ví của bạn hiện đang bị đóng băng.';
+
+  @override
+  String get apiResErrInsufficientBalance => 'Số dư không đủ.';
+
+  @override
+  String get apiResErrInvalidAmount => 'Số tiền không hợp lệ.';
+
+  @override
+  String get apiResErrTransactionFailed =>
+      'Giao dịch thất bại, vui lòng thử lại.';
+
+  @override
+  String get apiResErrPaymentFailed => 'Thanh toán thất bại, vui lòng thử lại.';
+
+  @override
+  String get apiResErrPaymentNotFound => 'Không tìm thấy thanh toán.';
+
+  @override
+  String get apiResErrUnsupportedCurrency => 'Loại tiền tệ không được hỗ trợ.';
+
+  @override
+  String get apiResErrDepositLimitExceeded => 'Vượt quá giới hạn nạp tiền.';
 }

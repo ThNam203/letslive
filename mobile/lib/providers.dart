@@ -13,6 +13,7 @@ import 'features/user/data/user_repository.dart';
 import 'features/vod/data/vod_comment_repository.dart';
 import 'features/vod/data/vod_repository.dart';
 import 'features/livestream/data/chat_repository.dart';
+import 'features/wallet/data/wallet_repository.dart';
 import 'models/user.dart';
 
 // ---------------------------------------------------------------------------
@@ -132,6 +133,11 @@ final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
 /// Chat repository (live chat messages).
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   return ChatRepository(ref.watch(apiClientProvider));
+});
+
+/// Wallet repository.
+final walletRepositoryProvider = Provider<WalletRepository>((ref) {
+  return WalletRepository(ref.watch(apiClientProvider));
 });
 
 /// Message repository.

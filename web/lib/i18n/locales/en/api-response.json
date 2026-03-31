@@ -35,6 +35,16 @@
     "res_err_vod_comment_not_liked": "Comment has not been liked.",
     "res_err_vod_comment_delete_failed": "Failed to delete comment.",
 
+    "res_err_account_not_found": "Wallet account not found.",
+    "res_err_account_frozen": "Your wallet account is currently frozen.",
+    "res_err_insufficient_balance": "Insufficient balance.",
+    "res_err_invalid_amount": "Invalid amount.",
+    "res_err_transaction_failed": "Transaction failed, please try again.",
+    "res_err_payment_failed": "Payment failed, please try again.",
+    "res_err_payment_not_found": "Payment not found.",
+    "res_err_unsupported_currency": "Unsupported currency.",
+    "res_err_deposit_limit_exceeded": "Deposit limit exceeded.",
+
     "res_succ_sent_verification_email": "Verification email sent, please check your inbox",
     "res_succ_ok": "Success",
     "res_succ_login": "Login successfully",

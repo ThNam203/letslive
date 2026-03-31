@@ -70,6 +70,16 @@ abstract final class ApiEndpoints {
       '/conversations/$id/participants/$userId';
   static String conversationRead(String id) => '/conversations/$id/read';
 
+  // Finance / Wallet
+  static const financeWallet = '/finance/wallet';
+  static const financeCurrencies = '/finance/currencies';
+  static const financeTransactions = '/finance/transactions';
+  static String financeTransactionById(String id) =>
+      '/finance/transactions/$id';
+  static const financeDeposits = '/finance/deposits';
+  static const financePayments = '/finance/payments';
+  static String financePaymentById(String id) => '/finance/payments/$id';
+
   // Upload
   static const uploadFile = '/upload-file';
 

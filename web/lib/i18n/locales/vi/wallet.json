@@ -1,0 +1,85 @@
+{
+    "page_title": "Ví",
+    "need_to_login": "Bạn cần đăng nhập để xem ví của mình",
+    "navigation": {
+        "overview": "Tổng quan",
+        "transactions": "Giao dịch",
+        "deposit": "Nạp tiền"
+    },
+    "overview": {
+        "title": "Số dư của bạn",
+        "description": "Xem số dư ví hiện tại của bạn",
+        "total_balance": "Tổng số dư",
+        "recent_transactions": "Giao dịch gần đây",
+        "view_all": "Xem tất cả giao dịch",
+        "no_transactions": "Chưa có giao dịch nào",
+        "deposit_funds": "Nạp tiền"
+    },
+    "currency": {
+        "spark": "Spark",
+        "spark_description": "Đơn vị tiền tệ tiêu chuẩn cho tip và mua hàng",
+        "flare": "Flare",
+        "flare_description": "Đơn vị tiền tệ cao cấp với quyền lợi đặc biệt"
+    },
+    "transactions": {
+        "title": "Lịch sử giao dịch",
+        "description": "Xem tất cả các giao dịch trước đây",
+        "no_transactions": "Không tìm thấy giao dịch",
+        "no_transactions_description": "Lịch sử giao dịch của bạn sẽ xuất hiện ở đây sau khi bạn thực hiện giao dịch đầu tiên.",
+        "load_more": "Tải thêm",
+        "type": {
+            "reward": "Phần thưởng",
+            "purchase": "Mua hàng",
+            "trade": "Trao đổi",
+            "donate": "Quyên góp",
+            "refund": "Hoàn tiền",
+            "fee": "Phí",
+            "adjustment": "Điều chỉnh"
+        },
+        "status": {
+            "created": "Đã tạo",
+            "processing": "Đang xử lý",
+            "completed": "Hoàn thành",
+            "failed": "Thất bại",
+            "cancelled": "Đã hủy"
+        },
+        "filter_all": "Tất cả",
+        "details": "Chi tiết"
+    },
+    "deposit": {
+        "title": "Nạp tiền",
+        "description": "Nạp tiền vào ví bằng nhà cung cấp thanh toán",
+        "select_currency": "Chọn loại tiền",
+        "select_provider": "Phương thức thanh toán",
+        "amount": "Số tiền",
+        "amount_placeholder": "Nhập số tiền",
+        "min_amount": "Nạp tối thiểu: {{amount}}",
+        "max_amount": "Nạp tối đa: {{amount}}",
+        "provider": {
+            "stripe": "Thẻ tín dụng / ghi nợ",
+            "stripe_description": "Thanh toán an toàn qua Stripe",
+            "paypal": "PayPal",
+            "paypal_description": "Thanh toán bằng tài khoản PayPal"
+        },
+        "summary": "Tóm tắt",
+        "you_pay": "Bạn trả",
+        "you_receive": "Bạn nhận",
+        "fee": "Phí xử lý",
+        "confirm": "Tiến hành thanh toán",
+        "confirming": "Đang chuyển hướng...",
+        "success": "Đã khởi tạo nạp tiền! Bạn sẽ được chuyển hướng để hoàn tất thanh toán.",
+        "error_invalid_amount": "Vui lòng nhập số tiền hợp lệ",
+        "error_min_amount": "Số tiền phải ít nhất {{amount}}",
+        "error_max_amount": "Số tiền không được vượt quá {{amount}}"
+    },
+    "payments": {
+        "title": "Lịch sử thanh toán",
+        "status": {
+            "pending": "Đang chờ",
+            "processing": "Đang xử lý",
+            "completed": "Hoàn thành",
+            "failed": "Thất bại",
+            "cancelled": "Đã hủy"
+        }
+    }
+}

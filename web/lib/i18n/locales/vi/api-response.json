@@ -35,6 +35,16 @@
     "res_err_vod_comment_not_liked": "Bình luận chưa được thích.",
     "res_err_vod_comment_delete_failed": "Không thể xóa bình luận.",
 
+    "res_err_account_not_found": "Không tìm thấy tài khoản ví.",
+    "res_err_account_frozen": "Tài khoản ví của bạn hiện đang bị đóng băng.",
+    "res_err_insufficient_balance": "Số dư không đủ.",
+    "res_err_invalid_amount": "Số tiền không hợp lệ.",
+    "res_err_transaction_failed": "Giao dịch thất bại, vui lòng thử lại.",
+    "res_err_payment_failed": "Thanh toán thất bại, vui lòng thử lại.",
+    "res_err_payment_not_found": "Không tìm thấy thanh toán.",
+    "res_err_unsupported_currency": "Loại tiền tệ không được hỗ trợ.",
+    "res_err_deposit_limit_exceeded": "Vượt quá giới hạn nạp tiền.",
+
     "res_succ_sent_verification_email": "Email xác thực đã được gửi, vui lòng kiểm tra hộp thư",
     "res_succ_ok": "Thành công",
     "res_succ_login": "Đăng nhập thành công",
