@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"sen1or/letslive/finance/config"
 	"sen1or/letslive/finance/handlers/general"
-	"sen1or/letslive/finance/middlewares"
-	"sen1or/letslive/finance/pkg/logger"
+	"sen1or/letslive/shared/middlewares"
+	"sen1or/letslive/shared/pkg/logger"
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -32,16 +32,16 @@ func NewAPIServer(cfg *config.Config) *APIServer {
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 	wrap := func(pattern string, fn func(http.ResponseWriter, *http.Request)) {
-		sm.Handle(pattern, otelhttp.WithRouteTag(pattern, http.HandlerFunc(fn)))
+		sm.Handle(pattern, http.HandlerFunc(fn))
 	}
-	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)
+	sm.HandleFunc("GET /v1/health", a.generalHandler.RouteServiceHealth)
 	wrap("GET /", a.generalHandler.RouteNotFoundHandler)
 
 	finalHandler := otelhttp.NewHandler(sm, "/", otelhttp.WithFilter(func(r *http.Request) bool {
 		return r.URL.Path != "/v1/health"
 	}))
-	finalHandler = middlewares.RequestIDMiddleware(finalHandler)
 	finalHandler = middlewares.LoggingMiddleware(finalHandler)
+	finalHandler = middlewares.RequestIDMiddleware(finalHandler)
 	return finalHandler
 }
 
