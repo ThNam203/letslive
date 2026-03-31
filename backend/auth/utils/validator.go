@@ -3,9 +3,12 @@ package utils
 import (
 	"unicode"
 
-	"sen1or/letslive/auth/constants"
-
 	"github.com/go-playground/validator/v10"
+)
+
+const (
+	passwordMinLength = 8
+	passwordMaxLength = 72
 )
 
 var Validator = validator.New(validator.WithRequiredStructEnabled())
@@ -23,12 +26,12 @@ func validatePassword(fl validator.FieldLevel) bool {
 	password := fl.Field().String()
 
 	// check minimum length
-	if len(password) < constants.PASSWORD_MIN_LENGTH {
+	if len(password) < passwordMinLength {
 		return false
 	}
 
 	// check maximum length
-	if len(password) > constants.PASSWORD_MAX_LENGTH {
+	if len(password) > passwordMaxLength {
 		return false
 	}
 

@@ -9,3 +9,6 @@ CREATE DATABASE letslive_user;
 
 -- 4. Create the 'letslive_finance' database
 CREATE DATABASE letslive_finance;
+
+-- 5. Create the 'letslive_vod' database
+CREATE DATABASE letslive_vod;

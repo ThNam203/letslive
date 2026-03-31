@@ -14,4 +14,4 @@ function requestIdMiddleware(req: Request, res: Response, next: NextFunction) {
     next()
 }
 
-export default requestIdMiddleware;
+export default requestIdMiddleware

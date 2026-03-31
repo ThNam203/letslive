@@ -2,16 +2,17 @@ package livestream
 
 import (
 	"sen1or/letslive/livestream/domains"
+	vodgateway "sen1or/letslive/livestream/gateway/vod"
 )
 
 type LivestreamService struct {
 	livestreamRepo domains.LivestreamRepository
-	vodRepo        domains.VODRepository
+	vodGateway     vodgateway.VODGateway
 }
 
-func NewLivestreamService(livestreamRepo domains.LivestreamRepository, vodRepo domains.VODRepository) *LivestreamService {
+func NewLivestreamService(livestreamRepo domains.LivestreamRepository, vodGateway vodgateway.VODGateway) *LivestreamService {
 	return &LivestreamService{
 		livestreamRepo: livestreamRepo,
-		vodRepo:        vodRepo,
+		vodGateway:     vodGateway,
 	}
 }

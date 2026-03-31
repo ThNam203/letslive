@@ -1,0 +1,17 @@
+{
+    "title": "Thông báo",
+    "mark_all_as_read": "Đánh dấu tất cả đã đọc",
+    "loading": "Đang tải...",
+    "no_notifications": "Không có thông báo",
+    "view_all": "Xem tất cả thông báo",
+    "no_notifications_yet": "Chưa có thông báo.",
+    "please_log_in": "Vui lòng đăng nhập để xem thông báo.",
+    "view": "Xem",
+    "mark_as_read": "Đánh dấu đã đọc",
+    "delete": "Xóa",
+    "load_more": "Tải thêm",
+    "time_just_now": "vừa xong",
+    "time_m_ago": "{{m}} phút trước",
+    "time_h_ago": "{{h}} giờ trước",
+    "time_d_ago": "{{d}} ngày trước"
+}

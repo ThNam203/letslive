@@ -4,6 +4,7 @@ import (
 	"context"
 	cryptorand "crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -68,6 +69,38 @@ func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.
 	}
 
 	http.Redirect(w, r, GetRedirectURLOnSuccess("/"), http.StatusMovedPermanently)
+}
+
+// OAuthGoogleMobileHandler handles Google sign-in from mobile clients.
+// Mobile sends a Google ID token obtained via the native google_sign_in SDK.
+func (h *AuthHandler) OAuthGoogleMobileHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	var body struct {
+		IDToken string `json:"idToken"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.IDToken == "" {
+		writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INVALID_PAYLOAD, nil, nil, nil,
+		))
+		return
+	}
+
+	createdAuth, authErr := h.googleAuthService.VerifyIDTokenAndGetUser(ctx, body.IDToken)
+	if authErr != nil {
+		writeResponse(w, ctx, authErr)
+		return
+	}
+
+	if err := h.setAuthJWTsInCookie(ctx, createdAuth.UserId.String(), w); err != nil {
+		writeResponse(w, ctx, err)
+		return
+	}
+
+	writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate[any](
+		serviceresponse.RES_SUCC_LOGIN, nil, nil, nil,
+	))
 }
 
 func generateOAuthCookieState(w http.ResponseWriter) (string, error) {

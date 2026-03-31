@@ -4,7 +4,7 @@ import (
 	"context"
 	"sen1or/letslive/livestream/domains"
 	"sen1or/letslive/livestream/dto"
-	"sen1or/letslive/livestream/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	response "sen1or/letslive/livestream/response"
 	"sen1or/letslive/livestream/utils"
 	"time"
@@ -12,7 +12,7 @@ import (
 
 func (s *LivestreamService) Create(ctx context.Context, data dto.CreateLivestreamRequestDTO) (*domains.Livestream, *response.Response[any]) {
 	if err := utils.Validator.Struct(&data); err != nil {
-		logger.Debugf(ctx, "validate failed for livestream data: %s", err.Error())
+		logger.Debugf(ctx, "create livestream validation failed: %s", err.Error())
 		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil)
 	}
 

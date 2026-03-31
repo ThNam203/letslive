@@ -3,10 +3,10 @@ import { MongoMemoryServer } from 'mongodb-memory-server'
 import mongoose from 'mongoose'
 import Redis from 'ioredis-mock'
 import { Message } from '../models/Message'
-import { ChatMessage, ChatMessageType } from '../types/chat_message'
+import { ChatMessage, ChatMessageType } from '../types/chat-message'
 import { ChatServer } from '../chatServer'
 import { RedisService } from '../services/redis'
-import { ChatEvent } from '../types/chat_event'
+import { ChatEvent } from '../types/chat-event'
 
 describe('test join and leave events', () => {
     const serverPort = 8080

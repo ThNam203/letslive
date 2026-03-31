@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"sen1or/letslive/user/dto"
 	"sen1or/letslive/user/handlers/utils"
-	"sen1or/letslive/user/pkg/logger"
-	"sen1or/letslive/user/pkg/tracer"
+	"sen1or/letslive/shared/pkg/logger"
+	"sen1or/letslive/shared/pkg/tracer"
 	"sen1or/letslive/user/response"
 
 	"github.com/gofrs/uuid/v5"

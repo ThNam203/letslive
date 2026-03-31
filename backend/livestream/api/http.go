@@ -7,12 +7,12 @@ import (
 	"sen1or/letslive/livestream/config"
 	"sen1or/letslive/livestream/handlers/general"
 	"sen1or/letslive/livestream/handlers/livestream"
-	"sen1or/letslive/livestream/handlers/vod"
-	"sen1or/letslive/livestream/middlewares"
-	"sen1or/letslive/livestream/pkg/logger"
+	"sen1or/letslive/shared/middlewares"
+	"sen1or/letslive/shared/pkg/logger"
 
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
@@ -24,45 +24,34 @@ type APIServer struct {
 
 	generalHandler    *general.GeneralHandler
 	livestreamHandler *livestream.LivestreamHandler
-	vodHandler        *vod.VODHandler
 }
 
-func NewAPIServer(livestreamHandler *livestream.LivestreamHandler, vodHandler *vod.VODHandler, cfg *config.Config) *APIServer {
+func NewAPIServer(livestreamHandler *livestream.LivestreamHandler, cfg *config.Config, db *pgxpool.Pool) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
 
-		generalHandler:    general.NewGeneralHandler(),
+		generalHandler:    general.NewGeneralHandler(db),
 		livestreamHandler: livestreamHandler,
-		vodHandler:        vodHandler,
 	}
 }
 
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
-	wrapHandleFuncWithOtel := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
-		handler := otelhttp.WithRouteTag(pattern, http.HandlerFunc(handlerFunc))
-		sm.Handle(pattern, handler)
+	wrap := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
+		sm.Handle(pattern, http.HandlerFunc(handlerFunc))
 	}
 
-	//TODO: change to query livestreams
-	wrapHandleFuncWithOtel("GET /v1/vods", a.vodHandler.GetVODsOfUserPublicHandler)
-	wrapHandleFuncWithOtel("GET /v1/vods/author", a.vodHandler.GetVODsOfAuthorPrivateHandler)
-	wrapHandleFuncWithOtel("GET /v1/vods/{vodId}", a.vodHandler.GetVODByIdPublicHandler)
-	wrapHandleFuncWithOtel("GET /v1/popular-livestreams", a.livestreamHandler.GetRecommendedLivestreamsPublicHandler)
-	wrapHandleFuncWithOtel("GET /v1/livestreams", a.livestreamHandler.GetLivestreamOfUserPublicHandler)
-	wrapHandleFuncWithOtel("GET /v1/popular-vods", a.vodHandler.GetRecommendedVODsPublicHandler)
+	wrap("GET /v1/popular-livestreams", a.livestreamHandler.GetRecommendedLivestreamsPublicHandler)
+	wrap("GET /v1/livestreams", a.livestreamHandler.GetLivestreamOfUserPublicHandler)
 
-	wrapHandleFuncWithOtel("PATCH /v1/vods/{vodId}", a.vodHandler.UpdateVODMetadataPrivateHandler)
-	wrapHandleFuncWithOtel("DELETE /v1/vods/{vodId}", a.vodHandler.DeleteVODPrivateHandler)
+	wrap("POST /v1/internal/livestreams/{livestreamId}/end", a.livestreamHandler.EndLivestreamAndCreateVODInternalHandler)
+	wrap("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)
 
-	wrapHandleFuncWithOtel("POST /v1/internal/livestreams/{livestreamId}/end", a.livestreamHandler.EndLivestreamAndCreateVODInternalHandler)
-	wrapHandleFuncWithOtel("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)
+	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)
 
-	wrapHandleFuncWithOtel("GET /v1/health", a.generalHandler.RouteServiceHealth)
-
-	wrapHandleFuncWithOtel("GET /", a.generalHandler.RouteNotFoundHandler)
+	wrap("GET /", a.generalHandler.RouteNotFoundHandler)
 
 	// TODO: remove filter
 	finalHandler := otelhttp.NewHandler(sm, "/", otelhttp.WithFilter(func(r *http.Request) bool {
@@ -83,8 +72,8 @@ func (a *APIServer) ListenAndServe(ctx context.Context, useTLS bool) error { // 
 	a.httpServer = &http.Server{
 		Addr:         addr,
 		Handler:      a.getHandler(),
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
 	}
 
 	// start the server (this will block)

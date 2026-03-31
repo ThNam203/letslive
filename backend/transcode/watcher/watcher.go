@@ -3,7 +3,7 @@ package watcher
 import (
 	"context"
 	"path/filepath"
-	"sen1or/letslive/transcode/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	"strings"
 	"time"
 	"unicode/utf8"
