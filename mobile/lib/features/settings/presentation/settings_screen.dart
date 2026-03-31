@@ -65,6 +65,19 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ],
           ),
+          if (user != null)
+            _SettingsSection(
+              title: l10n.walletTitle,
+              children: [
+                FTile(
+                  prefix: const Icon(FIcons.wallet),
+                  title: Text(l10n.walletTitle),
+                  subtitle: Text(l10n.walletDescription),
+                  suffix: const Icon(FIcons.chevronRight),
+                  onPress: () => context.push(AppRoutes.wallet),
+                ),
+              ],
+            ),
           _SettingsSection(
             title: l10n.settingsThemesTitle,
             children: [

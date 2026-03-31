@@ -106,6 +106,17 @@ abstract final class ApiCode {
   static const resErrVodCommentNotLiked = 40012;
   static const resErrVodCommentDeleteFailed = 40013;
 
+  // Finance (600xx)
+  static const resErrAccountNotFound = 60000;
+  static const resErrAccountFrozen = 60001;
+  static const resErrInsufficientBalance = 60002;
+  static const resErrInvalidAmount = 60003;
+  static const resErrTransactionFailed = 60004;
+  static const resErrPaymentFailed = 60005;
+  static const resErrPaymentNotFound = 60006;
+  static const resErrUnsupportedCurrency = 60007;
+  static const resErrDepositLimitExceeded = 60008;
+
   // DM / Conversations (500xx)
   static const resErrRoomNotFound = 50018;
   static const resErrConversationNotFound = 50019;

@@ -19,6 +19,9 @@ import '../../features/livestream/presentation/livestream_screen.dart';
 import '../../features/messages/presentation/conversation_screen.dart';
 import '../../features/vod/presentation/upload_vod_screen.dart';
 import '../../features/vod/presentation/vod_player_screen.dart';
+import '../../features/wallet/presentation/wallet_screen.dart';
+import '../../features/wallet/presentation/wallet_transactions_screen.dart';
+import '../../features/wallet/presentation/wallet_deposit_screen.dart';
 import '../../providers.dart';
 
 abstract final class AppRoutes {
@@ -38,6 +41,9 @@ abstract final class AppRoutes {
   static String vodPlayer(String vodId) => '/vods/$vodId/watch';
   static String conversation(String id) => '/conversations/$id';
   static const uploadVod = '/upload-vod';
+  static const wallet = '/wallet';
+  static const walletTransactions = '/wallet/transactions';
+  static const walletDeposit = '/wallet/deposit';
 }
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -119,6 +125,23 @@ final appRouter = GoRouter(
       path: AppRoutes.uploadVod,
       redirect: _requireAuth,
       builder: (context, state) => const UploadVodScreen(),
+    ),
+
+    // Wallet screens (outside shell for full-screen view)
+    GoRoute(
+      path: AppRoutes.wallet,
+      redirect: _requireAuth,
+      builder: (context, state) => const WalletScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.walletTransactions,
+      redirect: _requireAuth,
+      builder: (context, state) => const WalletTransactionsScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.walletDeposit,
+      redirect: _requireAuth,
+      builder: (context, state) => const WalletDepositScreen(),
     ),
 
     // Search (outside shell for full-screen view)

@@ -1945,6 +1945,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Added to upload queue'**
   String get uploadManagerQueued;
+
+  /// No description provided for @walletTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get walletTitle;
+
+  /// No description provided for @walletDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'View your balances and transactions'**
+  String get walletDescription;
+
+  /// No description provided for @walletDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit'**
+  String get walletDeposit;
+
+  /// No description provided for @walletCurrencySpark.
+  ///
+  /// In en, this message translates to:
+  /// **'Spark'**
+  String get walletCurrencySpark;
+
+  /// No description provided for @walletCurrencySparkDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard currency for tips and purchases'**
+  String get walletCurrencySparkDescription;
+
+  /// No description provided for @walletCurrencyFlare.
+  ///
+  /// In en, this message translates to:
+  /// **'Flare'**
+  String get walletCurrencyFlare;
+
+  /// No description provided for @walletCurrencyFlareDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium currency with exclusive benefits'**
+  String get walletCurrencyFlareDescription;
+
+  /// No description provided for @walletRecentTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Transactions'**
+  String get walletRecentTransactions;
+
+  /// No description provided for @walletViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get walletViewAll;
+
+  /// No description provided for @walletNoTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions yet'**
+  String get walletNoTransactions;
+
+  /// No description provided for @walletTransactionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction History'**
+  String get walletTransactionsTitle;
+
+  /// No description provided for @walletLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get walletLoadMore;
+
+  /// No description provided for @walletTxnReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward'**
+  String get walletTxnReward;
+
+  /// No description provided for @walletTxnPurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase'**
+  String get walletTxnPurchase;
+
+  /// No description provided for @walletTxnTrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Trade'**
+  String get walletTxnTrade;
+
+  /// No description provided for @walletTxnDonate.
+  ///
+  /// In en, this message translates to:
+  /// **'Donation'**
+  String get walletTxnDonate;
+
+  /// No description provided for @walletTxnRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get walletTxnRefund;
+
+  /// No description provided for @walletTxnFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Fee'**
+  String get walletTxnFee;
+
+  /// No description provided for @walletTxnAdjustment.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustment'**
+  String get walletTxnAdjustment;
+
+  /// No description provided for @walletStatusCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get walletStatusCreated;
+
+  /// No description provided for @walletStatusProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing'**
+  String get walletStatusProcessing;
+
+  /// No description provided for @walletStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get walletStatusCompleted;
+
+  /// No description provided for @walletStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get walletStatusFailed;
+
+  /// No description provided for @walletStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get walletStatusCancelled;
+
+  /// No description provided for @walletDepositTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit Funds'**
+  String get walletDepositTitle;
+
+  /// No description provided for @walletDepositSelectCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Currency'**
+  String get walletDepositSelectCurrency;
+
+  /// No description provided for @walletDepositAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get walletDepositAmount;
+
+  /// No description provided for @walletDepositAmountPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter amount'**
+  String get walletDepositAmountPlaceholder;
+
+  /// No description provided for @walletDepositSelectProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Method'**
+  String get walletDepositSelectProvider;
+
+  /// No description provided for @walletDepositProviderStripe.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit / Debit Card'**
+  String get walletDepositProviderStripe;
+
+  /// No description provided for @walletDepositProviderPaypal.
+  ///
+  /// In en, this message translates to:
+  /// **'PayPal'**
+  String get walletDepositProviderPaypal;
+
+  /// No description provided for @walletDepositConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Proceed to Payment'**
+  String get walletDepositConfirm;
+
+  /// No description provided for @walletDepositErrorInvalidAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid amount'**
+  String get walletDepositErrorInvalidAmount;
+
+  /// No description provided for @walletDepositErrorMinAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount must be at least 1'**
+  String get walletDepositErrorMinAmount;
+
+  /// No description provided for @walletPaymentPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get walletPaymentPending;
+
+  /// No description provided for @walletPaymentCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get walletPaymentCompleted;
+
+  /// No description provided for @walletPaymentFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get walletPaymentFailed;
+
+  /// No description provided for @apiResErrAccountNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet account not found.'**
+  String get apiResErrAccountNotFound;
+
+  /// No description provided for @apiResErrAccountFrozen.
+  ///
+  /// In en, this message translates to:
+  /// **'Your wallet account is currently frozen.'**
+  String get apiResErrAccountFrozen;
+
+  /// No description provided for @apiResErrInsufficientBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Insufficient balance.'**
+  String get apiResErrInsufficientBalance;
+
+  /// No description provided for @apiResErrInvalidAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid amount.'**
+  String get apiResErrInvalidAmount;
+
+  /// No description provided for @apiResErrTransactionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction failed, please try again.'**
+  String get apiResErrTransactionFailed;
+
+  /// No description provided for @apiResErrPaymentFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment failed, please try again.'**
+  String get apiResErrPaymentFailed;
+
+  /// No description provided for @apiResErrPaymentNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment not found.'**
+  String get apiResErrPaymentNotFound;
+
+  /// No description provided for @apiResErrUnsupportedCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported currency.'**
+  String get apiResErrUnsupportedCurrency;
+
+  /// No description provided for @apiResErrDepositLimitExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit limit exceeded.'**
+  String get apiResErrDepositLimitExceeded;
 }
 
 class _AppLocalizationsDelegate

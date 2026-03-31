@@ -1,0 +1,85 @@
+{
+    "page_title": "Wallet",
+    "need_to_login": "You need to log in to view your wallet",
+    "navigation": {
+        "overview": "Overview",
+        "transactions": "Transactions",
+        "deposit": "Deposit"
+    },
+    "overview": {
+        "title": "Your Balances",
+        "description": "View your current wallet balances",
+        "total_balance": "Total Balance",
+        "recent_transactions": "Recent Transactions",
+        "view_all": "View all transactions",
+        "no_transactions": "No transactions yet",
+        "deposit_funds": "Deposit Funds"
+    },
+    "currency": {
+        "spark": "Spark",
+        "spark_description": "Standard currency for tips and purchases",
+        "flare": "Flare",
+        "flare_description": "Premium currency with exclusive benefits"
+    },
+    "transactions": {
+        "title": "Transaction History",
+        "description": "View all your past transactions",
+        "no_transactions": "No transactions found",
+        "no_transactions_description": "Your transaction history will appear here once you make your first transaction.",
+        "load_more": "Load more",
+        "type": {
+            "reward": "Reward",
+            "purchase": "Purchase",
+            "trade": "Trade",
+            "donate": "Donation",
+            "refund": "Refund",
+            "fee": "Fee",
+            "adjustment": "Adjustment"
+        },
+        "status": {
+            "created": "Created",
+            "processing": "Processing",
+            "completed": "Completed",
+            "failed": "Failed",
+            "cancelled": "Cancelled"
+        },
+        "filter_all": "All",
+        "details": "Details"
+    },
+    "deposit": {
+        "title": "Deposit Funds",
+        "description": "Add funds to your wallet using a payment provider",
+        "select_currency": "Select Currency",
+        "select_provider": "Payment Method",
+        "amount": "Amount",
+        "amount_placeholder": "Enter amount",
+        "min_amount": "Minimum deposit: {{amount}}",
+        "max_amount": "Maximum deposit: {{amount}}",
+        "provider": {
+            "stripe": "Credit / Debit Card",
+            "stripe_description": "Pay securely with Stripe",
+            "paypal": "PayPal",
+            "paypal_description": "Pay with your PayPal account"
+        },
+        "summary": "Summary",
+        "you_pay": "You pay",
+        "you_receive": "You receive",
+        "fee": "Processing fee",
+        "confirm": "Proceed to Payment",
+        "confirming": "Redirecting...",
+        "success": "Deposit initiated! You will be redirected to complete payment.",
+        "error_invalid_amount": "Please enter a valid amount",
+        "error_min_amount": "Amount must be at least {{amount}}",
+        "error_max_amount": "Amount cannot exceed {{amount}}"
+    },
+    "payments": {
+        "title": "Payment History",
+        "status": {
+            "pending": "Pending",
+            "processing": "Processing",
+            "completed": "Completed",
+            "failed": "Failed",
+            "cancelled": "Cancelled"
+        }
+    }
+}

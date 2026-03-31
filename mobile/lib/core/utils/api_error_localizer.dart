@@ -50,6 +50,16 @@ final Map<String, String Function(AppLocalizations)> _apiKeyMap = {
   'res_err_vod_comment_already_liked': (l) => l.apiResErrVodCommentAlreadyLiked,
   'res_err_vod_comment_not_liked': (l) => l.apiResErrVodCommentNotLiked,
   'res_err_vod_comment_delete_failed': (l) => l.apiResErrVodCommentDeleteFailed,
+  // Finance errors
+  'res_err_account_not_found': (l) => l.apiResErrAccountNotFound,
+  'res_err_account_frozen': (l) => l.apiResErrAccountFrozen,
+  'res_err_insufficient_balance': (l) => l.apiResErrInsufficientBalance,
+  'res_err_invalid_amount': (l) => l.apiResErrInvalidAmount,
+  'res_err_transaction_failed': (l) => l.apiResErrTransactionFailed,
+  'res_err_payment_failed': (l) => l.apiResErrPaymentFailed,
+  'res_err_payment_not_found': (l) => l.apiResErrPaymentNotFound,
+  'res_err_unsupported_currency': (l) => l.apiResErrUnsupportedCurrency,
+  'res_err_deposit_limit_exceeded': (l) => l.apiResErrDepositLimitExceeded,
   // Success keys
   'res_succ_sent_verification_email': (l) => l.apiResSuccSentVerificationEmail,
   'res_succ_ok': (l) => l.apiResSuccOk,

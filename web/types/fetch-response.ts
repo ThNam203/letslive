@@ -64,6 +64,17 @@ export enum ApiCode {
     RES_ERR_VOD_COMMENT_NOT_LIKED = 40012,
     RES_ERR_VOD_COMMENT_DELETE_FAILED = 40013,
 
+    // Finance (600xx)
+    RES_ERR_ACCOUNT_NOT_FOUND = 60000,
+    RES_ERR_ACCOUNT_FROZEN = 60001,
+    RES_ERR_INSUFFICIENT_BALANCE = 60002,
+    RES_ERR_INVALID_AMOUNT = 60003,
+    RES_ERR_TRANSACTION_FAILED = 60004,
+    RES_ERR_PAYMENT_FAILED = 60005,
+    RES_ERR_PAYMENT_NOT_FOUND = 60006,
+    RES_ERR_UNSUPPORTED_CURRENCY = 60007,
+    RES_ERR_DEPOSIT_LIMIT_EXCEEDED = 60008,
+
     // DM / Conversations (500xx)
     RES_ERR_ROOM_NOT_FOUND = 50018,
     RES_ERR_CONVERSATION_NOT_FOUND = 50019,
@@ -115,4 +126,15 @@ export enum ApiKey {
     RES_ERR_VOD_COMMENT_ALREADY_LIKED = "res_err_vod_comment_already_liked",
     RES_ERR_VOD_COMMENT_NOT_LIKED = "res_err_vod_comment_not_liked",
     RES_ERR_VOD_COMMENT_DELETE_FAILED = "res_err_vod_comment_delete_failed",
+
+    // Finance
+    RES_ERR_ACCOUNT_NOT_FOUND = "res_err_account_not_found",
+    RES_ERR_ACCOUNT_FROZEN = "res_err_account_frozen",
+    RES_ERR_INSUFFICIENT_BALANCE = "res_err_insufficient_balance",
+    RES_ERR_INVALID_AMOUNT = "res_err_invalid_amount",
+    RES_ERR_TRANSACTION_FAILED = "res_err_transaction_failed",
+    RES_ERR_PAYMENT_FAILED = "res_err_payment_failed",
+    RES_ERR_PAYMENT_NOT_FOUND = "res_err_payment_not_found",
+    RES_ERR_UNSUPPORTED_CURRENCY = "res_err_unsupported_currency",
+    RES_ERR_DEPOSIT_LIMIT_EXCEEDED = "res_err_deposit_limit_exceeded",
 }
