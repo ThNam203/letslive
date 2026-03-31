@@ -1,0 +1,22 @@
+{
+    "title": "Comments",
+    "write_comment": "Write a comment...",
+    "write_reply": "Write a reply...",
+    "post": "Post",
+    "reply": "Reply",
+    "delete": "Delete",
+    "deleted_comment": "This comment has been deleted.",
+    "view_replies": "View {{count}} replies",
+    "view_replies_one": "View {{count}} reply",
+    "view_replies_other": "View {{count}} replies",
+    "load_more_replies": "Load more replies",
+    "no_comments": "No comments yet. Be the first to comment!",
+    "login_to_comment": "Log in to leave a comment.",
+    "owner": "Owner",
+    "you": "You",
+    "delete_confirm_title": "Delete comment?",
+    "delete_confirm_description": "This action cannot be undone.",
+    "like": "Like",
+    "unlike": "Unlike",
+    "char_remaining": "{{count}} characters remaining"
+}

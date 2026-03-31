@@ -1,0 +1,64 @@
+"use client";
+
+import { ClassValue } from "clsx";
+import Link from "next/link";
+import { cn } from "@/utils/cn";
+import LiveImage from "./live-image";
+
+const Hover3DBox = ({
+    className,
+    imageSrc,
+    fallbackSrc,
+    showStream = false,
+    onClick,
+}: {
+    className?: ClassValue;
+    imageSrc: string;
+    fallbackSrc?: string;
+    showStream?: boolean;
+    onClick?: () => void;
+}) => {
+    return (
+        <div
+            className={cn(
+                "group bg-primary relative z-0 aspect-video w-full",
+                className,
+            )}
+            onClick={onClick}
+        >
+            <div className="bg-primary absolute top-0 left-0 h-full w-2 skew-y-[0deg] duration-100 ease-linear group-hover:top-[-0.25rem] group-hover:skew-y-[-45deg]"></div>
+            <div className="bg-primary absolute right-0 bottom-0 h-2 w-full skew-x-[0deg] duration-100 ease-linear group-hover:right-[-0.25rem] group-hover:skew-x-[-45deg]"></div>
+            <LiveImage
+                width={500}
+                height={500}
+                src={imageSrc}
+                alt="Livestream preview image"
+                className="absolute top-0 left-0 z-10 aspect-video w-full cursor-pointer duration-100 ease-linear group-hover:translate-x-2 group-hover:-translate-y-2"
+                fallbackSrc={fallbackSrc || "/images/streaming.jpg"}
+                refreshInterval={30000}
+                alwaysRefresh={true}
+            />
+            <span
+                className={cn(
+                    "absolute top-2 left-2 z-20 rounded bg-red-600 p-1 text-white duration-100 ease-linear group-hover:translate-x-2 group-hover:-translate-y-2",
+                    showStream ? "" : "hidden",
+                )}
+            >
+                LIVE
+            </span>
+        </div>
+    );
+};
+
+const CustomLink = ({ content, href }: { content: string; href: string }) => {
+    return (
+        <Link
+            href={href}
+            className="text-primary underline-offset-2 opacity-100 hover:underline hover:opacity-90"
+        >
+            {content}
+        </Link>
+    );
+};
+
+export { CustomLink, Hover3DBox };

@@ -1,7 +1,7 @@
 services:
-  ui:
-    image: sen1or/letslive-ui:latest
-    container_name: letslive_ui
+  web:
+    image: sen1or/letslive-web:latest
+    container_name: letslive_web
     network_mode: "host"
     ports:
       - "5000:5000"
@@ -74,6 +74,10 @@ services:
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    volumes:
+      # HLS paths: publicHLSPath and privateHLSPath in config server (transcode-{profile}.yml)
+      - transcode_hls_public:/var/lib/transcode/hls/public
+      - transcode_hls_private:/var/lib/transcode/hls/private
     networks:
       general_network:
     depends_on:
@@ -94,6 +98,28 @@ services:
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
       - LIVESTREAM_DB_USER=${LIVESTREAM_DB_USER}
       - LIVESTREAM_DB_PASSWORD=${LIVESTREAM_DB_PASSWORD}
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+
+  vod:
+    image: sen1or/letslive-vod:latest
+    container_name: letslive-vod
+    restart: always
+    ports:
+      - "7782:7782"
+    expose:
+      - "7782"
+    environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
+      - VOD_DB_USER=${VOD_DB_USER}
+      - VOD_DB_PASSWORD=${VOD_DB_PASSWORD}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     networks:
       general_network:
     depends_on:
@@ -212,7 +238,11 @@ services:
     networks:
       general_network:
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
   grafana:
     image: grafana/grafana:latest
@@ -293,7 +323,7 @@ services:
         ipv4_address: 172.29.1.6
 
   consul:
-    image: hashicorp/consul:latest
+    image: hashicorp/consul:1.22.3
     container_name: letslive-consul
     ports:
       - "8500:8500" # Consul UI and API
@@ -399,3 +429,5 @@ volumes:
   consul_data:
   grafana_data:
   grafana_provisioning:
+  transcode_hls_public:
+  transcode_hls_private:

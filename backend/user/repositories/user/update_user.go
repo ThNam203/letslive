@@ -5,7 +5,7 @@ import (
 	"errors"
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/dto"
-	"sen1or/letslive/user/pkg/logger"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/user/response"
 
 	"github.com/jackc/pgx/v5"

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/handlers/utils"
-	"sen1or/letslive/user/pkg/tracer"
+	"sen1or/letslive/shared/pkg/tracer"
 	"sen1or/letslive/user/response"
 )
 
@@ -51,6 +51,17 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 
 	title := r.FormValue("title")
 	description := r.FormValue("description")
+
+	if len(title) > 50 || len(description) > 500 {
+		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
+			response.RES_ERR_INVALID_INPUT,
+			nil,
+			nil,
+			nil,
+		))
+		return
+	}
+
 	var thumbnailUrl string
 
 	file, fileHeader, formErr := r.FormFile("thumbnail")

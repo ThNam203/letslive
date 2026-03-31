@@ -35,9 +35,29 @@ export class ChatServer {
         }
 
         ws.on('message', async (rawMessage) => {
+            const raw = rawMessage.toString()
+            if (raw.length > 4096) {
+                logger.error('webSocket message too large, dropping')
+                return
+            }
+
             let data: ChatMessage
             try {
-                data = JSON.parse(rawMessage.toString())
+                data = JSON.parse(raw)
+
+                if (
+                    typeof data.roomId !== 'string' ||
+                    data.roomId.length > 36 ||
+                    typeof data.userId !== 'string' ||
+                    data.userId.length > 36 ||
+                    typeof data.username !== 'string' ||
+                    data.username.length > 50 ||
+                    (data.text !== undefined && (typeof data.text !== 'string' || data.text.length > 500))
+                ) {
+                    logger.error('webSocket message fields exceed length limits, dropping')
+                    return
+                }
+
                 userInfo = {
                     currentRoom: data.roomId,
                     id: data.userId,
@@ -110,7 +130,10 @@ export class ChatServer {
             userInfo.currentRoom !== data.roomId ||
             !this.redisService.checkIfUserInRoom(data.userId, userInfo.currentRoom)
         ) {
-            logger.error({ userId: data.userId, roomId: data.roomId, currentRoom: userInfo.currentRoom }, 'invalid leave request: user not in room')
+            logger.error(
+                { userId: data.userId, roomId: data.roomId, currentRoom: userInfo.currentRoom },
+                'invalid leave request: user not in room'
+            )
             return
         }
 
@@ -126,7 +149,10 @@ export class ChatServer {
             userInfo.currentRoom !== data.roomId ||
             !this.redisService.checkIfUserInRoom(data.userId, userInfo.currentRoom)
         ) {
-            logger.error({ userId: data.userId, roomId: data.roomId, currentRoom: userInfo.currentRoom }, 'invalid message request: user not in room')
+            logger.error(
+                { userId: data.userId, roomId: data.roomId, currentRoom: userInfo.currentRoom },
+                'invalid message request: user not in room'
+            )
             return
         }
 

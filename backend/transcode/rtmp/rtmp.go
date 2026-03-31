@@ -13,8 +13,8 @@ import (
 	livestreamdto "sen1or/letslive/transcode/gateway/livestream/dto"
 	livestreamgateway "sen1or/letslive/transcode/gateway/livestream/http"
 	usergateway "sen1or/letslive/transcode/gateway/user/http"
-	"sen1or/letslive/transcode/pkg/discovery"
-	"sen1or/letslive/transcode/pkg/logger"
+	"sen1or/letslive/shared/pkg/discovery"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/transcode/transcoder"
 	"sen1or/letslive/transcode/watcher"
 	"strconv"
@@ -133,10 +133,11 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 		startTime = time.Now()
 	}
 
+	// TODO: check if ctx should be from the connection or from the server
 	transcoder := transcoder.NewTranscoder(pipeOut, s.config.Transcode, startTimer)
-	defer transcoder.Stop()
+	defer transcoder.Stop(s.ctx)
 	go func() {
-		transcoder.Start(streamId)
+		transcoder.Start(s.ctx, streamId)
 	}()
 
 	w := flv.NewMuxer(pipeIn)
@@ -144,7 +145,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	for {
 		pkt, err := c.ReadPacket()
 		if err == io.EOF {
-			duration := int64(math.Ceil(time.Now().Sub(startTime).Seconds()) - 7) // TODO: proper duration calculation
+			duration := int64(math.Ceil(time.Since(startTime).Seconds()) - 7) // TODO: proper duration calculation
 			pipeOut.Close()
 			pipeIn.Close()
 			s.onDisconnect(streamId, duration)
@@ -153,7 +154,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 
 		if err := w.WritePacket(pkt); err != nil {
 			logger.Errorf(s.ctx, "failed to write rtmp package: %s", err)
-			duration := int64(math.Ceil(time.Now().Sub(startTime).Seconds()) - 7)
+			duration := int64(math.Ceil(time.Since(startTime).Seconds()) - 7)
 			pipeIn.Close()
 			pipeOut.Close()
 			s.onDisconnect(streamId, duration)
@@ -174,11 +175,17 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 		return "", "", fmt.Errorf("failed to get user information: %s", errRes.Message)
 	}
 
+	thumb := userInfo.Data.LivestreamInformationResponseDTO.ThumbnailURL
+	// empty string is invalid
+	if thumb != nil && *thumb == "" {
+		thumb = nil
+	}
+
 	streamDTO := &livestreamdto.CreateLivestreamRequestDTO{
 		Title:        userInfo.Data.LivestreamInformationResponseDTO.Title,
 		UserId:       userInfo.Data.Id,
 		Description:  userInfo.Data.LivestreamInformationResponseDTO.Description,
-		ThumbnailURL: userInfo.Data.LivestreamInformationResponseDTO.ThumbnailURL,
+		ThumbnailURL: thumb,
 		Visibility:   "public", // TODO: add to livestream information instead of default to public
 	}
 

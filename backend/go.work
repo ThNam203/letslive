@@ -1,0 +1,12 @@
+go 1.26.0
+
+use (
+	./shared
+	./auth
+	./user
+	./livestream
+	./vod
+	./transcode
+)
+
+replace sen1or/letslive/shared v0.0.0 => ./shared

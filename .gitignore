@@ -1,6 +1,9 @@
 .env
 prod.env
 
+# macOS
+.DS_Store
+
 # ignore generated ffmpeg files
 backend/transcode/public
 backend/transcode/private

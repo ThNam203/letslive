@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"sen1or/letslive/auth/config"
-	"sen1or/letslive/auth/pkg/discovery"
-	"sen1or/letslive/auth/pkg/logger"
+	"sen1or/letslive/shared/pkg/discovery"
+	"sen1or/letslive/shared/pkg/logger"
 
 	"sen1or/letslive/auth/handlers"
-	"sen1or/letslive/auth/middlewares"
+	"sen1or/letslive/shared/middlewares"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
@@ -29,36 +30,37 @@ func NewAPIServer(
 	authHandler *handlers.AuthHandler,
 	registry discovery.Registry,
 	cfg *config.Config,
+	db *pgxpool.Pool,
 ) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
 
 		authHandler:    authHandler,
-		generalHandler: handlers.NewGeneralHandler(),
+		generalHandler: handlers.NewGeneralHandler(db),
 	}
 }
 
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
-	wrapHandleFuncWithOtel := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
-		handler := otelhttp.WithRouteTag(pattern, http.HandlerFunc(handlerFunc))
-		sm.Handle(pattern, handler)
+	wrap := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
+		sm.Handle(pattern, http.HandlerFunc(handlerFunc))
 	}
 
-	wrapHandleFuncWithOtel("POST /v1/auth/signup", a.authHandler.VerifyOTPAndSignUpHandler)
-	wrapHandleFuncWithOtel("POST /v1/auth/login", a.authHandler.LogInHandler)
-	wrapHandleFuncWithOtel("POST /v1/auth/refresh-token", a.authHandler.RefreshTokenHandler)
-	wrapHandleFuncWithOtel("PATCH /v1/auth/password", a.authHandler.UpdatePasswordHandler)
-	wrapHandleFuncWithOtel("DELETE /v1/auth/logout", a.authHandler.LogOutHandler)
-	wrapHandleFuncWithOtel("POST /v1/auth/verify-email", a.authHandler.RequestEmailVerificationHandler)
+	wrap("POST /v1/auth/signup", a.authHandler.VerifyOTPAndSignUpHandler)
+	wrap("POST /v1/auth/login", a.authHandler.LogInHandler)
+	wrap("POST /v1/auth/refresh-token", a.authHandler.RefreshTokenHandler)
+	wrap("PATCH /v1/auth/password", a.authHandler.UpdatePasswordHandler)
+	wrap("DELETE /v1/auth/logout", a.authHandler.LogOutHandler)
+	wrap("POST /v1/auth/verify-email", a.authHandler.RequestEmailVerificationHandler)
 
-	wrapHandleFuncWithOtel("GET /v1/auth/google", a.authHandler.OAuthGoogleLoginHandler)
-	wrapHandleFuncWithOtel("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBackHandler)
+	wrap("GET /v1/auth/google", a.authHandler.OAuthGoogleLoginHandler)
+	wrap("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBackHandler)
+	wrap("POST /v1/auth/google/mobile", a.authHandler.OAuthGoogleMobileHandler)
 
 	sm.HandleFunc("GET /v1/health", a.generalHandler.RouteServiceHealth)
-	wrapHandleFuncWithOtel("GET /", a.generalHandler.RouteNotFoundHandler)
+	wrap("GET /", a.generalHandler.RouteNotFoundHandler)
 
 	//finalHandler := otelhttp.NewHandler(sm, "/")
 	// TODO: remove filter

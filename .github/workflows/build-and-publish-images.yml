@@ -12,31 +12,65 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dockerfile: [
-          { path: './backend/auth', name: 'letslive-auth', context: './backend/auth' },
-          { path: './backend/user', name: 'letslive-user', context: './backend/user' },
-          { path: './backend/finance', name: 'letslive-finance', context: './backend/finance' },
-          { path: './backend/transcode', name: 'letslive-transcode', context: './backend/transcode' },
-          { path: './backend/livestream', name: 'letslive-livestream', context: './backend/livestream' },
-          { path: './backend/configserver', name: 'letslive-configserver', context: './backend/configserver' },
-          { path: './backend/chat', name: 'letslive-chat', context: './backend/chat' },
-        ]
+        dockerfile:
+          [
+            {
+              path: "./backend/auth",
+              name: "letslive-auth",
+              context: "./backend",
+            },
+            {
+              path: "./backend/user",
+              name: "letslive-user",
+              context: "./backend",
+            },
+            {
+              path: "./backend/finance",
+              name: "letslive-finance",
+              context: "./backend",
+            },
+            {
+              path: "./backend/transcode",
+              name: "letslive-transcode",
+              context: "./backend",
+            },
+            {
+              path: "./backend/livestream",
+              name: "letslive-livestream",
+              context: "./backend",
+            },
+            {
+              path: "./backend/configserver",
+              name: "letslive-configserver",
+              context: "./backend/configserver",
+            },
+            {
+              path: "./backend/chat",
+              name: "letslive-chat",
+              context: "./backend/chat",
+            },
+            {
+              path: "./backend/vod",
+              name: "letslive-vod",
+              context: "./backend",
+            },
+          ]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.dockerfile.context }}
           file: ${{ matrix.dockerfile.path }}/Dockerfile
@@ -47,24 +81,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
-          context: ./ui
-          file: ./ui/Dockerfile
+          context: ./web
+          file: ./web/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/letslive-ui:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/letslive-web:latest
           secrets: |
             id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN
           build-args: |

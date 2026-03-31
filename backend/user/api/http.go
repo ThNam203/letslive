@@ -8,12 +8,14 @@ import (
 	"sen1or/letslive/user/handlers/follow"
 	"sen1or/letslive/user/handlers/general"
 	"sen1or/letslive/user/handlers/livestream_information"
+	"sen1or/letslive/user/handlers/notification"
 	"sen1or/letslive/user/handlers/user"
-	"sen1or/letslive/user/middlewares"
-	"sen1or/letslive/user/pkg/logger"
+	"sen1or/letslive/shared/middlewares"
+	"sen1or/letslive/shared/pkg/logger"
 
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
@@ -27,50 +29,60 @@ type APIServer struct {
 	userHandler                  *user.UserHandler
 	followHandler                *follow.FollowHandler
 	livestreamInformationHandler *livestream_information.LivestreamInformationHandler
+	notificationHandler          *notification.NotificationHandler
 }
 
-func NewAPIServer(userHandler *user.UserHandler, livestreamInfoHandler *livestream_information.LivestreamInformationHandler, followHandler *follow.FollowHandler, cfg *config.Config) *APIServer {
+func NewAPIServer(userHandler *user.UserHandler, livestreamInfoHandler *livestream_information.LivestreamInformationHandler, followHandler *follow.FollowHandler, notificationHandler *notification.NotificationHandler, cfg *config.Config, db *pgxpool.Pool) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
 
-		generalHandler:               general.NewGeneralHandler(),
+		generalHandler:               general.NewGeneralHandler(db),
 		userHandler:                  userHandler,
 		followHandler:                followHandler,
 		livestreamInformationHandler: livestreamInfoHandler,
+		notificationHandler:          notificationHandler,
 	}
 }
 
 func (a *APIServer) getHandler() http.Handler {
 	sm := http.NewServeMux()
 
-	wrapHandleFuncWithOtel := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
-		handler := otelhttp.WithRouteTag(pattern, http.HandlerFunc(handlerFunc))
-		sm.Handle(pattern, handler)
+	wrap := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
+		sm.Handle(pattern, http.HandlerFunc(handlerFunc))
 	}
 
-	wrapHandleFuncWithOtel("POST /v1/upload-file", a.userHandler.UploadSingleFileToMinIOHandler) // TODO: find another way to upload file
+	wrap("POST /v1/upload-file", a.userHandler.UploadSingleFileToMinIOHandler) // TODO: find another way to upload file
 
-	wrapHandleFuncWithOtel("GET /v1/users", a.userHandler.GetAllUsersPublicHandler) // TODO: should change into get random users
-	wrapHandleFuncWithOtel("GET /v1/users/search", a.userHandler.SearchUsersPublicHandler)
-	wrapHandleFuncWithOtel("GET /v1/user/{userId}", a.userHandler.GetUserByIdPublicHandler)
+	wrap("GET /v1/users/recommendations", a.userHandler.GetRecommendedChannelsPublicHandler)
+	wrap("GET /v1/users/search", a.userHandler.SearchUsersPublicHandler)
+	wrap("GET /v1/user/me/following", a.userHandler.GetFollowingChannelsPrivateHandler)
+	wrap("GET /v1/user/{userId}", a.userHandler.GetUserByIdPublicHandler)
 
-	wrapHandleFuncWithOtel("POST /v1/user/{userId}/follow", a.followHandler.FollowPrivateHandler)
-	wrapHandleFuncWithOtel("DELETE /v1/user/{userId}/unfollow", a.followHandler.UnfollowPrivateHandler)
-	wrapHandleFuncWithOtel("GET /v1/user/me", a.userHandler.GetCurrentUserPrivateHandler)
-	wrapHandleFuncWithOtel("PUT /v1/user/me", a.userHandler.UpdateCurrentUserPrivateHandler)
-	wrapHandleFuncWithOtel("PATCH /v1/user/me/livestream-information", a.livestreamInformationHandler.UpdatePrivateHandler)
-	wrapHandleFuncWithOtel("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKeyPrivateHandler)
+	wrap("POST /v1/user/{userId}/follow", a.followHandler.FollowPrivateHandler)
+	wrap("DELETE /v1/user/{userId}/unfollow", a.followHandler.UnfollowPrivateHandler)
+	wrap("GET /v1/user/me", a.userHandler.GetCurrentUserPrivateHandler)
+	wrap("PUT /v1/user/me", a.userHandler.UpdateCurrentUserPrivateHandler)
+	wrap("PATCH /v1/user/me/livestream-information", a.livestreamInformationHandler.UpdatePrivateHandler)
+	wrap("PATCH /v1/user/me/api-key", a.userHandler.GenerateNewAPIStreamKeyPrivateHandler)
 	// TODO: change this to not include the FormData
-	wrapHandleFuncWithOtel("PATCH /v1/user/me/profile-picture", a.userHandler.UpdateUserProfilePicturePrivateHandler)
-	wrapHandleFuncWithOtel("PATCH /v1/user/me/background-picture", a.userHandler.UpdateUserBackgroundPicturePrivateHandler)
+	wrap("PATCH /v1/user/me/profile-picture", a.userHandler.UpdateUserProfilePicturePrivateHandler)
+	wrap("PATCH /v1/user/me/background-picture", a.userHandler.UpdateUserBackgroundPicturePrivateHandler)
 
-	wrapHandleFuncWithOtel("POST /v1/user", a.userHandler.CreateUserInternalHandler)                        // internal
-	wrapHandleFuncWithOtel("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                // internal
-	wrapHandleFuncWithOtel("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler) // internal
+	// notifications
+	wrap("GET /v1/user/me/notifications", a.notificationHandler.GetNotificationsPrivateHandler)
+	wrap("GET /v1/user/me/notifications/unread-count", a.notificationHandler.GetUnreadCountPrivateHandler)
+	wrap("PATCH /v1/user/me/notifications/{notificationId}/read", a.notificationHandler.MarkAsReadPrivateHandler)
+	wrap("PATCH /v1/user/me/notifications/read-all", a.notificationHandler.MarkAllAsReadPrivateHandler)
+	wrap("DELETE /v1/user/me/notifications/{notificationId}", a.notificationHandler.DeleteNotificationPrivateHandler)
+	wrap("POST /v1/notifications", a.notificationHandler.CreateNotificationInternalHandler) // internal
 
-	wrapHandleFuncWithOtel("GET /v1/health", a.generalHandler.RouteServiceHealth)
-	wrapHandleFuncWithOtel("GET /", a.generalHandler.RouteNotFoundHandler)
+	wrap("POST /v1/user", a.userHandler.CreateUserInternalHandler)                        // internal
+	wrap("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                // internal
+	wrap("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler) // internal
+
+	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)
+	wrap("GET /", a.generalHandler.RouteNotFoundHandler)
 
 	// TODO: remove filter
 	finalHandler := otelhttp.NewHandler(sm, "/", otelhttp.WithFilter(func(r *http.Request) bool {

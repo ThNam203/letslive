@@ -1,15 +1,21 @@
 # STAGE 1
-FROM golang:1.25.7 AS builder
+FROM golang:1.26.1 AS builder
 
 WORKDIR /usr/src/app
 
-COPY ./go.mod ./go.sum ./
+COPY shared/go.mod shared/go.sum ./shared/
+COPY transcode/go.mod transcode/go.sum ./transcode/
+RUN go work init ./transcode
+RUN go work edit -replace=sen1or/letslive/shared=./shared
 
+WORKDIR /usr/src/app/transcode
 RUN go mod download
-RUN go mod verify
 
-COPY . .
+WORKDIR /usr/src/app
+COPY shared/ ./shared/
+COPY transcode/ ./transcode/
 
+WORKDIR /usr/src/app/transcode
 RUN CGO_ENABLED=0 go build -ldflags="-w -s" -v -o /app ./cmd/
 
 # STAGE 2

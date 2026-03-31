@@ -29,7 +29,7 @@ components:
         turnstileToken:
           type: string
           description: Cloudflare Turnstile token for bot detection
-    
+
     SignUpVerificationRequest:
       type: object
       required:
@@ -43,7 +43,7 @@ components:
         turnstileToken:
           type: string
           description: Cloudflare Turnstile token for bot detection
-    
+
     SignUpRequest:
       type: object
       required:
@@ -71,7 +71,7 @@ components:
           minLength: 6
           maxLength: 6
           description: 6-digit OTP code sent to email
-    
+
     ChangePasswordRequest:
       type: object
       required:
@@ -88,7 +88,7 @@ components:
           minLength: 8
           maxLength: 72
           example: "123123123"
-    
+
     ErrorResponse:
       type: object
       properties:
@@ -111,7 +111,7 @@ paths:
       summary: Health check endpoint
       description: Returns 200 OK if the service is healthy
       responses:
-        '200':
+        "200":
           description: Service is healthy
 
   /auth/login:
@@ -123,22 +123,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LogInRequest'
+              $ref: "#/components/schemas/LogInRequest"
       responses:
-        '204':
+        "204":
           description: Login successful, JWT tokens set in cookies
-        '400':
+        "400":
           description: Invalid payload
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
           description: Invalid credentials
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /auth/verify-email:
     post:
@@ -149,16 +149,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SignUpVerificationRequest'
+              $ref: "#/components/schemas/SignUpVerificationRequest"
       responses:
-        '204':
+        "204":
           description: Verification email sent successfully
-        '400':
+        "400":
           description: Invalid payload
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /auth/signup:
     post:
@@ -169,22 +169,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SignUpRequest'
+              $ref: "#/components/schemas/SignUpRequest"
       responses:
-        '201':
+        "201":
           description: Account created successfully, JWT tokens set in cookies
-        '400':
+        "400":
           description: Invalid payload or validation error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
           description: Invalid OTP code
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /auth/refresh:
     post:
@@ -193,14 +193,14 @@ paths:
       security:
         - cookieAuth: []
       responses:
-        '204':
+        "204":
           description: New access token generated successfully
-        '401':
+        "401":
           description: Invalid or expired refresh token
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /auth/logout:
     post:
@@ -209,7 +209,7 @@ paths:
       security:
         - cookieAuth: []
       responses:
-        '204':
+        "204":
           description: Logged out successfully
 
   /auth/update-password:
@@ -223,29 +223,29 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ChangePasswordRequest'
+              $ref: "#/components/schemas/ChangePasswordRequest"
       responses:
-        '204':
+        "204":
           description: Password updated successfully
-        '400':
+        "400":
           description: Invalid payload
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /auth/google/login:
     get:
       summary: Google OAuth login
       description: Initiates Google OAuth authentication flow
       responses:
-        '307':
+        "307":
           description: Redirects to Google OAuth consent screen
 
   /auth/google/callback:
@@ -264,11 +264,11 @@ paths:
           schema:
             type: string
       responses:
-        '307':
+        "307":
           description: Redirects to frontend with authentication cookies set
-        '400':
+        "400":
           description: Invalid OAuth parameters
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"

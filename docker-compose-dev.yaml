@@ -1,9 +1,9 @@
 services:
-  # ui:
+  # web:
   #   build:
-  #     context: ./ui
+  #     context: ./web
   #     dockerfile: Dockerfile
-  #   container_name: letslive_ui
+  #   container_name: letslive_web
   #   network_mode: "host"
   #   ports:
   #     - "5000:5000"
@@ -11,8 +11,8 @@ services:
   auth:
     #image: sen1or/letslive-auth:latest
     build:
-      context: ./backend/auth/
-      dockerfile: Dockerfile
+      context: ./backend/
+      dockerfile: auth/Dockerfile
     restart: always
     container_name: letslive-auth
     ports:
@@ -42,8 +42,8 @@ services:
   user:
     #image: sen1or/letslive-user:latest
     build:
-      context: ./backend/user/
-      dockerfile: Dockerfile
+      context: ./backend/
+      dockerfile: user/Dockerfile
     container_name: letslive-user
     restart: always
     ports:
@@ -67,8 +67,8 @@ services:
   transcode:
     #image: sen1or/letslive-transcode:latest
     build:
-      context: ./backend/transcode/
-      dockerfile: Dockerfile
+      context: ./backend/
+      dockerfile: transcode/Dockerfile
     container_name: letslive-transcode
     restart: always
     ports:
@@ -85,6 +85,10 @@ services:
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    volumes:
+      # HLS paths: publicHLSPath and privateHLSPath in config server (transcode-{profile}.yml)
+      - transcode_hls_public:/var/lib/transcode/hls/public
+      - transcode_hls_private:/var/lib/transcode/hls/private
     networks:
       general_network:
     depends_on:
@@ -94,8 +98,8 @@ services:
   livestream:
     #image: sen1or/letslive-livestream:latest
     build:
-      context: ./backend/livestream/
-      dockerfile: Dockerfile
+      context: ./backend/
+      dockerfile: livestream/Dockerfile
     container_name: letslive-livestream
     restart: always
     ports:
@@ -108,6 +112,30 @@ services:
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
       - LIVESTREAM_DB_USER=${LIVESTREAM_DB_USER}
       - LIVESTREAM_DB_PASSWORD=${LIVESTREAM_DB_PASSWORD}
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+
+  vod:
+    build:
+      context: ./backend/
+      dockerfile: vod/Dockerfile
+    container_name: letslive-vod
+    restart: always
+    ports:
+      - "7782:7782"
+    expose:
+      - "7782"
+    environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
+      - VOD_DB_USER=${VOD_DB_USER}
+      - VOD_DB_PASSWORD=${VOD_DB_PASSWORD}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     networks:
       general_network:
     depends_on:
@@ -232,7 +260,11 @@ services:
     networks:
       general_network:
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
   grafana:
     image: grafana/grafana:latest
@@ -261,7 +293,7 @@ services:
       - "3200"
       - "4318"
     ports:
-      - "3200:3200"   # Tempo HTTP endpoint
+      - "3200:3200" # Tempo HTTP endpoint
     networks:
       general_network:
         ipv4_address: 172.29.0.13
@@ -271,8 +303,7 @@ services:
     container_name: letslive-otel-collector
     volumes:
       - ./configs/otel-collector-config.yaml:/etc/otel-collector-config.yaml
-    command:
-      --config /etc/otel-collector-config.yaml
+    command: --config /etc/otel-collector-config.yaml
     expose:
       - "4318"
       - "4317"
@@ -286,7 +317,7 @@ services:
   loki:
     image: grafana/loki:latest
     container_name: letslive-loki
-    expose: 
+    expose:
       - "3100"
     ports:
       - "3100:3100"
@@ -419,6 +450,8 @@ volumes:
   minio_data:
   consul_data:
   grafana_data:
+  transcode_hls_public:
+  transcode_hls_private:
 
 secrets:
   SENTRY_AUTH_TOKEN:

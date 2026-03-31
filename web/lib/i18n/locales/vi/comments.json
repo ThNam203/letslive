@@ -1,0 +1,22 @@
+{
+    "title": "Bình luận",
+    "write_comment": "Viết bình luận...",
+    "write_reply": "Viết trả lời...",
+    "post": "Đăng",
+    "reply": "Trả lời",
+    "delete": "Xóa",
+    "deleted_comment": "Bình luận này đã bị xóa.",
+    "view_replies": "Xem {{count}} trả lời",
+    "view_replies_one": "Xem {{count}} trả lời",
+    "view_replies_other": "Xem {{count}} trả lời",
+    "load_more_replies": "Tải thêm trả lời",
+    "no_comments": "Chưa có bình luận nào. Hãy là người đầu tiên bình luận!",
+    "login_to_comment": "Đăng nhập để bình luận.",
+    "owner": "Chủ kênh",
+    "you": "Bạn",
+    "delete_confirm_title": "Xóa bình luận?",
+    "delete_confirm_description": "Hành động này không thể hoàn tác.",
+    "like": "Thích",
+    "unlike": "Bỏ thích",
+    "char_remaining": "Còn {{count}} ký tự"
+}

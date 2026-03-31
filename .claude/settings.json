@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(go build:*)",
+      "Bash(npx next build:*)",
+      "Bash(done)"
+    ]
+  }
+}

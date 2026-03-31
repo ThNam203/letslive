@@ -1,0 +1,32 @@
+"use client";
+
+import useT from "@/hooks/use-translation";
+import { Button } from "@/components/ui/button";
+
+type NotificationPageHeaderProps = {
+    hasUnread: boolean;
+    onMarkAllAsRead: () => void;
+};
+
+export function NotificationPageHeader({
+    hasUnread,
+    onMarkAllAsRead,
+}: NotificationPageHeaderProps) {
+    const { t } = useT(["notification"]);
+    return (
+        <div className="mb-6 flex items-center justify-between">
+            <h1 className="text-foreground text-xl font-semibold">
+                {t("title")}
+            </h1>
+            {hasUnread && (
+                <Button
+                    variant="ghost"
+                    className="cursor-pointer text-sm"
+                    onClick={onMarkAllAsRead}
+                >
+                    {t("mark_all_as_read")}
+                </Button>
+            )}
+        </div>
+    );
+}

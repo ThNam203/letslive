@@ -6,18 +6,23 @@ const Message = mongoose.model(
         roomId: {
             type: String,
             required: true,
+            maxlength: 36,
             index: true
         },
         username: {
             type: String,
-            required: true
+            required: true,
+            maxlength: 50
         },
         userId: {
             type: String,
-            required: true
+            required: true,
+            maxlength: 36
         },
         text: {
-            type: String
+            type: String,
+            required: true,
+            maxlength: 500
         },
         timestamp: { type: Date, default: Date.now }
     })
