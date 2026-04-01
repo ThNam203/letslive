@@ -3,6 +3,7 @@ import SearchBar from "./search";
 import UserInfo from "./userinfo";
 import NotificationBell from "./notification-bell";
 import MessagesIcon from "./messages-icon";
+import WalletIcon from "./wallet-icon";
 import StreamGuide from "./stream-guide";
 import { myGetT } from "@/lib/i18n";
 
@@ -27,6 +28,7 @@ export async function Header() {
             <div className="flex flex-1 flex-row items-center justify-end gap-4">
                 <StreamGuide />
                 <MessagesIcon />
+                <WalletIcon />
                 <NotificationBell />
                 <UserInfo />
             </div>
