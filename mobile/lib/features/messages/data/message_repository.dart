@@ -49,17 +49,31 @@ class MessageRepository {
     );
   }
 
-  Future<ApiResponse<void>> createConversation({
+  Future<ApiResponse<Conversation>> createConversation({
+    required String type,
     required List<String> participantIds,
+    Map<String, String>? participantUsernames,
+    Map<String, String>? participantDisplayNames,
+    Map<String, String>? participantProfilePictures,
+    String? creatorUsername,
+    String? creatorDisplayName,
+    String? creatorProfilePicture,
     String? name,
   }) {
     return _client.post(
       ApiEndpoints.conversations,
       data: {
+        'type': type,
         'participantIds': participantIds,
-        // ignore: use_null_aware_elements
-        if (name != null) 'name': name,
+        'participantUsernames': ?participantUsernames,
+        'participantDisplayNames': ?participantDisplayNames,
+        'participantProfilePictures': ?participantProfilePictures,
+        'creatorUsername': ?creatorUsername,
+        'creatorDisplayName': ?creatorDisplayName,
+        'creatorProfilePicture': ?creatorProfilePicture,
+        'name': ?name,
       },
+      fromJsonT: (json) => Conversation.fromJson(json as Map<String, dynamic>),
     );
   }
 

@@ -147,7 +147,8 @@ final messageRepositoryProvider = Provider<MessageRepository>((ref) {
 
 /// DM WebSocket service singleton.
 final dmWebSocketServiceProvider = Provider<DmWebSocketService>((ref) {
-  final service = DmWebSocketService();
+  final apiClient = ref.watch(apiClientProvider);
+  final service = DmWebSocketService(apiClient.cookieJar);
   ref.onDispose(() => service.dispose());
   return service;
 });
