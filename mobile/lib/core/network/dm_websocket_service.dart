@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:cookie_jar/cookie_jar.dart';
+import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../models/conversation.dart';
@@ -178,6 +180,8 @@ class DmWebSocketService {
   bool _disposed = false;
   bool _isConnecting = false;
 
+  final CookieJar _cookieJar;
+
   int _reconnectDelay = _initialReconnectDelay;
   static const _initialReconnectDelay = 1000; // ms
   static const _maxReconnectDelay = 30000; // ms
@@ -190,18 +194,30 @@ class DmWebSocketService {
   bool _isLocalTyping = false;
   Timer? _localTypingStopTimer;
 
+  DmWebSocketService(this._cookieJar);
+
   /// Stream of parsed server events.
   Stream<DmServerEvent> get events => _eventController.stream;
 
   bool get isConnected => _channel != null && !_disposed;
 
-  void connect() {
+  Future<void> connect() async {
     if (_disposed || _isConnecting) return;
     _isConnecting = true;
 
     try {
       final uri = Uri.parse(AppConfig.dmWsUrl);
-      _channel = WebSocketChannel.connect(uri);
+
+      // Extract cookies from the shared cookie jar for WebSocket auth
+      final cookies = await _cookieJar.loadForRequest(
+        Uri.parse(AppConfig.apiUrl),
+      );
+      final cookieHeader = cookies.map((c) => '${c.name}=${c.value}').join('; ');
+
+      _channel = IOWebSocketChannel.connect(
+        uri,
+        headers: cookieHeader.isNotEmpty ? {'Cookie': cookieHeader} : null,
+      );
 
       _channel!.stream.listen(
         (data) {

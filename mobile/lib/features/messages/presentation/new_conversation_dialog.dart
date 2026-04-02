@@ -84,11 +84,41 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
     if (_selectedUsers.isEmpty) return;
     setState(() => _isCreating = true);
 
+    final currentUser = ref.read(currentUserProvider);
+    if (currentUser == null) {
+      setState(() => _isCreating = false);
+      return;
+    }
+
+    final isGroup = _selectedUsers.length > 1;
+
+    final participantUsernames = <String, String>{};
+    final participantDisplayNames = <String, String>{};
+    final participantProfilePictures = <String, String>{};
+
+    for (final u in _selectedUsers) {
+      participantUsernames[u.id] = u.username;
+      if (u.displayName != null) participantDisplayNames[u.id] = u.displayName!;
+      if (u.profilePicture != null) {
+        participantProfilePictures[u.id] = u.profilePicture!;
+      }
+    }
+
     try {
       final repo = ref.read(messageRepositoryProvider);
       final response = await repo.createConversation(
+        type: isGroup ? 'group' : 'dm',
         participantIds: _selectedUsers.map((u) => u.id).toList(),
-        name: _selectedUsers.length > 1
+        participantUsernames: participantUsernames,
+        participantDisplayNames:
+            participantDisplayNames.isNotEmpty ? participantDisplayNames : null,
+        participantProfilePictures: participantProfilePictures.isNotEmpty
+            ? participantProfilePictures
+            : null,
+        creatorUsername: currentUser.username,
+        creatorDisplayName: currentUser.displayName,
+        creatorProfilePicture: currentUser.profilePicture,
+        name: isGroup
             ? _groupNameController.text.trim().isNotEmpty
                   ? _groupNameController.text.trim()
                   : null
@@ -96,11 +126,9 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
       );
       if (!mounted) return;
 
-      if (response.success) {
+      if (response.success && response.data != null) {
         Navigator.pop(context);
-        // The backend may return the conversation id in the response
-        // For now we just close and refresh
-        widget.onCreated('');
+        widget.onCreated(response.data!.id);
       } else {
         setState(() => _isCreating = false);
         showFToast(
