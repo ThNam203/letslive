@@ -126,6 +126,26 @@ services:
       consul:
         condition: service_healthy
 
+  finance:
+    image: sen1or/letslive-finance:latest
+    container_name: letslive-finance
+    restart: always
+    ports:
+      - "7783:7783"
+    expose:
+      - "7783"
+    environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
+      - FINANCE_DB_USER=${FINANCE_DB_USER}
+      - FINANCE_DB_PASSWORD=${FINANCE_DB_PASSWORD}
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+
   configserver:
     image: sen1or/letslive-configserver:latest
     container_name: letslive-configserver
