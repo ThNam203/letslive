@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import IconClose from "@/components/icons/close";
 import IconSend from "@/components/icons/send";
+import EmotePicker from "@/components/emote-picker";
+import { parseEmotes } from "@/utils/emote-parser";
 import useT from "@/hooks/use-translation";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/constant/field-limits";
 
@@ -164,7 +166,7 @@ export default function ChatPanel({
                                 ? t("users:chat.joined")
                                 : message.type === "leave"
                                   ? t("users:chat.left")
-                                  : message.text}
+                                  : parseEmotes(message.text)}
                         </span>
                     </div>
                 ))}
@@ -174,6 +176,12 @@ export default function ChatPanel({
                 onSubmit={handleSendMessage}
                 className="absolute right-0 bottom-2 left-0 flex gap-2"
             >
+                <EmotePicker
+                    disabled={!user}
+                    onSelect={(code) =>
+                        setInputMessage((prev) => prev + code)
+                    }
+                />
                 <div className="relative flex-1">
                     <Input
                         type="text"

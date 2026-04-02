@@ -1,6 +1,7 @@
 "use client";
 
 import { DmMessage, DmMessageType } from "@/types/dm";
+import { parseEmotes } from "@/utils/emote-parser";
 import useT from "@/hooks/use-translation";
 
 function formatMessageTime(dateStr: string) {
@@ -103,7 +104,9 @@ export default function MessageBubble({
                               })}
                     </p>
                 ) : (
-                    <p className="text-sm break-words">{message.text}</p>
+                    <p className="text-sm break-words">
+                        {parseEmotes(message.text)}
+                    </p>
                 )}
 
                 <div className="mt-0.5 flex items-center justify-end gap-1">
