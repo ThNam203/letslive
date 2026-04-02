@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import IconSend from "@/components/icons/send";
 import IconPaperclip from "@/components/icons/paperclip";
 import IconClose from "@/components/icons/close";
+import EmotePicker from "@/components/emote-picker";
 import { DM_MESSAGE_MAX_LENGTH } from "@/constant/field-limits";
 import {
     FILE_SIZE_LIMIT_BYTES_UNIT,
@@ -232,6 +233,10 @@ export default function MessageInput({
                     <IconPaperclip className="!h-5 !w-5" />
                 </Button>
 
+                <EmotePicker
+                    disabled={isUploading}
+                    onSelect={(code) => setText((prev) => prev + code)}
+                />
                 <div className="relative flex-1">
                     <Input
                         type="text"

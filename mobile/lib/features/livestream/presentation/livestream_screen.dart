@@ -19,6 +19,8 @@ import '../../../models/chat_message.dart';
 import '../../../models/livestream.dart';
 import '../../../models/user.dart';
 import '../../../providers.dart';
+import '../../../core/emotes/emote_parser.dart';
+import '../../../shared/widgets/emote_picker.dart';
 import '../../../shared/widgets/error_display.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 
@@ -400,6 +402,25 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
       ),
       child: Row(
         children: [
+          FButton.icon(
+            onPress: () => showEmotePicker(context, (code) {
+              final ctrl = _chatController;
+              final sel = ctrl.selection;
+              final text = ctrl.text;
+              final newText =
+                  text.substring(0, sel.baseOffset) +
+                  code +
+                  text.substring(sel.extentOffset);
+              ctrl.value = TextEditingValue(
+                text: newText,
+                selection: TextSelection.collapsed(
+                  offset: sel.baseOffset + code.length,
+                ),
+              );
+            }),
+            child: const Text('😊', style: TextStyle(fontSize: 18)),
+          ),
+          const SizedBox(width: 4),
           Expanded(
             child: TextField(
               controller: _chatController,
@@ -457,10 +478,12 @@ class _ChatBubble extends StatelessWidget {
 
     final usernameColor = _colorFromUserId(message.userId);
 
+    final textStyle = typography.xs.copyWith(color: colors.foreground);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
-      child: RichText(
-        text: TextSpan(
+      child: Text.rich(
+        TextSpan(
           children: [
             TextSpan(
               text: '${message.username}: ',
@@ -469,10 +492,7 @@ class _ChatBubble extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            TextSpan(
-              text: message.text,
-              style: typography.xs.copyWith(color: colors.foreground),
-            ),
+            ...parseEmotes(message.text, textStyle),
           ],
         ),
       ),

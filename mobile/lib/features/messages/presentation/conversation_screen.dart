@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 
+import '../../../core/emotes/emote_parser.dart';
 import '../../../core/network/dm_websocket_service.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/widgets/emote_picker.dart';
 import '../../../models/conversation.dart';
 import '../../../providers.dart';
 import '../../../shared/widgets/error_display.dart';
@@ -542,6 +544,25 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
           ),
           child: Row(
             children: [
+              FButton.icon(
+                onPress: () => showEmotePicker(context, (code) {
+                  final ctrl = _messageController;
+                  final sel = ctrl.selection;
+                  final text = ctrl.text;
+                  final newText =
+                      text.substring(0, sel.baseOffset) +
+                      code +
+                      text.substring(sel.extentOffset);
+                  ctrl.value = TextEditingValue(
+                    text: newText,
+                    selection: TextSelection.collapsed(
+                      offset: sel.baseOffset + code.length,
+                    ),
+                  );
+                }),
+                child: const Text('😊', style: TextStyle(fontSize: 18)),
+              ),
+              const SizedBox(width: 4),
               Expanded(
                 child: TextField(
                   controller: _messageController,
@@ -667,21 +688,27 @@ class _MessageBubble extends StatelessWidget {
                           ),
                         ),
                       ),
-                    Text(
-                      message.isDeleted
-                          ? l10n.messagesMessageDeleted
-                          : message.text,
-                      style: typography.sm.copyWith(
-                        color: message.isDeleted
-                            ? colors.mutedForeground
-                            : isMe
-                            ? colors.primaryForeground
-                            : colors.foreground,
-                        fontStyle: message.isDeleted
-                            ? FontStyle.italic
-                            : FontStyle.normal,
+                    if (message.isDeleted)
+                      Text(
+                        l10n.messagesMessageDeleted,
+                        style: typography.sm.copyWith(
+                          color: colors.mutedForeground,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      )
+                    else
+                      Text.rich(
+                        TextSpan(
+                          children: parseEmotes(
+                            message.text,
+                            typography.sm.copyWith(
+                              color: isMe
+                                  ? colors.primaryForeground
+                                  : colors.foreground,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
                     const SizedBox(height: 2),
                     Text(
                       timeAgo,
