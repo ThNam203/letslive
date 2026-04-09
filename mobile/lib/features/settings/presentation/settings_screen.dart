@@ -132,9 +132,19 @@ class SettingsScreen extends ConsumerWidget {
     final colors = context.theme.colors;
     final typography = context.theme.typography;
     final currentMode = ref.read(themeModeProvider);
+    final themeModes = AppThemeMode.values;
 
     showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+          bottomLeft: Radius.zero,
+          bottomRight: Radius.zero,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -147,22 +157,35 @@ class SettingsScreen extends ConsumerWidget {
                 style: typography.lg.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
-            for (final mode in AppThemeMode.values)
-              FTile(
-                prefix: Icon(switch (mode) {
-                  AppThemeMode.light => FIcons.sun,
-                  AppThemeMode.dark => FIcons.moon,
-                  AppThemeMode.system => FIcons.smartphone,
-                }),
-                title: Text(_themeModeName(l10n, mode)),
-                suffix: currentMode == mode
-                    ? Icon(FIcons.check, color: colors.primary)
-                    : null,
-                onPress: () {
-                  ref.read(themeModeProvider.notifier).setThemeMode(mode);
-                  Navigator.pop(sheetContext);
-                },
+            FTileGroup(
+              style: const FTileGroupStyleDelta.delta(
+                decoration: BoxDecorationDelta.delta(
+                  border: null,
+                  borderRadius: null,
+                ),
               ),
+              divider: FItemDivider.full,
+              children: [
+                for (var i = 0; i < themeModes.length; i++)
+                  FTile(
+                    prefix: Icon(switch (themeModes[i]) {
+                      AppThemeMode.light => FIcons.sun,
+                      AppThemeMode.dark => FIcons.moon,
+                      AppThemeMode.system => FIcons.smartphone,
+                    }),
+                    title: Text(_themeModeName(l10n, themeModes[i])),
+                    suffix: currentMode == themeModes[i]
+                        ? Icon(FIcons.check, color: colors.primary)
+                        : null,
+                    onPress: () {
+                      ref
+                          .read(themeModeProvider.notifier)
+                          .setThemeMode(themeModes[i]);
+                      Navigator.pop(sheetContext);
+                    },
+                  ),
+              ],
+            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -178,9 +201,19 @@ class SettingsScreen extends ConsumerWidget {
     final effectiveCode =
         savedLocale?.languageCode ??
         Localizations.localeOf(context).languageCode;
+    final languageEntries = supportedLanguageNames.entries.toList(growable: false);
 
     showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+          bottomLeft: Radius.zero,
+          bottomRight: Radius.zero,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -193,20 +226,31 @@ class SettingsScreen extends ConsumerWidget {
                 style: typography.lg.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
-            for (final entry in supportedLanguageNames.entries)
-              FTile(
-                prefix: const Icon(FIcons.globe),
-                title: Text(entry.value),
-                suffix: effectiveCode == entry.key
-                    ? Icon(FIcons.check, color: colors.primary)
-                    : null,
-                onPress: () {
-                  ref
-                      .read(localeProvider.notifier)
-                      .setLocale(Locale(entry.key));
-                  Navigator.pop(sheetContext);
-                },
+            FTileGroup(
+              style: const FTileGroupStyleDelta.delta(
+                decoration: BoxDecorationDelta.delta(
+                  border: null,
+                  borderRadius: null,
+                ),
               ),
+              divider: FItemDivider.full,
+              children: [
+                for (var i = 0; i < languageEntries.length; i++)
+                  FTile(
+                    prefix: const Icon(FIcons.globe),
+                    title: Text(languageEntries[i].value),
+                    suffix: effectiveCode == languageEntries[i].key
+                        ? Icon(FIcons.check, color: colors.primary)
+                        : null,
+                    onPress: () {
+                      ref.read(localeProvider.notifier).setLocale(
+                        Locale(languageEntries[i].key),
+                      );
+                      Navigator.pop(sheetContext);
+                    },
+                  ),
+              ],
+            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -239,7 +283,10 @@ class _SettingsSection extends StatelessWidget {
             ),
           ),
         ),
-        ...children,
+        for (var i = 0; i < children.length; i++) ...[
+          children[i],
+          if (i < children.length - 1) const SizedBox(height: 8),
+        ],
       ],
     );
   }
