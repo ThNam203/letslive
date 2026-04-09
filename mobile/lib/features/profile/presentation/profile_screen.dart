@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/config/app_config.dart';
 import '../../../core/router/app_router.dart';
@@ -358,11 +359,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         children: entries.map((entry) {
           return Tooltip(
             message: entry.value,
-            child: Icon(entry.key, size: 20, color: colors.mutedForeground),
+            child: GestureDetector(
+              onTap: () => _openSocialLink(entry.value),
+              child: Icon(entry.key, size: 20, color: colors.mutedForeground),
+            ),
           );
         }).toList(),
       ),
     );
+  }
+
+  Future<void> _openSocialLink(String rawUrl) async {
+    final link = rawUrl.trim();
+    if (link.isEmpty) return;
+
+    final normalized = link.startsWith(RegExp(r'https?://'))
+        ? link
+        : 'https://$link';
+    final uri = Uri.tryParse(normalized);
+    if (uri == null) return;
+
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   // ---------------------------------------------------------------------------
