@@ -407,6 +407,7 @@ class _VodCommentSectionState extends ConsumerState<VodCommentSection> {
                 isLiked: _likedIds.contains(comment.id),
                 isOwner: currentUser?.id == comment.userId,
                 isVodOwner: widget.vodOwnerId == currentUser?.id,
+                vodOwnerId: widget.vodOwnerId,
                 timeAgo: _formatTimeAgo(comment.createdAt, l10n),
                 onLike: () => _toggleLike(comment),
                 onDelete: () => _deleteComment(comment),
@@ -441,6 +442,7 @@ class _CommentTile extends StatelessWidget {
   final bool isLiked;
   final bool isOwner;
   final bool isVodOwner;
+  final String? vodOwnerId;
   final String timeAgo;
   final VoidCallback onLike;
   final VoidCallback onDelete;
@@ -450,6 +452,7 @@ class _CommentTile extends StatelessWidget {
     required this.isLiked,
     required this.isOwner,
     required this.isVodOwner,
+    required this.vodOwnerId,
     required this.timeAgo,
     required this.onLike,
     required this.onDelete,
@@ -503,7 +506,7 @@ class _CommentTile extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    if (comment.userId == comment.vodId) ...[
+                    if (vodOwnerId != null && comment.userId == vodOwnerId) ...[
                       const SizedBox(width: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
