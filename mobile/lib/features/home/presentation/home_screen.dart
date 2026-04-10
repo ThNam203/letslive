@@ -12,6 +12,7 @@ import '../../../models/livestream.dart';
 import '../../../models/user.dart';
 import '../../../models/vod.dart';
 import '../../../providers.dart';
+import '../../../shared/widgets/empty_state_view.dart';
 import '../../../shared/widgets/error_display.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 
@@ -195,7 +196,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
 
     if (_livestreams.isEmpty) {
-      return _EmptyState(
+      return EmptyStateView(
         icon: FIcons.video,
         title: l10n.noLivestreams,
         description: l10n.noLivestreamsDescription,
@@ -239,7 +240,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
 
     if (_vods.isEmpty) {
-      return _EmptyState(
+      return EmptyStateView(
         icon: FIcons.film,
         title: l10n.noVideos,
         description: l10n.noVideosDescription,
@@ -564,44 +565,3 @@ class _VodCard extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-
-  const _EmptyState({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final typography = context.theme.typography;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 48, color: colors.mutedForeground),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: typography.lg.copyWith(fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              description,
-              style: typography.sm.copyWith(color: colors.mutedForeground),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

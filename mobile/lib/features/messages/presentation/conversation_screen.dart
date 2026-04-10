@@ -9,6 +9,7 @@ import '../../../core/emotes/emote_parser.dart';
 import '../../../core/network/dm_websocket_service.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/emote_picker.dart';
+import '../../../shared/widgets/letter_avatar.dart';
 import '../../../models/conversation.dart';
 import '../../../providers.dart';
 import '../../../shared/widgets/error_display.dart';
@@ -564,32 +565,12 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
               ),
               const SizedBox(width: 4),
               Expanded(
-                child: TextField(
-                  controller: _messageController,
-                  maxLines: 4,
-                  minLines: 1,
-                  onChanged: _handleInputChanged,
-                  decoration: InputDecoration(
-                    hintText: l10n.messagesPlaceholderTypeMessage,
-                    hintStyle: typography.sm.copyWith(
-                      color: colors.mutedForeground,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide(color: colors.border),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide(color: colors.border),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    isDense: true,
+                child: FTextField(
+                  control: FTextFieldControl.managed(
+                    controller: _messageController,
+                    onChange: _handleInputChanged,
                   ),
-                  style: typography.sm,
-                  onSubmitted: (_) => _sendMessage(),
+                  hint: l10n.messagesPlaceholderTypeMessage,
                 ),
               ),
               const SizedBox(width: 8),
@@ -641,15 +622,12 @@ class _MessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
-            CircleAvatar(
-              radius: 14,
-              child: Text(
-                (message.senderUsername.isNotEmpty
-                        ? message.senderUsername[0]
-                        : '?')
-                    .toUpperCase(),
-                style: typography.xs,
-              ),
+            LetterAvatar(
+              text: (message.senderUsername.isNotEmpty
+                      ? message.senderUsername[0]
+                      : '?')
+                  .toUpperCase(),
+              textStyle: typography.xs,
             ),
             const SizedBox(width: 6),
           ],
@@ -742,22 +720,22 @@ class _MessageBubble extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (onEdit != null)
-              ListTile(
-                leading: const Icon(FIcons.pencil),
+              FTile(
+                prefix: const Icon(FIcons.pencil),
                 title: Text(l10n.edit),
-                onTap: () {
+                onPress: () {
                   Navigator.pop(context);
                   onEdit!();
                 },
               ),
             if (onDelete != null)
-              ListTile(
-                leading: Icon(FIcons.trash, color: colors.destructive),
+              FTile(
+                prefix: Icon(FIcons.trash, color: colors.destructive),
                 title: Text(
                   l10n.delete,
                   style: TextStyle(color: colors.destructive),
                 ),
-                onTap: () {
+                onPress: () {
                   Navigator.pop(context);
                   onDelete!();
                 },

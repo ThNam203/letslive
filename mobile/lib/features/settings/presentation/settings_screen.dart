@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers.dart';
+import '../../../shared/widgets/section_header.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -267,22 +268,10 @@ class _SettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final typography = context.theme.typography;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-          child: Text(
-            title,
-            style: typography.sm.copyWith(
-              color: colors.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
+        SectionHeader(title: title),
         for (var i = 0; i < children.length; i++) ...[
           children[i],
           if (i < children.length - 1) const SizedBox(height: 8),

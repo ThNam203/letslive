@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/user.dart';
 import '../../../providers.dart';
+import '../../../shared/widgets/user_avatar.dart';
 
 class NewConversationDialog extends ConsumerStatefulWidget {
   final void Function(String conversationId) onCreated;
@@ -195,49 +197,22 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
 
               // Group name (for multiple users)
               if (_selectedUsers.length > 1) ...[
-                TextField(
-                  controller: _groupNameController,
-                  decoration: InputDecoration(
-                    hintText: l10n.messagesGroupNamePlaceholder,
-                    hintStyle: typography.sm.copyWith(
-                      color: colors.mutedForeground,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: colors.border),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    isDense: true,
+                FTextField(
+                  control: FTextFieldControl.managed(
+                    controller: _groupNameController,
                   ),
-                  style: typography.sm,
+                  hint: l10n.messagesGroupNamePlaceholder,
                 ),
                 const SizedBox(height: 8),
               ],
 
               // Search input
-              TextField(
-                controller: _searchController,
-                onChanged: _onSearchChanged,
-                decoration: InputDecoration(
-                  hintText: l10n.messagesSearchUsersPlaceholder,
-                  hintStyle: typography.sm.copyWith(
-                    color: colors.mutedForeground,
-                  ),
-                  prefixIcon: const Icon(FIcons.search, size: 16),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: colors.border),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  isDense: true,
+              FTextField(
+                control: FTextFieldControl.managed(
+                  controller: _searchController,
+                  onChange: _onSearchChanged,
                 ),
-                style: typography.sm,
+                hint: l10n.messagesSearchUsersPlaceholder,
               ),
               const SizedBox(height: 8),
 
@@ -259,17 +234,17 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
                           final isSelected = _selectedUsers.any(
                             (u) => u.id == user.id,
                           );
-                          return ListTile(
-                            dense: true,
-                            leading: CircleAvatar(
-                              radius: 16,
-                              child: Text(
-                                (user.username.isNotEmpty
-                                        ? user.username[0]
-                                        : '?')
-                                    .toUpperCase(),
-                                style: typography.xs,
-                              ),
+                          return FTile(
+                            prefix: UserAvatar(
+                              imageUrl: user.profilePicture != null
+                                  ? '${AppConfig.apiUrl}/${user.profilePicture}'
+                                  : null,
+                              size: 32,
+                              fallbackText: (user.username.isNotEmpty
+                                      ? user.username[0]
+                                      : '?')
+                                  .toUpperCase(),
+                              textStyle: typography.xs,
                             ),
                             title: Text(
                               user.displayName ?? user.username,
@@ -281,14 +256,14 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
                                 color: colors.mutedForeground,
                               ),
                             ),
-                            trailing: isSelected
+                            suffix: isSelected
                                 ? Icon(
                                     FIcons.check,
                                     size: 16,
                                     color: colors.primary,
                                   )
                                 : null,
-                            onTap: () => _toggleUser(user),
+                            onPress: () => _toggleUser(user),
                           );
                         },
                       ),
