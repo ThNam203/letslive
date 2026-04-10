@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +11,7 @@ import '../../../core/router/app_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/user.dart';
 import '../../../providers.dart';
+import '../../../shared/widgets/user_avatar.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -83,57 +83,35 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       header: FHeader.nested(title: Text(l10n.searchUsers)),
       child: Column(
         children: [
-          // Search input
           Padding(
             padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              maxLength: 100,
+            child: FTextField(
+              control: FTextFieldControl.managed(
+                controller: _searchController,
+                onChange: _onSearchChanged,
+              ),
+              hint: l10n.messagesSearchUsersPlaceholder,
+              keyboardType: TextInputType.text,
               textInputAction: TextInputAction.search,
-              style: typography.sm,
-              decoration: InputDecoration(
-                hintText: l10n.messagesSearchUsersPlaceholder,
-                hintStyle: typography.sm.copyWith(
-                  color: colors.mutedForeground,
-                ),
-                prefixIcon: Icon(FIcons.search, color: colors.mutedForeground),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(
-                          FIcons.x,
-                          color: colors.mutedForeground,
-                          size: 18,
-                        ),
-                        onPressed: () {
-                          _searchController.clear();
-                          _onSearchChanged('');
-                        },
-                      )
-                    : null,
-                counterText: '',
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: colors.primary),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: colors.border),
+            ),
+          ),
+          if (_searchController.text.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: FButton.icon(
+                  variant: FButtonVariant.ghost,
+                  onPress: () {
+                    _searchController.clear();
+                    _onSearchChanged('');
+                    setState(() {});
+                  },
+                  child: const Icon(FIcons.x),
                 ),
               ),
             ),
-          ),
-
-          // Results
-          Expanded(child: _buildResults(colors, typography, l10n)),
+            Expanded(child: _buildResults(colors, typography, l10n)),
         ],
       ),
     );
@@ -176,7 +154,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: _results.length,
-      separatorBuilder: (_, _) => Divider(height: 1, color: colors.border),
+      separatorBuilder: (_, _) => const SizedBox(height: 4),
       itemBuilder: (context, index) {
         final user = _results[index];
         return _UserResultTile(
@@ -199,59 +177,32 @@ class _UserResultTile extends StatelessWidget {
     final colors = context.theme.colors;
     final typography = context.theme.typography;
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            // Avatar
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: colors.muted,
-              backgroundImage: user.profilePicture != null
-                  ? CachedNetworkImageProvider(
-                      '${AppConfig.apiUrl}/${user.profilePicture}',
-                    )
-                  : null,
-              child: user.profilePicture == null
-                  ? Text(
-                      (user.displayName ?? user.username).characters.first
-                          .toUpperCase(),
-                      style: typography.sm.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            // User info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    user.displayName ?? user.username,
-                    style: typography.sm.copyWith(fontWeight: FontWeight.w600),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    '@${user.username}',
-                    style: typography.xs.copyWith(
-                      color: colors.mutedForeground,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            Icon(FIcons.chevronRight, size: 16, color: colors.mutedForeground),
-          ],
-        ),
+    return FTile(
+      onPress: onTap,
+      prefix: UserAvatar(
+        imageUrl: user.profilePicture != null
+            ? '${AppConfig.apiUrl}/${user.profilePicture}'
+            : null,
+        size: 40,
+        fallbackText: (user.displayName ?? user.username).characters.first
+            .toUpperCase(),
+        textStyle: typography.sm.copyWith(fontWeight: FontWeight.w600),
       ),
+      title: Text(
+        user.displayName ?? user.username,
+        style: typography.sm.copyWith(fontWeight: FontWeight.w600),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        '@${user.username}',
+        style: typography.xs.copyWith(
+          color: colors.mutedForeground,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      suffix: Icon(FIcons.chevronRight, size: 16, color: colors.mutedForeground),
     );
   }
 }

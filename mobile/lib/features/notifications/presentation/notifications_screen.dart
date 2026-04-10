@@ -6,6 +6,7 @@ import 'package:forui/forui.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/notification.dart';
 import '../../../providers.dart';
+import '../../../shared/widgets/empty_state_view.dart';
 import '../../../shared/widgets/error_display.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 
@@ -246,35 +247,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
 
     if (_notifications.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                FIcons.bell,
-                size: 48,
-                color: context.theme.colors.mutedForeground,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.notificationsNoNotifications,
-                style: context.theme.typography.lg.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.notificationsNoNotificationsYet,
-                style: context.theme.typography.sm.copyWith(
-                  color: context.theme.colors.mutedForeground,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+      return EmptyStateView(
+        icon: FIcons.bell,
+        title: l10n.notificationsNoNotifications,
+        description: l10n.notificationsNoNotificationsYet,
       );
     }
 

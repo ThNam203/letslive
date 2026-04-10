@@ -9,6 +9,7 @@ import '../../../core/utils/api_error_localizer.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/user.dart';
 import '../../../providers.dart';
+import '../../../shared/widgets/section_header.dart';
 
 class SecuritySettingsScreen extends ConsumerStatefulWidget {
   const SecuritySettingsScreen({super.key});
@@ -246,7 +247,7 @@ class _SecuritySettingsScreenState
       child: ListView(
         children: [
           // Contact section
-          _SectionHeader(title: l10n.settingsSecurityContactTitle),
+          SectionHeader(title: l10n.settingsSecurityContactTitle),
           FTile(
             prefix: const Icon(FIcons.mail),
             title: Text(l10n.settingsSecurityContactEmail),
@@ -262,7 +263,7 @@ class _SecuritySettingsScreenState
 
           // Password section
           if (user?.authProvider == AuthProvider.local) ...[
-            _SectionHeader(title: l10n.settingsSecurityPasswordTitle),
+            SectionHeader(title: l10n.settingsSecurityPasswordTitle),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
@@ -280,7 +281,7 @@ class _SecuritySettingsScreenState
           ],
 
           // API Key section
-          _SectionHeader(title: l10n.settingsSecurityApiKeyLabel),
+          SectionHeader(title: l10n.settingsSecurityApiKeyLabel),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: DecoratedBox(
@@ -335,29 +336,6 @@ class _SecuritySettingsScreenState
           ),
           const SizedBox(height: 24),
         ],
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final typography = context.theme.typography;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-      child: Text(
-        title,
-        style: typography.sm.copyWith(
-          color: colors.primary,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }

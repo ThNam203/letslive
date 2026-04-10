@@ -23,6 +23,7 @@ import '../../../core/emotes/emote_parser.dart';
 import '../../../shared/widgets/emote_picker.dart';
 import '../../../shared/widgets/error_display.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/user_avatar.dart';
 
 class LivestreamScreen extends ConsumerStatefulWidget {
   final String livestreamId;
@@ -272,16 +273,12 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundImage: _streamer?.profilePicture != null
-                  ? CachedNetworkImageProvider(
-                      '${AppConfig.apiUrl}/${_streamer!.profilePicture}',
-                    )
+            UserAvatar(
+              imageUrl: _streamer?.profilePicture != null
+                  ? '${AppConfig.apiUrl}/${_streamer!.profilePicture}'
                   : null,
-              child: _streamer?.profilePicture == null
-                  ? const Icon(FIcons.user, size: 18)
-                  : null,
+              size: 36,
+              fallback: const Icon(FIcons.user, size: 18),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -347,7 +344,7 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
 
     return Column(
       children: [
-        Divider(height: 1, color: colors.border),
+        Container(height: 1, color: colors.border),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
@@ -422,24 +419,9 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
           ),
           const SizedBox(width: 4),
           Expanded(
-            child: TextField(
-              controller: _chatController,
-              maxLength: 500,
-              maxLines: 1,
-              decoration: InputDecoration(
-                hintText: l10n.usersChatPlaceholderTyping,
-                counterText: '',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                isDense: true,
-              ),
-              onSubmitted: (_) => _sendMessage(),
+            child: FTextField(
+              control: FTextFieldControl.managed(controller: _chatController),
+              hint: l10n.usersChatPlaceholderTyping,
             ),
           ),
           const SizedBox(width: 8),

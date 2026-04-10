@@ -10,6 +10,7 @@ import '../../../core/router/app_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/conversation.dart';
 import '../../../providers.dart';
+import '../../../shared/widgets/empty_state_view.dart';
 import '../../../shared/widgets/error_display.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import 'new_conversation_dialog.dart';
@@ -150,25 +151,9 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
   }
 
   Widget _buildLoginPrompt(BuildContext context, AppLocalizations l10n) {
-    final colors = context.theme.colors;
-    final typography = context.theme.typography;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(FIcons.messageCircle, size: 48, color: colors.mutedForeground),
-            const SizedBox(height: 16),
-            Text(
-              l10n.messagesLoginRequired,
-              style: typography.sm.copyWith(color: colors.mutedForeground),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+    return EmptyStateView(
+      icon: FIcons.messageCircle,
+      title: l10n.messagesLoginRequired,
     );
   }
 
@@ -190,27 +175,9 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
     }
 
     if (_conversations.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                FIcons.messageCircle,
-                size: 48,
-                color: context.theme.colors.mutedForeground,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.messagesNoConversationsYet,
-                style: context.theme.typography.lg.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
+      return EmptyStateView(
+        icon: FIcons.messageCircle,
+        title: l10n.messagesNoConversationsYet,
       );
     }
 
