@@ -21,7 +21,7 @@ const ThemeSwitch = ({ className }: { className?: string }) => {
 
     // useEffect only runs on the client, so now we can safely show the UI
     useEffect(() => {
-        setMounted(true);
+        queueMicrotask(() => setMounted(true));
     }, []);
 
     if (!mounted) {

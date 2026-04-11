@@ -65,7 +65,7 @@ export default function ConversationPage() {
             (c) => c._id === conversationId,
         );
         if (existingConv) {
-            setConversation(existingConv);
+            queueMicrotask(() => setConversation(existingConv));
         }
 
         GetConversation(conversationId)
@@ -86,7 +86,7 @@ export default function ConversationPage() {
         if (!user || !conversationId) return;
         if (currentMessages.length > 0) return; // already loaded
 
-        setIsLoadingMessages(true);
+        queueMicrotask(() => setIsLoadingMessages(true));
         GetDmMessages(conversationId)
             .then((res) => {
                 if (res.data) {

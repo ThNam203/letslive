@@ -12,7 +12,7 @@ const ThemeList = ({ className }: { className?: string }) => {
     const { t } = useT(["theme"]);
 
     useEffect(() => {
-        setMounted(true);
+        queueMicrotask(() => setMounted(true));
     }, []);
 
     if (!mounted) return null;

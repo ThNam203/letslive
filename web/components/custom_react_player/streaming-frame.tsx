@@ -1,7 +1,7 @@
 "use client";
 import { Slider } from "@/components/ui/slider";
 import { ClassValue } from "clsx";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import screenfull from "screenfull";
 import { cn } from "@/utils/cn";
@@ -104,19 +104,6 @@ export function StreamingFrame({
     });
     const [resolutions, setResolutions] = useState<string[]>(["Auto"]);
 
-    const [fnControl, setFnControl] = useState<FnControl>({
-        playVideo: () => playVideo(),
-        pauseVideo: () => pauseVideo(),
-        seekToTime: (time: number) => seekToTime(time),
-        handleVolumeChange: (value: number) => handleVolumeChange(value),
-        onFullScreen: () => onFullScreen(),
-        onExitFullScreen: () => onExitFullScreen(),
-        handlePlaybackRateChange: (value: number) =>
-            handlePlaybackRateChange(value),
-        handleResolutionChange: (value: string) =>
-            handleResolutionChange(value),
-    });
-
     const handleVolumeChange = (value: number) => {
         setConfig({ ...config, volumeValue: value });
     };
@@ -187,6 +174,19 @@ export function StreamingFrame({
                 return prevResolutions;
             });
         }
+    };
+
+    const fnControl: FnControl = {
+        playVideo: () => playVideo(),
+        pauseVideo: () => pauseVideo(),
+        seekToTime: (time: number) => seekToTime(time),
+        handleVolumeChange: (value: number) => handleVolumeChange(value),
+        onFullScreen: () => onFullScreen(),
+        onExitFullScreen: () => onExitFullScreen(),
+        handlePlaybackRateChange: (value: number) =>
+            handlePlaybackRateChange(value),
+        handleResolutionChange: (value: string) =>
+            handleResolutionChange(value),
     };
 
     return (
@@ -603,23 +603,23 @@ function VolumeButton({
     onVolumeChange: (value: number) => void;
 }) {
     const [volumeValue, setVolumeValue] = useState(100);
-    const [currentVolume, setCurrentVolume] = useState(100);
+    const lastNonZeroVolumeRef = useRef(100);
 
     const handleVolumeChange = (value: number) => {
         setVolumeValue(value);
         if (onVolumeChange) onVolumeChange(value);
+        if (value !== 0) {
+            lastNonZeroVolumeRef.current = value;
+        }
     };
-
-    useEffect(() => {
-        if (volumeValue !== 0) setCurrentVolume(volumeValue);
-    }, [volumeValue]);
 
     return (
         <div className="flex h-10 w-[120px] flex-row items-center gap-2 rounded bg-black/30 px-2 transition-colors hover:bg-black/50">
             <div
                 className="flex cursor-pointer items-center justify-center text-white"
                 onClick={() => {
-                    if (volumeValue === 0) handleVolumeChange(currentVolume);
+                    if (volumeValue === 0)
+                        handleVolumeChange(lastNonZeroVolumeRef.current);
                     else handleVolumeChange(0);
                 }}
             >

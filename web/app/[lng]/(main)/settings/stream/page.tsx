@@ -44,12 +44,13 @@ export default function StreamEdit() {
     };
 
     useEffect(() => {
-        if (user) {
+        if (!user) return;
+        queueMicrotask(() => {
             setTitle(user.livestreamInformation.title || "");
             setDescription(user.livestreamInformation.description || "");
             setImageUrl(user.livestreamInformation.thumbnailUrl || null);
             setImage(null);
-        }
+        });
     }, [user]);
 
     const handleSubmit = async (e: React.FormEvent) => {
