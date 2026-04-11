@@ -568,7 +568,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                 child: FTextField(
                   control: FTextFieldControl.managed(
                     controller: _messageController,
-                    onChange: _handleInputChanged,
+                    onChange: (value) => _handleInputChanged(value.text),
                   ),
                   hint: l10n.messagesPlaceholderTypeMessage,
                 ),

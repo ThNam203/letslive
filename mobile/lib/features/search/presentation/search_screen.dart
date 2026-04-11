@@ -88,7 +88,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             child: FTextField(
               control: FTextFieldControl.managed(
                 controller: _searchController,
-                onChange: _onSearchChanged,
+                onChange: (value) => _onSearchChanged(value.text),
               ),
               hint: l10n.messagesSearchUsersPlaceholder,
               keyboardType: TextInputType.text,
