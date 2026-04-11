@@ -125,9 +125,8 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
             const trimmedValue = value.trim();
             if (trimmedValue.length === 0) {
                 toast.error(t("settings:social_media_links.err_empty_url"));
+                return;
             }
-
-            links[platform] = trimmedValue;
 
             new URL(trimmedValue); // ensures it's a valid URL
             await UpdateProfile({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useCallback, useState } from "react";
 import GLOBAL from "@/global";
 import useDmStore from "./use-dm-store";
 import useUser from "./user";
@@ -144,6 +144,7 @@ export default function useDmWebSocket() {
         ],
     );
 
+    const connectRef = useRef<(() => void) | null>(null);
     const connect = useCallback(() => {
         if (!user || isConnectingRef.current) return;
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN)
@@ -179,7 +180,7 @@ export default function useDmWebSocket() {
                     reconnectDelayRef.current * 2,
                     MAX_RECONNECT_DELAY,
                 );
-                connect();
+                connectRef.current?.();
             }, reconnectDelayRef.current);
         };
 
@@ -187,6 +188,10 @@ export default function useDmWebSocket() {
             isConnectingRef.current = false;
         };
     }, [user, handleServerEvent]);
+
+    useLayoutEffect(() => {
+        connectRef.current = connect;
+    }, [connect]);
 
     const send = useCallback((event: DmWsClientEvent) => {
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -210,7 +215,7 @@ export default function useDmWebSocket() {
 
     useEffect(() => {
         if (user) {
-            connect();
+            queueMicrotask(() => connect());
         }
         return () => {
             disconnect();

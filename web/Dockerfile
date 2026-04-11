@@ -1,7 +1,5 @@
 FROM node:22-alpine
 
-RUN npm i -g npm
-
 EXPOSE 5000
 
 ENV PORT=5000

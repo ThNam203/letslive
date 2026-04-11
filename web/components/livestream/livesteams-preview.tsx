@@ -13,7 +13,7 @@ import { Card, CardContent } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 
 const LivestreamsPreviewView = () => {
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [limitView, setLimitView] = useState<number>(4);
     const [livestreams, setLivestreams] = useState<Livestream[]>([]);
     const { t } = useT(["common", "api-response", "fetch-error"]);
@@ -42,8 +42,7 @@ const LivestreamsPreviewView = () => {
                 });
         };
 
-        setIsLoading(true);
-        fetchLivestreams();
+        void fetchLivestreams();
     }, []);
 
     if (isLoading) {

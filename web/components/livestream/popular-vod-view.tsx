@@ -11,7 +11,7 @@ import useT from "@/hooks/use-translation";
 import VODCard from "./vod-card";
 
 export function PopularVODView() {
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [vods, setVods] = useState<VOD[]>([]);
     const { t } = useT(["common", "api-response", "fetch-error"]);
 
@@ -39,8 +39,7 @@ export function PopularVODView() {
                 });
         };
 
-        setIsLoading(true);
-        fetchData();
+        void fetchData();
     }, []);
 
     if (isLoading) {

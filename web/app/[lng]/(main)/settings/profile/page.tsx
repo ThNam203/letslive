@@ -30,15 +30,21 @@ export default function ProfileSettings() {
     const updateUser = useUser((state) => state.updateUser);
 
     const [displayName, setDisplayName] = useState("");
-    const [isDisplayNameChanged, setIsDisplayNameChanged] = useState(false);
     const [bio, setBio] = useState("");
-    const [isBioChanged, setIsBioChanged] = useState(false);
-    const [isButtonDisabled, setIsButtonDisabled] = useState(true);
     const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
     const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
     const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(
         null,
     );
+
+    const isDisplayNameChanged =
+        user != null && (user.displayName ?? "") !== displayName;
+    const isBioChanged = user != null && (user.bio ?? "") !== bio;
+    const isButtonDisabled =
+        !isDisplayNameChanged &&
+        !isBioChanged &&
+        profileImageFile === null &&
+        backgroundImageFile === null;
 
     const handleProfileImageChange = (file: File | null) => {
         setProfileImageFile(file);
@@ -137,27 +143,6 @@ export default function ProfileSettings() {
     };
 
     useEffect(() => {
-        if (!user) return;
-
-        const isDisplayNameChange = (user.displayName ?? "") !== displayName;
-        const isBioChange = (user.bio ?? "") !== bio;
-        const isProfileImageChange = profileImageFile !== null;
-        const isBackgroundImageChange = backgroundImageFile !== null;
-
-        setIsDisplayNameChanged(isDisplayNameChange);
-        setIsBioChanged(isBioChange);
-
-        const isUserDataChange =
-            isDisplayNameChange ||
-            isBioChange ||
-            isProfileImageChange ||
-            isBackgroundImageChange;
-
-        if (isUserDataChange) setIsButtonDisabled(false);
-        else setIsButtonDisabled(true);
-    }, [displayName, bio, user, profileImageFile, backgroundImageFile]);
-
-    useEffect(() => {
         return () => {
             try {
                 if (profileImageFile)
@@ -169,8 +154,11 @@ export default function ProfileSettings() {
     }, []);
 
     useEffect(() => {
-        setDisplayName(user?.displayName ?? "");
-        setBio(user?.bio ?? "");
+        if (!user) return;
+        queueMicrotask(() => {
+            setDisplayName(user.displayName ?? "");
+            setBio(user.bio ?? "");
+        });
     }, [user]);
 
     return (

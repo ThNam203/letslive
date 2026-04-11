@@ -17,7 +17,7 @@ export default function StreamGuide() {
 
     useEffect(() => {
         const readStreamGuiding = localStorage.getItem("readStreamGuiding");
-        setIsGotIt(readStreamGuiding === "true");
+        queueMicrotask(() => setIsGotIt(readStreamGuiding === "true"));
     }, []);
 
     const handleGotIt = () => {

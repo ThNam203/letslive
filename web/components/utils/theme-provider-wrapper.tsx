@@ -10,7 +10,9 @@ export function ThemeProviderWrapper({
 }) {
     const [mounted, setMounted] = useState(false);
 
-    useEffect(() => setMounted(true), []);
+    useEffect(() => {
+        queueMicrotask(() => setMounted(true));
+    }, []);
 
     if (!mounted) {
         // Render children without theming until hydrated
