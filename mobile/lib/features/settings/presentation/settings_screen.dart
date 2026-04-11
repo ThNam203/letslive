@@ -133,7 +133,7 @@ class SettingsScreen extends ConsumerWidget {
     final colors = context.theme.colors;
     final typography = context.theme.typography;
     final currentMode = ref.read(themeModeProvider);
-    final themeModes = AppThemeMode.values;
+    const themeModes = AppThemeMode.values;
 
     showModalBottomSheet(
       context: context,
