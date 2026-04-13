@@ -162,7 +162,7 @@ if (esMain(import.meta)) {
 
     SetupWebSocketServer(server)
         .then(() => logger.info('Server started'))
-        .catch(logger.error)
+        .catch((err) => logger.error(err))
 
     const consul = CreateConsulRegistry()
     consul.register()
