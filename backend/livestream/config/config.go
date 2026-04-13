@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	neturl "net/url"
 	"os"
@@ -48,7 +49,7 @@ func PostProcess(config *Config) error {
 	dbUser := os.Getenv("LIVESTREAM_DB_USER")
 	dbPassword := os.Getenv("LIVESTREAM_DB_PASSWORD")
 	if dbUser == "" || dbPassword == "" {
-		logger.Warnf(nil, "database credentials (LIVESTREAM_DB_USER, LIVESTREAM_DB_PASSWORD) not found in environment.")
+		logger.Warnf(context.TODO(), "database credentials (LIVESTREAM_DB_USER, LIVESTREAM_DB_PASSWORD) not found in environment.")
 	}
 
 	dbURL := &neturl.URL{
