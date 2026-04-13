@@ -81,19 +81,23 @@ CREATE INDEX "idx_ledger_entries_transaction_id" ON "ledger_entries"("transactio
 -------------------------------------------------
 --- block updates and deletion on ledger_entries ---
 -------------------------------------------------
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION block_delete() 
 RETURNS TRIGGER AS $$
 BEGIN
     RAISE EXCEPTION 'error: deleting records from % is forbidden', TG_TABLE_NAME;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION block_update() 
 RETURNS TRIGGER AS $$
 BEGIN
     RAISE EXCEPTION 'error: updating records in % is forbidden', TG_TABLE_NAME;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 CREATE TRIGGER ledger_entries_trigger_no_update
 BEFORE UPDATE ON ledger_entries
@@ -110,6 +114,7 @@ FOR EACH STATEMENT EXECUTE PROCEDURE block_delete();
 -------------------------------------------------
 --- double-entry: sum(amount) = 0 per transaction ---
 -------------------------------------------------
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION check_ledger_zero_sum_for_tid(tid UUID)
 RETURNS void AS $$
 DECLARE
@@ -121,7 +126,9 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION allow_transaction_status_update_only()
 RETURNS trigger AS $$
 BEGIN
@@ -143,12 +150,14 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 CREATE TRIGGER transactions_status_update_only
 BEFORE UPDATE ON transactions
 FOR EACH ROW
 EXECUTE FUNCTION allow_transaction_status_update_only();
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION enforce_zero_sum_on_completion()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -171,6 +180,7 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 CREATE TRIGGER transactions_enforce_zero_sum_on_complete
 BEFORE UPDATE OF status ON transactions

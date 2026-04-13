@@ -264,7 +264,7 @@ services:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
 
   chat_db:
-    image: mongo:7.0
+    image: mongo:8
     container_name: letslive-chat-db
     restart: always
     command: mongod --quiet
