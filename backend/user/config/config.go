@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	neturl "net/url"
 	"os"
@@ -44,17 +45,17 @@ type Tracer struct {
 }
 
 // TracerConfig interface methods
-func (c Config) GetServiceName() string      { return c.Service.Name }
-func (c Config) GetTracerEndpoint() string   { return c.Tracer.Endpoint }
-func (c Config) GetTracerBatchTimeout() int  { return c.Tracer.BatchTimeout }
-func (c Config) IsSecure() bool              { return c.Tracer.Secure }
+func (c Config) GetServiceName() string     { return c.Service.Name }
+func (c Config) GetTracerEndpoint() string  { return c.Tracer.Endpoint }
+func (c Config) GetTracerBatchTimeout() int { return c.Tracer.BatchTimeout }
+func (c Config) IsSecure() bool             { return c.Tracer.Secure }
 
 // PostProcess builds the database connection string from environment variables.
 func PostProcess(config *Config) error {
 	dbUser := os.Getenv("USER_DB_USER")
 	dbPassword := os.Getenv("USER_DB_PASSWORD")
 	if dbUser == "" || dbPassword == "" {
-		logger.Warnf(nil, "database credentials (USER_DB_USER, USER_DB_PASSWORD) not found in environment.")
+		logger.Warnf(context.TODO(), "database credentials (USER_DB_USER, USER_DB_PASSWORD) not found in environment.")
 	}
 
 	dbURL := &neturl.URL{
