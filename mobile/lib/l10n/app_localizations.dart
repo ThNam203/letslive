@@ -926,6 +926,12 @@ abstract class AppLocalizations {
   /// **'Stream'**
   String get settingsNavStream;
 
+  /// No description provided for @settingsNavChatCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat Commands'**
+  String get settingsNavChatCommands;
+
   /// No description provided for @settingsNavVods.
   ///
   /// In en, this message translates to:
@@ -2221,6 +2227,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deposit limit exceeded.'**
   String get apiResErrDepositLimitExceeded;
+
+  /// No description provided for @settingsChatCommandsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your slash chat commands'**
+  String get settingsChatCommandsDescription;
+
+  /// No description provided for @chatCommandsPersonalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your personal chat commands'**
+  String get chatCommandsPersonalTitle;
+
+  /// No description provided for @chatCommandsPersonalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Available to you in any channel.'**
+  String get chatCommandsPersonalDescription;
+
+  /// No description provided for @chatCommandsChannelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your channel chat commands'**
+  String get chatCommandsChannelTitle;
+
+  /// No description provided for @chatCommandsChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Available to anyone chatting in your channel.'**
+  String get chatCommandsChannelDescription;
+
+  /// No description provided for @chatCommandsBuiltinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in chat commands'**
+  String get chatCommandsBuiltinTitle;
+
+  /// No description provided for @chatCommandsBuiltinDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'These are always available in every channel.'**
+  String get chatCommandsBuiltinDescription;
+
+  /// No description provided for @chatCommandsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No chat commands yet.'**
+  String get chatCommandsEmpty;
+
+  /// No description provided for @chatCommandsNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat command name'**
+  String get chatCommandsNameLabel;
+
+  /// No description provided for @chatCommandsNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'discord'**
+  String get chatCommandsNameHint;
+
+  /// No description provided for @chatCommandsResponseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Response'**
+  String get chatCommandsResponseLabel;
+
+  /// No description provided for @chatCommandsResponseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'discord.gg/example'**
+  String get chatCommandsResponseHint;
+
+  /// No description provided for @chatCommandsDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get chatCommandsDescriptionLabel;
+
+  /// No description provided for @chatCommandsSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Add chat command'**
+  String get chatCommandsSubmit;
+
+  /// No description provided for @chatCommandsSubmitEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get chatCommandsSubmitEdit;
+
+  /// No description provided for @chatCommandsCancelEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get chatCommandsCancelEdit;
+
+  /// No description provided for @chatCommandsEditAria.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get chatCommandsEditAria;
+
+  /// No description provided for @chatCommandsEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing /{name}'**
+  String chatCommandsEditTitle(String name);
+
+  /// No description provided for @chatCommandsRemoveAria.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get chatCommandsRemoveAria;
+
+  /// No description provided for @chatCommandsAddedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'/{name} added'**
+  String chatCommandsAddedToast(String name);
+
+  /// No description provided for @chatCommandsUpdatedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'/{name} updated'**
+  String chatCommandsUpdatedToast(String name);
+
+  /// No description provided for @chatCommandsRemovedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat command removed'**
+  String get chatCommandsRemovedToast;
+
+  /// No description provided for @chatCommandsRemoveFailedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove chat command'**
+  String get chatCommandsRemoveFailedToast;
+
+  /// No description provided for @chatCommandsCreateFailedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create chat command (name may be taken)'**
+  String get chatCommandsCreateFailedToast;
+
+  /// No description provided for @chatCommandsUpdateFailedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update chat command (name may be taken)'**
+  String get chatCommandsUpdateFailedToast;
+
+  /// No description provided for @chatCommandsNameInvalidToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be 1-32 chars, lowercase letters/numbers/_-'**
+  String get chatCommandsNameInvalidToast;
+
+  /// No description provided for @chatCommandsResponseRequiredToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Response is required'**
+  String get chatCommandsResponseRequiredToast;
+
+  /// No description provided for @chatCommandsSourceBuiltin.
+  ///
+  /// In en, this message translates to:
+  /// **'built-in'**
+  String get chatCommandsSourceBuiltin;
+
+  /// No description provided for @chatCommandsSourceUser.
+  ///
+  /// In en, this message translates to:
+  /// **'yours'**
+  String get chatCommandsSourceUser;
+
+  /// No description provided for @chatCommandsSourceChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'channel'**
+  String get chatCommandsSourceChannel;
+
+  /// No description provided for @chatCommandsBuiltinMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a message styled as an action'**
+  String get chatCommandsBuiltinMe;
+
+  /// No description provided for @chatCommandsBuiltinShrug.
+  ///
+  /// In en, this message translates to:
+  /// **'Append a shrug to your message'**
+  String get chatCommandsBuiltinShrug;
+
+  /// No description provided for @chatCommandsBuiltinTableflip.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip a table'**
+  String get chatCommandsBuiltinTableflip;
+
+  /// No description provided for @chatCommandsBuiltinUnflip.
+  ///
+  /// In en, this message translates to:
+  /// **'Put the table back'**
+  String get chatCommandsBuiltinUnflip;
+
+  /// No description provided for @chatCommandsBuiltinRoll.
+  ///
+  /// In en, this message translates to:
+  /// **'Roll a die (default 1-100)'**
+  String get chatCommandsBuiltinRoll;
+
+  /// No description provided for @chatCommandsBuiltinHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Show available chat commands'**
+  String get chatCommandsBuiltinHelp;
+
+  /// No description provided for @chatCommandsErrorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown chat command: /{name}'**
+  String chatCommandsErrorUnknown(String name);
+
+  /// No description provided for @chatCommandsErrorRollUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage: /roll [1-1000000]'**
+  String get chatCommandsErrorRollUsage;
+
+  /// No description provided for @chatCommandsHelpHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Available chat commands:'**
+  String get chatCommandsHelpHeader;
+
+  /// No description provided for @chatCommandsHelpCustomHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom chat commands:'**
+  String get chatCommandsHelpCustomHeader;
+
+  /// No description provided for @chatCommandsRollMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'🎲 rolled {value} (1-{max})'**
+  String chatCommandsRollMessage(int value, int max);
 }
 
 class _AppLocalizationsDelegate

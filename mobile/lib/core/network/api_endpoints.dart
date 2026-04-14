@@ -58,6 +58,11 @@ abstract final class ApiEndpoints {
   // Chat (live chat messages, roomId passed as query parameter)
   static const chatMessages = '/messages';
 
+  // Chat slash commands
+  static const chatCommands = '/chat-commands';
+  static const chatCommandsMine = '/chat-commands/mine';
+  static String chatCommandById(String id) => '/chat-commands/$id';
+
   // DM / Conversations (no /dm/ prefix, matches web)
   static const conversations = '/conversations';
   static const conversationsUnreadCounts = '/conversations/unread-counts';

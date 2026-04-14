@@ -12,6 +12,7 @@ import 'features/notifications/data/notification_repository.dart';
 import 'features/user/data/user_repository.dart';
 import 'features/vod/data/vod_comment_repository.dart';
 import 'features/vod/data/vod_repository.dart';
+import 'features/livestream/data/chat_command_repository.dart';
 import 'features/livestream/data/chat_repository.dart';
 import 'features/wallet/data/wallet_repository.dart';
 import 'models/user.dart';
@@ -133,6 +134,11 @@ final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
 /// Chat repository (live chat messages).
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   return ChatRepository(ref.watch(apiClientProvider));
+});
+
+/// Chat command repository (slash commands CRUD).
+final chatCommandRepositoryProvider = Provider<ChatCommandRepository>((ref) {
+  return ChatCommandRepository(ref.watch(apiClientProvider));
 });
 
 /// Wallet repository.

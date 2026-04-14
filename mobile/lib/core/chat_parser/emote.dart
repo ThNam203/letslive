@@ -1,12 +1,12 @@
 import 'package:flutter/widgets.dart';
 
-import 'emote_registry.dart';
+import '../emotes/emote_registry.dart';
 
 final _emoteRegex = RegExp(r':([a-z0-9_]+):');
 
 /// Parse message text and return a list of [InlineSpan] with emotes rendered
 /// as larger emoji text. If the entire message is a single emote, it renders
-/// at [singleEmoteSize] (sticker-style).
+/// at sticker-style size.
 List<InlineSpan> parseEmotes(String text, TextStyle baseStyle) {
   final matches = _emoteRegex.allMatches(text).toList();
   if (matches.isEmpty) return [TextSpan(text: text, style: baseStyle)];
@@ -31,10 +31,11 @@ List<InlineSpan> parseEmotes(String text, TextStyle baseStyle) {
 
     // Add preceding text
     if (match.start > lastIndex) {
-      spans.add(TextSpan(text: text.substring(lastIndex, match.start), style: baseStyle));
+      spans.add(
+        TextSpan(text: text.substring(lastIndex, match.start), style: baseStyle),
+      );
     }
 
-    // Add emote
     final emoteStyle = baseStyle.copyWith(
       fontSize: isSingle ? 32 : (baseStyle.fontSize ?? 14) + 4,
     );
@@ -48,7 +49,6 @@ List<InlineSpan> parseEmotes(String text, TextStyle baseStyle) {
     lastIndex = match.end;
   }
 
-  // Add remaining text
   if (lastIndex < text.length) {
     spans.add(TextSpan(text: text.substring(lastIndex), style: baseStyle));
   }

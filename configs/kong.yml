@@ -300,6 +300,17 @@ services:
         https_redirect_status_code: 426
         request_buffering: true
         response_buffering: true
+      - name: Chat_Commands
+        protocols:
+          - http
+          - https
+        paths:
+          - /chat-commands
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
       - name: DM_Socket
         paths:
           - /dm-ws

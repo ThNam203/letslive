@@ -340,6 +340,8 @@
     "@settingsNavSecurity": {},
     "settingsNavStream": "Stream",
     "@settingsNavStream": {},
+    "settingsNavChatCommands": "Chat Commands",
+    "@settingsNavChatCommands": {},
     "settingsNavVods": "VODs",
     "@settingsNavVods": {},
     "settingsProfileTitle": "Profile Settings",
@@ -834,5 +836,108 @@
     "apiResErrUnsupportedCurrency": "Unsupported currency.",
     "@apiResErrUnsupportedCurrency": {},
     "apiResErrDepositLimitExceeded": "Deposit limit exceeded.",
-    "@apiResErrDepositLimitExceeded": {}
+    "@apiResErrDepositLimitExceeded": {},
+    "settingsChatCommandsDescription": "Manage your slash chat commands",
+    "@settingsChatCommandsDescription": {},
+    "chatCommandsPersonalTitle": "Your personal chat commands",
+    "@chatCommandsPersonalTitle": {},
+    "chatCommandsPersonalDescription": "Available to you in any channel.",
+    "@chatCommandsPersonalDescription": {},
+    "chatCommandsChannelTitle": "Your channel chat commands",
+    "@chatCommandsChannelTitle": {},
+    "chatCommandsChannelDescription": "Available to anyone chatting in your channel.",
+    "@chatCommandsChannelDescription": {},
+    "chatCommandsBuiltinTitle": "Built-in chat commands",
+    "@chatCommandsBuiltinTitle": {},
+    "chatCommandsBuiltinDescription": "These are always available in every channel.",
+    "@chatCommandsBuiltinDescription": {},
+    "chatCommandsEmpty": "No chat commands yet.",
+    "@chatCommandsEmpty": {},
+    "chatCommandsNameLabel": "Chat command name",
+    "@chatCommandsNameLabel": {},
+    "chatCommandsNameHint": "discord",
+    "@chatCommandsNameHint": {},
+    "chatCommandsResponseLabel": "Response",
+    "@chatCommandsResponseLabel": {},
+    "chatCommandsResponseHint": "discord.gg/example",
+    "@chatCommandsResponseHint": {},
+    "chatCommandsDescriptionLabel": "Description (optional)",
+    "@chatCommandsDescriptionLabel": {},
+    "chatCommandsSubmit": "Add chat command",
+    "@chatCommandsSubmit": {},
+    "chatCommandsSubmitEdit": "Save changes",
+    "@chatCommandsSubmitEdit": {},
+    "chatCommandsCancelEdit": "Cancel",
+    "@chatCommandsCancelEdit": {},
+    "chatCommandsEditAria": "Edit",
+    "@chatCommandsEditAria": {},
+    "chatCommandsEditTitle": "Editing /{name}",
+    "@chatCommandsEditTitle": {
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "chatCommandsRemoveAria": "Remove",
+    "@chatCommandsRemoveAria": {},
+    "chatCommandsAddedToast": "/{name} added",
+    "@chatCommandsAddedToast": {
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "chatCommandsUpdatedToast": "/{name} updated",
+    "@chatCommandsUpdatedToast": {
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "chatCommandsRemovedToast": "Chat command removed",
+    "@chatCommandsRemovedToast": {},
+    "chatCommandsRemoveFailedToast": "Could not remove chat command",
+    "@chatCommandsRemoveFailedToast": {},
+    "chatCommandsCreateFailedToast": "Could not create chat command (name may be taken)",
+    "@chatCommandsCreateFailedToast": {},
+    "chatCommandsUpdateFailedToast": "Could not update chat command (name may be taken)",
+    "@chatCommandsUpdateFailedToast": {},
+    "chatCommandsNameInvalidToast": "Name must be 1-32 chars, lowercase letters/numbers/_-",
+    "@chatCommandsNameInvalidToast": {},
+    "chatCommandsResponseRequiredToast": "Response is required",
+    "@chatCommandsResponseRequiredToast": {},
+    "chatCommandsSourceBuiltin": "built-in",
+    "@chatCommandsSourceBuiltin": {},
+    "chatCommandsSourceUser": "yours",
+    "@chatCommandsSourceUser": {},
+    "chatCommandsSourceChannel": "channel",
+    "@chatCommandsSourceChannel": {},
+    "chatCommandsBuiltinMe": "Send a message styled as an action",
+    "@chatCommandsBuiltinMe": {},
+    "chatCommandsBuiltinShrug": "Append a shrug to your message",
+    "@chatCommandsBuiltinShrug": {},
+    "chatCommandsBuiltinTableflip": "Flip a table",
+    "@chatCommandsBuiltinTableflip": {},
+    "chatCommandsBuiltinUnflip": "Put the table back",
+    "@chatCommandsBuiltinUnflip": {},
+    "chatCommandsBuiltinRoll": "Roll a die (default 1-100)",
+    "@chatCommandsBuiltinRoll": {},
+    "chatCommandsBuiltinHelp": "Show available chat commands",
+    "@chatCommandsBuiltinHelp": {},
+    "chatCommandsErrorUnknown": "Unknown chat command: /{name}",
+    "@chatCommandsErrorUnknown": {
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "chatCommandsErrorRollUsage": "Usage: /roll [1-1000000]",
+    "@chatCommandsErrorRollUsage": {},
+    "chatCommandsHelpHeader": "Available chat commands:",
+    "@chatCommandsHelpHeader": {},
+    "chatCommandsHelpCustomHeader": "Custom chat commands:",
+    "@chatCommandsHelpCustomHeader": {},
+    "chatCommandsRollMessage": "🎲 rolled {value} (1-{max})",
+    "@chatCommandsRollMessage": {
+        "placeholders": {
+            "value": {"type": "int"},
+            "max": {"type": "int"}
+        }
+    }
 }

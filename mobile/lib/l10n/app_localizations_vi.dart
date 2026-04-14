@@ -504,6 +504,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsNavStream => 'Stream';
 
   @override
+  String get settingsNavChatCommands => 'Lệnh chat';
+
+  @override
   String get settingsNavVods => 'VODs';
 
   @override
@@ -1206,4 +1209,143 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get apiResErrDepositLimitExceeded => 'Vượt quá giới hạn nạp tiền.';
+
+  @override
+  String get settingsChatCommandsDescription =>
+      'Quản lý các lệnh chat slash của bạn';
+
+  @override
+  String get chatCommandsPersonalTitle => 'Lệnh chat cá nhân của bạn';
+
+  @override
+  String get chatCommandsPersonalDescription => 'Khả dụng cho bạn ở mọi kênh.';
+
+  @override
+  String get chatCommandsChannelTitle => 'Lệnh chat trong kênh của bạn';
+
+  @override
+  String get chatCommandsChannelDescription =>
+      'Khả dụng cho mọi người khi chat trong kênh của bạn.';
+
+  @override
+  String get chatCommandsBuiltinTitle => 'Lệnh chat có sẵn';
+
+  @override
+  String get chatCommandsBuiltinDescription => 'Luôn khả dụng trong mọi kênh.';
+
+  @override
+  String get chatCommandsEmpty => 'Chưa có lệnh chat nào.';
+
+  @override
+  String get chatCommandsNameLabel => 'Tên lệnh chat';
+
+  @override
+  String get chatCommandsNameHint => 'discord';
+
+  @override
+  String get chatCommandsResponseLabel => 'Nội dung phản hồi';
+
+  @override
+  String get chatCommandsResponseHint => 'discord.gg/example';
+
+  @override
+  String get chatCommandsDescriptionLabel => 'Mô tả (tùy chọn)';
+
+  @override
+  String get chatCommandsSubmit => 'Thêm lệnh chat';
+
+  @override
+  String get chatCommandsSubmitEdit => 'Lưu thay đổi';
+
+  @override
+  String get chatCommandsCancelEdit => 'Hủy';
+
+  @override
+  String get chatCommandsEditAria => 'Sửa';
+
+  @override
+  String chatCommandsEditTitle(String name) {
+    return 'Đang sửa /$name';
+  }
+
+  @override
+  String get chatCommandsRemoveAria => 'Xóa';
+
+  @override
+  String chatCommandsAddedToast(String name) {
+    return 'Đã thêm /$name';
+  }
+
+  @override
+  String chatCommandsUpdatedToast(String name) {
+    return 'Đã cập nhật /$name';
+  }
+
+  @override
+  String get chatCommandsRemovedToast => 'Đã xóa lệnh chat';
+
+  @override
+  String get chatCommandsRemoveFailedToast => 'Không thể xóa lệnh chat';
+
+  @override
+  String get chatCommandsCreateFailedToast =>
+      'Không thể tạo lệnh chat (tên có thể đã được dùng)';
+
+  @override
+  String get chatCommandsUpdateFailedToast =>
+      'Không thể cập nhật lệnh chat (tên có thể đã được dùng)';
+
+  @override
+  String get chatCommandsNameInvalidToast =>
+      'Tên phải dài 1-32 ký tự, chữ thường/số/_-';
+
+  @override
+  String get chatCommandsResponseRequiredToast => 'Cần nhập nội dung phản hồi';
+
+  @override
+  String get chatCommandsSourceBuiltin => 'có sẵn';
+
+  @override
+  String get chatCommandsSourceUser => 'của bạn';
+
+  @override
+  String get chatCommandsSourceChannel => 'kênh';
+
+  @override
+  String get chatCommandsBuiltinMe => 'Gửi tin nhắn dưới dạng hành động';
+
+  @override
+  String get chatCommandsBuiltinShrug =>
+      'Thêm biểu tượng nhún vai vào tin nhắn';
+
+  @override
+  String get chatCommandsBuiltinTableflip => 'Lật bàn';
+
+  @override
+  String get chatCommandsBuiltinUnflip => 'Đặt bàn về chỗ cũ';
+
+  @override
+  String get chatCommandsBuiltinRoll => 'Tung xúc xắc (mặc định 1-100)';
+
+  @override
+  String get chatCommandsBuiltinHelp => 'Xem các lệnh chat khả dụng';
+
+  @override
+  String chatCommandsErrorUnknown(String name) {
+    return 'Lệnh chat không tồn tại: /$name';
+  }
+
+  @override
+  String get chatCommandsErrorRollUsage => 'Cú pháp: /roll [1-1000000]';
+
+  @override
+  String get chatCommandsHelpHeader => 'Các lệnh chat khả dụng:';
+
+  @override
+  String get chatCommandsHelpCustomHeader => 'Các lệnh chat tùy chỉnh:';
+
+  @override
+  String chatCommandsRollMessage(int value, int max) {
+    return '🎲 tung được $value (1-$max)';
+  }
 }

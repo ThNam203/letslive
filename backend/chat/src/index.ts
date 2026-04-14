@@ -11,6 +11,8 @@ import { ConversationService } from './services/conversationService'
 import { DmMessageService } from './services/dmMessageService'
 import { ConversationHandler } from './handlers/conversationHandler'
 import { DmMessageHandler } from './handlers/dmMessageHandler'
+import { ChatCommandHandler } from './handlers/chatCommandHandler'
+import { ChatCommandService } from './services/chatCommandService'
 import { authMiddleware, extractUserIdFromCookie } from './middlewares/auth'
 import esMain from 'es-main'
 import { createServer, Server } from 'http'
@@ -18,7 +20,6 @@ import ConsulRegistry from 'services/discovery'
 import { RESPONSE_TEMPLATES, Response as ServiceResponse, newResponseFromTemplate } from './types/api-response'
 import express, { NextFunction, Request, Response } from 'express'
 import requestIdMiddleware from 'middlewares/requestId'
-import loggingMiddleware from 'middlewares/logging'
 import pinohttp from 'pino-http'
 import logger from 'lib/logger'
 
@@ -62,6 +63,15 @@ function CreateExpressServer() {
             writeResponse(req, res, newResponseFromTemplate<any>(RESPONSE_TEMPLATES.RES_SUCC_OK, messages))
         })
     )
+
+    // --- Chat Slash Commands ---
+    const chatCommandService = new ChatCommandService()
+    const chatCommandHandler = new ChatCommandHandler(chatCommandService)
+    app.get('/v1/chat-commands', asyncHandler(chatCommandHandler.listForRoom))
+    app.get('/v1/chat-commands/mine', authMiddleware, asyncHandler(chatCommandHandler.listMine))
+    app.post('/v1/chat-commands', authMiddleware, asyncHandler(chatCommandHandler.create))
+    app.patch('/v1/chat-commands/:id', authMiddleware, asyncHandler(chatCommandHandler.update))
+    app.delete('/v1/chat-commands/:id', authMiddleware, asyncHandler(chatCommandHandler.delete))
 
     // --- DM/Group Conversation Routes ---
     const conversationService = new ConversationService()
