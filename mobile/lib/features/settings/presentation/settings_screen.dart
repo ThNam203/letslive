@@ -58,6 +58,13 @@ class SettingsScreen extends ConsumerWidget {
                 onPress: () => context.push(AppRoutes.settingsStream),
               ),
               FTile(
+                prefix: const Icon(FIcons.messageSquare),
+                title: Text(l10n.settingsNavChatCommands),
+                subtitle: Text(l10n.settingsChatCommandsDescription),
+                suffix: const Icon(FIcons.chevronRight),
+                onPress: () => context.push(AppRoutes.settingsChatCommands),
+              ),
+              FTile(
                 prefix: const Icon(FIcons.film),
                 title: Text(l10n.settingsNavVods),
                 subtitle: Text(l10n.settingsVodsDescription),

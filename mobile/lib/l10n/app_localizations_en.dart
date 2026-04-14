@@ -511,6 +511,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsNavStream => 'Stream';
 
   @override
+  String get settingsNavChatCommands => 'Chat Commands';
+
+  @override
   String get settingsNavVods => 'VODs';
 
   @override
@@ -1212,4 +1215,144 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get apiResErrDepositLimitExceeded => 'Deposit limit exceeded.';
+
+  @override
+  String get settingsChatCommandsDescription =>
+      'Manage your slash chat commands';
+
+  @override
+  String get chatCommandsPersonalTitle => 'Your personal chat commands';
+
+  @override
+  String get chatCommandsPersonalDescription =>
+      'Available to you in any channel.';
+
+  @override
+  String get chatCommandsChannelTitle => 'Your channel chat commands';
+
+  @override
+  String get chatCommandsChannelDescription =>
+      'Available to anyone chatting in your channel.';
+
+  @override
+  String get chatCommandsBuiltinTitle => 'Built-in chat commands';
+
+  @override
+  String get chatCommandsBuiltinDescription =>
+      'These are always available in every channel.';
+
+  @override
+  String get chatCommandsEmpty => 'No chat commands yet.';
+
+  @override
+  String get chatCommandsNameLabel => 'Chat command name';
+
+  @override
+  String get chatCommandsNameHint => 'discord';
+
+  @override
+  String get chatCommandsResponseLabel => 'Response';
+
+  @override
+  String get chatCommandsResponseHint => 'discord.gg/example';
+
+  @override
+  String get chatCommandsDescriptionLabel => 'Description (optional)';
+
+  @override
+  String get chatCommandsSubmit => 'Add chat command';
+
+  @override
+  String get chatCommandsSubmitEdit => 'Save changes';
+
+  @override
+  String get chatCommandsCancelEdit => 'Cancel';
+
+  @override
+  String get chatCommandsEditAria => 'Edit';
+
+  @override
+  String chatCommandsEditTitle(String name) {
+    return 'Editing /$name';
+  }
+
+  @override
+  String get chatCommandsRemoveAria => 'Remove';
+
+  @override
+  String chatCommandsAddedToast(String name) {
+    return '/$name added';
+  }
+
+  @override
+  String chatCommandsUpdatedToast(String name) {
+    return '/$name updated';
+  }
+
+  @override
+  String get chatCommandsRemovedToast => 'Chat command removed';
+
+  @override
+  String get chatCommandsRemoveFailedToast => 'Could not remove chat command';
+
+  @override
+  String get chatCommandsCreateFailedToast =>
+      'Could not create chat command (name may be taken)';
+
+  @override
+  String get chatCommandsUpdateFailedToast =>
+      'Could not update chat command (name may be taken)';
+
+  @override
+  String get chatCommandsNameInvalidToast =>
+      'Name must be 1-32 chars, lowercase letters/numbers/_-';
+
+  @override
+  String get chatCommandsResponseRequiredToast => 'Response is required';
+
+  @override
+  String get chatCommandsSourceBuiltin => 'built-in';
+
+  @override
+  String get chatCommandsSourceUser => 'yours';
+
+  @override
+  String get chatCommandsSourceChannel => 'channel';
+
+  @override
+  String get chatCommandsBuiltinMe => 'Send a message styled as an action';
+
+  @override
+  String get chatCommandsBuiltinShrug => 'Append a shrug to your message';
+
+  @override
+  String get chatCommandsBuiltinTableflip => 'Flip a table';
+
+  @override
+  String get chatCommandsBuiltinUnflip => 'Put the table back';
+
+  @override
+  String get chatCommandsBuiltinRoll => 'Roll a die (default 1-100)';
+
+  @override
+  String get chatCommandsBuiltinHelp => 'Show available chat commands';
+
+  @override
+  String chatCommandsErrorUnknown(String name) {
+    return 'Unknown chat command: /$name';
+  }
+
+  @override
+  String get chatCommandsErrorRollUsage => 'Usage: /roll [1-1000000]';
+
+  @override
+  String get chatCommandsHelpHeader => 'Available chat commands:';
+
+  @override
+  String get chatCommandsHelpCustomHeader => 'Custom chat commands:';
+
+  @override
+  String chatCommandsRollMessage(int value, int max) {
+    return '🎲 rolled $value (1-$max)';
+  }
 }

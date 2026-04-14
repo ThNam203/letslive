@@ -11,6 +11,7 @@ import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/search/presentation/search_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/settings/presentation/chat_commands_settings_screen.dart';
 import '../../features/settings/presentation/profile_settings_screen.dart';
 import '../../features/settings/presentation/security_settings_screen.dart';
 import '../../features/settings/presentation/stream_settings_screen.dart';
@@ -34,6 +35,7 @@ abstract final class AppRoutes {
   static const settingsProfile = '/settings/profile';
   static const settingsSecurity = '/settings/security';
   static const settingsStream = '/settings/stream';
+  static const settingsChatCommands = '/settings/chat-commands';
   static const settingsVods = '/settings/vods';
   static const search = '/search';
   static String userProfile(String userId) => '/users/$userId';
@@ -115,6 +117,11 @@ final appRouter = GoRouter(
       path: AppRoutes.settingsStream,
       redirect: _requireAuth,
       builder: (context, state) => const StreamSettingsScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.settingsChatCommands,
+      redirect: _requireAuth,
+      builder: (context, state) => const ChatCommandsSettingsScreen(),
     ),
     GoRoute(
       path: AppRoutes.settingsVods,

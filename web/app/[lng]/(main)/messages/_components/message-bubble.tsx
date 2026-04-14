@@ -1,7 +1,7 @@
 "use client";
 
 import { DmMessage, DmMessageType } from "@/types/dm";
-import { parseEmotes } from "@/utils/emote-parser";
+import { parseEmotes } from "@/utils/chat-parser";
 import useT from "@/hooks/use-translation";
 
 function formatMessageTime(dateStr: string) {

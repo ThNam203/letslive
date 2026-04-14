@@ -6,6 +6,7 @@
         "profile": "Profile",
         "security": "Security",
         "stream": "Stream",
+        "chat_commands": "Chat Commands",
         "vods": "VODs",
         "upload": "Upload"
     },

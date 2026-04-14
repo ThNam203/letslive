@@ -1,0 +1,53 @@
+{
+    "page": {
+        "personal_title": "Lệnh chat cá nhân của bạn",
+        "personal_description": "Khả dụng cho bạn ở mọi kênh.",
+        "channel_title": "Lệnh chat trong kênh của bạn",
+        "channel_description": "Khả dụng cho mọi người khi chat trong kênh của bạn.",
+        "builtin_title": "Lệnh chat có sẵn",
+        "builtin_description": "Luôn khả dụng trong mọi kênh.",
+        "empty": "Chưa có lệnh chat nào.",
+        "name_label": "Tên lệnh chat",
+        "name_placeholder": "discord",
+        "response_label": "Nội dung phản hồi",
+        "response_placeholder": "Tham gia với chúng tôi tại discord.gg/example",
+        "description_label": "Mô tả (tùy chọn)",
+        "description_placeholder": "Liên kết tới máy chủ Discord",
+        "submit": "Thêm lệnh chat",
+        "submit_edit": "Lưu thay đổi",
+        "cancel_edit": "Hủy",
+        "edit_aria": "Sửa",
+        "edit_title": "Đang sửa /{{name}}",
+        "remove_aria": "Xóa",
+        "added_toast": "Đã thêm /{{name}}",
+        "updated_toast": "Đã cập nhật /{{name}}",
+        "removed_toast": "Đã xóa lệnh chat",
+        "remove_failed_toast": "Không thể xóa lệnh chat",
+        "create_failed_toast": "Không thể tạo lệnh chat (tên có thể đã được dùng)",
+        "update_failed_toast": "Không thể cập nhật lệnh chat (tên có thể đã được dùng)",
+        "name_invalid_toast": "Tên phải dài 1-32 ký tự, chữ thường/số/_-",
+        "response_required_toast": "Cần nhập nội dung phản hồi"
+    },
+    "source": {
+        "builtin": "có sẵn",
+        "user": "của bạn",
+        "channel": "kênh"
+    },
+    "builtin": {
+        "me": "Gửi tin nhắn dưới dạng hành động",
+        "shrug": "Thêm biểu tượng nhún vai vào tin nhắn",
+        "tableflip": "Lật bàn",
+        "unflip": "Đặt bàn về chỗ cũ",
+        "roll": "Tung xúc xắc (mặc định 1-100)",
+        "help": "Xem các lệnh chat khả dụng"
+    },
+    "errors": {
+        "unknown": "Lệnh chat không tồn tại: /{{name}}",
+        "roll_usage": "Cú pháp: /roll [1-1000000]"
+    },
+    "help": {
+        "header": "Các lệnh chat khả dụng:",
+        "custom_header": "Các lệnh chat tùy chỉnh:"
+    },
+    "roll_message": "🎲 tung được {{value}} (1-{{max}})"
+}
