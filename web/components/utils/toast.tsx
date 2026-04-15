@@ -5,11 +5,16 @@ import i18next from "@/lib/i18n/i18next";
 
 const DEFAULT_ERROR_KEY = "api-response:default_error";
 
-function resolveMessage(message: string | undefined): string {
-    if (message != null && String(message).trim() !== "") {
-        return message;
+function resolveMessage(message?: string): string {
+    const normalized = String(message ?? "").trim();
+    if (
+        normalized === "" ||
+        normalized.toLowerCase() === "undefined" ||
+        normalized.toLowerCase() === "null"
+    ) {
+        return i18next.t(DEFAULT_ERROR_KEY);
     }
-    return i18next.t(DEFAULT_ERROR_KEY);
+    return normalized;
 }
 
 function toastWithDefault(
@@ -29,15 +34,15 @@ toastWithDefault.error = (
 toastWithDefault.success = (
     message?: string,
     options?: Parameters<typeof toastify>[1],
-) => toastify.success(message ?? resolveMessage(message), options);
+) => toastify.success(resolveMessage(message), options);
 toastWithDefault.info = (
     message?: string,
     options?: Parameters<typeof toastify>[1],
-) => toastify.info(message ?? resolveMessage(message), options);
+) => toastify.info(resolveMessage(message), options);
 toastWithDefault.warning = (
     message?: string,
     options?: Parameters<typeof toastify>[1],
-) => toastify.warning(message ?? resolveMessage(message), options);
+) => toastify.warning(resolveMessage(message), options);
 toastWithDefault.warn = toastWithDefault.warning;
 toastWithDefault.dismiss = toastify.dismiss;
 toastWithDefault.promise = toastify.promise;
