@@ -34,3 +34,4 @@ ios/Flutter/Flutter.podspec
 # Misc
 .DS_Store
 pubspec.lock
+*.log

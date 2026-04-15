@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 
-import '../../../core/emotes/emote_parser.dart';
+import '../../../core/chat_parser/emote.dart';
 import '../../../core/network/dm_websocket_service.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/emote_picker.dart';

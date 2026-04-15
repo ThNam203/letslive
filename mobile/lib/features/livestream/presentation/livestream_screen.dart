@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:chewie/chewie.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -11,18 +9,15 @@ import 'package:video_player/video_player.dart';
 
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_endpoints.dart';
-import '../../../core/network/websocket_service.dart';
 import '../../../core/router/app_router.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../models/chat_message.dart';
 import '../../../models/livestream.dart';
 import '../../../models/user.dart';
 import '../../../providers.dart';
-import '../../../core/emotes/emote_parser.dart';
-import '../../../shared/widgets/emote_picker.dart';
 import '../../../shared/widgets/error_display.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/user_avatar.dart';
+import 'widgets/live_chat_panel.dart';
 
 class LivestreamScreen extends ConsumerStatefulWidget {
   final String livestreamId;
@@ -41,18 +36,13 @@ class LivestreamScreen extends ConsumerStatefulWidget {
 class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
   VideoPlayerController? _videoController;
   ChewieController? _chewieController;
-  LiveChatService? _chatService;
-  final _chatController = TextEditingController();
-  final _scrollController = ScrollController();
 
   Livestream? _livestream;
   User? _streamer;
-  List<ChatMessage> _messages = [];
   bool _isLoading = true;
   bool _isVideoLoading = true;
   String? _error;
   bool _isChatVisible = true;
-  StreamSubscription<ChatMessage>? _chatSubscription;
 
   @override
   void initState() {
@@ -62,12 +52,8 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
 
   @override
   void dispose() {
-    _chatSubscription?.cancel();
-    _chatService?.dispose();
     _chewieController?.dispose();
     _videoController?.dispose();
-    _chatController.dispose();
-    _scrollController.dispose();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -97,7 +83,6 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
           _isLoading = false;
         });
         _initVideoPlayer(livestream);
-        _initChat(livestream);
         _fetchStreamer(livestream.userId);
       } else {
         setState(() {
@@ -158,54 +143,6 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
           });
   }
 
-  void _initChat(Livestream livestream) {
-    final currentUser = ref.read(currentUserProvider);
-    if (currentUser == null) return;
-
-    // Fetch chat history
-    final chatRepo = ref.read(chatRepositoryProvider);
-    chatRepo.getMessages(roomId: livestream.id).then((response) {
-      if (mounted && response.success && response.data != null) {
-        setState(() => _messages = response.data!);
-        _scrollToBottom();
-      }
-    });
-
-    // Connect WebSocket
-    _chatService = LiveChatService();
-    _chatSubscription = _chatService!.messages.listen((message) {
-      if (mounted) {
-        setState(() => _messages.add(message));
-        _scrollToBottom();
-      }
-    });
-    _chatService!.connect(
-      roomId: livestream.id,
-      userId: currentUser.id,
-      username: currentUser.username,
-    );
-  }
-
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  void _sendMessage() {
-    final text = _chatController.text.trim();
-    if (text.isEmpty || _chatService == null) return;
-
-    _chatService!.sendMessage(text);
-    _chatController.clear();
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -235,11 +172,14 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
   }
 
   Widget _buildContent(BuildContext context) {
+    final livestream = _livestream;
     return Column(
       children: [
         _buildVideoPlayer(context),
-        if (_livestream != null) _buildStreamInfo(context),
-        if (_isChatVisible) Expanded(child: _buildChat(context)),
+        if (livestream != null)
+          _StreamInfoBar(livestream: livestream, streamer: _streamer),
+        if (_isChatVisible && livestream != null)
+          Expanded(child: LiveChatPanel(roomId: livestream.id)),
       ],
     );
   }
@@ -259,12 +199,19 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
           : Chewie(controller: _chewieController!),
     );
   }
+}
 
-  Widget _buildStreamInfo(BuildContext context) {
+class _StreamInfoBar extends StatelessWidget {
+  final Livestream livestream;
+  final User? streamer;
+
+  const _StreamInfoBar({required this.livestream, required this.streamer});
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.theme.colors;
     final typography = context.theme.typography;
     final l10n = AppLocalizations.of(context);
-    final livestream = _livestream!;
 
     return GestureDetector(
       onTap: () => context.push(AppRoutes.userProfile(livestream.userId)),
@@ -273,8 +220,8 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
         child: Row(
           children: [
             UserAvatar(
-              imageUrl: _streamer?.profilePicture != null
-                  ? '${AppConfig.apiUrl}/${_streamer!.profilePicture}'
+              imageUrl: streamer?.profilePicture != null
+                  ? '${AppConfig.apiUrl}/${streamer!.profilePicture}'
                   : null,
               size: 36,
               fallback: const Icon(FIcons.user, size: 18),
@@ -291,7 +238,7 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    _streamer?.displayName ?? _streamer?.username ?? '',
+                    streamer?.displayName ?? streamer?.username ?? '',
                     style: typography.xs.copyWith(
                       color: colors.mutedForeground,
                     ),
@@ -333,156 +280,5 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
         ),
       ),
     );
-  }
-
-  Widget _buildChat(BuildContext context) {
-    final colors = context.theme.colors;
-    final typography = context.theme.typography;
-    final l10n = AppLocalizations.of(context);
-    final currentUser = ref.watch(currentUserProvider);
-
-    return Column(
-      children: [
-        Container(height: 1, color: colors.border),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            children: [
-              Icon(
-                FIcons.messageSquare,
-                size: 16,
-                color: colors.mutedForeground,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                l10n.usersChatTitle,
-                style: typography.sm.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemCount: _messages.length,
-            itemBuilder: (context, index) {
-              final message = _messages[index];
-              return _ChatBubble(message: message);
-            },
-          ),
-        ),
-        if (currentUser != null)
-          _buildChatInput(context)
-        else
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Text(
-              l10n.usersChatPlaceholderLogin,
-              style: typography.sm.copyWith(color: colors.mutedForeground),
-              textAlign: TextAlign.center,
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildChatInput(BuildContext context) {
-    final colors = context.theme.colors;
-    final l10n = AppLocalizations.of(context);
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: colors.border)),
-      ),
-      child: Row(
-        children: [
-          FButton.icon(
-            onPress: () => showEmotePicker(context, (code) {
-              final ctrl = _chatController;
-              final sel = ctrl.selection;
-              final text = ctrl.text;
-              final newText =
-                  text.substring(0, sel.baseOffset) +
-                  code +
-                  text.substring(sel.extentOffset);
-              ctrl.value = TextEditingValue(
-                text: newText,
-                selection: TextSelection.collapsed(
-                  offset: sel.baseOffset + code.length,
-                ),
-              );
-            }),
-            child: const Text('😊', style: TextStyle(fontSize: 18)),
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: FTextField(
-              control: FTextFieldControl.managed(controller: _chatController),
-              hint: l10n.usersChatPlaceholderTyping,
-            ),
-          ),
-          const SizedBox(width: 8),
-          FButton.icon(onPress: _sendMessage, child: const Icon(FIcons.send)),
-        ],
-      ),
-    );
-  }
-}
-
-class _ChatBubble extends StatelessWidget {
-  final ChatMessage message;
-
-  const _ChatBubble({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final typography = context.theme.typography;
-    final l10n = AppLocalizations.of(context);
-
-    if (message.isJoin || message.isLeave) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Center(
-          child: Text(
-            '${message.username} ${message.isJoin ? l10n.usersChatJoined : l10n.usersChatLeft}',
-            style: typography.xs.copyWith(
-              color: colors.mutedForeground,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-      );
-    }
-
-    final usernameColor = _colorFromUserId(message.userId);
-
-    final textStyle = typography.xs.copyWith(color: colors.foreground);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Text.rich(
-        TextSpan(
-          children: [
-            TextSpan(
-              text: '${message.username}: ',
-              style: typography.xs.copyWith(
-                color: usernameColor,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            ...parseEmotes(message.text, textStyle),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _colorFromUserId(String userId) {
-    final hash = userId.hashCode;
-    final hue = (hash % 360).abs().toDouble();
-    return HSLColor.fromAHSL(1.0, hue, 0.7, 0.5).toColor();
   }
 }

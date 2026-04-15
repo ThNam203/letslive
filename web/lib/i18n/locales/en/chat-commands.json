@@ -1,0 +1,53 @@
+{
+    "page": {
+        "personal_title": "Your personal chat commands",
+        "personal_description": "Available to you in any channel.",
+        "channel_title": "Your channel chat commands",
+        "channel_description": "Available to anyone chatting in your channel.",
+        "builtin_title": "Built-in chat commands",
+        "builtin_description": "These are always available in every channel.",
+        "empty": "No chat commands yet.",
+        "name_label": "Chat command name",
+        "name_placeholder": "discord",
+        "response_label": "Response",
+        "response_placeholder": "Join us at discord.gg/example",
+        "description_label": "Description (optional)",
+        "description_placeholder": "Link to our Discord server",
+        "submit": "Add chat command",
+        "submit_edit": "Save changes",
+        "cancel_edit": "Cancel",
+        "edit_aria": "Edit",
+        "edit_title": "Editing /{{name}}",
+        "remove_aria": "Remove",
+        "added_toast": "/{{name}} added",
+        "updated_toast": "/{{name}} updated",
+        "removed_toast": "Chat command removed",
+        "remove_failed_toast": "Could not remove chat command",
+        "create_failed_toast": "Could not create chat command (name may be taken)",
+        "update_failed_toast": "Could not update chat command (name may be taken)",
+        "name_invalid_toast": "Name must be 1-32 chars, lowercase letters/numbers/_-",
+        "response_required_toast": "Response is required"
+    },
+    "source": {
+        "builtin": "built-in",
+        "user": "yours",
+        "channel": "channel"
+    },
+    "builtin": {
+        "me": "Send a message styled as an action",
+        "shrug": "Append a shrug to your message",
+        "tableflip": "Flip a table",
+        "unflip": "Put the table back",
+        "roll": "Roll a die (default 1-100)",
+        "help": "Show available chat commands"
+    },
+    "errors": {
+        "unknown": "Unknown chat command: /{{name}}",
+        "roll_usage": "Usage: /roll [1-1000000]"
+    },
+    "help": {
+        "header": "Available chat commands:",
+        "custom_header": "Custom chat commands:"
+    },
+    "roll_message": "🎲 rolled {{value}} (1-{{max}})"
+}
