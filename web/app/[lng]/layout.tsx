@@ -10,6 +10,9 @@ import { myGetT } from "@/lib/i18n";
 import TranslationsProvider from "@/components/utils/i18n-provider";
 import { ThemeProviderWrapper } from "@/components/utils/theme-provider-wrapper";
 import UserInformationWrapper from "@/components/wrappers/UserInformationWrapper";
+import MockProvider from "@/components/utils/mock-provider";
+
+const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
 
 const inter = Inter({ subsets: ["latin"] });
 type Params = Promise<{ lng: string }>;
@@ -37,20 +40,28 @@ export default async function RootLayout({
 }) {
     const { lng } = await params;
 
+    const content = (
+        <TranslationsProvider>
+            <ThemeProviderWrapper>
+                <Suspense fallback={<Loading />}>
+                    <UserInformationWrapper>
+                        {children}
+                    </UserInformationWrapper>
+                    <Toast />
+                    <UploadManager />
+                </Suspense>
+            </ThemeProviderWrapper>
+        </TranslationsProvider>
+    );
+
     return (
         <html lang={lng} dir={dir(lng)}>
             <body className={inter.className}>
-                <TranslationsProvider>
-                    <ThemeProviderWrapper>
-                        <Suspense fallback={<Loading />}>
-                            <UserInformationWrapper>
-                                {children}
-                            </UserInformationWrapper>
-                            <Toast />
-                            <UploadManager />
-                        </Suspense>
-                    </ThemeProviderWrapper>
-                </TranslationsProvider>
+                {USE_MOCK_API ? (
+                    <MockProvider>{content}</MockProvider>
+                ) : (
+                    content
+                )}
             </body>
         </html>
     );
