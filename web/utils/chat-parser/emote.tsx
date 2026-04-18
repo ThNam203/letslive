@@ -9,7 +9,11 @@ const EMOTE_REGEX = /:([a-z0-9_]+):/g;
  *
  * If the entire message is a single emote, it renders larger (sticker-style).
  */
-export function parseEmotes(text: string): React.ReactNode[] {
+export function parseEmotes(text: string | undefined | null): React.ReactNode[] {
+    if (text == null) {
+        return [];
+    }
+
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
     let match: RegExpExecArray | null;

@@ -42,7 +42,7 @@ export default function SettingsNav({
                                     <Link
                                         href={item.href}
                                         className={cn(
-                                            "hover:text-primary relative inline-block w-20 py-4 text-center text-sm transition-colors",
+                                            "hover:text-primary relative inline-block w-fit px-4 py-4 text-center text-sm transition-colors",
                                             isActive
                                                 ? "text-primary border-primary border-b-2"
                                                 : "text-foreground",

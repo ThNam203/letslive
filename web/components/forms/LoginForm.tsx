@@ -19,9 +19,19 @@ import { Input } from "../ui/input";
 import { EMAIL_MAX_LENGTH } from "@/constant/field-limits";
 import { PASSWORD_MAX_LENGTH } from "@/constant/password";
 
+function initialMockLoginEmail() {
+    if (process.env.NEXT_PUBLIC_USE_MOCK_API !== "true") return "";
+    return process.env.NEXT_PUBLIC_MOCK_LOGIN_EMAIL ?? "";
+}
+
+function initialMockLoginPassword() {
+    if (process.env.NEXT_PUBLIC_USE_MOCK_API !== "true") return "";
+    return process.env.NEXT_PUBLIC_MOCK_LOGIN_PASSWORD ?? "";
+}
+
 export default function LogInForm() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [email, setEmail] = useState(initialMockLoginEmail);
+    const [password, setPassword] = useState(initialMockLoginPassword);
     const [hidingPassword, setHidingPassword] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
