@@ -7,7 +7,10 @@ export const authHandlers = [
     http.post(`${API_BASE}/auth/login`, async ({ request }) => {
         const body = (await request.json()) as any;
         if (!body?.email || !body?.password) {
-            return badRequest("res_err_invalid_input", "Email and password are required");
+            return badRequest(
+                "res_err_invalid_input",
+                "Email and password are required",
+            );
         }
         const response = ok<void>(undefined);
         // Set fake auth cookies so the app treats the user as logged in

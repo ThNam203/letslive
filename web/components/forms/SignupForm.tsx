@@ -30,6 +30,7 @@ import useUser from "@/hooks/user";
 import { Input } from "../ui/input";
 import { EMAIL_MAX_LENGTH, USERNAME_MAX_LENGTH } from "@/constant/field-limits";
 import { PASSWORD_MAX_LENGTH } from "@/constant/password";
+import { InputWithIconLabel } from "../ui/input-with-icon-label";
 
 export default function SignUpForm() {
     const [email, setEmail] = useState("");
@@ -201,20 +202,20 @@ export default function SignUpForm() {
                     />
                 </div>
                 <FormErrorText textError={errors.email} />
-                <div className="border-border mt-4 flex items-center gap-4 rounded-md border px-4">
-                    <label htmlFor="username">
-                        <IconUserOutline className="scale-125 opacity-40" />
-                    </label>
-                    <Input
+                <div className="mt-4">
+                    <InputWithIconLabel
+                        icon={
+                            <IconUserOutline className="scale-125 opacity-40" />
+                        }
                         id="username"
                         aria-label={t("common:username")}
                         className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"
                         placeholder={t("common:username")}
                         type="text"
                         maxLength={USERNAME_MAX_LENGTH}
-                        showCount
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
+                        emitErrorSignalOnLimit={true}
                     />
                 </div>
                 <FormErrorText textError={errors.username} />

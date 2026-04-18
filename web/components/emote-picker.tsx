@@ -57,7 +57,7 @@ export default function EmotePicker({
                     <input
                         type="text"
                         placeholder="Search emotes..."
-                        className="bg-transparent w-full text-sm outline-none"
+                        className="w-full bg-transparent text-sm outline-none"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />

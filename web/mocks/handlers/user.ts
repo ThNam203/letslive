@@ -1,6 +1,13 @@
 import { http } from "msw";
 import { API_BASE, ok, notFound, noContent } from "../utils";
-import { meUser, otherUsers, uid, now, notifications, likedCommentIds } from "../db";
+import {
+    meUser,
+    otherUsers,
+    uid,
+    now,
+    notifications,
+    likedCommentIds,
+} from "../db";
 import { MeUser, PublicUser } from "@/types/user";
 import { Notification, UnreadCountResponse } from "@/types/notification";
 
@@ -35,16 +42,21 @@ export const userHandlers = [
     }),
 
     // PATCH /user/me/livestream-information
-    http.patch(`${API_BASE}/user/me/livestream-information`, async ({ request }) => {
-        const formData = await request.formData();
-        const title = formData.get("title") as string | null;
-        const description = formData.get("description") as string | null;
-        const thumbnailUrl = formData.get("thumbnailUrl") as string | null;
-        if (title !== null) meUser.livestreamInformation.title = title;
-        if (description !== null) meUser.livestreamInformation.description = description;
-        if (thumbnailUrl !== null) meUser.livestreamInformation.thumbnailUrl = thumbnailUrl;
-        return ok(meUser.livestreamInformation);
-    }),
+    http.patch(
+        `${API_BASE}/user/me/livestream-information`,
+        async ({ request }) => {
+            const formData = await request.formData();
+            const title = formData.get("title") as string | null;
+            const description = formData.get("description") as string | null;
+            const thumbnailUrl = formData.get("thumbnailUrl") as string | null;
+            if (title !== null) meUser.livestreamInformation.title = title;
+            if (description !== null)
+                meUser.livestreamInformation.description = description;
+            if (thumbnailUrl !== null)
+                meUser.livestreamInformation.thumbnailUrl = thumbnailUrl;
+            return ok(meUser.livestreamInformation);
+        },
+    ),
 
     // PATCH /user/me/api-key
     http.patch(`${API_BASE}/user/me/api-key`, () => {
@@ -100,7 +112,11 @@ export const userHandlers = [
 
     // GET /users/recommendations
     http.get(`${API_BASE}/users/recommendations`, () => {
-        return ok<PublicUser[]>(otherUsers, { page: 0, page_size: 10, total: otherUsers.length });
+        return ok<PublicUser[]>(otherUsers, {
+            page: 0,
+            page_size: 10,
+            total: otherUsers.length,
+        });
     }),
 
     // GET /user/me/following
@@ -117,7 +133,9 @@ export const userHandlers = [
     http.get(`${API_BASE}/user/me/notifications`, () => {
         return ok<Notification[]>(
             [...notifications].sort(
-                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+                (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime(),
             ),
         );
     }),
@@ -129,12 +147,15 @@ export const userHandlers = [
     }),
 
     // PATCH /user/me/notifications/:id/read
-    http.patch(`${API_BASE}/user/me/notifications/:notificationId/read`, ({ params }) => {
-        const { notificationId } = params as { notificationId: string };
-        const notif = notifications.find((n) => n.id === notificationId);
-        if (notif) notif.isRead = true;
-        return noContent();
-    }),
+    http.patch(
+        `${API_BASE}/user/me/notifications/:notificationId/read`,
+        ({ params }) => {
+            const { notificationId } = params as { notificationId: string };
+            const notif = notifications.find((n) => n.id === notificationId);
+            if (notif) notif.isRead = true;
+            return noContent();
+        },
+    ),
 
     // PATCH /user/me/notifications/read-all
     http.patch(`${API_BASE}/user/me/notifications/read-all`, () => {
@@ -143,10 +164,13 @@ export const userHandlers = [
     }),
 
     // DELETE /user/me/notifications/:id
-    http.delete(`${API_BASE}/user/me/notifications/:notificationId`, ({ params }) => {
-        const { notificationId } = params as { notificationId: string };
-        const idx = notifications.findIndex((n) => n.id === notificationId);
-        if (idx !== -1) notifications.splice(idx, 1);
-        return noContent();
-    }),
+    http.delete(
+        `${API_BASE}/user/me/notifications/:notificationId`,
+        ({ params }) => {
+            const { notificationId } = params as { notificationId: string };
+            const idx = notifications.findIndex((n) => n.id === notificationId);
+            if (idx !== -1) notifications.splice(idx, 1);
+            return noContent();
+        },
+    ),
 ];

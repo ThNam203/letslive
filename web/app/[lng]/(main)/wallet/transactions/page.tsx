@@ -98,7 +98,7 @@ export default function TransactionsPage() {
                                 "rounded-full px-3 py-1 text-xs font-medium transition-colors",
                                 filter === opt
                                     ? "bg-primary text-primary-foreground"
-                                    : "border-border text-muted-foreground border hover:bg-background",
+                                    : "border-border text-muted-foreground hover:bg-background border",
                             )}
                         >
                             {label}

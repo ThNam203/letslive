@@ -36,7 +36,10 @@ export default function MockProvider({
                 });
                 setReady(true);
             } catch (err) {
-                console.error("[MockProvider] Failed to start MSW worker:", err);
+                console.error(
+                    "[MockProvider] Failed to start MSW worker:",
+                    err,
+                );
                 // Still render children so the app is usable (API calls will fail)
                 setReady(true);
             }

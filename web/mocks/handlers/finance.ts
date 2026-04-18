@@ -45,7 +45,9 @@ export const financeHandlers = [
         const page = parseInt(url.searchParams.get("page") ?? "0");
         const pageSize = parseInt(url.searchParams.get("page_size") ?? "20");
         const sorted = [...transactions].sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+            (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime(),
         );
         const slice = sorted.slice(page * pageSize, page * pageSize + pageSize);
         return ok<Transaction[]>(slice, {
@@ -56,12 +58,19 @@ export const financeHandlers = [
     }),
 
     // GET /finance/transactions/:transactionId
-    http.get(`${API_BASE}/finance/transactions/:transactionId`, ({ params }) => {
-        const { transactionId } = params as { transactionId: string };
-        const tx = transactions.find((t) => t.id === transactionId);
-        if (!tx) return notFound("res_err_transaction_failed", "Transaction not found");
-        return ok<Transaction>(tx);
-    }),
+    http.get(
+        `${API_BASE}/finance/transactions/:transactionId`,
+        ({ params }) => {
+            const { transactionId } = params as { transactionId: string };
+            const tx = transactions.find((t) => t.id === transactionId);
+            if (!tx)
+                return notFound(
+                    "res_err_transaction_failed",
+                    "Transaction not found",
+                );
+            return ok<Transaction>(tx);
+        },
+    ),
 
     // POST /finance/deposits
     http.post(`${API_BASE}/finance/deposits`, async ({ request }) => {
@@ -120,7 +129,9 @@ export const financeHandlers = [
         const page = parseInt(url.searchParams.get("page") ?? "0");
         const pageSize = parseInt(url.searchParams.get("page_size") ?? "20");
         const sorted = [...payments].sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+            (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime(),
         );
         const slice = sorted.slice(page * pageSize, page * pageSize + pageSize);
         return ok<Payment[]>(slice, {
@@ -134,7 +145,8 @@ export const financeHandlers = [
     http.get(`${API_BASE}/finance/payments/:paymentId`, ({ params }) => {
         const { paymentId } = params as { paymentId: string };
         const payment = payments.find((p) => p.id === paymentId);
-        if (!payment) return notFound("res_err_payment_not_found", "Payment not found");
+        if (!payment)
+            return notFound("res_err_payment_not_found", "Payment not found");
         return ok<Payment>(payment);
     }),
 ];

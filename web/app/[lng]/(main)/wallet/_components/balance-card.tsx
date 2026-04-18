@@ -10,19 +10,17 @@ interface Props {
     className?: string;
 }
 
-const currencyConfig: Record<
-    CurrencyCode,
-    { gradient: string; icon: string }
-> = {
-    [CurrencyCode.SPARK]: {
-        gradient: "from-amber-500 to-orange-600",
-        icon: "&#9889;",
-    },
-    [CurrencyCode.FLARE]: {
-        gradient: "from-purple-500 to-indigo-600",
-        icon: "&#128142;",
-    },
-};
+const currencyConfig: Record<CurrencyCode, { gradient: string; icon: string }> =
+    {
+        [CurrencyCode.SPARK]: {
+            gradient: "from-amber-500 to-orange-600",
+            icon: "&#9889;",
+        },
+        [CurrencyCode.FLARE]: {
+            gradient: "from-purple-500 to-indigo-600",
+            icon: "&#128142;",
+        },
+    };
 
 export default function BalanceCard({
     currencyCode,

@@ -71,7 +71,5 @@ export async function GetPayments(
 export async function GetPaymentById(
     paymentId: string,
 ): Promise<ApiResponse<Payment>> {
-    return fetchClient<ApiResponse<Payment>>(
-        `/finance/payments/${paymentId}`,
-    );
+    return fetchClient<ApiResponse<Payment>>(`/finance/payments/${paymentId}`);
 }

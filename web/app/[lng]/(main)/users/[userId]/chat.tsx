@@ -265,7 +265,7 @@ export default function ChatPanel({
                         return (
                             <div
                                 key={idx}
-                                className="text-muted-foreground mb-3 whitespace-pre-wrap text-sm italic"
+                                className="text-muted-foreground mb-3 text-sm whitespace-pre-wrap italic"
                             >
                                 {line.data.text}
                             </div>
@@ -311,12 +311,6 @@ export default function ChatPanel({
                 onSubmit={handleSendMessage}
                 className="absolute right-0 bottom-2 left-0 flex gap-2"
             >
-                <EmotePicker
-                    disabled={!user}
-                    onSelect={(code) =>
-                        handleInputChange(inputMessage + code)
-                    }
-                />
                 <div className="relative flex-1">
                     <ChatCommandSuggestions
                         suggestions={suggestions}
@@ -338,6 +332,10 @@ export default function ChatPanel({
                         onKeyDown={handleKeyDown}
                     />
                 </div>
+                <EmotePicker
+                    disabled={!user}
+                    onSelect={(code) => handleInputChange(inputMessage + code)}
+                />
                 <Button type="submit" disabled={!user} className="h-9 w-12 p-0">
                     <IconSend className="!h-6 !w-6" />
                 </Button>
@@ -345,4 +343,3 @@ export default function ChatPanel({
         </div>
     );
 }
-

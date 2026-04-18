@@ -11,7 +11,10 @@ const getNavItems = (t: any) => [
     { name: t("settings:navigation.profile"), href: "/settings/profile" },
     { name: t("settings:navigation.security"), href: "/settings/security" },
     { name: t("settings:navigation.stream"), href: "/settings/stream" },
-    { name: t("settings:navigation.chat_commands"), href: "/settings/chat-commands" },
+    {
+        name: t("settings:navigation.chat_commands"),
+        href: "/settings/chat-commands",
+    },
     { name: t("settings:navigation.vods"), href: "/settings/vods" },
     { name: t("settings:navigation.upload"), href: "/settings/upload" },
 ];

@@ -1,7 +1,11 @@
 "use client";
 
 import { cn } from "@/utils/cn";
-import { Transaction, TransactionStatus, TransactionType } from "@/types/wallet";
+import {
+    Transaction,
+    TransactionStatus,
+    TransactionType,
+} from "@/types/wallet";
 import useT from "@/hooks/use-translation";
 
 interface Props {
@@ -21,12 +25,8 @@ const typeIcons: Record<TransactionType, string> = {
 export default function TransactionRow({ transaction }: Props) {
     const { t } = useT("wallet");
 
-    const typeLabel = t(
-        `wallet:transactions.type.${transaction.type}`,
-    );
-    const statusLabel = t(
-        `wallet:transactions.status.${transaction.status}`,
-    );
+    const typeLabel = t(`wallet:transactions.type.${transaction.type}`);
+    const statusLabel = t(`wallet:transactions.status.${transaction.status}`);
 
     const netAmount = computeNetAmount(transaction);
     const isPositive = netAmount >= 0;

@@ -274,7 +274,9 @@ function ChatCommandScopeSection({
                     label={t("chat-commands:page.description_label")}
                     value={desc}
                     onChange={(e) => setDesc(e.target.value)}
-                    placeholder={t("chat-commands:page.description_placeholder")}
+                    placeholder={t(
+                        "chat-commands:page.description_placeholder",
+                    )}
                     maxLength={MAX_DESCRIPTION}
                 />
                 <div className="flex justify-end gap-2">

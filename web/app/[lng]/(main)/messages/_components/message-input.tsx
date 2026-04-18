@@ -212,7 +212,7 @@ export default function MessageInput({
                 <p className="text-destructive mb-1 text-xs">{uploadError}</p>
             )}
 
-            <form onSubmit={handleSubmit} className="flex items-center gap-2">
+            <form onSubmit={handleSubmit} className="flex items-start gap-2">
                 {/* File upload button */}
                 <input
                     ref={fileInputRef}
@@ -232,11 +232,6 @@ export default function MessageInput({
                 >
                     <IconPaperclip className="!h-5 !w-5" />
                 </Button>
-
-                <EmotePicker
-                    disabled={isUploading}
-                    onSelect={(code) => setText((prev) => prev + code)}
-                />
                 <div className="relative flex-1">
                     <Input
                         type="text"
@@ -251,6 +246,10 @@ export default function MessageInput({
                         disabled={isUploading}
                     />
                 </div>
+                <EmotePicker
+                    disabled={isUploading}
+                    onSelect={(code) => setText((prev) => prev + code)}
+                />
                 <Button
                     type="submit"
                     disabled={

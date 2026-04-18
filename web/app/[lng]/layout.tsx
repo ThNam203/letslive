@@ -44,9 +44,7 @@ export default async function RootLayout({
         <TranslationsProvider>
             <ThemeProviderWrapper>
                 <Suspense fallback={<Loading />}>
-                    <UserInformationWrapper>
-                        {children}
-                    </UserInformationWrapper>
+                    <UserInformationWrapper>{children}</UserInformationWrapper>
                     <Toast />
                     <UploadManager />
                 </Suspense>

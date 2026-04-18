@@ -1,5 +1,12 @@
 import { http } from "msw";
-import { API_BASE, ok, notFound, noContent, created, badRequest } from "../utils";
+import {
+    API_BASE,
+    ok,
+    notFound,
+    noContent,
+    created,
+    badRequest,
+} from "../utils";
 import {
     conversations,
     dmMessages,
@@ -60,7 +67,11 @@ export const dmHandlers = [
     http.get(`${API_BASE}/conversations/:conversationId`, ({ params }) => {
         const { conversationId } = params as { conversationId: string };
         const conv = conversations.find((c) => c._id === conversationId);
-        if (!conv) return notFound("res_err_conversation_not_found", "Conversation not found");
+        if (!conv)
+            return notFound(
+                "res_err_conversation_not_found",
+                "Conversation not found",
+            );
         return ok<Conversation>(conv);
     }),
 
@@ -79,11 +90,17 @@ export const dmHandlers = [
                     c.participants.some((p) => p.userId === otherId),
             );
             if (existing) {
-                return badRequest("res_err_dm_already_exists", "DM already exists");
+                return badRequest(
+                    "res_err_dm_already_exists",
+                    "DM already exists",
+                );
             }
         }
 
-        const allParticipantIds = [ME_USER_ID, ...participantIds.filter((id) => id !== ME_USER_ID)];
+        const allParticipantIds = [
+            ME_USER_ID,
+            ...participantIds.filter((id) => id !== ME_USER_ID),
+        ];
 
         const newConv: Conversation = {
             _id: `conv-${uid()}`,
@@ -101,7 +118,10 @@ export const dmHandlers = [
                     username: user?.username ?? userId,
                     displayName: user?.displayName ?? null,
                     profilePicture: user?.profilePicture ?? null,
-                    role: i === 0 ? ParticipantRole.OWNER : ParticipantRole.MEMBER,
+                    role:
+                        i === 0
+                            ? ParticipantRole.OWNER
+                            : ParticipantRole.MEMBER,
                     joinedAt: now(),
                     lastReadMessageId: null,
                     isMuted: false,
@@ -117,16 +137,26 @@ export const dmHandlers = [
     }),
 
     // PUT /conversations/:conversationId
-    http.put(`${API_BASE}/conversations/:conversationId`, async ({ params, request }) => {
-        const { conversationId } = params as { conversationId: string };
-        const conv = conversations.find((c) => c._id === conversationId);
-        if (!conv) return notFound("res_err_conversation_not_found", "Conversation not found");
-        const body = (await request.json()) as { name?: string; avatarUrl?: string };
-        if (body.name !== undefined) conv.name = body.name;
-        if (body.avatarUrl !== undefined) conv.avatarUrl = body.avatarUrl;
-        conv.updatedAt = now();
-        return ok<Conversation>(conv);
-    }),
+    http.put(
+        `${API_BASE}/conversations/:conversationId`,
+        async ({ params, request }) => {
+            const { conversationId } = params as { conversationId: string };
+            const conv = conversations.find((c) => c._id === conversationId);
+            if (!conv)
+                return notFound(
+                    "res_err_conversation_not_found",
+                    "Conversation not found",
+                );
+            const body = (await request.json()) as {
+                name?: string;
+                avatarUrl?: string;
+            };
+            if (body.name !== undefined) conv.name = body.name;
+            if (body.avatarUrl !== undefined) conv.avatarUrl = body.avatarUrl;
+            conv.updatedAt = now();
+            return ok<Conversation>(conv);
+        },
+    ),
 
     // DELETE /conversations/:conversationId — leave conversation
     http.delete(`${API_BASE}/conversations/:conversationId`, ({ params }) => {
@@ -142,14 +172,19 @@ export const dmHandlers = [
         async ({ params, request }) => {
             const { conversationId } = params as { conversationId: string };
             const conv = conversations.find((c) => c._id === conversationId);
-            if (!conv) return notFound("res_err_conversation_not_found", "Conversation not found");
+            if (!conv)
+                return notFound(
+                    "res_err_conversation_not_found",
+                    "Conversation not found",
+                );
             const body = (await request.json()) as any;
             const user = otherUsers.find((u) => u.id === body.userId);
             conv.participants.push({
                 userId: body.userId,
                 username: body.username ?? user?.username ?? body.userId,
                 displayName: body.displayName ?? user?.displayName ?? null,
-                profilePicture: body.profilePicture ?? user?.profilePicture ?? null,
+                profilePicture:
+                    body.profilePicture ?? user?.profilePicture ?? null,
                 role: ParticipantRole.MEMBER,
                 joinedAt: now(),
                 lastReadMessageId: null,
@@ -169,28 +204,37 @@ export const dmHandlers = [
                 userId: string;
             };
             const conv = conversations.find((c) => c._id === conversationId);
-            if (!conv) return notFound("res_err_conversation_not_found", "Conversation not found");
-            conv.participants = conv.participants.filter((p) => p.userId !== userId);
+            if (!conv)
+                return notFound(
+                    "res_err_conversation_not_found",
+                    "Conversation not found",
+                );
+            conv.participants = conv.participants.filter(
+                (p) => p.userId !== userId,
+            );
             conv.updatedAt = now();
             return ok<Conversation>(conv);
         },
     ),
 
     // GET /conversations/:conversationId/messages
-    http.get(`${API_BASE}/conversations/:conversationId/messages`, ({ params, request }) => {
-        const { conversationId } = params as { conversationId: string };
-        const url = new URL(request.url);
-        const limit = parseInt(url.searchParams.get("limit") ?? "50");
-        const before = url.searchParams.get("before");
+    http.get(
+        `${API_BASE}/conversations/:conversationId/messages`,
+        ({ params, request }) => {
+            const { conversationId } = params as { conversationId: string };
+            const url = new URL(request.url);
+            const limit = parseInt(url.searchParams.get("limit") ?? "50");
+            const before = url.searchParams.get("before");
 
-        let msgs = dmMessages[conversationId] ?? [];
-        if (before) {
-            const idx = msgs.findIndex((m) => m._id === before);
-            if (idx !== -1) msgs = msgs.slice(0, idx);
-        }
-        const slice = msgs.slice(-limit);
-        return ok<DmMessage[]>(slice);
-    }),
+            let msgs = dmMessages[conversationId] ?? [];
+            if (before) {
+                const idx = msgs.findIndex((m) => m._id === before);
+                if (idx !== -1) msgs = msgs.slice(0, idx);
+            }
+            const slice = msgs.slice(-limit);
+            return ok<DmMessage[]>(slice);
+        },
+    ),
 
     // POST /conversations/:conversationId/messages
     http.post(
@@ -241,7 +285,11 @@ export const dmHandlers = [
             };
             const msgs = dmMessages[conversationId] ?? [];
             const msg = msgs.find((m) => m._id === messageId);
-            if (!msg) return notFound("res_err_dm_message_not_found", "Message not found");
+            if (!msg)
+                return notFound(
+                    "res_err_dm_message_not_found",
+                    "Message not found",
+                );
             const body = (await request.json()) as { text: string };
             msg.text = body.text;
             msg.updatedAt = now();
@@ -265,16 +313,21 @@ export const dmHandlers = [
     ),
 
     // POST /conversations/:conversationId/read
-    http.post(`${API_BASE}/conversations/:conversationId/read`, ({ params }) => {
-        const { conversationId } = params as { conversationId: string };
-        const conv = conversations.find((c) => c._id === conversationId);
-        if (conv) {
-            const me = conv.participants.find((p) => p.userId === ME_USER_ID);
-            const msgs = dmMessages[conversationId] ?? [];
-            if (me && msgs.length > 0) {
-                me.lastReadMessageId = msgs[msgs.length - 1]._id;
+    http.post(
+        `${API_BASE}/conversations/:conversationId/read`,
+        ({ params }) => {
+            const { conversationId } = params as { conversationId: string };
+            const conv = conversations.find((c) => c._id === conversationId);
+            if (conv) {
+                const me = conv.participants.find(
+                    (p) => p.userId === ME_USER_ID,
+                );
+                const msgs = dmMessages[conversationId] ?? [];
+                if (me && msgs.length > 0) {
+                    me.lastReadMessageId = msgs[msgs.length - 1]._id;
+                }
             }
-        }
-        return noContent();
-    }),
+            return noContent();
+        },
+    ),
 ];

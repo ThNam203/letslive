@@ -4,12 +4,7 @@
  * within a browser session (page reload resets to seed data).
  */
 
-import {
-    AuthProvider,
-    MeUser,
-    PublicUser,
-    UserStatus,
-} from "@/types/user";
+import { AuthProvider, MeUser, PublicUser, UserStatus } from "@/types/user";
 import { Notification } from "@/types/notification";
 import { Livestream } from "@/types/livestream";
 import { VOD } from "@/types/vod";
@@ -90,8 +85,7 @@ export const otherUsers: PublicUser[] = [
         createdAt: daysAgo(200),
         displayName: "Jane Streams",
         bio: "Gaming & Tech streamer",
-        profilePicture:
-            "https://api.dicebear.com/9.x/avataaars/svg?seed=jane",
+        profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=jane",
         followerCount: 1340,
         livestreamInformation: {
             title: "Jane's Gaming Zone",
@@ -110,8 +104,7 @@ export const otherUsers: PublicUser[] = [
         createdAt: daysAgo(90),
         displayName: "Alex Codes",
         bio: "Live coding sessions every weekday",
-        profilePicture:
-            "https://api.dicebear.com/9.x/avataaars/svg?seed=alex",
+        profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=alex",
         followerCount: 882,
         livestreamInformation: {
             title: "Coding with Alex",
@@ -130,8 +123,7 @@ export const otherUsers: PublicUser[] = [
         createdAt: daysAgo(60),
         displayName: "Sam Beats",
         bio: "Producer & DJ streaming live sessions",
-        profilePicture:
-            "https://api.dicebear.com/9.x/avataaars/svg?seed=sam",
+        profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=sam",
         followerCount: 3201,
         livestreamInformation: {
             title: "Sam's Studio Sessions",
@@ -150,8 +142,7 @@ export const otherUsers: PublicUser[] = [
         createdAt: daysAgo(30),
         displayName: "Mia Wanderlust",
         bio: "Travel vlogger streaming from around the world",
-        profilePicture:
-            "https://api.dicebear.com/9.x/avataaars/svg?seed=mia",
+        profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=mia",
         followerCount: 7890,
         livestreamInformation: {
             title: "Live from Somewhere New",
@@ -231,8 +222,7 @@ export const vods: VOD[] = [
         visibility: "public",
         viewCount: 17,
         duration: 1800,
-        playbackUrl:
-            "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+        playbackUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
         status: "ready",
         originalFileUrl: null,
         createdAt: daysAgo(10),
@@ -376,7 +366,8 @@ export const chatCommands: ChatCommand[] = [
         scope: "user",
         ownerId: ME_USER_ID,
         name: "!socials",
-        response: "Follow me on Twitter: @mockuser | GitHub: github.com/mockuser",
+        response:
+            "Follow me on Twitter: @mockuser | GitHub: github.com/mockuser",
         description: "Social links",
         createdAt: daysAgo(20),
     },
@@ -413,7 +404,7 @@ export const notifications: Notification[] = [
         userId: ME_USER_ID,
         type: "vod_comment",
         title: "New Comment",
-        message: "coder_alex commented on your VOD: \"Great stream!\"",
+        message: 'coder_alex commented on your VOD: "Great stream!"',
         actionUrl: "/en/vod/vod-001",
         actionLabel: "View VOD",
         referenceId: "vod-001",

@@ -25,7 +25,6 @@ npm run dev:mock
 
 This loads [`.env.mock`](./.env.mock), which sets `NEXT_PUBLIC_USE_MOCK_API=true` so browser requests are handled by [MSW](https://mswjs.io/) instead of a live backend. Handlers live under [`mocks/handlers/`](./mocks/handlers/).
 
-
 ## Learn more
 
 - [Next.js documentation](https://nextjs.org/docs)

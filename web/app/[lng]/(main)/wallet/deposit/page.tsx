@@ -114,9 +114,7 @@ export default function DepositPage() {
                             min={MIN_DEPOSIT}
                             max={MAX_DEPOSIT}
                             step="0.01"
-                            placeholder={t(
-                                "wallet:deposit.amount_placeholder",
-                            )}
+                            placeholder={t("wallet:deposit.amount_placeholder")}
                             value={amount}
                             onChange={(e) => {
                                 setAmount(e.target.value);

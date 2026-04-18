@@ -38,7 +38,10 @@ export const chatHandlers = [
 
     // POST /chat-commands
     http.post(`${API_BASE}/chat-commands`, async ({ request }) => {
-        const body = (await request.json()) as Omit<ChatCommand, "id" | "ownerId" | "createdAt">;
+        const body = (await request.json()) as Omit<
+            ChatCommand,
+            "id" | "ownerId" | "createdAt"
+        >;
         const newCmd: ChatCommand = {
             id: uid(),
             ownerId: ME_USER_ID,

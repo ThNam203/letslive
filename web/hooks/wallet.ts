@@ -34,9 +34,7 @@ const useWallet = create<WalletState>((set, get) => ({
     setWallet: (wallet) => set({ wallet }),
     setBalances: (balances) =>
         set((state) => ({
-            wallet: state.wallet
-                ? { ...state.wallet, balances }
-                : null,
+            wallet: state.wallet ? { ...state.wallet, balances } : null,
         })),
     setTransactions: (transactions) => set({ transactions }),
     appendTransactions: (txns) =>

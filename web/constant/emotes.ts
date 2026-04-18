@@ -50,9 +50,7 @@ export const EMOTES: Emote[] = [
     { code: "crown", emoji: "👑", name: "Crown", category: "misc" },
 ];
 
-export const EMOTE_MAP = new Map<string, Emote>(
-    EMOTES.map((e) => [e.code, e]),
-);
+export const EMOTE_MAP = new Map<string, Emote>(EMOTES.map((e) => [e.code, e]));
 
 export const EMOTE_CATEGORIES = [
     "smileys",

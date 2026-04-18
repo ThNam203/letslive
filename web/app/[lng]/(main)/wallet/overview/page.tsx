@@ -69,8 +69,7 @@ export default function WalletOverviewPage() {
                         currencyCode={CurrencyCode.SPARK}
                         balance={
                             wallet?.balances.find(
-                                (b) =>
-                                    b.currencyCode === CurrencyCode.SPARK,
+                                (b) => b.currencyCode === CurrencyCode.SPARK,
                             )?.balance ?? "0"
                         }
                     />
@@ -78,8 +77,7 @@ export default function WalletOverviewPage() {
                         currencyCode={CurrencyCode.FLARE}
                         balance={
                             wallet?.balances.find(
-                                (b) =>
-                                    b.currencyCode === CurrencyCode.FLARE,
+                                (b) => b.currencyCode === CurrencyCode.FLARE,
                             )?.balance ?? "0"
                         }
                     />

@@ -4,7 +4,11 @@ import { ChatCommand } from "@/types/chat-command";
 export type ChatCommandResult =
     | { kind: "send"; text: string }
     | { kind: "help" }
-    | { kind: "error"; messageKey: string; params?: Record<string, string | number> }
+    | {
+          kind: "error";
+          messageKey: string;
+          params?: Record<string, string | number>;
+      }
     | { kind: "noop" };
 
 export type BuiltinChatCommand = {
@@ -35,7 +39,10 @@ export const BUILTIN_CHAT_COMMANDS: BuiltinChatCommand[] = [
         descriptionKey: "chat-commands:builtin.shrug",
         run: (args) => {
             const trimmed = args.trim();
-            return { kind: "send", text: trimmed ? `${trimmed} ${SHRUG}` : SHRUG };
+            return {
+                kind: "send",
+                text: trimmed ? `${trimmed} ${SHRUG}` : SHRUG,
+            };
         },
     },
     {
@@ -72,7 +79,10 @@ export const BUILTIN_CHAT_COMMANDS: BuiltinChatCommand[] = [
             if (trimmed) {
                 const n = parseInt(trimmed, 10);
                 if (!Number.isFinite(n) || n < 1 || n > 1_000_000) {
-                    return { kind: "error", messageKey: "chat-commands:errors.roll_usage" };
+                    return {
+                        kind: "error",
+                        messageKey: "chat-commands:errors.roll_usage",
+                    };
                 }
                 max = n;
             }
@@ -173,7 +183,9 @@ export function buildChatCommandHelpText(
 ): string {
     const lines = [
         t("chat-commands:help.header"),
-        ...BUILTIN_CHAT_COMMANDS.map((c) => `${c.usage} — ${t(c.descriptionKey)}`),
+        ...BUILTIN_CHAT_COMMANDS.map(
+            (c) => `${c.usage} — ${t(c.descriptionKey)}`,
+        ),
     ];
     if (custom.length > 0) {
         lines.push(t("chat-commands:help.custom_header"));
