@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "source .env && next dev --turbopack -p $PORT",
-    "dev:mock": "source .env.mock && next dev --turbopack -p $PORT",
+    "dev": "dotenv -e .env -- next dev --turbopack",
+    "dev:mock": "dotenv -e .env.mock -- next dev --turbopack",
     "build": "next build",
-    "start": "source .env && next start -p $PORT",
+    "start": "dotenv -e .env -- next start",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -56,6 +56,7 @@
     "@types/npm": "^7.19.3",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.1",
     "eslint-config-next": "16.1.6",
     "msw": "^2.13.4",

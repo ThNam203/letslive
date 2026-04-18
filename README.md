@@ -54,5 +54,9 @@ The project aims to create a functioning livestreaming website from a to z like 
 5. Run "docker compose up"
 6. Access web client at localhost:5000
 
-Last editted: 10/10/2025  
+### Web client — mock API (optional)
+
+To work on the **Next.js** UI without Docker or the Go API, use the mock flow: from the [`web`](./web) directory run `npm install` and then `npm run dev:mock`. That loads `.env.mock` and serves the app with [MSW](https://mswjs.io/) intercepting backend calls in the browser. More detail is in [`web/README.md`](./web/README.md). The mobile app does not use this setup yet.
+
+Last edited: 18/04/2026  
 **[Editor: Nam Huynh](https://github.com/ThNam203)**
