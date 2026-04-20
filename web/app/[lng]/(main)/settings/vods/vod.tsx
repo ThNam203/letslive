@@ -102,18 +102,25 @@ export default function VODEditCard({
 
     const handleSave = async () => {
         setIsSubmitting(true);
-        var newThumbnailPath = "";
+        let newThumbnailPath: string | undefined;
 
         if (formData.image) {
-            await UploadFile(formData.image).then((res) => {
-                if (!res.success) {
-                    toast(t(`api-response:${res.key}`), { type: "error" });
-                    setIsSubmitting(false);
-                    setIsDialogOpen(false);
-                } else {
-                    newThumbnailPath = res.data?.newPath!;
-                }
-            });
+            const res = await UploadFile(formData.image);
+            if (!res.success) {
+                toast(t(`api-response:${res.key}`), { type: "error" });
+                setIsSubmitting(false);
+                return;
+            }
+
+            if (!res.data?.newPath) {
+                toast(t("api-response:res_err_invalid_payload"), {
+                    type: "error",
+                });
+                setIsSubmitting(false);
+                return;
+            }
+
+            newThumbnailPath = res.data.newPath;
         }
 
         await UpdateVOD(
@@ -121,7 +128,7 @@ export default function VODEditCard({
             formData.title,
             formData.description,
             formData.isPublic ? "public" : "private",
-            newThumbnailPath.length > 0 ? newThumbnailPath : undefined,
+            newThumbnailPath,
         )
             .then((res) => {
                 if (!res.success) {
@@ -143,7 +150,7 @@ export default function VODEditCard({
                                           ? "public"
                                           : "private",
                                       thumbnailUrl:
-                                          newThumbnailPath.length > 0
+                                          newThumbnailPath
                                               ? newThumbnailPath
                                               : v.thumbnailUrl
                                                 ? v.thumbnailUrl

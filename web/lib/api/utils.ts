@@ -7,8 +7,21 @@ export async function UploadFile(
     const formData = new FormData();
     formData.append("file", file);
 
-    return fetchClient<ApiResponse<{ newPath?: string }>>(`/upload-file`, {
+    const response = await fetchClient<
+        ApiResponse<{ newPath?: string } | string>
+    >(`/upload-file`, {
         method: "POST",
         body: formData,
     });
+
+    if (response.success && typeof response.data === "string") {
+        return {
+            ...response,
+            data: {
+                newPath: response.data,
+            },
+        };
+    }
+
+    return response as ApiResponse<{ newPath?: string }>;
 }
