@@ -1,7 +1,7 @@
 services:
   web:
     image: sen1or/letslive-web:latest
-    container_name: letslive_web
+    container_name: letslive-web
     network_mode: "host"
     ports:
       - "5000:5000"
@@ -397,7 +397,6 @@ services:
     depends_on:
       configserver:
         condition: service_healthy
-
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8500/v1/status/leader"]
       interval: 30s
