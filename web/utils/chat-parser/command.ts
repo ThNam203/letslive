@@ -1,8 +1,9 @@
-import type { TFunction } from "next-i18next";
+import type { TFunction } from "i18next";
 import { ChatCommand } from "@/types/chat-command";
 
 export type ChatCommandResult =
     | { kind: "send"; text: string }
+    | { kind: "action"; text: string }
     | { kind: "help" }
     | {
           kind: "error";
@@ -30,7 +31,7 @@ export const BUILTIN_CHAT_COMMANDS: BuiltinChatCommand[] = [
         run: (args) => {
             const trimmed = args.trim();
             if (!trimmed) return { kind: "noop" };
-            return { kind: "send", text: `_${trimmed}_` };
+            return { kind: "action", text: trimmed };
         },
     },
     {

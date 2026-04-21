@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { toast } from "@/components/utils/toast";
 import useUser from "@/hooks/user";
 import { ReceivedMessage, SendMessage } from "@/types/message";
@@ -26,6 +26,7 @@ import { GetRoomChatCommands } from "@/lib/api/chat-command";
 import { ChatCommand } from "@/types/chat-command";
 import useT from "@/hooks/use-translation";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/constant/field-limits";
+import { CHAT_MESSAGE_TYPE } from "@/constant/chat";
 
 type LocalMessage = {
     kind: "system";
@@ -56,18 +57,21 @@ export default function ChatPanel({
     const [suggestions, setSuggestions] = useState<ChatCommandSuggestion[]>([]);
     const [activeSuggestion, setActiveSuggestion] = useState(0);
 
-    const chatCommandIndex = buildChatCommandIndex(customChatCommands, t);
+    const chatCommandIndex = useMemo(
+        () => buildChatCommandIndex(customChatCommands, t),
+        [customChatCommands, t],
+    );
 
     const appendLine = (line: ChatLine) =>
         setMessages((prev) =>
             prev.length >= 100 ? [...prev.slice(1), line] : [...prev, line],
         );
 
-    const sendText = (text: string) => {
+    const sendText = (text: string, type: SendMessage["type"] = CHAT_MESSAGE_TYPE.MESSAGE) => {
         const newMessage: SendMessage = {
             userId: user!.id,
             roomId: roomId,
-            type: "message",
+            type,
             username: user!.displayName ?? user!.username,
             text,
         };
@@ -104,7 +108,10 @@ export default function ChatPanel({
                 });
                 return;
             }
-            sendText(result.text.slice(0, CHAT_MESSAGE_MAX_LENGTH));
+            sendText(
+                result.text.slice(0, CHAT_MESSAGE_MAX_LENGTH),
+                result.kind === "action" ? CHAT_MESSAGE_TYPE.ACTION : CHAT_MESSAGE_TYPE.MESSAGE,
+            );
             return;
         }
 
@@ -201,13 +208,13 @@ export default function ChatPanel({
     useEffect(() => {
         const connectWebSocket = async () => {
             const ws = new WebSocket(GLOBAL.WS_SERVER_URL);
+            wsRef.current = ws;
 
             ws.onopen = () => {
-                wsRef.current = ws;
                 if (user) {
                     ws.send(
                         JSON.stringify({
-                            type: "join",
+                            type: CHAT_MESSAGE_TYPE.JOIN,
                             roomId: roomId,
                             userId: user.id,
                             username: user.displayName ?? user.username,
@@ -228,17 +235,20 @@ export default function ChatPanel({
 
         connectWebSocket();
         return () => {
-            if (wsRef.current) {
+            const ws = wsRef.current;
+            if (ws) {
                 if (user) {
-                    wsRef.current.send(
+                    ws.send(
                         JSON.stringify({
-                            type: "leave",
+                            type: CHAT_MESSAGE_TYPE.LEAVE,
                             roomId: roomId,
                             userId: user.id,
-                            username: user!.displayName ?? user!.username,
+                            username: user.displayName ?? user.username,
                         }),
                     );
-                } else wsRef.current.close();
+                }
+                ws.close();
+                wsRef.current = null;
             }
         };
     }, [user, roomId]);
@@ -272,14 +282,8 @@ export default function ChatPanel({
                         );
                     }
                     const message = line.data;
-                    const isAction =
-                        message.type === "message" &&
-                        message.text.startsWith("_") &&
-                        message.text.endsWith("_") &&
-                        message.text.length >= 2;
-                    const displayText = isAction
-                        ? message.text.slice(1, -1)
-                        : message.text;
+                    const isAction = message.type === CHAT_MESSAGE_TYPE.ACTION;
+                    const displayText = message.text;
                     return (
                         <div key={idx} className="mb-3">
                             <span
@@ -296,9 +300,9 @@ export default function ChatPanel({
                             <span
                                 className={`text-foreground ${isAction ? "italic" : ""}`}
                             >
-                                {message.type === "join"
+                                {message.type === CHAT_MESSAGE_TYPE.JOIN
                                     ? t("users:chat.joined")
-                                    : message.type === "leave"
+                                    : message.type === CHAT_MESSAGE_TYPE.LEAVE
                                       ? t("users:chat.left")
                                       : parseEmotes(displayText)}
                             </span>

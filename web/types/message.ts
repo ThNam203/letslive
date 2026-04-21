@@ -1,5 +1,9 @@
+import { CHAT_MESSAGE_TYPE } from "@/constant/chat";
+
+type MessageType = (typeof CHAT_MESSAGE_TYPE)[keyof typeof CHAT_MESSAGE_TYPE];
+
 export type SendMessage = {
-    type: "message" | "join" | "leave";
+    type: MessageType;
     roomId: string;
     userId: string;
     username: string;
@@ -8,7 +12,7 @@ export type SendMessage = {
 
 export type ReceivedMessage = {
     id: string;
-    type: "message" | "join" | "leave";
+    type: MessageType;
     userId: string;
     username: string;
     text: string;
