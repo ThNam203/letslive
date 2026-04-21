@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "@/components/utils/toast";
 import { Button } from "@/components/ui/button";
 import useUser from "@/hooks/user";
@@ -29,16 +29,29 @@ export default function StreamEdit() {
     const [image, setImage] = useState<File | null | undefined>(undefined);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const blobUrlRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+        };
+    }, []);
 
     const handleImageChange = (file: File | null) => {
         if (file) {
-            const imageUrl = URL.createObjectURL(file);
+            if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+            const url = URL.createObjectURL(file);
+            blobUrlRef.current = url;
             setImage(file);
-            setImageUrl(imageUrl);
+            setImageUrl(url);
         }
     };
 
     const handleResetImage = () => {
+        if (blobUrlRef.current) {
+            URL.revokeObjectURL(blobUrlRef.current);
+            blobUrlRef.current = null;
+        }
         setImage(null);
         setImageUrl(null);
     };
@@ -67,6 +80,10 @@ export default function StreamEdit() {
             .then((res) => {
                 if (res.success) {
                     if (res.data && res.data) {
+                        if (blobUrlRef.current) {
+                            URL.revokeObjectURL(blobUrlRef.current);
+                            blobUrlRef.current = null;
+                        }
                         updateUser({
                             ...user,
                             livestreamInformation: {

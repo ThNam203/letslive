@@ -10,8 +10,11 @@ import {
     DeleteNotification,
 } from "@/lib/api/notification";
 import { Notification } from "@/types/notification";
+import { toast } from "@/components/utils/toast";
+import useT from "@/hooks/use-translation";
 
 export function useNotificationsPage() {
+    const { t } = useT("fetch-error");
     const userState = useUser();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [page, setPage] = useState(0);
@@ -35,12 +38,12 @@ export function useNotificationsPage() {
                     }
                 }
             } catch {
-                // silently ignore
+                toast.error(t("client_fetch_error"));
             } finally {
                 setIsLoading(false);
             }
         },
-        [userState.user],
+        [userState.user, t],
     );
 
     useEffect(() => {
@@ -59,9 +62,9 @@ export function useNotificationsPage() {
                 useNotification.getState().markAsRead(notificationId);
             }
         } catch {
-            // silently ignore
+            toast.error(t("client_fetch_error"));
         }
-    }, []);
+    }, [t]);
 
     const handleMarkAllAsRead = useCallback(async () => {
         try {
@@ -73,9 +76,9 @@ export function useNotificationsPage() {
                 useNotification.getState().markAllAsRead();
             }
         } catch {
-            // silently ignore
+            toast.error(t("client_fetch_error"));
         }
-    }, []);
+    }, [t]);
 
     const handleDelete = useCallback(async (notificationId: string) => {
         try {
@@ -88,9 +91,9 @@ export function useNotificationsPage() {
                 setTotal((prev) => prev - 1);
             }
         } catch {
-            // silently ignore
+            toast.error(t("client_fetch_error"));
         }
-    }, []);
+    }, [t]);
 
     const handleLoadMore = useCallback(() => {
         const nextPage = page + 1;

@@ -47,6 +47,7 @@ export default function ConversationPage() {
     const [conversation, setConversation] = useState<Conversation | null>(null);
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
     const [hasMore, setHasMore] = useState(true);
+    const isLoadingRef = useRef(false);
 
     const currentMessages = messages[conversationId] || [];
     const currentTypingUsers = typingUsers[conversationId] || [];
@@ -81,10 +82,11 @@ export default function ConversationPage() {
             });
     }, [conversationId, user, conversations, t]);
 
-    // Fetch initial messages
+    // Fetch initial messages — skip if already in store for this conversation.
+    // We read current store state via getState() to avoid re-running on every incoming WS message.
     useEffect(() => {
         if (!user || !conversationId) return;
-        if (currentMessages.length > 0) return; // already loaded
+        if ((useDmStore.getState().messages[conversationId] || []).length > 0) return;
 
         queueMicrotask(() => setIsLoadingMessages(true));
         GetDmMessages(conversationId)
@@ -101,7 +103,7 @@ export default function ConversationPage() {
                 toast.error(t("fetch-error:client_fetch_error"));
                 setIsLoadingMessages(false);
             });
-    }, [conversationId, user, currentMessages.length, setMessages, t]);
+    }, [conversationId, user, setMessages, t]);
 
     // Mark as read
     useEffect(() => {
@@ -110,11 +112,12 @@ export default function ConversationPage() {
         MarkConversationRead(conversationId);
     }, [conversationId, user, currentMessages.length, clearUnread]);
 
-    // Load older messages
+    // Load older messages — use a ref guard to prevent concurrent fetches from rapid scroll events
     const loadOlderMessages = useCallback(async () => {
-        if (!hasMore || isLoadingMessages || currentMessages.length === 0)
+        if (!hasMore || isLoadingRef.current || currentMessages.length === 0)
             return;
 
+        isLoadingRef.current = true;
         setIsLoadingMessages(true);
         const oldestMessageId = currentMessages[0]?._id;
         const res = await GetDmMessages(conversationId, oldestMessageId);
@@ -126,10 +129,10 @@ export default function ConversationPage() {
                 setHasMore(res.data.length >= 50);
             }
         }
+        isLoadingRef.current = false;
         setIsLoadingMessages(false);
     }, [
         hasMore,
-        isLoadingMessages,
         currentMessages,
         conversationId,
         prependMessages,

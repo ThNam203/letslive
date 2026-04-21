@@ -143,17 +143,6 @@ export default function ProfileSettings() {
     };
 
     useEffect(() => {
-        return () => {
-            try {
-                if (profileImageFile)
-                    URL.revokeObjectURL(profileImageFile?.name);
-                if (backgroundImageFile)
-                    URL.revokeObjectURL(backgroundImageFile?.name);
-            } catch (e) {}
-        };
-    }, []);
-
-    useEffect(() => {
         if (!user) return;
         queueMicrotask(() => {
             setDisplayName(user.displayName ?? "");

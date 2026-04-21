@@ -130,6 +130,11 @@ export default function AllChannelsView({
             });
     }, [t, curUser?.id]);
 
+    const followingIds = new Set(followingUsers.map((user) => user.id));
+    const recommendedNotFollowing = recommendedUsers.filter(
+        (user) => !followingIds.has(user.id),
+    );
+
     return (
         <div
             className={cn(
@@ -161,14 +166,14 @@ export default function AllChannelsView({
                 </>
             )}
 
-            {recommendedUsers.length > 0 && (
+            {recommendedNotFollowing.length > 0 && (
                 <>
                     {!isMinimized && (
                         <h3 className="text-muted-foreground w-full text-sm font-medium">
                             {t("common:recommended")}
                         </h3>
                     )}
-                    {recommendedUsers.map((user) => (
+                    {recommendedNotFollowing.map((user) => (
                         <ChannelUserCard
                             key={user.id}
                             user={user}

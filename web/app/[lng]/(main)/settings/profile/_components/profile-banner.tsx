@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import useUser from "@/hooks/user";
 import { cn } from "@/utils/cn";
 import Image from "next/image";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import DefaultBackgound from "./default-background";
 import ImageHover from "../../_components/image-hover";
 
@@ -23,46 +23,94 @@ export default function ProfileBanner({
     const profileImageInputRef = useRef<HTMLInputElement>(null);
     const backgroundImageInputRef = useRef<HTMLInputElement>(null);
 
+    const [previewProfileUrl, setPreviewProfileUrl] = useState<string | null>(null);
+    const [previewBackgroundUrl, setPreviewBackgroundUrl] = useState<string | null>(null);
+    const previewProfileUrlRef = useRef<string | null>(null);
+    const previewBackgroundUrlRef = useRef<string | null>(null);
+
+    // Revoke blob URLs on unmount
+    useEffect(() => {
+        return () => {
+            if (previewProfileUrlRef.current) URL.revokeObjectURL(previewProfileUrlRef.current);
+            if (previewBackgroundUrlRef.current) URL.revokeObjectURL(previewBackgroundUrlRef.current);
+        };
+    }, []);
+
+    // When the store is updated with a real server URL after save, clear the local preview
+    useEffect(() => {
+        if (!user?.profilePicture?.startsWith("blob:")) {
+            if (previewProfileUrlRef.current) {
+                URL.revokeObjectURL(previewProfileUrlRef.current);
+                previewProfileUrlRef.current = null;
+            }
+            setPreviewProfileUrl(null);
+        }
+    }, [user?.profilePicture]);
+
+    useEffect(() => {
+        if (!user?.backgroundPicture?.startsWith("blob:")) {
+            if (previewBackgroundUrlRef.current) {
+                URL.revokeObjectURL(previewBackgroundUrlRef.current);
+                previewBackgroundUrlRef.current = null;
+            }
+            setPreviewBackgroundUrl(null);
+        }
+    }, [user?.backgroundPicture]);
+
     const handleProfileUpdateButtonClick = () => {
-        profileImageInputRef.current?.click(); // Trigger file input
+        profileImageInputRef.current?.click();
     };
 
     const handleBackgroundUpdateButtonClick = () => {
-        backgroundImageInputRef.current?.click(); // Trigger file input
+        backgroundImageInputRef.current?.click();
     };
 
     const handleBackgroundImageChange = (file: File) => {
-        updateUser({ ...user!, backgroundPicture: URL.createObjectURL(file) });
+        if (previewBackgroundUrlRef.current) URL.revokeObjectURL(previewBackgroundUrlRef.current);
+        const blobUrl = URL.createObjectURL(file);
+        previewBackgroundUrlRef.current = blobUrl;
+        setPreviewBackgroundUrl(blobUrl);
         onBackgroundImageChange?.(file);
     };
 
     const handleProfileImageChange = (file: File) => {
-        updateUser({ ...user!, profilePicture: URL.createObjectURL(file) });
+        if (previewProfileUrlRef.current) URL.revokeObjectURL(previewProfileUrlRef.current);
+        const blobUrl = URL.createObjectURL(file);
+        previewProfileUrlRef.current = blobUrl;
+        setPreviewProfileUrl(blobUrl);
         onProfileImageChange?.(file);
     };
 
     const handleRemoveBackgroundImage = () => {
+        if (previewBackgroundUrlRef.current) {
+            URL.revokeObjectURL(previewBackgroundUrlRef.current);
+            previewBackgroundUrlRef.current = null;
+        }
+        setPreviewBackgroundUrl(null);
         updateUser({ ...user!, backgroundPicture: "" });
         onBackgroundImageChange?.(null);
     };
 
     const handleRemoveProfileImage = () => {
+        if (previewProfileUrlRef.current) {
+            URL.revokeObjectURL(previewProfileUrlRef.current);
+            previewProfileUrlRef.current = null;
+        }
+        setPreviewProfileUrl(null);
         updateUser({ ...user!, profilePicture: "" });
         onProfileImageChange?.(null);
     };
+
+    const displayBackground = previewBackgroundUrl ?? user?.backgroundPicture;
+    const displayProfilePicture = previewProfileUrl ?? (user ? user.profilePicture : "");
 
     return (
         <div className={cn("relative w-full", className)}>
             <div className="relative z-10 h-[300px] w-full overflow-hidden rounded-lg">
                 {/* Profile Banner */}
-                {user && user.backgroundPicture ? (
+                {displayBackground ? (
                     <Image
-                        src={
-                            user.backgroundPicture ??
-                            `https://placehold.co/1200x800/F3F4F6/374151/png?font=playfair-display&text=${
-                                user.displayName ?? user.username
-                            }`
-                        }
+                        src={displayBackground}
                         alt="Profile Banner"
                         fill={true}
                         className="object-cover"
@@ -76,13 +124,13 @@ export default function ProfileBanner({
                     onValueChange={handleBackgroundImageChange}
                     onClick={handleBackgroundUpdateButtonClick}
                     onCloseIconClick={handleRemoveBackgroundImage}
-                    showCloseIcon={Boolean(user?.backgroundPicture)}
+                    showCloseIcon={Boolean(displayBackground)}
                 />
             </div>
             <div className="absolute left-1/2 z-20 -translate-x-1/2 -translate-y-2/3">
                 <Avatar className="relative flex h-32 w-32 overflow-hidden rounded-full border-4 border-white">
                     <AvatarImage
-                        src={user ? user.profilePicture : ""}
+                        src={displayProfilePicture}
                         alt="user avatar"
                     />
                     <AvatarFallback className="bg-primary text-primary-foreground">
@@ -90,12 +138,11 @@ export default function ProfileBanner({
                     </AvatarFallback>
                     <ImageHover
                         inputRef={profileImageInputRef}
-                        // title={t("settings:profile.update_profile_picture")}
                         onValueChange={handleProfileImageChange}
                         onClick={handleProfileUpdateButtonClick}
                         closeIconPosition="bottom"
                         onCloseIconClick={handleRemoveProfileImage}
-                        showCloseIcon={Boolean(user?.profilePicture)}
+                        showCloseIcon={Boolean(displayProfilePicture)}
                     />
                 </Avatar>
             </div>

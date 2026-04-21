@@ -17,6 +17,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import IconBell from "@/components/icons/bell";
+import { toast } from "@/components/utils/toast";
 import {
     NotificationPopupContent,
     NOTIFICATION_POLL_INTERVAL_MS,
@@ -70,13 +71,13 @@ export default function NotificationBell() {
                     useNotification.getState().setNotifications(res.data);
                 }
             } catch {
-                // silently ignore
+                toast.error(t("fetch-error:client_fetch_error"));
             } finally {
                 useNotification.getState().setIsLoading(false);
                 lastFetchRef.current = Date.now();
             }
         }
-    }, []);
+    }, [t]);
 
     const handleMarkAsRead = useCallback(async (notificationId: string) => {
         try {
@@ -84,18 +85,18 @@ export default function NotificationBell() {
             if (res.success)
                 useNotification.getState().markAsRead(notificationId);
         } catch {
-            // silently ignore
+            toast.error(t("fetch-error:client_fetch_error"));
         }
-    }, []);
+    }, [t]);
 
     const handleMarkAllAsRead = useCallback(async () => {
         try {
             const res = await MarkAllNotificationsAsRead();
             if (res.success) useNotification.getState().markAllAsRead();
         } catch {
-            // silently ignore
+            toast.error(t("fetch-error:client_fetch_error"));
         }
-    }, []);
+    }, [t]);
 
     const handleNotificationClick = useCallback(
         (notificationId: string, isRead: boolean) => {

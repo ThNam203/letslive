@@ -153,13 +153,17 @@ export default function ChatPanel({
 
     useEffect(() => {
         const fetchMessages = async () => {
-            const res = await GetMessages(roomId);
-            if (res.messages) {
-                const lines: ChatLine[] = res.messages.map((m) => ({
-                    kind: "remote",
-                    data: m,
-                }));
-                setMessages((prev) => [...lines, ...prev]);
+            try {
+                const res = await GetMessages(roomId);
+                if (res.messages.length > 0) {
+                    const lines: ChatLine[] = res.messages.map((m) => ({
+                        kind: "remote",
+                        data: m,
+                    }));
+                    setMessages((prev) => [...lines, ...prev]);
+                }
+            } catch {
+                toast(t("fetch-error:client_fetch_error"), { type: "error" });
             }
         };
 

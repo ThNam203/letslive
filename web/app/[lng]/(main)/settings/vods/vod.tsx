@@ -2,7 +2,7 @@
 
 import useT from "@/hooks/use-translation";
 import type React from "react";
-import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
+import { ChangeEvent, Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import {
     Dialog,
     DialogContent,
@@ -57,10 +57,20 @@ export default function VODEditCard({
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const selectedImageRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (selectedImageRef.current) URL.revokeObjectURL(selectedImageRef.current);
+        };
+    }, []);
+
     const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
+            if (selectedImageRef.current) URL.revokeObjectURL(selectedImageRef.current);
             const imageUrl = URL.createObjectURL(file);
+            selectedImageRef.current = imageUrl;
             setFormData((prev) => ({
                 ...prev,
                 image: file,
@@ -89,15 +99,19 @@ export default function VODEditCard({
 
     const handleConfirmDelete = async () => {
         setIsSubmitting(true);
-        await DeleteVOD(vod.id).then((res) => {
-            if (!res.success) {
+        try {
+            const res = await DeleteVOD(vod.id);
+            if (res.success) {
+                setVODS((prev) => prev.filter((v) => v.id !== vod.id));
+            } else {
                 toast(t(`api-response:${res.key}`), { type: "error" });
             }
-        });
-
-        setIsDeleteDialogOpen(false);
-        setIsSubmitting(false);
-        setVODS((prev) => prev.filter((v) => v.id !== vod.id));
+        } catch {
+            toast(t("fetch-error:client_fetch_error"), { type: "error" });
+        } finally {
+            setIsSubmitting(false);
+            setIsDeleteDialogOpen(false);
+        }
     };
 
     const handleSave = async () => {
@@ -162,12 +176,20 @@ export default function VODEditCard({
                 }
             })
             .finally(() => {
+                if (selectedImageRef.current) {
+                    URL.revokeObjectURL(selectedImageRef.current);
+                    selectedImageRef.current = null;
+                }
                 setIsSubmitting(false);
                 setIsDialogOpen(false);
             });
     };
 
     const handleCancel = () => {
+        if (selectedImageRef.current) {
+            URL.revokeObjectURL(selectedImageRef.current);
+            selectedImageRef.current = null;
+        }
         setIsDialogOpen(false);
     };
 
@@ -318,8 +340,10 @@ export default function VODEditCard({
                         </Button>
                         <Button
                             variant="destructive"
+                            disabled={isSubmitting}
                             onClick={handleConfirmDelete}
                         >
+                            {isSubmitting && <IconLoader className="mr-2 h-4 w-4" />}
                             {t("settings:vods.delete_dialog.delete")}
                         </Button>
                     </DialogFooter>
