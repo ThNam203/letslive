@@ -128,7 +128,7 @@ export default function AllChannelsView({
                     type: "error",
                 });
             });
-    }, [t]);
+    }, [t, curUser?.id]);
 
     return (
         <div
