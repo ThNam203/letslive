@@ -2,7 +2,7 @@
 
 import i18next from "@/lib/i18n/i18next";
 import { useEffect, useState } from "react";
-import { useTranslation } from "next-i18next";
+import { useTranslation } from "react-i18next";
 import { UseTranslationOptions } from "react-i18next";
 import { useParams, usePathname } from "next/navigation";
 

@@ -27,7 +27,9 @@ const LanguageSwitch = ({ className }: { className?: string }) => {
         const oldLanguage = String(i18n.resolvedLanguage);
         await i18n.changeLanguage(option || I18N_FALLBACK_LNG).then(() => {
             document.cookie = `${I18N_COOKIE_NAME}=${option}; path=/; max-age=${30 * 24 * 60 * 60}`;
-            const newPath = pathname.replace(`/${oldLanguage}/`, `/${option}/`);
+            const segments = pathname.split("/");
+            segments[1] = option;
+            const newPath = segments.join("/");
             router.replace(newPath);
         });
     };
