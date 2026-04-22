@@ -235,7 +235,7 @@ export default function ChatPanel({
             ws.onclose = (ev) => {};
 
             ws.onerror = () => {
-                toast(t("chat.connection_error"), { type: "error" });
+                toast(t("chat:connection_error"), { type: "error" });
             };
         };
 
@@ -262,7 +262,7 @@ export default function ChatPanel({
     return (
         <div className="relative flex h-full w-full flex-col">
             <div className="border-border flex items-center justify-between border border-y-0 px-4 py-3">
-                <h2 className="font-semibold">{t("chat.title")}</h2>
+                <h2 className="font-semibold">{t("chat:title")}</h2>
                 <Button
                     variant="ghost"
                     size="icon"
@@ -307,9 +307,9 @@ export default function ChatPanel({
                                 className={`text-foreground ${isAction ? "italic" : ""}`}
                             >
                                 {message.type === CHAT_MESSAGE_TYPE.JOIN
-                                    ? t("chat.joined")
+                                    ? t("chat:joined")
                                     : message.type === CHAT_MESSAGE_TYPE.LEAVE
-                                      ? t("chat.left")
+                                      ? t("chat:left")
                                       : parseEmotes(displayText)}
                             </span>
                         </div>
@@ -331,8 +331,8 @@ export default function ChatPanel({
                         type="text"
                         placeholder={
                             !user
-                                ? t("chat.placeholder_login")
-                                : t("chat.placeholder_typing")
+                                ? t("chat:placeholder_login")
+                                : t("chat:placeholder_typing")
                         }
                         disabled={!user}
                         maxLength={CHAT_MESSAGE_MAX_LENGTH}
