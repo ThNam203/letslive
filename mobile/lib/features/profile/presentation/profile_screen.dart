@@ -66,10 +66,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         if (!mounted) return;
 
         Livestream? activeLivestream;
-        if (livestreamResponse.success &&
-            livestreamResponse.data != null &&
-            livestreamResponse.data!.isNotEmpty) {
-          final ls = livestreamResponse.data!.first;
+        if (livestreamResponse.success && livestreamResponse.data != null) {
+          final ls = livestreamResponse.data!;
           if (ls.isLive) activeLivestream = ls;
         }
 

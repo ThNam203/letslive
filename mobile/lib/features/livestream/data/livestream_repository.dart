@@ -21,13 +21,19 @@ class LivestreamRepository {
     );
   }
 
-  Future<ApiResponse<List<Livestream>>> getLivestreamOfUser(String userId) {
+  Future<ApiResponse<Livestream?>> getLivestreamOfUser(String userId) {
     return _client.get(
       ApiEndpoints.livestreams,
       queryParameters: {'userId': userId},
-      fromJsonT: (json) => (json as List<dynamic>)
-          .map((e) => Livestream.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      fromJsonT: (json) {
+        if (json == null) {
+          return null;
+        }
+        if (json is Map<String, dynamic>) {
+          return Livestream.fromJson(json);
+        }
+        return null;
+      },
     );
   }
 

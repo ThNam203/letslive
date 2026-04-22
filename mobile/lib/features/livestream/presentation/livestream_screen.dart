@@ -74,10 +74,8 @@ class _LivestreamScreenState extends ConsumerState<LivestreamScreen> {
       final response = await repo.getLivestreamOfUser(widget.userId);
       if (!mounted) return;
 
-      if (response.success &&
-          response.data != null &&
-          response.data!.isNotEmpty) {
-        final livestream = response.data!.first;
+      if (response.success && response.data != null) {
+        final livestream = response.data!;
         setState(() {
           _livestream = livestream;
           _isLoading = false;

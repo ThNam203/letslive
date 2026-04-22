@@ -145,6 +145,11 @@ File: [web/types/message.ts:15](web/types/message.ts#L15)
 Instead of returning an error, the conversion silently yields a nil UUID, masking upstream bugs.
 File: [backend/user/handlers/user/update_current_user_private.go:45](backend/user/handlers/user/update_current_user_private.go#L45)
 
+**L8. No DB-level uniqueness for active livestream per user**
+The app reads only one active livestream (`GET /v1/livestreams?userId=...`) and now picks the latest one in query order, but the database schema still allows multiple active rows for the same user. This can create nondeterministic behavior across other queries and background jobs.
+Suggested future fix: add a partial unique index on `livestreams(user_id)` where `vod_id IS NULL AND ended_at IS NULL` after data cleanup.
+File: [backend/livestream/migrations/0001_init_tables.sql](backend/livestream/migrations/0001_init_tables.sql)
+
 ---
 
 ## Recommended Fix Order

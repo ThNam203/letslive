@@ -15,7 +15,8 @@ func (r *postgresLivestreamRepo) GetByUser(ctx context.Context, userId uuid.UUID
 	query := `
 		SELECT id, user_id, title, description, thumbnail_url, visibility, view_count, started_at, ended_at, created_at, updated_at, vod_id
 		FROM livestreams
-		WHERE user_id = $1 AND vod_id IS NULL
+		WHERE user_id = $1 AND vod_id IS NULL AND ended_at IS NULL
+		ORDER BY started_at DESC, created_at DESC, id DESC
 		LIMIT 1
 	`
 
@@ -33,12 +34,7 @@ func (r *postgresLivestreamRepo) GetByUser(ctx context.Context, userId uuid.UUID
 	livestream, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.Livestream])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, response.NewResponseFromTemplate[any](
-				response.RES_ERR_LIVESTREAM_NOT_FOUND,
-				nil,
-				nil,
-				nil,
-			)
+			return nil, nil
 		}
 		logger.Errorf(ctx, "db scan error [getlivestreambyuser: %v]", err)
 		return nil, response.NewResponseFromTemplate[any](
