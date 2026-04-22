@@ -23,10 +23,6 @@ function useT(
         i18next.changeLanguage(lng);
     }, [lng]);
 
-    if (i18next.resolvedLanguage !== lng) {
-        i18next.changeLanguage(lng);
-    }
-
     return useTranslation(ns, options);
 }
 

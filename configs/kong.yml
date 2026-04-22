@@ -282,13 +282,6 @@ services:
     read_timeout: 60000
     write_timeout: 60000
     routes:
-      - name: Chat_Socket
-        paths:
-          - /ws
-        strip_path: false
-        protocols:
-          - http
-          - https
       - name: Chat_Messages
         protocols:
           - http
@@ -311,23 +304,6 @@ services:
         https_redirect_status_code: 426
         request_buffering: true
         response_buffering: true
-      - name: DM_Socket
-        paths:
-          - /dm-ws
-        strip_path: false
-        protocols:
-          - http
-          - https
-        plugins:
-          - name: jwt
-            enabled: true
-            config:
-              claims_to_verify:
-                - exp
-              cookie_names:
-                - ACCESS_TOKEN
-              key_claim_name: consumer
-              run_on_preflight: true
       - name: DM_Conversations
         protocols:
           - http
@@ -339,6 +315,39 @@ services:
         https_redirect_status_code: 426
         request_buffering: true
         response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: true
+
+  - name: Chat_WS
+    host: chat.service.consul
+    port: 7780
+    path: /
+    connect_timeout: 60000
+    read_timeout: 60000
+    write_timeout: 60000
+    routes:
+      - name: Chat_Socket
+        paths:
+          - /ws
+        strip_path: false
+        protocols:
+          - http
+          - https
+      - name: DM_Socket
+        paths:
+          - /dm-ws
+        strip_path: false
+        protocols:
+          - http
+          - https
         plugins:
           - name: jwt
             enabled: true
