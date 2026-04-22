@@ -289,8 +289,6 @@ services:
         protocols:
           - http
           - https
-          - ws
-          - wss
       - name: Chat_Messages
         protocols:
           - http
@@ -320,8 +318,6 @@ services:
         protocols:
           - http
           - https
-          - ws
-          - wss
         plugins:
           - name: jwt
             enabled: true
