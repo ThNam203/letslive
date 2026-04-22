@@ -1,11 +1,4 @@
 {
-    "chat": {
-        "title": "Chat",
-        "joined": "joined the chat",
-        "left": "left the chat",
-        "placeholder_login": "Login to start messaging",
-        "placeholder_typing": "Type a message..."
-    },
     "offline": "Offline",
     "profile": {
         "about": "About",

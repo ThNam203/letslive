@@ -50,7 +50,7 @@ export default function ChatPanel({
     const wsRef = useRef<WebSocket | null>(null);
     const [atBottom, setAtBottom] = useState(false);
     const messageContainerRef = useRef<HTMLDivElement | null>(null);
-    const { t } = useT(["users", "chat-commands"]);
+    const { t } = useT(["chat", "chat-commands"]);
     const [customChatCommands, setCustomChatCommands] = useState<ChatCommand[]>(
         [],
     );
@@ -234,14 +234,16 @@ export default function ChatPanel({
 
             ws.onclose = (ev) => {};
 
-            ws.onerror = (error) => {};
+            ws.onerror = () => {
+                toast(t("chat.connection_error"), { type: "error" });
+            };
         };
 
         connectWebSocket();
         return () => {
             const ws = wsRef.current;
             if (ws) {
-                if (user) {
+                if (user && ws.readyState === WebSocket.OPEN) {
                     ws.send(
                         JSON.stringify({
                             type: CHAT_MESSAGE_TYPE.LEAVE,
@@ -260,7 +262,7 @@ export default function ChatPanel({
     return (
         <div className="relative flex h-full w-full flex-col">
             <div className="border-border flex items-center justify-between border border-y-0 px-4 py-3">
-                <h2 className="font-semibold">{t("users:chat.title")}</h2>
+                <h2 className="font-semibold">{t("chat.title")}</h2>
                 <Button
                     variant="ghost"
                     size="icon"
@@ -305,9 +307,9 @@ export default function ChatPanel({
                                 className={`text-foreground ${isAction ? "italic" : ""}`}
                             >
                                 {message.type === CHAT_MESSAGE_TYPE.JOIN
-                                    ? t("users:chat.joined")
+                                    ? t("chat.joined")
                                     : message.type === CHAT_MESSAGE_TYPE.LEAVE
-                                      ? t("users:chat.left")
+                                      ? t("chat.left")
                                       : parseEmotes(displayText)}
                             </span>
                         </div>
@@ -329,8 +331,8 @@ export default function ChatPanel({
                         type="text"
                         placeholder={
                             !user
-                                ? t("users:chat.placeholder_login")
-                                : t("users:chat.placeholder_typing")
+                                ? t("chat.placeholder_login")
+                                : t("chat.placeholder_typing")
                         }
                         disabled={!user}
                         maxLength={CHAT_MESSAGE_MAX_LENGTH}
