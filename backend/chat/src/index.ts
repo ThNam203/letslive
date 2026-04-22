@@ -124,7 +124,7 @@ async function SetupWebSocketServer(server: Server) {
 
     // Live chat WebSocket
     const redisService = new RedisService(pub, sub, roomManager)
-    const wss = new WebSocketServer({ server, path: '/v1/ws' })
+    const wss = new WebSocketServer({ server, path: '/ws' })
     const chatServer = new ChatServer(redisService, Message, wss)
 
     // DM WebSocket
@@ -139,7 +139,7 @@ async function SetupWebSocketServer(server: Server) {
 
     const dmWss = new WebSocketServer({
         server,
-        path: '/v1/dm-ws',
+        path: '/dm-ws',
         verifyClient: (info, callback) => {
             const userId = extractUserIdFromCookie(info.req.headers.cookie)
             if (!userId) {
