@@ -6,7 +6,9 @@
         "dev": "dotenv -e .env -- next dev --turbopack",
         "dev:mock": "dotenv -e .env.mock -- next dev --turbopack",
         "build": "next build",
+        "build:mock": "dotenv -e .env.mock -- next build",
         "start": "dotenv -e .env -- next start",
+        "start:mock": "dotenv -e .env.mock -- next start",
         "lint": "eslint ."
     },
     "dependencies": {
