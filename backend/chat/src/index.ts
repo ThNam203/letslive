@@ -23,6 +23,13 @@ import requestIdMiddleware from 'middlewares/requestId'
 import pinohttp from 'pino-http'
 import logger from 'lib/logger'
 
+function normalizeUpgradePath(url?: string): string {
+    if (!url) {
+        return '/'
+    }
+    return new URL(url, 'http://localhost').pathname
+}
+
 function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) {
     return (req: Request, res: Response, next: NextFunction) => {
         fn(req, res, next).catch(next) // Pass errors to the error-handling middleware
@@ -124,7 +131,7 @@ async function SetupWebSocketServer(server: Server) {
 
     // Live chat WebSocket
     const redisService = new RedisService(pub, sub, roomManager)
-    const wss = new WebSocketServer({ server, path: '/ws' })
+    const wss = new WebSocketServer({ noServer: true })
     const chatServer = new ChatServer(redisService, Message, wss)
 
     // DM WebSocket
@@ -138,8 +145,7 @@ async function SetupWebSocketServer(server: Server) {
     const dmMessageService = new DmMessageService()
 
     const dmWss = new WebSocketServer({
-        server,
-        path: '/dm-ws',
+        noServer: true,
         verifyClient: (info, callback) => {
             const userId = extractUserIdFromCookie(info.req.headers.cookie)
             if (!userId) {
@@ -152,6 +158,26 @@ async function SetupWebSocketServer(server: Server) {
     })
 
     const dmServer = new DmServer(dmRedisService, presenceService, conversationService, dmMessageService, dmWss)
+
+    server.on('upgrade', (req, socket, head) => {
+        const path = normalizeUpgradePath(req.url)
+
+        if (path === '/ws') {
+            wss.handleUpgrade(req, socket, head, (ws) => {
+                wss.emit('connection', ws, req)
+            })
+            return
+        }
+
+        if (path === '/dm-ws') {
+            dmWss.handleUpgrade(req, socket, head, (ws) => {
+                dmWss.emit('connection', ws, req)
+            })
+            return
+        }
+
+        socket.destroy()
+    })
 
     return { chatServer, dmServer }
 }
