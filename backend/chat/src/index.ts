@@ -227,7 +227,7 @@ if (esMain(import.meta)) {
 const shutdown = async (signal: string, consul: ConsulRegistry) => {
     logger.info(`\nReceived ${signal}. Starting graceful shutdown...`)
     try {
-        logger.info('Deregistering from Consul...')
+        logger.info('De-registering from Consul...')
         if (consul && typeof consul.deregister === 'function') {
             await consul.deregister()
             logger.info('successfully deregistered from Consul.')
