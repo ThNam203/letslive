@@ -56,6 +56,7 @@ export class DmServer {
 
         ws.on('close', async () => {
             this.connections.delete(userId)
+            clearInterval(pingInterval)
             await this.presenceService.setOffline(userId)
             this.broadcastPresence(userId, DmServerEventType.USER_OFFLINE)
         })

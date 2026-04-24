@@ -79,6 +79,7 @@ export class ChatServer {
             }
 
             this.connections.delete(userInfo.id!)
+            clearInterval(pingInterval)
             userInfo = {
                 currentRoom: null,
                 id: null,
@@ -88,7 +89,14 @@ export class ChatServer {
 
         // if the proxy doesn't get an upstream response in 60s (kong default), it will close the connection
         // the ws.send() does not count as an upstream response
-        setInterval(() => {
+        let isAlive = true
+        ws.on('pong', () => { isAlive = true })
+        const pingInterval = setInterval(() => {
+            if (!isAlive) {
+                ws.terminate()
+                return
+            }
+            isAlive = false
             ws.ping()
         }, 30000)
     }
@@ -128,7 +136,7 @@ export class ChatServer {
         if (
             !userInfo.currentRoom ||
             userInfo.currentRoom !== data.roomId ||
-            !this.redisService.checkIfUserInRoom(data.userId, userInfo.currentRoom)
+            !(await this.redisService.checkIfUserInRoom(data.userId, userInfo.currentRoom))
         ) {
             logger.error(
                 { userId: data.userId, roomId: data.roomId, currentRoom: userInfo.currentRoom },
@@ -147,7 +155,7 @@ export class ChatServer {
         if (
             !userInfo.currentRoom ||
             userInfo.currentRoom !== data.roomId ||
-            !this.redisService.checkIfUserInRoom(data.userId, userInfo.currentRoom)
+            !(await this.redisService.checkIfUserInRoom(data.userId, userInfo.currentRoom))
         ) {
             logger.error(
                 { userId: data.userId, roomId: data.roomId, currentRoom: userInfo.currentRoom },
