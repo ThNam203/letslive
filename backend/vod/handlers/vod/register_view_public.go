@@ -8,7 +8,6 @@ import (
 	"sen1or/letslive/shared/pkg/tracer"
 	response "sen1or/letslive/vod/response"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid/v5"
 )
 
@@ -34,7 +33,6 @@ func (h *VODHandler) RegisterViewPublicHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	validate := validator.New()
 	if err := validate.Struct(body); err != nil {
 		h.WriteResponse(w, ctx, response.NewResponseWithValidationErrors[any](nil, nil, err))
 		return

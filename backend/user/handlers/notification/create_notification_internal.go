@@ -7,8 +7,6 @@ import (
 	"sen1or/letslive/user/dto"
 	"sen1or/letslive/shared/pkg/tracer"
 	"sen1or/letslive/user/response"
-
-	"github.com/go-playground/validator/v10"
 )
 
 func (h *NotificationHandler) CreateNotificationInternalHandler(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +22,6 @@ func (h *NotificationHandler) CreateNotificationInternalHandler(w http.ResponseW
 		return
 	}
 
-	validate := validator.New()
 	if err := validate.Struct(req); err != nil {
 		h.WriteResponse(w, ctx, response.NewResponseWithValidationErrors[any](nil, nil, err))
 		return
