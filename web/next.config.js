@@ -1,14 +1,16 @@
 module.exports = {
+    output: "standalone",
     reactStrictMode: false,
     images: {
         remotePatterns: [
             {
                 protocol: "https",
-                hostname: "*",
+                hostname: process.env.NEXT_PUBLIC_MINIO_HOSTNAME || "localhost",
             },
             {
                 protocol: "http",
                 hostname: "localhost",
+                port: "9000",
             },
         ],
     },
