@@ -140,8 +140,11 @@ BEGIN
   END IF;
 
   -- only status may change
-  IF (OLD.* IS DISTINCT FROM NEW.*)
-     AND (OLD.status IS NOT DISTINCT FROM NEW.status)
+  IF OLD.type       IS DISTINCT FROM NEW.type       OR
+     OLD.reference  IS DISTINCT FROM NEW.reference  OR
+     OLD.actor_id   IS DISTINCT FROM NEW.actor_id   OR
+     OLD.metadata   IS DISTINCT FROM NEW.metadata   OR
+     OLD.created_at IS DISTINCT FROM NEW.created_at
   THEN
     RAISE EXCEPTION
       'only status column may be updated on transactions';
