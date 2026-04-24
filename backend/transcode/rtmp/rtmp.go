@@ -145,7 +145,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	for {
 		pkt, err := c.ReadPacket()
 		if err == io.EOF {
-			duration := int64(math.Ceil(time.Since(startTime).Seconds()) - 7) // TODO: proper duration calculation
+			duration := int64(math.Max(0, math.Ceil(time.Since(startTime).Seconds())-7))
 			pipeOut.Close()
 			pipeIn.Close()
 			s.onDisconnect(streamId, duration)
@@ -154,7 +154,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 
 		if err := w.WritePacket(pkt); err != nil {
 			logger.Errorf(s.ctx, "failed to write rtmp package: %s", err)
-			duration := int64(math.Ceil(time.Since(startTime).Seconds()) - 7)
+			duration := int64(math.Max(0, math.Ceil(time.Since(startTime).Seconds())-7))
 			pipeIn.Close()
 			pipeOut.Close()
 			s.onDisconnect(streamId, duration)
@@ -247,14 +247,14 @@ func removeLiveGeneratedFiles(streamingKey, privatePath, publicPath string) erro
 	var errList []error
 
 	for _, path := range paths {
-		logger.Infof(context.TODO(), "path is removed", path)
+		logger.Infof(context.TODO(), "removing path %s", path)
 		err := os.RemoveAll(path)
 		if err != nil {
 			errList = append(errList, fmt.Errorf("failed to remove %s: %w", path, err))
 		}
 	}
 
-	return nil
+	return errors.Join(errList...)
 }
 
 func (s *RTMPServer) Shutdown(ctx context.Context) error {
