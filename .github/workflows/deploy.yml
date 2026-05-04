@@ -1,10 +1,11 @@
 name: deploy
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: [build-and-publish-images]
-    types: [completed]
     branches: [main]
+  # workflow_run:
+  #   workflows: [build-and-publish-images]
+  #   types: [completed]
+  #   branches: [main]
 
 jobs:
   deploy-to-selfhost:
