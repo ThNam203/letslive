@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import DefaultBackgound from "./default-background";
 import ImageHover from "../../_components/image-hover";
+import useT from "@/hooks/use-translation";
 
 interface Props {
     className?: string;
@@ -18,6 +19,7 @@ export default function ProfileBanner({
     onBackgroundImageChange,
     onProfileImageChange,
 }: Props) {
+    const { t } = useT("accessibility");
     const user = useUser((state) => state.user);
     const updateUser = useUser((state) => state.updateUser);
     const profileImageInputRef = useRef<HTMLInputElement>(null);
@@ -111,7 +113,7 @@ export default function ProfileBanner({
                 {displayBackground ? (
                     <Image
                         src={displayBackground}
-                        alt="Profile Banner"
+                        alt={t("profile_banner")}
                         fill={true}
                         className="object-cover"
                         unoptimized
@@ -131,7 +133,7 @@ export default function ProfileBanner({
                 <Avatar className="relative flex h-32 w-32 overflow-hidden rounded-full border-4 border-white">
                     <AvatarImage
                         src={displayProfilePicture}
-                        alt="user avatar"
+                        alt={t("user_avatar")}
                     />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                         {user && user.username[0].toUpperCase()}

@@ -344,6 +344,11 @@ export default function ChatPanel({
                 </div>
                 <EmotePicker
                     disabled={!user}
+                    searchPlaceholder={t("chat:emote_search_placeholder")}
+                    emptyStateText={t("chat:emote_empty_state")}
+                    getCategoryLabel={(category) =>
+                        t(`chat:emote_category_${category}`)
+                    }
                     onSelect={(code) => handleInputChange(inputMessage + code)}
                 />
                 <Button type="submit" disabled={!user} className="h-9 w-12 p-0">

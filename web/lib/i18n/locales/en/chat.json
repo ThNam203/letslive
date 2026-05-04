@@ -4,5 +4,11 @@
     "left": "left the chat",
     "placeholder_login": "Login to start messaging",
     "placeholder_typing": "Type a message...",
+    "emote_search_placeholder": "Search emotes...",
+    "emote_empty_state": "No emotes found",
+    "emote_category_smileys": "Smileys",
+    "emote_category_gestures": "Gestures",
+    "emote_category_hype": "Hype",
+    "emote_category_misc": "Misc",
     "connection_error": "Failed to connect to chat. Please refresh the page."
 }

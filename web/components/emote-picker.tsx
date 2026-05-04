@@ -12,9 +12,15 @@ import { EMOTES, EMOTE_CATEGORIES, type Emote } from "@/constant/emotes";
 export default function EmotePicker({
     onSelect,
     disabled,
+    searchPlaceholder,
+    emptyStateText,
+    getCategoryLabel,
 }: {
     onSelect: (code: string) => void;
     disabled?: boolean;
+    searchPlaceholder: string;
+    emptyStateText: string;
+    getCategoryLabel: (category: (typeof EMOTE_CATEGORIES)[number]) => string;
 }) {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
@@ -56,7 +62,7 @@ export default function EmotePicker({
                 <div className="border-b p-2">
                     <input
                         type="text"
-                        placeholder="Search emotes..."
+                        placeholder={searchPlaceholder}
                         className="w-full bg-transparent text-sm outline-none"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
@@ -80,7 +86,7 @@ export default function EmotePicker({
                             ))}
                             {filtered.length === 0 && (
                                 <p className="text-muted-foreground col-span-8 py-4 text-center text-xs">
-                                    No emotes found
+                                    {emptyStateText}
                                 </p>
                             )}
                         </div>
@@ -92,7 +98,7 @@ export default function EmotePicker({
                             return (
                                 <div key={category} className="mb-2">
                                     <p className="text-muted-foreground mb-1 px-1 text-[10px] font-semibold uppercase">
-                                        {category}
+                                        {getCategoryLabel(category)}
                                     </p>
                                     <div className="grid grid-cols-8 gap-0.5">
                                         {emotes.map((emote) => (

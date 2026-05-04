@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { captureException } from "@sentry/nextjs";
 
 export default function GlobalError({ error }: { error: Error }) {
-    const { t } = useT(["error", "common"]);
+    const { t } = useT(["error", "common", "accessibility"]);
 
     useEffect(() => {
         captureException(error);
@@ -19,7 +19,7 @@ export default function GlobalError({ error }: { error: Error }) {
             <div className="flex max-w-[600px] items-center justify-center text-center">
                 <Image
                     src="/images/pc-error.png"
-                    alt="500 Error Illustration"
+                    alt={t("accessibility:error_500_illustration")}
                     width={400}
                     height={300}
                     className="mb-6 h-auto w-full"

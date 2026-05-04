@@ -6,6 +6,7 @@
     "cancel": "Hủy",
     "or": "hoặc",
     "go_home": "Về trang chủ",
+    "oops": "Ối!",
     "page_not_found": "Không tìm thấy trang",
     "save_changes": "Lưu thay đổi",
     "username": "Tên người dùng",
@@ -38,6 +39,7 @@
     "bio": "Tiểu sử",
     "started_at": "Bắt đầu {{time}} trước",
     "live": "Trực tiếp",
+    "streamer": "Streamer",
     "time": {
         "seconds_ago": "{{count}} giây",
         "minutes_ago": "{{count}} phút",
@@ -48,5 +50,7 @@
         "years_ago": "{{count}} năm"
     },
     "following": "Đang theo dõi",
-    "recommended": "Gợi ý"
+    "recommended": "Gợi ý",
+    "other_streams": "Các luồng khác",
+    "close": "Đóng"
 }

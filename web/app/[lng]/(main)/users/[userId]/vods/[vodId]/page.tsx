@@ -14,7 +14,7 @@ import useT from "@/hooks/use-translation";
 import CommentSection from "@/components/vod-comments/comment-section";
 
 export default function VODPage() {
-    const { t } = useT(["fetch-error", "api-response"]);
+    const { t } = useT(["fetch-error", "api-response", "common"]);
     const [user, setUser] = useState<PublicUser | null>(null);
     const [vods, setVods] = useState<VOD[]>([]);
     const [isExtraOpen, setIsExtraOpen] = useState(false);
@@ -33,9 +33,9 @@ export default function VODPage() {
     const params = useParams<{ userId: string; vodId: string }>();
 
     const [playerInfo, setPlayerInfo] = useState<VideoInfo>({
-        videoTitle: "Live Streaming",
+        videoTitle: t("common:live_streaming"),
         streamer: {
-            name: "Streamer",
+            name: t("common:streamer"),
         },
         videoUrl: null,
     });
@@ -109,7 +109,7 @@ export default function VODPage() {
                                 name:
                                     userRes.data?.displayName ??
                                     userRes.data?.username ??
-                                    "Streamer",
+                                    t("common:streamer"),
                             },
                         }));
                     } else {
@@ -154,7 +154,9 @@ export default function VODPage() {
                 className={`bg-background fixed top-0 right-2 z-40 h-[100%-48px] w-full transition-all duration-300 md:relative md:w-80 lg:w-96 ${isExtraOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}
             >
                 <div className="border-border bg-background flex h-full w-full flex-col border-x font-sans">
-                    <h2 className="p-4 font-semibold">Other streams</h2>
+                    <h2 className="p-4 font-semibold">
+                        {t("common:other_streams")}
+                    </h2>
                     <div className="small-scrollbar h-full overflow-y-auto px-4">
                         {vods
                             .filter((v) => v.id !== params.vodId)

@@ -18,7 +18,13 @@ export default function ProfileHeader({
     user: PublicUser;
     updateUser: (newUserInfo: PublicUser) => void;
 }) {
-    const { t } = useT(["common", "users", "fetch-error", "api-response"]);
+    const { t } = useT([
+        "common",
+        "users",
+        "fetch-error",
+        "api-response",
+        "accessibility",
+    ]);
     const me = useUser((state) => state.user);
     const [isFetching, setIsFetching] = useState(false);
 
@@ -89,7 +95,7 @@ export default function ProfileHeader({
                             user.displayName ?? user.username
                         }`
                     }
-                    alt="Profile Banner"
+                    alt={t("accessibility:profile_banner")}
                     className="object-cover"
                     fill={true}
                     priority={true}
@@ -101,7 +107,7 @@ export default function ProfileHeader({
                     <Avatar className="h-32 w-32 rounded-full border-4 border-white">
                         <AvatarImage
                             src={user.profilePicture}
-                            alt="user avatar"
+                            alt={t("accessibility:user_avatar")}
                         />
                         <AvatarFallback>
                             {user.username[0].toUpperCase()}

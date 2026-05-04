@@ -212,6 +212,8 @@
     "messagesSentImagesCount": "Đã gửi {count} ảnh",
     "messagesUploadFailed": "Tải lên thất bại",
     "messagesPlaceholderTypeMessage": "Nhập tin nhắn...",
+    "emoteSearchPlaceholder": "Tìm emote...",
+    "emoteNoResults": "Không tìm thấy emote",
     "messagesMessageDeleted": "Tin nhắn đã bị xóa",
     "messagesBeginningOfConversation": "Đầu cuộc trò chuyện",
     "messagesTypingOne": "{name} đang nhập...",

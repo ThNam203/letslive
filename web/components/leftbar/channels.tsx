@@ -25,7 +25,7 @@ function ChannelUserCard({
     user: PublicUser;
     isMinimized: boolean;
 }) {
-    const { t } = useT(["common"]);
+    const { t } = useT(["common", "accessibility"]);
     return (
         <HoverCard>
             <HoverCardTrigger asChild>
@@ -39,7 +39,7 @@ function ChannelUserCard({
                     <Avatar>
                         <AvatarImage
                             src={user.profilePicture}
-                            alt="User avatar"
+                            alt={t("accessibility:user_avatar")}
                             className="h-10 w-10 rounded-full"
                         />
                         <AvatarFallback className="border-border h-10 w-10 rounded-full border">
@@ -58,7 +58,7 @@ function ChannelUserCard({
                     <Avatar>
                         <AvatarImage
                             src={user.profilePicture}
-                            alt="User avatar"
+                            alt={t("accessibility:user_avatar")}
                             className="h-10 w-10 rounded-full"
                         />
                         <AvatarFallback className="border-border h-10 w-10 rounded-full border">

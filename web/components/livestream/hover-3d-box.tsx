@@ -4,6 +4,7 @@ import { ClassValue } from "clsx";
 import Link from "next/link";
 import { cn } from "@/utils/cn";
 import LiveImage from "./live-image";
+import useT from "@/hooks/use-translation";
 
 const Hover3DBox = ({
     className,
@@ -18,6 +19,7 @@ const Hover3DBox = ({
     showStream?: boolean;
     onClick?: () => void;
 }) => {
+    const { t } = useT(["accessibility", "common"]);
     return (
         <div
             className={cn(
@@ -32,7 +34,7 @@ const Hover3DBox = ({
                 width={500}
                 height={500}
                 src={imageSrc}
-                alt="Livestream preview image"
+                alt={t("accessibility:livestream_preview")}
                 className="absolute top-0 left-0 z-10 aspect-video w-full cursor-pointer duration-100 ease-linear group-hover:translate-x-2 group-hover:-translate-y-2"
                 fallbackSrc={fallbackSrc || "/images/streaming.jpg"}
                 refreshInterval={30000}
@@ -44,7 +46,7 @@ const Hover3DBox = ({
                     showStream ? "" : "hidden",
                 )}
             >
-                LIVE
+                {t("common:live")}
             </span>
         </div>
     );

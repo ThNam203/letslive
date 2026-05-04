@@ -4,5 +4,11 @@
     "left": "đã rời phòng chat",
     "placeholder_login": "Đăng nhập để bắt đầu nhắn tin",
     "placeholder_typing": "Nhập tin nhắn...",
+    "emote_search_placeholder": "Tìm emote...",
+    "emote_empty_state": "Không tìm thấy emote",
+    "emote_category_smileys": "Biểu cảm",
+    "emote_category_gestures": "Cử chỉ",
+    "emote_category_hype": "Sôi động",
+    "emote_category_misc": "Khác",
     "connection_error": "Không thể kết nối tới chat. Vui lòng tải lại trang."
 }

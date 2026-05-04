@@ -6,6 +6,7 @@
     "cancel": "Cancel",
     "or": "or",
     "go_home": "Go home",
+    "oops": "Oops!",
     "page_not_found": "We couldn't find the page you were looking for",
     "save_changes": "Save changes",
     "username": "Username",
@@ -37,6 +38,7 @@
     "bio": "Bio",
     "started_at": "Started {{time}}",
     "live": "Live",
+    "streamer": "Streamer",
     "time": {
         "seconds_ago_one": "{{count}} second ago",
         "seconds_ago_other": "{{count}} seconds ago",
@@ -54,5 +56,7 @@
         "years_ago_other": "{{count}} years ago"
     },
     "following": "Following",
-    "recommended": "Recommended"
+    "recommended": "Recommended",
+    "other_streams": "Other streams",
+    "close": "Close"
 }

@@ -36,6 +36,7 @@ export default function UserInfo() {
         "fetch-error",
         "settings",
         "theme",
+        "accessibility",
     ]);
 
     const logoutHandler = async () => {
@@ -67,7 +68,7 @@ export default function UserInfo() {
                             <>
                                 <AvatarImage
                                     src={userState.user.profilePicture}
-                                    alt="avatar"
+                                    alt={t("accessibility:user_avatar")}
                                 />
                                 <AvatarFallback>
                                     {userState.user.username

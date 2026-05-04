@@ -1316,6 +1316,18 @@ abstract class AppLocalizations {
   /// **'Type a message...'**
   String get messagesPlaceholderTypeMessage;
 
+  /// No description provided for @emoteSearchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search emotes...'**
+  String get emoteSearchPlaceholder;
+
+  /// No description provided for @emoteNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No emotes found'**
+  String get emoteNoResults;
+
   /// No description provided for @messagesMessageDeleted.
   ///
   /// In en, this message translates to:

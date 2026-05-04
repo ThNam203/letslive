@@ -1,6 +1,13 @@
 {
     "open_menu": "Open menu",
     "clear_search": "Clear search",
+    "wallet_open": "Open wallet",
+    "wallet": "Wallet",
+    "profile_banner": "Profile banner",
+    "user_avatar": "User avatar",
+    "livestream_preview": "Livestream preview image",
+    "error_404_illustration": "404 error illustration",
+    "error_500_illustration": "500 error illustration",
     "update_field_button": "Update field",
     "close_field_button": "Close field",
     "seek_back_10": "Rewind 10 seconds",

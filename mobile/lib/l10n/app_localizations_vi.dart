@@ -717,6 +717,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get messagesPlaceholderTypeMessage => 'Nhập tin nhắn...';
 
   @override
+  String get emoteSearchPlaceholder => 'Tìm emote...';
+
+  @override
+  String get emoteNoResults => 'Không tìm thấy emote';
+
+  @override
   String get messagesMessageDeleted => 'Tin nhắn đã bị xóa';
 
   @override

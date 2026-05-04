@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
+import '../../l10n/app_localizations.dart';
 
 class ErrorDisplay extends StatelessWidget {
   final String title;
@@ -15,6 +16,7 @@ class ErrorDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.theme.colors;
     final typography = context.theme.typography;
 
@@ -44,7 +46,7 @@ class ErrorDisplay extends StatelessWidget {
               FButton(
                 onPress: onRetry,
                 prefix: const Icon(FIcons.refreshCw),
-                child: const Text('Retry'),
+                child: Text(l10n.retry),
               ),
             ],
           ],

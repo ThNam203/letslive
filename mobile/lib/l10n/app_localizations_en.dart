@@ -723,6 +723,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagesPlaceholderTypeMessage => 'Type a message...';
 
   @override
+  String get emoteSearchPlaceholder => 'Search emotes...';
+
+  @override
+  String get emoteNoResults => 'No emotes found';
+
+  @override
   String get messagesMessageDeleted => 'This message was deleted';
 
   @override

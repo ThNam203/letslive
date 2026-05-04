@@ -1,6 +1,13 @@
 {
     "open_menu": "Mở menu",
     "clear_search": "Xóa tìm kiếm",
+    "wallet_open": "Mở ví",
+    "wallet": "Ví",
+    "profile_banner": "Ảnh bìa hồ sơ",
+    "user_avatar": "Ảnh đại diện người dùng",
+    "livestream_preview": "Ảnh xem trước livestream",
+    "error_404_illustration": "Minh họa lỗi 404",
+    "error_500_illustration": "Minh họa lỗi 500",
     "update_field_button": "Cập nhật trường",
     "close_field_button": "Đóng trường",
     "seek_back_10": "Lùi 10 giây",

@@ -248,6 +248,11 @@ export default function MessageInput({
                 </div>
                 <EmotePicker
                     disabled={isUploading}
+                    searchPlaceholder={t("emote_search_placeholder")}
+                    emptyStateText={t("emote_empty_state")}
+                    getCategoryLabel={(category) =>
+                        t(`emote_category_${category}`)
+                    }
                     onSelect={(code) => setText((prev) => prev + code)}
                 />
                 <Button

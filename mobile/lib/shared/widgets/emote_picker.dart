@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 
 import '../../core/emotes/emote_registry.dart';
+import '../../l10n/app_localizations.dart';
 
 /// A bottom-sheet emote picker that inserts shortcodes into a [TextEditingController].
 class EmotePicker extends StatefulWidget {
@@ -18,6 +19,7 @@ class _EmotePickerState extends State<EmotePicker> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.theme.colors;
     final typography = context.theme.typography;
 
@@ -42,7 +44,7 @@ class _EmotePickerState extends State<EmotePicker> {
             child: TextField(
               autofocus: false,
               decoration: InputDecoration(
-                hintText: 'Search emotes...',
+                hintText: l10n.emoteSearchPlaceholder,
                 hintStyle: typography.sm.copyWith(
                   color: colors.mutedForeground,
                 ),
@@ -105,7 +107,7 @@ class _EmotePickerState extends State<EmotePicker> {
         padding: const EdgeInsets.all(16),
         child: Center(
           child: Text(
-            'No emotes found',
+            l10n.emoteNoResults,
             style: context.theme.typography.xs.copyWith(
               color: context.theme.colors.mutedForeground,
             ),
