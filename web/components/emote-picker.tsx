@@ -46,7 +46,7 @@ export default function EmotePicker({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 shrink-0"
+                    className="h-8 w-8 shrink-0"
                     disabled={disabled}
                 >
                     <span className="text-lg">😊</span>
@@ -55,7 +55,7 @@ export default function EmotePicker({
             <PopoverContent
                 side="top"
                 align="start"
-                className="w-72 p-0"
+                className="w-72 p-0 mr-2 bg-muted"
                 onOpenAutoFocus={(e) => e.preventDefault()}
             >
                 {/* Search */}
