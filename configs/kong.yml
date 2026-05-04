@@ -43,7 +43,7 @@ services:
               cookie_names:
                 - ACCESS_TOKEN
               key_claim_name: consumer
-              run_on_preflight: true
+              run_on_preflight: false
 
   - name: Auth
     host: auth.service.consul

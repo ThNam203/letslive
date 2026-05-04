@@ -54,9 +54,16 @@ The project aims to create a functioning livestreaming website from a to z like 
 5. Run "docker compose up"
 6. Access web client at localhost:5000
 
-### Web client — mock API (optional)
+## DEPLOYMENT
+
+Before you deploy (including the GitHub Actions **deploy** workflow on a self-hosted runner), double-check [`configs/kong.yml`](./configs/kong.yml):
+
+1. **JWT consumer secret** — Under `consumers` → `jwt_secrets`, the `secret` must match the same signing key your auth stack uses for access tokens (`ACCESS_TOKEN_SECRET`). The deploy workflow replaces the placeholder `access_token_secret` string with the `ACCESS_TOKEN_SECRET` GitHub secret; if you deploy without that step, set the value in the file yourself and keep it in sync with the services.
+2. **CORS origins** — Under `plugins` → `cors` → `config`, set `origins` to the real browser origins that call the API (for example your production and staging site URLs). With `credentials: true`, do not rely on `["*"]` for production; browsers require explicit allowed origins.
+
+## Web client — mock API (optional)
 
 To work on the **Next.js** UI without Docker or the Go API, use the mock flow: from the [`web`](./web) directory run `npm install` and then `npm run dev:mock`. That loads `.env.mock` and serves the app with [MSW](https://mswjs.io/) intercepting backend calls in the browser. More detail is in [`web/README.md`](./web/README.md). The mobile app does not use this setup yet.
 
-Last edited: 18/04/2026  
+Last edited: 04/05/2026  
 **[Editor: Nam Huynh](https://github.com/ThNam203)**
