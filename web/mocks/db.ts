@@ -51,7 +51,7 @@ export const ME_USER_ID = "user-me-001";
 
 export const meUser: MeUser = {
     id: ME_USER_ID,
-    username: null,
+    username: "mockuser",
     email: "mockuser@letslive.dev",
     status: UserStatus.NORMAL,
     authProvider: AuthProvider.LOCAL,

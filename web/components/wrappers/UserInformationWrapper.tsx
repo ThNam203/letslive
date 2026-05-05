@@ -28,7 +28,7 @@ export default function UserInformationWrapper({
                             userRes.data.username == null &&
                             !pathname.includes("account-setup")
                         ) {
-                            router.push("/username-setup");
+                            router.push("/account-setup");
                         }
                     } else if (!userRes.success && userRes.statusCode != 401)
                         toast.error(t(`api-response:${userRes.key}`), {
