@@ -1,4 +1,9 @@
 -- +goose Up
+UPDATE users
+SET username = LEFT(display_name, 30)
+WHERE display_name IS NOT NULL
+  AND display_name <> '';
+
 ALTER TABLE users DROP COLUMN display_name;
 ALTER TABLE users ALTER COLUMN username DROP NOT NULL;
 ALTER TABLE users ALTER COLUMN username TYPE VARCHAR(30);
