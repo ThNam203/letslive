@@ -207,9 +207,6 @@ export default function NewConversationDialog({
                                 <p className="text-sm font-medium">
                                     {result.username}
                                 </p>
-                                <p className="text-muted-foreground text-xs">
-                                    @{result.username}
-                                </p>
                             </div>
                         </button>
                     ))}

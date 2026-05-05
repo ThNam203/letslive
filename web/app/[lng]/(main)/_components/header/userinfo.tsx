@@ -93,9 +93,6 @@ export default function UserInfo() {
                                     onMouseUp={() => setIsPopoverOpen(false)}
                                 >
                                     <p>{userState.user.username ?? ""}</p>
-                                    <p className="text-sm">
-                                        @{userState.user.username ?? ""}
-                                    </p>
                                 </Link>
                                 <div className="flex flex-col gap-2">
                                     <Button asChild>

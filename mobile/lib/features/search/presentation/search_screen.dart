@@ -193,14 +193,6 @@ class _UserResultTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      subtitle: Text(
-        '@${user.username ?? ''}',
-        style: typography.xs.copyWith(
-          color: colors.mutedForeground,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
       suffix: Icon(FIcons.chevronRight, size: 16, color: colors.mutedForeground),
     );
   }

@@ -248,12 +248,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
-                      '@${user.username}',
-                      style: typography.sm.copyWith(
-                        color: colors.mutedForeground,
-                      ),
-                    ),
                   ],
                 ),
               ),

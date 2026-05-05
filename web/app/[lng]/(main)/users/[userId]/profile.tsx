@@ -53,9 +53,6 @@ export default function ProfileView({
                         <h1 className="text-foreground text-3xl font-bold">
                             {user.username ?? ""}
                         </h1>
-                        <p className="text-foreground-muted">
-                            @{user.username ?? ""}
-                        </p>
                     </div>
                 </div>
                 <div className="flex flex-row gap-2">

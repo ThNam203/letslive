@@ -246,12 +246,6 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
                               user.username ?? '',
                               style: typography.sm,
                             ),
-                            subtitle: Text(
-                              '@${user.username ?? ''}',
-                              style: typography.xs.copyWith(
-                                color: colors.mutedForeground,
-                              ),
-                            ),
                             suffix: isSelected
                                 ? Icon(
                                     FIcons.check,
