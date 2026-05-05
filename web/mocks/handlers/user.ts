@@ -102,10 +102,8 @@ export const userHandlers = [
     http.get(`${API_BASE}/users/search`, ({ request }) => {
         const url = new URL(request.url);
         const query = url.searchParams.get("username")?.toLowerCase() ?? "";
-        const results = getAllUsers().filter(
-            (u) =>
-                u.username.toLowerCase().includes(query) ||
-                u.displayName?.toLowerCase().includes(query),
+        const results = getAllUsers().filter((u) =>
+            u.username?.toLowerCase().includes(query),
         ) as PublicUser[];
         return ok<PublicUser[]>(results);
     }),

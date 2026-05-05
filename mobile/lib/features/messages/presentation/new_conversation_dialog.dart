@@ -95,12 +95,10 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
     final isGroup = _selectedUsers.length > 1;
 
     final participantUsernames = <String, String>{};
-    final participantDisplayNames = <String, String>{};
     final participantProfilePictures = <String, String>{};
 
     for (final u in _selectedUsers) {
-      participantUsernames[u.id] = u.username;
-      if (u.displayName != null) participantDisplayNames[u.id] = u.displayName!;
+      if (u.username != null) participantUsernames[u.id] = u.username!;
       if (u.profilePicture != null) {
         participantProfilePictures[u.id] = u.profilePicture!;
       }
@@ -112,13 +110,10 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
         type: isGroup ? 'group' : 'dm',
         participantIds: _selectedUsers.map((u) => u.id).toList(),
         participantUsernames: participantUsernames,
-        participantDisplayNames:
-            participantDisplayNames.isNotEmpty ? participantDisplayNames : null,
         participantProfilePictures: participantProfilePictures.isNotEmpty
             ? participantProfilePictures
             : null,
         creatorUsername: currentUser.username,
-        creatorDisplayName: currentUser.displayName,
         creatorProfilePicture: currentUser.profilePicture,
         name: isGroup
             ? _groupNameController.text.trim().isNotEmpty
@@ -182,7 +177,7 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
                       .map(
                         (u) => Chip(
                           label: Text(
-                            u.displayName ?? u.username,
+                            u.username ?? '',
                             style: typography.xs,
                           ),
                           deleteIcon: const Icon(FIcons.x, size: 14),
@@ -240,18 +235,19 @@ class _NewConversationDialogState extends ConsumerState<NewConversationDialog> {
                                   ? '${AppConfig.apiUrl}/${user.profilePicture}'
                                   : null,
                               size: 32,
-                              fallbackText: (user.username.isNotEmpty
-                                      ? user.username[0]
-                                      : '?')
-                                  .toUpperCase(),
+                              fallbackText:
+                                  ((user.username?.isNotEmpty ?? false)
+                                          ? user.username![0]
+                                          : '?')
+                                      .toUpperCase(),
                               textStyle: typography.xs,
                             ),
                             title: Text(
-                              user.displayName ?? user.username,
+                              user.username ?? '',
                               style: typography.sm,
                             ),
                             subtitle: Text(
-                              '@${user.username}',
+                              '@${user.username ?? ''}',
                               style: typography.xs.copyWith(
                                 color: colors.mutedForeground,
                               ),

@@ -57,7 +57,6 @@ func (s *VODCommentService) enrichCommentsWithUsers(ctx context.Context, comment
 			userMap[userId] = &dto.CommentUser{
 				Id:             info.Id,
 				Username:       info.Username,
-				DisplayName:    info.DisplayName,
 				ProfilePicture: info.ProfilePicture,
 			}
 		}

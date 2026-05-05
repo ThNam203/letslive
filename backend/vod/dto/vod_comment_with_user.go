@@ -8,8 +8,7 @@ import (
 
 type CommentUser struct {
 	Id             uuid.UUID `json:"id"`
-	Username       string    `json:"username"`
-	DisplayName    *string   `json:"displayName,omitempty"`
+	Username       *string   `json:"username,omitempty"`
 	ProfilePicture *string   `json:"profilePicture,omitempty"`
 }
 

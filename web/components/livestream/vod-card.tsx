@@ -139,7 +139,9 @@ export default function VODCard({
                                 height={40}
                             />
                             <AvatarFallback>
-                                {user?.username.charAt(0).toUpperCase()}
+                                {(user?.username ?? "U")
+                                    .charAt(0)
+                                    .toUpperCase()}
                             </AvatarFallback>
                         </Avatar>
                     </div>
@@ -151,9 +153,7 @@ export default function VODCard({
                             {vod.title}
                         </h3>
                         <p className="text-muted-foreground truncate text-sm">
-                            {user
-                                ? (user.displayName ?? user.username)
-                                : "Unknown"}
+                            {user?.username ?? "Unknown"}
                         </p>
                         <div className="text-muted-foreground mt-1 flex items-center gap-3 text-xs">
                             <div className="flex items-center gap-1">

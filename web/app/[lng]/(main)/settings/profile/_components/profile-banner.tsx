@@ -136,7 +136,7 @@ export default function ProfileBanner({
                         alt={t("user_avatar")}
                     />
                     <AvatarFallback className="bg-primary text-primary-foreground">
-                        {user && user.username[0].toUpperCase()}
+                        {user && (user.username ?? "U")[0].toUpperCase()}
                     </AvatarFallback>
                     <ImageHover
                         inputRef={profileImageInputRef}

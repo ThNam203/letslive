@@ -24,9 +24,8 @@ type UserCreatedEvent struct {
 
 // UserUpdatedEvent is emitted when a user profile is updated.
 type UserUpdatedEvent struct {
-	UserId      uuid.UUID `json:"userId"`
-	Username    *string   `json:"username,omitempty"`
-	DisplayName *string   `json:"displayName,omitempty"`
+	UserId   uuid.UUID `json:"userId"`
+	Username *string   `json:"username,omitempty"`
 }
 
 // UserFollowedEvent is emitted when a user follows another user.

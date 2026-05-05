@@ -14,7 +14,6 @@
         "title": "Profile Settings",
         "description": "Change identifying details for your account",
         "username": "Username",
-        "display_name": "Display Name",
         "bio": "Bio",
         "update_success": "Profile information updated successfully!",
         "update_background": "Update background",

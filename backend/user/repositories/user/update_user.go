@@ -9,6 +9,7 @@ import (
 	"sen1or/letslive/user/response"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserRequestDTO) (*domains.User, *response.Response[any]) {
@@ -23,20 +24,29 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 	params := pgx.NamedArgs{
 		"id":           user.Id,
 		"status":       user.Status,
-		"display_name": user.DisplayName,
+		"username":     user.Username,
 		"phone_number": user.PhoneNumber,
 		"bio":          user.Bio,
 	}
 
 	rows, err := tx.Query(
 		ctx, `
-		UPDATE users 
-		SET display_name = @display_name, phone_number = @phone_number, bio = @bio, status = @status
-		WHERE id = @id 
+		UPDATE users
+		SET username = COALESCE(@username, username),
+		    phone_number = @phone_number,
+		    bio = @bio,
+		    status = @status
+		WHERE id = @id
 		RETURNING *
 	`, params)
 
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return nil, response.NewResponseFromTemplate[any](
+				response.RES_ERR_USERNAME_TAKEN, nil, nil, nil,
+			)
+		}
 		return nil, response.NewResponseFromTemplate[any](
 			response.RES_ERR_DATABASE_QUERY,
 			nil,
@@ -48,6 +58,12 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 
 	updatedUser, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.User])
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return nil, response.NewResponseFromTemplate[any](
+				response.RES_ERR_USERNAME_TAKEN, nil, nil, nil,
+			)
+		}
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, response.NewResponseFromTemplate[any](
 				response.RES_ERR_USER_NOT_FOUND,

@@ -13,7 +13,7 @@ import (
 func (r *postgresUserRepo) GetByAPIKey(ctx context.Context, apiKey uuid.UUID) (*domains.User, *response.Response[any]) {
 	var user domains.User
 	rows, err := r.dbConn.Query(ctx, `
-		SELECT u.id, u.username, u.email, u.created_at, u.stream_api_key, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url 
+		SELECT u.id, u.username, u.email, u.created_at, u.stream_api_key, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
 		FROM users u
 		JOIN livestream_information l ON u.id = l.user_id
 		WHERE u.stream_api_key = $1

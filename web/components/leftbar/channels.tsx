@@ -43,12 +43,12 @@ function ChannelUserCard({
                             className="h-10 w-10 rounded-full"
                         />
                         <AvatarFallback className="border-border h-10 w-10 rounded-full border">
-                            {user.username.charAt(0).toUpperCase()}
+                            {(user.username ?? "U").charAt(0).toUpperCase()}
                         </AvatarFallback>
                     </Avatar>
                     {!isMinimized && (
                         <span className="text-sm font-semibold">
-                            {user.displayName ?? user.username}
+                            {user.username ?? ""}
                         </span>
                     )}
                 </Link>
@@ -62,12 +62,12 @@ function ChannelUserCard({
                             className="h-10 w-10 rounded-full"
                         />
                         <AvatarFallback className="border-border h-10 w-10 rounded-full border">
-                            {user.username.charAt(0).toUpperCase()}
+                            {(user.username ?? "U").charAt(0).toUpperCase()}
                         </AvatarFallback>
                     </Avatar>
                     <div className="space-y-1">
                         <h4 className="text-sm font-semibold">
-                            {user.displayName ?? user.username}
+                            {user.username ?? ""}
                         </h4>
                         <p className="text-muted-foreground text-xs">
                             {t("common:bio")}:{" "}

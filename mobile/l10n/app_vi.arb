@@ -75,6 +75,9 @@
     "authEmailHint": "Nhập email của bạn",
     "authPasswordHint": "Nhập mật khẩu của bạn",
     "authUsernameHint": "Chọn tên người dùng",
+    "accountSetupTitle": "Chọn tên người dùng",
+    "accountSetupSubtitle": "Chọn một tên người dùng độc đáo. Đây là cách người khác tìm thấy bạn.",
+    "accountSetupSubmit": "Tiếp tục",
     "authCreatePasswordHint": "Tạo mật khẩu",
     "authConfirmPasswordHint": "Nhập lại mật khẩu",
 
@@ -151,7 +154,6 @@
     "settingsProfileTitle": "Cài đặt hồ sơ",
     "settingsProfileDescription": "Thay đổi thông tin nhận dạng cho tài khoản của bạn",
     "settingsProfileUsername": "Tên người dùng",
-    "settingsProfileDisplayName": "Tên hiển thị",
     "settingsProfileBio": "Tiểu sử",
     "settingsProfileUpdateSuccess": "Cập nhật thông tin hồ sơ thành công!",
     "settingsProfileUpdateBackground": "Cập nhật ảnh nền",

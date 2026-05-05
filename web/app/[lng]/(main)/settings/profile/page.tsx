@@ -18,7 +18,7 @@ import IconLoader from "@/components/icons/loader";
 import DisableAccountDialog from "./_components/disable-account-dialog";
 import useT from "@/hooks/use-translation";
 import {
-    DISPLAY_NAME_MAX_LENGTH,
+    USERNAME_MAX_LENGTH,
     BIO_MAX_LENGTH,
 } from "@/constant/field-limits";
 import LanguageList from "@/app/[lng]/(main)/settings/profile/_components/language-list";
@@ -29,7 +29,7 @@ export default function ProfileSettings() {
     const user = useUser((state) => state.user);
     const updateUser = useUser((state) => state.updateUser);
 
-    const [displayName, setDisplayName] = useState("");
+    const [username, setUsername] = useState("");
     const [bio, setBio] = useState("");
     const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
     const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
@@ -37,11 +37,11 @@ export default function ProfileSettings() {
         null,
     );
 
-    const isDisplayNameChanged =
-        user != null && (user.displayName ?? "") !== displayName;
+    const isUsernameChanged =
+        user != null && (user.username ?? "") !== username;
     const isBioChanged = user != null && (user.bio ?? "") !== bio;
     const isButtonDisabled =
-        !isDisplayNameChanged &&
+        !isUsernameChanged &&
         !isBioChanged &&
         profileImageFile === null &&
         backgroundImageFile === null;
@@ -111,10 +111,10 @@ export default function ProfileSettings() {
             }
         }
 
-        if (bio || displayName) {
+        if (isUsernameChanged || isBioChanged) {
             try {
                 const res = await UpdateProfile({
-                    displayName: isDisplayNameChanged ? displayName : undefined,
+                    username: isUsernameChanged ? username : undefined,
                     bio: isBioChanged ? bio : undefined,
                 });
                 if (res.success) {
@@ -145,7 +145,7 @@ export default function ProfileSettings() {
     useEffect(() => {
         if (!user) return;
         queueMicrotask(() => {
-            setDisplayName(user.displayName ?? "");
+            setUsername(user.username ?? "");
             setBio(user.bio ?? "");
         });
     }, [user]);
@@ -169,14 +169,9 @@ export default function ProfileSettings() {
                     />
                     <TextField
                         label={t("settings:profile.username")}
-                        disabled
-                        value={user?.username}
-                    />
-                    <TextField
-                        label={t("settings:profile.display_name")}
-                        maxLength={DISPLAY_NAME_MAX_LENGTH}
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
+                        maxLength={USERNAME_MAX_LENGTH}
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                         disabled={isUpdatingProfile}
                     />
                     <TextAreaField

@@ -243,7 +243,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      user.displayName ?? user.username,
+                      user.username ?? '',
                       style: typography.xl2.copyWith(
                         fontWeight: FontWeight.bold,
                       ),

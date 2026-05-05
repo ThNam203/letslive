@@ -78,9 +78,7 @@ export default function Livestreaming() {
                     setPlayerInfo({
                         videoTitle: livestreamRes.data.title,
                         streamer: {
-                            name:
-                                userRes.data!.displayName ??
-                                userRes.data!.username,
+                            name: userRes.data!.username ?? "",
                         },
                         videoUrl: `${GLOBAL.API_URL}/transcode/${livestreamRes.data.id}/index.m3u8`,
                     });

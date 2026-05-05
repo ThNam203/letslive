@@ -173,7 +173,6 @@ export const vodHandlers = [
                 user: {
                     id: ME_USER_ID,
                     username: meUser.username,
-                    displayName: meUser.displayName,
                     profilePicture: meUser.profilePicture,
                 },
             };

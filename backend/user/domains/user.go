@@ -22,13 +22,12 @@ type SocialMediaLinks struct {
 
 type User struct {
 	Id                    uuid.UUID    `json:"id" db:"id"`
-	Username              string       `json:"username" db:"username"`
+	Username              *string      `json:"username" db:"username"`
 	Email                 string       `json:"email" db:"email"`
 	Status                UserStatus   `json:"status" db:"status"`
 	AuthProvider          AuthProvider `json:"authProvider" db:"auth_provider"`
 	CreatedAt             time.Time    `json:"createdAt" db:"created_at"`
 	StreamAPIKey          uuid.UUID    `json:"streamAPIKey" db:"stream_api_key"`
-	DisplayName           *string      `json:"displayName,omitempty" db:"display_name"`
 	PhoneNumber           *string      `json:"phoneNumber,omitempty" db:"phone_number"`
 	Bio                   *string      `json:"bio,omitempty" db:"bio"`
 	ProfilePicture        *string      `json:"profilePicture,omitempty" db:"profile_picture"`
@@ -66,7 +65,7 @@ type UserRepository interface {
 	GetRecommendedPublic(ctx context.Context, excludeUserId *uuid.UUID, page, limit int) ([]dto.GetUserPublicResponseDTO, *response.Response[any])
 	SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, *response.Response[any])
 
-	Create(ctx context.Context, username, email string, authProvider AuthProvider) (*User, *response.Response[any])
+	Create(ctx context.Context, username *string, email string, authProvider AuthProvider) (*User, *response.Response[any])
 	Update(ctx context.Context, user dto.UpdateUserRequestDTO) (*User, *response.Response[any])
 	UpdateStreamAPIKey(ctx context.Context, userId uuid.UUID, newKey string) *response.Response[any]
 	UpdateProfilePicture(ctx context.Context, userId uuid.UUID, newProfilePictureURL string) *response.Response[any]

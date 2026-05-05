@@ -21,7 +21,7 @@ class ProfileSettingsScreen extends ConsumerStatefulWidget {
 
 class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _displayNameController;
+  late final TextEditingController _usernameController;
   late final TextEditingController _bioController;
   bool _isSaving = false;
   bool _isUploadingProfile = false;
@@ -31,15 +31,13 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   void initState() {
     super.initState();
     final user = ref.read(currentUserProvider);
-    _displayNameController = TextEditingController(
-      text: user?.displayName ?? '',
-    );
+    _usernameController = TextEditingController(text: user?.username ?? '');
     _bioController = TextEditingController(text: user?.bio ?? '');
   }
 
   @override
   void dispose() {
-    _displayNameController.dispose();
+    _usernameController.dispose();
     _bioController.dispose();
     super.dispose();
   }
@@ -52,7 +50,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     try {
       final userRepo = ref.read(userRepositoryProvider);
       final response = await userRepo.updateProfile(
-        displayName: _displayNameController.text.trim(),
+        username: _usernameController.text.trim(),
         bio: _bioController.text.trim(),
       );
 
@@ -287,11 +285,11 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
               children: [
                 FTextFormField(
                   control: FTextFieldControl.managed(
-                    controller: _displayNameController,
+                    controller: _usernameController,
                   ),
-                  label: Text(l10n.settingsProfileDisplayName),
-                  hint: l10n.settingsProfileDisplayName,
-                  maxLength: FieldLimits.displayNameMaxLength,
+                  label: Text(l10n.settingsProfileUsername),
+                  hint: l10n.settingsProfileUsername,
+                  maxLength: FieldLimits.usernameMaxLength,
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: 16),

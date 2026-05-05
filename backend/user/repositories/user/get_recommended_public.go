@@ -14,7 +14,7 @@ import (
 func (r *postgresUserRepo) GetRecommendedPublic(ctx context.Context, excludeUserId *uuid.UUID, page, limit int) ([]dto.GetUserPublicResponseDTO, *response.Response[any]) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT
-			u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture,
+			u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.phone_number, u.bio, u.profile_picture, u.background_picture,
 			l.title, l.description, l.thumbnail_url,
 			(COUNT(f.follower_id))::int AS follower_count,
 			CASE
@@ -32,7 +32,7 @@ func (r *postgresUserRepo) GetRecommendedPublic(ctx context.Context, excludeUser
 		LEFT JOIN user_social_links usl ON usl.user_id = u.id
 		WHERE ($1::uuid IS NULL OR u.id != $1)
 		  AND ($2::uuid IS NULL OR NOT EXISTS (SELECT 1 FROM followers f_ex WHERE f_ex.follower_id = $2 AND f_ex.user_id = u.id))
-		GROUP BY u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
+		GROUP BY u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
 		ORDER BY (COUNT(f.follower_id)) DESC
 		LIMIT $3 OFFSET $4
 	`, excludeUserId, excludeUserId, limit, page*limit)

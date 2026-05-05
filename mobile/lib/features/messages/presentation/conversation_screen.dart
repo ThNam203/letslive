@@ -63,7 +63,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       final dmWs = ref.read(dmWebSocketServiceProvider);
       dmWs.stopTyping(
         conversationId: widget.conversationId,
-        username: currentUser.displayName ?? currentUser.username,
+        username: currentUser.username ?? '',
       );
     }
     _messageController.dispose();
@@ -234,7 +234,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     final dmWs = ref.read(dmWebSocketServiceProvider);
     dmWs.stopTyping(
       conversationId: widget.conversationId,
-      username: currentUser.displayName ?? currentUser.username,
+      username: currentUser.username ?? '',
     );
 
     // If editing
@@ -250,7 +250,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       final response = await repo.sendMessage(
         widget.conversationId,
         text: text,
-        senderUsername: currentUser.username,
+        senderUsername: currentUser.username ?? '',
       );
       if (!mounted) return;
 
@@ -377,7 +377,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     final dmWs = ref.read(dmWebSocketServiceProvider);
     dmWs.handleTyping(
       conversationId: widget.conversationId,
-      username: currentUser.displayName ?? currentUser.username,
+      username: currentUser.username ?? '',
     );
   }
 
@@ -391,7 +391,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         .where((p) => p.userId != currentUser?.id)
         .toList();
     if (others.isEmpty) return AppLocalizations.of(context).messagesUnknown;
-    return others.map((p) => p.displayName ?? p.username).join(', ');
+    return others.map((p) => p.username ?? '').join(', ');
   }
 
   String _formatTimeAgo(String createdAt, AppLocalizations l10n) {

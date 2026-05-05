@@ -1,7 +1,7 @@
 abstract final class FieldLimits {
   static const emailMaxLength = 320;
-  static const usernameMaxLength = 50;
-  static const displayNameMaxLength = 50;
+  static const usernameMinLength = 6;
+  static const usernameMaxLength = 30;
   static const bioMaxLength = 300;
   static const phoneNumberMaxLength = 20;
   static const searchQueryMaxLength = 100;

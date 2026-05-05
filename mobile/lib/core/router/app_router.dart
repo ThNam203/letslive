@@ -21,6 +21,7 @@ import '../../features/messages/presentation/conversation_screen.dart';
 import '../../features/vod/presentation/upload_vod_screen.dart';
 import '../../features/vod/presentation/vod_player_screen.dart';
 import '../../features/wallet/presentation/wallet_screen.dart';
+import '../../features/account_setup/presentation/account_setup_screen.dart';
 import '../../features/wallet/presentation/wallet_transactions_screen.dart';
 import '../../features/wallet/presentation/wallet_deposit_screen.dart';
 import '../../providers.dart';
@@ -28,6 +29,7 @@ import '../../providers.dart';
 abstract final class AppRoutes {
   static const login = '/login';
   static const signup = '/signup';
+  static const accountSetup = '/account-setup';
   static const home = '/';
   static const messages = '/messages';
   static const notifications = '/notifications';
@@ -59,9 +61,26 @@ String? _requireAuth(BuildContext context, GoRouterState state) {
   return null;
 }
 
+String? _redirectAccountSetup(BuildContext context, GoRouterState state) {
+  final container = ProviderScope.containerOf(context);
+  final user = container.read(currentUserProvider);
+  final loc = state.matchedLocation;
+
+  if (user != null && user.username == null &&
+      loc != AppRoutes.accountSetup) {
+    return AppRoutes.accountSetup;
+  }
+  if (loc == AppRoutes.accountSetup) {
+    if (user == null) return AppRoutes.login;
+    if (user.username != null) return AppRoutes.home;
+  }
+  return null;
+}
+
 final appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: AppRoutes.home,
+  redirect: _redirectAccountSetup,
   routes: [
     // Auth routes (no bottom nav)
     GoRoute(
@@ -71,6 +90,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.signup,
       builder: (context, state) => const SignupScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.accountSetup,
+      builder: (context, state) => const AccountSetupScreen(),
     ),
 
     // Main app shell with bottom navigation

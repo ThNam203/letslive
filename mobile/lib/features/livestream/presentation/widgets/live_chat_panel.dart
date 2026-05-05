@@ -89,7 +89,7 @@ class _LiveChatPanelState extends ConsumerState<LiveChatPanel> {
     _chatService!.connect(
       roomId: widget.roomId,
       userId: currentUser.id,
-      username: currentUser.username,
+      username: currentUser.username ?? '',
     );
   }
 

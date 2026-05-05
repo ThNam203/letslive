@@ -290,6 +290,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authUsernameHint => 'Choose a username';
 
   @override
+  String get accountSetupTitle => 'Choose your username';
+
+  @override
+  String get accountSetupSubtitle => 'Pick a unique username. It\'s how others will find you.';
+
+  @override
+  String get accountSetupSubmit => 'Continue';
+
+  @override
   String get authCreatePasswordHint => 'Create a password';
 
   @override
@@ -525,9 +534,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsProfileUsername => 'Username';
-
-  @override
-  String get settingsProfileDisplayName => 'Display Name';
 
   @override
   String get settingsProfileBio => 'Bio';

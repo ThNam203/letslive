@@ -51,12 +51,11 @@ export const ME_USER_ID = "user-me-001";
 
 export const meUser: MeUser = {
     id: ME_USER_ID,
-    username: "mockuser",
+    username: null,
     email: "mockuser@letslive.dev",
     status: UserStatus.NORMAL,
     authProvider: AuthProvider.LOCAL,
     createdAt: daysAgo(120),
-    displayName: "Mock User",
     bio: "Just a mock user for local UI testing.",
     profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=mockuser",
     backgroundPicture:
@@ -83,7 +82,6 @@ export const otherUsers: PublicUser[] = [
         status: UserStatus.NORMAL,
         authProvider: AuthProvider.LOCAL,
         createdAt: daysAgo(200),
-        displayName: "Jane Streams",
         bio: "Gaming & Tech streamer",
         profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=jane",
         followerCount: 1340,
@@ -102,7 +100,6 @@ export const otherUsers: PublicUser[] = [
         status: UserStatus.NORMAL,
         authProvider: AuthProvider.LOCAL,
         createdAt: daysAgo(90),
-        displayName: "Alex Codes",
         bio: "Live coding sessions every weekday",
         profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=alex",
         followerCount: 882,
@@ -121,7 +118,6 @@ export const otherUsers: PublicUser[] = [
         status: UserStatus.NORMAL,
         authProvider: AuthProvider.LOCAL,
         createdAt: daysAgo(60),
-        displayName: "Sam Beats",
         bio: "Producer & DJ streaming live sessions",
         profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=sam",
         followerCount: 3201,
@@ -140,7 +136,6 @@ export const otherUsers: PublicUser[] = [
         status: UserStatus.NORMAL,
         authProvider: AuthProvider.LOCAL,
         createdAt: daysAgo(30),
-        displayName: "Mia Wanderlust",
         bio: "Travel vlogger streaming from around the world",
         profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=mia",
         followerCount: 7890,
@@ -299,7 +294,6 @@ export const vodComments: VODComment[] = [
         user: {
             id: "user-002",
             username: "streamer_jane",
-            displayName: "Jane Streams",
             profilePicture:
                 "https://api.dicebear.com/9.x/avataaars/svg?seed=jane",
         },
@@ -318,7 +312,6 @@ export const vodComments: VODComment[] = [
         user: {
             id: "user-003",
             username: "coder_alex",
-            displayName: "Alex Codes",
             profilePicture:
                 "https://api.dicebear.com/9.x/avataaars/svg?seed=alex",
         },
@@ -337,7 +330,6 @@ export const vodComments: VODComment[] = [
         user: {
             id: ME_USER_ID,
             username: "mockuser",
-            displayName: "Mock User",
             profilePicture:
                 "https://api.dicebear.com/9.x/avataaars/svg?seed=mockuser",
         },
@@ -437,7 +429,6 @@ export const conversations: Conversation[] = [
             {
                 userId: ME_USER_ID,
                 username: "mockuser",
-                displayName: "Mock User",
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=mockuser",
                 role: ParticipantRole.OWNER,
@@ -448,7 +439,6 @@ export const conversations: Conversation[] = [
             {
                 userId: "user-002",
                 username: "streamer_jane",
-                displayName: "Jane Streams",
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=jane",
                 role: ParticipantRole.MEMBER,
@@ -477,7 +467,6 @@ export const conversations: Conversation[] = [
             {
                 userId: ME_USER_ID,
                 username: "mockuser",
-                displayName: "Mock User",
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=mockuser",
                 role: ParticipantRole.MEMBER,
@@ -488,7 +477,6 @@ export const conversations: Conversation[] = [
             {
                 userId: "user-003",
                 username: "coder_alex",
-                displayName: "Alex Codes",
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=alex",
                 role: ParticipantRole.OWNER,
@@ -499,7 +487,6 @@ export const conversations: Conversation[] = [
             {
                 userId: "user-004",
                 username: "music_sam",
-                displayName: "Sam Beats",
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=sam",
                 role: ParticipantRole.MEMBER,

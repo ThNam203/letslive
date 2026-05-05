@@ -236,7 +236,7 @@ class _StreamInfoBar extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    streamer?.displayName ?? streamer?.username ?? '',
+                    streamer?.username ?? '',
                     style: typography.xs.copyWith(
                       color: colors.mutedForeground,
                     ),

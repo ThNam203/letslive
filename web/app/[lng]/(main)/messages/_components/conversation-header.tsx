@@ -35,7 +35,7 @@ export default function ConversationHeader({
         const other = conversation.participants.find(
             (p) => p.userId !== currentUserId,
         );
-        name = other?.displayName || other?.username || t("unknown");
+        name = other?.username || t("unknown");
         avatar = other?.profilePicture || null;
         initials = (other?.username || "U").charAt(0).toUpperCase();
         if (other) {

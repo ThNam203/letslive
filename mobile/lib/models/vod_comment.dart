@@ -1,21 +1,18 @@
 class CommentUser {
   final String id;
-  final String username;
-  final String? displayName;
+  final String? username;
   final String? profilePicture;
 
   const CommentUser({
     required this.id,
-    required this.username,
-    this.displayName,
+    this.username,
     this.profilePicture,
   });
 
   factory CommentUser.fromJson(Map<String, dynamic> json) {
     return CommentUser(
       id: json['id'] as String,
-      username: json['username'] as String,
-      displayName: json['displayName'] as String?,
+      username: json['username'] as String?,
       profilePicture: json['profilePicture'] as String?,
     );
   }

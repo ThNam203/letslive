@@ -4,6 +4,7 @@ import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
 import { GetMeProfile } from "@/lib/api/user";
 import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "@/components/utils/toast";
 
 export default function UserInformationWrapper({
@@ -13,19 +14,28 @@ export default function UserInformationWrapper({
 }) {
     const { setUser, setIsLoading } = useUser();
     const { t } = useT(["fetch-error", "api-response"]);
+    const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
         const fetchUser = async () => {
             setIsLoading(true);
             GetMeProfile()
                 .then((userRes) => {
-                    if (userRes.success && userRes.data) setUser(userRes.data);
-                    else if (!userRes.success && userRes.statusCode != 401)
+                    if (userRes.success && userRes.data) {
+                        setUser(userRes.data);
+                        if (
+                            userRes.data.username == null &&
+                            !pathname.includes("account-setup")
+                        ) {
+                            router.push("/username-setup");
+                        }
+                    } else if (!userRes.success && userRes.statusCode != 401)
                         toast.error(t(`api-response:${userRes.key}`), {
                             toastId: userRes.requestId,
                         });
                 })
-                .catch((e) => {
+                .catch((_) => {
                     toast(t("fetch-error:client_fetch_error"), {
                         toastId: "client-fetch-error-id",
                         type: "error",

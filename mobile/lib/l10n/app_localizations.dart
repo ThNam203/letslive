@@ -530,6 +530,24 @@ abstract class AppLocalizations {
   /// **'Choose a username'**
   String get authUsernameHint;
 
+  /// No description provided for @accountSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your username'**
+  String get accountSetupTitle;
+
+  /// No description provided for @accountSetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a unique username. It\'s how others will find you.'**
+  String get accountSetupSubtitle;
+
+  /// No description provided for @accountSetupSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get accountSetupSubmit;
+
   /// No description provided for @authCreatePasswordHint.
   ///
   /// In en, this message translates to:
@@ -955,12 +973,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Username'**
   String get settingsProfileUsername;
-
-  /// No description provided for @settingsProfileDisplayName.
-  ///
-  /// In en, this message translates to:
-  /// **'Display Name'**
-  String get settingsProfileDisplayName;
 
   /// No description provided for @settingsProfileBio.
   ///

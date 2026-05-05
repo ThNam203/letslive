@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand/v2"
 	"net/http"
 	"os"
 	"sen1or/letslive/auth/domains"
@@ -13,8 +12,6 @@ import (
 	usergatewaydto "sen1or/letslive/auth/gateway/user/dto"
 	"sen1or/letslive/shared/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
-	"strconv"
-	"strings"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -155,7 +152,6 @@ func (s GoogleAuthService) findOrCreateGoogleUser(ctx context.Context, oauthUser
 	// create new user if not found
 	if err.Code == serviceresponse.RES_ERR_AUTH_NOT_FOUND_CODE {
 		userDTO := &usergatewaydto.CreateUserRequestDTO{
-			Username:     generateUsername(oauthUser.Email),
 			Email:        oauthUser.Email,
 			AuthProvider: usergatewaydto.ProviderGoogle,
 		}
@@ -210,10 +206,4 @@ func (s GoogleAuthService) getUserDataFromGoogle(ctx context.Context, code strin
 	}
 
 	return userData, nil
-}
-
-func generateUsername(email string) string {
-	base := strings.Split(email, "@")[0]
-	uniqueSuffix := strconv.Itoa(rand.IntN(10000)) // Random 4-digit number
-	return base + "-gg" + uniqueSuffix
 }

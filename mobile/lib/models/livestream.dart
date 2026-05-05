@@ -14,7 +14,6 @@ class Livestream {
 
   // Joined user info (from backend joined queries)
   final String? username;
-  final String? displayName;
   final String? profilePicture;
 
   const Livestream({
@@ -31,7 +30,6 @@ class Livestream {
     required this.updatedAt,
     this.vodId,
     this.username,
-    this.displayName,
     this.profilePicture,
   });
 
@@ -52,7 +50,6 @@ class Livestream {
       updatedAt: json['updatedAt'] as String,
       vodId: json['vodId'] as String?,
       username: json['username'] as String?,
-      displayName: json['displayName'] as String?,
       profilePicture: json['profilePicture'] as String?,
     );
   }

@@ -501,7 +501,7 @@ class _CommentTile extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      comment.user?.displayName ?? comment.user?.username ?? '',
+                      comment.user?.username ?? '',
                       style: typography.xs.copyWith(
                         fontWeight: FontWeight.w600,
                       ),

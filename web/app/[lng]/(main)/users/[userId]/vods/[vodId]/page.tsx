@@ -106,10 +106,7 @@ export default function VODPage() {
                         setPlayerInfo((prev) => ({
                             ...prev,
                             streamer: {
-                                name:
-                                    userRes.data?.displayName ??
-                                    userRes.data?.username ??
-                                    t("common:streamer"),
+                                name: userRes.data?.username ?? t("common:streamer"),
                             },
                         }));
                     } else {

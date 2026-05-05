@@ -283,6 +283,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get authUsernameHint => 'Chọn tên người dùng';
 
   @override
+  String get accountSetupTitle => 'Chọn tên người dùng';
+
+  @override
+  String get accountSetupSubtitle => 'Chọn một tên người dùng độc đáo. Đây là cách người khác tìm thấy bạn.';
+
+  @override
+  String get accountSetupSubmit => 'Tiếp tục';
+
+  @override
   String get authCreatePasswordHint => 'Tạo mật khẩu';
 
   @override
@@ -518,9 +527,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsProfileUsername => 'Tên người dùng';
-
-  @override
-  String get settingsProfileDisplayName => 'Tên hiển thị';
 
   @override
   String get settingsProfileBio => 'Tiểu sử';

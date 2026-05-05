@@ -234,7 +234,7 @@ class _VodPlayerScreenState extends ConsumerState<VodPlayerScreen> {
     final typography = context.theme.typography;
     final l10n = AppLocalizations.of(context);
     final owner = _vodOwner;
-    final ownerName = owner?.displayName ?? owner?.username ?? '';
+    final ownerName = owner?.username ?? '';
 
     return Padding(
       padding: const EdgeInsets.all(16),

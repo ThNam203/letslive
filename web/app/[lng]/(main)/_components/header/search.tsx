@@ -125,7 +125,9 @@ export default function SearchBar({
                                     height={32}
                                 />
                                 <AvatarFallback>
-                                    {user.username.charAt(0).toUpperCase()}
+                                    {(user.username ?? "U")
+                                        .charAt(0)
+                                        .toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
                             <div>

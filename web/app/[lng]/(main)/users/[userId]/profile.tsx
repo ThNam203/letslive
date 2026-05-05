@@ -51,10 +51,10 @@ export default function ProfileView({
                 <div className="flex items-start gap-8">
                     <div>
                         <h1 className="text-foreground text-3xl font-bold">
-                            {user.displayName ?? user.username}
+                            {user.username ?? ""}
                         </h1>
                         <p className="text-foreground-muted">
-                            @{user.username}
+                            @{user.username ?? ""}
                         </p>
                     </div>
                 </div>

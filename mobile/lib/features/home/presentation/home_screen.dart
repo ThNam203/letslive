@@ -414,7 +414,7 @@ class _LivestreamCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            user?.displayName ?? user?.username ?? '',
+                            user?.username ?? '',
                             style: typography.xs.copyWith(
                               color: colors.mutedForeground,
                             ),
@@ -531,7 +531,7 @@ class _VodCard extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      user?.displayName ?? user?.username ?? '',
+                      user?.username ?? '',
                       style: typography.xs.copyWith(
                         color: colors.mutedForeground,
                       ),

@@ -102,7 +102,7 @@ func (s AuthService) CreateNewAuth(ctx context.Context, userForm dto.SignUpReque
 	}
 
 	userDTO := &usergatewaydto.CreateUserRequestDTO{
-		Username:     userForm.Username,
+		Username:     &userForm.Username,
 		Email:        userForm.Email,
 		AuthProvider: usergatewaydto.ProviderLocal,
 	}

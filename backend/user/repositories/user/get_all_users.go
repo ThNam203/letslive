@@ -11,7 +11,7 @@ import (
 
 func (r postgresUserRepo) GetAll(ctx context.Context, page int) ([]domains.User, *response.Response[any]) {
 	rows, err := r.dbConn.Query(ctx, `
-		SELECT id, username, email, status, created_at, display_name, phone_number, bio, profile_picture, background_picture
+		SELECT id, username, email, status, created_at, phone_number, bio, profile_picture, background_picture
 		FROM users
 		OFFSET $1 LIMIT $2
 	`, page*10, 10)

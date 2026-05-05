@@ -240,7 +240,7 @@ class _ConversationTile extends StatelessWidget {
         .where((p) => p.userId != currentUserId)
         .toList();
     if (others.isEmpty) return l10n.messagesUnknown;
-    return others.map((p) => p.displayName ?? p.username).join(', ');
+    return others.map((p) => p.username ?? '').join(', ');
   }
 
   String? _avatarUrl() {

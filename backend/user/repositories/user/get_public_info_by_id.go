@@ -15,7 +15,7 @@ import (
 func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *response.Response[any]) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT 
-			u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture,
+			u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.phone_number, u.bio, u.profile_picture, u.background_picture,
 			l.title, l.description, l.thumbnail_url, 
 			(COUNT(f.follower_id))::int AS follower_count,
 			CASE 
@@ -34,7 +34,7 @@ func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UU
 		LEFT JOIN followers f ON u.id = f.user_id
 		LEFT JOIN user_social_links usl ON usl.user_id = u.id
 		WHERE u.id = $1
-		GROUP BY u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
+		GROUP BY u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
 	`, userId.String(), authenticatedUserId)
 	if err != nil {
 		logger.Errorf(ctx, "failed to query user full information: %s", err)

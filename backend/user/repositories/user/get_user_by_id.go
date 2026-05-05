@@ -20,7 +20,6 @@ func (r *postgresUserRepo) GetById(ctx context.Context, userId uuid.UUID) (*doma
 			u.email,
 			u.status,
 			u.created_at,
-			u.display_name,
 			u.auth_provider,
 			u.stream_api_key,
 			u.phone_number,
@@ -40,7 +39,7 @@ func (r *postgresUserRepo) GetById(ctx context.Context, userId uuid.UUID) (*doma
 		LEFT JOIN user_social_links usl ON usl.user_id = u.id
 		WHERE u.id = $1
 		GROUP BY
-			u.id, u.username, u.email, u.status, u.created_at, u.display_name, u.auth_provider,
+			u.id, u.username, u.email, u.status, u.created_at, u.auth_provider,
 			u.stream_api_key, u.phone_number, u.bio, u.profile_picture, u.background_picture,
 			l.user_id, l.title, l.description, l.thumbnail_url
 	`, userId.String())

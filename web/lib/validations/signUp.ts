@@ -1,7 +1,11 @@
 import { z } from "zod";
 import i18next from "@/lib/i18n/i18next";
 import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "@/constant/password";
-import { EMAIL_MAX_LENGTH, USERNAME_MAX_LENGTH } from "@/constant/field-limits";
+import {
+    EMAIL_MAX_LENGTH,
+    USERNAME_MAX_LENGTH,
+    USERNAME_MIN_LENGTH,
+} from "@/constant/field-limits";
 
 export const signUpSchema = function (t: typeof i18next.t) {
     return z
@@ -13,7 +17,7 @@ export const signUpSchema = function (t: typeof i18next.t) {
             username: z
                 .string()
                 .min(1, t("error:username_required"))
-                .min(6, t("error:username_too_short"))
+                .min(USERNAME_MIN_LENGTH, t("error:username_too_short"))
                 .max(USERNAME_MAX_LENGTH, t("error:username_too_long")),
             password: z
                 .string()

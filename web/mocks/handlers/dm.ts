@@ -116,7 +116,6 @@ export const dmHandlers = [
                 return {
                     userId,
                     username: user?.username ?? userId,
-                    displayName: user?.displayName ?? null,
                     profilePicture: user?.profilePicture ?? null,
                     role:
                         i === 0
@@ -182,7 +181,6 @@ export const dmHandlers = [
             conv.participants.push({
                 userId: body.userId,
                 username: body.username ?? user?.username ?? body.userId,
-                displayName: body.displayName ?? user?.displayName ?? null,
                 profilePicture:
                     body.profilePicture ?? user?.profilePicture ?? null,
                 role: ParticipantRole.MEMBER,
@@ -246,7 +244,7 @@ export const dmHandlers = [
                 _id: uid(),
                 conversationId,
                 senderId: ME_USER_ID,
-                senderUsername: meUser.username,
+                senderUsername: meUser.username ?? "",
                 type: body.type ?? DmMessageType.TEXT,
                 text: body.text ?? "",
                 imageUrls: body.imageUrls,

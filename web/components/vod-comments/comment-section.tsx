@@ -109,7 +109,6 @@ export default function CommentSection({
                       user: {
                           id: user.id,
                           username: user.username,
-                          displayName: user.displayName,
                           profilePicture: user.profilePicture,
                       } satisfies CommentUser,
                   }

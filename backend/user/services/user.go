@@ -169,14 +169,9 @@ func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequest
 		statusPtr = &s
 	}
 
-	if data.DisplayName != nil {
-		existedData.DisplayName = data.DisplayName
+	if data.Username != nil {
+		existedData.Username = data.Username
 	}
-
-	// currently username is not changable
-	//if data.Username != nil {
-	//	existedData.Username = *data.Username
-	//}
 
 	if data.PhoneNumber != nil {
 		existedData.PhoneNumber = data.PhoneNumber
@@ -185,9 +180,9 @@ func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequest
 	finalDTO := dto.UpdateUserRequestDTO{
 		Id:               existedData.Id,
 		Status:           statusPtr,
+		Username:         existedData.Username,
 		PhoneNumber:      existedData.PhoneNumber,
 		Bio:              existedData.Bio,
-		DisplayName:      existedData.DisplayName,
 		SocialMediaLinks: data.SocialMediaLinks,
 	}
 

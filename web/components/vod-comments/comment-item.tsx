@@ -198,7 +198,6 @@ export default function CommentItem({
                       user: {
                           id: currentUser.id,
                           username: currentUser.username,
-                          displayName: currentUser.displayName,
                           profilePicture: currentUser.profilePicture,
                       } satisfies CommentUser,
                   }
@@ -248,7 +247,7 @@ export default function CommentItem({
                     <Avatar className="h-8 w-8">
                         <AvatarImage
                             src={commentUser?.profilePicture}
-                            alt={commentUser?.username}
+                            alt={commentUser?.username ?? undefined}
                         />
                         <AvatarFallback>
                             {commentUser?.username?.charAt(0).toUpperCase() ??
@@ -265,7 +264,7 @@ export default function CommentItem({
                 >
                     <AvatarImage
                         src={commentUser?.profilePicture}
-                        alt={commentUser?.username}
+                        alt={commentUser?.username ?? undefined}
                     />
                     <AvatarFallback>
                         {commentUser?.username?.charAt(0).toUpperCase() ?? "?"}
@@ -280,15 +279,11 @@ export default function CommentItem({
                                 href={userProfileHref}
                                 className="cursor-pointer text-sm font-semibold hover:underline"
                             >
-                                {commentUser?.displayName ??
-                                    commentUser?.username ??
-                                    "..."}
+                                {commentUser?.username ?? "..."}
                             </Link>
                         ) : (
                             <span className="text-sm font-semibold">
-                                {commentUser?.displayName ??
-                                    commentUser?.username ??
-                                    "..."}
+                                {commentUser?.username ?? "..."}
                             </span>
                         )}
                         {(isOwner || isYou) && (

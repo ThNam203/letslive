@@ -47,8 +47,7 @@ enum ParticipantRole {
 
 class ConversationParticipant {
   final String userId;
-  final String username;
-  final String? displayName;
+  final String? username;
   final String? profilePicture;
   final ParticipantRole role;
   final String joinedAt;
@@ -57,8 +56,7 @@ class ConversationParticipant {
 
   const ConversationParticipant({
     required this.userId,
-    required this.username,
-    this.displayName,
+    this.username,
     this.profilePicture,
     required this.role,
     required this.joinedAt,
@@ -69,8 +67,7 @@ class ConversationParticipant {
   factory ConversationParticipant.fromJson(Map<String, dynamic> json) {
     return ConversationParticipant(
       userId: json['userId'] as String,
-      username: json['username'] as String,
-      displayName: json['displayName'] as String?,
+      username: json['username'] as String?,
       profilePicture: json['profilePicture'] as String?,
       role: ParticipantRole.fromString(json['role'] as String? ?? 'member'),
       joinedAt: json['joinedAt'] as String,

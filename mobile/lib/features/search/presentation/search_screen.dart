@@ -184,18 +184,17 @@ class _UserResultTile extends StatelessWidget {
             ? '${AppConfig.apiUrl}/${user.profilePicture}'
             : null,
         size: 40,
-        fallbackText: (user.displayName ?? user.username).characters.first
-            .toUpperCase(),
+        fallbackText: (user.username ?? 'U').characters.first.toUpperCase(),
         textStyle: typography.sm.copyWith(fontWeight: FontWeight.w600),
       ),
       title: Text(
-        user.displayName ?? user.username,
+        user.username ?? '',
         style: typography.sm.copyWith(fontWeight: FontWeight.w600),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
-        '@${user.username}',
+        '@${user.username ?? ''}',
         style: typography.xs.copyWith(
           color: colors.mutedForeground,
         ),

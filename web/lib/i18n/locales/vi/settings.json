@@ -14,7 +14,6 @@
         "title": "Cài đặt hồ sơ",
         "description": "Thay đổi thông tin nhận dạng cho tài khoản của bạn",
         "username": "Tên người dùng",
-        "display_name": "Tên hiển thị",
         "bio": "Tiểu sử",
         "update_success": "Cập nhật thông tin hồ sơ thành công!",
         "update_background": "Cập nhật ảnh nền",

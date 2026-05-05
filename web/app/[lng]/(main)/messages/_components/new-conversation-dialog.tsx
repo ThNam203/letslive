@@ -78,13 +78,10 @@ export default function NewConversationDialog({
         setIsLoading(true);
         try {
             const participantUsernames: Record<string, string> = {};
-            const participantDisplayNames: Record<string, string> = {};
             const participantProfilePictures: Record<string, string> = {};
 
             for (const u of selectedUsers) {
-                participantUsernames[u.id] = u.username;
-                if (u.displayName)
-                    participantDisplayNames[u.id] = u.displayName;
+                if (u.username) participantUsernames[u.id] = u.username;
                 if (u.profilePicture)
                     participantProfilePictures[u.id] = u.profilePicture;
             }
@@ -93,10 +90,8 @@ export default function NewConversationDialog({
                 type: isGroup ? ConversationType.GROUP : ConversationType.DM,
                 participantIds: selectedUsers.map((u) => u.id),
                 participantUsernames,
-                participantDisplayNames,
                 participantProfilePictures,
-                creatorUsername: user.username,
-                creatorDisplayName: user.displayName ?? undefined,
+                creatorUsername: user.username ?? undefined,
                 creatorProfilePicture: user.profilePicture ?? undefined,
                 name: isGroup ? groupName || undefined : undefined,
             });
@@ -165,7 +160,7 @@ export default function NewConversationDialog({
                                 key={u.id}
                                 className="bg-muted flex items-center gap-1 rounded-full px-3 py-1 text-sm"
                             >
-                                {u.displayName || u.username}
+                                {u.username}
                                 <button
                                     onClick={() => handleRemoveUser(u.id)}
                                     className="text-muted-foreground ml-1 hover:text-red-500"
@@ -203,12 +198,14 @@ export default function NewConversationDialog({
                                     <AvatarImage src={result.profilePicture} />
                                 )}
                                 <AvatarFallback>
-                                    {result.username.charAt(0).toUpperCase()}
+                                    {(result.username ?? "U")
+                                        .charAt(0)
+                                        .toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="text-left">
                                 <p className="text-sm font-medium">
-                                    {result.displayName || result.username}
+                                    {result.username}
                                 </p>
                                 <p className="text-muted-foreground text-xs">
                                     @{result.username}

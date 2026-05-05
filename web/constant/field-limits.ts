@@ -1,6 +1,6 @@
 export const EMAIL_MAX_LENGTH = 320;
-export const USERNAME_MAX_LENGTH = 50;
-export const DISPLAY_NAME_MAX_LENGTH = 50;
+export const USERNAME_MIN_LENGTH = 6;
+export const USERNAME_MAX_LENGTH = 30;
 export const BIO_MAX_LENGTH = 300;
 export const PHONE_NUMBER_MAX_LENGTH = 20;
 export const SEARCH_QUERY_MAX_LENGTH = 100;

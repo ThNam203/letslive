@@ -53,10 +53,8 @@ class MessageRepository {
     required String type,
     required List<String> participantIds,
     Map<String, String>? participantUsernames,
-    Map<String, String>? participantDisplayNames,
     Map<String, String>? participantProfilePictures,
     String? creatorUsername,
-    String? creatorDisplayName,
     String? creatorProfilePicture,
     String? name,
   }) {
@@ -66,10 +64,8 @@ class MessageRepository {
         'type': type,
         'participantIds': participantIds,
         'participantUsernames': ?participantUsernames,
-        'participantDisplayNames': ?participantDisplayNames,
         'participantProfilePictures': ?participantProfilePictures,
         'creatorUsername': ?creatorUsername,
-        'creatorDisplayName': ?creatorDisplayName,
         'creatorProfilePicture': ?creatorProfilePicture,
         'name': ?name,
       },
@@ -143,7 +139,6 @@ class MessageRepository {
     String conversationId, {
     required String userId,
     required String username,
-    String? displayName,
     String? profilePicture,
   }) {
     return _client.post(
@@ -151,7 +146,6 @@ class MessageRepository {
       data: {
         'userId': userId,
         'username': username,
-        'displayName': ?displayName,
         'profilePicture': ?profilePicture,
       },
     );

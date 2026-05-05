@@ -18,7 +18,7 @@ function getConversationDisplay(
             (p) => p.userId !== currentUserId,
         );
         return {
-            name: other?.displayName || other?.username || t("unknown"),
+            name: other?.username || t("unknown"),
             avatar: other?.profilePicture || null,
             initials: (other?.username || "U").charAt(0).toUpperCase(),
         };

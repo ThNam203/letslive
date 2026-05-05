@@ -8,11 +8,10 @@ import (
 
 type CreateUserResponseDTO struct {
 	Id           uuid.UUID `json:"id"`
-	Username     string    `json:"username"`
+	Username     *string   `json:"username,omitempty"`
 	Email        string    `json:"email"`
 	CreatedAt    time.Time `json:"createdAt"`
 	StreamAPIKey uuid.UUID `json:"streamAPIKey"`
-	DisplayName  *string   `json:"displayName,omitempty"`
 	PhoneNumber  *string   `json:"phoneNumber,omitempty"`
 }
 

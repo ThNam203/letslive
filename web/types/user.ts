@@ -27,11 +27,10 @@ export enum UserStatus {
 
 export type BaseUser = {
     id: string;
-    username: string;
+    username: string | null;
     status: UserStatus;
     authProvider: AuthProvider;
     createdAt: string;
-    displayName?: string;
     bio?: string;
     backgroundPicture?: string;
     profilePicture?: string;

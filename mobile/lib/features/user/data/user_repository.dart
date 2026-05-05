@@ -66,13 +66,13 @@ class UserRepository {
   }
 
   Future<ApiResponse<User>> updateProfile({
-    String? displayName,
+    String? username,
     String? bio,
     String? phoneNumber,
     SocialMediaLinks? socialMediaLinks,
   }) {
     final data = <String, dynamic>{};
-    if (displayName != null) data['displayName'] = displayName;
+    if (username != null) data['username'] = username;
     if (bio != null) data['bio'] = bio;
     if (phoneNumber != null) data['phoneNumber'] = phoneNumber;
     if (socialMediaLinks != null) {

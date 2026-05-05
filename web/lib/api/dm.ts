@@ -28,10 +28,8 @@ export async function CreateConversation(body: {
     type: ConversationType;
     participantIds: string[];
     participantUsernames?: Record<string, string>;
-    participantDisplayNames?: Record<string, string>;
     participantProfilePictures?: Record<string, string>;
     creatorUsername?: string;
-    creatorDisplayName?: string;
     creatorProfilePicture?: string;
     name?: string;
 }): Promise<ApiResponse<Conversation>> {
@@ -69,7 +67,6 @@ export async function AddParticipant(
     body: {
         userId: string;
         username: string;
-        displayName?: string;
         profilePicture?: string;
     },
 ): Promise<ApiResponse<Conversation>> {

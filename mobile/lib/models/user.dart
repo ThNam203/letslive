@@ -98,12 +98,11 @@ class LivestreamInformation {
 
 class User {
   final String id;
-  final String username;
+  final String? username;
   final String email;
   final UserStatus status;
   final AuthProvider authProvider;
   final String createdAt;
-  final String? displayName;
   final String? bio;
   final String? backgroundPicture;
   final String? profilePicture;
@@ -125,7 +124,6 @@ class User {
     required this.status,
     required this.authProvider,
     required this.createdAt,
-    this.displayName,
     this.bio,
     this.backgroundPicture,
     this.profilePicture,
@@ -146,7 +144,6 @@ class User {
     UserStatus? status,
     AuthProvider? authProvider,
     String? createdAt,
-    String? displayName,
     String? bio,
     String? backgroundPicture,
     String? profilePicture,
@@ -164,7 +161,6 @@ class User {
       status: status ?? this.status,
       authProvider: authProvider ?? this.authProvider,
       createdAt: createdAt ?? this.createdAt,
-      displayName: displayName ?? this.displayName,
       bio: bio ?? this.bio,
       backgroundPicture: backgroundPicture ?? this.backgroundPicture,
       profilePicture: profilePicture ?? this.profilePicture,
@@ -181,14 +177,13 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] as String,
-      username: json['username'] as String,
+      username: json['username'] as String?,
       email: json['email'] as String? ?? '',
       status: UserStatus.fromString(json['status'] as String? ?? 'normal'),
       authProvider: AuthProvider.fromString(
         json['authProvider'] as String? ?? 'local',
       ),
       createdAt: json['createdAt'] as String,
-      displayName: json['displayName'] as String?,
       bio: json['bio'] as String?,
       backgroundPicture: json['backgroundPicture'] as String?,
       profilePicture: json['profilePicture'] as String?,

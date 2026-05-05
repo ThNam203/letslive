@@ -16,7 +16,6 @@ class Vod {
 
   // Joined user info (from backend joined queries)
   final String? username;
-  final String? displayName;
   final String? profilePicture;
 
   const Vod({
@@ -35,7 +34,6 @@ class Vod {
     required this.createdAt,
     required this.updatedAt,
     this.username,
-    this.displayName,
     this.profilePicture,
   });
 
@@ -68,7 +66,6 @@ class Vod {
       createdAt: createdAt,
       updatedAt: updatedAt,
       username: username,
-      displayName: displayName,
       profilePicture: profilePicture,
     );
   }
@@ -90,7 +87,6 @@ class Vod {
       createdAt: json['createdAt'] as String,
       updatedAt: json['updatedAt'] as String,
       username: json['username'] as String?,
-      displayName: json['displayName'] as String?,
       profilePicture: json['profilePicture'] as String?,
     );
   }

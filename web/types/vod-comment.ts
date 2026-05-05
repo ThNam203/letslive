@@ -1,7 +1,6 @@
 export type CommentUser = {
     id: string;
-    username: string;
-    displayName?: string;
+    username: string | null;
     profilePicture?: string;
 };
 

@@ -18,7 +18,7 @@ func (r *postgresUserRepo) GetPublicInfosByIds(ctx context.Context, ids []uuid.U
 
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT 
-			u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture,
+			u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.phone_number, u.bio, u.profile_picture, u.background_picture,
 			l.title, l.description, l.thumbnail_url, 
 			(COUNT(f.follower_id))::int AS follower_count,
 			CASE 
@@ -35,7 +35,7 @@ func (r *postgresUserRepo) GetPublicInfosByIds(ctx context.Context, ids []uuid.U
 		LEFT JOIN followers f ON u.id = f.user_id
 		LEFT JOIN user_social_links usl ON usl.user_id = u.id
 		WHERE u.id = ANY($1::uuid[])
-		GROUP BY u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.display_name, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
+		GROUP BY u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
 		ORDER BY array_position($1::uuid[], u.id)
 	`, ids, authenticatedUserId)
 	if err != nil {
