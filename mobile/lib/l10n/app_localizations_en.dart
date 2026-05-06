@@ -447,6 +447,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get apiResErrImageTooLarge => 'Image exceeds 10mb limit.';
 
   @override
+  String get apiResErrVideoTooLarge => 'Video exceeds upload size limit.';
+
+  @override
   String get apiResErrLivestreamUpdateAfterEnded =>
       'Failed to update, the livestream has ended.';
 

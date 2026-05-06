@@ -38,6 +38,7 @@ final Map<String, String Function(AppLocalizations)> _apiKeyMap = {
   // User errors
   'res_err_user_not_found': (l) => l.apiResErrUserNotFound,
   'res_err_image_too_large': (l) => l.apiResErrImageTooLarge,
+  'err_video_too_large': (l) => l.apiResErrVideoTooLarge,
   // Livestream / VOD errors
   'res_err_livestream_update_after_ended': (l) =>
       l.apiResErrLivestreamUpdateAfterEnded,

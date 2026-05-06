@@ -20,11 +20,12 @@ type RTMP struct {
 }
 
 type MinIO struct {
-	Enabled    bool   `yaml:"enabled"`
-	Host       string `yaml:"host"`
-	Port       int    `yaml:"port"`
-	BucketName string `yaml:"bucketName"`
-	ReturnURL  string `yaml:"returnURL"`
+	Enabled          bool   `yaml:"enabled"`
+	Host             string `yaml:"host"`
+	Port             int    `yaml:"port"`
+	BucketName       string `yaml:"bucketName"`
+	UploadBucketName string `yaml:"uploadBucketName"`
+	ReturnURL        string `yaml:"returnURL"`
 }
 
 type Transcode struct {
@@ -68,10 +69,12 @@ type Config struct {
 	} `yaml:"webserver"`
 }
 
+// TODO: this is a temporary solution for transcode service to get uploaded-vod from vod service
+// do not intervene databases between services
 func PostProcess(config *Config) error {
 	if config.Database.Host != "" {
-		dbUser := os.Getenv("LIVESTREAM_DB_USER")
-		dbPassword := os.Getenv("LIVESTREAM_DB_PASSWORD")
+		dbUser := os.Getenv("TRANSCODE_DB_USER")
+		dbPassword := os.Getenv("TRANSCODE_DB_PASSWORD")
 
 		dbURL := &neturl.URL{
 			Scheme: "postgres",

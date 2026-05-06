@@ -74,6 +74,8 @@ services:
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - TRANSCODE_DB_USER=${TRANSCODE_DB_USER}
+      - TRANSCODE_DB_PASSWORD=${TRANSCODE_DB_PASSWORD}
     volumes:
       # HLS paths: publicHLSPath and privateHLSPath in config server (transcode-{profile}.yml)
       - transcode_hls_public:/var/lib/transcode/hls/public

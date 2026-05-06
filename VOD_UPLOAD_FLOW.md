@@ -120,16 +120,6 @@ Severity: HIGH (bug). Three coordinated changes:
 - Problem: stalled upload hangs forever; user has no cancel button or progress indicator.
 - Fix: pass `AbortController` to fetch; expose Cancel button in upload UI; show progress via `XMLHttpRequest` upload events or chunked TUS-style upload.
 
-### F3 — No upload size cap → disk-fill DoS
-- Severity: HIGH (security)
-- File: `backend/vod/handlers/vod/upload_vod_private.go:23-30`
-- Problem: `r.ParseMultipartForm(32 << 20)` only sets memory buffer — files >32MB spill to disk with no upper bound. Attacker uploads multi-TB file → fills disk.
-- Fix: wrap before ParseMultipartForm:
-  ```go
-  r.Body = http.MaxBytesReader(w, r.Body, MAX_UPLOAD_BYTES) // e.g. 5 GiB
-  ```
-- Also: validate `fileHeader.Size` and reject before reading body.
-
 ### F4 — Raw file orphaned on transcode failure
 - Severity: MEDIUM (storage cost)
 - File: `backend/transcode/worker/worker.go:225-227` (delete only on success)
@@ -150,17 +140,6 @@ Severity: HIGH (bug). Three coordinated changes:
 - File: `backend/vod/repositories/vod/update_vod_status.go:13-15`
 - Problem: passing nil leaves old value; no way to reset to NULL. Inconsistent with `status` which is direct assignment.
 - Fix: decide policy — either always overwrite (drop COALESCE), or document COALESCE as intentional. Recommend overwrite for `failed` transitions to clear stale URLs.
-
-### F7 — Two ffmpeg invocations (transcode + thumbnail)
-- Severity: LOW (perf)
-- File: `backend/transcode/transcoder/file_transcoder.go:107-109`
-- Problem: separate ffmpeg call for thumbnail = duplicate decode cost.
-- Fix: combine into one ffmpeg with multiple outputs:
-  ```
-  ffmpeg -i in -map 0 -c:v libx264 -c:a aac -f hls ... \
-                -map 0:v -ss 3 -vframes 1 -update 1 thumb.jpg
-  ```
-- Or extract thumbnail from a generated HLS segment (no re-decode of source).
 
 ### F8 — Migration `status` default mismatches service
 - Severity: LOW (correctness)

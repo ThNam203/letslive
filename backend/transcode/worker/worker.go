@@ -301,8 +301,9 @@ func (w *TranscodeWorker) uploadHLSToStorage(ctx context.Context, vodId, outputD
 		return "", err
 	}
 
-	// Return the playback URL (relative path to the master playlist)
-	playbackURL := fmt.Sprintf("%s/%s", vodId, w.config.Transcode.FFMpegSetting.MasterFileName)
+	// Return the playback URL with configured prefix (same behavior as streaming flow).
+	playbackPath := fmt.Sprintf("%s/%s", vodId, w.config.Transcode.FFMpegSetting.MasterFileName)
+	playbackURL := buildPlaybackURL(w.config.Transcode.VODPlaybackUrlPrefix, playbackPath)
 	return playbackURL, nil
 }
 
@@ -341,4 +342,15 @@ func extractObjectName(rawURL, bucket string) string {
 		return ""
 	}
 	return rawURL[idx+len("/"+bucket+"/"):]
+}
+
+func buildPlaybackURL(prefix, path string) string {
+	trimmedPrefix := strings.TrimRight(prefix, "/")
+	trimmedPath := strings.TrimLeft(path, "/")
+
+	if trimmedPrefix == "" {
+		return trimmedPath
+	}
+
+	return fmt.Sprintf("%s/%s", trimmedPrefix, trimmedPath)
 }

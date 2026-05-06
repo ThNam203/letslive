@@ -34,6 +34,7 @@
     "res_err_vod_comment_already_liked": "Comment already liked.",
     "res_err_vod_comment_not_liked": "Comment has not been liked.",
     "res_err_vod_comment_delete_failed": "Failed to delete comment.",
+    "err_video_too_large": "Video exceeds upload size limit.",
 
     "res_err_account_not_found": "Wallet account not found.",
     "res_err_account_frozen": "Your wallet account is currently frozen.",

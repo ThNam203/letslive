@@ -806,6 +806,12 @@ abstract class AppLocalizations {
   /// **'Image exceeds 10mb limit.'**
   String get apiResErrImageTooLarge;
 
+  /// No description provided for @apiResErrVideoTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Video exceeds upload size limit.'**
+  String get apiResErrVideoTooLarge;
+
   /// No description provided for @apiResErrLivestreamUpdateAfterEnded.
   ///
   /// In en, this message translates to:

@@ -24,6 +24,7 @@ const (
 	RES_ERR_VOD_COMMENT_NOT_LIKED_CODE     = 40012
 	RES_ERR_VOD_COMMENT_DELETE_FAILED_CODE = 40013
 	RES_ERR_VOD_VIEW_THRESHOLD_CODE        = 40015
+	RES_ERR_VIDEO_TOO_LARGE_CODE           = 40016
 )
 
 // Error keys
@@ -47,6 +48,7 @@ const (
 	RES_ERR_VOD_COMMENT_NOT_LIKED_KEY     = "res_err_vod_comment_not_liked"
 	RES_ERR_VOD_COMMENT_DELETE_FAILED_KEY = "res_err_vod_comment_delete_failed"
 	RES_ERR_VOD_VIEW_THRESHOLD_KEY        = "res_err_vod_view_threshold"
+	RES_ERR_VIDEO_TOO_LARGE_KEY           = "err_video_too_large"
 )
 
 // Error templates
@@ -193,5 +195,13 @@ var (
 		Code:       RES_ERR_VOD_VIEW_THRESHOLD_CODE,
 		Key:        RES_ERR_VOD_VIEW_THRESHOLD_KEY,
 		Message:    "Watch time threshold not met.",
+	}
+
+	RES_ERR_VIDEO_TOO_LARGE = ResponseTemplate{
+		Success:    false,
+		StatusCode: http.StatusRequestEntityTooLarge,
+		Code:       RES_ERR_VIDEO_TOO_LARGE_CODE,
+		Key:        RES_ERR_VIDEO_TOO_LARGE_KEY,
+		Message:    "Video exceeds upload size limit.",
 	}
 )
