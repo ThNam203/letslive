@@ -695,6 +695,24 @@ export type ChatMessage = {
 };
 
 export const chatMessages: Record<string, ChatMessage[]> = {
+    [ME_USER_ID]: [
+        {
+            id: "chat-003",
+            roomId: ME_USER_ID,
+            userId: "user-002",
+            username: "streamer_jane",
+            content: "Hey mockuser! Chat room looks great 👋",
+            createdAt: daysAgo(0),
+        },
+        {
+            id: "chat-004",
+            roomId: ME_USER_ID,
+            userId: "user-003",
+            username: "coder_alex",
+            content: "Ready for your next stream?",
+            createdAt: daysAgo(0),
+        },
+    ],
     "user-002": [
         {
             id: "chat-001",
