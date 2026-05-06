@@ -1,4 +1,5 @@
 import React from "react";
+import { Twemoji } from "@/components/ui/twemoji";
 import { EMOTE_MAP } from "@/constant/emotes";
 
 const EMOTE_REGEX = /:([a-z0-9_]+):/g;
@@ -11,6 +12,9 @@ const EMOTE_REGEX = /:([a-z0-9_]+):/g;
  */
 export function parseEmotes(
     text: string | undefined | null,
+    options?: {
+        emoteClassName?: string;
+    },
 ): React.ReactNode[] {
     if (text == null) {
         return [];
@@ -33,19 +37,14 @@ export function parseEmotes(
                 parts.push(text.slice(lastIndex, match.index));
             }
 
-            const isSingleEmote =
-                match.index === 0 && EMOTE_REGEX.lastIndex === text.length;
-
             parts.push(
-                <span
+                <Twemoji
                     key={match.index}
-                    className={`inline-block align-middle ${isSingleEmote ? "text-4xl" : "text-lg"}`}
-                    role="img"
-                    aria-label={emote.name}
+                    className={options?.emoteClassName}
+                    ariaLabel={emote.name}
                     title={`:${emote.code}:`}
-                >
-                    {emote.emoji}
-                </span>,
+                    emoji={emote.emoji}
+                />,
             );
 
             lastIndex = EMOTE_REGEX.lastIndex;

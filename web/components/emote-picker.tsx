@@ -7,6 +7,7 @@ import {
     PopoverContent,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { Twemoji } from "@/components/ui/twemoji";
 import { EMOTES, EMOTE_CATEGORIES, type Emote } from "@/constant/emotes";
 
 export default function EmotePicker({
@@ -15,21 +16,45 @@ export default function EmotePicker({
     searchPlaceholder,
     emptyStateText,
     getCategoryLabel,
+    open,
+    onOpenChange,
+    searchValue,
+    onSearchChange,
 }: {
     onSelect: (code: string) => void;
     disabled?: boolean;
     searchPlaceholder: string;
     emptyStateText: string;
     getCategoryLabel: (category: (typeof EMOTE_CATEGORIES)[number]) => string;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    searchValue?: string;
+    onSearchChange?: (search: string) => void;
 }) {
-    const [open, setOpen] = useState(false);
-    const [search, setSearch] = useState("");
+    const [internalOpen, setInternalOpen] = useState(false);
+    const [internalSearch, setInternalSearch] = useState("");
+    const resolvedOpen = open ?? internalOpen;
+    const resolvedSearch = searchValue ?? internalSearch;
 
-    const filtered = search
+    const setOpen = (nextOpen: boolean) => {
+        if (open === undefined) {
+            setInternalOpen(nextOpen);
+        }
+        onOpenChange?.(nextOpen);
+    };
+
+    const setSearch = (nextSearch: string) => {
+        if (searchValue === undefined) {
+            setInternalSearch(nextSearch);
+        }
+        onSearchChange?.(nextSearch);
+    };
+
+    const filtered = resolvedSearch
         ? EMOTES.filter(
               (e) =>
-                  e.code.includes(search.toLowerCase()) ||
-                  e.name.toLowerCase().includes(search.toLowerCase()),
+                  e.code.includes(resolvedSearch.toLowerCase()) ||
+                  e.name.toLowerCase().includes(resolvedSearch.toLowerCase()),
           )
         : EMOTES;
 
@@ -40,16 +65,16 @@ export default function EmotePicker({
     };
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={resolvedOpen} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 shrink-0"
+                    className="h-9 w-9 shrink-0"
                     disabled={disabled}
                 >
-                    <span className="text-lg">😊</span>
+                    <Twemoji emoji="😊" className="text-lg" />
                 </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -64,14 +89,14 @@ export default function EmotePicker({
                         type="text"
                         placeholder={searchPlaceholder}
                         className="w-full bg-transparent text-sm outline-none"
-                        value={search}
+                        value={resolvedSearch}
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
 
                 {/* Emote grid */}
                 <div className="max-h-60 overflow-y-auto p-2">
-                    {search ? (
+                    {resolvedSearch ? (
                         <div className="grid grid-cols-8 gap-0.5">
                             {filtered.map((emote) => (
                                 <button
@@ -81,7 +106,12 @@ export default function EmotePicker({
                                     onClick={() => handleSelect(emote)}
                                     title={`:${emote.code}:`}
                                 >
-                                    {emote.emoji}
+                                    <Twemoji
+                                        emoji={emote.emoji}
+                                        title={`:${emote.code}:`}
+                                        ariaLabel={emote.name}
+                                        className="text-lg"
+                                    />
                                 </button>
                             ))}
                             {filtered.length === 0 && (
@@ -111,7 +141,12 @@ export default function EmotePicker({
                                                 }
                                                 title={`:${emote.code}:`}
                                             >
-                                                {emote.emoji}
+                                                <Twemoji
+                                                    emoji={emote.emoji}
+                                                    title={`:${emote.code}:`}
+                                                    ariaLabel={emote.name}
+                                                    className="text-lg"
+                                                />
                                             </button>
                                         ))}
                                     </div>

@@ -7,8 +7,8 @@ import useUser from "@/hooks/user";
 import { ReceivedMessage, SendMessage } from "@/types/message";
 import { GetMessages } from "@/lib/api/chat";
 import GLOBAL from "@/global";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import IconClose from "@/components/icons/close";
 import IconSend from "@/components/icons/send";
 import EmotePicker from "@/components/emote-picker";
@@ -44,6 +44,7 @@ export default function ChatPanel({
     roomId: string;
     onClose: () => any;
 }) {
+    const activeEmotePattern = /(^|\s):([a-z0-9_]*)$/i;
     const user = useUser((state) => state.user);
     const [messages, setMessages] = useState<ChatLine[]>([]);
     const [inputMessage, setInputMessage] = useState("");
@@ -56,6 +57,8 @@ export default function ChatPanel({
     );
     const [suggestions, setSuggestions] = useState<ChatCommandSuggestion[]>([]);
     const [activeSuggestion, setActiveSuggestion] = useState(0);
+    const [emotePickerOpen, setEmotePickerOpen] = useState(false);
+    const [emoteSearch, setEmoteSearch] = useState("");
 
     const chatCommandIndex = useMemo(
         () => buildChatCommandIndex(customChatCommands, t),
@@ -131,6 +134,35 @@ export default function ChatPanel({
         const next = filterChatCommandSuggestions(chatCommandIndex, value);
         setSuggestions(next);
         setActiveSuggestion(0);
+
+        const emoteMatch = value.match(activeEmotePattern);
+        if (emoteMatch) {
+            setEmoteSearch(emoteMatch[2] ?? "");
+            setEmotePickerOpen(true);
+        } else {
+            setEmotePickerOpen(false);
+            setEmoteSearch("");
+        }
+    };
+
+    const handleEmoteSelect = (shortcode: string) => {
+        const emoteCode = shortcode.slice(1, -1);
+        setInputMessage((prev) => {
+            const next = prev.match(activeEmotePattern)
+                ? prev.replace(activeEmotePattern, (_, prefix) => {
+                      return `${prefix}:${emoteCode}: `;
+                  })
+                : `${prev}${shortcode}`;
+            const nextSuggestions = filterChatCommandSuggestions(
+                chatCommandIndex,
+                next,
+            );
+            setSuggestions(nextSuggestions);
+            setActiveSuggestion(0);
+            return next;
+        });
+        setEmotePickerOpen(false);
+        setEmoteSearch("");
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -349,7 +381,11 @@ export default function ChatPanel({
                     getCategoryLabel={(category) =>
                         t(`chat:emote_category_${category}`)
                     }
-                    onSelect={(code) => handleInputChange(inputMessage + code)}
+                    open={emotePickerOpen}
+                    onOpenChange={setEmotePickerOpen}
+                    searchValue={emoteSearch}
+                    onSearchChange={setEmoteSearch}
+                    onSelect={handleEmoteSelect}
                 />
                 <Button type="submit" disabled={!user} className="h-9 w-12 p-0">
                     <IconSend className="!h-6 !w-6" />
