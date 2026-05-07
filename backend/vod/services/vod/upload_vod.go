@@ -106,19 +106,38 @@ func (s *VODService) UploadVOD(
 	if jobErr != nil {
 		logger.Errorf(ctx, "failed to create transcode job for vod %s: %v", createdVOD.Id, jobErr)
 		// VOD is created but job failed - mark VOD as failed
-		s.vodRepo.UpdateStatus(ctx, createdVOD.Id, domains.VODStatusFailed, nil, nil)
+		createdVOD.Status = domains.VODStatusFailed
+		s.vodRepo.Update(ctx, *createdVOD)
 		return nil, jobErr
 	}
 
 	return createdVOD, nil
 }
 
-func (s *VODService) UpdateVODStatus(
+func (s *VODService) UpdateStatus(
 	ctx context.Context,
 	vodId uuid.UUID,
 	status domains.VODStatus,
 	playbackUrl *string,
 	thumbnailUrl *string,
+	duration *int64,
 ) *response.Response[any] {
-	return s.vodRepo.UpdateStatus(ctx, vodId, status, playbackUrl, thumbnailUrl)
+	currentVOD, err := s.vodRepo.GetById(ctx, vodId)
+	if err != nil {
+		return err
+	}
+
+	currentVOD.Status = status
+	if playbackUrl != nil {
+		currentVOD.PlaybackURL = playbackUrl
+	}
+	if thumbnailUrl != nil {
+		currentVOD.ThumbnailURL = thumbnailUrl
+	}
+	if duration != nil {
+		currentVOD.Duration = *duration
+	}
+
+	_, updateErr := s.vodRepo.Update(ctx, *currentVOD)
+	return updateErr
 }
