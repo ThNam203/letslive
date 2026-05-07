@@ -95,12 +95,16 @@ func main() {
 			if dbErr != nil {
 				logger.Errorf(ctx, "failed to connect to database for transcode worker: %v", dbErr)
 			} else {
+				if config.MinIO.UploadBucketName == "" {
+					logger.Panicf(ctx, "minio.uploadBucketName is required for transcode raw read bucket")
+				}
+
 				rawMinioClient := worker.NewRawMinIOClient(config.MinIO)
 				transcodeWorker = worker.NewTranscodeWorker(
 					dbConn,
 					minioStorage,
 					rawMinioClient,
-					config.MinIO.BucketName,
+					config.MinIO.UploadBucketName,
 					config,
 					livestreamGateway,
 				)

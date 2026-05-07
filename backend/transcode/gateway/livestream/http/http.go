@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sen1or/letslive/transcode/domains"
 	"sen1or/letslive/transcode/gateway"
 	dto "sen1or/letslive/transcode/gateway/livestream/dto"
 	"sen1or/letslive/shared/pkg/discovery"
@@ -129,7 +130,7 @@ func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, 
 	return nil
 }
 
-func (g *LivestreamGateway) UpdateVODStatus(ctx context.Context, vodId string, status string, playbackUrl string, thumbnailUrl string) error {
+func (g *LivestreamGateway) UpdateVODStatus(ctx context.Context, vodId string, status domains.VODStatus, playbackUrl string, thumbnailUrl string, duration *int64) error {
 	addr, err := g.registry.ServiceAddress(ctx, "vod")
 	if err != nil {
 		logger.Debugf(ctx, "get service address from gateway failed for UpdateVODStatus")
@@ -138,14 +139,15 @@ func (g *LivestreamGateway) UpdateVODStatus(ctx context.Context, vodId string, s
 
 	url := fmt.Sprintf("http://%s/v1/internal/vods/%s/status", addr, vodId)
 
-	payload := map[string]string{
-		"status": status,
-	}
+	payload := map[string]interface{}{"status": string(status)}
 	if playbackUrl != "" {
 		payload["playbackUrl"] = playbackUrl
 	}
 	if thumbnailUrl != "" {
 		payload["thumbnailUrl"] = thumbnailUrl
+	}
+	if duration != nil {
+		payload["duration"] = *duration
 	}
 
 	payloadBuf := new(bytes.Buffer)

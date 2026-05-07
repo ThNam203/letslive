@@ -2,6 +2,7 @@ package vod
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"sen1or/letslive/vod/handlers/utils"
 	"sen1or/letslive/shared/pkg/tracer"
@@ -23,6 +24,11 @@ func (h *VODHandler) UploadVODPrivateHandler(w http.ResponseWriter, r *http.Requ
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
 
 	if parseErr := r.ParseMultipartForm(32 << 20); parseErr != nil { // 32MB memory buffer
+		var maxBytesErr *http.MaxBytesError
+		if errors.As(parseErr, &maxBytesErr) {
+			h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_VIDEO_TOO_LARGE, nil, nil, nil))
+			return
+		}
 		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
 		return
 	}
@@ -33,6 +39,11 @@ func (h *VODHandler) UploadVODPrivateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	defer file.Close()
+
+	if header.Size > maxUploadSize {
+		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_VIDEO_TOO_LARGE, nil, nil, nil))
+		return
+	}
 
 	title := r.FormValue("title")
 	if title == "" {

@@ -440,6 +440,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get apiResErrImageTooLarge => 'Ảnh vượt quá giới hạn 10mb.';
 
   @override
+  String get apiResErrVideoTooLarge => 'Video vượt quá giới hạn kích thước tải lên.';
+
+  @override
   String get apiResErrLivestreamUpdateAfterEnded =>
       'Không thể cập nhật, livestream đã kết thúc.';
 

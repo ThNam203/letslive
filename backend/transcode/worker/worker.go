@@ -1,13 +1,16 @@
 package worker
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"sen1or/letslive/transcode/config"
+	"sen1or/letslive/transcode/domains"
 	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/transcode/storage"
 	"sen1or/letslive/transcode/transcoder"
@@ -22,7 +25,7 @@ import (
 )
 
 type LivestreamGateway interface {
-	UpdateVODStatus(ctx context.Context, vodId string, status string, playbackUrl string, thumbnailUrl string) error
+	UpdateVODStatus(ctx context.Context, vodId string, status domains.VODStatus, playbackUrl string, thumbnailUrl string, duration *int64) error
 }
 
 type TranscodeWorker struct {
@@ -189,6 +192,13 @@ func (w *TranscodeWorker) doTranscode(ctx context.Context, jobId, vodId, rawFile
 		return errors.New(errMsg)
 	}
 
+	var durationPtr *int64
+	if duration, durationErr := getHLSDurationSeconds(outputDir); durationErr != nil {
+		logger.Warnf(ctx, "worker: failed to calculate duration for vod %s: %v", vodId, durationErr)
+	} else {
+		durationPtr = &duration
+	}
+
 	// Upload HLS segments and playlists to MinIO
 	playbackURL, err := w.uploadHLSToStorage(ctx, vodId, outputDir)
 	if err != nil {
@@ -209,7 +219,7 @@ func (w *TranscodeWorker) doTranscode(ctx context.Context, jobId, vodId, rawFile
 	}
 
 	// Update VOD status to ready via livestream gateway
-	if err := w.livestreamGateway.UpdateVODStatus(ctx, vodId, "ready", playbackURL, thumbnailURL); err != nil {
+	if err := w.livestreamGateway.UpdateVODStatus(ctx, vodId, domains.VODStatusReady, playbackURL, thumbnailURL, durationPtr); err != nil {
 		errMsg := fmt.Sprintf("failed to update VOD status: %v", err)
 		w.markJobFailed(ctx, jobId, vodId, errMsg, currentAttempt, maxAttempts)
 		return errors.New(errMsg)
@@ -251,6 +261,8 @@ func (w *TranscodeWorker) downloadFromMinIO(ctx context.Context, objectName, des
 }
 
 func (w *TranscodeWorker) uploadHLSToStorage(ctx context.Context, vodId, outputDir string) (string, error) {
+	var masterPlaylistURL string
+
 	// Walk through the output directory and upload all HLS files
 	err := filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -288,9 +300,11 @@ func (w *TranscodeWorker) uploadHLSToStorage(ctx context.Context, vodId, outputD
 				}
 			} else {
 				// Master playlist
-				if _, uploadErr := w.hlsStorage.AddThumbnail(ctx, path, vodId, "application/vnd.apple.mpegurl"); uploadErr != nil {
+				savedURL, uploadErr := w.hlsStorage.AddThumbnail(ctx, path, vodId, "application/vnd.apple.mpegurl")
+				if uploadErr != nil {
 					return fmt.Errorf("failed to upload master playlist: %w", uploadErr)
 				}
+				masterPlaylistURL = savedURL
 			}
 		}
 
@@ -301,9 +315,11 @@ func (w *TranscodeWorker) uploadHLSToStorage(ctx context.Context, vodId, outputD
 		return "", err
 	}
 
-	// Return the playback URL (relative path to the master playlist)
-	playbackURL := fmt.Sprintf("%s/%s", vodId, w.config.Transcode.FFMpegSetting.MasterFileName)
-	return playbackURL, nil
+	if masterPlaylistURL == "" {
+		return "", errors.New("master playlist URL is empty")
+	}
+
+	return masterPlaylistURL, nil
 }
 
 func (w *TranscodeWorker) markJobFailed(ctx context.Context, jobId, vodId, errMsg string, currentAttempt, maxAttempts int) {
@@ -314,7 +330,7 @@ func (w *TranscodeWorker) markJobFailed(ctx context.Context, jobId, vodId, errMs
 			logger.Errorf(ctx, "worker: failed to mark job as failed: %v", err)
 		}
 		// Mark VOD as failed too
-		w.livestreamGateway.UpdateVODStatus(ctx, vodId, "failed", "", "")
+		w.livestreamGateway.UpdateVODStatus(ctx, vodId, domains.VODStatusFailed, "", "", nil)
 	} else {
 		// Reset to pending for retry
 		_, err := w.db.Exec(ctx, `UPDATE transcode_jobs SET status = 'pending', error_message = $1, updated_at = now() WHERE id = $2`, errMsg, jobId)
@@ -330,7 +346,45 @@ func (w *TranscodeWorker) failJob(ctx context.Context, tx pgx.Tx, jobId, vodId, 
 		logger.Errorf(ctx, "worker: failed to mark job as failed: %v", err)
 	}
 	tx.Commit(ctx)
-	w.livestreamGateway.UpdateVODStatus(ctx, vodId, "failed", "", "")
+	w.livestreamGateway.UpdateVODStatus(ctx, vodId, domains.VODStatusFailed, "", "", nil)
+}
+
+func getHLSDurationSeconds(outputDir string) (int64, error) {
+	playlistPath := filepath.Join(outputDir, "0", "stream.m3u8")
+	file, err := os.Open(playlistPath)
+	if err != nil {
+		return 0, fmt.Errorf("failed to open playlist %s: %w", playlistPath, err)
+	}
+	defer file.Close()
+
+	var total float64
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if !strings.HasPrefix(line, "#EXTINF:") {
+			continue
+		}
+
+		durationStr := strings.TrimPrefix(line, "#EXTINF:")
+		if commaIdx := strings.Index(durationStr, ","); commaIdx >= 0 {
+			durationStr = durationStr[:commaIdx]
+		}
+
+		segmentDuration, parseErr := strconv.ParseFloat(strings.TrimSpace(durationStr), 64)
+		if parseErr != nil {
+			return 0, fmt.Errorf("failed to parse EXTINF duration %q: %w", line, parseErr)
+		}
+		total += segmentDuration
+	}
+
+	if scanErr := scanner.Err(); scanErr != nil {
+		return 0, fmt.Errorf("failed scanning playlist: %w", scanErr)
+	}
+	if total <= 0 {
+		return 0, errors.New("calculated duration is zero")
+	}
+
+	return int64(math.Ceil(total)), nil
 }
 
 // extractObjectName extracts the MinIO object path from a full URL.
@@ -342,3 +396,4 @@ func extractObjectName(rawURL, bucket string) string {
 	}
 	return rawURL[idx+len("/"+bucket+"/"):]
 }
+

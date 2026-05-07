@@ -15,6 +15,7 @@ type UpdateVODStatusRequest struct {
 	Status       string  `json:"status"`
 	PlaybackUrl  *string `json:"playbackUrl,omitempty"`
 	ThumbnailUrl *string `json:"thumbnailUrl,omitempty"`
+	Duration     *int64  `json:"duration,omitempty"`
 }
 
 func (h *VODHandler) UpdateVODStatusInternalHandler(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +40,7 @@ func (h *VODHandler) UpdateVODStatusInternalHandler(w http.ResponseWriter, r *ht
 	vodStatus := domains.VODStatus(reqBody.Status)
 
 	ctx, span := tracer.MyTracer.Start(ctx, "update_vod_status_internal_handler.vod_service.update_vod_status")
-	serviceErr := h.vodService.UpdateVODStatus(ctx, vodId, vodStatus, reqBody.PlaybackUrl, reqBody.ThumbnailUrl)
+	serviceErr := h.vodService.UpdateStatus(ctx, vodId, vodStatus, reqBody.PlaybackUrl, reqBody.ThumbnailUrl, reqBody.Duration)
 	span.End()
 
 	if serviceErr != nil {

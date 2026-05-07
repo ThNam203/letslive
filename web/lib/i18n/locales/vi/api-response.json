@@ -34,6 +34,7 @@
     "res_err_vod_comment_already_liked": "Bình luận đã được thích.",
     "res_err_vod_comment_not_liked": "Bình luận chưa được thích.",
     "res_err_vod_comment_delete_failed": "Không thể xóa bình luận.",
+    "err_video_too_large": "Video vượt quá giới hạn kích thước tải lên.",
 
     "res_err_account_not_found": "Không tìm thấy tài khoản ví.",
     "res_err_account_frozen": "Tài khoản ví của bạn hiện đang bị đóng băng.",
