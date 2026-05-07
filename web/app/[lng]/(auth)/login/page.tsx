@@ -51,9 +51,6 @@ export default function LogInPage() {
                     >
                         <IconGoogle /> Google
                     </Link>
-                    <p className="text-destructive mt-1 text-xs italic">
-                        {t("google_cookie_warning")}
-                    </p>
                 </div>
             </div>
             <div className="mt-2 mb-4 flex w-full items-center justify-center">

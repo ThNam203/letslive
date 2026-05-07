@@ -7,7 +7,9 @@ import { useDmWebSocketContext } from "@/contexts/dm-websocket-context";
 import useUser from "@/hooks/user";
 import {
     GetConversation,
+    GetConversations,
     GetDmMessages,
+    GetUnreadCounts,
     MarkConversationRead,
 } from "@/lib/api/dm";
 import ConversationList from "../_components/conversation-list";
@@ -25,6 +27,8 @@ import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import IconClose from "@/components/icons/close";
 
+const CONVERSATIONS_PAGE_SIZE = 20;
+
 export default function ConversationPage() {
     const params = useParams();
     const router = useRouter();
@@ -37,6 +41,8 @@ export default function ConversationPage() {
         setMessages,
         prependMessages,
         setActiveConversationId,
+        setConversations,
+        setUnreadCounts,
         clearUnread,
         typingUsers,
     } = useDmStore();
@@ -81,6 +87,31 @@ export default function ConversationPage() {
                 toast.error(t("fetch-error:client_fetch_error"));
             });
     }, [conversationId, user, conversations, t]);
+
+    // Direct URL access can start with an empty store. Prime sidebar conversations/unread counters.
+    useEffect(() => {
+        if (!user) return;
+        if (conversations.length > 0) return;
+
+        Promise.all([
+            GetConversations(0, CONVERSATIONS_PAGE_SIZE),
+            GetUnreadCounts(),
+        ])
+            .then(([convRes, unreadRes]) => {
+                if (convRes.data) {
+                    setConversations(convRes.data);
+                } else if (!convRes.success && convRes.key) {
+                    toast.error(t(convRes.key));
+                }
+
+                if (unreadRes.data) {
+                    setUnreadCounts(unreadRes.data);
+                }
+            })
+            .catch(() => {
+                toast.error(t("fetch-error:client_fetch_error"));
+            });
+    }, [user, conversations.length, setConversations, setUnreadCounts, t]);
 
     // Fetch initial messages — skip if already in store for this conversation.
     // We read current store state via getState() to avoid re-running on every incoming WS message.
