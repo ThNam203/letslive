@@ -27,9 +27,8 @@ export enum UserStatus {
 
 export type BaseUser = {
     id: string;
-    // after account setup, username is not null
-    // so we can use ! to avoid null checks almost in any cases
-    username: string | null;
+    // empty string means user has not completed account setup yet
+    username: string;
     status: UserStatus;
     authProvider: AuthProvider;
     createdAt: string;

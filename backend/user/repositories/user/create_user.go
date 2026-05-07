@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-func (r *postgresUserRepo) Create(ctx context.Context, username *string, email string, provider domains.AuthProvider) (*domains.User, *response.Response[any]) {
+func (r *postgresUserRepo) Create(ctx context.Context, username string, email string, provider domains.AuthProvider) (*domains.User, *response.Response[any]) {
 	params := pgx.NamedArgs{
 		"username":      username,
 		"email":         email,

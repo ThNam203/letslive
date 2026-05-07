@@ -26,7 +26,7 @@ export default function AccountSetupPage() {
     useEffect(() => {
         if (isLoading) return;
         if (!user) { router.replace("/login"); return; }
-        if (user.username != null) { router.replace("/"); return; }
+        if (user.username !== "") { router.replace("/"); return; }
     }, [user, isLoading, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -55,7 +55,7 @@ export default function AccountSetupPage() {
         }
     };
 
-    if (isLoading || !user || user.username != null) return null;
+    if (isLoading || !user || user.username !== "") return null;
 
     return (
         <>

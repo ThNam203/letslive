@@ -79,7 +79,7 @@ export default function ChatPanel({
             userId: user!.id,
             roomId: roomId,
             type,
-            username: user!.username!,
+            username: user!.username,
             text,
         };
         wsRef.current?.send(JSON.stringify(newMessage));
@@ -261,7 +261,7 @@ export default function ChatPanel({
                         type: CHAT_MESSAGE_TYPE.JOIN,
                         roomId: roomId,
                         userId: user.id,
-                        username: user.username!,
+                        username: user.username,
                     }),
                 );
             }
@@ -287,7 +287,7 @@ export default function ChatPanel({
                             type: CHAT_MESSAGE_TYPE.LEAVE,
                             roomId: roomId,
                             userId: user.id,
-                            username: user.username!,
+                            username: user.username,
                         }),
                     );
                 }

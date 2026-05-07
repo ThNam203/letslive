@@ -244,7 +244,7 @@ export const dmHandlers = [
                 _id: uid(),
                 conversationId,
                 senderId: ME_USER_ID,
-                senderUsername: meUser.username!,
+                senderUsername: meUser.username,
                 type: body.type ?? DmMessageType.TEXT,
                 text: body.text ?? "",
                 imageUrls: body.imageUrls,
