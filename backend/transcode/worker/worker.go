@@ -251,6 +251,8 @@ func (w *TranscodeWorker) downloadFromMinIO(ctx context.Context, objectName, des
 }
 
 func (w *TranscodeWorker) uploadHLSToStorage(ctx context.Context, vodId, outputDir string) (string, error) {
+	var masterPlaylistURL string
+
 	// Walk through the output directory and upload all HLS files
 	err := filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -288,9 +290,11 @@ func (w *TranscodeWorker) uploadHLSToStorage(ctx context.Context, vodId, outputD
 				}
 			} else {
 				// Master playlist
-				if _, uploadErr := w.hlsStorage.AddThumbnail(ctx, path, vodId, "application/vnd.apple.mpegurl"); uploadErr != nil {
+				savedURL, uploadErr := w.hlsStorage.AddThumbnail(ctx, path, vodId, "application/vnd.apple.mpegurl")
+				if uploadErr != nil {
 					return fmt.Errorf("failed to upload master playlist: %w", uploadErr)
 				}
+				masterPlaylistURL = savedURL
 			}
 		}
 
@@ -301,10 +305,11 @@ func (w *TranscodeWorker) uploadHLSToStorage(ctx context.Context, vodId, outputD
 		return "", err
 	}
 
-	// Return the playback URL with configured prefix (same behavior as streaming flow).
-	playbackPath := fmt.Sprintf("%s/%s", vodId, w.config.Transcode.FFMpegSetting.MasterFileName)
-	playbackURL := buildPlaybackURL(w.config.Transcode.VODPlaybackUrlPrefix, playbackPath)
-	return playbackURL, nil
+	if masterPlaylistURL == "" {
+		return "", errors.New("master playlist URL is empty")
+	}
+
+	return masterPlaylistURL, nil
 }
 
 func (w *TranscodeWorker) markJobFailed(ctx context.Context, jobId, vodId, errMsg string, currentAttempt, maxAttempts int) {
@@ -344,13 +349,3 @@ func extractObjectName(rawURL, bucket string) string {
 	return rawURL[idx+len("/"+bucket+"/"):]
 }
 
-func buildPlaybackURL(prefix, path string) string {
-	trimmedPrefix := strings.TrimRight(prefix, "/")
-	trimmedPath := strings.TrimLeft(path, "/")
-
-	if trimmedPrefix == "" {
-		return trimmedPath
-	}
-
-	return fmt.Sprintf("%s/%s", trimmedPrefix, trimmedPath)
-}
