@@ -68,7 +68,7 @@ func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	http.Redirect(w, r, GetRedirectURLOnSuccess("/"), http.StatusMovedPermanently)
+	http.Redirect(w, r, GetRedirectURLOnSuccess("/account-setup"), http.StatusMovedPermanently)
 }
 
 // OAuthGoogleMobileHandler handles Google sign-in from mobile clients.
