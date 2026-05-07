@@ -48,7 +48,7 @@ function ChannelUserCard({
                     </Avatar>
                     {!isMinimized && (
                         <span className="text-sm font-semibold">
-                            {user.username ?? ""}
+                            {user.username!}
                         </span>
                     )}
                 </Link>
@@ -67,7 +67,7 @@ function ChannelUserCard({
                     </Avatar>
                     <div className="space-y-1">
                         <h4 className="text-sm font-semibold">
-                            {user.username ?? ""}
+                            {user.username!}
                         </h4>
                         <p className="text-muted-foreground text-xs">
                             {t("common:bio")}:{" "}

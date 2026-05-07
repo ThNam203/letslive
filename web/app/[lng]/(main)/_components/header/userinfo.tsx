@@ -92,7 +92,7 @@ export default function UserInfo() {
                                     className="text-foreground mb-2 w-fit text-lg"
                                     onMouseUp={() => setIsPopoverOpen(false)}
                                 >
-                                    <p>{userState.user.username ?? ""}</p>
+                                    <p>{userState.user.username}</p>
                                 </Link>
                                 <div className="flex flex-col gap-2">
                                     <Button asChild>
