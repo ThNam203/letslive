@@ -71,6 +71,8 @@ jobs:
           CHAT_DB_PASSWORD=${{ secrets.CHAT_DB_PASSWORD }}
           LIVESTREAM_DB_USER=${{ secrets.LIVESTREAM_DB_USER }}
           LIVESTREAM_DB_PASSWORD=${{ secrets.LIVESTREAM_DB_PASSWORD }}
+          TRANSCODE_DB_USER=${{ secrets.TRANSCODE_DB_USER }}
+          TRANSCODE_DB_PASSWORD=${{ secrets.TRANSCODE_DB_PASSWORD }}
           VOD_DB_USER=${{ secrets.VOD_DB_USER }}
           VOD_DB_PASSWORD=${{ secrets.VOD_DB_PASSWORD }}
           USER_DB_USER=${{ secrets.USER_DB_USER }}
