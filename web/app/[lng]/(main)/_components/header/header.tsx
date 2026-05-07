@@ -5,6 +5,7 @@ import NotificationBell from "./notification-bell";
 import MessagesIcon from "./messages-icon";
 import WalletIcon from "./wallet-icon";
 import StreamGuide from "./stream-guide";
+import UploadIcon from "./upload-icon";
 import { myGetT } from "@/lib/i18n";
 
 export async function Header() {
@@ -30,6 +31,7 @@ export async function Header() {
                 <MessagesIcon />
                 <WalletIcon />
                 <NotificationBell />
+                <UploadIcon />
                 <UserInfo />
             </div>
         </nav>

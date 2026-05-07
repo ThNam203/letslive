@@ -42,15 +42,13 @@ export default function MessagesIcon() {
         return () => clearInterval(interval);
     }, [user, fetchUnreadCounts]);
 
-    if (!user) return null;
-
     return (
         <Link
-            href={`/${lng}/messages`}
+            href={user ? `/${lng}/messages` : `/${lng}/login`}
             className="hover:bg-muted relative cursor-pointer rounded-md p-1.5 transition-colors"
         >
             <IconMessage className="size-5" />
-            {totalUnread > 0 && (
+            {user && totalUnread > 0 && (
                 <span className="bg-destructive absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white">
                     {totalUnread > 99 ? "99+" : totalUnread}
                 </span>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import useUser from "@/hooks/user";
@@ -56,8 +57,6 @@ export default function NotificationBell() {
         };
     }, [userState.user, fetchUnreadCount]);
 
-    const canShowNotifications = !!userState.user;
-
     const handleOpenChange = useCallback(async (open: boolean) => {
         setIsOpen(open);
         if (
@@ -106,7 +105,16 @@ export default function NotificationBell() {
         [handleMarkAsRead],
     );
 
-    if (!canShowNotifications) return null;
+    if (!userState.user) {
+        return (
+            <Link
+                href={`/${lng}/login`}
+                className="hover:bg-muted relative cursor-pointer rounded-md p-1.5 transition-colors"
+            >
+                <IconBell className="size-5" />
+            </Link>
+        );
+    }
 
     return (
         <Popover open={isOpen} onOpenChange={handleOpenChange}>
