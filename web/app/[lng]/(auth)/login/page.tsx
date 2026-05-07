@@ -22,17 +22,22 @@ export default function LogInPage() {
             toast(err, {
                 type: "error",
             });
-            return;
         }
-
-        const redirectURL = searchParams.get("redirectUrl");
-        if (redirectURL === null) return;
-        else router.push(redirectURL);
     }, [searchParams, router]);
 
     useEffect(() => {
-        if (user) router.push("/");
-    }, [user]);
+        if (!user) return;
+        const redirectUrl = searchParams.get("redirectUrl");
+        if (
+            redirectUrl &&
+            redirectUrl.startsWith("/") &&
+            !redirectUrl.startsWith("//")
+        ) {
+            router.push(redirectUrl);
+            return;
+        }
+        router.push("/");
+    }, [user, searchParams, router]);
 
     return (
         <>
