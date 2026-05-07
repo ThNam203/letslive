@@ -92,7 +92,7 @@ export default function ProfileHeader({
                     src={
                         user.backgroundPicture ??
                         `https://placehold.co/1200x600/F3F4F6/374151/png?font=playfair-display&text=${
-                            user.username ?? ""
+                            user.username!
                         }`
                     }
                     alt={t("accessibility:profile_banner")}
@@ -110,7 +110,7 @@ export default function ProfileHeader({
                             alt={t("accessibility:user_avatar")}
                         />
                         <AvatarFallback>
-                            {(user.username ?? "U")[0].toUpperCase()}
+                            {(user.username!)[0].toUpperCase()}
                         </AvatarFallback>
                     </Avatar>
                     {me?.id && me.id !== user.id && (

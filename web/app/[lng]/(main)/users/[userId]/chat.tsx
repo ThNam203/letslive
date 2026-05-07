@@ -71,11 +71,15 @@ export default function ChatPanel({
         );
 
     const sendText = (text: string, type: SendMessage["type"] = CHAT_MESSAGE_TYPE.MESSAGE) => {
+      if (!user) {
+        toast(t("chat:login_required"), { type: "error" });
+        return;
+      }
         const newMessage: SendMessage = {
             userId: user!.id,
             roomId: roomId,
             type,
-            username: user!.username ?? "",
+            username: user!.username!,
             text,
         };
         wsRef.current?.send(JSON.stringify(newMessage));
@@ -242,52 +246,54 @@ export default function ChatPanel({
     }, [messages, atBottom]);
 
     useEffect(() => {
-        const connectWebSocket = async () => {
-            const ws = new WebSocket(GLOBAL.WS_SERVER_URL);
-            wsRef.current = ws;
+        let cancelled = false;
+        const ws = new WebSocket(GLOBAL.WS_SERVER_URL);
+        wsRef.current = ws;
 
-            ws.onopen = () => {
-                if (user) {
-                    ws.send(
-                        JSON.stringify({
-                            type: CHAT_MESSAGE_TYPE.JOIN,
-                            roomId: roomId,
-                            userId: user.id,
-                            username: user.username ?? "",
-                        }),
-                    );
-                }
-            };
-
-            ws.onmessage = (event) => {
-                const data: ReceivedMessage = JSON.parse(event.data);
-                appendLine({ kind: "remote", data });
-            };
-
-            ws.onclose = (ev) => {};
-
-            ws.onerror = () => {
-                toast(t("chat:connection_error"), { type: "error" });
-            };
+        ws.onopen = () => {
+            if (cancelled) {
+                ws.close();
+                return;
+            }
+            if (user) {
+                ws.send(
+                    JSON.stringify({
+                        type: CHAT_MESSAGE_TYPE.JOIN,
+                        roomId: roomId,
+                        userId: user.id,
+                        username: user.username!,
+                    }),
+                );
+            }
         };
 
-        connectWebSocket();
+        ws.onmessage = (event) => {
+            if (cancelled) return;
+            const data: ReceivedMessage = JSON.parse(event.data);
+            appendLine({ kind: "remote", data });
+        };
+
+        ws.onerror = () => {
+            if (cancelled) return;
+            toast(t("chat:connection_error"), { type: "error" });
+        };
+
         return () => {
-            const ws = wsRef.current;
-            if (ws) {
-                if (user && ws.readyState === WebSocket.OPEN) {
+            cancelled = true;
+            if (ws.readyState === WebSocket.OPEN) {
+                if (user) {
                     ws.send(
                         JSON.stringify({
                             type: CHAT_MESSAGE_TYPE.LEAVE,
                             roomId: roomId,
                             userId: user.id,
-                            username: user.username ?? "",
+                            username: user.username!,
                         }),
                     );
                 }
                 ws.close();
-                wsRef.current = null;
             }
+            wsRef.current = null;
         };
     }, [user, roomId]);
 

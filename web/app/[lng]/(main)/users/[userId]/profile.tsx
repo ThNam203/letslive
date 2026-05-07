@@ -51,7 +51,7 @@ export default function ProfileView({
                 <div className="flex items-start gap-8">
                     <div>
                         <h1 className="text-foreground text-3xl font-bold">
-                            {user.username ?? ""}
+                            {user.username!}
                         </h1>
                     </div>
                 </div>

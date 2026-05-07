@@ -141,6 +141,7 @@ export default function ConversationPage() {
     const handleSendMessage = useCallback(
         (text: string, imageUrls?: string[]) => {
             if (!user) return;
+
             send({
                 type: DmClientEventType.SEND_MESSAGE,
                 conversationId,
@@ -149,7 +150,7 @@ export default function ConversationPage() {
                     imageUrls && imageUrls.length > 0
                         ? DmMessageType.IMAGE
                         : DmMessageType.TEXT,
-                senderUsername: user.username ?? "",
+                senderUsername: user.username!,
                 imageUrls,
             });
         },
@@ -158,19 +159,21 @@ export default function ConversationPage() {
 
     const handleTypingStart = useCallback(() => {
         if (!user) return;
+        
         send({
             type: DmClientEventType.TYPING_START,
             conversationId,
-            username: user.username ?? "",
+            username: user.username!,
         });
     }, [user, conversationId, send]);
 
     const handleTypingStop = useCallback(() => {
         if (!user) return;
+
         send({
             type: DmClientEventType.TYPING_STOP,
             conversationId,
-            username: user.username ?? "",
+            username: user.username!,
         });
     }, [user, conversationId, send]);
 
