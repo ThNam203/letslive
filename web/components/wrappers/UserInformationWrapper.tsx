@@ -25,7 +25,7 @@ export default function UserInformationWrapper({
                     if (userRes.success && userRes.data) {
                         setUser(userRes.data);
                         if (
-                            userRes.data.username == null &&
+                            userRes.data.username === "" &&
                             !pathname.includes("account-setup")
                         ) {
                             router.push("/account-setup");

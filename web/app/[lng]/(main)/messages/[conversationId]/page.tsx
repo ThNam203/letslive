@@ -150,7 +150,7 @@ export default function ConversationPage() {
                     imageUrls && imageUrls.length > 0
                         ? DmMessageType.IMAGE
                         : DmMessageType.TEXT,
-                senderUsername: user.username!,
+                senderUsername: user.username,
                 imageUrls,
             });
         },
@@ -163,7 +163,7 @@ export default function ConversationPage() {
         send({
             type: DmClientEventType.TYPING_START,
             conversationId,
-            username: user.username!,
+            username: user.username,
         });
     }, [user, conversationId, send]);
 
@@ -173,7 +173,7 @@ export default function ConversationPage() {
         send({
             type: DmClientEventType.TYPING_STOP,
             conversationId,
-            username: user.username!,
+            username: user.username,
         });
     }, [user, conversationId, send]);
 

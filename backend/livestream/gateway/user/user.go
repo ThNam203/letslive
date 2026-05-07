@@ -8,7 +8,7 @@ import (
 
 type UserPublicInfo struct {
 	Id             uuid.UUID `json:"id"`
-	Username       *string   `json:"username,omitempty"`
+	Username       string    `json:"username"`
 	ProfilePicture *string   `json:"profilePicture,omitempty"`
 }
 

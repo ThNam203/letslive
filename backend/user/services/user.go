@@ -170,7 +170,7 @@ func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequest
 	}
 
 	if data.Username != nil {
-		existedData.Username = data.Username
+		existedData.Username = *data.Username
 	}
 
 	if data.PhoneNumber != nil {
@@ -180,7 +180,7 @@ func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequest
 	finalDTO := dto.UpdateUserRequestDTO{
 		Id:               existedData.Id,
 		Status:           statusPtr,
-		Username:         existedData.Username,
+		Username:         &existedData.Username,
 		PhoneNumber:      existedData.PhoneNumber,
 		Bio:              existedData.Bio,
 		SocialMediaLinks: data.SocialMediaLinks,

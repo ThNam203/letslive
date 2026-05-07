@@ -8,7 +8,7 @@ import (
 
 type GetUserPublicResponseDTO struct {
 	Id                uuid.UUID `json:"id"`
-	Username          *string   `json:"username"`
+	Username          string    `json:"username"`
 	Email             string    `json:"email"`
 	Status            string    `json:"status"`
 	AuthProvider      string    `json:"authProvider"`

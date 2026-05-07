@@ -38,7 +38,7 @@ export default function ProfileSettings() {
     );
 
     const isUsernameChanged =
-        user != null && user.username! !== username;
+        user != null && user.username !== username;
     const isBioChanged = user != null && (user.bio ?? "") !== bio;
     const isButtonDisabled =
         !isUsernameChanged &&
@@ -146,7 +146,7 @@ export default function ProfileSettings() {
         if (!user) return;
         
         queueMicrotask(() => {
-            setUsername(user.username!);
+            setUsername(user.username);
             setBio(user.bio ?? "");
         });
     }, [user]);
