@@ -7,11 +7,13 @@ export function VODFrame({
     videoInfo,
     className,
     onVideoStart,
+    onProgressSeconds,
     enableSkipButtons,
 }: {
     videoInfo: VideoInfo;
     className?: ClassValue;
     onVideoStart?: () => void;
+    onProgressSeconds?: (seconds: number) => void;
     enableSkipButtons?: boolean;
 }) {
     return (
@@ -20,6 +22,7 @@ export function VODFrame({
             mode="vod"
             className={className}
             onVideoStart={onVideoStart}
+            onProgressSeconds={onProgressSeconds}
             enableSkipButtons={enableSkipButtons}
         />
     );

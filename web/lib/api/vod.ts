@@ -60,6 +60,19 @@ export async function DeleteVOD(vodId: string): Promise<ApiResponse<void>> {
     });
 }
 
+export async function RegisterVODView(
+    vodId: string,
+    watchedSeconds: number,
+): Promise<ApiResponse<void>> {
+    return fetchClient<ApiResponse<void>>(`/vods/${vodId}/view`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ watchedSeconds }),
+    });
+}
+
 export async function UploadVOD(
     file: File,
     title: string,

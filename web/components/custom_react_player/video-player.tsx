@@ -67,12 +67,14 @@ export function VideoPlayer({
     mode,
     className,
     onVideoStart,
+    onProgressSeconds,
     enableSkipButtons,
 }: {
     videoInfo: VideoInfo;
     mode: PlayerMode;
     className?: ClassValue;
     onVideoStart?: () => void;
+    onProgressSeconds?: (seconds: number) => void;
     enableSkipButtons?: boolean;
 }) {
     const skipButtons = enableSkipButtons ?? mode === "vod";
@@ -162,6 +164,7 @@ export function VideoPlayer({
                         onProgress={(state: any) => {
                             setIdleCount((c) => c + 1);
                             setCurrentTime(state.playedSeconds);
+                            onProgressSeconds?.(state.playedSeconds);
                         }}
                         onDuration={(d: number) => setDuration(d)}
                         onBuffer={() => setIsLoading(true)}
