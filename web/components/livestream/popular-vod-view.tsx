@@ -8,7 +8,7 @@ import { toast } from "@/components/utils/toast";
 import IconFilm from "../icons/film";
 import { VOD } from "@/types/vod";
 import useT from "@/hooks/use-translation";
-import VODCard from "./vod-card";
+import MediaCard from "./media-card";
 
 export function PopularVODView() {
     const [isLoading, setIsLoading] = useState(true);
@@ -66,7 +66,12 @@ export function PopularVODView() {
         <div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {vods.map((vod) => (
-                    <VODCard key={vod.id} vod={vod} variant="with-user" />
+                    <MediaCard
+                        key={vod.id}
+                        kind="vod"
+                        vod={vod}
+                        variant="with-user"
+                    />
                 ))}
             </div>
         </div>

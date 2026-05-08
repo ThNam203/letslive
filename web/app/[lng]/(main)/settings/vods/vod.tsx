@@ -26,7 +26,7 @@ import {
     VOD_DESCRIPTION_MAX_LENGTH,
 } from "@/constant/field-limits";
 import IconLoader from "@/components/icons/loader";
-import VODCard from "@/components/livestream/vod-card";
+import MediaCard from "@/components/livestream/media-card";
 
 export default function VODEditCard({
     vod,
@@ -210,7 +210,8 @@ export default function VODEditCard({
 
     return (
         <>
-            <VODCard
+            <MediaCard
+                kind="vod"
                 vod={vod}
                 variant="editable"
                 onEdit={handleEdit}

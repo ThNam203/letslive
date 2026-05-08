@@ -2,7 +2,7 @@
 
 import { PublicUser } from "@/types/user";
 import ProfileHeader from "./profile-header";
-import VODCard from "@/components/livestream/vod-card";
+import MediaCard from "@/components/livestream/media-card";
 import IconCalendar from "@/components/icons/calendar";
 import IconUsers from "@/components/icons/users";
 import { VOD } from "@/types/vod";
@@ -119,7 +119,13 @@ export default function ProfileView({
 
                               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                                   {vods.map((vod, idx) => {
-                                      return <VODCard key={idx} vod={vod} />;
+                                      return (
+                                          <MediaCard
+                                              key={idx}
+                                              kind="vod"
+                                              vod={vod}
+                                          />
+                                      );
                                   })}
                               </div>
                           </div>

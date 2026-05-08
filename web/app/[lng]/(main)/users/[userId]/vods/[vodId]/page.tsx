@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "@/components/utils/toast";
 import { VideoInfo } from "@/components/custom_react_player/streaming-frame";
 import { VODFrame } from "@/components/custom_react_player/vod-frame";
-import VODCard from "@/components/livestream/vod-card";
+import MediaCard from "@/components/livestream/media-card";
 import { VOD } from "@/types/vod";
 import { PublicUser } from "@/types/user";
 import { GetPublicVODsOfUser, GetVODInformation } from "@/lib/api/vod";
@@ -158,8 +158,9 @@ export default function VODPage() {
                         {vods
                             .filter((v) => v.id !== params.vodId)
                             .map((vod, idx) => (
-                                <VODCard
+                                <MediaCard
                                     key={idx}
+                                    kind="vod"
                                     vod={vod}
                                     variant="with-user"
                                     className="mb-2"
