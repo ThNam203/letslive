@@ -18,7 +18,7 @@ export async function GetPublicVODsOfUser(
 
 export async function GetPopularVODs(
     page: number = 0,
-    limit: number = 10,
+    limit: number = 20,
 ): Promise<ApiResponse<VOD[]>> {
     return fetchClient<ApiResponse<VOD[]>>(
         `/popular-vods?page=${page}&limit=${limit}`,
