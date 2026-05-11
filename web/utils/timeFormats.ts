@@ -42,6 +42,10 @@ export function formatSeconds(duration: number): string {
     const hours = Math.floor(duration / 3600);
     const minutes = Math.floor((duration % 3600) / 60);
     const seconds = duration % 60;
+    const pad2 = (n: number) => n.toString().padStart(2, "0");
 
-    return `${hours ? `${hours}:` : ""}${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+    if (hours > 0) {
+        return `${hours}:${pad2(minutes)}:${pad2(seconds)}`;
+    }
+    return `${minutes}:${pad2(seconds)}`;
 }
