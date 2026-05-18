@@ -1,6 +1,11 @@
-module.exports = {
+const { withSentryConfig } = require("@sentry/nextjs");
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
     reactStrictMode: false,
+    output: "standalone",
     images: {
+        formats: ["image/avif", "image/webp"],
         remotePatterns: [
             {
                 protocol: "https",
@@ -12,33 +17,32 @@ module.exports = {
             },
         ],
     },
+    experimental: {
+        optimizePackageImports: [
+            "@radix-ui/react-avatar",
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-hover-card",
+            "@radix-ui/react-label",
+            "@radix-ui/react-popover",
+            "@radix-ui/react-scroll-area",
+            "@radix-ui/react-select",
+            "@radix-ui/react-separator",
+            "@radix-ui/react-slider",
+            "@radix-ui/react-slot",
+            "@radix-ui/react-switch",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-tooltip",
+            "lucide-react",
+            "@sentry/nextjs",
+        ],
+    },
 };
 
-// Injected content via Sentry wizard below
-
-const { withSentryConfig } = require("@sentry/nextjs");
-
-module.exports = withSentryConfig(module.exports, {
-    // For all available options, see:
-    // https://www.npmjs.com/package/@sentry/webpack-plugin#options
-
+module.exports = withSentryConfig(nextConfig, {
     org: "vnuhcm-uit-university-of-infor",
     project: "letslive",
-
-    // Only print logs for uploading source maps in CI
     silent: !process.env.CI,
-
-    // For all available options, see:
-    // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-
     authToken: process.env.SENTRY_AUTH_TOKEN,
-
-    // Upload a larger set of source maps for prettier stack traces (increases build time)
     widenClientFileUpload: true,
-
-    // Uncomment to route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-    // This can increase your server load as well as your hosting bill.
-    // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-    // side errors will fail.
-    // tunnelRoute: "/monitoring",
 });
