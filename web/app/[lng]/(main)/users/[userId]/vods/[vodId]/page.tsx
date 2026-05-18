@@ -40,9 +40,9 @@ export default function VODPage() {
     const params = useParams<{ userId: string; vodId: string }>();
 
     const [playerInfo, setPlayerInfo] = useState<VideoInfo>({
-        videoTitle: t("common:live_streaming"),
+        videoTitle: "",
         streamer: {
-            name: t("common:streamer"),
+            name: "",
         },
         videoUrl: null,
     });
@@ -51,33 +51,64 @@ export default function VODPage() {
         setHasRegisteredView(false);
         isRegisteringViewRef.current = false;
 
-        const fetchVODInfo = async () => {
-            await GetVODInformation(params.vodId)
-                .then((res) => {
-                    if (res.success) {
-                        setPlayerInfo((prev) => ({
-                            ...prev,
-                            videoTitle: res.data?.title ?? "",
-                            videoUrl: res.data?.playbackUrl ?? null,
-                        }));
-                        setVodDuration(res.data?.duration ?? 0);
-                    } else {
-                        toast(t(`api-response:${res.key}`), {
-                            toastId: res.requestId,
-                            type: "error",
-                        });
-                    }
-                })
-                .catch((_) => {
-                    toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "client-fetch-error-id",
+        const fetchAll = async () => {
+            try {
+                const [vodRes, userRes, vodsRes] = await Promise.all([
+                    GetVODInformation(params.vodId),
+                    GetUserById(params.userId),
+                    GetPublicVODsOfUser(params.userId),
+                ]);
+
+                const vodTitle = vodRes.success ? (vodRes.data?.title ?? "") : "";
+                const vodUrl = vodRes.success
+                    ? (vodRes.data?.playbackUrl ?? null)
+                    : null;
+                const streamerName = userRes.success
+                    ? (userRes.data?.username ?? "")
+                    : "";
+
+                setPlayerInfo({
+                    videoTitle: vodTitle,
+                    streamer: { name: streamerName },
+                    videoUrl: vodUrl,
+                });
+
+                if (vodRes.success) {
+                    setVodDuration(vodRes.data?.duration ?? 0);
+                } else {
+                    toast(t(`api-response:${vodRes.key}`), {
+                        toastId: vodRes.requestId,
                         type: "error",
                     });
+                }
+
+                if (userRes.success) {
+                    setUser(userRes.data ?? null);
+                } else {
+                    toast(t(`api-response:${userRes.key}`), {
+                        toastId: userRes.requestId,
+                        type: "error",
+                    });
+                }
+
+                if (vodsRes.success) {
+                    setVods(vodsRes.data ?? []);
+                } else {
+                    toast(t(`api-response:${vodsRes.key}`), {
+                        toastId: vodsRes.requestId,
+                        type: "error",
+                    });
+                }
+            } catch (_) {
+                toast(t("fetch-error:client_fetch_error"), {
+                    toastId: "client-fetch-error-id",
+                    type: "error",
                 });
+            }
         };
 
-        fetchVODInfo();
-    }, [params.vodId]);
+        fetchAll();
+    }, [params.vodId, params.userId]);
 
     const getViewThreshold = () => {
         let threshold = 15;
@@ -125,65 +156,6 @@ export default function VODPage() {
 
         isRegisteringViewRef.current = false;
     };
-
-    useEffect(() => {
-        if (!user) {
-            return;
-        }
-
-        const fetchVODs = async () => {
-            await GetPublicVODsOfUser(user.id)
-                .then((res) => {
-                    if (res.success) {
-                        setVods(res.data ?? []);
-                    } else {
-                        toast(t(`api-response:${res.key}`), {
-                            toastId: res.requestId,
-                            type: "error",
-                        });
-                    }
-                })
-                .catch((_) => {
-                    toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "client-fetch-error-id",
-                        type: "error",
-                    });
-                });
-        };
-
-        fetchVODs();
-    }, [user]);
-
-    useEffect(() => {
-        const fetchUserInfo = async () => {
-            await GetUserById(params.userId)
-                .then((userRes) => {
-                    if (userRes.success) {
-                        setUser(userRes.data ?? null);
-
-                        setPlayerInfo((prev) => ({
-                            ...prev,
-                            streamer: {
-                                name: userRes.data?.username ?? t("common:streamer"),
-                            },
-                        }));
-                    } else {
-                        toast(t(`api-response:${userRes.key}`), {
-                            toastId: userRes.requestId,
-                            type: "error",
-                        });
-                    }
-                })
-                .catch((_) => {
-                    toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "client-fetch-error-id",
-                        type: "error",
-                    });
-                });
-        };
-
-        fetchUserInfo();
-    }, [params.userId]);
 
     return (
         <div className="ml-4 flex h-full gap-6 overflow-hidden">
