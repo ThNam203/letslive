@@ -25,7 +25,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { GetUserById } from "@/lib/api/user";
+import { GetUserByIdCached } from "@/lib/api/user-cache";
 import { toast } from "@/components/utils/toast";
 
 export type VODVariant = "default" | "with-user" | "editable";
@@ -83,7 +83,7 @@ export default function MediaCard(props: MediaCardProps) {
         const needsUser = isLive || isWithUser;
         if (!needsUser) return;
         let cancelled = false;
-        GetUserById(userId)
+        GetUserByIdCached(userId)
             .then((res) => {
                 if (cancelled) return;
                 if (res.success) {
@@ -105,7 +105,7 @@ export default function MediaCard(props: MediaCardProps) {
         return () => {
             cancelled = true;
         };
-    }, [userId, isLive, isWithUser, providedUser, t]);
+    }, [userId, isLive, isWithUser, providedUser]);
 
     const goToTarget = () => {
         if (isLive) {
