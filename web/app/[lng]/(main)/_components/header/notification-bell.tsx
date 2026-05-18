@@ -32,7 +32,6 @@ export default function NotificationBell() {
     const notifState = useNotification();
     const [isOpen, setIsOpen] = useState(false);
     const lastFetchRef = useRef<number>(0);
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const fetchUnreadCount = useCallback(async () => {
         if (!userState.user) return;
@@ -49,12 +48,13 @@ export default function NotificationBell() {
     useEffect(() => {
         if (!userState.user) return;
         fetchUnreadCount();
-        intervalRef.current = setInterval(() => {
+
+        const onVisible = () => {
             if (!document.hidden) fetchUnreadCount();
-        }, NOTIFICATION_POLL_INTERVAL_MS);
-        return () => {
-            if (intervalRef.current) clearInterval(intervalRef.current);
         };
+        document.addEventListener("visibilitychange", onVisible);
+        return () =>
+            document.removeEventListener("visibilitychange", onVisible);
     }, [userState.user, fetchUnreadCount]);
 
     const handleOpenChange = useCallback(async (open: boolean) => {
