@@ -1,12 +1,12 @@
 import LivestreamsPreviewView from "@/components/livestream/livesteams-preview";
 import { PopularVODView } from "@/components/livestream/popular-vod-view";
 import { myGetT } from "@/lib/i18n";
-function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
-export default async function HomePage() {
-    const { t } = await myGetT("common");
+type Params = Promise<{ lng: string }>;
+
+export default async function HomePage({ params }: { params: Params }) {
+    const { lng } = await params;
+    const { t } = await myGetT(lng, "common");
 
     return (
         <div className="flex max-h-full w-full flex-col overflow-x-hidden overflow-y-auto px-8 py-4 text-xs">

@@ -8,8 +8,8 @@ import StreamGuide from "./stream-guide";
 import UploadIcon from "./upload-icon";
 import { myGetT } from "@/lib/i18n";
 
-export async function Header() {
-    const { t } = await myGetT();
+export async function Header({ lng }: { lng: string }) {
+    const { t } = await myGetT(lng, "common");
 
     return (
         <nav className="border-border bg-background text-foreground sticky flex h-14 w-full flex-row items-center border-b px-4 py-2 text-xl font-semibold">
