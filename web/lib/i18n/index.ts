@@ -1,15 +1,22 @@
 import { headers } from "next/headers";
-import { I18N_HEADER_NAME, I18N_FALLBACK_LNG } from "./settings";
-import { createI18nInstance } from "@/lib/i18n/i18next";
+import { I18N_HEADER_NAME } from "./settings";
+import i18next from "@/lib/i18n/i18next";
 
 export async function myGetT(ns: string | string[] = "common") {
     const headerList = await headers();
-    const lng = headerList.get(I18N_HEADER_NAME) ?? I18N_FALLBACK_LNG;
+    const lng = headerList.get(I18N_HEADER_NAME);
 
-    const instance = await createI18nInstance(lng, ns);
+    if (lng && i18next.resolvedLanguage !== lng) {
+        await i18next.changeLanguage(lng);
+    }
+    if (ns && !i18next.hasLoadedNamespace(ns)) {
+        await i18next.loadNamespaces(ns);
+    }
+
+    const language = lng ?? i18next.resolvedLanguage ?? null;
 
     return {
-        t: instance.getFixedT(lng, Array.isArray(ns) ? ns[0] : ns),
-        i18n: instance,
+        t: i18next.getFixedT(language, Array.isArray(ns) ? ns[0] : ns),
+        i18n: i18next,
     };
 }
