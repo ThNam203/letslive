@@ -8,9 +8,10 @@ type BaseIconComponentProps = IconProp & { children: React.ReactNode };
 export function BaseIcon(rawProps: BaseIconComponentProps) {
     const { resolvedTheme } = useTheme();
 
-    if (!resolvedTheme) return null;
-
-    const props = { ...getDefaultIconProps(resolvedTheme), ...rawProps };
+    const props = {
+        ...getDefaultIconProps(resolvedTheme ?? "light"),
+        ...rawProps,
+    };
     const { color, width, height, className, viewBox, children, ...rest } =
         props;
 

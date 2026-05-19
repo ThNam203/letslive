@@ -51,9 +51,13 @@ export default function Livestreaming() {
     const [timeVideoStart, setTimeVideoStart] = useState<Date>(new Date());
 
     useEffect(() => {
-        const fetchUser = async () => {
+        const fetchAll = async () => {
             try {
-                const userRes = await GetUserById(params.userId);
+                const [userRes, livestreamRes, vodsRes] = await Promise.all([
+                    GetUserById(params.userId),
+                    GetLivestreamOfUser(params.userId),
+                    GetPublicVODsOfUser(params.userId),
+                ]);
 
                 if (!userRes.success) {
                     toast(t(`api-response:${userRes.key}`), {
@@ -63,28 +67,21 @@ export default function Livestreaming() {
                     return;
                 }
 
-                if (!userRes.data) throw new Error(); // TODO: throw meaning full error
+                if (!userRes.data) throw new Error();
 
                 setUser(userRes.data);
 
-                const livestreamRes = await GetLivestreamOfUser(
-                    userRes.data.id,
-                );
-
-                // only care if user is live
                 if (livestreamRes.success && livestreamRes.data) {
                     setLivestream(livestreamRes.data);
 
                     setPlayerInfo({
                         videoTitle: livestreamRes.data.title,
                         streamer: {
-                            name: userRes.data!.username,
+                            name: userRes.data.username,
                         },
                         videoUrl: `${GLOBAL.API_URL}/transcode/${livestreamRes.data.id}/index.m3u8`,
                     });
                 }
-
-                const vodsRes = await GetPublicVODsOfUser(userRes.data.id);
 
                 if (!vodsRes.success) {
                     toast(t(`api-response:${vodsRes.key}`), {
@@ -100,7 +97,7 @@ export default function Livestreaming() {
             }
         };
 
-        fetchUser();
+        fetchAll();
     }, [params.userId, t]);
 
     return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import useDmStore from "@/hooks/use-dm-store";
 import { useDmWebSocketContext } from "@/contexts/dm-websocket-context";
@@ -55,7 +55,10 @@ export default function ConversationPage() {
     const [hasMore, setHasMore] = useState(true);
     const isLoadingRef = useRef(false);
 
-    const currentMessages = messages[conversationId] || [];
+    const currentMessages = useMemo(
+        () => messages[conversationId] || [],
+        [messages, conversationId],
+    );
     const currentTypingUsers = typingUsers[conversationId] || [];
 
     // Set active conversation

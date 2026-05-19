@@ -1,4 +1,4 @@
-import { TFunction } from "next-i18next";
+import { TFunction } from "i18next";
 
 export function dateDiffFromNow(pastDate: string, t: TFunction) {
     const now = new Date();

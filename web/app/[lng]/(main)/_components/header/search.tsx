@@ -9,9 +9,18 @@ import { SearchUsersByUsername } from "@/lib/api/user";
 import { toast } from "@/components/utils/toast";
 import { Input } from "@/components/ui/input";
 import IconClose from "@/components/icons/close";
+import IconSearch from "@/components/icons/search";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/utils/cn";
+import { MQ_MAX_MD } from "@/constant/breakpoints";
 import { SEARCH_QUERY_MAX_LENGTH } from "@/constant/field-limits";
+import useMediaQuery from "@/hooks/use-media-query";
+import {
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function SearchBar({
     onSearch,
@@ -24,6 +33,8 @@ export default function SearchBar({
     const [results, setResults] = useState<PublicUser[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [showResults, setShowResults] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const isSmallScreen = useMediaQuery(MQ_MAX_MD);
     const { t } = useT([
         "common",
         "api-response",
@@ -68,7 +79,7 @@ export default function SearchBar({
         }, 1000);
 
         return () => clearTimeout(timer);
-    }, [query, onSearch]);
+    }, [query, onSearch, t]);
 
     const handleClear = () => {
         setQuery("");
@@ -76,8 +87,12 @@ export default function SearchBar({
         setShowResults(false);
     };
 
-    return (
-        <div className={cn("relative w-full", className)}>
+    const handleResultClick = () => {
+        setMobileOpen(false);
+    };
+
+    const searchInput = (
+        <div className="relative w-[300px] lg:w-[400px]">
             <div className="relative">
                 <Input
                     type="text"
@@ -87,6 +102,7 @@ export default function SearchBar({
                     onChange={(e) => setQuery(e.target.value)}
                     className="border-border pr-8"
                     onFocus={() => query.trim() && setShowResults(true)}
+                    autoFocus={isSmallScreen}
                 />
                 {query && (
                     <button
@@ -110,11 +126,12 @@ export default function SearchBar({
             )}
 
             {showResults && results.length > 0 && !isLoading && (
-                <div className="bg-background absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm shadow-md">
+                <div className="bg-background absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm border shadow-md">
                     {results.map((user) => (
                         <Link
                             key={user.id}
                             href={`/users/${user.id}`}
+                            onClick={handleResultClick}
                             className="flex w-full cursor-pointer flex-row items-center gap-3 p-2 hover:bg-gray-400"
                         >
                             <Avatar className="h-8 w-8">
@@ -152,4 +169,31 @@ export default function SearchBar({
             )}
         </div>
     );
+
+    if (isSmallScreen) {
+        return (
+            <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
+                <DialogTrigger asChild>
+                    <button
+                        type="button"
+                        aria-label={t("common:search_users")}
+                        className="flex-1 justify-end hover:bg-background-hover flex mr-2 rounded-full"
+                    >
+                        <IconSearch />
+                    </button>
+                </DialogTrigger>
+                <DialogContent
+                    showCloseButton={false}
+                    className="top-20 left-1/2 w-[92vw] max-w-md translate-y-0 p-4"
+                >
+                    <DialogTitle className="sr-only">
+                        {t("common:search_users")}
+                    </DialogTitle>
+                    {searchInput}
+                </DialogContent>
+            </Dialog>
+        );
+    }
+
+    return <div className={cn("relative w-full flex flex-row justify-center", className)}>{searchInput}</div>;
 }

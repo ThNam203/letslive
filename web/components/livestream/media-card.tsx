@@ -25,7 +25,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { GetUserById } from "@/lib/api/user";
+import { GetUserByIdCached } from "@/lib/api/user-cache";
 import { toast } from "@/components/utils/toast";
 
 export type VODVariant = "default" | "with-user" | "editable";
@@ -83,7 +83,7 @@ export default function MediaCard(props: MediaCardProps) {
         const needsUser = isLive || isWithUser;
         if (!needsUser) return;
         let cancelled = false;
-        GetUserById(userId)
+        GetUserByIdCached(userId)
             .then((res) => {
                 if (cancelled) return;
                 if (res.success) {
@@ -126,7 +126,7 @@ export default function MediaCard(props: MediaCardProps) {
                 <Hover3DBox
                     showStream={true}
                     imageSrc={thumbnailUrl}
-                    fallbackSrc="/images/streaming.jpg"
+                    fallbackSrc="/images/streaming.webp"
                     className="cursor-pointer"
                     onClick={goToTarget}
                 />
@@ -161,7 +161,7 @@ export default function MediaCard(props: MediaCardProps) {
                     width={500}
                     height={500}
                     onClick={isEditable ? undefined : goToTarget}
-                    fallbackSrc="/images/streaming.jpg"
+                    fallbackSrc="/images/streaming.webp"
                     alwaysRefresh={false}
                 />
             </div>

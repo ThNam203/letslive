@@ -23,8 +23,9 @@ export async function generateStaticParams() {
     }));
 }
 
-export async function generateMetadata() {
-    const { t } = await myGetT("common");
+export async function generateMetadata({ params }: { params: Params }) {
+    const { lng } = await params;
+    const { t } = await myGetT(lng, "common");
 
     return {
         title: t("app_title"),
@@ -53,7 +54,7 @@ export default async function RootLayout({
     );
 
     return (
-        <html lang={lng} dir={dir(lng)}>
+        <html lang={lng} dir={dir(lng)} suppressHydrationWarning>
             <body className={inter.className}>
                 {USE_MOCK_API ? (
                     <MockProvider>{content}</MockProvider>

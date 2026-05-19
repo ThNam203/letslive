@@ -2,7 +2,7 @@
 import { Slider } from "@/components/ui/slider";
 import { ClassValue } from "clsx";
 import { useRef, useState } from "react";
-import ReactPlayer from "react-player";
+import type ReactPlayer from "react-player";
 import screenfull from "screenfull";
 import { cn } from "@/utils/cn";
 import {

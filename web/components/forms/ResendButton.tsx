@@ -62,9 +62,9 @@ export const ResendOtpButton: React.FC<ResendOtpButtonProps> = ({
                 type: "error",
             });
         } finally {
-            setIsResending(false); // Ensure loading state is reset
+            setIsResending(false);
         }
-    }, [onResend, initialCountdown, isButtonDisabled]); // Dependencies for useCallback
+    }, [onResend, initialCountdown, isButtonDisabled, t]);
 
     const getButtonText = () => {
         if (isResending) {

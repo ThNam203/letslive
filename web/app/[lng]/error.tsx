@@ -18,7 +18,7 @@ export default function GlobalError({ error }: { error: Error }) {
         <div className="flex min-h-screen w-full flex-col items-center justify-center p-4">
             <div className="flex max-w-[600px] items-center justify-center text-center">
                 <Image
-                    src="/images/pc-error.png"
+                    src="/images/pc-error.webp"
                     alt={t("accessibility:error_500_illustration")}
                     width={400}
                     height={300}
