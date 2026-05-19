@@ -204,7 +204,7 @@ export default function ChatPanel({
         };
 
         fetchMessages();
-    }, [roomId]);
+    }, [roomId, t]);
 
     useEffect(() => {
         let cancelled = false;
@@ -295,7 +295,7 @@ export default function ChatPanel({
             }
             wsRef.current = null;
         };
-    }, [user, roomId]);
+    }, [user, roomId, t]);
 
     return (
         <div className="relative flex h-full w-full flex-col">

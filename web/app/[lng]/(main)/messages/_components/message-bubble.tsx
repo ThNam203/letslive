@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { DmMessage, DmMessageType } from "@/types/dm";
 import { parseEmotes } from "@/utils/chat-parser";
 import useT from "@/hooks/use-translation";
@@ -79,10 +80,13 @@ export default function MessageBubble({
                                     href={url}
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    className="relative block max-h-60 w-full overflow-hidden rounded"
                                 >
-                                    <img
+                                    <Image
                                         src={url}
                                         alt={t("image_alt", { number: i + 1 })}
+                                        layout="fill"
+                                        unoptimized
                                         className="max-h-60 w-full cursor-pointer rounded object-cover transition-opacity hover:opacity-90"
                                     />
                                 </a>

@@ -77,7 +77,7 @@ export default function VODPage() {
         };
 
         fetchVODInfo();
-    }, [params.vodId]);
+    }, [params.vodId, t]);
 
     const getViewThreshold = () => {
         let threshold = 15;
@@ -152,7 +152,7 @@ export default function VODPage() {
         };
 
         fetchVODs();
-    }, [user]);
+    }, [user, t]);
 
     useEffect(() => {
         const fetchUserInfo = async () => {
@@ -183,7 +183,7 @@ export default function VODPage() {
         };
 
         fetchUserInfo();
-    }, [params.userId]);
+    }, [params.userId, t]);
 
     return (
         <div className="ml-4 flex h-full gap-6 overflow-hidden">

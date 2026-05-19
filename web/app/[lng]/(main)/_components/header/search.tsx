@@ -68,7 +68,7 @@ export default function SearchBar({
         }, 1000);
 
         return () => clearTimeout(timer);
-    }, [query, onSearch]);
+    }, [query, onSearch, t]);
 
     const handleClear = () => {
         setQuery("");

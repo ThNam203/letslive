@@ -43,7 +43,7 @@ const LivestreamsPreviewView = () => {
         };
 
         void fetchLivestreams();
-    }, []);
+    }, [t]);
 
     if (isLoading) {
         return <LoadingSkeleton />;

@@ -40,7 +40,7 @@ export function PopularVODView() {
         };
 
         void fetchData();
-    }, []);
+    }, [t]);
 
     if (isLoading) {
         return <LoadingSkeleton />;

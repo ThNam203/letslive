@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { useState, useRef, useCallback } from "react";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import IconSend from "@/components/icons/send";
@@ -99,7 +100,7 @@ export default function MessageInput({
                 fileInputRef.current.value = "";
             }
         },
-        [selectedFiles.length],
+        [selectedFiles.length, t],
     );
 
     const removeFile = useCallback((index: number) => {
@@ -190,9 +191,11 @@ export default function MessageInput({
                 <div className="mb-2 flex flex-wrap gap-2">
                     {selectedFiles.map((sf, index) => (
                         <div key={sf.previewUrl} className="relative">
-                            <img
+                            <Image
                                 src={sf.previewUrl}
                                 alt={t("preview_alt", { number: index + 1 })}
+                                unoptimized
+                                layout="fill"
                                 className="h-20 w-20 rounded-lg border object-cover"
                             />
                             <button
