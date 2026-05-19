@@ -39,10 +39,17 @@ const nextConfig = {
     },
 };
 
-module.exports = withSentryConfig(nextConfig, {
+const isProductionEnvironment =
+    process.env.NEXT_PUBLIC_ENVIRONMENT === "production";
+
+const sentryWebpackPluginOptions = {
     org: "vnuhcm-uit-university-of-infor",
     project: "letslive",
     silent: !process.env.CI,
     authToken: process.env.SENTRY_AUTH_TOKEN,
     widenClientFileUpload: true,
-});
+};
+
+module.exports = isProductionEnvironment
+    ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+    : nextConfig;
