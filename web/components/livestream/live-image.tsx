@@ -70,6 +70,7 @@ export default function LiveImage({
         <div ref={containerRef} className="contents">
             <Image
                 {...props}
+                alt={props.alt ?? ""}
                 src={imgSrc}
                 unoptimized={alwaysRefresh}
                 onError={

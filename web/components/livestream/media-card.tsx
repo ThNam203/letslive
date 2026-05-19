@@ -105,7 +105,7 @@ export default function MediaCard(props: MediaCardProps) {
         return () => {
             cancelled = true;
         };
-    }, [userId, isLive, isWithUser, providedUser]);
+    }, [userId, isLive, isWithUser, providedUser, t]);
 
     const goToTarget = () => {
         if (isLive) {

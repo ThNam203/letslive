@@ -38,7 +38,7 @@ export default function VODsEdit() {
         };
 
         fetchVODs();
-    }, [user]);
+    }, [user, t]);
 
     return (
         <>

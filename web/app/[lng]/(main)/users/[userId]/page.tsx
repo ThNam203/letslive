@@ -98,7 +98,7 @@ export default function Livestreaming() {
         };
 
         fetchAll();
-    }, [params.userId]);
+    }, [params.userId, t]);
 
     return (
         <div className="ml-4 flex h-full gap-6 overflow-hidden">

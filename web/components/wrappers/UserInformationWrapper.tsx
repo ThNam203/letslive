@@ -3,7 +3,7 @@
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
 import { GetMeProfile } from "@/lib/api/user";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "@/components/utils/toast";
 
@@ -16,8 +16,12 @@ export default function UserInformationWrapper({
     const { t } = useT(["fetch-error", "api-response"]);
     const router = useRouter();
     const pathname = usePathname();
+    const hasFetchedRef = useRef(false);
 
     useEffect(() => {
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
+
         const fetchUser = async () => {
             setIsLoading(true);
             GetMeProfile()
@@ -47,7 +51,7 @@ export default function UserInformationWrapper({
         };
 
         fetchUser();
-    }, []);
+    }, [setUser, setIsLoading, router, pathname, t]);
 
     // Render children immediately - user fetch happens in background
     return <>{children}</>;

@@ -108,7 +108,7 @@ export default function VODPage() {
         };
 
         fetchAll();
-    }, [params.vodId, params.userId]);
+    }, [params.vodId, params.userId, t]);
 
     const getViewThreshold = () => {
         let threshold = 15;
