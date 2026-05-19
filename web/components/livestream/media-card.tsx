@@ -126,7 +126,7 @@ export default function MediaCard(props: MediaCardProps) {
                 <Hover3DBox
                     showStream={true}
                     imageSrc={thumbnailUrl}
-                    fallbackSrc="/images/streaming.jpg"
+                    fallbackSrc="/images/streaming.webp"
                     className="cursor-pointer"
                     onClick={goToTarget}
                 />
@@ -161,7 +161,7 @@ export default function MediaCard(props: MediaCardProps) {
                     width={500}
                     height={500}
                     onClick={isEditable ? undefined : goToTarget}
-                    fallbackSrc="/images/streaming.jpg"
+                    fallbackSrc="/images/streaming.webp"
                     alwaysRefresh={false}
                 />
             </div>

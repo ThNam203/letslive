@@ -36,7 +36,7 @@ const Hover3DBox = ({
                 src={imageSrc}
                 alt={t("accessibility:livestream_preview")}
                 className="absolute top-0 left-0 z-10 aspect-video w-full cursor-pointer duration-100 ease-linear group-hover:translate-x-2 group-hover:-translate-y-2"
-                fallbackSrc={fallbackSrc || "/images/streaming.jpg"}
+                fallbackSrc={fallbackSrc || "/images/streaming.webp"}
                 refreshInterval={30000}
                 alwaysRefresh={true}
             />
