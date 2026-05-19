@@ -1,12 +1,8 @@
 import IconLoader from "@/components/icons/loader";
 import { myGetT } from "@/lib/i18n";
-import { cookies } from "next/headers";
-import { I18N_COOKIE_NAME, I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
 
 export default async function LoadingPage() {
-    const cookieStore = await cookies();
-    const lng = cookieStore.get(I18N_COOKIE_NAME)?.value ?? I18N_FALLBACK_LNG;
-    const { t } = await myGetT(lng, "common");
+    const { t } = await myGetT("common");
 
     return (
         <div className="from-background to-muted/20 flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b p-4">

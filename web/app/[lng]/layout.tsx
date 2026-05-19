@@ -23,9 +23,8 @@ export async function generateStaticParams() {
     }));
 }
 
-export async function generateMetadata({ params }: { params: Params }) {
-    const { lng } = await params;
-    const { t } = await myGetT(lng, "common");
+export async function generateMetadata() {
+    const { t } = await myGetT("common");
 
     return {
         title: t("app_title"),
