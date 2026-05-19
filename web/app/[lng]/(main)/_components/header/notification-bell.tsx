@@ -21,7 +21,7 @@ import IconBell from "@/components/icons/bell";
 import { toast } from "@/components/utils/toast";
 import {
     NotificationPopupContent,
-    NOTIFICATION_POLL_INTERVAL_MS,
+    NOTIFICATION_REFETCH_TTL_MS,
 } from "@/components/notification";
 
 export default function NotificationBell() {
@@ -61,7 +61,7 @@ export default function NotificationBell() {
         setIsOpen(open);
         if (
             open &&
-            Date.now() - lastFetchRef.current >= NOTIFICATION_POLL_INTERVAL_MS
+            Date.now() - lastFetchRef.current >= NOTIFICATION_REFETCH_TTL_MS
         ) {
             useNotification.getState().setIsLoading(true);
             try {

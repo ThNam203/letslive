@@ -20,7 +20,6 @@ export default function LiveImage({
     const [imgSrc, setImgSrc] = useState<string>(
         alwaysRefresh ? fallbackSrc : src,
     );
-    const [lastFailed, setLastFailed] = useState<boolean>(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const isVisibleRef = useRef<boolean>(true);
 
@@ -30,27 +29,19 @@ export default function LiveImage({
         const tryLoadImage = () => {
             const testImg = new window.Image();
             testImg.src = `${src}?t=${Date.now()}`;
-            testImg.onload = () => {
-                setImgSrc(testImg.src);
-                setLastFailed(false);
-            };
-            testImg.onerror = () => {
-                setImgSrc(fallbackSrc);
-                setLastFailed(true);
-            };
+            testImg.onload = () => setImgSrc(testImg.src);
+            testImg.onerror = () => setImgSrc(fallbackSrc);
         };
 
         tryLoadImage();
 
         const interval = setInterval(() => {
             if (!isVisibleRef.current) return;
-            if (alwaysRefresh || lastFailed) {
-                tryLoadImage();
-            }
+            tryLoadImage();
         }, refreshInterval);
 
         return () => clearInterval(interval);
-    }, [src, fallbackSrc, refreshInterval, alwaysRefresh, lastFailed]);
+    }, [src, fallbackSrc, refreshInterval, alwaysRefresh]);
 
     useEffect(() => {
         if (!alwaysRefresh) return;
