@@ -54,7 +54,7 @@ export default async function RootLayout({
     );
 
     return (
-        <html lang={lng} dir={dir(lng)} suppressHydrationWarning>
+        <html lang={lng} dir={dir(lng)}>
             <body className={inter.className}>
                 {USE_MOCK_API ? (
                     <MockProvider>{content}</MockProvider>
