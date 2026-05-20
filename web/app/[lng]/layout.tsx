@@ -11,6 +11,7 @@ import TranslationsProvider from "@/components/utils/i18n-provider";
 import { ThemeProviderWrapper } from "@/components/utils/theme-provider-wrapper";
 import UserInformationWrapper from "@/components/wrappers/UserInformationWrapper";
 import MockProvider from "@/components/utils/mock-provider";
+import { JsonLd } from "@/components/seo/json-ld";
 import type { Metadata } from "next";
 
 const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
@@ -80,6 +81,32 @@ export default async function RootLayout({
     params: Params;
 }) {
     const { lng } = await params;
+    const { t } = await myGetT("common");
+    const appName = t("app_title");
+    const appDescription = t("app_description");
+
+    const jsonLd = [
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: appName,
+            url: SITE_URL,
+            logo: `${SITE_URL}/favicon-32x32.png`,
+        },
+        {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: appName,
+            url: SITE_URL,
+            description: appDescription,
+            inLanguage: lng,
+            potentialAction: {
+                "@type": "SearchAction",
+                target: `${SITE_URL}/${lng}/?q={search_term_string}`,
+                "query-input": "required name=search_term_string",
+            },
+        },
+    ];
 
     const content = (
         <TranslationsProvider>
@@ -96,6 +123,7 @@ export default async function RootLayout({
     return (
         <html lang={lng} dir={dir(lng)}>
             <body className={inter.className}>
+                <JsonLd data={jsonLd} />
                 {USE_MOCK_API ? (
                     <MockProvider>{content}</MockProvider>
                 ) : (
