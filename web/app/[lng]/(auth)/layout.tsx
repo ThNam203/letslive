@@ -2,6 +2,11 @@ import "@/app/globals.css";
 import LanguageSwitch from "@/components/utils/language-switch";
 import ThemeSwitch from "@/components/utils/theme-switch";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+    robots: { index: false, follow: false },
+};
 
 export default async function RootLayout({
     children,

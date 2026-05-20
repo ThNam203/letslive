@@ -69,7 +69,27 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next({ headers });
     }
 
-    return NextResponse.next({ headers });
+    const next = NextResponse.next({ headers });
+
+    // block crawlers on private routes (auth, settings, dms, wallet, etc.)
+    const pathNoLocale = request.nextUrl.pathname.replace(
+        new RegExp(`^/(${I18N_LANGUAGES.join("|")})(?=/|$)`),
+        "",
+    );
+    const PRIVATE_PREFIXES = [
+        "/settings",
+        "/messages",
+        "/notifications",
+        "/wallet",
+        "/account-setup",
+        "/login",
+        "/signup",
+    ];
+    if (PRIVATE_PREFIXES.some((p) => pathNoLocale.startsWith(p))) {
+        next.headers.set("X-Robots-Tag", "noindex, nofollow");
+    }
+
+    return next;
 }
 
 export const config = {

@@ -1,5 +1,13 @@
 {
     "app_title": "Let's Live",
+    "app_description": "Let's Live — watch live streams and on-demand videos from creators around the world.",
+    "meta_home_title": "Live streams and videos",
+    "meta_login_title": "Log in",
+    "meta_signup_title": "Sign up",
+    "meta_user_offline": "{{username}} is offline",
+    "meta_user_live": "{{username}} is live: {{title}}",
+    "meta_user_description": "Watch {{username}} on Let's Live. {{bio}}",
+    "meta_vod_description": "Watch \"{{title}}\" by {{username}} on Let's Live.",
     "loading": "Loading...",
     "setting": "Setting",
     "save": "Save",

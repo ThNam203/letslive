@@ -1,5 +1,13 @@
 {
     "app_title": "Let's Live",
+    "app_description": "Let's Live — xem livestream và video theo yêu cầu từ các nhà sáng tạo khắp thế giới.",
+    "meta_home_title": "Livestream và video",
+    "meta_login_title": "Đăng nhập",
+    "meta_signup_title": "Đăng ký",
+    "meta_user_offline": "{{username}} đang ngoại tuyến",
+    "meta_user_live": "{{username}} đang phát trực tiếp: {{title}}",
+    "meta_user_description": "Xem {{username}} trên Let's Live. {{bio}}",
+    "meta_vod_description": "Xem \"{{title}}\" bởi {{username}} trên Let's Live.",
     "loading": "Đang tải...",
     "setting": "Cài đặt",
     "save": "Lưu",
