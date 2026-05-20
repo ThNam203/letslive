@@ -67,7 +67,13 @@ export default function Livestreaming() {
                     return;
                 }
 
-                if (!userRes.data) throw new Error();
+                if (!userRes.data) {
+                    toast(t("api-response:res_err_user_not_found"), {
+                        toastId: userRes.requestId,
+                        type: "error",
+                    });
+                    return;
+                }
 
                 setUser(userRes.data);
 
