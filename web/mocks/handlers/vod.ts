@@ -97,7 +97,8 @@ export const vodHandlers = [
             thumbnailUrl: null,
             viewCount: 0,
             duration: 0,
-            playbackUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+            playbackUrl:
+                "https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8",
             status: "ready",
             originalFileUrl: null,
             createdAt: now(),

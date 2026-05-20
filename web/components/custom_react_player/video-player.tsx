@@ -169,6 +169,7 @@ export function VideoPlayer({
                         onDuration={(d: number) => setDuration(d)}
                         onBuffer={() => setIsLoading(true)}
                         onBufferEnd={() => setIsLoading(false)}
+                        onEnded={pauseVideo}
                         config={{ file: { forceHLS: true } }}
                         onReady={(reactPlayer) => {
                             setIsLoading(false);
@@ -331,12 +332,12 @@ function PlayerControls({
     const isAtLive = mode === "live" && duration > 0 && duration - currentTime <= 3;
 
     return (
-        <div className="flex w-full flex-col px-3 pb-3 sm:px-4 sm:pb-4">
+        <div className="mx-3 mb-1 flex flex-col rounded bg-black/40 px-3 pt-2 pb-1 sm:mx-4 sm:mb-2 sm:px-4 sm:pt-3 sm:pb-2">
             {/* Live badge — live mode only */}
             {mode === "live" && (
                 <div
                     className={cn(
-                        "mb-2 flex w-fit items-center gap-2 rounded bg-black/30 px-2 py-1 text-xs font-semibold text-red-500 sm:text-sm",
+                        "mb-2 flex w-fit items-center gap-2 px-1 py-1 text-xs font-semibold text-red-500 sm:text-sm",
                         !isAtLive &&
                             "cursor-pointer transition-opacity hover:opacity-80",
                     )}
@@ -353,7 +354,7 @@ function PlayerControls({
             )}
 
             {/* Progress bar */}
-            <div className="mb-2 w-full cursor-pointer sm:mb-3">
+            <div className="mb-2 flex w-full cursor-pointer items-center sm:mb-3">
                 <Slider
                     value={[duration !== 0 ? (currentTime / duration) * 100 : 0]}
                     onValueChange={(value) =>
@@ -393,7 +394,7 @@ function PlayerControls({
 
                     {/* Time display — VOD only, hidden on small screens */}
                     {mode === "vod" && (
-                        <span className="hidden h-8 items-center rounded bg-black/30 px-2 text-xs text-white sm:flex sm:h-10 sm:px-3 sm:text-sm">
+                        <span className="hidden h-8 items-center px-2 text-xs text-white sm:flex sm:h-10 sm:px-3 sm:text-sm">
                             {formatTime(currentTime)} / {formatTime(duration)}
                         </span>
                     )}
@@ -497,7 +498,7 @@ function ControlButton({
         <div
             onClick={onClick}
             title={title}
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded bg-black/30 transition-colors hover:bg-black/50 sm:h-10 sm:w-10"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded transition-colors hover:bg-white/10 sm:h-10 sm:w-10"
         >
             {children}
         </div>
@@ -526,7 +527,7 @@ function VolumeControl({
               : IconVolumeUp;
 
     return (
-        <div className="flex h-8 items-center gap-1 rounded bg-black/30 px-2 transition-colors hover:bg-black/50 sm:h-10 sm:gap-2 sm:px-2">
+        <div className="flex h-8 items-center gap-1 rounded px-2 transition-colors hover:bg-white/10 sm:h-10 sm:gap-2 sm:px-2">
             <div
                 className="flex cursor-pointer items-center justify-center"
                 onClick={() =>
@@ -579,7 +580,7 @@ function Combobox({
             className="relative flex cursor-pointer items-center justify-center"
         >
             <div
-                className="flex h-8 cursor-pointer items-center justify-center rounded bg-black/30 px-2 text-xs text-white transition-colors hover:bg-black/50 sm:h-10 sm:px-3 sm:text-sm"
+                className="flex h-8 cursor-pointer items-center justify-center rounded px-2 text-xs text-white transition-colors hover:bg-white/10 sm:h-10 sm:px-3 sm:text-sm"
                 onClick={handleTriggerClick}
             >
                 {value}
