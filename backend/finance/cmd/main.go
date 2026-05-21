@@ -16,6 +16,8 @@ import (
 	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/shared/pkg/tracer"
 	sharedutils "sen1or/letslive/shared/utils"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
@@ -43,7 +45,6 @@ func main() {
 	defer cfgManager.Stop()
 
 	config := cfgManager.GetConfig()
-
 	sharedutils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
 
 	serviceName := config.Service.Name
@@ -58,7 +59,7 @@ func main() {
 	dbConn := sharedutils.ConnectDB(ctx, config.Database.ConnectionString)
 	defer dbConn.Close()
 
-	server := api.NewAPIServer(config)
+	server := SetupServer(ctx, dbConn, registry, config)
 	go func() {
 		logger.Infof(ctx, "starting server on %s:%d...", config.Service.Hostname, config.Service.APIPort)
 		server.ListenAndServe(ctx, false)
@@ -99,4 +100,10 @@ func main() {
 
 	shutdownWg.Wait()
 	logger.Infof(shutdownCtx, "service shut down complete.")
+}
+
+func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
+	// TODO: wire repositories, services, handlers as endpoints land per API_SPEC.md / docs/openapi.yaml.
+	// ctx and registry will be consumed by storage clients and gateway constructors once added.
+	return api.NewAPIServer(cfg, dbConn)
 }
