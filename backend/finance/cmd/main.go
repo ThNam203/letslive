@@ -10,12 +10,16 @@ import (
 
 	"sen1or/letslive/finance/api"
 	cfg "sen1or/letslive/finance/config"
+	gatewaypayment "sen1or/letslive/finance/gateway/payment"
+	mockgateway "sen1or/letslive/finance/gateway/payment/mock"
 	currencyHandler "sen1or/letslive/finance/handlers/currency"
+	depositHandler "sen1or/letslive/finance/handlers/deposit"
 	paymentHandler "sen1or/letslive/finance/handlers/payment"
 	transactionHandler "sen1or/letslive/finance/handlers/transaction"
 	walletHandler "sen1or/letslive/finance/handlers/wallet"
 	"sen1or/letslive/finance/repositories"
 	currencyService "sen1or/letslive/finance/services/currency"
+	depositService "sen1or/letslive/finance/services/deposit"
 	paymentService "sen1or/letslive/finance/services/payment"
 	transactionService "sen1or/letslive/finance/services/transaction"
 	walletService "sen1or/letslive/finance/services/wallet"
@@ -118,15 +122,21 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var transactionRepo = repositories.NewTransactionRepository(dbConn)
 	var paymentRepo = repositories.NewPaymentRepository(dbConn)
 
+	var gateways = []gatewaypayment.PaymentGateway{
+		mockgateway.NewMockGateway(),
+	}
+
 	var wSvc = walletService.NewWalletService(accountRepo, currencyRepo)
 	var cSvc = currencyService.NewCurrencyService(currencyRepo)
 	var tSvc = transactionService.NewTransactionService(accountRepo, transactionRepo, currencyRepo)
 	var pSvc = paymentService.NewPaymentService(paymentRepo, transactionRepo, currencyRepo)
+	var dSvc = depositService.NewDepositService(accountRepo, currencyRepo, transactionRepo, paymentRepo, gateways, cfg.Deposit.MinAmount, cfg.Deposit.MaxAmount)
 
 	var wHandler = walletHandler.NewWalletHandler(wSvc)
 	var cHandler = currencyHandler.NewCurrencyHandler(cSvc)
 	var tHandler = transactionHandler.NewTransactionHandler(tSvc)
 	var pHandler = paymentHandler.NewPaymentHandler(pSvc)
+	var dHandler = depositHandler.NewDepositHandler(dSvc)
 
-	return api.NewAPIServer(wHandler, cHandler, tHandler, pHandler, cfg, dbConn)
+	return api.NewAPIServer(wHandler, cHandler, tHandler, pHandler, dHandler, cfg, dbConn)
 }

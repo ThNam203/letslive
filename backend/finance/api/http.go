@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sen1or/letslive/finance/config"
 	"sen1or/letslive/finance/handlers/currency"
+	"sen1or/letslive/finance/handlers/deposit"
 	"sen1or/letslive/finance/handlers/general"
 	"sen1or/letslive/finance/handlers/payment"
 	"sen1or/letslive/finance/handlers/transaction"
@@ -29,6 +30,7 @@ type APIServer struct {
 	currencyHandler    *currency.CurrencyHandler
 	transactionHandler *transaction.TransactionHandler
 	paymentHandler     *payment.PaymentHandler
+	depositHandler     *deposit.DepositHandler
 }
 
 func NewAPIServer(
@@ -36,6 +38,7 @@ func NewAPIServer(
 	currencyHandler *currency.CurrencyHandler,
 	transactionHandler *transaction.TransactionHandler,
 	paymentHandler *payment.PaymentHandler,
+	depositHandler *deposit.DepositHandler,
 	cfg *config.Config,
 	db *pgxpool.Pool,
 ) *APIServer {
@@ -48,6 +51,7 @@ func NewAPIServer(
 		currencyHandler:    currencyHandler,
 		transactionHandler: transactionHandler,
 		paymentHandler:     paymentHandler,
+		depositHandler:     depositHandler,
 	}
 }
 
@@ -67,6 +71,7 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("GET /v1/transactions/{transactionId}", a.transactionHandler.GetTransactionByIdPrivateHandler)
 	wrap("GET /v1/payments", a.paymentHandler.GetPaymentsPrivateHandler)
 	wrap("GET /v1/payments/{paymentId}", a.paymentHandler.GetPaymentByIdPrivateHandler)
+	wrap("POST /v1/deposits", a.depositHandler.InitiateDepositPrivateHandler)
 
 	// Health check
 	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)
