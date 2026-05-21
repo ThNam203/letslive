@@ -29,10 +29,17 @@ type Tracer struct {
 	BatchTimeout int    `yaml:"batchTimeout"` // in milli-second
 }
 
+// Deposit holds amount bounds (in minor units / cents) for the POST /deposits flow.
+type Deposit struct {
+	MinAmount int64 `yaml:"minAmount"`
+	MaxAmount int64 `yaml:"maxAmount"`
+}
+
 type Config struct {
 	Service  `yaml:"service"`
 	Database `yaml:"database"`
 	Tracer   `yaml:"tracer"`
+	Deposit  `yaml:"deposit"`
 }
 
 // TracerConfig interface implementation
