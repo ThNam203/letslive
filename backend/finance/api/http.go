@@ -73,6 +73,9 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("GET /v1/payments/{paymentId}", a.paymentHandler.GetPaymentByIdPrivateHandler)
 	wrap("POST /v1/deposits", a.depositHandler.InitiateDepositPrivateHandler)
 
+	// Public webhook (signature-verified inside handler, no JWT)
+	wrap("POST /v1/deposits/webhook/stripe", a.depositHandler.HandleStripeWebhookPublicHandler)
+
 	// Health check
 	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)
 	wrap("GET /", a.generalHandler.RouteNotFoundHandler)

@@ -35,11 +35,21 @@ type Deposit struct {
 	MaxAmount int64 `yaml:"maxAmount"`
 }
 
+// Stripe holds checkout-session redirect URLs and is augmented at runtime
+// with the API key and webhook secret loaded from environment variables.
+type Stripe struct {
+	SuccessURL    string `yaml:"successUrl"`
+	CancelURL     string `yaml:"cancelUrl"`
+	APIKey        string
+	WebhookSecret string
+}
+
 type Config struct {
 	Service  `yaml:"service"`
 	Database `yaml:"database"`
 	Tracer   `yaml:"tracer"`
 	Deposit  `yaml:"deposit"`
+	Stripe   `yaml:"stripe"`
 }
 
 // TracerConfig interface implementation
@@ -63,6 +73,9 @@ func PostProcess(config *Config) error {
 		dbURL.RawQuery = strings.Join(config.Database.Params, "&")
 	}
 	config.Database.ConnectionString = dbURL.String()
+
+	config.Stripe.APIKey = os.Getenv("FINANCE_STRIPE_API_KEY")
+	config.Stripe.WebhookSecret = os.Getenv("FINANCE_STRIPE_WEBHOOK_SECRET")
 
 	return nil
 }
