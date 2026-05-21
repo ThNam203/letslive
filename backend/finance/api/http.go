@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"sen1or/letslive/finance/config"
+	"sen1or/letslive/finance/handlers/currency"
 	"sen1or/letslive/finance/handlers/general"
+	"sen1or/letslive/finance/handlers/payment"
+	"sen1or/letslive/finance/handlers/transaction"
+	"sen1or/letslive/finance/handlers/wallet"
 	"sen1or/letslive/shared/middlewares"
 	"sen1or/letslive/shared/pkg/logger"
 	"time"
@@ -20,15 +24,30 @@ type APIServer struct {
 	logger     *zap.SugaredLogger
 	config     *config.Config
 
-	generalHandler *general.GeneralHandler
+	generalHandler     *general.GeneralHandler
+	walletHandler      *wallet.WalletHandler
+	currencyHandler    *currency.CurrencyHandler
+	transactionHandler *transaction.TransactionHandler
+	paymentHandler     *payment.PaymentHandler
 }
 
-func NewAPIServer(cfg *config.Config, db *pgxpool.Pool) *APIServer {
+func NewAPIServer(
+	walletHandler *wallet.WalletHandler,
+	currencyHandler *currency.CurrencyHandler,
+	transactionHandler *transaction.TransactionHandler,
+	paymentHandler *payment.PaymentHandler,
+	cfg *config.Config,
+	db *pgxpool.Pool,
+) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
 
-		generalHandler: general.NewGeneralHandler(db),
+		generalHandler:     general.NewGeneralHandler(db),
+		walletHandler:      walletHandler,
+		currencyHandler:    currencyHandler,
+		transactionHandler: transactionHandler,
+		paymentHandler:     paymentHandler,
 	}
 }
 
@@ -38,6 +57,16 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
 		sm.Handle(pattern, http.HandlerFunc(handlerFunc))
 	}
+
+	// Public routes
+	wrap("GET /v1/currencies", a.currencyHandler.GetCurrenciesPublicHandler)
+
+	// Private routes (require JWT via Kong)
+	wrap("GET /v1/wallet", a.walletHandler.GetWalletPrivateHandler)
+	wrap("GET /v1/transactions", a.transactionHandler.GetTransactionsPrivateHandler)
+	wrap("GET /v1/transactions/{transactionId}", a.transactionHandler.GetTransactionByIdPrivateHandler)
+	wrap("GET /v1/payments", a.paymentHandler.GetPaymentsPrivateHandler)
+	wrap("GET /v1/payments/{paymentId}", a.paymentHandler.GetPaymentByIdPrivateHandler)
 
 	// Health check
 	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)

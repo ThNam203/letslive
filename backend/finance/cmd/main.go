@@ -10,6 +10,15 @@ import (
 
 	"sen1or/letslive/finance/api"
 	cfg "sen1or/letslive/finance/config"
+	currencyHandler "sen1or/letslive/finance/handlers/currency"
+	paymentHandler "sen1or/letslive/finance/handlers/payment"
+	transactionHandler "sen1or/letslive/finance/handlers/transaction"
+	walletHandler "sen1or/letslive/finance/handlers/wallet"
+	"sen1or/letslive/finance/repositories"
+	currencyService "sen1or/letslive/finance/services/currency"
+	paymentService "sen1or/letslive/finance/services/payment"
+	transactionService "sen1or/letslive/finance/services/transaction"
+	walletService "sen1or/letslive/finance/services/wallet"
 
 	sharedconfig "sen1or/letslive/shared/config"
 	"sen1or/letslive/shared/pkg/discovery"
@@ -103,7 +112,21 @@ func main() {
 }
 
 func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
-	// TODO: wire repositories, services, handlers as endpoints land per API_SPEC.md / docs/openapi.yaml.
-	// ctx and registry will be consumed by storage clients and gateway constructors once added.
-	return api.NewAPIServer(cfg, dbConn)
+	// ctx and registry are consumed by storage/gateway constructors added in later PRs (Stripe gateway, etc.)
+	var accountRepo = repositories.NewAccountRepository(dbConn)
+	var currencyRepo = repositories.NewCurrencyRepository(dbConn)
+	var transactionRepo = repositories.NewTransactionRepository(dbConn)
+	var paymentRepo = repositories.NewPaymentRepository(dbConn)
+
+	var wSvc = walletService.NewWalletService(accountRepo, currencyRepo)
+	var cSvc = currencyService.NewCurrencyService(currencyRepo)
+	var tSvc = transactionService.NewTransactionService(accountRepo, transactionRepo, currencyRepo)
+	var pSvc = paymentService.NewPaymentService(paymentRepo, transactionRepo, currencyRepo)
+
+	var wHandler = walletHandler.NewWalletHandler(wSvc)
+	var cHandler = currencyHandler.NewCurrencyHandler(cSvc)
+	var tHandler = transactionHandler.NewTransactionHandler(tSvc)
+	var pHandler = paymentHandler.NewPaymentHandler(pSvc)
+
+	return api.NewAPIServer(wHandler, cHandler, tHandler, pHandler, cfg, dbConn)
 }
