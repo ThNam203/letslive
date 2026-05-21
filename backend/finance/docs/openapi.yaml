@@ -1,0 +1,416 @@
+openapi: 3.0.0
+info:
+  title: LetsLive Finance API
+  description: Wallet, transaction, and payment service for LetsLive. All endpoints are exposed through Kong under /finance/* and require JWT authentication unless noted.
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: wallet
+    description: User wallet and account balances
+  - name: currencies
+    description: Supported virtual currencies
+  - name: transactions
+    description: Transaction history and ledger entries
+  - name: deposits
+    description: Initiate and confirm fiat-to-virtual deposits
+  - name: payments
+    description: Payment provider records
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: jwt
+
+  schemas:
+    Meta:
+      type: object
+      properties:
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total:
+          type: integer
+
+    ResponseEnvelope:
+      type: object
+      properties:
+        requestId:
+          type: string
+        success:
+          type: boolean
+        code:
+          type: integer
+        key:
+          type: string
+        message:
+          type: string
+        data:
+          nullable: true
+        meta:
+          $ref: '#/components/schemas/Meta'
+        errorDetails:
+          nullable: true
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ownerId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [user_wallet, platform, escrow, fee]
+        status:
+          type: string
+          enum: [active, frozen, closed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Balance:
+      type: object
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        currencyCode:
+          type: string
+          example: SPARK
+        balance:
+          type: string
+          description: Decimal string
+          example: "1500.00"
+        lastEntryId:
+          type: string
+          format: uuid
+          nullable: true
+
+    Wallet:
+      type: object
+      properties:
+        account:
+          $ref: '#/components/schemas/Account'
+        balances:
+          type: array
+          items:
+            $ref: '#/components/schemas/Balance'
+
+    Currency:
+      type: object
+      properties:
+        code:
+          type: string
+          example: SPARK
+        name:
+          type: string
+          example: Spark
+        precision:
+          type: integer
+          example: 2
+
+    LedgerEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        transactionId:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        currencyCode:
+          type: string
+        amount:
+          type: string
+          description: Signed decimal string. Negative = debit, positive = credit.
+        createdAt:
+          type: string
+          format: date-time
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [reward, purchase, trade, donate, refund, fee, adjustment]
+        status:
+          type: string
+          enum: [created, processing, completed, failed, cancelled]
+        reference:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        actorId:
+          type: string
+          format: uuid
+        metadata:
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerEntry'
+
+    DepositRequest:
+      type: object
+      required: [provider, currencyCode, amount]
+      properties:
+        provider:
+          type: string
+          enum: [stripe, paypal]
+        currencyCode:
+          type: string
+          enum: [SPARK, FLARE]
+        amount:
+          type: string
+          description: Decimal string, min 1, max 10000
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        transactionId:
+          type: string
+          format: uuid
+          nullable: true
+        provider:
+          type: string
+          enum: [stripe, paypal]
+        providerReference:
+          type: string
+        currencyCode:
+          type: string
+        amount:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, completed, failed, cancelled]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    DepositResponse:
+      type: object
+      properties:
+        payment:
+          $ref: '#/components/schemas/Payment'
+        checkoutUrl:
+          type: string
+          format: uri
+
+security:
+  - cookieAuth: []
+
+paths:
+  /finance/wallet:
+    get:
+      tags: [wallet]
+      summary: Get current user's wallet overview (auto-creates account on first call)
+      responses:
+        '200':
+          description: Wallet retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Wallet'
+
+  /finance/currencies:
+    get:
+      tags: [currencies]
+      summary: List supported currencies
+      responses:
+        '200':
+          description: Currency list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Currency'
+
+  /finance/transactions:
+    get:
+      tags: [transactions]
+      summary: List current user's transactions (newest first)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated transactions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Transaction'
+
+  /finance/transactions/{id}:
+    get:
+      tags: [transactions]
+      summary: Get single transaction with ledger entries
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Transaction
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Transaction'
+        '404':
+          description: Not found / not owned by user (code 60004)
+
+  /finance/deposits:
+    post:
+      tags: [deposits]
+      summary: Initiate a deposit (purchase virtual currency)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepositRequest'
+      responses:
+        '200':
+          description: Deposit initiated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DepositResponse'
+
+  /finance/deposits/webhook:
+    post:
+      tags: [deposits]
+      summary: Payment provider webhook (internal; signature-verified, no JWT)
+      security: []
+      responses:
+        '200':
+          description: Webhook acknowledged
+        '400':
+          description: Signature verification failed
+
+  /finance/payments:
+    get:
+      tags: [payments]
+      summary: List current user's payment history
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Paginated payments
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Payment'
+
+  /finance/payments/{id}:
+    get:
+      tags: [payments]
+      summary: Get single payment record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payment
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Payment'
+        '404':
+          description: Not found (code 60006)
