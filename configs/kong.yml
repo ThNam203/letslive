@@ -373,10 +373,21 @@ services:
           - http
           - https
         paths:
-          - /finance/deposits/webhook
+          - ~/deposits/webhook/[^/]+$
         methods:
           - POST
-        strip_path: true
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+      - name: Finance_Public_Routes
+        protocols:
+          - http
+          - https
+        paths:
+          - /currencies
+        strip_path: false
         preserve_host: false
         https_redirect_status_code: 426
         request_buffering: true
@@ -386,8 +397,13 @@ services:
           - http
           - https
         paths:
-          - /finance
-        strip_path: true
+          - /wallet
+          - /transactions
+          - ~/transactions/[^/]+$
+          - /payments
+          - ~/payments/[^/]+$
+          - /deposits
+        strip_path: false
         preserve_host: false
         https_redirect_status_code: 426
         request_buffering: true

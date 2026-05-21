@@ -317,13 +317,13 @@ All responses follow the shared `Response[T]` format:
 
 ## Kong Gateway Configuration
 
-Register the finance service in Kong to route `/finance/*` to the finance backend:
+Finance follows the same Kong pattern as the other services (auth, user, livestream, vod): routes match resource paths directly with `strip_path: false`, and the service path `/v1` is appended on the upstream side. See `configs/kong.yml`. External callers hit:
 
-```
-Service name: finance-service
-Service host: finance.service.consul (via Consul DNS)
-Route path: /finance
-Strip path: true
-```
+| Public                    | JWT required                   | Webhook (signature-verified)        |
+|---------------------------|--------------------------------|-------------------------------------|
+| `GET /currencies`         | `GET /wallet`                  | `POST /deposits/webhook/stripe`     |
+|                           | `GET /transactions[/{id}]`     |                                     |
+|                           | `GET /payments[/{id}]`         |                                     |
+|                           | `POST /deposits`               |                                     |
 
-This means the finance backend receives requests at `/wallet`, `/currencies`, etc. (without the `/finance` prefix), which matches the routes defined in `api/http.go`.
+Kong forwards these to `/v1/<resource>` on the finance backend (`api/http.go`).

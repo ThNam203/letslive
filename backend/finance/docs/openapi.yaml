@@ -1,12 +1,12 @@
 openapi: 3.0.0
 info:
   title: LetsLive Finance API
-  description: Wallet, transaction, and payment service for LetsLive. All endpoints are exposed through Kong under /finance/* and require JWT authentication unless noted.
+  description: Wallet, transaction, deposit, and payment service for LetsLive. External clients hit `/wallet`, `/transactions`, `/payments`, `/deposits`, `/currencies` and `/deposits/webhook/{provider}` via Kong (no `/finance/` prefix). Kong forwards to `/v1/<resource>` on the finance backend. Private routes require a `ACCESS_TOKEN` cookie validated by Kong's JWT plugin; webhook routes are signature-verified by the provider.
   version: 0.1.0
 
 servers:
   - url: http://localhost:8080
-    description: Local development server
+    description: Local development server (via Kong)
 
 tags:
   - name: wallet
@@ -25,7 +25,7 @@ components:
     cookieAuth:
       type: apiKey
       in: cookie
-      name: jwt
+      name: ACCESS_TOKEN
 
   schemas:
     Meta:
@@ -67,6 +67,7 @@ components:
         ownerId:
           type: string
           format: uuid
+          nullable: true
         type:
           type: string
           enum: [user_wallet, platform, escrow, fee]
@@ -74,9 +75,6 @@ components:
           type: string
           enum: [active, frozen, closed]
         createdAt:
-          type: string
-          format: date-time
-        updatedAt:
           type: string
           format: date-time
 
@@ -91,8 +89,8 @@ components:
           example: SPARK
         balance:
           type: string
-          description: Decimal string
-          example: "1500.00"
+          description: Decimal string formatted with the currency's precision.
+          example: "15.00"
         lastEntryId:
           type: string
           format: uuid
@@ -157,18 +155,13 @@ components:
         reference:
           type: string
           nullable: true
-        description:
-          type: string
-          nullable: true
         actorId:
           type: string
           format: uuid
+          nullable: true
         metadata:
           nullable: true
         createdAt:
-          type: string
-          format: date-time
-        updatedAt:
           type: string
           format: date-time
         entries:
@@ -182,13 +175,14 @@ components:
       properties:
         provider:
           type: string
-          enum: [stripe, paypal]
+          enum: [stripe, paypal, mock]
         currencyCode:
           type: string
-          enum: [SPARK, FLARE]
+          example: SPARK
         amount:
           type: string
-          description: Decimal string, min 1, max 10000
+          description: Decimal string. Must satisfy Deposit.MinAmount <= amount <= Deposit.MaxAmount (after conversion to minor units).
+          example: "50.00"
 
     Payment:
       type: object
@@ -199,10 +193,9 @@ components:
         transactionId:
           type: string
           format: uuid
-          nullable: true
         provider:
           type: string
-          enum: [stripe, paypal]
+          enum: [stripe, paypal, mock]
         providerReference:
           type: string
         currencyCode:
@@ -211,11 +204,8 @@ components:
           type: string
         status:
           type: string
-          enum: [pending, processing, completed, failed, cancelled]
+          enum: [created, processing, completed, failed, cancelled]
         createdAt:
-          type: string
-          format: date-time
-        updatedAt:
           type: string
           format: date-time
 
@@ -232,7 +222,7 @@ security:
   - cookieAuth: []
 
 paths:
-  /finance/wallet:
+  /wallet:
     get:
       tags: [wallet]
       summary: Get current user's wallet overview (auto-creates account on first call)
@@ -249,10 +239,11 @@ paths:
                       data:
                         $ref: '#/components/schemas/Wallet'
 
-  /finance/currencies:
+  /currencies:
     get:
       tags: [currencies]
       summary: List supported currencies
+      security: []
       responses:
         '200':
           description: Currency list
@@ -268,7 +259,7 @@ paths:
                         items:
                           $ref: '#/components/schemas/Currency'
 
-  /finance/transactions:
+  /transactions:
     get:
       tags: [transactions]
       summary: List current user's transactions (newest first)
@@ -278,12 +269,12 @@ paths:
           schema:
             type: integer
             default: 0
-        - name: page_size
+        - name: limit
           in: query
           schema:
             type: integer
             default: 20
-            maximum: 100
+            maximum: 20
       responses:
         '200':
           description: Paginated transactions
@@ -299,12 +290,12 @@ paths:
                         items:
                           $ref: '#/components/schemas/Transaction'
 
-  /finance/transactions/{id}:
+  /transactions/{transactionId}:
     get:
       tags: [transactions]
-      summary: Get single transaction with ledger entries
+      summary: Get a single transaction with the user's own ledger entries
       parameters:
-        - name: id
+        - name: transactionId
           in: path
           required: true
           schema:
@@ -325,7 +316,7 @@ paths:
         '404':
           description: Not found / not owned by user (code 60004)
 
-  /finance/deposits:
+  /deposits:
     post:
       tags: [deposits]
       summary: Initiate a deposit (purchase virtual currency)
@@ -347,19 +338,27 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/DepositResponse'
+        '400':
+          description: Invalid amount or unsupported currency (60003, 60007, 60008)
 
-  /finance/deposits/webhook:
+  /deposits/webhook/stripe:
     post:
       tags: [deposits]
-      summary: Payment provider webhook (internal; signature-verified, no JWT)
+      summary: Stripe webhook (signature-verified inside the handler, no JWT)
       security: []
+      parameters:
+        - name: Stripe-Signature
+          in: header
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: Webhook acknowledged
-        '400':
+          description: Webhook processed (or already-terminal, idempotent no-op)
+        '401':
           description: Signature verification failed
 
-  /finance/payments:
+  /payments:
     get:
       tags: [payments]
       summary: List current user's payment history
@@ -369,7 +368,7 @@ paths:
           schema:
             type: integer
             default: 0
-        - name: page_size
+        - name: limit
           in: query
           schema:
             type: integer
@@ -389,12 +388,12 @@ paths:
                         items:
                           $ref: '#/components/schemas/Payment'
 
-  /finance/payments/{id}:
+  /payments/{paymentId}:
     get:
       tags: [payments]
-      summary: Get single payment record
+      summary: Get a single payment record
       parameters:
-        - name: id
+        - name: paymentId
           in: path
           required: true
           schema:
