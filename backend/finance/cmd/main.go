@@ -12,6 +12,7 @@ import (
 	cfg "sen1or/letslive/finance/config"
 	gatewaypayment "sen1or/letslive/finance/gateway/payment"
 	mockgateway "sen1or/letslive/finance/gateway/payment/mock"
+	stripegateway "sen1or/letslive/finance/gateway/payment/stripe"
 	currencyHandler "sen1or/letslive/finance/handlers/currency"
 	depositHandler "sen1or/letslive/finance/handlers/deposit"
 	paymentHandler "sen1or/letslive/finance/handlers/payment"
@@ -124,6 +125,7 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 
 	var gateways = []gatewaypayment.PaymentGateway{
 		mockgateway.NewMockGateway(),
+		stripegateway.NewStripeGateway(cfg.Stripe.APIKey, cfg.Stripe.WebhookSecret, cfg.Stripe.SuccessURL, cfg.Stripe.CancelURL),
 	}
 
 	var wSvc = walletService.NewWalletService(accountRepo, currencyRepo)
