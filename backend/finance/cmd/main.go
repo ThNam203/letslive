@@ -10,12 +10,28 @@ import (
 
 	"sen1or/letslive/finance/api"
 	cfg "sen1or/letslive/finance/config"
+	gatewaypayment "sen1or/letslive/finance/gateway/payment"
+	mockgateway "sen1or/letslive/finance/gateway/payment/mock"
+	stripegateway "sen1or/letslive/finance/gateway/payment/stripe"
+	currencyHandler "sen1or/letslive/finance/handlers/currency"
+	depositHandler "sen1or/letslive/finance/handlers/deposit"
+	paymentHandler "sen1or/letslive/finance/handlers/payment"
+	transactionHandler "sen1or/letslive/finance/handlers/transaction"
+	walletHandler "sen1or/letslive/finance/handlers/wallet"
+	"sen1or/letslive/finance/repositories"
+	currencyService "sen1or/letslive/finance/services/currency"
+	depositService "sen1or/letslive/finance/services/deposit"
+	paymentService "sen1or/letslive/finance/services/payment"
+	transactionService "sen1or/letslive/finance/services/transaction"
+	walletService "sen1or/letslive/finance/services/wallet"
 
 	sharedconfig "sen1or/letslive/shared/config"
 	"sen1or/letslive/shared/pkg/discovery"
 	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/shared/pkg/tracer"
 	sharedutils "sen1or/letslive/shared/utils"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
@@ -43,7 +59,6 @@ func main() {
 	defer cfgManager.Stop()
 
 	config := cfgManager.GetConfig()
-
 	sharedutils.StartMigration(config.Database.ConnectionString, config.Database.MigrationPath)
 
 	serviceName := config.Service.Name
@@ -58,7 +73,7 @@ func main() {
 	dbConn := sharedutils.ConnectDB(ctx, config.Database.ConnectionString)
 	defer dbConn.Close()
 
-	server := api.NewAPIServer(config)
+	server := SetupServer(ctx, dbConn, registry, config)
 	go func() {
 		logger.Infof(ctx, "starting server on %s:%d...", config.Service.Hostname, config.Service.APIPort)
 		server.ListenAndServe(ctx, false)
@@ -99,4 +114,31 @@ func main() {
 
 	shutdownWg.Wait()
 	logger.Infof(shutdownCtx, "service shut down complete.")
+}
+
+func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
+	// ctx and registry are consumed by storage/gateway constructors added in later PRs (Stripe gateway, etc.)
+	var accountRepo = repositories.NewAccountRepository(dbConn)
+	var currencyRepo = repositories.NewCurrencyRepository(dbConn)
+	var transactionRepo = repositories.NewTransactionRepository(dbConn)
+	var paymentRepo = repositories.NewPaymentRepository(dbConn)
+
+	var gateways = []gatewaypayment.PaymentGateway{
+		mockgateway.NewMockGateway(),
+		stripegateway.NewStripeGateway(cfg.Stripe.APIKey, cfg.Stripe.WebhookSecret, cfg.Stripe.SuccessURL, cfg.Stripe.CancelURL),
+	}
+
+	var wSvc = walletService.NewWalletService(accountRepo, currencyRepo)
+	var cSvc = currencyService.NewCurrencyService(currencyRepo)
+	var tSvc = transactionService.NewTransactionService(accountRepo, transactionRepo, currencyRepo)
+	var pSvc = paymentService.NewPaymentService(paymentRepo, transactionRepo, currencyRepo)
+	var dSvc = depositService.NewDepositService(accountRepo, currencyRepo, transactionRepo, paymentRepo, gateways, cfg.Deposit.MinAmount, cfg.Deposit.MaxAmount)
+
+	var wHandler = walletHandler.NewWalletHandler(wSvc)
+	var cHandler = currencyHandler.NewCurrencyHandler(cSvc)
+	var tHandler = transactionHandler.NewTransactionHandler(tSvc)
+	var pHandler = paymentHandler.NewPaymentHandler(pSvc)
+	var dHandler = depositHandler.NewDepositHandler(dSvc)
+
+	return api.NewAPIServer(wHandler, cHandler, tHandler, pHandler, dHandler, cfg, dbConn)
 }
