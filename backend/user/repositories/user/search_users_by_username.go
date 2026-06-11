@@ -46,8 +46,9 @@ func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query stri
 		    followers f ON u.id = f.user_id
 		LEFT JOIN
 		    user_social_links usl ON usl.user_id = u.id
-		WHERE 
-		    u.username % $1 OR levenshtein(u.username, $1) <= 5
+		WHERE
+		    u.status != 'disabled'
+		    AND (u.username % $1 OR levenshtein(u.username, $1) <= 5)
 		GROUP BY 
 		    u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.phone_number, u.bio, u.profile_picture, u.background_picture,
 		    l.user_id, l.title, l.description, l.thumbnail_url
