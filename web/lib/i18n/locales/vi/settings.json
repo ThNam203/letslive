@@ -127,6 +127,15 @@
         },
         "unknown_error": "Đã xảy ra lỗi không xác định"
     },
+    "reactivate": {
+        "dialog": {
+            "title": "Tài khoản của bạn đang bị vô hiệu hóa",
+            "description": "Chào mừng trở lại! Tài khoản của bạn hiện đang bị vô hiệu hóa và bị ẩn khỏi người dùng khác. Bạn có muốn kích hoạt lại không?",
+            "confirm": "Kích hoạt lại tài khoản",
+            "decline": "Đăng xuất"
+        },
+        "success": "Tài khoản của bạn đã được kích hoạt lại"
+    },
     "security": {
         "api_key": {
             "label": "API Key của bạn",

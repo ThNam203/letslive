@@ -6,6 +6,7 @@ import { GetMeProfile } from "@/lib/api/user";
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "@/components/utils/toast";
+import ReactivateAccountDialog from "@/components/wrappers/ReactivateAccountDialog";
 
 export default function UserInformationWrapper({
     children,
@@ -54,5 +55,10 @@ export default function UserInformationWrapper({
     }, [setUser, setIsLoading, router, pathname, t]);
 
     // Render children immediately - user fetch happens in background
-    return <>{children}</>;
+    return (
+        <>
+            {children}
+            <ReactivateAccountDialog />
+        </>
+    );
 }

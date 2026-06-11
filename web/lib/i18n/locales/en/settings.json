@@ -127,6 +127,15 @@
         },
         "unknown_error": "An unknown error occurred"
     },
+    "reactivate": {
+        "dialog": {
+            "title": "Your account is disabled",
+            "description": "Welcome back! Your account is currently disabled and hidden from other users. Would you like to reactivate it?",
+            "confirm": "Reactivate my account",
+            "decline": "Log out"
+        },
+        "success": "Your account has been reactivated"
+    },
     "security": {
         "api_key": {
             "label": "Your API Key",
