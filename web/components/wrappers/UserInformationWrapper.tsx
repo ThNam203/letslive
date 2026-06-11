@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { toast } from "@/components/utils/toast";
 import { I18N_LANGUAGES } from "@/lib/i18n/settings";
 import { switchLocale } from "@/lib/i18n/switch-locale";
+import ReactivateAccountDialog from "@/components/wrappers/ReactivateAccountDialog";
 
 export default function UserInformationWrapper({
     children,
@@ -64,5 +65,10 @@ export default function UserInformationWrapper({
     }, [setUser, setIsLoading, router, pathname, t]);
 
     // Render children immediately - user fetch happens in background
-    return <>{children}</>;
+    return (
+        <>
+            {children}
+            <ReactivateAccountDialog />
+        </>
+    );
 }
