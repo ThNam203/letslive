@@ -30,7 +30,8 @@ func (r *postgresUserRepo) GetRecommendedPublic(ctx context.Context, excludeUser
 		LEFT JOIN livestream_information l ON u.id = l.user_id
 		LEFT JOIN followers f ON u.id = f.user_id
 		LEFT JOIN user_social_links usl ON usl.user_id = u.id
-		WHERE ($1::uuid IS NULL OR u.id != $1)
+		WHERE u.status != 'disabled'
+		  AND ($1::uuid IS NULL OR u.id != $1)
 		  AND ($2::uuid IS NULL OR NOT EXISTS (SELECT 1 FROM followers f_ex WHERE f_ex.follower_id = $2 AND f_ex.user_id = u.id))
 		GROUP BY u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
 		ORDER BY (COUNT(f.follower_id)) DESC
