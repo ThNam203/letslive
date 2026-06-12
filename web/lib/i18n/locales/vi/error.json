@@ -17,5 +17,7 @@
     "passwords_do_not_match": "Mật khẩu không khớp",
     "new_password_must_be_different": "Mật khẩu mới phải khác mật khẩu hiện tại",
     "otp_required": "Vui lòng nhập mã OTP",
-    "otp_send_fail": "Có lỗi xảy ra khi gửi OTP"
+    "otp_send_fail": "Có lỗi xảy ra khi gửi OTP",
+    "msw_failed_title": "MSW worker khởi động thất bại — từ chối render khi mock không hoạt động",
+    "msw_failed_description": "NEXT_PUBLIC_USE_MOCK_API=true nhưng không thể cài đặt mock service worker, các request sẽ đi thẳng đến backend thật. Hãy sửa worker hoặc tắt cờ này."
 }

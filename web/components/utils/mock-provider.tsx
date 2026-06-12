@@ -1,6 +1,7 @@
 "use client";
 
 import GLOBAL from "@/global";
+import useT from "@/hooks/use-translation";
 import { useEffect, useState } from "react";
 
 /**
@@ -18,6 +19,7 @@ export default function MockProvider({
 }: {
     children: React.ReactNode;
 }) {
+    const { t } = useT("error");
     const [ready, setReady] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
@@ -41,8 +43,7 @@ export default function MockProvider({
                     "[MockProvider] Failed to start MSW worker:",
                     err,
                 );
-                // Fail loud: without the worker, requests would silently
-                // hit the real backend while the dev believes mocks are on
+                
                 setError(
                     err instanceof Error ? err : new Error(String(err)),
                 );
@@ -55,14 +56,9 @@ export default function MockProvider({
         return (
             <div className="p-6 font-mono">
                 <h2 className="text-red-600 font-bold">
-                    MSW worker failed to start — refusing to render with
-                    mocks disabled
+                    {t("msw_failed_title")}
                 </h2>
-                <p>
-                    NEXT_PUBLIC_USE_MOCK_API=true but the mock service
-                    worker could not be installed, so requests would hit
-                    the real backend. Fix the worker or unset the flag.
-                </p>
+                <p>{t("msw_failed_description")}</p>
                 <pre className="whitespace-pre-wrap">{error.message}</pre>
             </div>
         );
