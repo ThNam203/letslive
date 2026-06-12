@@ -9,9 +9,9 @@ import (
 	"sen1or/letslive/auth/gateway"
 	usergateway "sen1or/letslive/auth/gateway/user"
 	"sen1or/letslive/auth/gateway/user/dto"
+	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/shared/pkg/discovery"
 	"sen1or/letslive/shared/pkg/logger"
-	serviceresponse "sen1or/letslive/auth/response"
 )
 
 type userGateway struct {
@@ -96,7 +96,6 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO dto.Crea
 	}
 
 	var createdUser serviceresponse.Response[dto.CreateUserResponseDTO]
-	defer resp.Body.Close()
 
 	if err := json.NewDecoder(resp.Body).Decode(&createdUser); err != nil {
 		logger.Errorf(ctx, "failed to decode resp body: %s", err)
