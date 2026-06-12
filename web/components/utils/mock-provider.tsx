@@ -19,6 +19,7 @@ export default function MockProvider({
     children: React.ReactNode;
 }) {
     const [ready, setReady] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
         async function startWorker() {
@@ -40,12 +41,32 @@ export default function MockProvider({
                     "[MockProvider] Failed to start MSW worker:",
                     err,
                 );
-                // Still render children so the app is usable (API calls will fail)
-                setReady(true);
+                // Fail loud: without the worker, requests would silently
+                // hit the real backend while the dev believes mocks are on
+                setError(
+                    err instanceof Error ? err : new Error(String(err)),
+                );
             }
         }
         startWorker();
     }, []);
+
+    if (error) {
+        return (
+            <div className="p-6 font-mono">
+                <h2 className="text-red-600 font-bold">
+                    MSW worker failed to start — refusing to render with
+                    mocks disabled
+                </h2>
+                <p>
+                    NEXT_PUBLIC_USE_MOCK_API=true but the mock service
+                    worker could not be installed, so requests would hit
+                    the real backend. Fix the worker or unset the flag.
+                </p>
+                <pre className="whitespace-pre-wrap">{error.message}</pre>
+            </div>
+        );
+    }
 
     if (!ready) return null;
 
