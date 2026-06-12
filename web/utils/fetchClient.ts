@@ -46,11 +46,11 @@ export const fetchClient = async <T>(
     };
 
     // Setup timeout controller
+    const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS; // default 15s
     let controller: AbortController | undefined;
     let timeoutId: NodeJS.Timeout | undefined;
 
     if (!options.disableTimeout) {
-        const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS; // default 15s
         controller = new AbortController();
         timeoutId = setTimeout(() => controller!.abort(), timeoutMs);
     }
@@ -66,6 +66,12 @@ export const fetchClient = async <T>(
         if (!response.ok) {
             if (response.status === 401 && !shouldSkipRefresh(path)) {
                 await refreshToken();
+
+                if (timeoutId) clearTimeout(timeoutId);
+                if (!options.disableTimeout) {
+                    controller = new AbortController();
+                    timeoutId = setTimeout(() => controller!.abort(), timeoutMs);
+                }
 
                 const retryResponse = await fetch(path, {
                     ...options,
