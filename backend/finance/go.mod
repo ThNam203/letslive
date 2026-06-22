@@ -8,7 +8,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/jackc/pgx/v5 v5.8.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.62.0
-	go.uber.org/zap v1.27.1
+	go.uber.org/zap v1.28.0
 	sen1or/letslive/shared v0.0.0
 )
 
