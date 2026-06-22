@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.62.0
-	go.uber.org/zap v1.27.1
+	go.uber.org/zap v1.28.0
 	sen1or/letslive/shared v0.0.0
 )
 
