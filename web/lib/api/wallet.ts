@@ -14,7 +14,7 @@ import { fetchClient } from "@/utils/fetchClient";
 // ---------------------------------------------------------------------------
 
 export async function GetMyWallet(): Promise<ApiResponse<WalletOverview>> {
-    return fetchClient<ApiResponse<WalletOverview>>(`/finance/wallet`);
+    return fetchClient<ApiResponse<WalletOverview>>(`/wallet`);
 }
 
 // ---------------------------------------------------------------------------
@@ -22,7 +22,7 @@ export async function GetMyWallet(): Promise<ApiResponse<WalletOverview>> {
 // ---------------------------------------------------------------------------
 
 export async function GetCurrencies(): Promise<ApiResponse<Currency[]>> {
-    return fetchClient<ApiResponse<Currency[]>>(`/finance/currencies`);
+    return fetchClient<ApiResponse<Currency[]>>(`/currencies`);
 }
 
 // ---------------------------------------------------------------------------
@@ -34,7 +34,7 @@ export async function GetTransactions(
     pageSize: number = 20,
 ): Promise<ApiResponse<Transaction[]>> {
     return fetchClient<ApiResponse<Transaction[]>>(
-        `/finance/transactions?page=${page}&page_size=${pageSize}`,
+        `/transactions?page=${page}&page_size=${pageSize}`,
     );
 }
 
@@ -42,7 +42,7 @@ export async function GetTransactionById(
     transactionId: string,
 ): Promise<ApiResponse<Transaction>> {
     return fetchClient<ApiResponse<Transaction>>(
-        `/finance/transactions/${transactionId}`,
+        `/transactions/${transactionId}`,
     );
 }
 
@@ -53,7 +53,7 @@ export async function GetTransactionById(
 export async function CreateDeposit(
     data: CreateDepositRequest,
 ): Promise<ApiResponse<DepositResponse>> {
-    return fetchClient<ApiResponse<DepositResponse>>(`/finance/deposits`, {
+    return fetchClient<ApiResponse<DepositResponse>>(`/deposits`, {
         method: "POST",
         body: JSON.stringify(data),
     });
@@ -64,12 +64,12 @@ export async function GetPayments(
     pageSize: number = 20,
 ): Promise<ApiResponse<Payment[]>> {
     return fetchClient<ApiResponse<Payment[]>>(
-        `/finance/payments?page=${page}&page_size=${pageSize}`,
+        `/payments?page=${page}&page_size=${pageSize}`,
     );
 }
 
 export async function GetPaymentById(
     paymentId: string,
 ): Promise<ApiResponse<Payment>> {
-    return fetchClient<ApiResponse<Payment>>(`/finance/payments/${paymentId}`);
+    return fetchClient<ApiResponse<Payment>>(`/payments/${paymentId}`);
 }

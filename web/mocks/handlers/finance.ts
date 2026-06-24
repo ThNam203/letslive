@@ -25,8 +25,7 @@ import {
 } from "@/types/wallet";
 
 export const financeHandlers = [
-    // GET /finance/wallet
-    http.get(`${API_BASE}/finance/wallet`, () => {
+    http.get(`${API_BASE}/wallet`, () => {
         const overview: WalletOverview = {
             account: walletAccount,
             balances: walletBalances,
@@ -34,13 +33,11 @@ export const financeHandlers = [
         return ok<WalletOverview>(overview);
     }),
 
-    // GET /finance/currencies
-    http.get(`${API_BASE}/finance/currencies`, () => {
+    http.get(`${API_BASE}/currencies`, () => {
         return ok<Currency[]>(currencies);
     }),
 
-    // GET /finance/transactions
-    http.get(`${API_BASE}/finance/transactions`, ({ request }) => {
+    http.get(`${API_BASE}/transactions`, ({ request }) => {
         const url = new URL(request.url);
         const page = parseInt(url.searchParams.get("page") ?? "0");
         const pageSize = parseInt(url.searchParams.get("page_size") ?? "20");
@@ -57,9 +54,8 @@ export const financeHandlers = [
         });
     }),
 
-    // GET /finance/transactions/:transactionId
     http.get(
-        `${API_BASE}/finance/transactions/:transactionId`,
+        `${API_BASE}/transactions/:transactionId`,
         ({ params }) => {
             const { transactionId } = params as { transactionId: string };
             const tx = transactions.find((t) => t.id === transactionId);
@@ -72,8 +68,7 @@ export const financeHandlers = [
         },
     ),
 
-    // POST /finance/deposits
-    http.post(`${API_BASE}/finance/deposits`, async ({ request }) => {
+    http.post(`${API_BASE}/deposits`, async ({ request }) => {
         const body = (await request.json()) as CreateDepositRequest;
 
         const paymentId = `pay-${uid()}`;
@@ -86,7 +81,7 @@ export const financeHandlers = [
             providerReference: `pi_mock_${uid()}`,
             currencyCode: body.currencyCode ?? CurrencyCode.SPARK,
             amount: body.amount,
-            status: PaymentStatus.PENDING,
+            status: PaymentStatus.CREATED,
             createdAt: now(),
             updatedAt: now(),
         };
@@ -118,13 +113,12 @@ export const financeHandlers = [
 
         const depositResponse: DepositResponse = {
             payment: newPayment,
-            checkoutUrl: `https://checkout.stripe.com/mock-session/${uid()}`,
+            checkoutUrl: "",
         };
         return created<DepositResponse>(depositResponse);
     }),
 
-    // GET /finance/payments
-    http.get(`${API_BASE}/finance/payments`, ({ request }) => {
+    http.get(`${API_BASE}/payments`, ({ request }) => {
         const url = new URL(request.url);
         const page = parseInt(url.searchParams.get("page") ?? "0");
         const pageSize = parseInt(url.searchParams.get("page_size") ?? "20");
@@ -141,8 +135,7 @@ export const financeHandlers = [
         });
     }),
 
-    // GET /finance/payments/:paymentId
-    http.get(`${API_BASE}/finance/payments/:paymentId`, ({ params }) => {
+    http.get(`${API_BASE}/payments/:paymentId`, ({ params }) => {
         const { paymentId } = params as { paymentId: string };
         const payment = payments.find((p) => p.id === paymentId);
         if (!payment)

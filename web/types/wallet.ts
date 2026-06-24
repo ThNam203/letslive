@@ -100,7 +100,7 @@ export type LedgerEntry = {
 // ---------------------------------------------------------------------------
 
 export enum PaymentStatus {
-    PENDING = "pending",
+    CREATED = "created",
     PROCESSING = "processing",
     COMPLETED = "completed",
     FAILED = "failed",
@@ -136,5 +136,5 @@ export type CreateDepositRequest = {
 
 export type DepositResponse = {
     payment: Payment;
-    checkoutUrl: string;
+    checkoutUrl: string | null;
 };

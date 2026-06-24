@@ -38,10 +38,11 @@ type Deposit struct {
 // Stripe holds checkout-session redirect URLs and is augmented at runtime
 // with the API key and webhook secret loaded from environment variables.
 type Stripe struct {
-	SuccessURL    string `yaml:"successUrl"`
-	CancelURL     string `yaml:"cancelUrl"`
-	APIKey        string
-	WebhookSecret string
+	SuccessURL       string `yaml:"successUrl"`
+	CancelURL        string `yaml:"cancelUrl"`
+	FiatCurrencyCode string `yaml:"fiatCurrencyCode"`
+	APIKey           string
+	WebhookSecret    string
 }
 
 type Config struct {
@@ -76,6 +77,10 @@ func PostProcess(config *Config) error {
 
 	config.Stripe.APIKey = os.Getenv("FINANCE_STRIPE_API_KEY")
 	config.Stripe.WebhookSecret = os.Getenv("FINANCE_STRIPE_WEBHOOK_SECRET")
+
+	if config.Stripe.FiatCurrencyCode == "" {
+		return fmt.Errorf("stripe.fiatCurrencyCode must be set in config (e.g. \"usd\")")
+	}
 
 	return nil
 }

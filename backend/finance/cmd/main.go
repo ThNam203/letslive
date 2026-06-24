@@ -125,7 +125,7 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 
 	var gateways = []gatewaypayment.PaymentGateway{
 		mockgateway.NewMockGateway(),
-		stripegateway.NewStripeGateway(cfg.Stripe.APIKey, cfg.Stripe.WebhookSecret, cfg.Stripe.SuccessURL, cfg.Stripe.CancelURL),
+		stripegateway.NewStripeGateway(cfg.Stripe.APIKey, cfg.Stripe.WebhookSecret, cfg.Stripe.SuccessURL, cfg.Stripe.CancelURL, cfg.Stripe.FiatCurrencyCode),
 	}
 
 	var wSvc = walletService.NewWalletService(accountRepo, currencyRepo)
