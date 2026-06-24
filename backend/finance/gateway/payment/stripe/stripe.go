@@ -12,18 +12,20 @@ import (
 )
 
 type StripeGateway struct {
-	apiKey        string
-	webhookSecret string
-	successURL    string
-	cancelURL     string
+	apiKey           string
+	webhookSecret    string
+	successURL       string
+	cancelURL        string
+	fiatCurrencyCode string
 }
 
-func NewStripeGateway(apiKey, webhookSecret, successURL, cancelURL string) *StripeGateway {
+func NewStripeGateway(apiKey, webhookSecret, successURL, cancelURL, fiatCurrencyCode string) *StripeGateway {
 	return &StripeGateway{
-		apiKey:        apiKey,
-		webhookSecret: webhookSecret,
-		successURL:    successURL,
-		cancelURL:     cancelURL,
+		apiKey:           apiKey,
+		webhookSecret:    webhookSecret,
+		successURL:       successURL,
+		cancelURL:        cancelURL,
+		fiatCurrencyCode: fiatCurrencyCode,
 	}
 }
 
@@ -31,6 +33,9 @@ func (g *StripeGateway) Provider() domains.PaymentProvider {
 	return domains.PaymentProviderStripe
 }
 
+// CreateCheckoutSession creates a Stripe checkout session. currencyCode is the
+// platform currency being purchased (e.g. SPARK) and is used only for the
+// product display name; g.fiatCurrencyCode (e.g. "usd") is what Stripe charges.
 func (g *StripeGateway) CreateCheckoutSession(ctx context.Context, idempotencyKey string, amount int64, currencyCode string, metadata map[string]string) (*gatewaypayment.CheckoutSession, error) {
 	_ = ctx
 
@@ -43,7 +48,7 @@ func (g *StripeGateway) CreateCheckoutSession(ctx context.Context, idempotencyKe
 		LineItems: []*stripego.CheckoutSessionLineItemParams{
 			{
 				PriceData: &stripego.CheckoutSessionLineItemPriceDataParams{
-					Currency: stripego.String(currencyCode),
+					Currency: stripego.String(g.fiatCurrencyCode),
 					ProductData: &stripego.CheckoutSessionLineItemPriceDataProductDataParams{
 						Name: stripego.String(fmt.Sprintf("LetsLive %s deposit", currencyCode)),
 					},
@@ -62,6 +67,7 @@ func (g *StripeGateway) CreateCheckoutSession(ctx context.Context, idempotencyKe
 	if err != nil {
 		return nil, fmt.Errorf("stripe checkout session: %w", err)
 	}
+
 	return &gatewaypayment.CheckoutSession{
 		ProviderRef: sess.ID,
 		CheckoutURL: sess.URL,
