@@ -8,6 +8,8 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
+const NotificationTypeGiftReceived = "gift_received"
+
 type Notification struct {
 	Id          uuid.UUID  `json:"id" db:"id"`
 	UserId      uuid.UUID  `json:"userId" db:"user_id"`
