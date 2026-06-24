@@ -7,6 +7,8 @@ import (
 	"sen1or/letslive/user/config"
 	"sen1or/letslive/user/handlers/follow"
 	"sen1or/letslive/user/handlers/general"
+	gifthandler "sen1or/letslive/user/handlers/gift"
+	inventoryhandler "sen1or/letslive/user/handlers/inventory"
 	"sen1or/letslive/user/handlers/livestream_information"
 	"sen1or/letslive/user/handlers/notification"
 	"sen1or/letslive/user/handlers/user"
@@ -30,9 +32,11 @@ type APIServer struct {
 	followHandler                *follow.FollowHandler
 	livestreamInformationHandler *livestream_information.LivestreamInformationHandler
 	notificationHandler          *notification.NotificationHandler
+	inventoryHandler             *inventoryhandler.InventoryHandler
+	giftHandler                  *gifthandler.GiftHandler
 }
 
-func NewAPIServer(userHandler *user.UserHandler, livestreamInfoHandler *livestream_information.LivestreamInformationHandler, followHandler *follow.FollowHandler, notificationHandler *notification.NotificationHandler, cfg *config.Config, db *pgxpool.Pool) *APIServer {
+func NewAPIServer(userHandler *user.UserHandler, livestreamInfoHandler *livestream_information.LivestreamInformationHandler, followHandler *follow.FollowHandler, notificationHandler *notification.NotificationHandler, invHandler *inventoryhandler.InventoryHandler, gHandler *gifthandler.GiftHandler, cfg *config.Config, db *pgxpool.Pool) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
@@ -42,6 +46,8 @@ func NewAPIServer(userHandler *user.UserHandler, livestreamInfoHandler *livestre
 		followHandler:                followHandler,
 		livestreamInformationHandler: livestreamInfoHandler,
 		notificationHandler:          notificationHandler,
+		inventoryHandler:             invHandler,
+		giftHandler:                  gHandler,
 	}
 }
 
@@ -76,6 +82,16 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("PATCH /v1/user/me/notifications/read-all", a.notificationHandler.MarkAllAsReadPrivateHandler)
 	wrap("DELETE /v1/user/me/notifications/{notificationId}", a.notificationHandler.DeleteNotificationPrivateHandler)
 	wrap("POST /v1/notifications", a.notificationHandler.CreateNotificationInternalHandler) // internal
+
+	// inventory
+	wrap("GET /v1/user/me/inventory", a.inventoryHandler.GetInventoryPrivateHandler)
+	wrap("POST /v1/internal/inventory/add", a.inventoryHandler.AddInventoryInternalHandler) // internal
+
+	// gifts
+	wrap("POST /v1/gifts", a.giftHandler.SendGiftPrivateHandler)
+	wrap("GET /v1/user/{userId}/gifts/received", a.giftHandler.GetGiftsReceivedPublicHandler)
+	wrap("GET /v1/user/me/gifts/sent", a.giftHandler.GetGiftsSentPrivateHandler)
+	wrap("POST /v1/internal/gifts/create", a.giftHandler.CreateGiftInternalHandler) // internal
 
 	wrap("POST /v1/user", a.userHandler.CreateUserInternalHandler)                        // internal
 	wrap("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                // internal

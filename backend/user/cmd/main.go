@@ -11,6 +11,8 @@ import (
 	"sen1or/letslive/user/api"
 	cfg "sen1or/letslive/user/config"
 	"sen1or/letslive/user/handlers/follow"
+	gifthandler "sen1or/letslive/user/handlers/gift"
+	inventoryhandler "sen1or/letslive/user/handlers/inventory"
 	"sen1or/letslive/user/handlers/livestream_information"
 	notificationhandler "sen1or/letslive/user/handlers/notification"
 	"sen1or/letslive/user/handlers/user"
@@ -117,16 +119,22 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var livestreamInfoRepo = repositories.NewLivestreamInformationRepository(dbConn)
 	var followRepo = repositories.NewFollowRepository(dbConn)
 	var notificationRepo = repositories.NewNotificationRepository(dbConn)
+	var inventoryRepo = repositories.NewInventoryRepository(dbConn)
+	var giftRepo = repositories.NewGiftRepository(dbConn)
 
 	minioService := services.NewMinIOService(ctx, cfg.MinIO)
 	var userService = services.NewUserService(userRepo, livestreamInfoRepo, notificationRepo, followRepo, *minioService)
 	var livestreamInfoService = services.NewLivestreamInformationService(livestreamInfoRepo)
 	var followService = services.NewFollowService(followRepo)
 	var notificationService = services.NewNotificationService(notificationRepo)
+	var inventoryService = services.NewInventoryService(inventoryRepo)
+	var giftService = services.NewGiftService(giftRepo, inventoryRepo, notificationService)
 
 	var userHandler = user.NewUserHandler(*userService)
 	var livestreamInfoHandler = livestream_information.NewLivestreamInformationHandler(*livestreamInfoService, *minioService)
 	var followHandler = follow.NewFollowHandler(*followService)
 	var notifHandler = notificationhandler.NewNotificationHandler(*notificationService)
-	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, notifHandler, cfg, dbConn)
+	var invHandler = inventoryhandler.NewInventoryHandler(inventoryService)
+	var gHandler = gifthandler.NewGiftHandler(giftService)
+	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, notifHandler, invHandler, gHandler, cfg, dbConn)
 }
