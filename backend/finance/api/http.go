@@ -9,6 +9,7 @@ import (
 	"sen1or/letslive/finance/handlers/deposit"
 	"sen1or/letslive/finance/handlers/general"
 	"sen1or/letslive/finance/handlers/payment"
+	purchasehandler "sen1or/letslive/finance/handlers/purchase"
 	shopitemhandler "sen1or/letslive/finance/handlers/shop_item"
 	"sen1or/letslive/finance/handlers/transaction"
 	"sen1or/letslive/finance/handlers/wallet"
@@ -33,6 +34,7 @@ type APIServer struct {
 	paymentHandler     *payment.PaymentHandler
 	depositHandler     *deposit.DepositHandler
 	shopItemHandler    *shopitemhandler.ShopItemHandler
+	purchaseHandler    *purchasehandler.PurchaseHandler
 }
 
 func NewAPIServer(
@@ -42,6 +44,7 @@ func NewAPIServer(
 	paymentHandler *payment.PaymentHandler,
 	depositHandler *deposit.DepositHandler,
 	shopItemHandler *shopitemhandler.ShopItemHandler,
+	purchaseHandler *purchasehandler.PurchaseHandler,
 	cfg *config.Config,
 	db *pgxpool.Pool,
 ) *APIServer {
@@ -56,6 +59,7 @@ func NewAPIServer(
 		paymentHandler:     paymentHandler,
 		depositHandler:     depositHandler,
 		shopItemHandler:    shopItemHandler,
+		purchaseHandler:    purchaseHandler,
 	}
 }
 
@@ -72,6 +76,7 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("GET /v1/shop/items/{id}", a.shopItemHandler.GetItemPublicHandler)
 
 	// Private routes (require JWT via Kong)
+	wrap("POST /v1/shop/purchase", a.purchaseHandler.CreatePurchasePrivateHandler)
 	wrap("GET /v1/wallet", a.walletHandler.GetWalletPrivateHandler)
 	wrap("GET /v1/transactions", a.transactionHandler.GetTransactionsPrivateHandler)
 	wrap("GET /v1/transactions/{transactionId}", a.transactionHandler.GetTransactionByIdPrivateHandler)
