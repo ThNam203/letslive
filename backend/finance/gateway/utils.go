@@ -9,10 +9,6 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-type contextKey string
-
-const requestIDKey = contextKey("requestId")
-
 // SetRequestIDHeader extracts the request ID from the context and adds it to the request header.
 func SetRequestIDHeader(ctx context.Context, req *http.Request) error {
 	if req == nil {
@@ -23,7 +19,7 @@ func SetRequestIDHeader(ctx context.Context, req *http.Request) error {
 		return errors.New("no context found")
 	}
 
-	v, ok := ctx.Value(requestIDKey).(string)
+	v, ok := ctx.Value("requestId").(string)
 	if !ok || len(v) == 0 {
 		logger.Warnf(ctx, "no requestId found when setting request id header, creating new one")
 		newId, err := uuid.NewGen().NewV4()
