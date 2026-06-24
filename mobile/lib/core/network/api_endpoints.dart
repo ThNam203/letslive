@@ -85,6 +85,11 @@ abstract final class ApiEndpoints {
   static const financePayments = '/finance/payments';
   static String financePaymentById(String id) => '/finance/payments/$id';
 
+  // Finance / Shop
+  static const financeShopItems = '/finance/shop/items';
+  static String financeShopItemById(String id) => '/finance/shop/items/$id';
+  static const financeShopPurchase = '/finance/shop/purchase';
+
   // Upload
   static const uploadFile = '/upload-file';
 

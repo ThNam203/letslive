@@ -14,6 +14,7 @@ import 'features/vod/data/vod_comment_repository.dart';
 import 'features/vod/data/vod_repository.dart';
 import 'features/livestream/data/chat_command_repository.dart';
 import 'features/livestream/data/chat_repository.dart';
+import 'features/shop/data/repositories/shop_repository.dart';
 import 'features/wallet/data/wallet_repository.dart';
 import 'models/user.dart';
 
@@ -144,6 +145,11 @@ final chatCommandRepositoryProvider = Provider<ChatCommandRepository>((ref) {
 /// Wallet repository.
 final walletRepositoryProvider = Provider<WalletRepository>((ref) {
   return WalletRepository(ref.watch(apiClientProvider));
+});
+
+/// Shop repository.
+final shopRepositoryProvider = Provider<ShopRepository>((ref) {
+  return ShopRepository(ref.watch(apiClientProvider));
 });
 
 /// Message repository.

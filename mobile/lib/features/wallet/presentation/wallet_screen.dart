@@ -64,6 +64,11 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
       header: FHeader(
         title: Text(l10n.walletTitle),
         suffixes: [
+          FButton.icon(
+            onPress: () => context.push(AppRoutes.shop),
+            child: const Icon(FIcons.shoppingBag),
+          ),
+          const SizedBox(width: 8),
           FButton(
             onPress: () => context.push(AppRoutes.walletDeposit),
             prefix: const Icon(FIcons.plus),

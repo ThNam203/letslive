@@ -20,6 +20,7 @@ import '../../features/livestream/presentation/livestream_screen.dart';
 import '../../features/messages/presentation/conversation_screen.dart';
 import '../../features/vod/presentation/upload_vod_screen.dart';
 import '../../features/vod/presentation/vod_player_screen.dart';
+import '../../features/shop/presentation/screens/shop_screen.dart';
 import '../../features/wallet/presentation/wallet_screen.dart';
 import '../../features/account_setup/presentation/account_setup_screen.dart';
 import '../../features/wallet/presentation/wallet_transactions_screen.dart';
@@ -48,6 +49,7 @@ abstract final class AppRoutes {
   static const wallet = '/wallet';
   static const walletTransactions = '/wallet/transactions';
   static const walletDeposit = '/wallet/deposit';
+  static const shop = '/shop';
 }
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -155,6 +157,12 @@ final appRouter = GoRouter(
       path: AppRoutes.uploadVod,
       redirect: _requireAuth,
       builder: (context, state) => const UploadVodScreen(),
+    ),
+
+    // Shop
+    GoRoute(
+      path: AppRoutes.shop,
+      builder: (context, state) => const ShopScreen(),
     ),
 
     // Wallet screens (outside shell for full-screen view)
