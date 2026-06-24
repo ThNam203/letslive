@@ -52,6 +52,12 @@ export default function ChatPanel({
     const [atBottom, setAtBottom] = useState(false);
     const messageContainerRef = useRef<HTMLDivElement | null>(null);
     const { t } = useT(["chat", "chat-commands"]);
+    // Ref so the WebSocket effect doesn't depend on `t` — a language
+    // change must not tear down and reconnect the socket
+    const tRef = useRef(t);
+    useEffect(() => {
+        tRef.current = t;
+    }, [t]);
     const [customChatCommands, setCustomChatCommands] = useState<ChatCommand[]>(
         [],
     );
@@ -269,13 +275,20 @@ export default function ChatPanel({
 
         ws.onmessage = (event) => {
             if (cancelled) return;
-            const data: ReceivedMessage = JSON.parse(event.data);
-            appendLine({ kind: "remote", data });
+            try {
+                const data: ReceivedMessage = JSON.parse(event.data);
+                appendLine({ kind: "remote", data });
+            } catch {
+                console.error(
+                    "[ChatPanel] Malformed WebSocket message:",
+                    event.data,
+                );
+            }
         };
 
         ws.onerror = () => {
             if (cancelled) return;
-            toast(t("chat:connection_error"), { type: "error" });
+            toast(tRef.current("chat:connection_error"), { type: "error" });
         };
 
         return () => {
@@ -295,7 +308,7 @@ export default function ChatPanel({
             }
             wsRef.current = null;
         };
-    }, [user, roomId, t]);
+    }, [user, roomId]);
 
     return (
         <div className="relative flex h-full w-full flex-col">
