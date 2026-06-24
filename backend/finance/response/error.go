@@ -24,6 +24,8 @@ const (
 	RES_ERR_PAYMENT_NOT_FOUND_CODE      = 60006
 	RES_ERR_UNSUPPORTED_CURRENCY_CODE   = 60007
 	RES_ERR_DEPOSIT_LIMIT_EXCEEDED_CODE = 60008
+	RES_ERR_SHOP_ITEM_NOT_FOUND_CODE    = 60009
+	RES_ERR_USER_SERVICE_ERROR_CODE     = 60010
 )
 
 // Error keys
@@ -46,6 +48,8 @@ const (
 	RES_ERR_PAYMENT_NOT_FOUND_KEY      = "res_err_payment_not_found"
 	RES_ERR_UNSUPPORTED_CURRENCY_KEY   = "res_err_unsupported_currency"
 	RES_ERR_DEPOSIT_LIMIT_EXCEEDED_KEY = "res_err_deposit_limit_exceeded"
+	RES_ERR_SHOP_ITEM_NOT_FOUND_KEY    = "res_err_shop_item_not_found"
+	RES_ERR_USER_SERVICE_ERROR_KEY     = "res_err_user_service_error"
 )
 
 // Error templates
@@ -184,5 +188,21 @@ var (
 		Code:       RES_ERR_DEPOSIT_LIMIT_EXCEEDED_CODE,
 		Key:        RES_ERR_DEPOSIT_LIMIT_EXCEEDED_KEY,
 		Message:    "Deposit amount exceeds limit.",
+	}
+
+	RES_ERR_SHOP_ITEM_NOT_FOUND = ResponseTemplate{
+		Success:    false,
+		StatusCode: http.StatusNotFound,
+		Code:       RES_ERR_SHOP_ITEM_NOT_FOUND_CODE,
+		Key:        RES_ERR_SHOP_ITEM_NOT_FOUND_KEY,
+		Message:    "Shop item not found or unavailable.",
+	}
+
+	RES_ERR_USER_SERVICE_ERROR = ResponseTemplate{
+		Success:    false,
+		StatusCode: http.StatusInternalServerError,
+		Code:       RES_ERR_USER_SERVICE_ERROR_CODE,
+		Key:        RES_ERR_USER_SERVICE_ERROR_KEY,
+		Message:    "Failed to contact user service.",
 	}
 )
