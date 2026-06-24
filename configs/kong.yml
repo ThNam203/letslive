@@ -1,3 +1,4 @@
+# Refs: docs/superpowers/specs/2026-06-24-shop-gift-design.md
 _format_version: "3.0"
 services:
   - name: User
