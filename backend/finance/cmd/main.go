@@ -16,12 +16,15 @@ import (
 	currencyHandler "sen1or/letslive/finance/handlers/currency"
 	depositHandler "sen1or/letslive/finance/handlers/deposit"
 	paymentHandler "sen1or/letslive/finance/handlers/payment"
+	shopitemhandler "sen1or/letslive/finance/handlers/shop_item"
 	transactionHandler "sen1or/letslive/finance/handlers/transaction"
 	walletHandler "sen1or/letslive/finance/handlers/wallet"
 	"sen1or/letslive/finance/repositories"
+	shopitemrepo "sen1or/letslive/finance/repositories/shop_item"
 	currencyService "sen1or/letslive/finance/services/currency"
 	depositService "sen1or/letslive/finance/services/deposit"
 	paymentService "sen1or/letslive/finance/services/payment"
+	shopitemservice "sen1or/letslive/finance/services/shop_item"
 	transactionService "sen1or/letslive/finance/services/transaction"
 	walletService "sen1or/letslive/finance/services/wallet"
 
@@ -134,11 +137,15 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var pSvc = paymentService.NewPaymentService(paymentRepo, transactionRepo, currencyRepo)
 	var dSvc = depositService.NewDepositService(accountRepo, currencyRepo, transactionRepo, paymentRepo, gateways, cfg.Deposit.MinAmount, cfg.Deposit.MaxAmount)
 
+	var shopItemRepo = shopitemrepo.NewShopItemRepository(dbConn)
+	var shopItemSvc = shopitemservice.NewShopItemService(shopItemRepo)
+
 	var wHandler = walletHandler.NewWalletHandler(wSvc)
 	var cHandler = currencyHandler.NewCurrencyHandler(cSvc)
 	var tHandler = transactionHandler.NewTransactionHandler(tSvc)
 	var pHandler = paymentHandler.NewPaymentHandler(pSvc)
 	var dHandler = depositHandler.NewDepositHandler(dSvc)
+	var siHandler = shopitemhandler.NewShopItemHandler(shopItemSvc)
 
-	return api.NewAPIServer(wHandler, cHandler, tHandler, pHandler, dHandler, cfg, dbConn)
+	return api.NewAPIServer(wHandler, cHandler, tHandler, pHandler, dHandler, siHandler, cfg, dbConn)
 }
