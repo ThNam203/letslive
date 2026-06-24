@@ -3,6 +3,7 @@ package repositories
 import (
 	"sen1or/letslive/user/domains"
 	followerrepo "sen1or/letslive/user/repositories/follower"
+	giftrepo "sen1or/letslive/user/repositories/gift"
 	inventoryrepo "sen1or/letslive/user/repositories/inventory"
 	livestreaminforepo "sen1or/letslive/user/repositories/livestream_information"
 	notificationrepo "sen1or/letslive/user/repositories/notification"
@@ -29,4 +30,8 @@ func NewNotificationRepository(conn *pgxpool.Pool) domains.NotificationRepositor
 
 func NewInventoryRepository(conn *pgxpool.Pool) domains.InventoryRepository {
 	return inventoryrepo.NewInventoryRepository(conn)
+}
+
+func NewGiftRepository(conn *pgxpool.Pool) domains.GiftRepository {
+	return giftrepo.NewGiftRepository(conn)
 }
