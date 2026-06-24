@@ -44,6 +44,88 @@ services:
                 - ACCESS_TOKEN
               key_claim_name: consumer
               run_on_preflight: false
+      - name: User_Inventory_Route
+        protocols:
+          - http
+          - https
+        paths:
+          - /user/me/inventory
+        methods:
+          - GET
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: false
+      - name: User_Gifts_Sent_Route
+        protocols:
+          - http
+          - https
+        paths:
+          - /user/me/gifts/sent
+        methods:
+          - GET
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: false
+      - name: User_Gifts_Received_Route
+        protocols:
+          - http
+          - https
+        paths:
+          - ~/user/[^/]+/gifts/received$
+        methods:
+          - GET
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+      - name: User_Gifts_Create_Route
+        protocols:
+          - http
+          - https
+        paths:
+          - /gifts
+        methods:
+          - POST
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: false
 
   - name: Auth
     host: auth.service.consul
@@ -387,6 +469,8 @@ services:
           - https
         paths:
           - /currencies
+          - /shop/items
+          - ~/shop/items/[^/]+$
         strip_path: false
         preserve_host: false
         https_redirect_status_code: 426
@@ -403,6 +487,7 @@ services:
           - /payments
           - ~/payments/[^/]+$
           - /deposits
+          - /shop/purchase
         strip_path: false
         preserve_host: false
         https_redirect_status_code: 426
