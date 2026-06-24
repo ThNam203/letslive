@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "@/components/utils/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ const MIN_DEPOSIT = 1;
 const MAX_DEPOSIT = 10000;
 
 export default function DepositPage() {
+    const router = useRouter();
     const { t } = useT(["wallet", "api-response", "fetch-error"]);
     const user = useUser((s) => s.user);
 
@@ -66,7 +68,11 @@ export default function DepositPage() {
 
             if (res.success && res.data) {
                 toast.success(t("wallet:deposit.success"));
-                window.open(res.data.checkoutUrl, "_blank");
+                if (res.data.checkoutUrl) {
+                    window.open(res.data.checkoutUrl, "_blank");
+                } else {
+                    router.push("./overview");
+                }
             } else {
                 toast.error(t(`api-response:${res.key}`), {
                     toastId: res.requestId,

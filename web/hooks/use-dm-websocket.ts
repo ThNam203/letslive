@@ -150,6 +150,14 @@ export default function useDmWebSocket() {
         ],
     );
 
+    // Ref so `connect` doesn't depend on `handleServerEvent` (whose
+    // identity changes with `t`) — a language change must not tear
+    // down and reconnect the socket
+    const handleServerEventRef = useRef(handleServerEvent);
+    useLayoutEffect(() => {
+        handleServerEventRef.current = handleServerEvent;
+    }, [handleServerEvent]);
+
     const connectRef = useRef<(() => void) | null>(null);
     const connect = useCallback(() => {
         if (!user || isConnectingRef.current) return;
@@ -171,7 +179,7 @@ export default function useDmWebSocket() {
         ws.onmessage = (event) => {
             try {
                 const data: DmWsServerEvent = JSON.parse(event.data);
-                handleServerEvent(data);
+                handleServerEventRef.current(data);
             } catch {
                 // ignore malformed messages
             }
@@ -193,7 +201,7 @@ export default function useDmWebSocket() {
         ws.onerror = () => {
             isConnectingRef.current = false;
         };
-    }, [user, handleServerEvent]);
+    }, [user]);
 
     useLayoutEffect(() => {
         connectRef.current = connect;
