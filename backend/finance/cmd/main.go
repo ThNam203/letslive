@@ -13,9 +13,11 @@ import (
 	gatewaypayment "sen1or/letslive/finance/gateway/payment"
 	mockgateway "sen1or/letslive/finance/gateway/payment/mock"
 	stripegateway "sen1or/letslive/finance/gateway/payment/stripe"
+	userservicehttp "sen1or/letslive/finance/gateway/userservice/http"
 	currencyHandler "sen1or/letslive/finance/handlers/currency"
 	depositHandler "sen1or/letslive/finance/handlers/deposit"
 	paymentHandler "sen1or/letslive/finance/handlers/payment"
+	purchaseHandler "sen1or/letslive/finance/handlers/purchase"
 	shopitemhandler "sen1or/letslive/finance/handlers/shop_item"
 	transactionHandler "sen1or/letslive/finance/handlers/transaction"
 	walletHandler "sen1or/letslive/finance/handlers/wallet"
@@ -24,6 +26,7 @@ import (
 	currencyService "sen1or/letslive/finance/services/currency"
 	depositService "sen1or/letslive/finance/services/deposit"
 	paymentService "sen1or/letslive/finance/services/payment"
+	purchaseService "sen1or/letslive/finance/services/purchase"
 	shopitemservice "sen1or/letslive/finance/services/shop_item"
 	transactionService "sen1or/letslive/finance/services/transaction"
 	walletService "sen1or/letslive/finance/services/wallet"
@@ -140,12 +143,16 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var shopItemRepo = shopitemrepo.NewShopItemRepository(dbConn)
 	var shopItemSvc = shopitemservice.NewShopItemService(shopItemRepo)
 
+	var userGateway = userservicehttp.NewUserServiceGateway(registry)
+	var purchaseSvc = purchaseService.NewPurchaseService(accountRepo, transactionRepo, shopItemRepo, userGateway)
+
 	var wHandler = walletHandler.NewWalletHandler(wSvc)
 	var cHandler = currencyHandler.NewCurrencyHandler(cSvc)
 	var tHandler = transactionHandler.NewTransactionHandler(tSvc)
 	var pHandler = paymentHandler.NewPaymentHandler(pSvc)
 	var dHandler = depositHandler.NewDepositHandler(dSvc)
 	var siHandler = shopitemhandler.NewShopItemHandler(shopItemSvc)
+	var puchaseHandler = purchaseHandler.NewPurchaseHandler(purchaseSvc)
 
-	return api.NewAPIServer(wHandler, cHandler, tHandler, pHandler, dHandler, siHandler, cfg, dbConn)
+	return api.NewAPIServer(wHandler, cHandler, tHandler, pHandler, dHandler, siHandler, puchaseHandler, cfg, dbConn)
 }
