@@ -14,6 +14,7 @@ const getNavItems = (t: any) => [
         href: "/wallet/transactions",
     },
     { name: t("wallet:navigation.deposit"), href: "/wallet/deposit" },
+    { name: t("wallet:navigation.inventory"), href: "/wallet/inventory" },
 ];
 
 export default function WalletLayout({
