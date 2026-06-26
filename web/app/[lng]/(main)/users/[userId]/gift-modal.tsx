@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
@@ -32,9 +32,20 @@ export default function GiftModal({
     const [items, setItems] = useState<ShopItem[]>([]);
     const [isLoadingItems, setIsLoadingItems] = useState(false);
     const [sendingItemId, setSendingItemId] = useState<string | null>(null);
+    const [animationUrl, setAnimationUrl] = useState<string | null>(null);
+    const animationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
-        if (!open) return;
+        return () => {
+            if (animationTimerRef.current) clearTimeout(animationTimerRef.current);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!open) {
+            setAnimationUrl(null);
+            return;
+        }
         const fetchItems = async () => {
             setIsLoadingItems(true);
             try {
@@ -55,6 +66,12 @@ export default function GiftModal({
         fetchItems();
     }, [open, t]);
 
+    const dismissAnimation = () => {
+        if (animationTimerRef.current) clearTimeout(animationTimerRef.current);
+        setAnimationUrl(null);
+        onClose();
+    };
+
     const handleSend = async (item: ShopItem) => {
         setSendingItemId(item.id);
         try {
@@ -63,9 +80,10 @@ export default function GiftModal({
                 quantity: 1,
                 recipientUserId,
             });
-            if (res.success) {
+            if (res.success && res.data) {
                 toast.success(t("shop:shop.gift_sent"));
-                onClose();
+                setAnimationUrl(res.data.animationUrl);
+                animationTimerRef.current = setTimeout(dismissAnimation, 3000);
             } else {
                 toast.error(t(`api-response:${res.key}`), {
                     toastId: res.requestId,
@@ -80,7 +98,22 @@ export default function GiftModal({
 
     return (
         <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="relative max-w-lg">
+                {animationUrl && (
+                    <div
+                        className="absolute inset-0 z-10 flex cursor-pointer items-center justify-center rounded-lg bg-black/80"
+                        onClick={dismissAnimation}
+                    >
+                        <Image
+                            src={animationUrl}
+                            alt=""
+                            width={256}
+                            height={256}
+                            className="object-contain"
+                            unoptimized
+                        />
+                    </div>
+                )}
                 <DialogHeader>
                     <DialogTitle>
                         {t("shop:shop.gift_pick_item")} — {recipientName}
