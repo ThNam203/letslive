@@ -1,0 +1,29 @@
+{
+    "shop": {
+        "page_title": "Shop",
+        "empty": "No items available right now.",
+        "price_label": "{{price}} SPARK",
+        "buy_button": "Buy",
+        "gift_button": "Send as Gift",
+        "gift_send": "Send Gift",
+        "gift_sending": "Sending...",
+        "gift_sent": "Gift sent!",
+        "gift_pick_item": "Pick an item to send",
+        "gift_message_placeholder": "Add a message (optional)",
+        "gift_no_items": "No items in your inventory.",
+        "gift_quick_send": "Quick Buy & Send",
+        "purchase_success": "Purchase successful!"
+    },
+    "inventory": {
+        "page_title": "My Inventory",
+        "empty": "You don't own any items yet.",
+        "quantity_label": "×{{quantity}}",
+        "send_gift": "Send as Gift"
+    },
+    "gifts_received": {
+        "page_title": "Gift Collection",
+        "empty": "No gifts received yet.",
+        "from": "From {{name}}",
+        "quantity_label": "×{{quantity}}"
+    }
+}

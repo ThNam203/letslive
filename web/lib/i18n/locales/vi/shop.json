@@ -1,0 +1,29 @@
+{
+    "shop": {
+        "page_title": "Cửa hàng",
+        "empty": "Hiện chưa có sản phẩm nào.",
+        "price_label": "{{price}} SPARK",
+        "buy_button": "Mua",
+        "gift_button": "Tặng quà",
+        "gift_send": "Gửi quà",
+        "gift_sending": "Đang gửi...",
+        "gift_sent": "Đã gửi quà!",
+        "gift_pick_item": "Chọn vật phẩm để gửi",
+        "gift_message_placeholder": "Thêm tin nhắn (không bắt buộc)",
+        "gift_no_items": "Kho đồ của bạn trống.",
+        "gift_quick_send": "Mua & Gửi ngay",
+        "purchase_success": "Mua thành công!"
+    },
+    "inventory": {
+        "page_title": "Kho đồ của tôi",
+        "empty": "Bạn chưa có vật phẩm nào.",
+        "quantity_label": "×{{quantity}}",
+        "send_gift": "Tặng quà"
+    },
+    "gifts_received": {
+        "page_title": "Bộ sưu tập quà",
+        "empty": "Chưa nhận được quà nào.",
+        "from": "Từ {{name}}",
+        "quantity_label": "×{{quantity}}"
+    }
+}
