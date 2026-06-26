@@ -6,7 +6,6 @@ import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import { GetShopItems, CreatePurchase } from "@/lib/api/shop";
 import { ShopItem } from "@/types/shop";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
     Dialog,
