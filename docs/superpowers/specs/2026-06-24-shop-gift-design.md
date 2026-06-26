@@ -61,6 +61,7 @@ CREATE TABLE gifts (
   sender_user_id    UUID NOT NULL REFERENCES users(id),
   recipient_user_id UUID NOT NULL REFERENCES users(id),
   shop_item_id      UUID NOT NULL,   -- cross-service ref, no FK
+  quantity          INTEGER NOT NULL DEFAULT 1 CHECK (quantity >= 1),
   message           TEXT,
   sent_at           TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -91,7 +92,7 @@ POST /v1/shop/purchase           # buy items, deduct wallet (private/JWT)
 
 Response includes `animation_url` so client can play the animation immediately on quick-send.
 
-When `recipient_user_id` is present, `quantity` must be exactly 1 — validated server-side. Bulk purchases always go to inventory.
+When `recipient_user_id` is present with `quantity > 1`, all N items are sent as a bulk gift — a single `gifts` record with the quantity stored, not N separate records.
 
 ### User service — new endpoints
 
