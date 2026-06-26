@@ -10,6 +10,7 @@ import { toast } from "@/components/utils/toast";
 import { Button } from "@/components/ui/button";
 import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";
+import GiftModal from "./gift-modal";
 
 export default function ProfileHeader({
     user,
@@ -24,9 +25,11 @@ export default function ProfileHeader({
         "fetch-error",
         "api-response",
         "accessibility",
+        "shop",
     ]);
     const me = useUser((state) => state.user);
     const [isFetching, setIsFetching] = useState(false);
+    const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
 
     const onFollowClick = async () => {
         setIsFetching(true);
@@ -114,19 +117,30 @@ export default function ProfileHeader({
                         </AvatarFallback>
                     </Avatar>
                     {me?.id && me.id !== user.id && (
-                        <Button
-                            variant={
-                                user.isFollowing ? "destructive" : "default"
-                            }
-                            disabled={isFetching || !me}
-                            onClick={onFollowClick}
-                            className="absolute right-0 bottom-4 flex translate-x-[50%] flex-row items-center justify-center gap-0"
-                        >
-                            {isFetching && <IconLoader className="mr-1" />}
-                            {user.isFollowing
-                                ? t("common:unfollow")
-                                : t("common:follow")}
-                        </Button>
+                        <>
+                            <Button
+                                variant={user.isFollowing ? "destructive" : "default"}
+                                disabled={isFetching || !me}
+                                onClick={onFollowClick}
+                                className="absolute right-0 bottom-4 flex translate-x-[50%] flex-row items-center justify-center gap-0"
+                            >
+                                {isFetching && <IconLoader className="mr-1" />}
+                                {user.isFollowing ? t("common:unfollow") : t("common:follow")}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsGiftModalOpen(true)}
+                                className="absolute right-0 bottom-16 flex translate-x-[50%] flex-row items-center justify-center gap-1"
+                            >
+                                🎁 {t("shop:shop.gift_button")}
+                            </Button>
+                            <GiftModal
+                                open={isGiftModalOpen}
+                                onClose={() => setIsGiftModalOpen(false)}
+                                recipientUserId={user.id}
+                                recipientName={user.username}
+                            />
+                        </>
                     )}
                 </div>
             </div>
