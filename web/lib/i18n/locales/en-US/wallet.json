@@ -4,7 +4,8 @@
     "navigation": {
         "overview": "Overview",
         "transactions": "Transactions",
-        "deposit": "Deposit"
+        "deposit": "Deposit",
+        "inventory": "Inventory"
     },
     "overview": {
         "title": "Your Balances",
