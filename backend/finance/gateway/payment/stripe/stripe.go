@@ -75,7 +75,9 @@ func (g *StripeGateway) CreateCheckoutSession(ctx context.Context, idempotencyKe
 }
 
 func (g *StripeGateway) VerifyWebhook(payload []byte, signature string) (*gatewaypayment.WebhookEvent, error) {
-	event, err := webhook.ConstructEvent(payload, signature, g.webhookSecret)
+	event, err := webhook.ConstructEventWithOptions(payload, signature, g.webhookSecret, webhook.ConstructEventOptions{
+		IgnoreAPIVersionMismatch: true,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("stripe webhook signature: %w", err)
 	}
