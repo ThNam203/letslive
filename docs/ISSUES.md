@@ -1,6 +1,6 @@
 # Issues — letslive
 
-_Last updated: 2026-04-17_
+_Last updated: 2026-07-14_
 
 ---
 
@@ -58,9 +58,8 @@ File: [configs/kong.yml:435](configs/kong.yml#L435)
 
 ### 🟡 MEDIUM
 
-**S10. Finance service routed but unimplemented**
-Kong routes `/finance` to a service that only exposes `/health`. When real endpoints land they must enforce per-user authz, atomic balance updates, and rejection of negative amounts to prevent double-spend.
-File: [finance/api/http.go](finance/api/http.go)
+**S10. ~~Finance service routed but unimplemented~~ — SUPERSEDED**
+Finance service is now implemented (branch `feat/finance-service`). Per-user authz, atomic balance updates, and negative-amount rejection are in place (double-entry ledger with DB triggers). Remaining finance findings tracked in the **Finance Service Issues** section below (F1–F15).
 
 **S11. Chat conversation updates lack role checks**
 Any participant — not just the owner — can rename or modify a group conversation.
@@ -152,6 +151,82 @@ File: [backend/livestream/migrations/0001_init_tables.sql](backend/livestream/mi
 
 ---
 
+## Finance Service Issues
+
+_Audit of `backend/finance` on branch `feat/finance-service`, 2026-07-14. Ledger core verified sound: zero-sum DB trigger, ledger immutability triggers, `FOR UPDATE` completion idempotency, wallet overdraft rejection. Build, vet, and tests pass._
+
+### 🔴 HIGH
+
+**F1. Refund compensation dies with the request context → stranded funds**
+`Purchase()` debits the wallet, then calls the user service with the request-scoped `ctx`. If the client disconnects (or the server's 10s `WriteTimeout` fires) after the debit, `CreateGift`/`AddInventory` fails with `context canceled` — and the compensating `refund()` then runs its DB writes on the same canceled context, so it fails too. Money leaves the wallet, no item is granted, no refund lands; the only trace is a CRITICAL log requiring manual reconciliation.
+Fix: run compensation (and arguably the post-debit grant call) on `context.WithoutCancel(ctx)`. Same for `failTransaction` in the deposit service.
+Files: [backend/finance/services/purchase/purchase.go:103-149](backend/finance/services/purchase/purchase.go#L103-L149), [backend/finance/services/deposit/deposit.go:48](backend/finance/services/deposit/deposit.go#L48)
+
+**F2. `http.DefaultClient` with no timeout in the user-service gateway**
+Purchase holds committed ledger state while the inter-service call hangs; only the server write timeout eventually kills the connection — which then triggers F1. Give the gateway a dedicated `http.Client{Timeout: ~5s}`.
+Files: [backend/finance/gateway/userservice/http/http.go:74](backend/finance/gateway/userservice/http/http.go#L74), [backend/finance/gateway/userservice/http/http.go:119](backend/finance/gateway/userservice/http/http.go#L119)
+
+**F3. Stripe `checkout.session.completed` credits wallet without checking `payment_status`**
+For async payment methods (bank debits, etc.), `completed` fires with `payment_status=unpaid`; the code credits the wallet immediately and marks the payment completed. A later `async_payment_failed` hits the terminal-state guard and is silently dropped — the user keeps the balance for a failed charge. `checkout.session.async_payment_succeeded` is also unhandled. Card-only checkout masks this today.
+Fix: only credit when `session.payment_status == "paid"`; fulfill async payments on `async_payment_succeeded`.
+Files: [backend/finance/gateway/payment/stripe/stripe.go:86-91](backend/finance/gateway/payment/stripe/stripe.go#L86-L91), [backend/finance/services/deposit/handle_webhook.go:46](backend/finance/services/deposit/handle_webhook.go#L46)
+
+### 🟠 MEDIUM
+
+**F4. Payment status has no transition guard (transactions do; payments don't)**
+The terminal-state check in the webhook handler is check-then-act. A concurrent or late `failed` webhook after `completed` processing overwrites the payment row to `failed` while the wallet stays credited (the ledger itself is protected by the DB trigger; the payment row now lies).
+Fix: guarded update — `UPDATE payments SET status=$1 WHERE id=$2 AND status IN ('created','processing')`.
+Files: [backend/finance/repositories/payment/update_status.go:13](backend/finance/repositories/payment/update_status.go#L13), [backend/finance/services/deposit/handle_webhook.go:46-56](backend/finance/services/deposit/handle_webhook.go#L46-L56)
+
+**F5. Global `stripego.Key` written on every checkout call**
+Unsynchronized write to a package-level global per request — a data race under `-race`, and it breaks the moment a second Stripe key exists. Set once at init, or use a `client.API` instance.
+File: [backend/finance/gateway/payment/stripe/stripe.go:42](backend/finance/gateway/payment/stripe/stripe.go#L42)
+
+**F6. Missing index on `transactions(actor_id)`**
+`ListByActor` runs `count(*)` and a paged list by `actor_id` — sequential scans on the busiest table. Add an index in the next migration.
+File: [backend/finance/repositories/transaction/list_by_actor.go:14-32](backend/finance/repositories/transaction/list_by_actor.go#L14-L32)
+
+**F7. No client idempotency key on purchase/deposit**
+`transactions.reference` is documented as an idempotency key but is always a server-generated UUID — a double-click means a double purchase. Accept a client-supplied idempotency key in the DTOs and dedupe on the existing `reference` unique constraint.
+Files: [backend/finance/migrations/0001_init_tables.sql:30](backend/finance/migrations/0001_init_tables.sql#L30), [backend/finance/services/purchase/purchase.go:88](backend/finance/services/purchase/purchase.go#L88), [backend/finance/services/deposit/initiate.go:78-88](backend/finance/services/deposit/initiate.go#L78-L88)
+
+### 🟡 LOW
+
+**F8. Ownership-check error mismatch (500 instead of 404)**
+Wrong-owner transaction lookup returns `RES_ERR_TRANSACTION_FAILED` (HTTP 500); the payment service correctly returns 404 for the same case. Inconsistent and the wrong status code.
+Files: [backend/finance/services/transaction/get_for_actor.go:16-23](backend/finance/services/transaction/get_for_actor.go#L16-L23), [backend/finance/services/payment/get_for_actor.go:21-28](backend/finance/services/payment/get_for_actor.go#L21-L28)
+
+**F9. Unbounded webhook request body**
+`io.ReadAll(r.Body)` with no `http.MaxBytesReader` on the public webhook endpoint. Cap it (e.g. 64 KB).
+File: [backend/finance/handlers/deposit/handle_webhook_public.go:19](backend/finance/handlers/deposit/handle_webhook_public.go#L19)
+
+**F10. Mock provider dead-ends in dev**
+The deposit DTO allows `provider: mock` and the mock gateway registers under the dev profile, but the only webhook route is `/v1/deposits/webhook/stripe` — mock deposits can never complete, even in dev.
+Files: [backend/finance/dto/deposit_request.go:4](backend/finance/dto/deposit_request.go#L4), [backend/finance/api/http.go:88](backend/finance/api/http.go#L88)
+
+**F11. Unknown `provider_ref` returns 404 to Stripe → retry storm**
+Webhook events for sessions created by another environment sharing the endpoint get 404, so Stripe retries for days. Consider returning 200 for unknown refs after signature verification.
+Files: [backend/finance/services/deposit/handle_webhook.go:40-43](backend/finance/services/deposit/handle_webhook.go#L40-L43)
+
+**F12. N+1 entries query in transaction listing**
+`ListForActor` fetches ledger entries per transaction in a loop. Bounded by the max page size of 20 — acceptable for now, note only.
+File: [backend/finance/services/transaction/list_for_actor.go:32-42](backend/finance/services/transaction/list_for_actor.go#L32-L42)
+
+**F13. Implicit 1:1 platform-currency↔fiat peg**
+Deposit amounts in platform-currency minor units are passed raw as Stripe `UnitAmount` in `fiatCurrencyCode`. Holds only while precision matches and the rate is 1:1. Make the rate explicit in config before it silently misprices.
+File: [backend/finance/gateway/payment/stripe/stripe.go:51-55](backend/finance/gateway/payment/stripe/stripe.go#L51-L55)
+
+**F14. Unauthenticated internal endpoints mint gifts/inventory**
+`/v1/internal/gifts/create` and `/v1/internal/inventory/add` on the user service have no auth; they are safe only because Kong does not route them (extends S1's trust-the-network posture to money-adjacent writes). An internal API key header would harden this.
+Files: [backend/user/api/http.go:88](backend/user/api/http.go#L88), [backend/user/api/http.go:94](backend/user/api/http.go#L94)
+
+**F15. Minor cleanups**
+- Dead `pgx.ErrNoRows` check on `Query` error (never returned there): [backend/finance/repositories/shop_item/list.go:23](backend/finance/repositories/shop_item/list.go#L23)
+- Self-gifting allowed (no `actor == recipient` check in purchase) — confirm intended: [backend/finance/services/purchase/purchase.go:107](backend/finance/services/purchase/purchase.go#L107)
+- No validation that `deposit.minAmount <= maxAmount` in config: [backend/finance/config/config.go:33-36](backend/finance/config/config.go#L33-L36)
+
+---
+
 ## Recommended Fix Order
 
 1. **S8** — Rotate all leaked secrets immediately; remove `.env` from git history
@@ -162,5 +237,7 @@ File: [backend/livestream/migrations/0001_init_tables.sql](backend/livestream/mi
 6. **S5 + S16** — Fix CORS; add `SameSite=Strict` to cookies
 7. **S7** — Set OTP rate limit to 1/min
 8. **S6** — Enable TLS between Kong and services
-9. **L1** — Send error events to WebSocket clients on validation failure
-10. **L2 + L3** — Align backend type definitions with actual runtime payloads
+9. **F1 + F2** — Compensation on `context.WithoutCancel`; HTTP client timeout in finance→user gateway (before merging `feat/finance-service`)
+10. **F3 + F4** — Check Stripe `payment_status` before crediting; guarded payment status transitions
+11. **L1** — Send error events to WebSocket clients on validation failure
+12. **L2 + L3** — Align backend type definitions with actual runtime payloads
