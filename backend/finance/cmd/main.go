@@ -22,7 +22,6 @@ import (
 	transactionHandler "sen1or/letslive/finance/handlers/transaction"
 	walletHandler "sen1or/letslive/finance/handlers/wallet"
 	"sen1or/letslive/finance/repositories"
-	shopitemrepo "sen1or/letslive/finance/repositories/shop_item"
 	currencyService "sen1or/letslive/finance/services/currency"
 	depositService "sen1or/letslive/finance/services/deposit"
 	paymentService "sen1or/letslive/finance/services/payment"
@@ -128,10 +127,14 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var currencyRepo = repositories.NewCurrencyRepository(dbConn)
 	var transactionRepo = repositories.NewTransactionRepository(dbConn)
 	var paymentRepo = repositories.NewPaymentRepository(dbConn)
+	var shopItemRepo = repositories.NewShopItemRepository(dbConn)
 
 	var gateways = []gatewaypayment.PaymentGateway{
-		mockgateway.NewMockGateway(),
 		stripegateway.NewStripeGateway(cfg.Stripe.APIKey, cfg.Stripe.WebhookSecret, cfg.Stripe.SuccessURL, cfg.Stripe.CancelURL, cfg.Stripe.FiatCurrencyCode),
+	}
+	// the mock gateway mints balance from unsigned webhooks; dev profile only
+	if configProfile == "dev" {
+		gateways = append(gateways, mockgateway.NewMockGateway())
 	}
 
 	var wSvc = walletService.NewWalletService(accountRepo, currencyRepo)
@@ -140,11 +143,10 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var pSvc = paymentService.NewPaymentService(paymentRepo, transactionRepo, currencyRepo)
 	var dSvc = depositService.NewDepositService(accountRepo, currencyRepo, transactionRepo, paymentRepo, gateways, cfg.Deposit.MinAmount, cfg.Deposit.MaxAmount)
 
-	var shopItemRepo = shopitemrepo.NewShopItemRepository(dbConn)
 	var shopItemSvc = shopitemservice.NewShopItemService(shopItemRepo)
 
 	var userGateway = userservicehttp.NewUserServiceGateway(registry)
-	var purchaseSvc = purchaseService.NewPurchaseService(accountRepo, transactionRepo, shopItemRepo, userGateway)
+	var purchaseSvc = purchaseService.NewPurchaseService(accountRepo, currencyRepo, transactionRepo, shopItemRepo, userGateway)
 
 	var wHandler = walletHandler.NewWalletHandler(wSvc)
 	var cHandler = currencyHandler.NewCurrencyHandler(cSvc)

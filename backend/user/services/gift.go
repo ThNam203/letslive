@@ -6,6 +6,7 @@ import (
 
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/dto"
+	financegateway "sen1or/letslive/user/gateway/finance"
 	"sen1or/letslive/user/response"
 
 	"github.com/gofrs/uuid/v5"
@@ -14,13 +15,23 @@ import (
 type GiftService struct {
 	giftRepo            domains.GiftRepository
 	inventoryRepo       domains.InventoryRepository
+	userRepo            domains.UserRepository
+	financeGateway      financegateway.FinanceGateway
 	notificationService *NotificationService
 }
 
-func NewGiftService(giftRepo domains.GiftRepository, inventoryRepo domains.InventoryRepository, notificationService *NotificationService) *GiftService {
+func NewGiftService(
+	giftRepo domains.GiftRepository,
+	inventoryRepo domains.InventoryRepository,
+	userRepo domains.UserRepository,
+	financeGateway financegateway.FinanceGateway,
+	notificationService *NotificationService,
+) *GiftService {
 	return &GiftService{
 		giftRepo:            giftRepo,
 		inventoryRepo:       inventoryRepo,
+		userRepo:            userRepo,
+		financeGateway:      financeGateway,
 		notificationService: notificationService,
 	}
 }
@@ -81,13 +92,28 @@ func (s *GiftService) GetSent(ctx context.Context, senderID uuid.UUID, page, lim
 }
 
 func (s *GiftService) notifyRecipient(ctx context.Context, gift *domains.Gift) {
+	// name lookups are best-effort; the notification must not fail the gift
+	senderName := "Someone"
+	if sender, errResp := s.userRepo.GetById(ctx, gift.SenderUserId); errResp == nil && sender.Username != "" {
+		senderName = sender.Username
+	}
+
+	message := fmt.Sprintf("%s sent you a gift", senderName)
+	if item, err := s.financeGateway.GetShopItem(ctx, gift.ShopItemId.String()); err == nil && item.Name != "" {
+		if gift.Quantity > 1 {
+			message = fmt.Sprintf("%s sent you %d x %s", senderName, gift.Quantity, item.Name)
+		} else {
+			message = fmt.Sprintf("%s sent you a %s", senderName, item.Name)
+		}
+	}
+
 	actionURL := "/user/me/gifts/received"
 	refIDStr := gift.Id.String()
 	s.notificationService.CreateNotification(ctx, dto.CreateNotificationRequestDTO{
 		UserId:      gift.RecipientUserId.String(),
 		Type:        domains.NotificationTypeGiftReceived,
 		Title:       "You received a gift!",
-		Message:     fmt.Sprintf("Someone sent you a gift"),
+		Message:     message,
 		ActionUrl:   &actionURL,
 		ReferenceId: &refIDStr,
 	})

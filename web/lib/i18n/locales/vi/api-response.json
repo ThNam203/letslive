@@ -45,6 +45,9 @@
     "res_err_payment_not_found": "Không tìm thấy thanh toán.",
     "res_err_unsupported_currency": "Loại tiền tệ không được hỗ trợ.",
     "res_err_deposit_limit_exceeded": "Vượt quá giới hạn nạp tiền.",
+    "res_err_shop_item_not_found": "Không tìm thấy vật phẩm hoặc vật phẩm không khả dụng.",
+    "res_err_user_service_error": "Không thể trao vật phẩm, khoản thanh toán đã được hoàn lại.",
+    "res_err_transaction_not_found": "Không tìm thấy giao dịch.",
 
     "res_succ_sent_verification_email": "Email xác thực đã được gửi, vui lòng kiểm tra hộp thư",
     "res_succ_ok": "Thành công",

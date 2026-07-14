@@ -12,16 +12,12 @@ interface Props {
 export default function ProviderSelect({ selected, onChange }: Props) {
     const { t } = useT("wallet");
 
+    // only providers with a registered backend gateway
     const options = [
         {
             provider: PaymentProvider.STRIPE,
             name: t("wallet:deposit.provider.stripe"),
             description: t("wallet:deposit.provider.stripe_description"),
-        },
-        {
-            provider: PaymentProvider.PAYPAL,
-            name: t("wallet:deposit.provider.paypal"),
-            description: t("wallet:deposit.provider.paypal_description"),
         },
     ];
 

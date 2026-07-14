@@ -7,13 +7,13 @@ import (
 	"sen1or/letslive/finance/domains"
 	"sen1or/letslive/finance/response"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 )
 
 func (r *postgresShopItemRepo) GetById(ctx context.Context, id uuid.UUID) (*domains.ShopItem, *response.Response[any]) {
 	query := `
-		SELECT id, name, description, image_url, animation_url, price, is_active, created_at
+		SELECT id, name, description, image_url, animation_url, price, currency_code, is_active, created_at
 		FROM shop_items
 		WHERE id = $1 AND is_active = true
 	`

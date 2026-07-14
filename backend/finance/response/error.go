@@ -14,7 +14,7 @@ const (
 	RES_ERR_DATABASE_ISSUE_CODE  = 20016
 	RES_ERR_INTERNAL_SERVER_CODE = 20017
 
-	// Finance domain (60000-60008)
+	// Finance domain (60000-60011)
 	RES_ERR_ACCOUNT_NOT_FOUND_CODE      = 60000
 	RES_ERR_ACCOUNT_FROZEN_CODE         = 60001
 	RES_ERR_INSUFFICIENT_BALANCE_CODE   = 60002
@@ -26,6 +26,7 @@ const (
 	RES_ERR_DEPOSIT_LIMIT_EXCEEDED_CODE = 60008
 	RES_ERR_SHOP_ITEM_NOT_FOUND_CODE    = 60009
 	RES_ERR_USER_SERVICE_ERROR_CODE     = 60010
+	RES_ERR_TRANSACTION_NOT_FOUND_CODE  = 60011
 )
 
 // Error keys
@@ -50,6 +51,7 @@ const (
 	RES_ERR_DEPOSIT_LIMIT_EXCEEDED_KEY = "res_err_deposit_limit_exceeded"
 	RES_ERR_SHOP_ITEM_NOT_FOUND_KEY    = "res_err_shop_item_not_found"
 	RES_ERR_USER_SERVICE_ERROR_KEY     = "res_err_user_service_error"
+	RES_ERR_TRANSACTION_NOT_FOUND_KEY  = "res_err_transaction_not_found"
 )
 
 // Error templates
@@ -204,5 +206,13 @@ var (
 		Code:       RES_ERR_USER_SERVICE_ERROR_CODE,
 		Key:        RES_ERR_USER_SERVICE_ERROR_KEY,
 		Message:    "Failed to contact user service.",
+	}
+
+	RES_ERR_TRANSACTION_NOT_FOUND = ResponseTemplate{
+		Success:    false,
+		StatusCode: http.StatusNotFound,
+		Code:       RES_ERR_TRANSACTION_NOT_FOUND_CODE,
+		Key:        RES_ERR_TRANSACTION_NOT_FOUND_KEY,
+		Message:    "Transaction not found.",
 	}
 )

@@ -34,7 +34,7 @@ export async function GetTransactions(
     pageSize: number = 20,
 ): Promise<ApiResponse<Transaction[]>> {
     return fetchClient<ApiResponse<Transaction[]>>(
-        `/transactions?page=${page}&page_size=${pageSize}`,
+        `/transactions?page=${page}&limit=${pageSize}`,
     );
 }
 
@@ -64,7 +64,7 @@ export async function GetPayments(
     pageSize: number = 20,
 ): Promise<ApiResponse<Payment[]>> {
     return fetchClient<ApiResponse<Payment[]>>(
-        `/payments?page=${page}&page_size=${pageSize}`,
+        `/payments?page=${page}&limit=${pageSize}`,
     );
 }
 

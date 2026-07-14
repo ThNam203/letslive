@@ -7,7 +7,7 @@ export async function GetMyInventory(
     pageSize: number = 20,
 ): Promise<ApiResponse<UserInventory[]>> {
     return fetchClient<ApiResponse<UserInventory[]>>(
-        `/user/me/inventory?page=${page}&page_size=${pageSize}`,
+        `/user/me/inventory?page=${page}&limit=${pageSize}`,
     );
 }
 
@@ -17,7 +17,7 @@ export async function GetUserGiftsReceived(
     pageSize: number = 20,
 ): Promise<ApiResponse<Gift[]>> {
     return fetchClient<ApiResponse<Gift[]>>(
-        `/user/${userId}/gifts/received?page=${page}&page_size=${pageSize}`,
+        `/user/${userId}/gifts/received?page=${page}&limit=${pageSize}`,
     );
 }
 

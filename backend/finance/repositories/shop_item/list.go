@@ -12,7 +12,7 @@ import (
 
 func (r *postgresShopItemRepo) List(ctx context.Context) ([]domains.ShopItem, *response.Response[any]) {
 	query := `
-		SELECT id, name, description, image_url, animation_url, price, is_active, created_at
+		SELECT id, name, description, image_url, animation_url, price, currency_code, is_active, created_at
 		FROM shop_items
 		WHERE is_active = true
 		ORDER BY created_at ASC

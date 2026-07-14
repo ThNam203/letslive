@@ -44,7 +44,6 @@ type AccountBalance struct {
 type AccountRepository interface {
 	GetUserWalletByOwnerId(ctx context.Context, ownerId uuid.UUID) (*Account, *response.Response[any])
 	CreateUserWallet(ctx context.Context, ownerId uuid.UUID) (*Account, *response.Response[any])
-	GetById(ctx context.Context, id uuid.UUID) (*Account, *response.Response[any])
 	GetEscrow(ctx context.Context) (*Account, *response.Response[any])
 	GetBalances(ctx context.Context, accountId uuid.UUID) ([]AccountBalance, *response.Response[any])
 }

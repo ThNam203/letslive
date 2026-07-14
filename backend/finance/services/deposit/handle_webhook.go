@@ -49,13 +49,24 @@ func (s *DepositService) HandleWebhook(ctx context.Context, providerName domains
 
 	switch event.Type {
 	case gatewaypayment.WebhookEventFailed:
-		return s.paymentRepo.UpdateStatus(ctx, payment.Id, domains.ProcessStatusFailed)
+		if errResp := s.paymentRepo.UpdateStatus(ctx, payment.Id, domains.ProcessStatusFailed); errResp != nil {
+			return errResp
+		}
+		s.failTransaction(ctx, payment.TransactionId)
+		return nil
 
 	case gatewaypayment.WebhookEventCompleted:
 		tx, txErr := s.transactionRepo.GetById(ctx, payment.TransactionId)
 		if txErr != nil {
 			return txErr
 		}
+
+		// crash recovery: ledger already completed but the payment row was not
+		// marked before a previous attempt died — just finish the payment
+		if tx.Status == domains.ProcessStatusCompleted {
+			return s.paymentRepo.UpdateStatus(ctx, payment.Id, domains.ProcessStatusCompleted)
+		}
+
 		if tx.ActorId == nil {
 			logger.Errorf(ctx, "completed webhook for transaction %s missing actor_id", tx.Id)
 			return response.NewResponseFromTemplate[any](
