@@ -87,7 +87,7 @@ func (s *DepositService) Initiate(ctx context.Context, actorId uuid.UUID, req dt
 	}
 	reference := idempotencyKey.String()
 	tx, errResp := s.transactionRepo.Create(ctx, domains.Transaction{
-		Type:      domains.TransactionTypePurchase,
+		Type:      domains.TransactionTypeDeposit,
 		Reference: &reference,
 		Status:    domains.ProcessStatusCreated,
 		ActorId:   &actorId,
@@ -102,6 +102,7 @@ func (s *DepositService) Initiate(ctx context.Context, actorId uuid.UUID, req dt
 	})
 	if gwErr != nil {
 		logger.Errorf(ctx, "gateway checkout session error [initiatedeposit: %v]", gwErr)
+		s.failTransaction(ctx, tx.Id)
 		return nil, response.NewResponseFromTemplate[any](
 			response.RES_ERR_PAYMENT_FAILED,
 			nil,
@@ -119,6 +120,10 @@ func (s *DepositService) Initiate(ctx context.Context, actorId uuid.UUID, req dt
 		TransactionId: tx.Id,
 	})
 	if errResp != nil {
+		// the provider session exists but we have no payment row to complete it against;
+		// keep the ref in the log for manual reconciliation
+		logger.Errorf(ctx, "payment row create failed after checkout session %s created [initiatedeposit]", session.ProviderRef)
+		s.failTransaction(ctx, tx.Id)
 		return nil, errResp
 	}
 

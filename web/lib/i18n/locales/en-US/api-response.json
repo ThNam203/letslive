@@ -45,6 +45,9 @@
     "res_err_payment_not_found": "Payment not found.",
     "res_err_unsupported_currency": "Unsupported currency.",
     "res_err_deposit_limit_exceeded": "Deposit limit exceeded.",
+    "res_err_shop_item_not_found": "Shop item not found or unavailable.",
+    "res_err_user_service_error": "Could not deliver the item, your payment was refunded.",
+    "res_err_transaction_not_found": "Transaction not found.",
 
     "res_succ_sent_verification_email": "Verification email sent, please check your inbox",
     "res_succ_ok": "Success",

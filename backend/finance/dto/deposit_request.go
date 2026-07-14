@@ -1,7 +1,7 @@
 package dto
 
 type DepositRequestDTO struct {
-	Provider     string `json:"provider" validate:"required,oneof=stripe paypal mock"`
+	Provider     string `json:"provider" validate:"required,oneof=stripe mock"`
 	CurrencyCode string `json:"currencyCode" validate:"required"`
 	Amount       string `json:"amount" validate:"required"`
 }

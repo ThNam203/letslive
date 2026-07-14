@@ -6,7 +6,7 @@ import (
 	"sen1or/letslive/finance/domains"
 	"sen1or/letslive/finance/response"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid/v5"
 )
 
 type ShopItemService struct {

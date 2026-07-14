@@ -10,6 +10,7 @@ import (
 
 	"sen1or/letslive/user/api"
 	cfg "sen1or/letslive/user/config"
+	financehttp "sen1or/letslive/user/gateway/finance/http"
 	"sen1or/letslive/user/handlers/follow"
 	gifthandler "sen1or/letslive/user/handlers/gift"
 	inventoryhandler "sen1or/letslive/user/handlers/inventory"
@@ -128,7 +129,8 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var followService = services.NewFollowService(followRepo)
 	var notificationService = services.NewNotificationService(notificationRepo)
 	var inventoryService = services.NewInventoryService(inventoryRepo)
-	var giftService = services.NewGiftService(giftRepo, inventoryRepo, notificationService)
+	var financeGateway = financehttp.NewFinanceGateway(registry)
+	var giftService = services.NewGiftService(giftRepo, inventoryRepo, userRepo, financeGateway, notificationService)
 
 	var userHandler = user.NewUserHandler(*userService)
 	var livestreamInfoHandler = livestream_information.NewLivestreamInformationHandler(*livestreamInfoService, *minioService)

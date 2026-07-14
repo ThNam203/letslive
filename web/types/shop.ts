@@ -4,7 +4,8 @@ export type ShopItem = {
     description: string | null;
     imageUrl: string;
     animationUrl: string;
-    price: number;
+    price: number; // whole units of currencyCode
+    currencyCode: string;
     createdAt: string;
 };
 
@@ -39,7 +40,7 @@ export type PurchaseResponse = {
 };
 
 export type SendGiftRequest = {
-    shop_item_id: string;
-    recipient_user_id: string;
+    shopItemId: string;
+    recipientUserId: string;
     message?: string;
 };

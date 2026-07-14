@@ -31,6 +31,7 @@ func (h *ShopItemHandler) GetItemsPublicHandler(w http.ResponseWriter, r *http.R
 			ImageURL:     item.ImageURL,
 			AnimationURL: item.AnimationURL,
 			Price:        item.Price,
+			CurrencyCode: item.CurrencyCode,
 			CreatedAt:    item.CreatedAt,
 		}
 	}

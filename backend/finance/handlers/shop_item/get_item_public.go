@@ -8,14 +8,14 @@ import (
 	"sen1or/letslive/finance/response"
 	"sen1or/letslive/shared/pkg/tracer"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid/v5"
 )
 
 func (h *ShopItemHandler) GetItemPublicHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
-	id, err := uuid.Parse(r.PathValue("id"))
+	id, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {
 		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
 		return
@@ -37,6 +37,7 @@ func (h *ShopItemHandler) GetItemPublicHandler(w http.ResponseWriter, r *http.Re
 		ImageURL:     item.ImageURL,
 		AnimationURL: item.AnimationURL,
 		Price:        item.Price,
+		CurrencyCode: item.CurrencyCode,
 		CreatedAt:    item.CreatedAt,
 	}
 

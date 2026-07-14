@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid/v5"
 	"sen1or/letslive/finance/response"
 )
 
@@ -14,7 +14,8 @@ type ShopItem struct {
 	Description  *string   `json:"description" db:"description"`
 	ImageURL     string    `json:"imageUrl" db:"image_url"`
 	AnimationURL string    `json:"animationUrl" db:"animation_url"`
-	Price        int64     `json:"price" db:"price"`
+	Price        int64     `json:"price" db:"price"` // whole units of CurrencyCode
+	CurrencyCode string    `json:"currencyCode" db:"currency_code"`
 	IsActive     bool      `json:"isActive" db:"is_active"`
 	CreatedAt    time.Time `json:"createdAt" db:"created_at"`
 }
