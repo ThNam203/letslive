@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import { GetUserGiftsReceived } from "@/lib/api/gift";
-import { Gift } from "@/types/shop";
+import { GetShopItems } from "@/lib/api/shop";
+import { Gift, ShopItem } from "@/types/shop";
 import { Badge } from "@/components/ui/badge";
 import IconLoader from "@/components/icons/loader";
 
@@ -13,6 +15,7 @@ export default function UserGiftsPage() {
     const { t } = useT(["shop", "api-response", "fetch-error"]);
     const params = useParams<{ userId: string }>();
     const [gifts, setGifts] = useState<Gift[]>([]);
+    const [itemsById, setItemsById] = useState<Record<string, ShopItem>>({});
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -36,6 +39,16 @@ export default function UserGiftsPage() {
         fetchGifts();
     }, [params.userId, t]);
 
+    useEffect(() => {
+        GetShopItems().then((res) => {
+            if (res.success && res.data) {
+                setItemsById(
+                    Object.fromEntries(res.data.map((i) => [i.id, i])),
+                );
+            }
+        });
+    }, []);
+
     if (isLoading) {
         return (
             <div className="flex justify-center py-20">
@@ -56,26 +69,42 @@ export default function UserGiftsPage() {
                 </p>
             ) : (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    {gifts.map((gift) => (
-                        <div
-                            key={gift.id}
-                            className="border-border bg-card flex flex-col items-center gap-2 rounded-xl border p-4"
-                        >
-                            <p className="text-muted-foreground text-xs">
-                                {gift.shopItemId}
-                            </p>
-                            <Badge variant="secondary">
-                                {t("shop:gifts_received.quantity_label", {
-                                    quantity: gift.quantity,
-                                })}
-                            </Badge>
-                            {gift.message && (
-                                <p className="text-muted-foreground line-clamp-2 text-center text-xs italic">
-                                    "{gift.message}"
+                    {gifts.map((gift) => {
+                        const shopItem = itemsById[gift.shopItemId];
+                        const name =
+                            shopItem?.name ?? t("shop:shop.unknown_item");
+                        return (
+                            <div
+                                key={gift.id}
+                                className="border-border bg-card flex flex-col items-center gap-2 rounded-xl border p-4"
+                            >
+                                {shopItem && (
+                                    <div className="relative h-16 w-16">
+                                        <Image
+                                            src={shopItem.imageUrl}
+                                            alt={name}
+                                            fill
+                                            className="object-contain"
+                                            unoptimized
+                                        />
+                                    </div>
+                                )}
+                                <p className="text-foreground text-center text-sm font-medium">
+                                    {name}
                                 </p>
-                            )}
-                        </div>
-                    ))}
+                                <Badge variant="secondary">
+                                    {t("shop:gifts_received.quantity_label", {
+                                        quantity: gift.quantity,
+                                    })}
+                                </Badge>
+                                {gift.message && (
+                                    <p className="text-muted-foreground line-clamp-2 text-center text-xs italic">
+                                        &quot;{gift.message}&quot;
+                                    </p>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>

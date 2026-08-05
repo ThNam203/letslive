@@ -12,13 +12,21 @@
         "gift_message_placeholder": "Add a message (optional)",
         "gift_no_items": "No items in your inventory.",
         "gift_quick_send": "Quick Buy & Send",
-        "purchase_success": "Purchase successful!"
+        "purchase_success": "Purchase successful!",
+        "login_to_buy": "Log in to buy",
+        "unknown_item": "Unknown item"
     },
     "inventory": {
         "page_title": "My Inventory",
         "empty": "You don't own any items yet.",
         "quantity_label": "×{{quantity}}",
-        "send_gift": "Send as Gift"
+        "send_gift": "Send as Gift",
+        "send_gift_title": "Send {{item}} as a gift",
+        "recipient_search_placeholder": "Search username...",
+        "no_recipient_results": "No users found.",
+        "confirm_send": "Send",
+        "sending_gift": "Sending...",
+        "gift_sent_success": "Gift sent!"
     },
     "gifts_received": {
         "page_title": "Gift Collection",

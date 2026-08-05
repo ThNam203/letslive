@@ -12,13 +12,21 @@
         "gift_message_placeholder": "Thêm tin nhắn (không bắt buộc)",
         "gift_no_items": "Kho đồ của bạn trống.",
         "gift_quick_send": "Mua & Gửi ngay",
-        "purchase_success": "Mua thành công!"
+        "purchase_success": "Mua thành công!",
+        "login_to_buy": "Đăng nhập để mua",
+        "unknown_item": "Vật phẩm không xác định"
     },
     "inventory": {
         "page_title": "Kho đồ của tôi",
         "empty": "Bạn chưa có vật phẩm nào.",
         "quantity_label": "×{{quantity}}",
-        "send_gift": "Tặng quà"
+        "send_gift": "Tặng quà",
+        "send_gift_title": "Gửi {{item}} làm quà tặng",
+        "recipient_search_placeholder": "Tìm theo tên người dùng...",
+        "no_recipient_results": "Không tìm thấy người dùng.",
+        "confirm_send": "Gửi",
+        "sending_gift": "Đang gửi...",
+        "gift_sent_success": "Đã gửi quà!"
     },
     "gifts_received": {
         "page_title": "Bộ sưu tập quà",
