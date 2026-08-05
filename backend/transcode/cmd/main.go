@@ -115,7 +115,7 @@ func main() {
 	}
 
 	// TODO: find a way to remove the vodHandler from the rtmp, or change the design or config
-	//Use kafka
+	//Use nats
 	rtmpServer := rtmp.NewRTMPServer(
 		rtmp.RTMPServerConfig{Context: ctx, Port: config.RTMP.Port, Registry: &registry, Config: *config, VODHandler: vodHandler},
 		userGateway,

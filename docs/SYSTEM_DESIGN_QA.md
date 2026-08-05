@@ -22,19 +22,19 @@
 3. HLS files are written to **MinIO** (S3-compatible object storage)
 4. A file watcher detects new segments and makes them available via MinIO's HTTP endpoint
 5. Viewers fetch the HLS playlist (`.m3u8`) and segments directly from MinIO
-6. When the stream ends, the VOD is archived — a Kafka event triggers the VOD service to record the archive
+6. When the stream ends, the VOD is archived — a NATS event triggers the VOD service to record the archive
 
 This separates ingestion from delivery, and using HLS + MinIO allows horizontal scaling without stateful media servers.
 
 ---
 
-## 4. Why two message brokers — Kafka AND Redis?
+## 4. Why two message brokers — NATS AND Redis?
 
 **Answer:** They solve different problems:
 - **Redis Pub/Sub** is used for live chat — it has sub-millisecond latency and is ideal for fire-and-forget fan-out to WebSocket connections. Messages don't need to be durable.
-- **Kafka** is used for cross-service business events (stream started, VOD created, payment made). Kafka gives durability, replay capability, and decoupled consumers.
+- **NATS (JetStream)** is used for cross-service business events (stream started, VOD created, payment made). JetStream gives durability, replay capability, and decoupled consumers via durable consumers — the same value Kafka would give, at a fraction of the operational footprint (one binary, no partitions/brokers/controller quorum to run).
 
-Using Redis for chat avoids Kafka's overhead (partitions, consumer groups, offsets) for something that needs to be fast but not durable. The trade-off is Redis pub/sub has no message persistence — if a subscriber drops, it misses messages.
+Using Redis for chat avoids a persistent broker's overhead (streams, durable consumers, acks) for something that needs to be fast but not durable. The trade-off is Redis pub/sub has no message persistence — if a subscriber drops, it misses messages.
 
 ---
 
@@ -63,7 +63,7 @@ Using Redis for chat avoids Kafka's overhead (partitions, consumer groups, offse
 - **Transcode** is CPU-intensive — scale with a worker pool; each worker handles one RTMP stream
 - **Chat** bottleneck is Redis pub/sub — at scale, replace with Redis Cluster or switch to a distributed messaging system
 - **PostgreSQL** needs read replicas for query-heavy services (User, Livestream); write throughput goes through the primary
-- **Kafka** moves from single-broker to a multi-broker cluster with replication
+- **NATS** moves from a single node to a clustered JetStream deployment with stream replication
 - **MinIO** clusters (erasure coding mode) or migrate to S3 for HLS delivery + CloudFront CDN in front of it
 - **Kong** can be clustered with a shared database (PostgreSQL/Cassandra)
 
@@ -95,7 +95,7 @@ This is a classic **fan-out on write** pattern. The Chat service acts as a state
 **Answer:**
 - **Kong down**: All traffic blocked — it's a SPOF in this setup. Production fix: Kong clustering + load balancer
 - **Consul down**: Service discovery fails, no new routing. Services use exponential backoff to reconnect. Cached DNS can sustain briefly.
-- **Kafka down**: Async events are lost — VOD archiving, notifications, finance events fail silently. Production fix: local retry queues + DLTs
+- **NATS down**: Async events are lost — VOD archiving, notifications, finance events fail silently. Production fix: local retry queues + DLTs
 - **Redis down**: Live chat goes dark. Chat service WebSockets still connect but no fan-out. Fix: Redis Sentinel/Cluster
 - **MinIO down**: HLS delivery fails, streams go black. Fix: MinIO clustering or S3 fallback
 - **PostgreSQL down**: Most services degrade to read-only or fail entirely — no mitigation currently
@@ -110,7 +110,7 @@ This is a classic **fan-out on write** pattern. The Chat service acts as a state
 
 ## 13. How do notifications work end-to-end?
 
-**Answer:** Notifications are event-driven via Kafka. For example, when a followed user starts a stream, the Livestream service publishes to the `letslive.livestream` topic. The User service consumes this event and inserts notification records into PostgreSQL for each follower. The frontend polls or receives notifications through the User service REST API. The trade-off of this approach: notification fanout to many followers is done synchronously in the consumer — for a creator with millions of followers, this would need to be batched or offloaded to a dedicated notification worker.
+**Answer:** Notifications are event-driven via NATS (JetStream). For example, when a followed user starts a stream, the Livestream service publishes to the `letslive.livestream` topic. The User service consumes this event and inserts notification records into PostgreSQL for each follower. The frontend polls or receives notifications through the User service REST API. The trade-off of this approach: notification fanout to many followers is done synchronously in the consumer — for a creator with millions of followers, this would need to be batched or offloaded to a dedicated notification worker.
 
 ---
 
@@ -122,7 +122,7 @@ This is a classic **fan-out on write** pattern. The Chat service acts as a state
 
 ## 15. How does the Finance service ensure transaction integrity?
 
-**Answer:** The Finance service uses PostgreSQL transactions for all deposit and withdrawal operations. A database trigger (`allow_transaction_status_update_only`) enforces that once a transaction is created, only its status can be updated — fields like amount and type are immutable. This prevents accidental double-updates and ensures an audit trail. Kafka events are published after a successful commit, so downstream services (e.g., notification) only react to committed transactions, not in-flight ones. The trade-off: there's no outbox pattern, so if the service crashes after the DB commit but before publishing to Kafka, the event is lost.
+**Answer:** The Finance service uses PostgreSQL transactions for all deposit and withdrawal operations. A database trigger (`allow_transaction_status_update_only`) enforces that once a transaction is created, only its status can be updated — fields like amount and type are immutable. This prevents accidental double-updates and ensures an audit trail. NATS events are published after a successful commit, so downstream services (e.g., notification) only react to committed transactions, not in-flight ones. The trade-off: there's no outbox pattern, so if the service crashes after the DB commit but before publishing to NATS, the event is lost.
 
 ---
 
@@ -134,7 +134,7 @@ This is a classic **fan-out on write** pattern. The Chat service acts as a state
 
 ## 17. How does service-to-service communication work?
 
-**Answer:** Services communicate synchronously over HTTP, using Consul DNS for address resolution (e.g., `http://user-service/v1/users/{id}`). There's no gRPC or service mesh sidecar — just plain HTTP with JSON. Consul health checks ensure only healthy instances receive traffic. For async flows (VOD archiving, notifications), services communicate via Kafka topics instead. The trade-off of HTTP over gRPC: simpler debugging and no schema compilation step, but larger payload sizes and no streaming support. For a platform at Twitch scale, gRPC with protobuf would be more efficient.
+**Answer:** Services communicate synchronously over HTTP, using Consul DNS for address resolution (e.g., `http://user-service/v1/users/{id}`). There's no gRPC or service mesh sidecar — just plain HTTP with JSON. Consul health checks ensure only healthy instances receive traffic. For async flows (VOD archiving, notifications), services communicate via NATS topics instead. The trade-off of HTTP over gRPC: simpler debugging and no schema compilation step, but larger payload sizes and no streaming support. For a platform at Twitch scale, gRPC with protobuf would be more efficient.
 
 ---
 
@@ -166,7 +166,7 @@ In dev, 100% of traces are sampled. In production this would be reduced (e.g., 1
 **Answer:**
 1. Client sends `POST /v1/users/{id}/follow` → Kong validates JWT → User service
 2. User service inserts a row into the `followers` table (follower_id, followee_id) in PostgreSQL
-3. User service publishes a `user.followed` event to the `letslive.user` Kafka topic
+3. User service publishes a `user.followed` event to the `letslive.user` NATS topic
 4. Downstream consumers (e.g., notification service) react to the event — e.g., to notify the followee or update recommendation signals
 5. The follower count on the followee's profile is either computed on read (COUNT query) or maintained as a denormalized counter column
 
@@ -177,7 +177,7 @@ The follow relationship is a simple join table, which is efficient for checking 
 ## 22. How does the VOD system work after a stream ends?
 
 **Answer:**
-1. Stream ends → Transcode service publishes to `letslive.transcode` Kafka topic with the HLS file location in MinIO
+1. Stream ends → Transcode service publishes to `letslive.transcode` NATS topic with the HLS file location in MinIO
 2. VOD service consumes the event and creates a VOD record in PostgreSQL pointing to the MinIO path
 3. The private HLS directory is cleaned up or moved to the VOD path in MinIO
 4. Users can then browse VODs, which are served as static HLS files from MinIO
@@ -289,7 +289,7 @@ Same JWT cookies are issued at the end. The trade-off of separate flows: more co
 
 ## 35. What's the testing strategy, and what are its gaps?
 
-**Answer:** There is essentially no automated test coverage in the Go services — no `*_test.go` files exist across the seven Go modules. The Chat service has a single `chatserver.test.ts`. Validation happens manually via `docker-compose-dev.yaml` running the full stack locally. The trade-off is honest: this is a personal/portfolio project optimized for breadth of system integration over test rigor. In production, you'd want at minimum: unit tests for each service's domain logic, integration tests that spin up Postgres + Kafka via `testcontainers`, and contract tests at gateway boundaries (e.g., between Auth and User).
+**Answer:** There is essentially no automated test coverage in the Go services — no `*_test.go` files exist across the seven Go modules. The Chat service has a single `chatserver.test.ts`. Validation happens manually via `docker-compose-dev.yaml` running the full stack locally. The trade-off is honest: this is a personal/portfolio project optimized for breadth of system integration over test rigor. In production, you'd want at minimum: unit tests for each service's domain logic, integration tests that spin up Postgres + NATS via `testcontainers`, and contract tests at gateway boundaries (e.g., between Auth and User).
 
 ---
 
