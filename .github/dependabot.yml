@@ -7,73 +7,73 @@ updates:
     directory: "/web"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 50
 
   # Go modules (backend services)
   - package-ecosystem: "gomod"
     directory: "/backend/auth"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "gomod"
     directory: "/backend/user"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "gomod"
     directory: "/backend/livestream"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "gomod"
     directory: "/backend/transcode"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "gomod"
     directory: "/backend/finance"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 20
 
   # Docker
   - package-ecosystem: "docker"
     directory: "/backend/auth"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "docker"
     directory: "/backend/user"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "docker"
     directory: "/backend/livestream"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "docker"
     directory: "/backend/transcode"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "docker"
     directory: "/backend/finance"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 20
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 20
