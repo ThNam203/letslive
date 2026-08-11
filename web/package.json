@@ -45,7 +45,7 @@
         "react-toastify": "^11.1.0",
         "react-turnstile": "^1.1.4",
         "screenfull": "^6.0.2",
-        "sharp": "^0.33.5",
+        "sharp": "^0.35.3",
         "tailwind-merge": "^3.5.0",
         "tailwindcss-animate": "^1.0.7",
         "twemoji": "^14.0.2",
