@@ -2,7 +2,6 @@
 import { Slider } from "@/components/ui/slider";
 import { ClassValue } from "clsx";
 import { useRef, useState } from "react";
-import type ReactPlayer from "react-player";
 import screenfull from "screenfull";
 import { cn } from "@/utils/cn";
 import {
@@ -25,6 +24,13 @@ import IconLoader from "../icons/loader";
 const ReactPlayerWrapper = dynamic(() => import("./react-player-wrapper"), {
     ssr: false,
 });
+
+type HlsCapableVideo = HTMLVideoElement & {
+    api?: {
+        currentLevel: number;
+        levels: { attrs: { RESOLUTION: string } }[];
+    } | null;
+};
 
 export const formatTime = (seconds: number) => {
     if (isNaN(seconds) || seconds < 0) return "00:00";
@@ -79,7 +85,7 @@ export function VideoPlayer({
 }) {
     const skipButtons = enableSkipButtons ?? mode === "vod";
     const containerRef = useRef<HTMLDivElement>(null);
-    const playerRef = useRef<ReactPlayer>(null);
+    const playerRef = useRef<HlsCapableVideo>(null);
 
     const [idleCount, setIdleCount] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -105,7 +111,7 @@ export function VideoPlayer({
     const seekToTime = (time: number) => {
         if (playerRef.current) {
             setCurrentTime(time);
-            playerRef.current.seekTo(time);
+            playerRef.current.currentTime = time;
         }
     };
 
@@ -124,10 +130,11 @@ export function VideoPlayer({
     };
 
     const handleResolutionChange = (value: string) => {
-        if (!playerRef.current?.getInternalPlayer("hls")) return;
+        const hlsPlayer = playerRef.current?.api;
+        if (!hlsPlayer) return;
         setConfig((prev) => ({ ...prev, resolution: value }));
         if (value === "Auto") {
-            playerRef.current.getInternalPlayer("hls").currentLevel = -1;
+            hlsPlayer.currentLevel = -1;
         } else {
             const selectedHeight = getResolutionHeight(value);
             if (selectedHeight === null) return;
@@ -136,8 +143,7 @@ export function VideoPlayer({
                 return getResolutionHeight(reso) === selectedHeight;
             });
             if (levelIndex !== -1) {
-                playerRef.current.getInternalPlayer("hls").currentLevel =
-                    levelIndex - 1;
+                hlsPlayer.currentLevel = levelIndex - 1;
             }
         }
     };
@@ -153,7 +159,7 @@ export function VideoPlayer({
                 <>
                     <ReactPlayerWrapper
                         playerRef={playerRef}
-                        url={videoInfo.videoUrl}
+                        src={videoInfo.videoUrl}
                         muted={config.volumeValue === 0}
                         volume={config.volumeValue / 100}
                         playing={isPlaying}
@@ -161,23 +167,24 @@ export function VideoPlayer({
                         height="100%"
                         playbackRate={config.playbackRate}
                         loop={config.loop}
-                        onProgress={(state: any) => {
+                        onTimeUpdate={(e) => {
+                            const seconds = e.currentTarget.currentTime;
                             setIdleCount((c) => c + 1);
-                            setCurrentTime(state.playedSeconds);
-                            onProgressSeconds?.(state.playedSeconds);
+                            setCurrentTime(seconds);
+                            onProgressSeconds?.(seconds);
                         }}
-                        onDuration={(d: number) => setDuration(d)}
-                        onBuffer={() => setIsLoading(true)}
-                        onBufferEnd={() => setIsLoading(false)}
+                        onDurationChange={(e) =>
+                            setDuration(e.currentTarget.duration)
+                        }
+                        onWaiting={() => setIsLoading(true)}
+                        onPlaying={() => setIsLoading(false)}
                         onEnded={pauseVideo}
-                        config={{ file: { forceHLS: true } }}
-                        onReady={(reactPlayer) => {
+                        onCanPlay={() => {
                             setIsLoading(false);
-                            const hlsPlayer =
-                                reactPlayer.getInternalPlayer("hls");
+                            const hlsPlayer = playerRef.current?.api;
                             if (!hlsPlayer) return;
                             const newResolutions = hlsPlayer.levels.map(
-                                (level: any) => level.attrs.RESOLUTION,
+                                (level) => level.attrs.RESOLUTION,
                             );
                             setResolutions(["Auto", ...newResolutions]);
                         }}
