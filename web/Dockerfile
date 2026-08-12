@@ -28,7 +28,7 @@ ENV CI=${CI}
 COPY package.json .
 COPY package-lock.json .
 
-RUN npm install --omit=optional
+RUN npm install
 RUN npx browserslist@latest --update-db
 RUN npx next telemetry disable
 
