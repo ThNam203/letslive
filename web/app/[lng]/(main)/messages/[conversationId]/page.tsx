@@ -26,6 +26,7 @@ import {
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import IconClose from "@/components/icons/close";
+import RequireAuth from "@/components/wrappers/RequireAuth";
 
 const CONVERSATIONS_PAGE_SIZE = 20;
 
@@ -212,70 +213,68 @@ export default function ConversationPage() {
     }, [user, conversationId, send]);
 
     if (!user) {
-        return (
-            <div className="flex h-full w-full items-center justify-center">
-                <p className="text-muted-foreground">
-                    {tMessages("login_required")}
-                </p>
-            </div>
-        );
+        return <RequireAuth>{null}</RequireAuth>;
     }
 
     return (
-        <div className="flex h-full w-full">
-            {/* Conversation list sidebar (hidden on mobile) */}
-            <div className="hidden h-full w-80 border-r md:block">
-                <div className="flex items-center gap-2 border-b p-4">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => router.push(`/${params.lng as string}`)}
-                        title={tMessages("close_section")}
-                        aria-label={tMessages("close_section")}
-                        className="h-9 w-9 shrink-0"
-                    >
-                        <IconClose className="h-4 w-4" />
-                    </Button>
-                    <h1 className="min-w-0 flex-1 truncate text-lg font-semibold">
-                        {tMessages("title")}
-                    </h1>
+        <RequireAuth>
+            <div className="flex h-full w-full">
+                {/* Conversation list sidebar (hidden on mobile) */}
+                <div className="hidden h-full w-80 border-r md:block">
+                    <div className="flex items-center gap-2 border-b p-4">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                                router.push(`/${params.lng as string}`)
+                            }
+                            title={tMessages("close_section")}
+                            aria-label={tMessages("close_section")}
+                            className="h-9 w-9 shrink-0"
+                        >
+                            <IconClose className="h-4 w-4" />
+                        </Button>
+                        <h1 className="min-w-0 flex-1 truncate text-lg font-semibold">
+                            {tMessages("title")}
+                        </h1>
+                    </div>
+                    <ConversationList
+                        conversations={conversations}
+                        isLoading={false}
+                        activeId={conversationId}
+                    />
                 </div>
-                <ConversationList
-                    conversations={conversations}
-                    isLoading={false}
-                    activeId={conversationId}
-                />
+
+                {/* Message thread */}
+                <div className="flex h-full flex-1 flex-col">
+                    <ConversationHeader
+                        conversation={conversation}
+                        currentUserId={user.id}
+                        onBack={() =>
+                            router.push(`/${params.lng as string}/messages`)
+                        }
+                        onCloseSection={() =>
+                            router.push(`/${params.lng as string}`)
+                        }
+                    />
+
+                    <MessageThread
+                        messages={currentMessages}
+                        currentUserId={user.id}
+                        isLoading={isLoadingMessages}
+                        hasMore={hasMore}
+                        onLoadMore={loadOlderMessages}
+                    />
+
+                    <TypingIndicator usernames={currentTypingUsers} />
+
+                    <MessageInput
+                        onSend={handleSendMessage}
+                        onTypingStart={handleTypingStart}
+                        onTypingStop={handleTypingStop}
+                    />
+                </div>
             </div>
-
-            {/* Message thread */}
-            <div className="flex h-full flex-1 flex-col">
-                <ConversationHeader
-                    conversation={conversation}
-                    currentUserId={user.id}
-                    onBack={() =>
-                        router.push(`/${params.lng as string}/messages`)
-                    }
-                    onCloseSection={() =>
-                        router.push(`/${params.lng as string}`)
-                    }
-                />
-
-                <MessageThread
-                    messages={currentMessages}
-                    currentUserId={user.id}
-                    isLoading={isLoadingMessages}
-                    hasMore={hasMore}
-                    onLoadMore={loadOlderMessages}
-                />
-
-                <TypingIndicator usernames={currentTypingUsers} />
-
-                <MessageInput
-                    onSend={handleSendMessage}
-                    onTypingStart={handleTypingStart}
-                    onTypingStop={handleTypingStop}
-                />
-            </div>
-        </div>
+        </RequireAuth>
     );
 }

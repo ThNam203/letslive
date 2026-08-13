@@ -1,7 +1,6 @@
 {
     "title": "Messages",
     "select_conversation": "Select a conversation",
-    "login_required": "Please log in to view messages.",
     "close_section": "Close message section",
     "back_to_list": "Back to list",
     "unknown": "Unknown",

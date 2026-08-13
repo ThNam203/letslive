@@ -6,6 +6,7 @@ import { cn } from "@/utils/cn";
 import useUser from "@/hooks/user";
 import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";
+import RequireAuth from "@/components/wrappers/RequireAuth";
 
 const getNavItems = (t: any) => [
     { name: t("settings:navigation.profile"), href: "/settings/profile" },
@@ -23,7 +24,7 @@ export default function SettingsNav({
     children,
 }: Readonly<{ children: React.ReactNode }>) {
     const pathname = usePathname();
-    const { user, isLoading } = useUser();
+    const { isLoading } = useUser();
     const { t } = useT(["settings", "fetch-error"]);
     const navItems = getNavItems(t);
 
@@ -61,11 +62,7 @@ export default function SettingsNav({
             </div>
             <div className="text-foreground flex-1 overflow-y-auto p-6">
                 <div className="max-w-4xl space-y-8">
-                    {isLoading ? null : !user ? (
-                        <p>{t("settings:need_to_login")}</p>
-                    ) : (
-                        children
-                    )}
+                    <RequireAuth>{children}</RequireAuth>
                 </div>
             </div>
         </div>

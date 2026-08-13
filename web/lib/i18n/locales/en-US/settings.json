@@ -1,7 +1,6 @@
 {
     "title": "Settings",
     "page_title": "Settings",
-    "need_to_login": "You need to log in to configure your settings",
     "navigation": {
         "profile": "Profile",
         "security": "Security",

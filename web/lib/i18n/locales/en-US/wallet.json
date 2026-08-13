@@ -1,6 +1,5 @@
 {
     "page_title": "Wallet",
-    "need_to_login": "You need to log in to view your wallet",
     "navigation": {
         "overview": "Overview",
         "transactions": "Transactions",
