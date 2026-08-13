@@ -227,6 +227,35 @@ Files: [backend/user/api/http.go:88](backend/user/api/http.go#L88), [backend/use
 
 ---
 
+## Web — TanStack Query Migration (Pending Manual Verification)
+
+_Migration landed on `feat/finance-service`, 2026-08-13. Verified via `tsc --noEmit`, `eslint`, `next build`, and a dev-server smoke check (4 pages returned 200 with real HTML, no crash/error boundary). No live backend was running in the environment this was built in, so none of the authenticated data flows below were exercised against real data — needs a manual pass against a real backend before being trusted._
+
+### 🟠 Needs manual click-through before trust
+
+**W1. DM WebSocket ↔ query-cache sync (highest risk, do this one first)**
+`use-dm-websocket.ts` now writes live events (new message, edit, delete, unread increment, conversation update) via `queryClient.setQueryData` instead of the old Zustand setters. This is the one part of the migration that can't be verified by build/typecheck alone — needs two logged-in browser sessions messaging each other, checking: live message delivery + correct chronological order, typing indicators, presence (online/offline), unread badge increments on the non-active conversation only, and reconnect behavior after a dropped socket.
+Files: [web/hooks/use-dm-websocket.ts](web/hooks/use-dm-websocket.ts), [web/lib/query/dm-cache.ts](web/lib/query/dm-cache.ts)
+
+**W2. Money-adjacent mutation coordination**
+Shop purchase and gift-send now invalidate wallet balance + inventory together (previously separate manual refetch callbacks, easy to forget one). Verify: buy an item → balance decreases and item appears in inventory; send a gift to another user → sender balance decreases, sender inventory unchanged, recipient receives the item.
+Files: [web/app/[lng]/(main)/shop/page.tsx](web/app/[lng]/(main)/shop/page.tsx), [web/app/[lng]/(main)/users/[userId]/gift-modal.tsx](web/app/[lng]/(main)/users/[userId]/gift-modal.tsx), [web/app/[lng]/(main)/wallet/inventory/send-gift-dialog.tsx](web/app/[lng]/(main)/wallet/inventory/send-gift-dialog.tsx)
+
+**W3. Notification + DM polling replacement**
+Manual `setInterval`/`visibilitychange` polling replaced with `useQuery({ refetchInterval, refetchOnWindowFocus })`. Verify unread counts still update in the background within ~30s and immediately on tab focus, for both the notification bell and the messages icon.
+Files: [web/hooks/queries/use-notifications.ts](web/hooks/queries/use-notifications.ts), [web/hooks/queries/use-dm-unread-counts.ts](web/hooks/queries/use-dm-unread-counts.ts)
+
+**W4. Pagination correctness**
+Conversations, notifications, wallet transactions, and VOD comments moved to `useInfiniteQuery`. Verify "load more" actually appends (not replaces) and correctly stops at the end of each list — most likely place for an off-by-one if it breaks.
+Files: [web/hooks/queries/use-conversations.ts](web/hooks/queries/use-conversations.ts), [web/hooks/queries/use-notifications.ts](web/hooks/queries/use-notifications.ts), [web/hooks/queries/use-transactions.ts](web/hooks/queries/use-transactions.ts), [web/hooks/queries/use-vod-comments.ts](web/hooks/queries/use-vod-comments.ts)
+
+### 🟢 Lower risk, spot-check
+
+**W5. Settings mutations** — profile (username/bio/pictures), stream info, password change, chat-commands CRUD. Straightforward `useMutation` wraps of existing logic; spot-check each save button once.
+**W6. VOD comment create/delete/like** — optimistic local state preserved as-is, only the API-call plumbing changed.
+
+---
+
 ## Recommended Fix Order
 
 1. **S8** — Rotate all leaked secrets immediately; remove `.env` from git history
