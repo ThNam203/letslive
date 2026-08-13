@@ -11,5 +11,6 @@ type UpdateUserRequestDTO struct {
 	Status           *string           `json:"status,omitempty" validate:"omitempty,oneof=normal disabled"`
 	PhoneNumber      *string           `json:"phoneNumber,omitempty" validate:"omitempty,lte=20"`
 	Bio              *string           `json:"bio,omitempty" validate:"omitempty,lte=300"`
+	Locale           *string           `json:"locale,omitempty" validate:"omitempty,bcp47_language_tag"`
 	SocialMediaLinks *SocialMediaLinks `json:"socialMediaLinks,omitempty"`
 }

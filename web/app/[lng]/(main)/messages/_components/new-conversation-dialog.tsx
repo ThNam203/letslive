@@ -13,6 +13,7 @@ import { ConversationType } from "@/types/dm";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
+import { I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
 
 export default function NewConversationDialog({
     onClose,
@@ -99,7 +100,7 @@ export default function NewConversationDialog({
             if (res.data) {
                 addConversation(res.data);
                 onClose();
-                const lng = (params.lng as string) ?? "en";
+                const lng = (params.lng as string) ?? I18N_FALLBACK_LNG;
                 router.push(`/${lng}/messages/${res.data._id}`);
             } else if (!res.success && res.key) {
                 toast.error(t(res.key));

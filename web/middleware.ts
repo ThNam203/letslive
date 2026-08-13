@@ -16,11 +16,16 @@ function setUpCookieLocale(
 
     let finalLng = I18N_FALLBACK_LNG;
 
-    // then check Accept-Language
+    // then check Accept-Language, matching by primary subtag since
+    // browsers rarely send a full region-qualified tag (e.g. "en" not "en-US")
     const acceptLang = request.headers.get("accept-language")?.split(",")[0];
-    if (acceptLang)
-        finalLng = acceptLang.split("-")[0]; // just "en" if "en-US"
-    else if (request.headers.has("referer")) {
+    if (acceptLang) {
+        const primarySubtag = acceptLang.split("-")[0].toLowerCase();
+        finalLng =
+            I18N_LANGUAGES.find(
+                (l) => l.split("-")[0].toLowerCase() === primarySubtag,
+            ) || "";
+    } else if (request.headers.has("referer")) {
         const refererUrl = new URL(request.headers.get("referer") || "");
         finalLng =
             I18N_LANGUAGES.find((l) =>

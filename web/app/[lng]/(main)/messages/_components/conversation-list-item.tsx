@@ -7,6 +7,7 @@ import useDmStore from "@/hooks/use-dm-store";
 import useUser from "@/hooks/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import useT from "@/hooks/use-translation";
+import { I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
 
 function getConversationDisplay(
     conversation: Conversation,
@@ -60,7 +61,7 @@ export default function ConversationListItem({
     const user = useUser((state) => state.user);
     const { unreadCounts, onlineUsers } = useDmStore();
     const { t } = useT("messages");
-    const lng = (params.lng as string) ?? "en";
+    const lng = (params.lng as string) ?? I18N_FALLBACK_LNG;
 
     if (!user) return null;
 

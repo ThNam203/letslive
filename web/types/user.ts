@@ -51,6 +51,8 @@ export type MeUser = BaseUser & {
     email: string;
     phoneNumber?: string;
     streamAPIKey: string;
+    /** BCP-47 tag (e.g. "en-US"). Unset means the user has never explicitly chosen a locale. */
+    locale?: string;
 };
 
 /** Union for code that can receive either (e.g. profile header when viewing self vs others). */

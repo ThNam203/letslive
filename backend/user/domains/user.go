@@ -33,6 +33,7 @@ type User struct {
 	ProfilePicture        *string      `json:"profilePicture,omitempty" db:"profile_picture"`
 	BackgroundPicture     *string      `json:"backgroundPicture,omitempty" db:"background_picture"`
 	FollowerCount         int          `json:"followerCount" db:"follower_count"`
+	Locale                *string      `json:"locale,omitempty" db:"locale"`
 	LivestreamInformation `json:"livestreamInformation,omitempty"`
 	SocialMediaLinks      `json:"socialMediaLinks,omitempty"`
 	SocialLinksJSON       string `json:"-"` // TODO: should i use this

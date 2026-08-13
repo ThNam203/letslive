@@ -27,6 +27,7 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 		"username":     user.Username,
 		"phone_number": user.PhoneNumber,
 		"bio":          user.Bio,
+		"locale":       user.Locale,
 	}
 
 	rows, err := tx.Query(
@@ -35,6 +36,7 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 		SET username = COALESCE(@username, username),
 		    phone_number = @phone_number,
 		    bio = @bio,
+		    locale = @locale,
 		    status = @status
 		WHERE id = @id
 		RETURNING *

@@ -23,11 +23,12 @@ import {
     NotificationPopupContent,
     NOTIFICATION_REFETCH_TTL_MS,
 } from "@/components/notification";
+import { I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
 
 export default function NotificationBell() {
     const { t } = useT(["notification"]);
     const params = useParams();
-    const lng = (params?.lng as string) ?? "en";
+    const lng = (params?.lng as string) ?? I18N_FALLBACK_LNG;
     const userState = useUser();
     const notifState = useNotification();
     const [isOpen, setIsOpen] = useState(false);

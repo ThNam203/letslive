@@ -6,17 +6,27 @@ import { GetMeProfile } from "@/lib/api/user";
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "@/components/utils/toast";
+import { I18N_LANGUAGES } from "@/lib/i18n/settings";
+import { switchLocale } from "@/lib/i18n/switch-locale";
 
 export default function UserInformationWrapper({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const { setUser, setIsLoading } = useUser();
+    const { user, setUser, setIsLoading } = useUser();
     const { t } = useT(["fetch-error", "api-response"]);
     const router = useRouter();
     const pathname = usePathname();
     const hasFetchedRef = useRef(false);
+
+    // hydrate FE locale from the user's saved preference (login or session-restore)
+    useEffect(() => {
+        if (!user?.locale || !I18N_LANGUAGES.includes(user.locale)) return;
+        const currentLocale = pathname.split("/")[1];
+        if (currentLocale === user.locale) return;
+        switchLocale(router, pathname, user.locale, { syncToBackend: false });
+    }, [user, pathname, router]);
 
     useEffect(() => {
         if (hasFetchedRef.current) return;

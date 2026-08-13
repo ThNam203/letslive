@@ -177,12 +177,17 @@ func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequest
 		existedData.PhoneNumber = data.PhoneNumber
 	}
 
+	if data.Locale != nil {
+		existedData.Locale = data.Locale
+	}
+
 	finalDTO := dto.UpdateUserRequestDTO{
 		Id:               existedData.Id,
 		Status:           statusPtr,
 		Username:         &existedData.Username,
 		PhoneNumber:      existedData.PhoneNumber,
 		Bio:              existedData.Bio,
+		Locale:           existedData.Locale,
 		SocialMediaLinks: data.SocialMediaLinks,
 	}
 

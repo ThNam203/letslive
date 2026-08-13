@@ -5,10 +5,11 @@ import { useParams } from "next/navigation";
 import useUser from "@/hooks/user";
 import IconWallet from "@/components/icons/wallet";
 import useT from "@/hooks/use-translation";
+import { I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
 
 export default function WalletIcon() {
     const params = useParams();
-    const lng = (params?.lng as string) ?? "en";
+    const lng = (params?.lng as string) ?? I18N_FALLBACK_LNG;
     const user = useUser((state) => state.user);
     const { t } = useT("accessibility");
 

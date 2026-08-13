@@ -3,11 +3,10 @@
 import { cn } from "@/utils/cn";
 import useT from "@/hooks/use-translation";
 import {
-    I18N_COOKIE_NAME,
-    I18N_FALLBACK_LNG,
     I18N_LANGUAGE_COUNTRY_MAP,
     I18N_LANGUAGES,
 } from "@/lib/i18n/settings";
+import { switchLocale } from "@/lib/i18n/switch-locale";
 import { usePathname, useRouter } from "next/navigation";
 
 const LanguageList = ({ className }: { className?: string }) => {
@@ -16,15 +15,8 @@ const LanguageList = ({ className }: { className?: string }) => {
     const pathname = usePathname();
 
     const handleChange = async (option: string) => {
-        const oldLanguage = String(i18n.resolvedLanguage);
-        if (oldLanguage === option) return;
-        await i18n.changeLanguage(option || I18N_FALLBACK_LNG).then(() => {
-            document.cookie = `${I18N_COOKIE_NAME}=${option}; path=/; max-age=${30 * 24 * 60 * 60}`;
-            const segments = pathname.split("/");
-            segments[1] = option;
-            const newPath = segments.join("/");
-            router.replace(newPath);
-        });
+        if (i18n.resolvedLanguage === option) return;
+        await switchLocale(router, pathname, option);
     };
 
     return (

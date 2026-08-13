@@ -7,12 +7,13 @@ import useUser from "@/hooks/user";
 import useDmStore from "@/hooks/use-dm-store";
 import { GetUnreadCounts } from "@/lib/api/dm";
 import IconMessage from "@/components/icons/message";
+import { I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
 
 const POLL_INTERVAL_MS = 30000; // 30 seconds
 
 export default function MessagesIcon() {
     const params = useParams();
-    const lng = (params?.lng as string) ?? "en";
+    const lng = (params?.lng as string) ?? I18N_FALLBACK_LNG;
     const user = useUser((state) => state.user);
     const { unreadCounts, setUnreadCounts } = useDmStore();
 
