@@ -11,6 +11,7 @@ import TranslationsProvider from "@/components/utils/i18n-provider";
 import { ThemeProviderWrapper } from "@/components/utils/theme-provider-wrapper";
 import UserInformationWrapper from "@/components/wrappers/UserInformationWrapper";
 import MockProvider from "@/components/utils/mock-provider";
+import QueryProvider from "@/components/utils/query-provider";
 
 const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
 
@@ -41,15 +42,19 @@ export default async function RootLayout({
     const { lng } = await params;
 
     const content = (
-        <TranslationsProvider>
-            <ThemeProviderWrapper>
-                <Suspense fallback={<Loading />}>
-                    <UserInformationWrapper>{children}</UserInformationWrapper>
-                    <Toast />
-                    <UploadManager />
-                </Suspense>
-            </ThemeProviderWrapper>
-        </TranslationsProvider>
+        <QueryProvider>
+            <TranslationsProvider>
+                <ThemeProviderWrapper>
+                    <Suspense fallback={<Loading />}>
+                        <UserInformationWrapper>
+                            {children}
+                        </UserInformationWrapper>
+                        <Toast />
+                        <UploadManager />
+                    </Suspense>
+                </ThemeProviderWrapper>
+            </TranslationsProvider>
+        </QueryProvider>
     );
 
     return (

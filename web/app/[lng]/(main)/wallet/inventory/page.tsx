@@ -6,18 +6,19 @@ import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
 import { GetMyInventory } from "@/lib/api/gift";
-import { GetShopItems } from "@/lib/api/shop";
-import { ShopItem, UserInventory } from "@/types/shop";
+import { UserInventory } from "@/types/shop";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import IconLoader from "@/components/icons/loader";
 import SendGiftDialog from "./send-gift-dialog";
+import { useShopItems } from "@/hooks/queries/use-shop-items";
 
 export default function InventoryPage() {
     const { t } = useT(["shop", "api-response", "fetch-error"]);
     const user = useUser((s) => s.user);
     const [items, setItems] = useState<UserInventory[]>([]);
-    const [itemsById, setItemsById] = useState<Record<string, ShopItem>>({});
+    const { data: shopItems = [] } = useShopItems();
+    const itemsById = Object.fromEntries(shopItems.map((i) => [i.id, i]));
     const [isLoading, setIsLoading] = useState(true);
     const [sendingItem, setSendingItem] = useState<UserInventory | null>(null);
 
@@ -43,16 +44,6 @@ export default function InventoryPage() {
     useEffect(() => {
         fetchInventory();
     }, [fetchInventory]);
-
-    useEffect(() => {
-        GetShopItems().then((res) => {
-            if (res.success && res.data) {
-                setItemsById(
-                    Object.fromEntries(res.data.map((i) => [i.id, i])),
-                );
-            }
-        });
-    }, []);
 
     if (isLoading) {
         return (

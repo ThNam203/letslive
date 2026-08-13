@@ -1,13 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import useUser from "../../hooks/user";
 import { PublicUser } from "../../types/user";
-import {
-    GetFollowingChannels,
-    GetRecommendedChannels,
-} from "../../lib/api/user";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { cn } from "@/utils/cn";
 import {
@@ -16,7 +11,10 @@ import {
     HoverCardTrigger,
 } from "../ui/hover-card";
 import useT from "@/hooks/use-translation";
-import { toast } from "@/components/utils/toast";
+import {
+    useFollowingChannels,
+    useRecommendedChannels,
+} from "@/hooks/queries/use-channels";
 
 function ChannelUserCard({
     user,
@@ -97,38 +95,9 @@ export default function AllChannelsView({
     minimizeLeftBarIcon?: React.ReactNode;
 }) {
     const curUser = useUser((state) => state.user);
-    const [followingUsers, setFollowingUsers] = useState<PublicUser[]>([]);
-    const [recommendedUsers, setRecommendedUsers] = useState<PublicUser[]>([]);
-    const { t } = useT(["common", "api-response", "fetch-error"]);
-
-    useEffect(() => {
-        if (!curUser) return;
-        GetFollowingChannels()
-            .then((res) => {
-                if (res.success) setFollowingUsers(res.data ?? []);
-            })
-            .catch(() => {
-                setFollowingUsers([]);
-            });
-    }, [curUser]);
-
-    useEffect(() => {
-        GetRecommendedChannels(0)
-            .then((res) => {
-                if (res.success) setRecommendedUsers(res.data ?? []);
-                else
-                    toast(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                        type: "error",
-                    });
-            })
-            .catch(() => {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-            });
-    }, [t, curUser?.id]);
+    const { data: followingUsers = [] } = useFollowingChannels(!!curUser);
+    const { data: recommendedUsers = [] } = useRecommendedChannels(0);
+    const { t } = useT(["common"]);
 
     const followingIds = new Set(followingUsers.map((user) => user.id));
     const recommendedNotFollowing = recommendedUsers.filter(

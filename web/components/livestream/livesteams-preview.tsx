@@ -1,49 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { toast } from "@/components/utils/toast";
+import { useState } from "react";
 import MediaCard from "./media-card";
-import { GetPopularLivestreams } from "../../lib/api/livestream";
-import { Livestream } from "../../types/livestream";
 import IconChevronDown from "../icons/chevron-down";
 import { Separator } from "../ui/separator";
 import IconPlay from "../icons/play";
 import useT from "@/hooks/use-translation";
 import { Card, CardContent } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
+import { usePopularLivestreams } from "@/hooks/queries/use-popular-livestreams";
 
 const LivestreamsPreviewView = () => {
-    const [isLoading, setIsLoading] = useState(true);
     const [limitView, setLimitView] = useState<number>(4);
-    const [livestreams, setLivestreams] = useState<Livestream[]>([]);
-    const { t } = useT(["common", "api-response", "fetch-error"]);
-
-    useEffect(() => {
-        const fetchLivestreams = async () => {
-            await GetPopularLivestreams()
-                .then((res) => {
-                    if (res.success) {
-                        setLivestreams(res.data ?? []);
-                    } else {
-                        toast(t(`api-response:${res.key}`), {
-                            toastId: res.requestId,
-                            type: "error",
-                        });
-                    }
-                })
-                .catch((_) => {
-                    toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "client-fetch-error-id",
-                        type: "error",
-                    });
-                })
-                .finally(() => {
-                    setIsLoading(false);
-                });
-        };
-
-        void fetchLivestreams();
-    }, [t]);
+    const { data: livestreams = [], isLoading } = usePopularLivestreams();
+    const { t } = useT(["common"]);
 
     if (isLoading) {
         return <LoadingSkeleton />;

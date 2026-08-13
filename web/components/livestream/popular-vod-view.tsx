@@ -1,46 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
-import { GetPopularVODs } from "../../lib/api/vod";
-import { toast } from "@/components/utils/toast";
 import IconFilm from "../icons/film";
-import { VOD } from "@/types/vod";
 import useT from "@/hooks/use-translation";
 import MediaCard from "./media-card";
+import { usePopularVods } from "@/hooks/queries/use-popular-vods";
 
 export function PopularVODView() {
-    const [isLoading, setIsLoading] = useState(true);
-    const [vods, setVods] = useState<VOD[]>([]);
-    const { t } = useT(["common", "api-response", "fetch-error"]);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            await GetPopularVODs()
-                .then((res) => {
-                    if (res.success) {
-                        setVods(res.data ?? []);
-                    } else {
-                        toast(t(`api-response:${res.key}`), {
-                            toastId: res.requestId,
-                            type: "error",
-                        });
-                    }
-                })
-                .catch((_) => {
-                    toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "client-fetch-error-id",
-                        type: "error",
-                    });
-                })
-                .finally(() => {
-                    setIsLoading(false);
-                });
-        };
-
-        void fetchData();
-    }, [t]);
+    const { data: vods = [], isLoading } = usePopularVods();
+    const { t } = useT(["common"]);
 
     if (isLoading) {
         return <LoadingSkeleton />;

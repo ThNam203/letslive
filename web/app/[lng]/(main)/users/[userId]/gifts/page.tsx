@@ -6,16 +6,17 @@ import Image from "next/image";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import { GetUserGiftsReceived } from "@/lib/api/gift";
-import { GetShopItems } from "@/lib/api/shop";
-import { Gift, ShopItem } from "@/types/shop";
+import { Gift } from "@/types/shop";
 import { Badge } from "@/components/ui/badge";
 import IconLoader from "@/components/icons/loader";
+import { useShopItems } from "@/hooks/queries/use-shop-items";
 
 export default function UserGiftsPage() {
     const { t } = useT(["shop", "api-response", "fetch-error"]);
     const params = useParams<{ userId: string }>();
     const [gifts, setGifts] = useState<Gift[]>([]);
-    const [itemsById, setItemsById] = useState<Record<string, ShopItem>>({});
+    const { data: shopItems = [] } = useShopItems();
+    const itemsById = Object.fromEntries(shopItems.map((i) => [i.id, i]));
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -38,16 +39,6 @@ export default function UserGiftsPage() {
         };
         fetchGifts();
     }, [params.userId, t]);
-
-    useEffect(() => {
-        GetShopItems().then((res) => {
-            if (res.success && res.data) {
-                setItemsById(
-                    Object.fromEntries(res.data.map((i) => [i.id, i])),
-                );
-            }
-        });
-    }, []);
 
     if (isLoading) {
         return (

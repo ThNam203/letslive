@@ -1,43 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
-import { GetShopItems, CreatePurchase } from "@/lib/api/shop";
+import { CreatePurchase } from "@/lib/api/shop";
 import { ShopItem } from "@/types/shop";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import IconLoader from "@/components/icons/loader";
+import { useShopItems } from "@/hooks/queries/use-shop-items";
 
 export default function ShopPage() {
     const { t } = useT(["shop", "api-response", "fetch-error"]);
     const user = useUser((s) => s.user);
-    const [items, setItems] = useState<ShopItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { data: items = [], isLoading } = useShopItems();
     const [buyingItemId, setBuyingItemId] = useState<string | null>(null);
-
-    useEffect(() => {
-        const fetchItems = async () => {
-            setIsLoading(true);
-            try {
-                const res = await GetShopItems();
-                if (res.success && res.data) {
-                    setItems(res.data);
-                } else {
-                    toast.error(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                    });
-                }
-            } catch (_) {
-                toast.error(t("fetch-error:client_fetch_error"));
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchItems();
-    }, [t]);
 
     const handleBuy = async (item: ShopItem) => {
         if (!user) return;

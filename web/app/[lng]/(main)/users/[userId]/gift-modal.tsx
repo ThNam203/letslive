@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
-import { GetShopItems, CreatePurchase } from "@/lib/api/shop";
+import { CreatePurchase } from "@/lib/api/shop";
 import { ShopItem } from "@/types/shop";
+import { useShopItems } from "@/hooks/queries/use-shop-items";
 import { Badge } from "@/components/ui/badge";
 import {
     Dialog,
@@ -29,8 +30,9 @@ export default function GiftModal({
     recipientName,
 }: GiftModalProps) {
     const { t } = useT(["shop", "api-response", "fetch-error"]);
-    const [items, setItems] = useState<ShopItem[]>([]);
-    const [isLoadingItems, setIsLoadingItems] = useState(false);
+    const { data: items = [], isLoading: isLoadingItems } = useShopItems({
+        enabled: open,
+    });
     const [sendingItemId, setSendingItemId] = useState<string | null>(null);
     const [animationUrl, setAnimationUrl] = useState<string | null>(null);
     const animationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -42,29 +44,8 @@ export default function GiftModal({
     }, []);
 
     useEffect(() => {
-        if (!open) {
-            setAnimationUrl(null);
-            return;
-        }
-        const fetchItems = async () => {
-            setIsLoadingItems(true);
-            try {
-                const res = await GetShopItems();
-                if (res.success && res.data) {
-                    setItems(res.data);
-                } else {
-                    toast.error(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                    });
-                }
-            } catch (_) {
-                toast.error(t("fetch-error:client_fetch_error"));
-            } finally {
-                setIsLoadingItems(false);
-            }
-        };
-        fetchItems();
-    }, [open, t]);
+        if (!open) setAnimationUrl(null);
+    }, [open]);
 
     const dismissAnimation = () => {
         if (animationTimerRef.current) clearTimeout(animationTimerRef.current);
