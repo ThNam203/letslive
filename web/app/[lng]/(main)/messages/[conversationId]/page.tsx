@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import useDmStore from "@/hooks/use-dm-store";
 import { useDmWebSocketContext } from "@/contexts/dm-websocket-context";
 import useUser from "@/hooks/user";
-import {
-    GetConversation,
-    GetConversations,
-    GetDmMessages,
-    GetUnreadCounts,
-    MarkConversationRead,
-} from "@/lib/api/dm";
+import { GetConversation, MarkConversationRead } from "@/lib/api/dm";
 import ConversationList from "../_components/conversation-list";
 import ConversationHeader from "../_components/conversation-header";
 import MessageThread from "../_components/message-thread";
@@ -27,8 +22,9 @@ import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import IconClose from "@/components/icons/close";
 import RequireAuth from "@/components/wrappers/RequireAuth";
-
-const CONVERSATIONS_PAGE_SIZE = 20;
+import { useConversationsInfinite } from "@/hooks/queries/use-conversations";
+import { useDmMessagesInfinite } from "@/hooks/queries/use-dm-messages";
+import { clearDmUnread } from "@/lib/query/dm-cache";
 
 export default function ConversationPage() {
     const params = useParams();
@@ -36,30 +32,31 @@ export default function ConversationPage() {
     const conversationId = params.conversationId as string;
 
     const user = useUser((state) => state.user);
-    const {
-        conversations,
-        messages,
-        setMessages,
-        prependMessages,
-        setActiveConversationId,
-        setConversations,
-        setUnreadCounts,
-        clearUnread,
-        typingUsers,
-    } = useDmStore();
+    const queryClient = useQueryClient();
+    const { setActiveConversationId, typingUsers } = useDmStore();
     const { send } = useDmWebSocketContext();
     const { t } = useT("api-response");
     const { t: tMessages } = useT("messages");
 
-    const [conversation, setConversation] = useState<Conversation | null>(null);
-    const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
-    const isLoadingRef = useRef(false);
-
-    const currentMessages = useMemo(
-        () => messages[conversationId] || [],
-        [messages, conversationId],
+    const { data: conversationsData } = useConversationsInfinite(!!user);
+    const conversations = useMemo(
+        () => conversationsData?.pages.flat() ?? [],
+        [conversationsData],
     );
+
+    const {
+        data: messagesData,
+        isLoading: isLoadingMessages,
+        isFetchingNextPage: isLoadingOlderMessages,
+        hasNextPage,
+        fetchNextPage,
+    } = useDmMessagesInfinite(conversationId, !!user);
+    const currentMessages = useMemo(
+        () => [...(messagesData?.pages ?? [])].reverse().flat(),
+        [messagesData],
+    );
+
+    const [conversation, setConversation] = useState<Conversation | null>(null);
     const currentTypingUsers = typingUsers[conversationId] || [];
 
     // Set active conversation
@@ -92,86 +89,17 @@ export default function ConversationPage() {
             });
     }, [conversationId, user, conversations, t]);
 
-    // Direct URL access can start with an empty store. Prime sidebar conversations/unread counters.
-    useEffect(() => {
-        if (!user) return;
-        if (conversations.length > 0) return;
-
-        Promise.all([
-            GetConversations(0, CONVERSATIONS_PAGE_SIZE),
-            GetUnreadCounts(),
-        ])
-            .then(([convRes, unreadRes]) => {
-                if (convRes.data) {
-                    setConversations(convRes.data);
-                } else if (!convRes.success && convRes.key) {
-                    toast.error(t(convRes.key));
-                }
-
-                if (unreadRes.data) {
-                    setUnreadCounts(unreadRes.data);
-                }
-            })
-            .catch(() => {
-                toast.error(t("fetch-error:client_fetch_error"));
-            });
-    }, [user, conversations.length, setConversations, setUnreadCounts, t]);
-
-    // Fetch initial messages — skip if already in store for this conversation.
-    // We read current store state via getState() to avoid re-running on every incoming WS message.
-    useEffect(() => {
-        if (!user || !conversationId) return;
-        if ((useDmStore.getState().messages[conversationId] || []).length > 0) return;
-
-        queueMicrotask(() => setIsLoadingMessages(true));
-        GetDmMessages(conversationId)
-            .then((res) => {
-                if (res.data) {
-                    setMessages(conversationId, res.data);
-                    setHasMore(res.data.length >= 50);
-                } else if (!res.success && res.key) {
-                    toast.error(t(res.key));
-                }
-                setIsLoadingMessages(false);
-            })
-            .catch(() => {
-                toast.error(t("fetch-error:client_fetch_error"));
-                setIsLoadingMessages(false);
-            });
-    }, [conversationId, user, setMessages, t]);
-
     // Mark as read
     useEffect(() => {
         if (!user || !conversationId) return;
-        clearUnread(conversationId);
+        clearDmUnread(queryClient, conversationId);
         MarkConversationRead(conversationId);
-    }, [conversationId, user, currentMessages.length, clearUnread]);
+    }, [conversationId, user, currentMessages.length, queryClient]);
 
-    // Load older messages — use a ref guard to prevent concurrent fetches from rapid scroll events
-    const loadOlderMessages = useCallback(async () => {
-        if (!hasMore || isLoadingRef.current || currentMessages.length === 0)
-            return;
-
-        isLoadingRef.current = true;
-        setIsLoadingMessages(true);
-        const oldestMessageId = currentMessages[0]?._id;
-        const res = await GetDmMessages(conversationId, oldestMessageId);
-        if (res.data) {
-            if (res.data.length === 0) {
-                setHasMore(false);
-            } else {
-                prependMessages(conversationId, res.data);
-                setHasMore(res.data.length >= 50);
-            }
-        }
-        isLoadingRef.current = false;
-        setIsLoadingMessages(false);
-    }, [
-        hasMore,
-        currentMessages,
-        conversationId,
-        prependMessages,
-    ]);
+    const loadOlderMessages = useCallback(() => {
+        if (!hasNextPage) return;
+        fetchNextPage();
+    }, [hasNextPage, fetchNextPage]);
 
     const handleSendMessage = useCallback(
         (text: string, imageUrls?: string[]) => {
@@ -194,7 +122,7 @@ export default function ConversationPage() {
 
     const handleTypingStart = useCallback(() => {
         if (!user) return;
-        
+
         send({
             type: DmClientEventType.TYPING_START,
             conversationId,
@@ -261,8 +189,8 @@ export default function ConversationPage() {
                     <MessageThread
                         messages={currentMessages}
                         currentUserId={user.id}
-                        isLoading={isLoadingMessages}
-                        hasMore={hasMore}
+                        isLoading={isLoadingMessages || isLoadingOlderMessages}
+                        hasMore={!!hasNextPage}
                         onLoadMore={loadOlderMessages}
                     />
 

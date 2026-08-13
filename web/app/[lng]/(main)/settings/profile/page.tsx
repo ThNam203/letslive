@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "@/components/utils/toast";
 import { Button } from "@/components/ui/button";
 import useUser from "@/hooks/user";
@@ -31,7 +32,6 @@ export default function ProfileSettings() {
 
     const [username, setUsername] = useState("");
     const [bio, setBio] = useState("");
-    const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
     const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
     const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(
         null,
@@ -54,92 +54,63 @@ export default function ProfileSettings() {
         setBackgroundImageFile(file);
     };
 
-    const handleUpdateProfileInformation = async (
-        event: React.FormEvent<HTMLFormElement>,
-    ) => {
-        event.preventDefault();
-        setIsUpdatingProfile(true);
-        let hasError = false;
+    const updateProfileMutation = useMutation({
+        mutationFn: async () => {
+            let hasError = false;
 
-        if (backgroundImageFile) {
-            try {
+            if (backgroundImageFile) {
                 const res = await UpdateBackgroundPicture(backgroundImageFile);
                 if (res.success) {
                     setBackgroundImageFile(null);
-                    updateUser({
-                        ...user!,
-                        backgroundPicture: res.data,
-                    });
+                    updateUser({ ...user!, backgroundPicture: res.data });
                 } else {
                     toast.error(t(`api-response:${res.key}`), {
                         toastId: res.requestId,
-                        type: "error",
                     });
                     hasError = true;
                 }
-            } catch (_) {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-                hasError = true;
             }
-        }
 
-        if (profileImageFile) {
-            try {
+            if (profileImageFile) {
                 const res = await UpdateProfilePicture(profileImageFile);
                 if (res.success) {
                     setProfileImageFile(null);
-                    updateUser({
-                        ...user!,
-                        profilePicture: res.data,
-                    });
+                    updateUser({ ...user!, profilePicture: res.data });
                 } else {
                     toast.error(t(`api-response:${res.key}`), {
                         toastId: res.requestId,
-                        type: "error",
                     });
                     hasError = true;
                 }
-            } catch (_) {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-                hasError = true;
             }
-        }
 
-        if (isUsernameChanged || isBioChanged) {
-            try {
+            if (isUsernameChanged || isBioChanged) {
                 const res = await UpdateProfile({
                     username: isUsernameChanged ? username : undefined,
                     bio: isBioChanged ? bio : undefined,
                 });
                 if (res.success) {
-                    updateUser({
-                        ...user!,
-                        ...res.data,
-                    });
+                    updateUser({ ...user!, ...res.data });
                 } else {
                     toast.error(t(`api-response:${res.key}`), {
                         toastId: res.requestId,
-                        type: "error",
                     });
                     hasError = true;
                 }
-            } catch (_) {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-                hasError = true;
             }
-        }
 
-        setIsUpdatingProfile(false);
-        if (!hasError) toast.success(t("settings:profile.update_success"));
+            return hasError;
+        },
+        onSuccess: (hasError) => {
+            if (!hasError) toast.success(t("settings:profile.update_success"));
+        },
+    });
+
+    const handleUpdateProfileInformation = (
+        event: React.FormEvent<HTMLFormElement>,
+    ) => {
+        event.preventDefault();
+        updateProfileMutation.mutate();
     };
 
     useEffect(() => {
@@ -173,23 +144,23 @@ export default function ProfileSettings() {
                         maxLength={USERNAME_MAX_LENGTH}
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        disabled={isUpdatingProfile}
+                        disabled={updateProfileMutation.isPending}
                     />
                     <TextAreaField
                         label={t("settings:profile.bio")}
                         maxLength={BIO_MAX_LENGTH}
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
-                        disabled={isUpdatingProfile}
+                        disabled={updateProfileMutation.isPending}
                         className="min-h-[100px]"
                     />
 
                     <div className="mt-6 flex justify-end">
                         <Button
-                            disabled={isUpdatingProfile || isButtonDisabled}
+                            disabled={updateProfileMutation.isPending || isButtonDisabled}
                             type="submit"
                         >
-                            {isUpdatingProfile && <IconLoader />}{" "}
+                            {updateProfileMutation.isPending && <IconLoader />}{" "}
                             {t("common:save_changes")}
                         </Button>
                     </div>
@@ -234,7 +205,7 @@ export default function ProfileSettings() {
                         {t("settings:disable.note")}
                     </p>
                     <DisableAccountDialog
-                        isUpdatingProfile={isUpdatingProfile}
+                        isUpdatingProfile={updateProfileMutation.isPending}
                     />
                 </div>
             </Section>

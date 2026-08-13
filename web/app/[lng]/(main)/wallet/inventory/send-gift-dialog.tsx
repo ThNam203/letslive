@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import { SearchUsersByUsername } from "@/lib/api/user";
 import { SendGift } from "@/lib/api/gift";
+import { unwrapResponse } from "@/lib/api/api-error";
+import { WALLET_BALANCE_QUERY_KEY } from "@/hooks/queries/use-wallet";
+import { INVENTORY_QUERY_KEY } from "@/hooks/queries/use-inventory";
 import { PublicUser } from "@/types/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -22,7 +26,6 @@ type SendGiftDialogProps = {
     onClose: () => void;
     shopItemId: string;
     itemName: string;
-    onSent: () => void;
 };
 
 export default function SendGiftDialog({
@@ -30,15 +33,14 @@ export default function SendGiftDialog({
     onClose,
     shopItemId,
     itemName,
-    onSent,
 }: SendGiftDialogProps) {
     const { t } = useT(["shop", "common", "api-response", "fetch-error"]);
+    const queryClient = useQueryClient();
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<PublicUser[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [recipient, setRecipient] = useState<PublicUser | null>(null);
     const [message, setMessage] = useState("");
-    const [isSending, setIsSending] = useState(false);
 
     const handleSearch = async (value: string) => {
         setQuery(value);
@@ -70,30 +72,26 @@ export default function SendGiftDialog({
         onClose();
     };
 
-    const handleSend = async () => {
-        if (!recipient) return;
+    const sendGiftMutation = useMutation({
+        mutationFn: async () =>
+            unwrapResponse(
+                await SendGift({
+                    shopItemId,
+                    recipientUserId: recipient!.id,
+                    message: message.trim() || undefined,
+                }),
+            ),
+        onSuccess: () => {
+            toast.success(t("shop:inventory.gift_sent_success"));
+            queryClient.invalidateQueries({ queryKey: WALLET_BALANCE_QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEY });
+            handleClose();
+        },
+    });
 
-        setIsSending(true);
-        try {
-            const res = await SendGift({
-                shopItemId,
-                recipientUserId: recipient.id,
-                message: message.trim() || undefined,
-            });
-            if (res.success) {
-                toast.success(t("shop:inventory.gift_sent_success"));
-                onSent();
-                handleClose();
-            } else {
-                toast.error(t(`api-response:${res.key}`), {
-                    toastId: res.requestId,
-                });
-            }
-        } catch (_) {
-            toast.error(t("fetch-error:client_fetch_error"));
-        } finally {
-            setIsSending(false);
-        }
+    const handleSend = () => {
+        if (!recipient) return;
+        sendGiftMutation.mutate();
     };
 
     return (
@@ -178,8 +176,11 @@ export default function SendGiftDialog({
                     <Button variant="outline" onClick={handleClose}>
                         {t("common:cancel")}
                     </Button>
-                    <Button disabled={!recipient || isSending} onClick={handleSend}>
-                        {isSending
+                    <Button
+                        disabled={!recipient || sendGiftMutation.isPending}
+                        onClick={handleSend}
+                    >
+                        {sendGiftMutation.isPending
                             ? t("shop:inventory.sending_gift")
                             : t("shop:inventory.confirm_send")}
                     </Button>

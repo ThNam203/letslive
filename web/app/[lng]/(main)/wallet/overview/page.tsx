@@ -1,56 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
-import useWallet from "@/hooks/wallet";
 import useUser from "@/hooks/user";
-import { GetMyWallet, GetTransactions } from "@/lib/api/wallet";
-import { CurrencyCode, Transaction } from "@/types/wallet";
+import { CurrencyCode } from "@/types/wallet";
 import BalanceCard from "../_components/balance-card";
 import TransactionRow from "../_components/transaction-row";
 import Link from "next/link";
 import IconLoader from "@/components/icons/loader";
+import { useRecentTransactions, useWalletBalance } from "@/hooks/queries/use-wallet";
 
 export default function WalletOverviewPage() {
     const { t } = useT(["wallet", "api-response", "fetch-error"]);
     const user = useUser((s) => s.user);
-    const { wallet, setWallet } = useWallet();
-    const [recentTxns, setRecentTxns] = useState<Transaction[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { data: wallet, isLoading: isLoadingWallet } = useWalletBalance(!!user);
+    const { data: recentTxns = [], isLoading: isLoadingTxns } =
+        useRecentTransactions(!!user);
 
-    const fetchData = useCallback(async () => {
-        if (!user) return;
-        setIsLoading(true);
-        try {
-            const [walletRes, txnRes] = await Promise.all([
-                GetMyWallet(),
-                GetTransactions(0, 5),
-            ]);
-
-            if (walletRes.success && walletRes.data) {
-                setWallet(walletRes.data);
-            } else if (!walletRes.success) {
-                toast.error(t(`api-response:${walletRes.key}`), {
-                    toastId: walletRes.requestId,
-                });
-            }
-
-            if (txnRes.success && txnRes.data) {
-                setRecentTxns(txnRes.data);
-            }
-        } catch (_) {
-            toast.error(t("fetch-error:client_fetch_error"));
-        } finally {
-            setIsLoading(false);
-        }
-    }, [user, setWallet, t]);
-
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
-
-    if (isLoading) {
+    if (isLoadingWallet || isLoadingTxns) {
         return (
             <div className="flex justify-center py-20">
                 <IconLoader />

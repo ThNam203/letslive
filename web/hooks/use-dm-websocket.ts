@@ -7,6 +7,7 @@ import {
     useCallback,
     useState,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import GLOBAL from "@/global";
 import useDmStore from "./use-dm-store";
 import useUser from "./user";
@@ -17,6 +18,12 @@ import {
 } from "@/types/dm";
 import { toast } from "@/components/utils/toast";
 import useT from "./use-translation";
+import {
+    appendDmMessage,
+    incrementDmUnread,
+    updateConversationInCache,
+    updateDmMessageInCache,
+} from "@/lib/query/dm-cache";
 
 const MAX_RECONNECT_DELAY = 30000;
 const INITIAL_RECONNECT_DELAY = 1000;
@@ -35,16 +42,12 @@ export default function useDmWebSocket() {
 
     const [isConnected, setIsConnected] = useState(false);
     const user = useUser((state) => state.user);
+    const queryClient = useQueryClient();
     const {
-        addMessage,
-        updateMessage,
-        removeMessage,
         setTypingUser,
         removeTypingUser,
         setUserOnline,
         setUserOffline,
-        incrementUnread,
-        updateConversation,
     } = useDmStore();
     const { t } = useT("api-response");
 
@@ -52,35 +55,56 @@ export default function useDmWebSocket() {
         (event: DmWsServerEvent) => {
             switch (event.type) {
                 case DmServerEventType.NEW_MESSAGE:
-                    addMessage(event.conversationId, event.message);
+                    appendDmMessage(
+                        queryClient,
+                        event.conversationId,
+                        event.message,
+                    );
                     {
                         const activeId =
                             useDmStore.getState().activeConversationId;
                         if (event.conversationId !== activeId) {
-                            incrementUnread(event.conversationId);
+                            incrementDmUnread(
+                                queryClient,
+                                event.conversationId,
+                            );
                         }
                     }
-                    updateConversation(event.conversationId, {
-                        lastMessage: {
-                            _id: event.message._id,
-                            senderId: event.message.senderId,
-                            senderUsername: event.message.senderUsername,
-                            text: event.message.text.substring(0, 100),
-                            createdAt: event.message.createdAt,
+                    updateConversationInCache(
+                        queryClient,
+                        event.conversationId,
+                        {
+                            lastMessage: {
+                                _id: event.message._id,
+                                senderId: event.message.senderId,
+                                senderUsername: event.message.senderUsername,
+                                text: event.message.text.substring(0, 100),
+                                createdAt: event.message.createdAt,
+                            },
+                            updatedAt: event.message.createdAt,
                         },
-                        updatedAt: event.message.createdAt,
-                    });
+                    );
                     break;
 
                 case DmServerEventType.MESSAGE_EDITED:
-                    updateMessage(event.conversationId, event.messageId, {
-                        text: event.newText,
-                        updatedAt: event.updatedAt,
-                    });
+                    updateDmMessageInCache(
+                        queryClient,
+                        event.conversationId,
+                        event.messageId,
+                        {
+                            text: event.newText,
+                            updatedAt: event.updatedAt,
+                        },
+                    );
                     break;
 
                 case DmServerEventType.MESSAGE_DELETED:
-                    removeMessage(event.conversationId, event.messageId);
+                    updateDmMessageInCache(
+                        queryClient,
+                        event.conversationId,
+                        event.messageId,
+                        { isDeleted: true, text: "" },
+                    );
                     break;
 
                 case DmServerEventType.USER_TYPING:
@@ -124,7 +148,11 @@ export default function useDmWebSocket() {
                     break;
 
                 case DmServerEventType.CONVERSATION_UPDATED:
-                    updateConversation(event.conversationId, event.update);
+                    updateConversationInCache(
+                        queryClient,
+                        event.conversationId,
+                        event.update,
+                    );
                     break;
 
                 case DmServerEventType.SEND_FAILED:
@@ -137,15 +165,11 @@ export default function useDmWebSocket() {
             }
         },
         [
-            addMessage,
-            updateMessage,
-            removeMessage,
+            queryClient,
             setTypingUser,
             removeTypingUser,
             setUserOnline,
             setUserOffline,
-            incrementUnread,
-            updateConversation,
             t,
         ],
     );

@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useUser from "@/hooks/user";
-import useDmStore from "@/hooks/use-dm-store";
 import { CreateConversation } from "@/lib/api/dm";
+import { prependConversation } from "@/lib/query/dm-cache";
 import { SearchUsersByUsername } from "@/lib/api/user";
 import { PublicUser } from "@/types/user";
 import { ConversationType } from "@/types/dm";
@@ -23,7 +24,7 @@ export default function NewConversationDialog({
     const router = useRouter();
     const params = useParams();
     const user = useUser((state) => state.user);
-    const { addConversation } = useDmStore();
+    const queryClient = useQueryClient();
     const { t } = useT("api-response");
     const { t: tMessages } = useT("messages");
 
@@ -98,7 +99,7 @@ export default function NewConversationDialog({
             });
 
             if (res.data) {
-                addConversation(res.data);
+                prependConversation(queryClient, res.data);
                 onClose();
                 const lng = (params.lng as string) ?? I18N_FALLBACK_LNG;
                 router.push(`/${lng}/messages/${res.data._id}`);

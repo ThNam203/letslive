@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { CreateVODComment } from "@/lib/api/vod-comment";
+import { unwrapResponse } from "@/lib/api/api-error";
 import { VODComment } from "@/types/vod-comment";
-import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
 import { Button } from "@/components/ui/button";
@@ -28,37 +29,27 @@ export default function CommentForm({
     placeholder,
     autoFocus = false,
 }: CommentFormProps) {
-    const { t } = useT(["comments", "common", "fetch-error", "api-response"]);
+    const { t } = useT(["comments", "common"]);
     const user = useUser((state) => state.user);
     const [content, setContent] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = async () => {
-        if (!content.trim() || isSubmitting) return;
+    const createComment = useMutation({
+        mutationFn: async () =>
+            unwrapResponse(
+                await CreateVODComment(vodId, {
+                    content: content.trim(),
+                    parentId,
+                }),
+            ),
+        onSuccess: (comment) => {
+            setContent("");
+            onCommentCreated(comment);
+        },
+    });
 
-        setIsSubmitting(true);
-        try {
-            const res = await CreateVODComment(vodId, {
-                content: content.trim(),
-                parentId,
-            });
-            if (res.success && res.data) {
-                setContent("");
-                onCommentCreated(res.data);
-            } else {
-                toast(t(`api-response:${res.key}`), {
-                    toastId: res.requestId,
-                    type: "error",
-                });
-            }
-        } catch (_) {
-            toast(t("fetch-error:client_fetch_error"), {
-                toastId: "client-fetch-error-id",
-                type: "error",
-            });
-        } finally {
-            setIsSubmitting(false);
-        }
+    const handleSubmit = () => {
+        if (!content.trim() || createComment.isPending) return;
+        createComment.mutate();
     };
 
     return (
@@ -109,9 +100,9 @@ export default function CommentForm({
                         <Button
                             size="sm"
                             onClick={handleSubmit}
-                            disabled={!content.trim() || isSubmitting}
+                            disabled={!content.trim() || createComment.isPending}
                         >
-                            {isSubmitting
+                            {createComment.isPending
                                 ? t("common:loading")
                                 : t("comments:post")}
                         </Button>

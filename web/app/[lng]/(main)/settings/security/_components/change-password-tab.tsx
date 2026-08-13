@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "@/components/utils/toast";
 import { ChangePassword } from "@/lib/api/auth";
 import { Label } from "@/components/ui/label";
@@ -23,39 +24,39 @@ export default function ChangePasswordTab() {
         newPassword: "",
         confirmPassword: "",
     });
-    const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+    const changePasswordMutation = useMutation({
+        mutationFn: (payload: { oldPassword: string; newPassword: string }) =>
+            ChangePassword(payload),
+        onSuccess: (res) => {
+            if (!res.success) {
+                setErrors((prev) => ({
+                    ...prev,
+                    confirmPassword: t(`api-response:${res.key}`),
+                }));
+                return;
+            }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+            setErrors({
+                currentPassword: "",
+                newPassword: "",
+                confirmPassword: "",
+            });
+
+            toast(t("settings:security.security.password.updated_success"), {
+                type: "success",
+            });
+        },
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!validate()) return;
-
-        setIsUpdatingPassword(true);
-        const res = await ChangePassword({
+        changePasswordMutation.mutate({
             oldPassword: currentPassword,
-            newPassword: newPassword,
-        });
-
-        setIsUpdatingPassword(false);
-
-        if (!res.success) {
-            setErrors((prev) => ({
-                ...prev,
-                confirmPassword: t(`api-response:${res.key}`),
-            }));
-            return;
-        }
-
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-        setErrors({
-            currentPassword: "",
-            newPassword: "",
-            confirmPassword: "",
-        });
-
-        toast(t("settings:security.security.password.updated_success"), {
-            type: "success",
+            newPassword,
         });
     };
 
@@ -135,11 +136,13 @@ export default function ChangePasswordTab() {
                 <FormErrorText textError={errors.confirmPassword} />
             </div>
             <Button
-                disabled={isUpdatingPassword}
+                disabled={changePasswordMutation.isPending}
                 className="float-right disabled:bg-gray-300"
                 type="submit"
             >
-                {isUpdatingPassword && <IconLoader className="animate-spin" />}
+                {changePasswordMutation.isPending && (
+                    <IconLoader className="animate-spin" />
+                )}
                 {t("settings:security.security.password.form.submit")}
             </Button>
         </form>

@@ -1,103 +1,25 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import useDmStore from "@/hooks/use-dm-store";
 import useUser from "@/hooks/user";
-import { GetConversations, GetUnreadCounts } from "@/lib/api/dm";
 import ConversationList from "./_components/conversation-list";
 import NewConversationDialog from "./_components/new-conversation-dialog";
 import { Button } from "@/components/ui/button";
 import useT from "@/hooks/use-translation";
-import { toast } from "@/components/utils/toast";
 import IconClose from "@/components/icons/close";
 import RequireAuth from "@/components/wrappers/RequireAuth";
-
-const CONVERSATIONS_PAGE_SIZE = 20;
+import { useConversationsInfinite } from "@/hooks/queries/use-conversations";
 
 export default function MessagesPage() {
     const params = useParams();
     const router = useRouter();
     const user = useUser((state) => state.user);
-    const {
-        conversations,
-        setConversations,
-        appendConversations,
-        setUnreadCounts,
-        setIsLoading,
-        isLoading,
-    } = useDmStore();
+    const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+        useConversationsInfinite(!!user);
+    const conversations = data?.pages.flat() ?? [];
     const [showNewConversation, setShowNewConversation] = useState(false);
-    const [page, setPage] = useState(0);
-    const [hasMore, setHasMore] = useState(true);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const { t } = useT("messages");
-
-    useEffect(() => {
-        if (!user) return;
-
-        const fetchData = async () => {
-            setIsLoading(true);
-            setPage(0);
-            setHasMore(true);
-            try {
-                const [convRes, unreadRes] = await Promise.all([
-                    GetConversations(0, CONVERSATIONS_PAGE_SIZE),
-                    GetUnreadCounts(),
-                ]);
-
-                if (convRes.data) {
-                    setConversations(convRes.data);
-                    const total = convRes.meta?.total ?? 0;
-                    setHasMore(convRes.data.length < total);
-                }
-                if (unreadRes.data) {
-                    setUnreadCounts(unreadRes.data);
-                }
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [user, setConversations, setUnreadCounts, setIsLoading]);
-
-    const loadMore = useCallback(async () => {
-        if (!user || !hasMore || isLoadingMore) return;
-        const nextPage = page + 1;
-        setIsLoadingMore(true);
-        try {
-            const convRes = await GetConversations(
-                nextPage,
-                CONVERSATIONS_PAGE_SIZE,
-            );
-            if (convRes.data && convRes.data.length > 0) {
-                appendConversations(convRes.data);
-                setPage(nextPage);
-                const total = convRes.meta?.total ?? 0;
-                const newLength = conversations.length + convRes.data.length;
-                setHasMore(
-                    total > 0
-                        ? newLength < total
-                        : convRes.data.length >= CONVERSATIONS_PAGE_SIZE,
-                );
-            } else {
-                setHasMore(false);
-            }
-        } catch {
-            toast.error(t("fetch-error:client_fetch_error"));
-        } finally {
-            setIsLoadingMore(false);
-        }
-    }, [
-        user,
-        hasMore,
-        isLoadingMore,
-        page,
-        conversations.length,
-        appendConversations,
-        t,
-    ]);
 
     return (
         <RequireAuth>
@@ -132,9 +54,9 @@ export default function MessagesPage() {
                     <ConversationList
                         conversations={conversations}
                         isLoading={isLoading}
-                        hasMore={hasMore}
-                        isLoadingMore={isLoadingMore}
-                        onLoadMore={loadMore}
+                        hasMore={!!hasNextPage}
+                        isLoadingMore={isFetchingNextPage}
+                        onLoadMore={() => fetchNextPage()}
                     />
 
                     {showNewConversation && (

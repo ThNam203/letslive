@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+    MutationCache,
     QueryCache,
     QueryClient,
     QueryClientProvider,
@@ -30,6 +31,9 @@ export default function QueryProvider({
         () =>
             new QueryClient({
                 queryCache: new QueryCache({ onError: handleQueryError }),
+                mutationCache: new MutationCache({
+                    onError: handleQueryError,
+                }),
                 defaultOptions: {
                     queries: {
                         staleTime: 30_000,

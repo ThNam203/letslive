@@ -5,6 +5,7 @@ import { PublicUser } from "@/types/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import useUser from "@/hooks/user";
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { FollowOtherUser, UnfollowOtherUser } from "@/lib/api/user";
 import { toast } from "@/components/utils/toast";
 import { Button } from "@/components/ui/button";
@@ -28,63 +29,33 @@ export default function ProfileHeader({
         "shop",
     ]);
     const me = useUser((state) => state.user);
-    const [isFetching, setIsFetching] = useState(false);
     const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
 
-    const onFollowClick = async () => {
-        setIsFetching(true);
+    const followMutation = useMutation({
+        mutationFn: () =>
+            user.isFollowing
+                ? UnfollowOtherUser(user.id)
+                : FollowOtherUser(user.id),
+        onSuccess: (res) => {
+            if (res.success) {
+                updateUser({
+                    ...user,
+                    isFollowing: !user.isFollowing,
+                    followerCount: user.isFollowing
+                        ? user.followerCount - 1
+                        : user.followerCount + 1,
+                });
+            } else {
+                toast(t(`api-response:${res.key}`), {
+                    toastId: res.requestId,
+                    type: "error",
+                });
+            }
+        },
+    });
 
-        if (user.isFollowing) {
-            await UnfollowOtherUser(user.id)
-                .then((res) => {
-                    if (res.success) {
-                        updateUser({
-                            ...user,
-                            isFollowing: false,
-                            followerCount: user.followerCount - 1,
-                        });
-                    } else {
-                        toast(t(`api-response:${res.key}`), {
-                            toastId: res.requestId,
-                            type: "error",
-                        });
-                    }
-                })
-                .catch((err) => {
-                    toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "client-fetch-error-id",
-                        type: "error",
-                    });
-                })
-                .finally(() => {
-                    setIsFetching(false);
-                });
-        } else {
-            await FollowOtherUser(user.id)
-                .then((res) => {
-                    if (res.success) {
-                        updateUser({
-                            ...user,
-                            isFollowing: true,
-                            followerCount: user.followerCount + 1,
-                        });
-                    } else {
-                        toast(t(`api-response:${res.key}`), {
-                            toastId: res.key,
-                            type: "error",
-                        });
-                    }
-                })
-                .catch((err) => {
-                    toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "client-fetch-error-id",
-                        type: "error",
-                    });
-                })
-                .finally(() => {
-                    setIsFetching(false);
-                });
-        }
+    const onFollowClick = () => {
+        followMutation.mutate();
     };
 
     return (
@@ -120,11 +91,13 @@ export default function ProfileHeader({
                         <>
                             <Button
                                 variant={user.isFollowing ? "destructive" : "default"}
-                                disabled={isFetching || !me}
+                                disabled={followMutation.isPending || !me}
                                 onClick={onFollowClick}
                                 className="absolute right-0 bottom-4 flex translate-x-[50%] flex-row items-center justify-center gap-0"
                             >
-                                {isFetching && <IconLoader className="mr-1" />}
+                                {followMutation.isPending && (
+                                    <IconLoader className="mr-1" />
+                                )}
                                 {user.isFollowing ? t("common:unfollow") : t("common:follow")}
                             </Button>
                             <Button

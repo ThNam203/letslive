@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "@/components/utils/toast";
 import { Button } from "@/components/ui/button";
 import useUser from "@/hooks/user";
 import { UpdateLivestreamInformation } from "@/lib/api/user";
+import { unwrapResponse } from "@/lib/api/api-error";
 import ImageField from "../_components/image-field";
 import Section from "../_components/section";
 import TextField from "../_components/text-field";
@@ -28,7 +30,6 @@ export default function StreamEdit() {
     // use null to indicate that user has reset the image
     const [image, setImage] = useState<File | null | undefined>(undefined);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const blobUrlRef = useRef<string | null>(null);
 
     useEffect(() => {
@@ -66,49 +67,39 @@ export default function StreamEdit() {
         });
     }, [user]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const updateStreamInfoMutation = useMutation({
+        mutationFn: async () =>
+            unwrapResponse(
+                await UpdateLivestreamInformation(
+                    image === undefined ? null : image,
+                    image === null
+                        ? null
+                        : user!.livestreamInformation.thumbnailUrl,
+                    title,
+                    description,
+                ),
+            ),
+        onSuccess: (data) => {
+            if (!user || !data) return;
+            if (blobUrlRef.current) {
+                URL.revokeObjectURL(blobUrlRef.current);
+                blobUrlRef.current = null;
+            }
+            updateUser({
+                ...user,
+                livestreamInformation: {
+                    ...user.livestreamInformation,
+                    ...data,
+                },
+            });
+            toast.success(t("settings:stream.updated_success"));
+        },
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
-
-        setIsSubmitting(true);
-        await UpdateLivestreamInformation(
-            image === undefined ? null : image,
-            image === null ? null : user!.livestreamInformation.thumbnailUrl,
-            title,
-            description,
-        )
-            .then((res) => {
-                if (res.success) {
-                    if (res.data && res.data) {
-                        if (blobUrlRef.current) {
-                            URL.revokeObjectURL(blobUrlRef.current);
-                            blobUrlRef.current = null;
-                        }
-                        updateUser({
-                            ...user,
-                            livestreamInformation: {
-                                ...user.livestreamInformation,
-                                ...res.data,
-                            },
-                        });
-                        toast.success(t("settings:stream.updated_success"));
-                    }
-                } else {
-                    toast(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                        type: "error",
-                    });
-                }
-            })
-            .catch((_) => {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-            })
-            .finally(() => {
-                setIsSubmitting(false);
-            });
+        updateStreamInfoMutation.mutate();
     };
 
     const isFormChange = useMemo(() => {
@@ -151,10 +142,12 @@ export default function StreamEdit() {
                 />
                 <div className="flex items-center justify-end">
                     <Button
-                        disabled={isSubmitting || !isFormChange}
+                        disabled={
+                            updateStreamInfoMutation.isPending || !isFormChange
+                        }
                         type="submit"
                     >
-                        {isSubmitting && <IconLoader />}
+                        {updateStreamInfoMutation.isPending && <IconLoader />}
                         {t("settings:stream.confirm_edit_button")}
                     </Button>
                 </div>

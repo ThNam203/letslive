@@ -1,41 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
 import { CreatePurchase } from "@/lib/api/shop";
+import { unwrapResponse } from "@/lib/api/api-error";
 import { ShopItem } from "@/types/shop";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import IconLoader from "@/components/icons/loader";
 import { useShopItems } from "@/hooks/queries/use-shop-items";
+import { WALLET_BALANCE_QUERY_KEY } from "@/hooks/queries/use-wallet";
+import { INVENTORY_QUERY_KEY } from "@/hooks/queries/use-inventory";
 
 export default function ShopPage() {
     const { t } = useT(["shop", "api-response", "fetch-error"]);
     const user = useUser((s) => s.user);
+    const queryClient = useQueryClient();
     const { data: items = [], isLoading } = useShopItems();
-    const [buyingItemId, setBuyingItemId] = useState<string | null>(null);
 
-    const handleBuy = async (item: ShopItem) => {
+    const buyMutation = useMutation({
+        mutationFn: async (item: ShopItem) =>
+            unwrapResponse(
+                await CreatePurchase({ shopItemId: item.id, quantity: 1 }),
+            ),
+        onSuccess: () => {
+            toast.success(t("shop:shop.purchase_success"));
+            queryClient.invalidateQueries({ queryKey: WALLET_BALANCE_QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEY });
+        },
+    });
+
+    const handleBuy = (item: ShopItem) => {
         if (!user) return;
-
-        setBuyingItemId(item.id);
-        try {
-            const res = await CreatePurchase({ shopItemId: item.id, quantity: 1 });
-            if (res.success) {
-                toast.success(t("shop:shop.purchase_success"));
-            } else {
-                toast.error(t(`api-response:${res.key}`), {
-                    toastId: res.requestId,
-                });
-            }
-        } catch (_) {
-            toast.error(t("fetch-error:client_fetch_error"));
-        } finally {
-            setBuyingItemId(null);
-        }
+        buyMutation.mutate(item);
     };
 
     if (isLoading) {
@@ -59,7 +59,9 @@ export default function ShopPage() {
             ) : (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     {items.map((item) => {
-                        const isBuying = buyingItemId === item.id;
+                        const isBuying =
+                            buyMutation.isPending &&
+                            buyMutation.variables?.id === item.id;
                         return (
                             <div
                                 key={item.id}
@@ -90,7 +92,7 @@ export default function ShopPage() {
                                 <Button
                                     size="sm"
                                     className="w-full"
-                                    disabled={!user || buyingItemId !== null}
+                                    disabled={!user || buyMutation.isPending}
                                     title={
                                         !user
                                             ? t("shop:shop.login_to_buy")

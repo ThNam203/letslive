@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { CommentUser, VODComment } from "@/types/vod-comment";
 import {
     GetCommentReplies,
@@ -11,6 +12,7 @@ import {
     UnlikeVODComment,
     DeleteVODComment,
 } from "@/lib/api/vod-comment";
+import { unwrapResponse } from "@/lib/api/api-error";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
@@ -76,66 +78,35 @@ export default function CommentItem({
     );
     const [replyLikedIds, setReplyLikedIds] = useState<Set<string>>(new Set());
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [isLiking, setIsLiking] = useState(false);
     const [isLoadingReplies, setIsLoadingReplies] = useState(false);
 
-    const handleLike = async () => {
-        if (!currentUser || isLiking) return;
-        setIsLiking(true);
-        try {
-            if (isLiked) {
-                const res = await UnlikeVODComment(comment.id);
-                if (res.success) {
-                    setIsLiked(false);
-                    setLikeCount((prev) => Math.max(prev - 1, 0));
-                    onLikedChanged?.(comment.id, false);
-                } else {
-                    toast(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                        type: "error",
-                    });
-                }
-            } else {
-                const res = await LikeVODComment(comment.id);
-                if (res.success) {
-                    setIsLiked(true);
-                    setLikeCount((prev) => prev + 1);
-                    onLikedChanged?.(comment.id, true);
-                } else {
-                    toast(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                        type: "error",
-                    });
-                }
-            }
-        } catch (_) {
-            toast(t("fetch-error:client_fetch_error"), {
-                toastId: "client-fetch-error-id",
-                type: "error",
-            });
-        } finally {
-            setIsLiking(false);
-        }
+    const likeMutation = useMutation({
+        mutationFn: async (nextLiked: boolean) =>
+            unwrapResponse(
+                nextLiked
+                    ? await LikeVODComment(comment.id)
+                    : await UnlikeVODComment(comment.id),
+            ),
+        onSuccess: (_data, nextLiked) => {
+            setIsLiked(nextLiked);
+            setLikeCount((prev) => Math.max(prev + (nextLiked ? 1 : -1), 0));
+            onLikedChanged?.(comment.id, nextLiked);
+        },
+    });
+
+    const handleLike = () => {
+        if (!currentUser || likeMutation.isPending) return;
+        likeMutation.mutate(!isLiked);
     };
 
-    const handleDelete = async () => {
+    const deleteMutation = useMutation({
+        mutationFn: async () => unwrapResponse(await DeleteVODComment(comment.id)),
+        onSuccess: () => onCommentDeleted(comment.id),
+    });
+
+    const handleDelete = () => {
         setDeleteDialogOpen(false);
-        try {
-            const res = await DeleteVODComment(comment.id);
-            if (res.success) {
-                onCommentDeleted(comment.id);
-            } else {
-                toast(t(`api-response:${res.key}`), {
-                    toastId: res.requestId,
-                    type: "error",
-                });
-            }
-        } catch (_) {
-            toast(t("fetch-error:client_fetch_error"), {
-                toastId: "client-fetch-error-id",
-                type: "error",
-            });
-        }
+        deleteMutation.mutate();
     };
 
     const fetchReplyLikedIds = useCallback(
@@ -323,14 +294,14 @@ export default function CommentItem({
                             size="sm"
                             className="h-7 cursor-pointer gap-1 px-2 text-xs"
                             onClick={handleLike}
-                            disabled={!currentUser || isLiking}
+                            disabled={!currentUser || likeMutation.isPending}
                             aria-label={
                                 isLiked
                                     ? t("comments:unlike")
                                     : t("comments:like")
                             }
                         >
-                            {isLiking ? (
+                            {likeMutation.isPending ? (
                                 <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
                             ) : isLiked ? (
                                 <IconHeartFilled className="h-3.5 w-3.5 text-red-500" />

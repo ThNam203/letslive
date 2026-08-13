@@ -176,6 +176,7 @@ export default function VODPage() {
                     />
                 )}
                 <CommentSection
+                    key={params.vodId}
                     vodId={params.vodId}
                     vodOwnerId={params.userId}
                     className="mt-4 pb-8"

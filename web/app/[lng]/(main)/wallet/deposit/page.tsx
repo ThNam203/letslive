@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/utils/toast";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
 import { CreateDeposit } from "@/lib/api/wallet";
+import { unwrapResponse } from "@/lib/api/api-error";
 import { CurrencyCode, PaymentProvider } from "@/types/wallet";
 import CurrencySelect from "../_components/currency-select";
 import ProviderSelect from "../_components/provider-select";
@@ -26,7 +28,6 @@ export default function DepositPage() {
         PaymentProvider.STRIPE,
     );
     const [amount, setAmount] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const validateAmount = (value: string): string | null => {
@@ -47,7 +48,26 @@ export default function DepositPage() {
         return null;
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const depositMutation = useMutation({
+        mutationFn: async () =>
+            unwrapResponse(
+                await CreateDeposit({
+                    provider,
+                    currencyCode: currency,
+                    amount,
+                }),
+            ),
+        onSuccess: (data) => {
+            toast.success(t("wallet:deposit.success"));
+            if (data?.checkoutUrl) {
+                window.open(data.checkoutUrl, "_blank");
+            } else {
+                router.push("./overview");
+            }
+        },
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
 
@@ -57,32 +77,7 @@ export default function DepositPage() {
             return;
         }
         setError(null);
-        setIsSubmitting(true);
-
-        try {
-            const res = await CreateDeposit({
-                provider,
-                currencyCode: currency,
-                amount,
-            });
-
-            if (res.success && res.data) {
-                toast.success(t("wallet:deposit.success"));
-                if (res.data.checkoutUrl) {
-                    window.open(res.data.checkoutUrl, "_blank");
-                } else {
-                    router.push("./overview");
-                }
-            } else {
-                toast.error(t(`api-response:${res.key}`), {
-                    toastId: res.requestId,
-                });
-            }
-        } catch (_) {
-            toast.error(t("fetch-error:client_fetch_error"));
-        } finally {
-            setIsSubmitting(false);
-        }
+        depositMutation.mutate();
     };
 
     const parsedAmount = parseFloat(amount);
@@ -175,9 +170,12 @@ export default function DepositPage() {
             )}
 
             <div className="flex justify-end">
-                <Button type="submit" disabled={isSubmitting || !amount}>
-                    {isSubmitting && <IconLoader />}
-                    {isSubmitting
+                <Button
+                    type="submit"
+                    disabled={depositMutation.isPending || !amount}
+                >
+                    {depositMutation.isPending && <IconLoader />}
+                    {depositMutation.isPending
                         ? t("wallet:deposit.confirming")
                         : t("wallet:deposit.confirm")}
                 </Button>

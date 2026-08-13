@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { CommentUser, VODComment } from "@/types/vod-comment";
-import { GetVODComments, GetUserLikedCommentIds } from "@/lib/api/vod-comment";
+import { GetUserLikedCommentIds } from "@/lib/api/vod-comment";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
@@ -11,6 +12,8 @@ import CommentForm from "./comment-form";
 import { CommentEmpty } from "./comment-empty";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
+import { useVodCommentsInfinite } from "@/hooks/queries/use-vod-comments";
+import { prependVodComment, markVodCommentDeleted } from "@/lib/query/vod-comments-cache";
 
 interface CommentSectionProps {
     vodId: string;
@@ -25,23 +28,28 @@ export default function CommentSection({
 }: CommentSectionProps) {
     const { t } = useT(["comments", "common", "fetch-error", "api-response"]);
     const user = useUser((state) => state.user);
-    const [comments, setComments] = useState<VODComment[]>([]);
-    const [page, setPage] = useState(0);
-    const [hasMore, setHasMore] = useState(true);
-    const [isLoading, setIsLoading] = useState(false);
+    const queryClient = useQueryClient();
     const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
-    const [totalComments, setTotalComments] = useState(0);
-    const LIMIT = 10;
+    const fetchedLikeIdsRef = useRef<Set<string>>(new Set());
 
-    const fetchLikedIds = useCallback(
-        async (commentList: VODComment[]) => {
-            if (!user) return;
-            const ids = commentList
-                .filter((c) => !c.isDeleted)
-                .map((c) => c.id);
-            if (ids.length === 0) return;
-            try {
-                const res = await GetUserLikedCommentIds(ids);
+    const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+        useVodCommentsInfinite(vodId);
+    const comments = useMemo(
+        () => data?.pages.flatMap((p) => p.items) ?? [],
+        [data],
+    );
+    const totalComments = data?.pages[0]?.total ?? 0;
+
+    useEffect(() => {
+        if (!user) return;
+        const newIds = comments
+            .filter((c) => !c.isDeleted && !fetchedLikeIdsRef.current.has(c.id))
+            .map((c) => c.id);
+        if (newIds.length === 0) return;
+        newIds.forEach((id) => fetchedLikeIdsRef.current.add(id));
+
+        GetUserLikedCommentIds(newIds)
+            .then((res) => {
                 if (res.success && res.data) {
                     setLikedIds((prev) => {
                         const next = new Set(prev);
@@ -49,57 +57,14 @@ export default function CommentSection({
                         return next;
                     });
                 }
-            } catch (_) {
+            })
+            .catch(() => {
                 toast(t("fetch-error:client_fetch_error"), {
                     toastId: "liked-ids-fetch-error",
                     type: "error",
                 });
-            }
-        },
-        [user, t],
-    );
-
-    const fetchComments = useCallback(
-        async (pageNum: number) => {
-            setIsLoading(true);
-            try {
-                const res = await GetVODComments(vodId, pageNum, LIMIT);
-                if (res.success) {
-                    const newComments = res.data ?? [];
-                    if (pageNum === 0) {
-                        setComments(newComments);
-                    } else {
-                        setComments((prev) => [...prev, ...newComments]);
-                    }
-                    setHasMore(newComments.length === LIMIT);
-                    if (res.meta?.total !== undefined) {
-                        setTotalComments(res.meta.total);
-                    }
-                    fetchLikedIds(newComments);
-                } else {
-                    toast(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                        type: "error",
-                    });
-                }
-            } catch (_) {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-            } finally {
-                setIsLoading(false);
-            }
-        },
-        [vodId, t, fetchLikedIds],
-    );
-
-    useEffect(() => {
-        setPage(0);
-        setComments([]);
-        setLikedIds(new Set());
-        fetchComments(0);
-    }, [fetchComments]);
+            });
+    }, [comments, user, t]);
 
     const handleCommentCreated = (newComment: VODComment) => {
         const commentWithUser: VODComment =
@@ -113,17 +78,11 @@ export default function CommentSection({
                       } satisfies CommentUser,
                   }
                 : newComment;
-        setComments((prev) => [commentWithUser, ...prev]);
-        setTotalComments((prev) => prev + 1);
+        prependVodComment(queryClient, vodId, commentWithUser);
     };
 
     const handleCommentDeleted = (commentId: string) => {
-        setComments((prev) =>
-            prev.map((c) =>
-                c.id === commentId ? { ...c, content: "", isDeleted: true } : c,
-            ),
-        );
-        setTotalComments((prev) => Math.max(prev - 1, 0));
+        markVodCommentDeleted(queryClient, vodId, commentId);
     };
 
     const handleLikedChanged = (commentId: string, liked: boolean) => {
@@ -136,12 +95,6 @@ export default function CommentSection({
             }
             return next;
         });
-    };
-
-    const handleLoadMore = () => {
-        const nextPage = page + 1;
-        setPage(nextPage);
-        fetchComments(nextPage);
     };
 
     return (
@@ -179,14 +132,14 @@ export default function CommentSection({
                 onLikedChanged={handleLikedChanged}
             />
 
-            {hasMore && comments.length > 0 && (
+            {hasNextPage && comments.length > 0 && (
                 <div className="flex justify-center">
                     <Button
                         variant="ghost"
-                        onClick={handleLoadMore}
-                        disabled={isLoading}
+                        onClick={() => fetchNextPage()}
+                        disabled={isLoading || isFetchingNextPage}
                     >
-                        {isLoading
+                        {isLoading || isFetchingNextPage
                             ? t("common:loading")
                             : t("common:show_more")}
                     </Button>

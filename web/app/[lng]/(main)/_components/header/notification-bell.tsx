@@ -1,112 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useParams } from "next/navigation";
 import useUser from "@/hooks/user";
-import useNotification from "@/hooks/notification";
 import useT from "@/hooks/use-translation";
-import {
-    GetNotifications,
-    GetUnreadCount,
-    MarkNotificationAsRead,
-    MarkAllNotificationsAsRead,
-} from "@/lib/api/notification";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
 import IconBell from "@/components/icons/bell";
-import { toast } from "@/components/utils/toast";
-import {
-    NotificationPopupContent,
-    NOTIFICATION_REFETCH_TTL_MS,
-} from "@/components/notification";
+import { NotificationPopupContent } from "@/components/notification";
 import { I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
+import {
+    useNotificationsInfinite,
+    useUnreadNotificationCount,
+} from "@/hooks/queries/use-notifications";
+import {
+    useMarkAllNotificationsAsRead,
+    useMarkNotificationAsRead,
+} from "@/hooks/queries/use-notification-mutations";
 
 export default function NotificationBell() {
     const { t } = useT(["notification"]);
     const params = useParams();
     const lng = (params?.lng as string) ?? I18N_FALLBACK_LNG;
-    const userState = useUser();
-    const notifState = useNotification();
+    const user = useUser((state) => state.user);
     const [isOpen, setIsOpen] = useState(false);
-    const lastFetchRef = useRef<number>(0);
 
-    const fetchUnreadCount = useCallback(async () => {
-        if (!userState.user) return;
-        try {
-            const res = await GetUnreadCount();
-            if (res.success && res.data) {
-                useNotification.getState().setUnreadCount(res.data.count);
-            }
-        } catch {
-            // silently ignore
-        }
-    }, [userState.user]);
+    const { data: unreadData } = useUnreadNotificationCount(!!user);
+    const unreadCount = unreadData?.count ?? 0;
 
-    useEffect(() => {
-        if (!userState.user) return;
-        fetchUnreadCount();
+    const { data, isLoading } = useNotificationsInfinite(!!user && isOpen);
+    const notifications = data?.pages[0] ?? [];
 
-        const onVisible = () => {
-            if (!document.hidden) fetchUnreadCount();
-        };
-        document.addEventListener("visibilitychange", onVisible);
-        return () =>
-            document.removeEventListener("visibilitychange", onVisible);
-    }, [userState.user, fetchUnreadCount]);
-
-    const handleOpenChange = useCallback(async (open: boolean) => {
-        setIsOpen(open);
-        if (
-            open &&
-            Date.now() - lastFetchRef.current >= NOTIFICATION_REFETCH_TTL_MS
-        ) {
-            useNotification.getState().setIsLoading(true);
-            try {
-                const res = await GetNotifications(0);
-                if (res.success && res.data) {
-                    useNotification.getState().setNotifications(res.data);
-                }
-            } catch {
-                toast.error(t("fetch-error:client_fetch_error"));
-            } finally {
-                useNotification.getState().setIsLoading(false);
-                lastFetchRef.current = Date.now();
-            }
-        }
-    }, [t]);
-
-    const handleMarkAsRead = useCallback(async (notificationId: string) => {
-        try {
-            const res = await MarkNotificationAsRead(notificationId);
-            if (res.success)
-                useNotification.getState().markAsRead(notificationId);
-        } catch {
-            toast.error(t("fetch-error:client_fetch_error"));
-        }
-    }, [t]);
-
-    const handleMarkAllAsRead = useCallback(async () => {
-        try {
-            const res = await MarkAllNotificationsAsRead();
-            if (res.success) useNotification.getState().markAllAsRead();
-        } catch {
-            toast.error(t("fetch-error:client_fetch_error"));
-        }
-    }, [t]);
+    const markAsRead = useMarkNotificationAsRead();
+    const markAllAsRead = useMarkAllNotificationsAsRead();
 
     const handleNotificationClick = useCallback(
         (notificationId: string, isRead: boolean) => {
-            if (!isRead) handleMarkAsRead(notificationId);
+            if (!isRead) markAsRead.mutate(notificationId);
             setIsOpen(false);
         },
-        [handleMarkAsRead],
+        [markAsRead],
     );
 
-    if (!userState.user) {
+    if (!user) {
         return (
             <Link
                 href={`/${lng}/login`}
@@ -118,15 +58,13 @@ export default function NotificationBell() {
     }
 
     return (
-        <Popover open={isOpen} onOpenChange={handleOpenChange}>
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
                 <button className="hover:bg-muted relative cursor-pointer rounded-md p-1.5 transition-colors">
                     <IconBell className="size-5" />
-                    {notifState.unreadCount > 0 && (
+                    {unreadCount > 0 && (
                         <span className="bg-destructive absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white">
-                            {notifState.unreadCount > 99
-                                ? "99+"
-                                : notifState.unreadCount}
+                            {unreadCount > 99 ? "99+" : unreadCount}
                         </span>
                     )}
                 </button>
@@ -136,12 +74,12 @@ export default function NotificationBell() {
                 align="end"
             >
                 <NotificationPopupContent
-                    notifications={notifState.notifications}
-                    isLoading={notifState.isLoading}
-                    unreadCount={notifState.unreadCount}
+                    notifications={notifications}
+                    isLoading={isLoading}
+                    unreadCount={unreadCount}
                     viewAllHref={`/${lng}/notifications`}
                     t={t}
-                    onMarkAllAsRead={handleMarkAllAsRead}
+                    onMarkAllAsRead={() => markAllAsRead.mutate()}
                     onNotificationClick={handleNotificationClick}
                     onClose={() => setIsOpen(false)}
                 />

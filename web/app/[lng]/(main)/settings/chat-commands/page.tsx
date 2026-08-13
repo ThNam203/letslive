@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/utils/toast";
 import { Button } from "@/components/ui/button";
 import IconClose from "@/components/icons/close";
@@ -21,37 +22,37 @@ import {
 } from "@/types/chat-command";
 import { BUILTIN_CHAT_COMMANDS } from "@/utils/chat-parser";
 import useT from "@/hooks/use-translation";
+import { unwrapResponse } from "@/lib/api/api-error";
 
 const NAME_PATTERN = /^[a-z0-9_-]{1,32}$/;
 const MAX_RESPONSE = 500;
 const MAX_DESCRIPTION = 120;
+const CHAT_COMMANDS_QUERY_KEY = ["chat-commands"];
 
 export default function ChatCommandsSettings() {
     const { t } = useT("chat-commands");
-    const [data, setData] = useState<MyChatCommands>({ user: [], channel: [] });
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
+    const { data, isLoading } = useQuery({
+        queryKey: CHAT_COMMANDS_QUERY_KEY,
+        queryFn: async () => unwrapResponse(await GetMyChatCommands()),
+    });
+    const commands: MyChatCommands = data ?? { user: [], channel: [] };
 
-    const refresh = async () => {
-        const res = await GetMyChatCommands();
-        if (res.success && res.data) setData(res.data);
-        setLoading(false);
-    };
-
-    useEffect(() => {
-        refresh();
-    }, []);
-
-    const handleDelete = async (id: string) => {
-        const res = await DeleteChatCommand(id);
-        if (res.success) {
-            toast.success(t("chat-commands:page.removed_toast"));
-            refresh();
-        } else {
-            toast(t("chat-commands:page.remove_failed_toast"), {
-                type: "error",
-            });
-        }
-    };
+    const deleteMutation = useMutation({
+        mutationFn: (id: string) => DeleteChatCommand(id),
+        onSuccess: (res) => {
+            if (res.success) {
+                toast.success(t("chat-commands:page.removed_toast"));
+                queryClient.invalidateQueries({
+                    queryKey: CHAT_COMMANDS_QUERY_KEY,
+                });
+            } else {
+                toast(t("chat-commands:page.remove_failed_toast"), {
+                    type: "error",
+                });
+            }
+        },
+    });
 
     return (
         <div className="space-y-8">
@@ -59,17 +60,15 @@ export default function ChatCommandsSettings() {
                 title={t("chat-commands:page.personal_title")}
                 description={t("chat-commands:page.personal_description")}
                 scope="user"
-                items={data.user}
-                onChanged={refresh}
-                onDelete={handleDelete}
+                items={commands.user}
+                onDelete={(id) => deleteMutation.mutate(id)}
             />
             <ChatCommandScopeSection
                 title={t("chat-commands:page.channel_title")}
                 description={t("chat-commands:page.channel_description")}
                 scope="channel"
-                items={data.channel}
-                onChanged={refresh}
-                onDelete={handleDelete}
+                items={commands.channel}
+                onDelete={(id) => deleteMutation.mutate(id)}
             />
             <Section
                 title={t("chat-commands:page.builtin_title")}
@@ -87,7 +86,7 @@ export default function ChatCommandsSettings() {
                     ))}
                 </ul>
             </Section>
-            {loading && (
+            {isLoading && (
                 <div className="flex justify-center py-4">
                     <IconLoader />
                 </div>
@@ -101,22 +100,20 @@ function ChatCommandScopeSection({
     description,
     scope,
     items,
-    onChanged,
     onDelete,
 }: {
     title: string;
     description: string;
     scope: ChatCommandScope;
     items: ChatCommand[];
-    onChanged: () => void;
     onDelete: (id: string) => void;
 }) {
     const { t } = useT("chat-commands");
+    const queryClient = useQueryClient();
     const [editing, setEditing] = useState<ChatCommand | null>(null);
     const [name, setName] = useState("");
     const [response, setResponse] = useState("");
     const [desc, setDesc] = useState("");
-    const [submitting, setSubmitting] = useState(false);
 
     const reset = () => {
         setEditing(null);
@@ -132,7 +129,54 @@ function ChatCommandScopeSection({
         setDesc(cmd.description ?? "");
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const upsertMutation = useMutation({
+        mutationFn: async () => {
+            const trimmedName = name.trim().toLowerCase();
+            const payload = {
+                name: trimmedName,
+                response: response.trim(),
+                description: desc.trim(),
+            };
+            return editing
+                ? {
+                      wasEditing: true as const,
+                      res: await UpdateChatCommand(editing.id, payload),
+                      trimmedName,
+                  }
+                : {
+                      wasEditing: false as const,
+                      res: await CreateChatCommand({ scope, ...payload }),
+                      trimmedName,
+                  };
+        },
+        onSuccess: ({ wasEditing, res, trimmedName }) => {
+            if (res.success) {
+                toast.success(
+                    t(
+                        wasEditing
+                            ? "chat-commands:page.updated_toast"
+                            : "chat-commands:page.added_toast",
+                        { name: trimmedName },
+                    ),
+                );
+                reset();
+                queryClient.invalidateQueries({
+                    queryKey: CHAT_COMMANDS_QUERY_KEY,
+                });
+            } else {
+                toast(
+                    t(
+                        wasEditing
+                            ? "chat-commands:page.update_failed_toast"
+                            : "chat-commands:page.create_failed_toast",
+                    ),
+                    { type: "error" },
+                );
+            }
+        },
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const trimmedName = name.trim().toLowerCase();
         if (!NAME_PATTERN.test(trimmedName)) {
@@ -147,51 +191,7 @@ function ChatCommandScopeSection({
             });
             return;
         }
-        setSubmitting(true);
-        try {
-            if (editing) {
-                const res = await UpdateChatCommand(editing.id, {
-                    name: trimmedName,
-                    response: response.trim(),
-                    description: desc.trim(),
-                });
-                if (res.success) {
-                    toast.success(
-                        t("chat-commands:page.updated_toast", {
-                            name: trimmedName,
-                        }),
-                    );
-                    reset();
-                    onChanged();
-                } else {
-                    toast(t("chat-commands:page.update_failed_toast"), {
-                        type: "error",
-                    });
-                }
-            } else {
-                const res = await CreateChatCommand({
-                    scope,
-                    name: trimmedName,
-                    response: response.trim(),
-                    description: desc.trim(),
-                });
-                if (res.success) {
-                    toast.success(
-                        t("chat-commands:page.added_toast", {
-                            name: trimmedName,
-                        }),
-                    );
-                    reset();
-                    onChanged();
-                } else {
-                    toast(t("chat-commands:page.create_failed_toast"), {
-                        type: "error",
-                    });
-                }
-            }
-        } finally {
-            setSubmitting(false);
-        }
+        upsertMutation.mutate();
     };
 
     return (
@@ -285,13 +285,13 @@ function ChatCommandScopeSection({
                             type="button"
                             variant="ghost"
                             onClick={reset}
-                            disabled={submitting}
+                            disabled={upsertMutation.isPending}
                         >
                             {t("chat-commands:page.cancel_edit")}
                         </Button>
                     )}
-                    <Button type="submit" disabled={submitting}>
-                        {submitting && <IconLoader />}
+                    <Button type="submit" disabled={upsertMutation.isPending}>
+                        {upsertMutation.isPending && <IconLoader />}
                         {editing
                             ? t("chat-commands:page.submit_edit")
                             : t("chat-commands:page.submit")}

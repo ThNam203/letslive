@@ -1,4 +1,3 @@
-export const NOTIFICATION_REFETCH_TTL_MS = 30_000;
 export const NOTIFICATION_POPUP_LIMIT = 10;
 
 export type TimeAgoTranslator = (

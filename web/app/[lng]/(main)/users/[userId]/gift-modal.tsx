@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import { CreatePurchase } from "@/lib/api/shop";
+import { unwrapResponse } from "@/lib/api/api-error";
 import { ShopItem } from "@/types/shop";
 import { useShopItems } from "@/hooks/queries/use-shop-items";
+import { WALLET_BALANCE_QUERY_KEY } from "@/hooks/queries/use-wallet";
 import { Badge } from "@/components/ui/badge";
 import {
     Dialog,
@@ -30,10 +33,10 @@ export default function GiftModal({
     recipientName,
 }: GiftModalProps) {
     const { t } = useT(["shop", "api-response", "fetch-error"]);
+    const queryClient = useQueryClient();
     const { data: items = [], isLoading: isLoadingItems } = useShopItems({
         enabled: open,
     });
-    const [sendingItemId, setSendingItemId] = useState<string | null>(null);
     const [animationUrl, setAnimationUrl] = useState<string | null>(null);
     const animationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -43,42 +46,44 @@ export default function GiftModal({
         };
     }, []);
 
-    useEffect(() => {
-        if (!open) setAnimationUrl(null);
-    }, [open]);
-
     const dismissAnimation = () => {
         if (animationTimerRef.current) clearTimeout(animationTimerRef.current);
         setAnimationUrl(null);
         onClose();
     };
 
-    const handleSend = async (item: ShopItem) => {
-        setSendingItemId(item.id);
-        try {
-            const res = await CreatePurchase({
-                shopItemId: item.id,
-                quantity: 1,
-                recipientUserId,
-            });
-            if (res.success && res.data) {
-                toast.success(t("shop:shop.gift_sent"));
-                setAnimationUrl(res.data.animationUrl);
+    const sendGiftMutation = useMutation({
+        mutationFn: async (item: ShopItem) =>
+            unwrapResponse(
+                await CreatePurchase({
+                    shopItemId: item.id,
+                    quantity: 1,
+                    recipientUserId,
+                }),
+            ),
+        onSuccess: (data) => {
+            toast.success(t("shop:shop.gift_sent"));
+            queryClient.invalidateQueries({ queryKey: WALLET_BALANCE_QUERY_KEY });
+            if (data?.animationUrl) {
+                setAnimationUrl(data.animationUrl);
                 animationTimerRef.current = setTimeout(dismissAnimation, 3000);
-            } else {
-                toast.error(t(`api-response:${res.key}`), {
-                    toastId: res.requestId,
-                });
             }
-        } catch (_) {
-            toast.error(t("fetch-error:client_fetch_error"));
-        } finally {
-            setSendingItemId(null);
-        }
+        },
+    });
+
+    const handleSend = (item: ShopItem) => {
+        sendGiftMutation.mutate(item);
     };
 
     return (
-        <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+        <Dialog
+            open={open}
+            onOpenChange={(v) => {
+                if (v) return;
+                setAnimationUrl(null);
+                onClose();
+            }}
+        >
             <DialogContent className="relative max-w-lg">
                 {animationUrl && (
                     <div
@@ -112,12 +117,14 @@ export default function GiftModal({
                 ) : (
                     <div className="grid grid-cols-3 gap-3 py-2">
                         {items.map((item) => {
-                            const isSending = sendingItemId === item.id;
+                            const isSending =
+                                sendGiftMutation.isPending &&
+                                sendGiftMutation.variables?.id === item.id;
                             return (
                                 <button
                                     key={item.id}
                                     onClick={() => handleSend(item)}
-                                    disabled={sendingItemId !== null}
+                                    disabled={sendGiftMutation.isPending}
                                     className="border-border bg-card hover:border-primary flex flex-col items-center gap-1 rounded-lg border p-3 transition-colors disabled:opacity-50"
                                 >
                                     <div className="relative h-16 w-16">

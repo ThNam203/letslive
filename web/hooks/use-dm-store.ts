@@ -1,126 +1,30 @@
 import { create } from "zustand";
-import { Conversation, DmMessage } from "@/types/dm";
 
+// Conversations, messages, and unread counts are server data and live in
+// the React Query cache (see hooks/queries/use-conversations.ts,
+// use-dm-messages.ts, use-dm-unread-counts.ts). This store only holds
+// ephemeral, WebSocket-driven UI state that has no server-fetched form.
 export type DmState = {
-    conversations: Conversation[];
     activeConversationId: string | null;
-    messages: Record<string, DmMessage[]>;
     typingUsers: Record<string, string[]>;
-    unreadCounts: Record<string, number>;
     onlineUsers: Set<string>;
-    isLoading: boolean;
 
-    setConversations: (conversations: Conversation[]) => void;
-    appendConversations: (conversations: Conversation[]) => void;
-    addConversation: (conversation: Conversation) => void;
-    updateConversation: (
-        conversationId: string,
-        update: Partial<Conversation>,
-    ) => void;
-    removeConversation: (conversationId: string) => void;
     setActiveConversationId: (id: string | null) => void;
-
-    setMessages: (conversationId: string, messages: DmMessage[]) => void;
-    prependMessages: (conversationId: string, messages: DmMessage[]) => void;
-    addMessage: (conversationId: string, message: DmMessage) => void;
-    updateMessage: (
-        conversationId: string,
-        messageId: string,
-        update: Partial<DmMessage>,
-    ) => void;
-    removeMessage: (conversationId: string, messageId: string) => void;
 
     setTypingUser: (conversationId: string, username: string) => void;
     removeTypingUser: (conversationId: string, username: string) => void;
 
-    setUnreadCounts: (counts: Record<string, number>) => void;
-    incrementUnread: (conversationId: string) => void;
-    clearUnread: (conversationId: string) => void;
-
     setUserOnline: (userId: string) => void;
     setUserOffline: (userId: string) => void;
     setOnlineUsers: (userIds: string[]) => void;
-
-    setIsLoading: (isLoading: boolean) => void;
 };
 
 const useDmStore = create<DmState>((set) => ({
-    conversations: [],
     activeConversationId: null,
-    messages: {},
     typingUsers: {},
-    unreadCounts: {},
     onlineUsers: new Set(),
-    isLoading: false,
 
-    setConversations: (conversations) => set({ conversations }),
-    appendConversations: (conversations) =>
-        set((state) => ({
-            conversations: [...state.conversations, ...conversations],
-        })),
-    addConversation: (conversation) =>
-        set((state) => ({
-            conversations: [conversation, ...state.conversations],
-        })),
-    updateConversation: (conversationId, update) =>
-        set((state) => ({
-            conversations: state.conversations.map((c) =>
-                c._id === conversationId ? { ...c, ...update } : c,
-            ),
-        })),
-    removeConversation: (conversationId) =>
-        set((state) => ({
-            conversations: state.conversations.filter(
-                (c) => c._id !== conversationId,
-            ),
-        })),
     setActiveConversationId: (id) => set({ activeConversationId: id }),
-
-    setMessages: (conversationId, messages) =>
-        set((state) => ({
-            messages: { ...state.messages, [conversationId]: messages },
-        })),
-    prependMessages: (conversationId, messages) =>
-        set((state) => ({
-            messages: {
-                ...state.messages,
-                [conversationId]: [
-                    ...messages,
-                    ...(state.messages[conversationId] || []),
-                ],
-            },
-        })),
-    addMessage: (conversationId, message) =>
-        set((state) => ({
-            messages: {
-                ...state.messages,
-                [conversationId]: [
-                    ...(state.messages[conversationId] || []),
-                    message,
-                ],
-            },
-        })),
-    updateMessage: (conversationId, messageId, update) =>
-        set((state) => ({
-            messages: {
-                ...state.messages,
-                [conversationId]: (state.messages[conversationId] || []).map(
-                    (m) => (m._id === messageId ? { ...m, ...update } : m),
-                ),
-            },
-        })),
-    removeMessage: (conversationId, messageId) =>
-        set((state) => ({
-            messages: {
-                ...state.messages,
-                [conversationId]: (state.messages[conversationId] || []).map(
-                    (m) =>
-                        m._id === messageId
-                            ? { ...m, isDeleted: true, text: "" }
-                            : m,
-                ),
-            },
-        })),
 
     setTypingUser: (conversationId, username) =>
         set((state) => {
@@ -143,21 +47,6 @@ const useDmStore = create<DmState>((set) => ({
             },
         })),
 
-    setUnreadCounts: (counts) => set({ unreadCounts: counts }),
-    incrementUnread: (conversationId) =>
-        set((state) => ({
-            unreadCounts: {
-                ...state.unreadCounts,
-                [conversationId]: (state.unreadCounts[conversationId] || 0) + 1,
-            },
-        })),
-    clearUnread: (conversationId) =>
-        set((state) => {
-            const newCounts = { ...state.unreadCounts };
-            delete newCounts[conversationId];
-            return { unreadCounts: newCounts };
-        }),
-
     setUserOnline: (userId) =>
         set((state) => {
             const next = new Set(state.onlineUsers);
@@ -171,8 +60,6 @@ const useDmStore = create<DmState>((set) => ({
             return { onlineUsers: next };
         }),
     setOnlineUsers: (userIds) => set({ onlineUsers: new Set(userIds) }),
-
-    setIsLoading: (isLoading) => set({ isLoading }),
 }));
 
 export default useDmStore;

@@ -1,49 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
-import { GetMyInventory } from "@/lib/api/gift";
 import { UserInventory } from "@/types/shop";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import IconLoader from "@/components/icons/loader";
 import SendGiftDialog from "./send-gift-dialog";
 import { useShopItems } from "@/hooks/queries/use-shop-items";
+import { useMyInventory } from "@/hooks/queries/use-inventory";
 
 export default function InventoryPage() {
     const { t } = useT(["shop", "api-response", "fetch-error"]);
     const user = useUser((s) => s.user);
-    const [items, setItems] = useState<UserInventory[]>([]);
     const { data: shopItems = [] } = useShopItems();
     const itemsById = Object.fromEntries(shopItems.map((i) => [i.id, i]));
-    const [isLoading, setIsLoading] = useState(true);
+    const { data: items = [], isLoading } = useMyInventory(!!user);
     const [sendingItem, setSendingItem] = useState<UserInventory | null>(null);
-
-    const fetchInventory = useCallback(async () => {
-        if (!user) return;
-        setIsLoading(true);
-        try {
-            const res = await GetMyInventory();
-            if (res.success && res.data) {
-                setItems(res.data);
-            } else {
-                toast.error(t(`api-response:${res.key}`), {
-                    toastId: res.requestId,
-                });
-            }
-        } catch (_) {
-            toast.error(t("fetch-error:client_fetch_error"));
-        } finally {
-            setIsLoading(false);
-        }
-    }, [user, t]);
-
-    useEffect(() => {
-        fetchInventory();
-    }, [fetchInventory]);
 
     if (isLoading) {
         return (
@@ -117,7 +92,6 @@ export default function InventoryPage() {
                         itemsById[sendingItem.shopItemId]?.name ??
                         t("shop:shop.unknown_item")
                     }
-                    onSent={fetchInventory}
                 />
             )}
         </>
