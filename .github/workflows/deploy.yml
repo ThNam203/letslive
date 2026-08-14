@@ -82,6 +82,10 @@ jobs:
           FINANCE_DB_USER=${{ secrets.FINANCE_DB_USER }}
           FINANCE_DB_PASSWORD=${{ secrets.FINANCE_DB_PASSWORD }}
 
+          # Stripe (finance deposits)
+          FINANCE_STRIPE_API_KEY=${{ secrets.FINANCE_STRIPE_API_KEY }}
+          FINANCE_STRIPE_WEBHOOK_SECRET=${{ secrets.FINANCE_STRIPE_WEBHOOK_SECRET }}
+
           # MinIO credentials
           MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}
           MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}
