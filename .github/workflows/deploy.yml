@@ -110,8 +110,12 @@ jobs:
           do
             echo "Deploy attempt $attempt/$max_retries"
 
+            # Kong runs DB-less and only reads configs/kong.yml at container
+            # start; Compose won't recreate it on its own since the bind-mounted
+            # file's content isn't part of the service diff. Force it every deploy.
             if docker compose pull &&
               docker compose up -d --remove-orphans &&
+              docker compose up -d --force-recreate kong &&
               docker image prune -f
             then
               echo "Deploy succeeded"
