@@ -2,13 +2,16 @@
 
 import { Card, CardContent } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
+import { Button } from "../ui/button";
 import IconFilm from "../icons/film";
 import useT from "@/hooks/use-translation";
 import MediaCard from "./media-card";
-import { usePopularVods } from "@/hooks/queries/use-popular-vods";
+import { useVodsInfinite } from "@/hooks/queries/use-vods-infinite";
 
-export function PopularVODView() {
-    const { data: vods = [], isLoading } = usePopularVods();
+export function VodFeedView() {
+    const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+        useVodsInfinite();
+    const vods = data?.pages.flat() ?? [];
     const { t } = useT(["common"]);
 
     if (isLoading) {
@@ -43,6 +46,19 @@ export function PopularVODView() {
                     />
                 ))}
             </div>
+            {hasNextPage && (
+                <div className="mt-4 flex justify-center">
+                    <Button
+                        variant="ghost"
+                        onClick={() => fetchNextPage()}
+                        disabled={isFetchingNextPage}
+                    >
+                        {isFetchingNextPage
+                            ? t("common:loading")
+                            : t("common:show_more")}
+                    </Button>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import LivestreamsPreviewView from "@/components/livestream/livesteams-preview";
-import { PopularVODView } from "@/components/livestream/popular-vod-view";
+import { VodFeedView } from "@/components/livestream/vod-feed-view";
 import { myGetT } from "@/lib/i18n";
 function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -14,7 +14,7 @@ export default async function HomePage() {
             <LivestreamsPreviewView />
 
             <h1 className="my-2 text-xl font-semibold">{t("videos")}</h1>
-            <PopularVODView />
+            <VodFeedView />
         </div>
     );
 }
