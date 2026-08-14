@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
-import { Button } from "../ui/button";
 import IconFilm from "../icons/film";
+import IconLoader from "../icons/loader";
 import useT from "@/hooks/use-translation";
 import MediaCard from "./media-card";
 import { useVodsInfinite } from "@/hooks/queries/use-vods-infinite";
@@ -13,6 +14,24 @@ export function VodFeedView() {
         useVodsInfinite();
     const vods = data?.pages.flat() ?? [];
     const { t } = useT(["common"]);
+    const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const el = sentinelRef.current;
+        if (!el || typeof IntersectionObserver === "undefined") return;
+        if (!hasNextPage || isFetchingNextPage) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((e) => e.isIntersecting)) {
+                    fetchNextPage();
+                }
+            },
+            { rootMargin: "200px" },
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
     if (isLoading) {
         return <LoadingSkeleton />;
@@ -47,16 +66,18 @@ export function VodFeedView() {
                 ))}
             </div>
             {hasNextPage && (
-                <div className="mt-4 flex justify-center">
-                    <Button
-                        variant="ghost"
-                        onClick={() => fetchNextPage()}
-                        disabled={isFetchingNextPage}
-                    >
-                        {isFetchingNextPage
-                            ? t("common:loading")
-                            : t("common:show_more")}
-                    </Button>
+                <div
+                    ref={sentinelRef}
+                    className="mt-4 flex items-center justify-center gap-2"
+                >
+                    {isFetchingNextPage && (
+                        <>
+                            <IconLoader className="h-4 w-4 animate-spin" />
+                            <span className="text-muted-foreground text-sm">
+                                {t("common:loading")}
+                            </span>
+                        </>
+                    )}
                 </div>
             )}
         </div>
