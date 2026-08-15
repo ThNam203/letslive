@@ -1,5 +1,5 @@
 # STAGE 1
-FROM golang:1.26.5 AS builder
+FROM golang:1.27rc2 AS builder
 
 WORKDIR /usr/src/app
 
