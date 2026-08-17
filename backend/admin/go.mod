@@ -1,6 +1,6 @@
 module sen1or/letslive/admin
 
-go 1.26.1
+go 1.26.0
 
 require (
 	github.com/gofrs/uuid/v5 v5.4.0
