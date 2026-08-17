@@ -2287,10 +2287,10 @@ export default function HomePage() {
 ```bash
 cd admin-web
 npx tsc --noEmit
-npm run build
+NEXT_PUBLIC_ADMIN_API_URL=http://localhost:8000 npm run build
 ```
 
-Expected: both succeed with zero errors.
+Expected: both succeed with zero errors. `NEXT_PUBLIC_ADMIN_API_URL` must be set for the `build` step specifically — `lib/global.ts` (Task 6) throws if it's missing, and Next.js executes that module during static generation of the `"use client"` pages added in this task (Steps 1-3), not only in the browser. `tsc --noEmit` is a pure type check and never executes the module, so it needs no env var.
 
 - [ ] **Step 5: Manual browser end-to-end test**
 
