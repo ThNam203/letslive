@@ -4,7 +4,9 @@ go 1.26.0
 
 require (
 	github.com/gofrs/uuid/v5 v5.4.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/jackc/pgx/v5 v5.8.0
+	golang.org/x/crypto v0.49.0
 	sen1or/letslive/shared v0.0.0
 )
 
@@ -19,7 +21,6 @@ require (
 	github.com/leodido/go-urn v1.4.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
-	golang.org/x/crypto v0.49.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.35.0 // indirect
