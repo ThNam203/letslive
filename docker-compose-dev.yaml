@@ -8,6 +8,17 @@ services:
   #   ports:
   #     - "5000:5000"
 
+  admin-web:
+    build:
+      context: ./admin-web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_ADMIN_API_URL: ${NEXT_PUBLIC_ADMIN_API_URL}
+    container_name: letslive_admin_web
+    network_mode: "host"
+    ports:
+      - "5001:5001"
+
   auth:
     #image: sen1or/letslive-auth:latest
     build:

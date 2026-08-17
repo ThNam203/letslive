@@ -6,6 +6,13 @@ services:
     ports:
       - "5000:5000"
 
+  admin-web:
+    image: sen1or/letslive-admin-web:latest
+    container_name: letslive_admin_web
+    network_mode: "host"
+    ports:
+      - "5001:5001"
+
   auth:
     image: sen1or/letslive-auth:latest
     restart: always
