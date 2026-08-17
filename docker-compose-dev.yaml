@@ -168,6 +168,29 @@ services:
       consul:
         condition: service_healthy
 
+  admin:
+    build:
+      context: ./backend/
+      dockerfile: admin/Dockerfile
+    container_name: letslive-admin
+    restart: always
+    ports:
+      - "7784:7784"
+    expose:
+      - "7784"
+    environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
+      - ADMIN_DB_USER=${ADMIN_DB_USER}
+      - ADMIN_DB_PASSWORD=${ADMIN_DB_PASSWORD}
+      - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+
   configserver:
     #image: sen1or/letslive-configserver:latest
     build:

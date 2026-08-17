@@ -537,6 +537,29 @@ services:
           - /transcode
         strip_path: true
 
+  - name: Admin_Service
+    host: admin.service.consul
+    port: 7784
+    path: /v1
+    connect_timeout: 60000
+    read_timeout: 60000
+    write_timeout: 60000
+    routes:
+      - name: Admin_Login_Route
+        protocols:
+          - http
+          - https
+        paths:
+          - /admin/login
+        strip_path: false
+      - name: Admin_Private_Routes
+        protocols:
+          - http
+          - https
+        paths:
+          - /admin/me
+        strip_path: false
+
 consumers:
   - username: "authenticated users"
     keyauth_credentials:
