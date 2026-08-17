@@ -47,6 +47,21 @@ tracer:
 
 (`host`/`port`/`params` for `database`, and `tracer.endpoint`, should match whatever values the existing `finance_service` config in that repo uses — copy those, only `name` differs.)
 
+**2. Create the `letslive_admin` database by hand on any already-provisioned environment.** `docker-entrypoint-initdb.d/01-create-dbs.sql` (added by Task 5) only runs when Postgres's data directory is empty — that's standard behavior for the official Postgres Docker image. Production's `main_db` uses a persistent volume (`letslive_data`), so on an environment that's already been deployed once, this init script will never re-run and `letslive_admin` will not exist. Before deploying `backend/admin` to such an environment, someone with DB access must run once:
+
+```bash
+docker compose exec main_db psql -U postgres -c 'CREATE DATABASE letslive_admin;'
+```
+
+Without this, `backend/admin`'s migration step panics on a nonexistent database on boot, and the container crash-loops (it has `restart: always`).
+
+**3. Set `NEXT_PUBLIC_ADMIN_API_URL` in *both* GitHub Actions namespaces — repo variable AND repo secret.** This mirrors how `web`'s equivalent var (e.g. `NEXT_PUBLIC_BACKEND_PROTOCOL`) is already split across the two workflows:
+
+- As a repository **variable**, `vars.NEXT_PUBLIC_ADMIN_API_URL` — read by `.github/workflows/build-and-publish-images.yml`'s `build-and-publish-admin-web` job as a Docker build-arg.
+- As a repository **secret**, `secrets.NEXT_PUBLIC_ADMIN_API_URL` — read by `.github/workflows/deploy.yml` when generating the deploy `.env`.
+
+If the repo **variable** is left unset, the Docker build-arg is empty and `admin-web/lib/global.ts` throws during `npm run build` inside the image build, failing the `build-and-publish-admin-web` CI job with an error that doesn't obviously point at a missing repo variable. Set both alongside the other required secrets (`ADMIN_DB_USER`, `ADMIN_DB_PASSWORD`, `ADMIN_JWT_SECRET` — see Task 9 Step 7's "Manual step" note) before the next deploy run.
+
 ---
 
 ## File Structure

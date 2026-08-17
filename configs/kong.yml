@@ -552,6 +552,12 @@ services:
         paths:
           - /admin/login
         strip_path: false
+        plugins:
+          - name: rate-limiting
+            config:
+              error_message: "Too many login attempts, please try again in a minute."
+              minute: 10
+              policy: local
       - name: Admin_Private_Routes
         protocols:
           - http
