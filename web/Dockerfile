@@ -1,11 +1,11 @@
-FROM node:22-alpine
+FROM node:22-alpine AS deps
+WORKDIR /app
 
-EXPOSE 5000
+COPY package.json package-lock.json ./
+RUN npm ci
 
-ENV PORT=5000
-ENV APP_ENV=production
-
-WORKDIR /home/nextjs/app
+FROM node:22-alpine AS builder
+WORKDIR /app
 
 # Accept build arguments for Next.js public environment variables
 ARG NEXT_PUBLIC_BACKEND_PROTOCOL
@@ -25,23 +25,35 @@ ENV NEXT_PUBLIC_ENVIRONMENT=${NEXT_PUBLIC_ENVIRONMENT}
 ENV NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
 ENV CI=${CI}
 
-COPY package.json .
-COPY package-lock.json .
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
-RUN npm install
 RUN npx browserslist@latest --update-db
 RUN npx next telemetry disable
-
-COPY . .
 
 # Use BuildKit secret for SENTRY_AUTH_TOKEN to avoid exposing it in image layers
 RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN \
     export SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN) && \
     npm run build
 
+FROM node:22-alpine AS runner
+WORKDIR /home/nextjs/app
+
+ENV NODE_ENV=production
+ENV PORT=5000
+ENV HOSTNAME=0.0.0.0
+ENV APP_ENV=production
+
+EXPOSE 5000
+
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nextjs -u 1001
 
+# Standalone output already contains only the production deps actually used
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
 USER nextjs
 
-CMD [ "npm", "start" ]
+CMD ["node", "server.js"]
