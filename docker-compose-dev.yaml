@@ -4,9 +4,10 @@ services:
   #     context: ./web
   #     dockerfile: Dockerfile
   #   container_name: letslive_web
-  #   network_mode: "host"
   #   ports:
   #     - "5000:5000"
+  #   networks:
+  #     general_network:
 
   admin-web:
     build:
@@ -15,9 +16,10 @@ services:
       args:
         NEXT_PUBLIC_ADMIN_API_URL: ${NEXT_PUBLIC_ADMIN_API_URL}
     container_name: letslive_admin_web
-    network_mode: "host"
     ports:
       - "5001:5001"
+    networks:
+      general_network:
 
   auth:
     #image: sen1or/letslive-auth:latest
@@ -365,7 +367,7 @@ services:
         ipv4_address: 172.29.0.12
 
   tempo:
-    image: grafana/tempo:latest
+    image: grafana/tempo:2.8.1
     container_name: letslive-grafana-tempo
     command: ["-config.file=/etc/tempo.yaml"]
     volumes:
