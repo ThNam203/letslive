@@ -7,6 +7,7 @@ import {
     TransactionType,
 } from "@/types/wallet";
 import useT from "@/hooks/use-translation";
+import { formatLocaleDate } from "@/utils/timeFormats";
 
 interface Props {
     transaction: Transaction;
@@ -23,7 +24,7 @@ const typeIcons: Record<TransactionType, string> = {
 };
 
 export default function TransactionRow({ transaction }: Props) {
-    const { t } = useT("wallet");
+    const { t, i18n } = useT("wallet");
 
     const typeLabel = t(`wallet:transactions.type.${transaction.type}`);
     const statusLabel = t(`wallet:transactions.status.${transaction.status}`);
@@ -45,8 +46,9 @@ export default function TransactionRow({ transaction }: Props) {
                         {typeLabel}
                     </p>
                     <p className="text-muted-foreground text-xs">
-                        {new Date(transaction.createdAt).toLocaleDateString(
-                            undefined,
+                        {formatLocaleDate(
+                            new Date(transaction.createdAt),
+                            i18n.resolvedLanguage,
                             {
                                 year: "numeric",
                                 month: "short",

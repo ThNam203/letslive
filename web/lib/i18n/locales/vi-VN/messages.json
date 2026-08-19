@@ -11,6 +11,7 @@
     "no_conversations_yet": "Chưa có cuộc trò chuyện",
     "load_more": "Tải thêm",
     "no_messages_yet": "Chưa có tin nhắn",
+    "yesterday_at": "{{time}} Hôm qua",
     "new_conversation": "Cuộc trò chuyện mới",
     "direct_message": "Tin nhắn trực tiếp",
     "group_name_placeholder": "Tên nhóm (tùy chọn)",

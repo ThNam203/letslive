@@ -4,9 +4,10 @@ import Image from "next/image";
 import { DmMessage, DmMessageType } from "@/types/dm";
 import { parseEmotes } from "@/utils/chat-parser";
 import useT from "@/hooks/use-translation";
+import { formatLocaleDate } from "@/utils/timeFormats";
 
-function formatMessageTime(dateStr: string) {
-    return new Date(dateStr).toLocaleTimeString([], {
+function formatMessageTime(dateStr: string, locale: string | undefined) {
+    return formatLocaleDate(new Date(dateStr), locale, {
         hour: "2-digit",
         minute: "2-digit",
     });
@@ -21,7 +22,7 @@ export default function MessageBubble({
     isOwn: boolean;
     showSender: boolean;
 }) {
-    const { t } = useT("messages");
+    const { t, i18n } = useT("messages");
 
     if (message.isDeleted) {
         return (
@@ -115,7 +116,10 @@ export default function MessageBubble({
 
                 <div className="mt-0.5 flex items-center justify-end gap-1">
                     <span className="text-[10px] opacity-60">
-                        {formatMessageTime(message.createdAt)}
+                        {formatMessageTime(
+                            message.createdAt,
+                            i18n.resolvedLanguage,
+                        )}
                     </span>
                     {message.updatedAt !== message.createdAt && (
                         <span className="text-[10px] opacity-50">(edited)</span>

@@ -7,6 +7,7 @@ import IconCalendar from "@/components/icons/calendar";
 import IconUsers from "@/components/icons/users";
 import { VOD } from "@/types/vod";
 import useT from "@/hooks/use-translation";
+import { formatLocaleDate } from "@/utils/timeFormats";
 import IconFacebook from "@/components/icons/facebook";
 import IconTwitter from "@/components/icons/twitter";
 import IconInstagram from "@/components/icons/instagram";
@@ -41,7 +42,7 @@ export default function ProfileView({
     showRecentActivity?: boolean;
     className?: string;
 }) {
-    const { t } = useT("users");
+    const { t, i18n } = useT("users");
 
     return (
         <div className={className}>
@@ -96,7 +97,10 @@ export default function ProfileView({
                             <IconCalendar />
                             <span>
                                 {t("users:profile.joined_prefix")}{" "}
-                                {new Date(user.createdAt).toLocaleString()}
+                                {formatLocaleDate(
+                                    new Date(user.createdAt),
+                                    i18n.resolvedLanguage,
+                                )}
                             </span>
                         </div>
                     </div>

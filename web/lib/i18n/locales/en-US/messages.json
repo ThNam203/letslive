@@ -11,6 +11,7 @@
     "no_conversations_yet": "No conversations yet",
     "load_more": "Load more",
     "no_messages_yet": "No messages yet",
+    "yesterday_at": "{{time}} Yesterday",
     "new_conversation": "New Conversation",
     "direct_message": "Direct Message",
     "group_name_placeholder": "Group name (optional)",

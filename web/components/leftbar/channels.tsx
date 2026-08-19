@@ -11,6 +11,7 @@ import {
     HoverCardTrigger,
 } from "../ui/hover-card";
 import useT from "@/hooks/use-translation";
+import { formatLocaleDate } from "@/utils/timeFormats";
 import {
     useFollowingChannels,
     useRecommendedChannels,
@@ -23,7 +24,7 @@ function ChannelUserCard({
     user: PublicUser;
     isMinimized: boolean;
 }) {
-    const { t } = useT(["common", "accessibility"]);
+    const { t, i18n } = useT(["common", "accessibility"]);
     return (
         <HoverCard>
             <HoverCardTrigger asChild>
@@ -78,7 +79,10 @@ function ChannelUserCard({
                         </p>
                         <p className="text-muted-foreground text-xs">
                             {t("common:joined")}:{" "}
-                            {new Date(user.createdAt).toLocaleDateString()}
+                            {formatLocaleDate(
+                                new Date(user.createdAt),
+                                i18n.resolvedLanguage,
+                            )}
                         </p>
                     </div>
                 </div>

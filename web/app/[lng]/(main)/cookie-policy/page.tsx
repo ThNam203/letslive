@@ -1,4 +1,5 @@
 import { myGetT } from "@/lib/i18n";
+import { formatLocaleDate } from "@/utils/timeFormats";
 
 const POLICY_LAST_UPDATED = "2026-08-19";
 
@@ -11,10 +12,11 @@ export async function generateMetadata() {
 
 export default async function CookiePolicyPage() {
     const { t, i18n } = await myGetT("legal");
-    const lastUpdated = new Intl.DateTimeFormat(
+    const lastUpdated = formatLocaleDate(
+        new Date(POLICY_LAST_UPDATED),
         i18n.resolvedLanguage,
         { dateStyle: "long" },
-    ).format(new Date(POLICY_LAST_UPDATED));
+    );
 
     const rows = [
         {

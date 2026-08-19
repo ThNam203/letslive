@@ -1,5 +1,13 @@
 import { TFunction } from "i18next";
 
+export function formatLocaleDate(
+    date: Date,
+    locale: string | undefined,
+    options: Intl.DateTimeFormatOptions = {},
+): string {
+    return new Intl.DateTimeFormat(locale, options).format(date);
+}
+
 export function dateDiffFromNow(pastDate: string, t: TFunction) {
     const now = new Date();
     const past = new Date(pastDate);

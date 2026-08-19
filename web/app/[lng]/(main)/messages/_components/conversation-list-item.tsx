@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import useT from "@/hooks/use-translation";
 import { I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
 import { useDmUnreadCounts } from "@/hooks/queries/use-dm-unread-counts";
+import { formatLocaleDate } from "@/utils/timeFormats";
 
 function getConversationDisplay(
     conversation: Conversation,
@@ -33,22 +34,38 @@ function getConversationDisplay(
     };
 }
 
-function formatTime(dateStr: string) {
+function isSameDay(a: Date, b: Date) {
+    return a.toDateString() === b.toDateString();
+}
+
+function formatTime(
+    dateStr: string,
+    locale: string,
+    t: (key: string, options?: Record<string, string>) => string,
+) {
     const date = new Date(dateStr);
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const dayMs = 24 * 60 * 60 * 1000;
+    const time = formatLocaleDate(date, locale, {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
 
-    if (diff < dayMs) {
-        return date.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-        });
+    if (isSameDay(date, now)) {
+        return time;
     }
+
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if (isSameDay(date, yesterday)) {
+        return t("yesterday_at", { time });
+    }
+
+    const dayMs = 24 * 60 * 60 * 1000;
+    const diff = now.getTime() - date.getTime();
     if (diff < 7 * dayMs) {
-        return date.toLocaleDateString([], { weekday: "short" });
+        return formatLocaleDate(date, locale, { weekday: "short" });
     }
-    return date.toLocaleDateString([], { month: "short", day: "numeric" });
+    return formatLocaleDate(date, locale, { month: "short", day: "numeric" });
 }
 
 export default function ConversationListItem({
@@ -104,7 +121,11 @@ export default function ConversationListItem({
                     </span>
                     {conversation.lastMessage && (
                         <span className="text-muted-foreground ml-2 text-xs whitespace-nowrap">
-                            {formatTime(conversation.lastMessage.createdAt)}
+                            {formatTime(
+                                conversation.lastMessage.createdAt,
+                                lng,
+                                t,
+                            )}
                         </span>
                     )}
                 </div>
