@@ -120,7 +120,20 @@ export default function ConversationListItem({
                         {display.name}
                     </span>
                     {conversation.lastMessage && (
-                        <span className="text-muted-foreground ml-2 text-xs whitespace-nowrap">
+                        <span
+                            className="text-muted-foreground ml-2 text-xs whitespace-nowrap"
+                            title={formatLocaleDate(
+                                new Date(conversation.lastMessage.createdAt),
+                                lng,
+                                {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                },
+                            )}
+                        >
                             {formatTime(
                                 conversation.lastMessage.createdAt,
                                 lng,

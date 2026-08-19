@@ -1,9 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { cn } from "@/utils/cn";
 import { Notification } from "@/types/notification";
 import { timeAgo, type TimeAgoTranslator } from "./utils";
+import useT from "@/hooks/use-translation";
+import { formatLocaleDate } from "@/utils/timeFormats";
+
+const TIME_AGO_REFRESH_MS = 60 * 1000;
 
 type NotificationItemProps = {
     notification: Notification;
@@ -18,6 +23,28 @@ export function NotificationItemContent({
     t,
     variant = "compact",
 }: Omit<NotificationItemProps, "onClick">) {
+    const { i18n } = useT("notification");
+    const [, setTick] = useState(0);
+
+    useEffect(() => {
+        const id = setInterval(() => {
+            setTick((n) => n + 1);
+        }, TIME_AGO_REFRESH_MS);
+        return () => clearInterval(id);
+    }, []);
+
+    const fullTimestamp = formatLocaleDate(
+        new Date(notification.createdAt),
+        i18n.resolvedLanguage,
+        {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        },
+    );
+
     return (
         <div
             className={cn(
@@ -44,7 +71,10 @@ export function NotificationItemContent({
                     </div>
                 </div>
 
-                <span className="text-muted-foreground shrink-0 pt-0.5 text-xs">
+                <span
+                    className="text-muted-foreground shrink-0 pt-0.5 text-xs"
+                    title={fullTimestamp}
+                >
                     {timeAgo(notification.createdAt, t)}
                 </span>
             </div>

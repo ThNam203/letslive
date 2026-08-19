@@ -115,7 +115,20 @@ export default function MessageBubble({
                 )}
 
                 <div className="mt-0.5 flex items-center justify-end gap-1">
-                    <span className="text-[10px] opacity-60">
+                    <span
+                        className="text-[10px] opacity-60"
+                        title={formatLocaleDate(
+                            new Date(message.createdAt),
+                            i18n.resolvedLanguage,
+                            {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            },
+                        )}
+                    >
                         {formatMessageTime(
                             message.createdAt,
                             i18n.resolvedLanguage,
