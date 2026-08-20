@@ -5,6 +5,7 @@ import (
 	"os"
 	"sen1or/letslive/auth/config"
 	"sen1or/letslive/auth/domains"
+	usergateway "sen1or/letslive/auth/gateway/user"
 	"sen1or/letslive/shared/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/types"
@@ -14,15 +15,19 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const reactivationTokenMaxAge = 10 * time.Minute
+
 type JWTService struct {
-	repo   domains.RefreshTokenRepository
-	config config.JWT
+	repo        domains.RefreshTokenRepository
+	config      config.JWT
+	userGateway usergateway.UserGateway
 }
 
-func NewJWTService(repo domains.RefreshTokenRepository, cfg config.JWT) *JWTService {
+func NewJWTService(repo domains.RefreshTokenRepository, cfg config.JWT, userGateway usergateway.UserGateway) *JWTService {
 	return &JWTService{
-		repo:   repo,
-		config: cfg,
+		repo:        repo,
+		config:      cfg,
+		userGateway: userGateway,
 	}
 }
 
@@ -66,6 +71,19 @@ func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*ty
 		logger.Errorf(ctx, "token not valid")
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_UNAUTHORIZED,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
+	status, statusErr := c.userGateway.GetUserStatus(ctx, myClaims.UserId)
+	if statusErr != nil {
+		return nil, statusErr
+	}
+	if status == usergateway.UserStatusDisabled {
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_ACCOUNT_DISABLED,
 			nil,
 			nil,
 			nil,
@@ -168,4 +186,50 @@ func (c *JWTService) RevokeTokenByValue(ctx context.Context, tokenValue string) 
 
 func (c *JWTService) RevokeAllTokensOfUser(ctx context.Context, userID uuid.UUID) *serviceresponse.Response[any] {
 	return c.repo.RevokeAllTokensOfUser(ctx, userID)
+}
+
+func (c *JWTService) GenerateReactivationToken(ctx context.Context, userId string) (string, *serviceresponse.Response[any]) {
+	expiresAt := time.Now().Add(reactivationTokenMaxAge)
+	myClaims := types.MyClaims{
+		UserId:   userId,
+		Consumer: c.config.Consumer,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Issuer:    c.config.Issuer,
+			Subject:   c.config.Subject,
+		},
+	}
+	unsignedToken := jwt.NewWithClaims(jwt.SigningMethodHS256, myClaims)
+
+	token, err := unsignedToken.SignedString([]byte(os.Getenv("REACTIVATION_TOKEN_SECRET")))
+	if err != nil {
+		return "", serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
+	return token, nil
+}
+
+func (c *JWTService) VerifyReactivationToken(ctx context.Context, token string) (string, *serviceresponse.Response[any]) {
+	myClaims := types.MyClaims{}
+	parsedToken, err := jwt.NewParser().ParseWithClaims(token, &myClaims, func(t *jwt.Token) (any, error) {
+		return []byte(os.Getenv("REACTIVATION_TOKEN_SECRET")), nil
+	})
+
+	if err != nil || !parsedToken.Valid {
+		return "", serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_UNAUTHORIZED,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
+	return myClaims.UserId, nil
 }

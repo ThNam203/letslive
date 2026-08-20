@@ -117,7 +117,7 @@ func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Con
 	userGateway := usergateway.NewUserGateway(registry)
 	var authService = services.NewAuthService(userRepo, userGateway)
 	var googleAuthService = services.NewGoogleAuthService(userRepo, userGateway)
-	var jwtService = services.NewJWTService(refreshTokenRepo, cfg.JWT)
+	var jwtService = services.NewJWTService(refreshTokenRepo, cfg.JWT, userGateway)
 	var verificationService = services.NewVerificationService(signUpOTPRepo)
 	var authHandler = handlers.NewAuthHandler(*jwtService, *authService, *verificationService, *googleAuthService, cfg.Verification.Gateway)
 	return api.NewAPIServer(authHandler, registry, cfg, dbConn)

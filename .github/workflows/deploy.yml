@@ -48,6 +48,7 @@ jobs:
           # Authentication tokens
           ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
           REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
+          REACTIVATION_TOKEN_SECRET=${{ secrets.REACTIVATION_TOKEN_SECRET }}
 
           # Email service
           GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}
