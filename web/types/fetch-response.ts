@@ -42,6 +42,7 @@ export enum ApiCode {
     RES_ERR_DATABASE_ISSUE = 20016,
     RES_ERR_INTERNAL_SERVER = 20017,
     RES_ERR_FAILED_TO_SEND_VERIFICATION = 20018,
+    RES_ERR_ACCOUNT_DISABLED = 20019,
 
     // User (300xx)
     RES_ERR_USER_NOT_FOUND = 30000,
@@ -108,6 +109,7 @@ export enum ApiKey {
     RES_ERR_DATABASE_ISSUE = "res_err_database_issue",
     RES_ERR_INTERNAL_SERVER = "res_err_internal_server",
     RES_ERR_FAILED_TO_SEND_VERIFICATION = "res_err_failed_to_send_verification",
+    RES_ERR_ACCOUNT_DISABLED = "res_err_account_disabled",
 
     RES_ERR_USER_NOT_FOUND = "res_err_user_not_found",
     RES_ERR_IMAGE_TOO_LARGE = "res_err_image_too_large",
