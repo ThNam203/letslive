@@ -86,6 +86,38 @@ func TestVerifyReactivationToken_RejectsTokenSignedWithWrongSecret(t *testing.T)
 	}
 }
 
+func TestVerifyReactivationToken_RejectsTokenMissingReactivationPurpose(t *testing.T) {
+	s := newTestJWTService(t, &testutil.FakeUserGateway{})
+
+	claims := types.MyClaims{
+		UserId: "user-123",
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(10 * time.Minute)),
+		},
+	}
+	accessLikeToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte("test-reactivation-secret"))
+	if err != nil {
+		t.Fatalf("failed to build token: %s", err)
+	}
+
+	if _, verifyErr := s.VerifyReactivationToken(context.Background(), accessLikeToken); verifyErr == nil {
+		t.Fatal("expected an error for a token missing the reactivation purpose, got nil")
+	}
+}
+
+func TestVerifyReactivationToken_RejectsRealAccessToken(t *testing.T) {
+	s := newTestJWTService(t, &testutil.FakeUserGateway{})
+
+	pair, genErr := s.GenerateTokenPair(context.Background(), "user-123")
+	if genErr != nil {
+		t.Fatalf("failed to generate token pair: %+v", genErr)
+	}
+
+	if _, verifyErr := s.VerifyReactivationToken(context.Background(), pair.AccessToken); verifyErr == nil {
+		t.Fatal("expected an error for a real access token presented at the reactivate endpoint, got nil")
+	}
+}
+
 func TestRefreshToken_RejectsDisabledAccount(t *testing.T) {
 	gateway := &testutil.FakeUserGateway{
 		GetUserStatusFunc: func(ctx context.Context, id string) (string, *serviceresponse.Response[any]) {

@@ -5,7 +5,7 @@ import IconGoogle from "@/components/icons/google";
 import LogInForm from "@/components/forms/LoginForm";
 import AccountDisabledDialog from "@/components/forms/AccountDisabledDialog";
 import GLOBAL from "@/global";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
@@ -15,6 +15,7 @@ export default function LogInPage() {
     const { t } = useT(["auth", "common"]);
     const searchParams = useSearchParams();
     const router = useRouter();
+    const pathname = usePathname();
     const user = useUser((userState) => userState.user);
     const [reactivationToken, setReactivationToken] = useState<string | null>(
         null,
@@ -34,8 +35,9 @@ export default function LogInPage() {
         const token = searchParams.get("reactivationToken");
         if (disabled === "true" && token) {
             setReactivationToken(token);
+            router.replace(pathname);
         }
-    }, [searchParams]);
+    }, [searchParams, router, pathname]);
 
     useEffect(() => {
         if (!user) return;
