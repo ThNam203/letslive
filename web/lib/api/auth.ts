@@ -24,15 +24,18 @@ export async function LogIn(body: {
     email: string;
     password: string;
     turnstileToken: string;
-}): Promise<ApiResponse<void>> {
-    return fetchClient<ApiResponse<void>>("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({
-            email: body.email,
-            password: body.password,
-            turnstileToken: body.turnstileToken,
-        }),
-    });
+}): Promise<ApiResponse<{ reactivationToken?: string }>> {
+    return fetchClient<ApiResponse<{ reactivationToken?: string }>>(
+        "/auth/login",
+        {
+            method: "POST",
+            body: JSON.stringify({
+                email: body.email,
+                password: body.password,
+                turnstileToken: body.turnstileToken,
+            }),
+        },
+    );
 }
 
 export async function Logout(): Promise<ApiResponse<void>> {
@@ -61,5 +64,16 @@ export async function RequestToSendVerification(
     return fetchClient<ApiResponse<void>>("/auth/verify-email", {
         method: "POST",
         body: JSON.stringify({ email, turnstileToken }),
+    });
+}
+
+export async function Reactivate(body: {
+    reactivationToken: string;
+}): Promise<ApiResponse<void>> {
+    return fetchClient<ApiResponse<void>>("/auth/reactivate", {
+        method: "POST",
+        body: JSON.stringify({
+            reactivationToken: body.reactivationToken,
+        }),
     });
 }
