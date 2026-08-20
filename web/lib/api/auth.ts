@@ -44,6 +44,12 @@ export async function Logout(): Promise<ApiResponse<void>> {
     });
 }
 
+export async function LogoutAll(): Promise<ApiResponse<void>> {
+    return fetchClient<ApiResponse<void>>("/auth/logout-all", {
+        method: "DELETE",
+    });
+}
+
 export async function ChangePassword(body: {
     oldPassword: string;
     newPassword: string;

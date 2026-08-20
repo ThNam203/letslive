@@ -218,6 +218,26 @@ func (h *AuthHandler) LogOutHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *AuthHandler) LogOutAllHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	userId, err := h.getUserIDFromCookie(r)
+	if err != nil {
+		writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_UNAUTHORIZED, nil, nil, nil))
+		return
+	}
+
+	if revokeErr := h.jwtService.RevokeAllTokensOfUser(ctx, *userId); revokeErr != nil {
+		writeResponse(w, ctx, revokeErr)
+		return
+	}
+
+	h.setAccessTokenCookie(w, "", -1)
+	h.setRefreshTokenCookie(w, "", -1)
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *AuthHandler) VerifyOTPAndSignUpHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()

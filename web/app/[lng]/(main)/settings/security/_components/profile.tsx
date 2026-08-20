@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/utils/cn";
 import { Button } from "@/components/ui/button";
 import useT from "@/hooks/use-translation";
@@ -13,9 +15,39 @@ import Section from "../../_components/section";
 import ApiKeyTab from "./api-key-tab";
 import ChangePasswordTab from "./change-password-tab";
 import PhoneNumber from "@/app/[lng]/(main)/settings/security/_components/phone-number";
+import IconLoader from "@/components/icons/loader";
+import { toast } from "@/components/utils/toast";
+import useUser from "@/hooks/user";
+import { LogoutAll } from "@/lib/api/auth";
 
 export default function ContactSettings({ user }: { user: MeUser }) {
-    const { t } = useT("settings");
+    const { t } = useT(["settings", "api-response", "fetch-error"]);
+    const { clearUser } = useUser();
+    const router = useRouter();
+    const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
+
+    const handleLogOutAll = async () => {
+        setIsLoggingOutAll(true);
+        await LogoutAll()
+            .then((res) => {
+                if (res.statusCode === 204) {
+                    clearUser();
+                    router.push("/login");
+                } else {
+                    toast(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
+                        type: "error",
+                    });
+                }
+            })
+            .catch((_) => {
+                toast(t("fetch-error:client_fetch_error"), {
+                    toastId: "client-fetch-error-id",
+                    type: "error",
+                });
+            })
+            .finally(() => setIsLoggingOutAll(false));
+    };
 
     return (
         <>
@@ -136,8 +168,15 @@ export default function ContactSettings({ user }: { user: MeUser }) {
                             </a>
                             .
                         </p>
-                        <Button variant="destructive">
+                        <Button
+                            variant="destructive"
+                            disabled={isLoggingOutAll}
+                            onClick={handleLogOutAll}
+                        >
                             {t("settings:security.security.sign_out.button")}
+                            {isLoggingOutAll && (
+                                <IconLoader className="ml-1" />
+                            )}
                         </Button>
                     </div>
                 </div>
