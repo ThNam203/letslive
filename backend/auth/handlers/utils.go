@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	usergateway "sen1or/letslive/auth/gateway/user"
 	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/types"
 
@@ -79,4 +80,22 @@ func (h *AuthHandler) getUserIDFromCookie(r *http.Request) (*uuid.UUID, error) {
 	}
 
 	return &userUUID, nil
+}
+
+func (h *AuthHandler) checkAccountStatus(ctx context.Context, userId uuid.UUID) (isDisabled bool, reactivationToken string, errRes *serviceresponse.Response[any]) {
+	status, statusErr := h.authService.GetUserStatus(ctx, userId)
+	if statusErr != nil {
+		return false, "", statusErr
+	}
+
+	if status != usergateway.UserStatusDisabled {
+		return false, "", nil
+	}
+
+	token, tokenErr := h.jwtService.GenerateReactivationToken(ctx, userId.String())
+	if tokenErr != nil {
+		return false, "", tokenErr
+	}
+
+	return true, token, nil
 }

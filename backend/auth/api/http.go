@@ -50,6 +50,7 @@ func (a *APIServer) getHandler() http.Handler {
 
 	wrap("POST /v1/auth/signup", a.authHandler.VerifyOTPAndSignUpHandler)
 	wrap("POST /v1/auth/login", a.authHandler.LogInHandler)
+	wrap("POST /v1/auth/reactivate", a.authHandler.ReactivateHandler)
 	wrap("POST /v1/auth/refresh-token", a.authHandler.RefreshTokenHandler)
 	wrap("PATCH /v1/auth/password", a.authHandler.UpdatePasswordHandler)
 	wrap("DELETE /v1/auth/logout", a.authHandler.LogOutHandler)
