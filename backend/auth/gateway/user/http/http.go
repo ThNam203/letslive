@@ -109,3 +109,151 @@ func (g *userGateway) CreateNewUser(ctx context.Context, userRequestDTO dto.Crea
 
 	return createdUser.Data, nil
 }
+
+func (g *userGateway) GetUserStatus(ctx context.Context, userId string) (string, *serviceresponse.Response[any]) {
+	addr, err := g.registry.ServiceAddress(ctx, "user")
+	if err != nil {
+		return "", serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
+	url := fmt.Sprintf("http://%s/v1/user/%s", addr, userId)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		logger.Errorf(ctx, "failed to create the request: %s", err)
+		return "", serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
+	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
+		logger.Errorf(ctx, "failed to create the request: %s", err)
+		return "", serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		logger.Errorf(ctx, "failed to call request: %s", err)
+		return "", serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 != 2 {
+		resInfo := serviceresponse.Response[any]{}
+		if err := json.NewDecoder(resp.Body).Decode(&resInfo); err != nil {
+			logger.Errorf(ctx, "failed to decode error response from user service: %s", err)
+			return "", serviceresponse.NewResponseFromTemplate[any](
+				serviceresponse.RES_ERR_INTERNAL_SERVER,
+				nil,
+				nil,
+				nil,
+			)
+		}
+
+		return "", &resInfo
+	}
+
+	var statusRes serviceresponse.Response[dto.GetUserStatusResponseDTO]
+	if err := json.NewDecoder(resp.Body).Decode(&statusRes); err != nil {
+		logger.Errorf(ctx, "failed to decode resp body: %s", err)
+		return "", serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
+	return statusRes.Data.Status, nil
+}
+
+func (g *userGateway) UpdateUserStatus(ctx context.Context, userId string, status string) *serviceresponse.Response[any] {
+	addr, err := g.registry.ServiceAddress(ctx, "user")
+	if err != nil {
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
+	url := fmt.Sprintf("http://%s/v1/user/%s", addr, userId)
+	payloadBuf := new(bytes.Buffer)
+	if err := json.NewEncoder(payloadBuf).Encode(&dto.UpdateUserStatusRequestDTO{Status: status}); err != nil {
+		logger.Errorf(ctx, "failed to encode user status dto body: %s", err)
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, payloadBuf)
+	if err != nil {
+		logger.Errorf(ctx, "failed to create the request: %s", err)
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
+	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
+		logger.Errorf(ctx, "failed to create the request: %s", err)
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		logger.Errorf(ctx, "failed to call request: %s", err)
+		return serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 != 2 {
+		resInfo := serviceresponse.Response[any]{}
+		if err := json.NewDecoder(resp.Body).Decode(&resInfo); err != nil {
+			logger.Errorf(ctx, "failed to decode error response from user service: %s", err)
+			return serviceresponse.NewResponseFromTemplate[any](
+				serviceresponse.RES_ERR_INTERNAL_SERVER,
+				nil,
+				nil,
+				nil,
+			)
+		}
+
+		return &resInfo
+	}
+
+	return nil
+}
