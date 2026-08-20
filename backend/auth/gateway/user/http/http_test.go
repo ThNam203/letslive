@@ -107,3 +107,21 @@ func TestUpdateUserStatus_SendsStatusAndSucceeds(t *testing.T) {
 		t.Errorf("sent status = %q, want %q", receivedBody.Status, "normal")
 	}
 }
+
+func TestGetUserStatus_ReturnsErrorOnNilData(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(serviceresponse.Response[dto.GetUserStatusResponseDTO]{
+			Success: true,
+			Data:    nil,
+		})
+	}))
+	defer server.Close()
+
+	g := NewUserGateway(&fakeRegistry{addr: strings.TrimPrefix(server.URL, "http://")})
+
+	_, err := g.GetUserStatus(context.Background(), "user-123")
+	if err == nil {
+		t.Fatal("expected error for nil data, got nil")
+	}
+}

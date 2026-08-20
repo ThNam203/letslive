@@ -181,6 +181,16 @@ func (g *userGateway) GetUserStatus(ctx context.Context, userId string) (string,
 		)
 	}
 
+	if statusRes.Data == nil {
+		logger.Errorf(ctx, "user service returned no data for status lookup")
+		return "", serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
 	return statusRes.Data.Status, nil
 }
 
