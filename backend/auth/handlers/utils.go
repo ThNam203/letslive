@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"os"
 	usergateway "sen1or/letslive/auth/gateway/user"
 	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/types"
@@ -72,7 +73,12 @@ func (h *AuthHandler) getUserIDFromCookie(r *http.Request) (*uuid.UUID, error) {
 	}
 
 	myClaims := types.MyClaims{}
-	_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
+	parsedToken, err := jwt.NewParser().ParseWithClaims(accessTokenCookie.Value, &myClaims, func(t *jwt.Token) (any, error) {
+		return []byte(os.Getenv("ACCESS_TOKEN_SECRET")), nil
+	})
+	if err != nil || !parsedToken.Valid {
+		return nil, errors.New("invalid credentials")
+	}
 
 	userUUID, err := uuid.FromString(myClaims.UserId)
 	if err != nil {
