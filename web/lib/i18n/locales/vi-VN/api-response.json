@@ -19,6 +19,7 @@
     "res_err_internal_server": "Đã xảy ra lỗi hệ thống.",
     "res_err_failed_to_send_verification": "Gửi email xác minh thất bại, vui lòng thử lại sau.",
     "res_err_user_not_found": "Không tìm thấy người dùng.",
+    "res_err_account_disabled": "Tài khoản này đã bị vô hiệu hóa.",
     "res_err_image_too_large": "Ảnh vượt quá giới hạn 10mb.",
     "res_err_livestream_update_after_ended": "Không thể cập nhật, livestream đã kết thúc.",
     "res_err_livestream_not_found": "Không tìm thấy livestream.",

@@ -16,6 +16,7 @@ import (
 )
 
 const reactivationTokenMaxAge = 10 * time.Minute
+const reactivationTokenPurpose = "reactivation"
 
 type JWTService struct {
 	repo        domains.RefreshTokenRepository
@@ -193,6 +194,7 @@ func (c *JWTService) GenerateReactivationToken(ctx context.Context, userId strin
 	myClaims := types.MyClaims{
 		UserId:   userId,
 		Consumer: c.config.Consumer,
+		Purpose:  reactivationTokenPurpose,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -222,7 +224,7 @@ func (c *JWTService) VerifyReactivationToken(ctx context.Context, token string) 
 		return []byte(os.Getenv("REACTIVATION_TOKEN_SECRET")), nil
 	})
 
-	if err != nil || !parsedToken.Valid {
+	if err != nil || !parsedToken.Valid || myClaims.Purpose != reactivationTokenPurpose {
 		return "", serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_UNAUTHORIZED,
 			nil,

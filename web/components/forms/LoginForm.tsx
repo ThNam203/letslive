@@ -88,6 +88,8 @@ export default function LogInForm({
                         res.code === ApiCode.RES_ERR_ACCOUNT_DISABLED &&
                         res.data?.reactivationToken
                     ) {
+                        turnstile.reset();
+                        setTurnstileToken("");
                         onAccountDisabled(res.data.reactivationToken);
                         return;
                     }
