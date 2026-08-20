@@ -3,9 +3,10 @@
 import Link from "next/link";
 import IconGoogle from "@/components/icons/google";
 import LogInForm from "@/components/forms/LoginForm";
+import AccountDisabledDialog from "@/components/forms/AccountDisabledDialog";
 import GLOBAL from "@/global";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
@@ -15,6 +16,9 @@ export default function LogInPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const user = useUser((userState) => userState.user);
+    const [reactivationToken, setReactivationToken] = useState<string | null>(
+        null,
+    );
 
     useEffect(() => {
         const err = searchParams.get("errorMessage");
@@ -24,6 +28,14 @@ export default function LogInPage() {
             });
         }
     }, [searchParams, router]);
+
+    useEffect(() => {
+        const disabled = searchParams.get("accountDisabled");
+        const token = searchParams.get("reactivationToken");
+        if (disabled === "true" && token) {
+            setReactivationToken(token);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         if (!user) return;
@@ -60,7 +72,11 @@ export default function LogInPage() {
                 </p>
                 <hr className="bg-border h-[2px] flex-1" />
             </div>
-            <LogInForm />
+            <LogInForm onAccountDisabled={setReactivationToken} />
+            <AccountDisabledDialog
+                reactivationToken={reactivationToken}
+                onClose={() => setReactivationToken(null)}
+            />
             <p className="mt-4 text-end text-sm opacity-80">
                 {t("no_account")}
                 <Link

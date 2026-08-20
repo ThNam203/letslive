@@ -18,6 +18,7 @@ import useUser from "@/hooks/user";
 import { Input } from "../ui/input";
 import { EMAIL_MAX_LENGTH } from "@/constant/field-limits";
 import { PASSWORD_MAX_LENGTH } from "@/constant/password";
+import { ApiCode } from "@/types/fetch-response";
 
 function initialMockLoginEmail() {
     if (process.env.NEXT_PUBLIC_USE_MOCK_API !== "true") return "";
@@ -29,7 +30,11 @@ function initialMockLoginPassword() {
     return process.env.NEXT_PUBLIC_MOCK_LOGIN_PASSWORD ?? "";
 }
 
-export default function LogInForm() {
+export default function LogInForm({
+    onAccountDisabled,
+}: {
+    onAccountDisabled: (reactivationToken: string) => void;
+}) {
     const [email, setEmail] = useState(initialMockLoginEmail);
     const [password, setPassword] = useState(initialMockLoginPassword);
     const [hidingPassword, setHidingPassword] = useState(true);
@@ -79,6 +84,14 @@ export default function LogInForm() {
         })
             .then((res) => {
                 if (!res.success) {
+                    if (
+                        res.code === ApiCode.RES_ERR_ACCOUNT_DISABLED &&
+                        res.data?.reactivationToken
+                    ) {
+                        onAccountDisabled(res.data.reactivationToken);
+                        return;
+                    }
+
                     turnstile.reset();
                     setTurnstileToken("");
                     toast.error(t(`api-response:${res.key}`), {
