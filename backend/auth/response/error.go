@@ -22,6 +22,7 @@ const (
 	RES_ERR_DATABASE_ISSUE_CODE               = 20016
 	RES_ERR_INTERNAL_SERVER_CODE              = 20017
 	RES_ERR_FAILED_TO_SEND_VERIFICATION_CODE  = 20018
+	RES_ERR_ACCOUNT_DISABLED_CODE             = 20019
 )
 
 const (
@@ -44,6 +45,7 @@ const (
 	RES_ERR_DATABASE_ISSUE_KEY               = "res_err_database_issue"
 	RES_ERR_INTERNAL_SERVER_KEY              = "res_err_internal_server"
 	RES_ERR_FAILED_TO_SEND_VERIFICATION_KEY  = "res_err_failed_to_send_verification"
+	RES_ERR_ACCOUNT_DISABLED_KEY             = "res_err_account_disabled"
 )
 
 var (
@@ -197,5 +199,13 @@ var (
 		Code:       RES_ERR_FAILED_TO_SEND_VERIFICATION_CODE,
 		Key:        RES_ERR_FAILED_TO_SEND_VERIFICATION_KEY,
 		Message:    "Failed to send email verification, please try again later.",
+	}
+
+	RES_ERR_ACCOUNT_DISABLED = ResponseTemplate{
+		Success:    false,
+		StatusCode: http.StatusForbidden,
+		Code:       RES_ERR_ACCOUNT_DISABLED_CODE,
+		Key:        RES_ERR_ACCOUNT_DISABLED_KEY,
+		Message:    "This account has been disabled.",
 	}
 )
