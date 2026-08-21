@@ -2,9 +2,9 @@ package vodcomment
 
 import (
 	"context"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/vod/domains"
 	"sen1or/letslive/vod/dto"
-	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/vod/response"
 	"sen1or/letslive/vod/utils"
 
@@ -20,6 +20,14 @@ func (s *VODCommentService) CreateComment(ctx context.Context, data dto.CreateVO
 	_, vodErr := s.vodRepo.GetById(ctx, vodId)
 	if vodErr != nil {
 		return nil, vodErr
+	}
+
+	statuses, statusErr := s.userGateway.GetUsersStatuses(ctx, []uuid.UUID{userId})
+	if statusErr != nil {
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_FORBIDDEN, nil, nil, nil)
+	}
+	if statuses[userId.String()] == "disabled" {
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_FORBIDDEN, nil, nil, nil)
 	}
 
 	comment := domains.VODComment{
