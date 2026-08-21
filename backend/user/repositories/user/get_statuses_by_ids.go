@@ -37,5 +37,14 @@ func (r *postgresUserRepo) GetStatusesByIds(ctx context.Context, userIds []uuid.
 		statuses[id] = status
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, response.NewResponseFromTemplate[any](
+			response.RES_ERR_DATABASE_ISSUE,
+			nil,
+			nil,
+			nil,
+		)
+	}
+
 	return statuses, nil
 }
