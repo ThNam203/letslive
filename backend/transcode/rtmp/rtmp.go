@@ -178,6 +178,9 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 	if userInfo.Data.Status == "disabled" {
 		return "", "", fmt.Errorf("account is disabled")
 	}
+	if userInfo.Data.Status == "" {
+		logger.Warnf(s.ctx, "user service returned empty status for stream key owner, disabled-account gate may be inert")
+	}
 
 	thumb := userInfo.Data.LivestreamInformationResponseDTO.ThumbnailURL
 	// empty string is invalid
