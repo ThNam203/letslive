@@ -18,7 +18,11 @@ export default function LogInPage() {
     const pathname = usePathname();
     const user = useUser((userState) => userState.user);
     const [reactivationToken, setReactivationToken] = useState<string | null>(
-        null,
+        () => {
+            const disabled = searchParams.get("accountDisabled");
+            const token = searchParams.get("reactivationToken");
+            return disabled === "true" && token ? token : null;
+        },
     );
 
     useEffect(() => {
@@ -31,13 +35,10 @@ export default function LogInPage() {
     }, [searchParams, router]);
 
     useEffect(() => {
-        const disabled = searchParams.get("accountDisabled");
-        const token = searchParams.get("reactivationToken");
-        if (disabled === "true" && token) {
-            setReactivationToken(token);
+        if (reactivationToken) {
             router.replace(pathname);
         }
-    }, [searchParams, router, pathname]);
+    }, [reactivationToken, router, pathname]);
 
     useEffect(() => {
         if (!user) return;
