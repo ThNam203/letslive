@@ -13,7 +13,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import useUser from "@/hooks/user";
-import { Logout } from "@/lib/api/auth";
+import { LogoutAll } from "@/lib/api/auth";
 import { UpdateProfile } from "@/lib/api/user";
 import { UserStatus } from "@/types/user";
 import { useState } from "react";
@@ -31,7 +31,7 @@ export default function DisableAccountDialog({
     const { t } = useT(["settings", "api-response", "fetch-error"]);
 
     const logoutHandler = async () => {
-        await Logout().then((res) => {
+        await LogoutAll().then((res) => {
             if (res.statusCode === 204) {
                 clearUser();
             } else {

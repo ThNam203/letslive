@@ -259,3 +259,64 @@ func TestLogOutAllHandler_ForgedCookieIsRejectedWithoutRevoking(t *testing.T) {
 		t.Error("RevokeAllTokensOfUser should not be called for a forged cookie")
 	}
 }
+
+func TestLogOutHandler_RevokesRefreshTokenAndClearsCookies(t *testing.T) {
+	var foundValue string
+	var updatedToken *domains.RefreshToken
+	refreshRepo := &testutil.FakeRefreshTokenRepository{
+		FindByValueFunc: func(ctx context.Context, value string) (*domains.RefreshToken, *serviceresponse.Response[any]) {
+			foundValue = value
+			return &domains.RefreshToken{Token: value}, nil
+		},
+		UpdateFunc: func(ctx context.Context, token *domains.RefreshToken) *serviceresponse.Response[any] {
+			updatedToken = token
+			return nil
+		},
+	}
+	h := newTestAuthHandler(t, &testutil.FakeUserGateway{}, &testutil.FakeAuthRepository{}, refreshRepo)
+
+	req := httptest.NewRequest(http.MethodDelete, "/v1/auth/logout", nil)
+	req.AddCookie(&http.Cookie{Name: "REFRESH_TOKEN", Value: "some-refresh-token-value"})
+	rec := httptest.NewRecorder()
+
+	h.LogOutHandler(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusNoContent)
+	}
+	if foundValue != "some-refresh-token-value" {
+		t.Errorf("FindByValue called with %q, want %q", foundValue, "some-refresh-token-value")
+	}
+	if updatedToken == nil || updatedToken.RevokedAt == nil {
+		t.Error("expected the refresh token to be marked revoked")
+	}
+	if _, ok := rec.Result().Header["Set-Cookie"]; !ok {
+		t.Error("expected Set-Cookie header clearing cookies")
+	}
+}
+
+func TestLogOutHandler_MissingRefreshTokenCookieStillClearsCookies(t *testing.T) {
+	called := false
+	refreshRepo := &testutil.FakeRefreshTokenRepository{
+		FindByValueFunc: func(ctx context.Context, value string) (*domains.RefreshToken, *serviceresponse.Response[any]) {
+			called = true
+			return nil, nil
+		},
+	}
+	h := newTestAuthHandler(t, &testutil.FakeUserGateway{}, &testutil.FakeAuthRepository{}, refreshRepo)
+
+	req := httptest.NewRequest(http.MethodDelete, "/v1/auth/logout", nil)
+	rec := httptest.NewRecorder()
+
+	h.LogOutHandler(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusNoContent)
+	}
+	if called {
+		t.Error("should not attempt revocation when no refresh token cookie is present")
+	}
+	if _, ok := rec.Result().Header["Set-Cookie"]; !ok {
+		t.Error("expected Set-Cookie header clearing cookies")
+	}
+}

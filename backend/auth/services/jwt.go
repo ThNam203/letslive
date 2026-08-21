@@ -56,7 +56,7 @@ func (c *JWTService) GenerateTokenPair(ctx context.Context, userId string) (*typ
 // the process is called "refresh token"
 func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*types.AccessTokenInformation, *serviceresponse.Response[any]) {
 	myClaims := types.MyClaims{}
-	parsedToken, err := jwt.NewParser().ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (any, error) {
+	parsedToken, err := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()})).ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (any, error) {
 		return []byte(os.Getenv("REFRESH_TOKEN_SECRET")), nil
 	})
 
@@ -220,7 +220,7 @@ func (c *JWTService) GenerateReactivationToken(ctx context.Context, userId strin
 
 func (c *JWTService) VerifyReactivationToken(ctx context.Context, token string) (string, *serviceresponse.Response[any]) {
 	myClaims := types.MyClaims{}
-	parsedToken, err := jwt.NewParser().ParseWithClaims(token, &myClaims, func(t *jwt.Token) (any, error) {
+	parsedToken, err := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()})).ParseWithClaims(token, &myClaims, func(t *jwt.Token) (any, error) {
 		return []byte(os.Getenv("REACTIVATION_TOKEN_SECRET")), nil
 	})
 

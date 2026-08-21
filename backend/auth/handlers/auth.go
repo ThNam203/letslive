@@ -211,8 +211,16 @@ func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// TODO: revoke refresh token
 func (h *AuthHandler) LogOutHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	if refreshTokenCookie, err := r.Cookie("REFRESH_TOKEN"); err == nil && len(refreshTokenCookie.Value) > 0 {
+		if revokeErr := h.jwtService.RevokeTokenByValue(ctx, refreshTokenCookie.Value); revokeErr != nil {
+			logger.Errorf(ctx, "failed to revoke refresh token on logout: %s", revokeErr.Message)
+		}
+	}
+
 	h.setAccessTokenCookie(w, "", -1)
 	h.setRefreshTokenCookie(w, "", -1)
 	w.WriteHeader(http.StatusNoContent)
