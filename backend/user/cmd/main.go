@@ -126,7 +126,7 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	minioService := services.NewMinIOService(ctx, cfg.MinIO)
 	var userService = services.NewUserService(userRepo, livestreamInfoRepo, notificationRepo, followRepo, *minioService)
 	var livestreamInfoService = services.NewLivestreamInformationService(livestreamInfoRepo)
-	var followService = services.NewFollowService(followRepo)
+	var followService = services.NewFollowService(followRepo, userRepo)
 	var notificationService = services.NewNotificationService(notificationRepo)
 	var inventoryService = services.NewInventoryService(inventoryRepo)
 	var financeGateway = financehttp.NewFinanceGateway(registry)
