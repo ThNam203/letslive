@@ -59,6 +59,7 @@ type UserRepository interface {
 	GetByUsername(ctx context.Context, username string) (*User, *response.Response[any])
 	GetByEmail(ctx context.Context, email string) (*User, *response.Response[any])
 	GetByAPIKey(ctx context.Context, apiKey uuid.UUID) (*User, *response.Response[any])
+	GetStatusesByIds(ctx context.Context, userIds []uuid.UUID) (map[uuid.UUID]UserStatus, *response.Response[any])
 
 	// the authenticatedUserId is used for checking if the caller is following the userId
 	GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *response.Response[any])

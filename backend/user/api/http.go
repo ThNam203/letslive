@@ -93,9 +93,10 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("GET /v1/user/me/gifts/sent", a.giftHandler.GetGiftsSentPrivateHandler)
 	wrap("POST /v1/internal/gifts/create", a.giftHandler.CreateGiftInternalHandler) // internal
 
-	wrap("POST /v1/user", a.userHandler.CreateUserInternalHandler)                        // internal
-	wrap("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                // internal
-	wrap("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler) // internal
+	wrap("POST /v1/user", a.userHandler.CreateUserInternalHandler)                          // internal
+	wrap("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                  // internal
+	wrap("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler)   // internal
+	wrap("POST /v1/internal/users/statuses", a.userHandler.GetUsersStatusesInternalHandler) // internal
 
 	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)
 	wrap("GET /", a.generalHandler.RouteNotFoundHandler)
