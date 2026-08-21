@@ -37,6 +37,8 @@ func main() {
 	defer stop()
 
 	logger.Init(logger.LogLevel(logger.Debug))
+	validateJWTSecrets(ctx)
+
 	registry, err := discovery.NewConsulRegistry(os.Getenv("REGISTRY_SERVICE_ADDRESS"))
 	if err != nil {
 		logger.Panicf(ctx, "failed to start discovery mechanism: %s", err)
@@ -109,6 +111,30 @@ func main() {
 	logger.Infof(shutdownCtx, "service shut down complete.")
 }
 
+func validateJWTSecrets(ctx context.Context) {
+	secrets := map[string]string{
+		"ACCESS_TOKEN_SECRET":       os.Getenv("ACCESS_TOKEN_SECRET"),
+		"REFRESH_TOKEN_SECRET":      os.Getenv("REFRESH_TOKEN_SECRET"),
+		"REACTIVATION_TOKEN_SECRET": os.Getenv("REACTIVATION_TOKEN_SECRET"),
+	}
+
+	for name, value := range secrets {
+		if value == "" {
+			logger.Panicf(ctx, "missing required env var: %s must be set", name)
+		}
+	}
+
+	if secrets["ACCESS_TOKEN_SECRET"] == secrets["REFRESH_TOKEN_SECRET"] {
+		logger.Panicf(ctx, "ACCESS_TOKEN_SECRET and REFRESH_TOKEN_SECRET must be distinct")
+	}
+	if secrets["ACCESS_TOKEN_SECRET"] == secrets["REACTIVATION_TOKEN_SECRET"] {
+		logger.Panicf(ctx, "ACCESS_TOKEN_SECRET and REACTIVATION_TOKEN_SECRET must be distinct")
+	}
+	if secrets["REFRESH_TOKEN_SECRET"] == secrets["REACTIVATION_TOKEN_SECRET"] {
+		logger.Panicf(ctx, "REFRESH_TOKEN_SECRET and REACTIVATION_TOKEN_SECRET must be distinct")
+	}
+}
+
 func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
 	var userRepo = repositories.NewAuthRepository(dbConn)
 	var refreshTokenRepo = repositories.NewRefreshTokenRepository(dbConn)
@@ -117,7 +143,7 @@ func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Con
 	userGateway := usergateway.NewUserGateway(registry)
 	var authService = services.NewAuthService(userRepo, userGateway)
 	var googleAuthService = services.NewGoogleAuthService(userRepo, userGateway)
-	var jwtService = services.NewJWTService(refreshTokenRepo, cfg.JWT)
+	var jwtService = services.NewJWTService(refreshTokenRepo, cfg.JWT, userGateway)
 	var verificationService = services.NewVerificationService(signUpOTPRepo)
 	var authHandler = handlers.NewAuthHandler(*jwtService, *authService, *verificationService, *googleAuthService, cfg.Verification.Gateway)
 	return api.NewAPIServer(authHandler, registry, cfg, dbConn)

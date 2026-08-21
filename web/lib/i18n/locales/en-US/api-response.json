@@ -19,6 +19,7 @@
     "res_err_internal_server": "Something went wrong.",
     "res_err_failed_to_send_verification": "Failed to send email verification, please try again later.",
     "res_err_user_not_found": "User not found.",
+    "res_err_account_disabled": "This account has been disabled.",
     "res_err_image_too_large": "Image exceeds 10mb limit.",
     "res_err_livestream_update_after_ended": "Failed to update, the livestream has ended.",
     "res_err_livestream_not_found": "Livestream not found.",

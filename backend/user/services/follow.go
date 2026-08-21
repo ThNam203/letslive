@@ -10,13 +10,16 @@ import (
 
 type FollowService struct {
 	followRepo domains.FollowRepository
+	userRepo   domains.UserRepository
 }
 
 func NewFollowService(
 	followRepo domains.FollowRepository,
+	userRepo domains.UserRepository,
 ) *FollowService {
 	return &FollowService{
 		followRepo: followRepo,
+		userRepo:   userRepo,
 	}
 }
 
@@ -31,6 +34,23 @@ func (s FollowService) Follow(ctx context.Context, followId, followedId string) 
 			nil,
 		)
 	}
+
+	follower, followerErr := s.userRepo.GetById(ctx, followUUID)
+	if followerErr != nil {
+		return followerErr
+	}
+	if follower.Status == domains.UserStatusDisabled {
+		return response.NewResponseFromTemplate[any](response.RES_ERR_ACCOUNT_DISABLED, nil, nil, nil)
+	}
+
+	followed, followedErr := s.userRepo.GetById(ctx, followedUUID)
+	if followedErr != nil {
+		return followedErr
+	}
+	if followed.Status == domains.UserStatusDisabled {
+		return response.NewResponseFromTemplate[any](response.RES_ERR_ACCOUNT_DISABLED, nil, nil, nil)
+	}
+
 	err := s.followRepo.FollowUser(ctx, followUUID, followedUUID)
 	if err != nil {
 		return err

@@ -34,10 +34,10 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 		ctx, `
 		UPDATE users
 		SET username = COALESCE(@username, username),
-		    phone_number = @phone_number,
-		    bio = @bio,
-		    locale = @locale,
-		    status = @status
+		    phone_number = COALESCE(@phone_number, phone_number),
+		    bio = COALESCE(@bio, bio),
+		    locale = COALESCE(@locale, locale),
+		    status = COALESCE(@status, status)
 		WHERE id = @id
 		RETURNING *
 	`, params)
