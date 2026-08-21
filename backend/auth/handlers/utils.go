@@ -73,7 +73,7 @@ func (h *AuthHandler) getUserIDFromCookie(r *http.Request) (*uuid.UUID, error) {
 	}
 
 	myClaims := types.MyClaims{}
-	parsedToken, err := jwt.NewParser().ParseWithClaims(accessTokenCookie.Value, &myClaims, func(t *jwt.Token) (any, error) {
+	parsedToken, err := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()})).ParseWithClaims(accessTokenCookie.Value, &myClaims, func(t *jwt.Token) (any, error) {
 		return []byte(os.Getenv("ACCESS_TOKEN_SECRET")), nil
 	})
 	if err != nil || !parsedToken.Valid {

@@ -37,7 +37,7 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 		    phone_number = COALESCE(@phone_number, phone_number),
 		    bio = COALESCE(@bio, bio),
 		    locale = COALESCE(@locale, locale),
-		    status = @status
+		    status = COALESCE(@status, status)
 		WHERE id = @id
 		RETURNING *
 	`, params)
