@@ -30,6 +30,7 @@
         "type": {
             "reward": "Reward",
             "purchase": "Purchase",
+            "deposit": "Deposit",
             "trade": "Trade",
             "donate": "Donation",
             "refund": "Refund",

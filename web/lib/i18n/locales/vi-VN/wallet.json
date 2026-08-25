@@ -30,6 +30,7 @@
         "type": {
             "reward": "Phần thưởng",
             "purchase": "Mua hàng",
+            "deposit": "Nạp tiền",
             "trade": "Trao đổi",
             "donate": "Quyên góp",
             "refund": "Hoàn tiền",

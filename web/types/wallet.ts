@@ -58,6 +58,7 @@ export type WalletOverview = {
 export enum TransactionType {
     REWARD = "reward",
     PURCHASE = "purchase",
+    DEPOSIT = "deposit",
     TRADE = "trade",
     DONATE = "donate",
     REFUND = "refund",
