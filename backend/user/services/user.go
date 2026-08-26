@@ -275,6 +275,20 @@ func (s UserService) UpdateUserInternal(ctx context.Context, data dto.UpdateUser
 	return updatedUser, nil
 }
 
+func (s *UserService) GetUsersStatuses(ctx context.Context, userIds []uuid.UUID) (map[string]string, *response.Response[any]) {
+	statuses, err := s.userRepo.GetStatusesByIds(ctx, userIds)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]string, len(statuses))
+	for id, status := range statuses {
+		result[id.String()] = string(status)
+	}
+
+	return result, nil
+}
+
 func (s UserService) UploadFileToMinIO(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, *response.Response[any]) {
 	savedPath, err := s.minioService.AddFile(ctx, file, fileHeader, "general-files")
 	if err != nil {

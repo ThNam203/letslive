@@ -10,6 +10,7 @@ type GetUserResponseDTO struct {
 	Id                uuid.UUID `json:"id"`
 	Username          string    `json:"username"`
 	Email             string    `json:"email"`
+	Status            string    `json:"status"`
 	CreatedAt         time.Time `json:"createdAt"`
 	StreamAPIKey      uuid.UUID `json:"streamAPIKey"`
 	PhoneNumber       *string   `json:"phoneNumber,omitempty"`

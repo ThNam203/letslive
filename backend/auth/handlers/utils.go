@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"os"
+	usergateway "sen1or/letslive/auth/gateway/user"
 	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/types"
 
@@ -71,7 +73,12 @@ func (h *AuthHandler) getUserIDFromCookie(r *http.Request) (*uuid.UUID, error) {
 	}
 
 	myClaims := types.MyClaims{}
-	_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
+	parsedToken, err := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()})).ParseWithClaims(accessTokenCookie.Value, &myClaims, func(t *jwt.Token) (any, error) {
+		return []byte(os.Getenv("ACCESS_TOKEN_SECRET")), nil
+	})
+	if err != nil || !parsedToken.Valid {
+		return nil, errors.New("invalid credentials")
+	}
 
 	userUUID, err := uuid.FromString(myClaims.UserId)
 	if err != nil {
@@ -79,4 +86,22 @@ func (h *AuthHandler) getUserIDFromCookie(r *http.Request) (*uuid.UUID, error) {
 	}
 
 	return &userUUID, nil
+}
+
+func (h *AuthHandler) checkAccountStatus(ctx context.Context, userId uuid.UUID) (isDisabled bool, reactivationToken string, errRes *serviceresponse.Response[any]) {
+	status, statusErr := h.authService.GetUserStatus(ctx, userId)
+	if statusErr != nil {
+		return false, "", statusErr
+	}
+
+	if status != usergateway.UserStatusDisabled {
+		return false, "", nil
+	}
+
+	token, tokenErr := h.jwtService.GenerateReactivationToken(ctx, userId.String())
+	if tokenErr != nil {
+		return false, "", tokenErr
+	}
+
+	return true, token, nil
 }

@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	neturl "net/url"
 	"os"
+	"sen1or/letslive/auth/dto"
 	serviceresponse "sen1or/letslive/auth/response"
 	"time"
 )
@@ -63,12 +65,27 @@ func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
+	isDisabled, reactivationToken, statusErr := h.checkAccountStatus(ctx, *createdAuth.UserId)
+	if statusErr != nil {
+		http.Redirect(w, r, GetRedirectURLOnFail(statusErr.Message), http.StatusTemporaryRedirect)
+		return
+	}
+
+	if isDisabled {
+		http.Redirect(w, r, buildDisabledRedirectURL(os.Getenv("CLIENT_URL"), reactivationToken), http.StatusTemporaryRedirect)
+		return
+	}
+
 	if err := h.setAuthJWTsInCookie(ctx, createdAuth.UserId.String(), w); err != nil {
 		http.Redirect(w, r, GetRedirectURLOnFail(err.Message), http.StatusTemporaryRedirect)
 		return
 	}
 
 	http.Redirect(w, r, GetRedirectURLOnSuccess("/account-setup"), http.StatusMovedPermanently)
+}
+
+func buildDisabledRedirectURL(clientAddr, reactivationToken string) string {
+	return fmt.Sprintf("%s/login?accountDisabled=true&reactivationToken=%s", clientAddr, neturl.QueryEscape(reactivationToken))
 }
 
 // OAuthGoogleMobileHandler handles Google sign-in from mobile clients.
@@ -90,6 +107,18 @@ func (h *AuthHandler) OAuthGoogleMobileHandler(w http.ResponseWriter, r *http.Re
 	createdAuth, authErr := h.googleAuthService.VerifyIDTokenAndGetUser(ctx, body.IDToken)
 	if authErr != nil {
 		writeResponse(w, ctx, authErr)
+		return
+	}
+
+	isDisabled, reactivationToken, statusErr := h.checkAccountStatus(ctx, *createdAuth.UserId)
+	if statusErr != nil {
+		writeResponse(w, ctx, statusErr)
+		return
+	}
+
+	if isDisabled {
+		disabledData := any(dto.AccountDisabledResponseDTO{ReactivationToken: reactivationToken})
+		writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate(serviceresponse.RES_ERR_ACCOUNT_DISABLED, &disabledData, nil, nil))
 		return
 	}
 

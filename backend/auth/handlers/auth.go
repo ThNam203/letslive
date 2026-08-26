@@ -66,7 +66,58 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	isDisabled, reactivationToken, statusErr := h.checkAccountStatus(ctx, *auth.UserId)
+	if statusErr != nil {
+		writeResponse(w, ctx, statusErr)
+		return
+	}
+
+	if isDisabled {
+		disabledData := any(dto.AccountDisabledResponseDTO{ReactivationToken: reactivationToken})
+		writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate(serviceresponse.RES_ERR_ACCOUNT_DISABLED, &disabledData, nil, nil))
+		return
+	}
+
 	if err := h.setAuthJWTsInCookie(ctx, auth.UserId.String(), w); err != nil {
+		writeResponse(w, ctx, err)
+		return
+	}
+
+	writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate[any](
+		serviceresponse.RES_SUCC_LOGIN,
+		nil,
+		nil,
+		nil,
+	))
+}
+
+func (h *AuthHandler) ReactivateHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	var reqBody dto.ReactivateRequestDTO
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
+		return
+	}
+
+	if err := utils.Validator.Struct(&reqBody); err != nil {
+		writeResponse(w, ctx, serviceresponse.NewResponseWithValidationErrors[any](nil, nil, err))
+		return
+	}
+
+	userId, tokenErr := h.jwtService.VerifyReactivationToken(ctx, reqBody.ReactivationToken)
+	if tokenErr != nil {
+		writeResponse(w, ctx, tokenErr)
+		return
+	}
+
+	if statusErr := h.authService.ReactivateUser(ctx, userId); statusErr != nil {
+		writeResponse(w, ctx, statusErr)
+		return
+	}
+
+	if err := h.setAuthJWTsInCookie(ctx, userId, w); err != nil {
 		writeResponse(w, ctx, err)
 		return
 	}
@@ -160,8 +211,36 @@ func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// TODO: revoke refresh token
 func (h *AuthHandler) LogOutHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	if refreshTokenCookie, err := r.Cookie("REFRESH_TOKEN"); err == nil && len(refreshTokenCookie.Value) > 0 {
+		if revokeErr := h.jwtService.RevokeTokenByValue(ctx, refreshTokenCookie.Value); revokeErr != nil {
+			logger.Errorf(ctx, "failed to revoke refresh token on logout: %s", revokeErr.Message)
+		}
+	}
+
+	h.setAccessTokenCookie(w, "", -1)
+	h.setRefreshTokenCookie(w, "", -1)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *AuthHandler) LogOutAllHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	userId, err := h.getUserIDFromCookie(r)
+	if err != nil {
+		writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_UNAUTHORIZED, nil, nil, nil))
+		return
+	}
+
+	if revokeErr := h.jwtService.RevokeAllTokensOfUser(ctx, *userId); revokeErr != nil {
+		writeResponse(w, ctx, revokeErr)
+		return
+	}
+
 	h.setAccessTokenCookie(w, "", -1)
 	h.setRefreshTokenCookie(w, "", -1)
 	w.WriteHeader(http.StatusNoContent)

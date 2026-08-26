@@ -33,7 +33,7 @@ func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UU
 		LEFT JOIN livestream_information l ON u.id = l.user_id
 		LEFT JOIN followers f ON u.id = f.user_id
 		LEFT JOIN user_social_links usl ON usl.user_id = u.id
-		WHERE u.id = $1
+		WHERE u.id = $1 AND u.status != 'disabled'
 		GROUP BY u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
 	`, userId.String(), authenticatedUserId)
 	if err != nil {

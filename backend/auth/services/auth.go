@@ -197,3 +197,11 @@ func (s AuthService) UpdatePassword(ctx context.Context, dto dto.ChangePasswordR
 
 	return nil
 }
+
+func (s AuthService) GetUserStatus(ctx context.Context, userId uuid.UUID) (string, *serviceresponse.Response[any]) {
+	return s.userGateway.GetUserStatus(ctx, userId.String())
+}
+
+func (s AuthService) ReactivateUser(ctx context.Context, userId string) *serviceresponse.Response[any] {
+	return s.userGateway.UpdateUserStatus(ctx, userId, usergateway.UserStatusNormal)
+}
