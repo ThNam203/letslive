@@ -16,6 +16,7 @@ interface Props {
 const typeIcons: Record<TransactionType, string> = {
     [TransactionType.REWARD]: "&#127942;",
     [TransactionType.PURCHASE]: "&#128722;",
+    [TransactionType.DEPOSIT]: "&#128179;",
     [TransactionType.TRADE]: "&#128257;",
     [TransactionType.DONATE]: "&#10084;",
     [TransactionType.REFUND]: "&#8634;",
