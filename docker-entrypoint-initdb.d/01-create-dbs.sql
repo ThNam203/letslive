@@ -12,3 +12,6 @@ CREATE DATABASE letslive_finance;
 
 -- 5. Create the 'letslive_vod' database
 CREATE DATABASE letslive_vod;
+
+-- 6. Create the 'letslive_admin' database
+CREATE DATABASE letslive_admin;
