@@ -18,7 +18,6 @@
     "got_it": "Đã hiểu",
     "how_to_livestream": "Cách livestream",
     "start_your_livestream": "Bắt đầu livestream của bạn",
-    "open": "Mở",
     "stream_guide_step_1": "Mở OBS → Settings → Stream",
     "stream_guide_step_2": "Nhập: \"Server: {{server_url}}, StreamKey: Lấy mã của bạn tại cài đặt\"",
     "live_streaming": "Live Streaming",
@@ -41,13 +40,13 @@
     "live": "Trực tiếp",
     "streamer": "Streamer",
     "time": {
-        "seconds_ago": "{{count}} giây",
-        "minutes_ago": "{{count}} phút",
-        "hours_ago": "{{count}} giờ",
-        "days_ago": "{{count}} ngày",
-        "weeks_ago": "{{count}} tuần",
-        "months_ago": "{{count}} tháng",
-        "years_ago": "{{count}} năm"
+        "seconds_ago_other": "{{count}} giây",
+        "minutes_ago_other": "{{count}} phút",
+        "hours_ago_other": "{{count}} giờ",
+        "days_ago_other": "{{count}} ngày",
+        "weeks_ago_other": "{{count}} tuần",
+        "months_ago_other": "{{count}} tháng",
+        "years_ago_other": "{{count}} năm"
     },
     "following": "Đang theo dõi",
     "recommended": "Gợi ý",
