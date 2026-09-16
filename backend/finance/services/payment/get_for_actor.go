@@ -2,13 +2,13 @@ package payment
 
 import (
 	"context"
+	"sen1or/letslive/finance/domains"
 	"sen1or/letslive/finance/dto"
-	response "sen1or/letslive/finance/response"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *PaymentService) GetForActor(ctx context.Context, paymentId uuid.UUID, actorId uuid.UUID) (*dto.PaymentResponse, *response.Response[any]) {
+func (s *PaymentService) GetForActor(ctx context.Context, paymentId uuid.UUID, actorId uuid.UUID) (*dto.PaymentResponse, error) {
 	p, errResp := s.paymentRepo.GetById(ctx, paymentId)
 	if errResp != nil {
 		return nil, errResp
@@ -19,12 +19,7 @@ func (s *PaymentService) GetForActor(ctx context.Context, paymentId uuid.UUID, a
 		return nil, txErr
 	}
 	if tx.ActorId == nil || *tx.ActorId != actorId {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_PAYMENT_NOT_FOUND,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrPaymentNotFound
 	}
 
 	currency, curErr := s.currencyRepo.GetByCode(ctx, p.CurrencyCode)

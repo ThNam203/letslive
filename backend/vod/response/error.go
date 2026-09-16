@@ -9,13 +9,11 @@ const (
 	RES_ERR_UNAUTHORIZED_CODE    = 20005
 	RES_ERR_FORBIDDEN_CODE       = 20008
 	RES_ERR_ROUTE_NOT_FOUND_CODE = 20012
-	RES_ERR_IMAGE_TOO_LARGE_CODE = 30002
 	RES_ERR_DATABASE_QUERY_CODE  = 20015
 	RES_ERR_DATABASE_ISSUE_CODE  = 20016
 	RES_ERR_INTERNAL_SERVER_CODE = 20017
 
 	RES_ERR_VOD_NOT_FOUND_CODE             = 40002
-	RES_ERR_QUERY_SCAN_FAILED_CODE         = 40004
 	RES_ERR_VOD_CREATE_FAILED_CODE         = 40007
 	RES_ERR_VOD_UPDATE_FAILED_CODE         = 40008
 	RES_ERR_VOD_COMMENT_NOT_FOUND_CODE     = 40009
@@ -34,7 +32,6 @@ const (
 	RES_ERR_UNAUTHORIZED_KEY    = "res_err_unauthorized"
 	RES_ERR_FORBIDDEN_KEY       = "res_err_forbidden"
 	RES_ERR_ROUTE_NOT_FOUND_KEY = "res_err_route_not_found"
-	RES_ERR_IMAGE_TOO_LARGE_KEY = "res_err_image_too_large"
 	RES_ERR_DATABASE_QUERY_KEY  = "res_err_database_query"
 	RES_ERR_DATABASE_ISSUE_KEY  = "res_err_database_issue"
 	RES_ERR_INTERNAL_SERVER_KEY = "res_err_internal_server"
@@ -48,7 +45,7 @@ const (
 	RES_ERR_VOD_COMMENT_NOT_LIKED_KEY     = "res_err_vod_comment_not_liked"
 	RES_ERR_VOD_COMMENT_DELETE_FAILED_KEY = "res_err_vod_comment_delete_failed"
 	RES_ERR_VOD_VIEW_THRESHOLD_KEY        = "res_err_vod_view_threshold"
-	RES_ERR_VIDEO_TOO_LARGE_KEY           = "err_video_too_large"
+	RES_ERR_VIDEO_TOO_LARGE_KEY           = "res_err_video_too_large"
 )
 
 // Error templates
@@ -99,14 +96,6 @@ var (
 		Code:       RES_ERR_ROUTE_NOT_FOUND_CODE,
 		Key:        RES_ERR_ROUTE_NOT_FOUND_KEY,
 		Message:    "Requested endpoint not found.",
-	}
-
-	RES_ERR_IMAGE_TOO_LARGE = ResponseTemplate{
-		Success:    false,
-		StatusCode: http.StatusRequestEntityTooLarge,
-		Code:       RES_ERR_IMAGE_TOO_LARGE_CODE,
-		Key:        RES_ERR_IMAGE_TOO_LARGE_KEY,
-		Message:    "Image exceeds 10mb limit.",
 	}
 
 	RES_ERR_DATABASE_QUERY = ResponseTemplate{

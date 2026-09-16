@@ -8,11 +8,12 @@ import IconLoader from "../icons/loader";
 import useT from "@/hooks/use-translation";
 import MediaCard from "./media-card";
 import { useVodsInfinite } from "@/hooks/queries/use-vods-infinite";
+import { flattenPages } from "@/lib/query/paginated";
 
 export function VodFeedView() {
     const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
         useVodsInfinite();
-    const vods = data?.pages.flat() ?? [];
+    const vods = flattenPages(data);
     const { t } = useT(["common"]);
     const sentinelRef = useRef<HTMLDivElement | null>(null);
 

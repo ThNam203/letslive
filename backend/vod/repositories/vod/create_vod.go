@@ -2,14 +2,13 @@ package vod
 
 import (
 	"context"
-	"sen1or/letslive/vod/domains"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/vod/response"
+	"sen1or/letslive/vod/domains"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresVODRepo) Create(ctx context.Context, vod domains.VOD) (*domains.VOD, *response.Response[any]) {
+func (r *postgresVODRepo) Create(ctx context.Context, vod domains.VOD) (*domains.VOD, error) {
 	query := `
         insert into vods (livestream_id, user_id, title, description, thumbnail_url, visibility, duration, playback_url, view_count, status, original_file_url, created_at)
         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
@@ -23,23 +22,13 @@ func (r *postgresVODRepo) Create(ctx context.Context, vod domains.VOD) (*domains
 	if err != nil {
 		// todo: check for specific db errors like fk violations if possible
 		logger.Errorf(ctx, "db query error [createvod: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_VOD_CREATE_FAILED,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrVODCreateFailed
 	}
 
 	createdVod, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.VOD])
 	if err != nil {
 		logger.Errorf(ctx, "db scan error [createvod: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 	return &createdVod, nil
 }

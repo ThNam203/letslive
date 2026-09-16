@@ -3,10 +3,9 @@ package livestream
 import (
 	"context"
 	"sen1or/letslive/livestream/domains"
-	"sen1or/letslive/livestream/response"
 )
 
-func (s *LivestreamService) GetRecommendedLivestreams(ctx context.Context, page int, limit int) ([]domains.Livestream, *response.Response[any]) {
+func (s *LivestreamService) GetRecommendedLivestreams(ctx context.Context, page int, limit int) ([]domains.Livestream, error) {
 	if page < 0 {
 		page = 0
 	}

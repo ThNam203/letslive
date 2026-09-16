@@ -2,7 +2,6 @@ package domains
 
 import (
 	"context"
-	response "sen1or/letslive/finance/response"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -27,9 +26,9 @@ type Payment struct {
 }
 
 type PaymentRepository interface {
-	Create(ctx context.Context, payment Payment) (*Payment, *response.Response[any])
-	GetById(ctx context.Context, id uuid.UUID) (*Payment, *response.Response[any])
-	GetByProviderRef(ctx context.Context, provider PaymentProvider, providerRef string) (*Payment, *response.Response[any])
-	UpdateStatus(ctx context.Context, id uuid.UUID, status ProcessStatus) *response.Response[any]
-	ListByActor(ctx context.Context, actorId uuid.UUID, page int, limit int) ([]Payment, int, *response.Response[any])
+	Create(ctx context.Context, payment Payment) (*Payment, error)
+	GetById(ctx context.Context, id uuid.UUID) (*Payment, error)
+	GetByProviderRef(ctx context.Context, provider PaymentProvider, providerRef string) (*Payment, error)
+	UpdateStatus(ctx context.Context, id uuid.UUID, status ProcessStatus) error
+	ListByActor(ctx context.Context, actorId uuid.UUID, page int, limit int) ([]Payment, int, error)
 }

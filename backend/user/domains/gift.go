@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid/v5"
-	"sen1or/letslive/user/response"
 )
 
 type Gift struct {
@@ -19,7 +18,7 @@ type Gift struct {
 }
 
 type GiftRepository interface {
-	Create(ctx context.Context, gift Gift) (*Gift, *response.Response[any])
-	ListByRecipient(ctx context.Context, recipientID uuid.UUID, page, limit int) ([]Gift, int, *response.Response[any])
-	ListBySender(ctx context.Context, senderID uuid.UUID, page, limit int) ([]Gift, int, *response.Response[any])
+	Create(ctx context.Context, gift Gift) (*Gift, error)
+	ListByRecipient(ctx context.Context, recipientID uuid.UUID, page, limit int) ([]Gift, int, error)
+	ListBySender(ctx context.Context, senderID uuid.UUID, page, limit int) ([]Gift, int, error)
 }

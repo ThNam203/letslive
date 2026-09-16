@@ -5,12 +5,11 @@ import (
 	"errors"
 	"sen1or/letslive/auth/domains"
 	"sen1or/letslive/shared/pkg/logger"
-	serviceresponse "sen1or/letslive/auth/response"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresAuthRepo) Create(ctx context.Context, newAuth domains.Auth) (*domains.Auth, *serviceresponse.Response[any]) {
+func (r *postgresAuthRepo) Create(ctx context.Context, newAuth domains.Auth) (*domains.Auth, error) {
 	params := pgx.NamedArgs{
 		"email":         newAuth.Email,
 		"password_hash": newAuth.PasswordHash,
@@ -29,34 +28,19 @@ func (r *postgresAuthRepo) Create(ctx context.Context, newAuth domains.Auth) (*d
 		) RETURNING *
 	`, params)
 	if err != nil {
-		logger.Errorf(ctx, "failed to create auth: %s", err)
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			&serviceresponse.ErrorDetails{serviceresponse.ErrorDetail{"newAuth.email": newAuth.Email, "newAuth.userId": newAuth.UserId}},
-		)
+		logger.Errorf(ctx, "failed to create auth for user %v: %s", newAuth.UserId, err)
+		return nil, domains.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.Auth])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, serviceresponse.NewResponseFromTemplate[any](
-				serviceresponse.RES_ERR_AUTH_NOT_FOUND,
-				nil,
-				nil,
-				&serviceresponse.ErrorDetails{serviceresponse.ErrorDetail{"newAuth.email": newAuth.Email, "newAuth.userId": newAuth.UserId}},
-			)
+			return nil, domains.ErrAuthNotFound
 		}
 
-		logger.Errorf(ctx, "failed to collect row: %s", err)
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			&serviceresponse.ErrorDetails{serviceresponse.ErrorDetail{"newAuth.email": newAuth.Email, "newAuth.userId": newAuth.UserId}},
-		)
+		logger.Errorf(ctx, "failed to collect created auth row for user %v: %s", newAuth.UserId, err)
+		return nil, domains.ErrDatabaseIssue
 	}
 
 	return &user, nil

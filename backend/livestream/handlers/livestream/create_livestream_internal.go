@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"sen1or/letslive/livestream/dto"
+	response "sen1or/letslive/livestream/response"
 	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/shared/pkg/tracer"
-	response "sen1or/letslive/livestream/response"
 )
 
 func (h *LivestreamHandler) CreateLivestreamInternalHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +26,7 @@ func (h *LivestreamHandler) CreateLivestreamInternalHandler(w http.ResponseWrite
 	span.End()
 
 	if err != nil {
-		h.WriteResponse(w, ctx, err)
+		h.WriteResponse(w, ctx, response.FromError(err))
 		return
 	}
 

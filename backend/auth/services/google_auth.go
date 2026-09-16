@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,7 +12,6 @@ import (
 	usergateway "sen1or/letslive/auth/gateway/user"
 	usergatewaydto "sen1or/letslive/auth/gateway/user/dto"
 	"sen1or/letslive/shared/pkg/logger"
-	serviceresponse "sen1or/letslive/auth/response"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -55,27 +55,17 @@ func (s GoogleAuthService) GenerateAuthCodeURL(oauthState string) string {
 	return s.getGoogleOauthConfig().AuthCodeURL(oauthState)
 }
 
-func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode string) (*domains.Auth, *serviceresponse.Response[any]) {
+func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode string) (*domains.Auth, error) {
 	data, getErr := s.getUserDataFromGoogle(ctx, googleCode)
 	if getErr != nil {
 		logger.Errorf(ctx, "failed to get user data from google: %s", getErr)
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInternal
 	}
 
 	var returnedOAuthUser googleOAuthUser
 	if err := json.Unmarshal(data, &returnedOAuthUser); err != nil {
 		logger.Errorf(ctx, "failed to unmarshal data into google user")
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInternal
 	}
 
 	return s.findOrCreateGoogleUser(ctx, returnedOAuthUser)
@@ -83,22 +73,18 @@ func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode strin
 
 // VerifyIDTokenAndGetUser verifies a Google ID token (from mobile's google_sign_in)
 // by calling Google's tokeninfo endpoint, then finds or creates the user.
-func (s GoogleAuthService) VerifyIDTokenAndGetUser(ctx context.Context, idToken string) (*domains.Auth, *serviceresponse.Response[any]) {
+func (s GoogleAuthService) VerifyIDTokenAndGetUser(ctx context.Context, idToken string) (*domains.Auth, error) {
 	tokenInfoURL := "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken
 	resp, err := http.Get(tokenInfoURL)
 	if err != nil {
 		logger.Errorf(ctx, "failed to verify google id token: %s", err)
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_INTERNAL_SERVER, nil, nil, nil,
-		)
+		return nil, domains.ErrInternal
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		logger.Errorf(ctx, "google tokeninfo returned status %d", resp.StatusCode)
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_UNAUTHORIZED, nil, nil, nil,
-		)
+		return nil, domains.ErrUnauthorized
 	}
 
 	var tokenInfo struct {
@@ -110,9 +96,7 @@ func (s GoogleAuthService) VerifyIDTokenAndGetUser(ctx context.Context, idToken 
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&tokenInfo); err != nil {
 		logger.Errorf(ctx, "failed to decode google tokeninfo: %s", err)
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_INTERNAL_SERVER, nil, nil, nil,
-		)
+		return nil, domains.ErrInternal
 	}
 
 	// Verify the token was issued for our client
@@ -122,16 +106,12 @@ func (s GoogleAuthService) VerifyIDTokenAndGetUser(ctx context.Context, idToken 
 		mobileClientID := os.Getenv("GOOGLE_OAUTH_MOBILE_CLIENT_ID")
 		if mobileClientID == "" || tokenInfo.Aud != mobileClientID {
 			logger.Errorf(ctx, "google id token audience mismatch: got %s", tokenInfo.Aud)
-			return nil, serviceresponse.NewResponseFromTemplate[any](
-				serviceresponse.RES_ERR_UNAUTHORIZED, nil, nil, nil,
-			)
+			return nil, domains.ErrUnauthorized
 		}
 	}
 
 	if tokenInfo.Email == "" || tokenInfo.EmailVerified != "true" {
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_UNAUTHORIZED, nil, nil, nil,
-		)
+		return nil, domains.ErrUnauthorized
 	}
 
 	return s.findOrCreateGoogleUser(ctx, googleOAuthUser{
@@ -143,14 +123,14 @@ func (s GoogleAuthService) VerifyIDTokenAndGetUser(ctx context.Context, idToken 
 }
 
 // findOrCreateGoogleUser looks up a user by email; if not found, creates a new one.
-func (s GoogleAuthService) findOrCreateGoogleUser(ctx context.Context, oauthUser googleOAuthUser) (*domains.Auth, *serviceresponse.Response[any]) {
+func (s GoogleAuthService) findOrCreateGoogleUser(ctx context.Context, oauthUser googleOAuthUser) (*domains.Auth, error) {
 	existedRecord, err := s.repo.GetByEmail(ctx, oauthUser.Email)
 	if err == nil {
 		return existedRecord, nil
 	}
 
 	// create new user if not found
-	if err.Code == serviceresponse.RES_ERR_AUTH_NOT_FOUND_CODE {
+	if errors.Is(err, domains.ErrAuthNotFound) {
 		userDTO := &usergatewaydto.CreateUserRequestDTO{
 			Email:        oauthUser.Email,
 			AuthProvider: usergatewaydto.ProviderGoogle,
@@ -158,7 +138,7 @@ func (s GoogleAuthService) findOrCreateGoogleUser(ctx context.Context, oauthUser
 
 		createdUser, errRes := s.userGateway.CreateNewUser(ctx, *userDTO)
 		if errRes != nil {
-			logger.Errorf(ctx, "failed to create new user through gateway: %s", errRes.Message)
+			logger.Errorf(ctx, "failed to create new user through gateway: %s", errRes)
 			return nil, errRes
 		}
 
@@ -176,12 +156,7 @@ func (s GoogleAuthService) findOrCreateGoogleUser(ctx context.Context, oauthUser
 		return newlyCreatedAuthRecord, nil
 	}
 
-	return nil, serviceresponse.NewResponseFromTemplate[any](
-		serviceresponse.RES_ERR_INTERNAL_SERVER,
-		nil,
-		nil,
-		nil,
-	)
+	return nil, domains.ErrInternal
 }
 
 func (s GoogleAuthService) getUserDataFromGoogle(ctx context.Context, code string) ([]byte, error) {

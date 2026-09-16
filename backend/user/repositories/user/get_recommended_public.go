@@ -3,15 +3,15 @@ package user
 import (
 	"context"
 	"encoding/json"
-	"sen1or/letslive/user/dto"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/user/response"
+	"sen1or/letslive/user/domains"
+	"sen1or/letslive/user/dto"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresUserRepo) GetRecommendedPublic(ctx context.Context, excludeUserId *uuid.UUID, page, limit int) ([]dto.GetUserPublicResponseDTO, *response.Response[any]) {
+func (r *postgresUserRepo) GetRecommendedPublic(ctx context.Context, excludeUserId *uuid.UUID, page, limit int) ([]dto.GetUserPublicResponseDTO, error) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT
 			u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.phone_number, u.bio, u.profile_picture, u.background_picture,
@@ -38,23 +38,13 @@ func (r *postgresUserRepo) GetRecommendedPublic(ctx context.Context, excludeUser
 	`, excludeUserId, excludeUserId, limit, page*limit)
 	if err != nil {
 		logger.Errorf(ctx, "failed to get recommended public users: %s", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseQuery
 	}
 
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[dto.GetUserPublicResponseDTO])
 	if err != nil {
 		logger.Errorf(ctx, "failed to collect recommended public users: %s", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 
 	for i := range users {

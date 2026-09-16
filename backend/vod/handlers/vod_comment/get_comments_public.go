@@ -3,8 +3,8 @@ package vodcomment
 import (
 	"context"
 	"net/http"
-	"sen1or/letslive/vod/handlers/utils"
 	"sen1or/letslive/shared/pkg/tracer"
+	"sen1or/letslive/vod/handlers/utils"
 	response "sen1or/letslive/vod/response"
 
 	"github.com/gofrs/uuid/v5"
@@ -28,7 +28,7 @@ func (h *VODCommentHandler) GetCommentsPublicHandler(w http.ResponseWriter, r *h
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

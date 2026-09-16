@@ -18,15 +18,20 @@
     "res_err_database_issue": "Lỗi cơ sở dữ liệu, vui lòng thử lại.",
     "res_err_internal_server": "Đã xảy ra lỗi hệ thống.",
     "res_err_failed_to_send_verification": "Gửi email xác minh thất bại, vui lòng thử lại sau.",
+
     "res_err_user_not_found": "Không tìm thấy người dùng.",
     "res_err_image_too_large": "Ảnh vượt quá giới hạn 10mb.",
+    "res_err_notification_not_found": "Không tìm thấy thông báo.",
+    "res_err_username_taken": "Tên người dùng đã được sử dụng.",
+    "res_err_insufficient_inventory": "Không đủ vật phẩm trong kho.",
+
     "res_err_livestream_update_after_ended": "Không thể cập nhật, livestream đã kết thúc.",
     "res_err_livestream_not_found": "Không tìm thấy livestream.",
-    "res_err_vod_not_found": "Không tìm thấy VOD.",
     "res_err_end_already_ended_livestream": "Livestream đã kết thúc trước đó.",
-    "res_err_query_scan_failed": "Quét dữ liệu thất bại.",
     "res_err_livestream_create_failed": "Không thể tạo bản ghi livestream.",
     "res_err_livestream_update_failed": "Không thể cập nhật bản ghi livestream.",
+
+    "res_err_vod_not_found": "Không tìm thấy VOD.",
     "res_err_vod_create_failed": "Không thể tạo bản ghi VOD.",
     "res_err_vod_update_failed": "Không thể cập nhật bản ghi VOD.",
     "res_err_vod_comment_not_found": "Không tìm thấy bình luận.",
@@ -34,7 +39,17 @@
     "res_err_vod_comment_already_liked": "Bình luận đã được thích.",
     "res_err_vod_comment_not_liked": "Bình luận chưa được thích.",
     "res_err_vod_comment_delete_failed": "Không thể xóa bình luận.",
-    "err_video_too_large": "Video vượt quá giới hạn kích thước tải lên.",
+    "res_err_vod_view_threshold": "Chưa đạt thời lượng xem tối thiểu.",
+    "res_err_video_too_large": "Video vượt quá giới hạn kích thước tải lên.",
+
+    "res_err_room_not_found": "Không tìm thấy phòng.",
+    "res_err_conversation_not_found": "Không tìm thấy cuộc trò chuyện.",
+    "res_err_dm_already_exists": "Cuộc trò chuyện với người dùng này đã tồn tại.",
+    "res_err_not_participant": "Bạn không phải là thành viên của cuộc trò chuyện này.",
+    "res_err_insufficient_role": "Bạn không có quyền thực hiện hành động này.",
+    "res_err_dm_message_not_found": "Không tìm thấy tin nhắn.",
+    "res_err_cannot_message_self": "Bạn không thể tạo cuộc trò chuyện với chính mình.",
+    "res_err_too_many_participants": "Quá nhiều thành viên.",
 
     "res_err_account_not_found": "Không tìm thấy tài khoản ví.",
     "res_err_account_frozen": "Tài khoản ví của bạn hiện đang bị đóng băng.",
@@ -49,9 +64,11 @@
     "res_err_user_service_error": "Không thể trao vật phẩm, khoản thanh toán đã được hoàn lại.",
     "res_err_transaction_not_found": "Không tìm thấy giao dịch.",
 
-    "res_succ_sent_verification_email": "Email xác thực đã được gửi, vui lòng kiểm tra hộp thư",
     "res_succ_ok": "Thành công",
     "res_succ_login": "Đăng nhập thành công",
     "res_succ_sign_up": "Đăng kí thành công",
+    "res_succ_sent_verification_email": "Email xác thực đã được gửi, vui lòng kiểm tra hộp thư",
+    "res_succ_email_verified": "Email đã được xác minh thành công, vui lòng tiếp tục đăng ký.",
+
     "default_error": "Đã xảy ra lỗi. Vui lòng thử lại."
 }

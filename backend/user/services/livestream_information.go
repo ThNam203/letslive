@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"sen1or/letslive/user/domains"
-	"sen1or/letslive/user/response"
 )
 
 type LivestreamInformationService struct {
@@ -16,7 +15,7 @@ func NewLivestreamInformationService(repo domains.LivestreamInformationRepositor
 	}
 }
 
-func (c *LivestreamInformationService) Update(ctx context.Context, data domains.LivestreamInformation) (*domains.LivestreamInformation, *response.Response[any]) {
+func (c *LivestreamInformationService) Update(ctx context.Context, data domains.LivestreamInformation) (*domains.LivestreamInformation, error) {
 	updatedInformation, err := c.repo.Update(ctx, data)
 
 	if err != nil {

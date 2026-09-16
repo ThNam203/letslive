@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"sen1or/letslive/vod/dto"
 	"sen1or/letslive/shared/pkg/tracer"
+	"sen1or/letslive/vod/dto"
 	response "sen1or/letslive/vod/response"
 
 	"github.com/go-playground/validator/v10"
@@ -45,7 +45,7 @@ func (h *VODHandler) RegisterViewPublicHandler(w http.ResponseWriter, r *http.Re
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

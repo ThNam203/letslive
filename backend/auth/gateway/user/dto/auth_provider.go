@@ -6,4 +6,3 @@ const (
 	ProviderGoogle AuthProvider = "google"
 	ProviderLocal  AuthProvider = "local"
 )
-

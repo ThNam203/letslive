@@ -5,4 +5,3 @@ type CreateUserRequestDTO struct {
 	Email        string       `json:"email" validate:"required,email,lte=320"`
 	AuthProvider AuthProvider `json:"authProvider" validate:"required"`
 }
-

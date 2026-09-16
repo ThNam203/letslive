@@ -5,6 +5,7 @@ import { NotificationPageHeader } from "./_components/notification-page-header";
 import { NotificationList } from "./_components/notification-list";
 import RequireAuth from "@/components/wrappers/RequireAuth";
 import { useNotificationsInfinite } from "@/hooks/queries/use-notifications";
+import { flattenPages } from "@/lib/query/paginated";
 import {
     useDeleteNotification,
     useMarkAllNotificationsAsRead,
@@ -15,7 +16,7 @@ export default function NotificationsPage() {
     const { t } = useT(["notification", "common"]);
     const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
         useNotificationsInfinite();
-    const notifications = data?.pages.flat() ?? [];
+    const notifications = flattenPages(data);
 
     const markAsRead = useMarkNotificationAsRead();
     const markAllAsRead = useMarkAllNotificationsAsRead();

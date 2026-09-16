@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"sen1or/letslive/shared/pkg/tracer"
 	"sen1or/letslive/user/dto"
 	"sen1or/letslive/user/handlers/utils"
 	"sen1or/letslive/user/response"
-	"sen1or/letslive/shared/pkg/tracer"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -40,7 +40,7 @@ func (h *GiftHandler) SendGiftPrivateHandler(w http.ResponseWriter, r *http.Requ
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

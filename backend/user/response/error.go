@@ -12,7 +12,7 @@ const (
 	RES_ERR_ROUTE_NOT_FOUND_CODE        = 20012
 	RES_ERR_IMAGE_TOO_LARGE_CODE        = 30001
 	RES_ERR_NOTIFICATION_NOT_FOUND_CODE = 30002
-	RES_ERR_USERNAME_TAKEN_CODE              = 30003
+	RES_ERR_USERNAME_TAKEN_CODE         = 30003
 	RES_ERR_INSUFFICIENT_INVENTORY_CODE = 30004
 	RES_ERR_DATABASE_QUERY_CODE         = 20015
 	RES_ERR_DATABASE_ISSUE_CODE         = 20016
@@ -29,7 +29,7 @@ const (
 	RES_ERR_ROUTE_NOT_FOUND_KEY        = "res_err_route_not_found"
 	RES_ERR_IMAGE_TOO_LARGE_KEY        = "res_err_image_too_large"
 	RES_ERR_NOTIFICATION_NOT_FOUND_KEY = "res_err_notification_not_found"
-	RES_ERR_USERNAME_TAKEN_KEY              = "res_err_username_taken"
+	RES_ERR_USERNAME_TAKEN_KEY         = "res_err_username_taken"
 	RES_ERR_INSUFFICIENT_INVENTORY_KEY = "res_err_insufficient_inventory"
 	RES_ERR_DATABASE_QUERY_KEY         = "res_err_database_query"
 	RES_ERR_DATABASE_ISSUE_KEY         = "res_err_database_issue"

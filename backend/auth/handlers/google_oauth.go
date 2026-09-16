@@ -59,12 +59,12 @@ func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.
 
 	createdAuth, handleErr := h.googleAuthService.CallbackHandler(ctx, r.FormValue("code"))
 	if handleErr != nil {
-		http.Redirect(w, r, GetRedirectURLOnFail(handleErr.Message), http.StatusTemporaryRedirect)
+		http.Redirect(w, r, GetRedirectURLOnFail(serviceresponse.FromError(handleErr).Message), http.StatusTemporaryRedirect)
 		return
 	}
 
 	if err := h.setAuthJWTsInCookie(ctx, createdAuth.UserId.String(), w); err != nil {
-		http.Redirect(w, r, GetRedirectURLOnFail(err.Message), http.StatusTemporaryRedirect)
+		http.Redirect(w, r, GetRedirectURLOnFail(serviceresponse.FromError(err).Message), http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -89,12 +89,12 @@ func (h *AuthHandler) OAuthGoogleMobileHandler(w http.ResponseWriter, r *http.Re
 
 	createdAuth, authErr := h.googleAuthService.VerifyIDTokenAndGetUser(ctx, body.IDToken)
 	if authErr != nil {
-		writeResponse(w, ctx, authErr)
+		writeResponse(w, ctx, serviceresponse.FromError(authErr))
 		return
 	}
 
 	if err := h.setAuthJWTsInCookie(ctx, createdAuth.UserId.String(), w); err != nil {
-		writeResponse(w, ctx, err)
+		writeResponse(w, ctx, serviceresponse.FromError(err))
 		return
 	}
 

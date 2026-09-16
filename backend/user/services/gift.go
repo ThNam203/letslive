@@ -7,7 +7,6 @@ import (
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/dto"
 	financegateway "sen1or/letslive/user/gateway/finance"
-	"sen1or/letslive/user/response"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -37,14 +36,14 @@ func NewGiftService(
 }
 
 // SendFromInventory deducts 1 item from sender's inventory, creates a gift record.
-func (s *GiftService) SendFromInventory(ctx context.Context, senderID uuid.UUID, req dto.SendGiftRequestDTO) (*domains.Gift, *response.Response[any]) {
+func (s *GiftService) SendFromInventory(ctx context.Context, senderID uuid.UUID, req dto.SendGiftRequestDTO) (*domains.Gift, error) {
 	recipientID, err := uuid.FromString(req.RecipientUserId)
 	if err != nil {
-		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil)
+		return nil, domains.ErrInvalidInput
 	}
 	shopItemID, err := uuid.FromString(req.ShopItemId)
 	if err != nil {
-		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil)
+		return nil, domains.ErrInvalidInput
 	}
 
 	if _, serviceErr := s.inventoryRepo.Deduct(ctx, senderID, shopItemID); serviceErr != nil {
@@ -67,7 +66,7 @@ func (s *GiftService) SendFromInventory(ctx context.Context, senderID uuid.UUID,
 }
 
 // CreateFromPurchase used by internal finance→user quick-send call.
-func (s *GiftService) CreateFromPurchase(ctx context.Context, senderID, recipientID, shopItemID uuid.UUID, quantity int, message *string) (*domains.Gift, *response.Response[any]) {
+func (s *GiftService) CreateFromPurchase(ctx context.Context, senderID, recipientID, shopItemID uuid.UUID, quantity int, message *string) (*domains.Gift, error) {
 	gift, serviceErr := s.giftRepo.Create(ctx, domains.Gift{
 		SenderUserId:    senderID,
 		RecipientUserId: recipientID,
@@ -83,11 +82,11 @@ func (s *GiftService) CreateFromPurchase(ctx context.Context, senderID, recipien
 	return gift, nil
 }
 
-func (s *GiftService) GetReceived(ctx context.Context, recipientID uuid.UUID, page, limit int) ([]domains.Gift, int, *response.Response[any]) {
+func (s *GiftService) GetReceived(ctx context.Context, recipientID uuid.UUID, page, limit int) ([]domains.Gift, int, error) {
 	return s.giftRepo.ListByRecipient(ctx, recipientID, page, limit)
 }
 
-func (s *GiftService) GetSent(ctx context.Context, senderID uuid.UUID, page, limit int) ([]domains.Gift, int, *response.Response[any]) {
+func (s *GiftService) GetSent(ctx context.Context, senderID uuid.UUID, page, limit int) ([]domains.Gift, int, error) {
 	return s.giftRepo.ListBySender(ctx, senderID, page, limit)
 }
 

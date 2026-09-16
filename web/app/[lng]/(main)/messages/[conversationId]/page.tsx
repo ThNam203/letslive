@@ -25,6 +25,7 @@ import RequireAuth from "@/components/wrappers/RequireAuth";
 import { useConversationsInfinite } from "@/hooks/queries/use-conversations";
 import { useDmMessagesInfinite } from "@/hooks/queries/use-dm-messages";
 import { clearDmUnread } from "@/lib/query/dm-cache";
+import { flattenPages } from "@/lib/query/paginated";
 
 export default function ConversationPage() {
     const params = useParams();
@@ -40,7 +41,7 @@ export default function ConversationPage() {
 
     const { data: conversationsData } = useConversationsInfinite(!!user);
     const conversations = useMemo(
-        () => conversationsData?.pages.flat() ?? [],
+        () => flattenPages(conversationsData),
         [conversationsData],
     );
 

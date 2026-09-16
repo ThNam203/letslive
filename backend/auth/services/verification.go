@@ -5,9 +5,8 @@ import (
 	"net/smtp"
 	"os"
 	"sen1or/letslive/auth/domains"
-	"sen1or/letslive/shared/pkg/logger"
-	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/utils"
+	"sen1or/letslive/shared/pkg/logger"
 	"time"
 )
 
@@ -21,7 +20,7 @@ func NewVerificationService(repo domains.SignUpOTPRepository) *VerificationServi
 	}
 }
 
-func (c *VerificationService) CreateSignUpOTP(ctx context.Context, email string) (*domains.SignUpOTP, *serviceresponse.Response[any]) {
+func (c *VerificationService) CreateSignUpOTP(ctx context.Context, email string) (*domains.SignUpOTP, error) {
 	generatedOTP, err := utils.GenerateOTP()
 	if err != nil {
 		return nil, err
@@ -41,28 +40,18 @@ func (c *VerificationService) CreateSignUpOTP(ctx context.Context, email string)
 	return newToken, nil
 }
 
-func (s VerificationService) Verify(ctx context.Context, code, email string) *serviceresponse.Response[any] {
+func (s VerificationService) Verify(ctx context.Context, code, email string) error {
 	otp, err := s.repo.GetOTP(ctx, code, email)
 	if err != nil {
 		return err
 	}
 
 	if otp.UsedAt != nil {
-		return serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_SIGN_UP_OTP_ALREADY_USED,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrSignUpOTPAlreadyUsed
 	}
 
 	if otp.ExpiresAt.Before(time.Now()) {
-		return serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_SIGN_UP_OTP_EXPIRED,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrSignUpOTPExpired
 	}
 
 	if err := s.repo.UpdateUsedAt(ctx, otp.Id, time.Now()); err != nil {
@@ -72,7 +61,7 @@ func (s VerificationService) Verify(ctx context.Context, code, email string) *se
 	return nil
 }
 
-func (c *VerificationService) CreateOTPAndSendEmailVerification(ctx context.Context, verificationGateway string, userEmail string) *serviceresponse.Response[any] {
+func (c *VerificationService) CreateOTPAndSendEmailVerification(ctx context.Context, verificationGateway string, userEmail string) error {
 	createdToken, err := c.CreateSignUpOTP(ctx, userEmail)
 	if err != nil {
 		return err
@@ -137,12 +126,7 @@ func (c *VerificationService) CreateOTPAndSendEmailVerification(ctx context.Cont
 	mErr := smtp.SendMail(smtpServer, auth, from, to, []byte(msg))
 	if mErr != nil {
 		logger.Errorf(ctx, "failed trying to send confirmation code email to %s: %s", userEmail, mErr.Error())
-		return serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_FAILED_TO_SEND_VERIFICATION,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrFailedToSendVerification
 	}
 
 	logger.Infof(ctx, "verification code email sent successfully to %s", userEmail)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"sen1or/letslive/finance/domains"
-	"sen1or/letslive/finance/response"
 	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
@@ -14,7 +13,7 @@ import (
 // CreateUserWallet inserts the user's wallet account. A partial unique index on
 // accounts(owner_id) where type = 'user_wallet' guards concurrent creates (e.g. deposit
 // initiate racing the webhook); on conflict the existing wallet is fetched and returned.
-func (r postgresAccountRepo) CreateUserWallet(ctx context.Context, ownerId uuid.UUID) (*domains.Account, *response.Response[any]) {
+func (r postgresAccountRepo) CreateUserWallet(ctx context.Context, ownerId uuid.UUID) (*domains.Account, error) {
 	query := `
         insert into accounts (type, owner_id, status)
         values ('user_wallet', $1, 'active')
@@ -24,12 +23,7 @@ func (r postgresAccountRepo) CreateUserWallet(ctx context.Context, ownerId uuid.
 	rows, err := r.dbConn.Query(ctx, query, ownerId)
 	if err != nil {
 		logger.Errorf(ctx, "db query error [createuserwallet: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseQuery
 	}
 
 	account, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.Account])
@@ -39,12 +33,7 @@ func (r postgresAccountRepo) CreateUserWallet(ctx context.Context, ownerId uuid.
 			return r.GetUserWalletByOwnerId(ctx, ownerId)
 		}
 		logger.Errorf(ctx, "db scan error [createuserwallet: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 	return &account, nil
 }

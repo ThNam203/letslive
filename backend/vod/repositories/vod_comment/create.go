@@ -2,14 +2,13 @@ package vodcomment
 
 import (
 	"context"
-	"sen1or/letslive/vod/domains"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/vod/response"
+	"sen1or/letslive/vod/domains"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresVODCommentRepo) Create(ctx context.Context, comment domains.VODComment) (*domains.VODComment, *response.Response[any]) {
+func (r *postgresVODCommentRepo) Create(ctx context.Context, comment domains.VODComment) (*domains.VODComment, error) {
 	query := `
 		INSERT INTO vod_comments (vod_id, user_id, parent_id, content)
 		VALUES ($1, $2, $3, $4)
@@ -18,23 +17,13 @@ func (r *postgresVODCommentRepo) Create(ctx context.Context, comment domains.VOD
 	rows, err := r.db.Query(ctx, query, comment.VODId, comment.UserId, comment.ParentId, comment.Content)
 	if err != nil {
 		logger.Errorf(ctx, "db query error [createvodcomment: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_VOD_COMMENT_CREATE_FAILED,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrCommentCreateFailed
 	}
 
 	createdComment, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.VODComment])
 	if err != nil {
 		logger.Errorf(ctx, "db scan error [createvodcomment: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 	return &createdComment, nil
 }

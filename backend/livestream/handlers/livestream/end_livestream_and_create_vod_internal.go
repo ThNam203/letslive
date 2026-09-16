@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"sen1or/letslive/livestream/dto"
-	"sen1or/letslive/shared/pkg/tracer"
 	response "sen1or/letslive/livestream/response"
+	"sen1or/letslive/shared/pkg/tracer"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -34,7 +34,7 @@ func (h *LivestreamHandler) EndLivestreamAndCreateVODInternalHandler(w http.Resp
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

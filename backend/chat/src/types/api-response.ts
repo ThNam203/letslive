@@ -4,7 +4,6 @@ export const RES_ERR_INVALID_PAYLOAD_CODE = 20001
 export const RES_ERR_UNAUTHORIZED_CODE = 20005
 export const RES_ERR_FORBIDDEN_CODE = 20008
 export const RES_ERR_ROUTE_NOT_FOUND_CODE = 20012
-export const RES_ERR_IMAGE_TOO_LARGE_CODE = 30002
 export const RES_ERR_DATABASE_QUERY_CODE = 20015
 export const RES_ERR_DATABASE_ISSUE_CODE = 20016
 export const RES_ERR_INTERNAL_SERVER_CODE = 20017
@@ -24,7 +23,6 @@ export const RES_ERR_INVALID_PAYLOAD_KEY = 'res_err_invalid_payload'
 export const RES_ERR_UNAUTHORIZED_KEY = 'res_err_unauthorized'
 export const RES_ERR_FORBIDDEN_KEY = 'res_err_forbidden'
 export const RES_ERR_ROUTE_NOT_FOUND_KEY = 'res_err_route_not_found'
-export const RES_ERR_IMAGE_TOO_LARGE_KEY = 'res_err_image_too_large'
 export const RES_ERR_DATABASE_QUERY_KEY = 'res_err_database_query'
 export const RES_ERR_DATABASE_ISSUE_KEY = 'res_err_database_issue'
 export const RES_ERR_INTERNAL_SERVER_KEY = 'res_err_internal_server'
@@ -98,12 +96,6 @@ export const RESPONSE_TEMPLATES = {
         statusCode: HTTP_STATUS_NOT_FOUND,
         code: RES_ERR_ROUTE_NOT_FOUND_CODE,
         key: RES_ERR_ROUTE_NOT_FOUND_KEY
-    },
-    RES_ERR_IMAGE_TOO_LARGE: {
-        success: false,
-        statusCode: HTTP_STATUS_BAD_REQUEST,
-        code: RES_ERR_IMAGE_TOO_LARGE_CODE,
-        key: RES_ERR_IMAGE_TOO_LARGE_KEY
     },
     RES_ERR_DATABASE_QUERY: {
         success: false,

@@ -2,9 +2,9 @@ package deposit
 
 import (
 	"context"
+	"errors"
 	"sen1or/letslive/finance/domains"
 	"sen1or/letslive/finance/dto"
-	response "sen1or/letslive/finance/response"
 	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
@@ -13,15 +13,10 @@ import (
 // Initiate validates the deposit request, ensures the user has an active wallet,
 // creates a created-state purchase transaction and a pending payment row, then
 // asks the payment gateway to create a checkout session.
-func (s *DepositService) Initiate(ctx context.Context, actorId uuid.UUID, req dto.DepositRequestDTO) (*dto.DepositResponse, *response.Response[any]) {
+func (s *DepositService) Initiate(ctx context.Context, actorId uuid.UUID, req dto.DepositRequestDTO) (*dto.DepositResponse, error) {
 	gateway, ok := s.gateways[domains.PaymentProvider(req.Provider)]
 	if !ok {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_INPUT,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInvalidInput
 	}
 
 	currency, errResp := s.currencyRepo.GetByCode(ctx, req.CurrencyCode)
@@ -31,33 +26,18 @@ func (s *DepositService) Initiate(ctx context.Context, actorId uuid.UUID, req dt
 
 	amount, err := dto.ParseAmount(req.Amount, currency.Precision)
 	if err != nil {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_AMOUNT,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInvalidAmount
 	}
 	if amount < s.minAmount {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_AMOUNT,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInvalidAmount
 	}
 	if amount > s.maxAmount {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DEPOSIT_LIMIT_EXCEEDED,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDepositLimitExceeded
 	}
 
 	account, errResp := s.accountRepo.GetUserWalletByOwnerId(ctx, actorId)
 	if errResp != nil {
-		if errResp.Code != response.RES_ERR_ACCOUNT_NOT_FOUND_CODE {
+		if !errors.Is(errResp, domains.ErrAccountNotFound) {
 			return nil, errResp
 		}
 		created, createErr := s.accountRepo.CreateUserWallet(ctx, actorId)
@@ -67,23 +47,13 @@ func (s *DepositService) Initiate(ctx context.Context, actorId uuid.UUID, req dt
 		account = created
 	}
 	if account.Status == domains.AccountStatusFrozen {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_ACCOUNT_FROZEN,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrAccountFrozen
 	}
 
 	idempotencyKey, err := uuid.NewV4()
 	if err != nil {
 		logger.Errorf(ctx, "uuid generation failed [initiatedeposit: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInternal
 	}
 	reference := idempotencyKey.String()
 	tx, errResp := s.transactionRepo.Create(ctx, domains.Transaction{
@@ -103,12 +73,7 @@ func (s *DepositService) Initiate(ctx context.Context, actorId uuid.UUID, req dt
 	if gwErr != nil {
 		logger.Errorf(ctx, "gateway checkout session error [initiatedeposit: %v]", gwErr)
 		s.failTransaction(ctx, tx.Id)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_PAYMENT_FAILED,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrPaymentFailed
 	}
 
 	payment, errResp := s.paymentRepo.Create(ctx, domains.Payment{

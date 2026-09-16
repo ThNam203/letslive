@@ -28,7 +28,7 @@ func (h *DepositHandler) HandleStripeWebhookPublicHandler(w http.ResponseWriter,
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

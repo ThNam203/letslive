@@ -3,12 +3,11 @@ package jwt_token
 import (
 	"context"
 	"sen1or/letslive/auth/domains"
-	serviceresponse "sen1or/letslive/auth/response"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresRefreshTokenRepo) Insert(ctx context.Context, tokenRecord *domains.RefreshToken) *serviceresponse.Response[any] {
+func (r *postgresRefreshTokenRepo) Insert(ctx context.Context, tokenRecord *domains.RefreshToken) error {
 	params := pgx.NamedArgs{
 		"token":      tokenRecord.Token,
 		"expires_at": tokenRecord.ExpiresAt,
@@ -28,21 +27,11 @@ func (r *postgresRefreshTokenRepo) Insert(ctx context.Context, tokenRecord *doma
 	`, params)
 
 	if err != nil {
-		return serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrDatabaseQuery
 	}
 
 	if result.RowsAffected() == 0 {
-		return serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrInternal
 	}
 
 	return nil

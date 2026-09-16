@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"sen1or/letslive/user/dto"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/user/response"
+	"sen1or/letslive/user/domains"
+	"sen1or/letslive/user/dto"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *response.Response[any]) {
+func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, error) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT 
 			u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.phone_number, u.bio, u.profile_picture, u.background_picture,
@@ -38,33 +38,18 @@ func (r *postgresUserRepo) GetPublicInfoById(ctx context.Context, userId uuid.UU
 	`, userId.String(), authenticatedUserId)
 	if err != nil {
 		logger.Errorf(ctx, "failed to query user full information: %s", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseQuery
 	}
 
 	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[dto.GetUserPublicResponseDTO])
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, response.NewResponseFromTemplate[any](
-				response.RES_ERR_USER_NOT_FOUND,
-				nil,
-				nil,
-				nil,
-			)
+			return nil, domains.ErrUserNotFound
 		}
 
 		logger.Errorf(ctx, "failed to collect user full information: %s", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 
 	if len(user.SocialLinksJSON) > 0 {

@@ -3,21 +3,18 @@ package user
 import (
 	"context"
 	"errors"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/dto"
-	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/user/response"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserRequestDTO) (*domains.User, *response.Response[any]) {
+func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserRequestDTO) (*domains.User, error) {
 	tx, err := r.dbConn.Begin(ctx)
 	if err != nil {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE, nil, nil, nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 	defer tx.Rollback(ctx)
 
@@ -45,16 +42,9 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return nil, response.NewResponseFromTemplate[any](
-				response.RES_ERR_USERNAME_TAKEN, nil, nil, nil,
-			)
+			return nil, domains.ErrUsernameTaken
 		}
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
@@ -62,26 +52,14 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return nil, response.NewResponseFromTemplate[any](
-				response.RES_ERR_USERNAME_TAKEN, nil, nil, nil,
-			)
+			return nil, domains.ErrUsernameTaken
 		}
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, response.NewResponseFromTemplate[any](
-				response.RES_ERR_USER_NOT_FOUND,
-				nil,
-				nil,
-				nil,
-			)
+			return nil, domains.ErrUserNotFound
 		}
 
 		logger.Errorf(ctx, "database issue when update profile: %s", err.Error())
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 
 	logger.Debugf(ctx, "social media links: %+v", user.SocialMediaLinks)
@@ -114,9 +92,7 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 			`, user.Id, platform)
 				if err != nil {
 					logger.Errorf(ctx, "failed to delete social link %s: %v", platform, err)
-					return nil, response.NewResponseFromTemplate[any](
-						response.RES_ERR_DATABASE_QUERY, nil, nil, nil,
-					)
+					return nil, domains.ErrDatabaseQuery
 				}
 				continue
 			}
@@ -132,17 +108,13 @@ func (r *postgresUserRepo) Update(ctx context.Context, user dto.UpdateUserReques
 		`, user.Id, platform, *url)
 			if err != nil {
 				logger.Errorf(ctx, "failed to upsert social link %s: %v", platform, err)
-				return nil, response.NewResponseFromTemplate[any](
-					response.RES_ERR_DATABASE_QUERY, nil, nil, nil,
-				)
+				return nil, domains.ErrDatabaseQuery
 			}
 		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE, nil, nil, nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 
 	return &updatedUser, nil

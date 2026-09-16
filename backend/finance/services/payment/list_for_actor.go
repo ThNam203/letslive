@@ -3,12 +3,11 @@ package payment
 import (
 	"context"
 	"sen1or/letslive/finance/dto"
-	response "sen1or/letslive/finance/response"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *PaymentService) ListForActor(ctx context.Context, actorId uuid.UUID, page int, limit int) ([]dto.PaymentResponse, int, *response.Response[any]) {
+func (s *PaymentService) ListForActor(ctx context.Context, actorId uuid.UUID, page int, limit int) ([]dto.PaymentResponse, int, error) {
 	payments, total, errResp := s.paymentRepo.ListByActor(ctx, actorId, page, limit)
 	if errResp != nil {
 		return nil, 0, errResp

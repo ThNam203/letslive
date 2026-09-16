@@ -2,18 +2,18 @@ package vodcomment
 
 import (
 	"context"
+	"fmt"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/vod/domains"
 	"sen1or/letslive/vod/dto"
-	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/vod/response"
 	"sen1or/letslive/vod/utils"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *VODCommentService) CreateComment(ctx context.Context, data dto.CreateVODCommentRequestDTO, vodId uuid.UUID, userId uuid.UUID) (*domains.VODComment, *response.Response[any]) {
+func (s *VODCommentService) CreateComment(ctx context.Context, data dto.CreateVODCommentRequestDTO, vodId uuid.UUID, userId uuid.UUID) (*domains.VODComment, error) {
 	if err := utils.Validator.Struct(&data); err != nil {
-		return nil, response.NewResponseWithValidationErrors[any](nil, nil, err)
+		return nil, fmt.Errorf("%w: %w", domains.ErrInvalidInput, err)
 	}
 
 	// verify VOD exists
@@ -32,12 +32,7 @@ func (s *VODCommentService) CreateComment(ctx context.Context, data dto.CreateVO
 	if data.ParentId != nil {
 		parentUUID, err := uuid.FromString(*data.ParentId)
 		if err != nil {
-			return nil, response.NewResponseFromTemplate[any](
-				response.RES_ERR_INVALID_INPUT,
-				nil,
-				nil,
-				nil,
-			)
+			return nil, domains.ErrInvalidInput
 		}
 
 		parentComment, parentErr := s.commentRepo.GetById(ctx, parentUUID)
@@ -46,12 +41,7 @@ func (s *VODCommentService) CreateComment(ctx context.Context, data dto.CreateVO
 		}
 
 		if parentComment.VODId != vodId {
-			return nil, response.NewResponseFromTemplate[any](
-				response.RES_ERR_INVALID_INPUT,
-				nil,
-				nil,
-				nil,
-			)
+			return nil, domains.ErrInvalidInput
 		}
 
 		comment.ParentId = &parentUUID
@@ -65,11 +55,11 @@ func (s *VODCommentService) CreateComment(ctx context.Context, data dto.CreateVO
 	return s.commentRepo.Create(ctx, comment)
 }
 
-func (s *VODCommentService) createReplyWithTransaction(ctx context.Context, comment domains.VODComment) (*domains.VODComment, *response.Response[any]) {
+func (s *VODCommentService) createReplyWithTransaction(ctx context.Context, comment domains.VODComment) (*domains.VODComment, error) {
 	tx, txErr := s.dbPool.Begin(ctx)
 	if txErr != nil {
 		logger.Errorf(ctx, "failed to begin tx [createcomment: %v]", txErr)
-		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_DATABASE_ISSUE, nil, nil, nil)
+		return nil, domains.ErrDatabaseIssue
 	}
 	defer tx.Rollback(ctx)
 
@@ -86,7 +76,7 @@ func (s *VODCommentService) createReplyWithTransaction(ctx context.Context, comm
 
 	if commitErr := tx.Commit(ctx); commitErr != nil {
 		logger.Errorf(ctx, "failed to commit tx [createcomment: %v]", commitErr)
-		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_DATABASE_ISSUE, nil, nil, nil)
+		return nil, domains.ErrDatabaseIssue
 	}
 
 	return createdComment, nil

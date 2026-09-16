@@ -4,17 +4,17 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
-	serviceresponse "sen1or/letslive/auth/response"
+	"sen1or/letslive/auth/domains"
 )
 
-func GenerateOTP() (string, *serviceresponse.Response[any]) {
+func GenerateOTP() (string, error) {
 	const otpLength = 6
 	// exclusive
 	maxOTPValue := big.NewInt(1000000)
 	// random number from [0, maxOTPValue).
 	n, err := rand.Int(rand.Reader, maxOTPValue)
 	if err != nil {
-		return "", serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_FAILED_TO_CREATE_SIGN_UP_OTP, nil, nil, nil)
+		return "", domains.ErrFailedToCreateSignUpOTP
 	}
 
 	// Format the number as a 6-digit string, left-padding with zeros if needed.

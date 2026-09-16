@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { GetNotifications, GetUnreadCount } from "@/lib/api/notification";
 import { unwrapResponse } from "@/lib/api/api-error";
+import { nextPageParam, unwrapPage } from "@/lib/query/paginated";
 
 export const NOTIFICATIONS_QUERY_KEY = ["notifications", "list"] as const;
 export const NOTIFICATIONS_UNREAD_COUNT_QUERY_KEY = [
@@ -8,14 +9,17 @@ export const NOTIFICATIONS_UNREAD_COUNT_QUERY_KEY = [
     "unread-count",
 ] as const;
 
+// the endpoint takes no limit: the backend pages notifications 20 at a time
+const NOTIFICATIONS_PAGE_SIZE = 20;
+
 export function useNotificationsInfinite(enabled: boolean = true) {
     return useInfiniteQuery({
         queryKey: NOTIFICATIONS_QUERY_KEY,
         queryFn: async ({ pageParam }) =>
-            unwrapResponse(await GetNotifications(pageParam)),
+            unwrapPage(await GetNotifications(pageParam)),
         initialPageParam: 0,
-        getNextPageParam: (lastPage, allPages) =>
-            lastPage.length > 0 ? allPages.length : undefined,
+        getNextPageParam: (_lastPage, allPages) =>
+            nextPageParam(allPages, NOTIFICATIONS_PAGE_SIZE),
         enabled,
     });
 }

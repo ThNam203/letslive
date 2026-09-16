@@ -24,7 +24,7 @@ func writeResponse(w http.ResponseWriter, ctx context.Context, res *servicerespo
 	json.NewEncoder(w).Encode(res)
 }
 
-func (h *AuthHandler) setAuthJWTsInCookie(ctx context.Context, userId string, w http.ResponseWriter) *serviceresponse.Response[any] {
+func (h *AuthHandler) setAuthJWTsInCookie(ctx context.Context, userId string, w http.ResponseWriter) error {
 	tokensInfo, err := h.jwtService.GenerateTokenPair(ctx, userId)
 	if err != nil {
 		return err

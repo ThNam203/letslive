@@ -2,19 +2,19 @@ package wallet
 
 import (
 	"context"
+	"errors"
 	"sen1or/letslive/finance/domains"
 	"sen1or/letslive/finance/dto"
-	response "sen1or/letslive/finance/response"
 
 	"github.com/gofrs/uuid/v5"
 )
 
 // GetOrCreateWallet fetches the user's wallet account; if absent, creates an active one.
 // It then returns balances for every supported currency, defaulting missing rows to "0".
-func (s *WalletService) GetOrCreateWallet(ctx context.Context, ownerId uuid.UUID) (*dto.WalletResponse, *response.Response[any]) {
+func (s *WalletService) GetOrCreateWallet(ctx context.Context, ownerId uuid.UUID) (*dto.WalletResponse, error) {
 	account, errResp := s.accountRepo.GetUserWalletByOwnerId(ctx, ownerId)
 	if errResp != nil {
-		if errResp.Code != response.RES_ERR_ACCOUNT_NOT_FOUND_CODE {
+		if !errors.Is(errResp, domains.ErrAccountNotFound) {
 			return nil, errResp
 		}
 		created, createErr := s.accountRepo.CreateUserWallet(ctx, ownerId)
@@ -25,12 +25,7 @@ func (s *WalletService) GetOrCreateWallet(ctx context.Context, ownerId uuid.UUID
 	}
 
 	if account.Status == domains.AccountStatusFrozen {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_ACCOUNT_FROZEN,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrAccountFrozen
 	}
 
 	balances, balErr := s.accountRepo.GetBalances(ctx, account.Id)

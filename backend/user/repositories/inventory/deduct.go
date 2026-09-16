@@ -5,13 +5,12 @@ import (
 	"errors"
 
 	"sen1or/letslive/user/domains"
-	"sen1or/letslive/user/response"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresInventoryRepo) Deduct(ctx context.Context, userID, shopItemID uuid.UUID) (*domains.UserInventory, *response.Response[any]) {
+func (r *postgresInventoryRepo) Deduct(ctx context.Context, userID, shopItemID uuid.UUID) (*domains.UserInventory, error) {
 	query := `
 		UPDATE user_inventory
 		SET quantity = quantity - 1, updated_at = now()
@@ -21,15 +20,15 @@ func (r *postgresInventoryRepo) Deduct(ctx context.Context, userID, shopItemID u
 
 	rows, err := r.dbConn.Query(ctx, query, userID, shopItemID)
 	if err != nil {
-		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_DATABASE_QUERY, nil, nil, nil)
+		return nil, domains.ErrDatabaseQuery
 	}
 
 	item, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.UserInventory])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INSUFFICIENT_INVENTORY, nil, nil, nil)
+			return nil, domains.ErrInsufficientInventory
 		}
-		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_DATABASE_ISSUE, nil, nil, nil)
+		return nil, domains.ErrDatabaseIssue
 	}
 
 	return &item, nil
