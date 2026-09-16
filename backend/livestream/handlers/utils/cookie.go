@@ -2,9 +2,9 @@ package utils
 
 import (
 	"net/http"
-	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/livestream/response"
 	"sen1or/letslive/livestream/types"
+	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/golang-jwt/jwt/v5"

@@ -4,16 +4,15 @@ import (
 	"context"
 	"sen1or/letslive/livestream/domains"
 	"sen1or/letslive/livestream/dto"
-	"sen1or/letslive/shared/pkg/logger"
-	response "sen1or/letslive/livestream/response"
 	"sen1or/letslive/livestream/utils"
+	"sen1or/letslive/shared/pkg/logger"
 	"time"
 )
 
-func (s *LivestreamService) Create(ctx context.Context, data dto.CreateLivestreamRequestDTO) (*domains.Livestream, *response.Response[any]) {
+func (s *LivestreamService) Create(ctx context.Context, data dto.CreateLivestreamRequestDTO) (*domains.Livestream, error) {
 	if err := utils.Validator.Struct(&data); err != nil {
 		logger.Debugf(ctx, "create livestream validation failed: %s", err.Error())
-		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil)
+		return nil, domains.ErrInvalidPayload
 	}
 
 	var titleString = ""
