@@ -10,6 +10,7 @@ import useT from "@/hooks/use-translation";
 import IconClose from "@/components/icons/close";
 import RequireAuth from "@/components/wrappers/RequireAuth";
 import { useConversationsInfinite } from "@/hooks/queries/use-conversations";
+import { flattenPages } from "@/lib/query/paginated";
 
 export default function MessagesPage() {
     const params = useParams();
@@ -17,7 +18,7 @@ export default function MessagesPage() {
     const user = useUser((state) => state.user);
     const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
         useConversationsInfinite(!!user);
-    const conversations = data?.pages.flat() ?? [];
+    const conversations = flattenPages(data);
     const [showNewConversation, setShowNewConversation] = useState(false);
     const { t } = useT("messages");
 

@@ -6,7 +6,7 @@ import (
 	response "sen1or/letslive/vod/response"
 )
 
-func (s *VODService) GetRecommendedVODs(ctx context.Context, page int, limit int) ([]domains.VOD, *response.Response[any]) {
+func (s *VODService) GetRecommendedVODs(ctx context.Context, page int, limit int) ([]domains.VOD, int, *response.Response[any]) {
 	if page < 0 {
 		page = 0
 	}

@@ -67,7 +67,7 @@ type VODRepository interface {
 	GetById(ctx context.Context, id uuid.UUID) (*VOD, *response.Response[any])
 	GetByUser(ctx context.Context, userId uuid.UUID, page int, limit int) ([]VOD, *response.Response[any])
 	GetPublicVODsByUser(ctx context.Context, userId uuid.UUID, page int, limit int) ([]VOD, *response.Response[any])
-	GetPopular(ctx context.Context, page int, limit int) ([]VOD, *response.Response[any])
+	GetPopular(ctx context.Context, page int, limit int) ([]VOD, int, *response.Response[any])
 	IncrementViewCount(ctx context.Context, id uuid.UUID) *response.Response[any]
 	Create(ctx context.Context, vod VOD) (*VOD, *response.Response[any])
 	Update(ctx context.Context, vod VOD) (*VOD, *response.Response[any])
