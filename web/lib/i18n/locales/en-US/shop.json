@@ -4,7 +4,7 @@
         "empty": "No items available right now.",
         "price_label": "{{price}} SPARK",
         "buy_button": "Buy",
-        "gift_button": "Send as Gift",
+        "gift_button": "Send Gift",
         "gift_send": "Send Gift",
         "gift_sending": "Sending...",
         "gift_sent": "Gift sent!",
