@@ -2,7 +2,6 @@ package domains
 
 import (
 	"context"
-	serviceresponse "sen1or/letslive/auth/response"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -18,9 +17,9 @@ type RefreshToken struct {
 }
 
 type RefreshTokenRepository interface {
-	RevokeAllTokensOfUser(context.Context, uuid.UUID) *serviceresponse.Response[any]
+	RevokeAllTokensOfUser(context.Context, uuid.UUID) error
 
-	Insert(context.Context, *RefreshToken) *serviceresponse.Response[any]
-	FindByValue(context.Context, string) (*RefreshToken, *serviceresponse.Response[any])
-	Update(context.Context, *RefreshToken) *serviceresponse.Response[any]
+	Insert(context.Context, *RefreshToken) error
+	FindByValue(context.Context, string) (*RefreshToken, error)
+	Update(context.Context, *RefreshToken) error
 }

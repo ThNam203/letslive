@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	serviceresponse "sen1or/letslive/auth/response"
+	"sen1or/letslive/auth/domains"
 )
 
-func CheckCAPTCHA(token string, userIPAddress string) *serviceresponse.Response[any] {
+func CheckCAPTCHA(token string, userIPAddress string) error {
 	formData := url.Values{}
 	formData.Set("secret", os.Getenv("CLOUDFLARE_TURNSTILE_SECRET_KEY"))
 	formData.Set("response", token)
@@ -19,7 +19,7 @@ func CheckCAPTCHA(token string, userIPAddress string) *serviceresponse.Response[
 	// Send verification request to Cloudflare
 	resp, err := http.PostForm("https://challenges.cloudflare.com/turnstile/v0/siteverify", formData)
 	if err != nil {
-		return serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_CAPTCHA_FAILED, nil, nil, nil)
+		return domains.ErrCaptchaFailed
 	}
 	defer resp.Body.Close()
 
@@ -30,12 +30,12 @@ func CheckCAPTCHA(token string, userIPAddress string) *serviceresponse.Response[
 	// Parse response
 	var outcome TurnstileResponse
 	if err := json.NewDecoder(resp.Body).Decode(&outcome); err != nil {
-		return serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_CAPTCHA_FAILED, nil, nil, nil)
+		return domains.ErrCaptchaFailed
 	}
 
 	if outcome.Success {
 		return nil
 	}
 
-	return serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_CAPTCHA_FAILED, nil, nil, nil)
+	return domains.ErrCaptchaFailed
 }

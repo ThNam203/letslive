@@ -14,4 +14,3 @@ type CreateUserResponseDTO struct {
 	StreamAPIKey uuid.UUID `json:"streamAPIKey"`
 	PhoneNumber  *string   `json:"phoneNumber,omitempty"`
 }
-
