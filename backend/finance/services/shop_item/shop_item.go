@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"sen1or/letslive/finance/domains"
-	"sen1or/letslive/finance/response"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -17,10 +16,10 @@ func NewShopItemService(shopItemRepo domains.ShopItemRepository) *ShopItemServic
 	return &ShopItemService{shopItemRepo: shopItemRepo}
 }
 
-func (s *ShopItemService) List(ctx context.Context) ([]domains.ShopItem, *response.Response[any]) {
+func (s *ShopItemService) List(ctx context.Context) ([]domains.ShopItem, error) {
 	return s.shopItemRepo.List(ctx)
 }
 
-func (s *ShopItemService) GetById(ctx context.Context, id uuid.UUID) (*domains.ShopItem, *response.Response[any]) {
+func (s *ShopItemService) GetById(ctx context.Context, id uuid.UUID) (*domains.ShopItem, error) {
 	return s.shopItemRepo.GetById(ctx, id)
 }

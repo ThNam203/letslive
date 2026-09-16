@@ -2,7 +2,6 @@ package domains
 
 import (
 	"context"
-	response "sen1or/letslive/finance/response"
 )
 
 type Currency struct {
@@ -12,6 +11,6 @@ type Currency struct {
 }
 
 type CurrencyRepository interface {
-	List(ctx context.Context) ([]Currency, *response.Response[any])
-	GetByCode(ctx context.Context, code string) (*Currency, *response.Response[any])
+	List(ctx context.Context) ([]Currency, error)
+	GetByCode(ctx context.Context, code string) (*Currency, error)
 }

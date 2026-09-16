@@ -2,7 +2,6 @@ package domains
 
 import (
 	"context"
-	response "sen1or/letslive/finance/response"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -42,8 +41,8 @@ type AccountBalance struct {
 }
 
 type AccountRepository interface {
-	GetUserWalletByOwnerId(ctx context.Context, ownerId uuid.UUID) (*Account, *response.Response[any])
-	CreateUserWallet(ctx context.Context, ownerId uuid.UUID) (*Account, *response.Response[any])
-	GetEscrow(ctx context.Context) (*Account, *response.Response[any])
-	GetBalances(ctx context.Context, accountId uuid.UUID) ([]AccountBalance, *response.Response[any])
+	GetUserWalletByOwnerId(ctx context.Context, ownerId uuid.UUID) (*Account, error)
+	CreateUserWallet(ctx context.Context, ownerId uuid.UUID) (*Account, error)
+	GetEscrow(ctx context.Context) (*Account, error)
+	GetBalances(ctx context.Context, accountId uuid.UUID) ([]AccountBalance, error)
 }

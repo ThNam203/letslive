@@ -2,9 +2,9 @@ package deposit
 
 import (
 	"context"
+	"errors"
 	"sen1or/letslive/finance/domains"
 	gatewaypayment "sen1or/letslive/finance/gateway/payment"
-	response "sen1or/letslive/finance/response"
 	"sen1or/letslive/shared/pkg/logger"
 )
 
@@ -12,26 +12,16 @@ import (
 // payment idempotently. On completion the user wallet is credited and the
 // escrow account is debited inside a single DB transaction; the zero-sum
 // trigger validates the ledger on the status transition.
-func (s *DepositService) HandleWebhook(ctx context.Context, providerName domains.PaymentProvider, payload []byte, signature string) *response.Response[any] {
+func (s *DepositService) HandleWebhook(ctx context.Context, providerName domains.PaymentProvider, payload []byte, signature string) error {
 	gateway, ok := s.gateways[providerName]
 	if !ok {
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_INPUT,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrInvalidInput
 	}
 
 	event, err := gateway.VerifyWebhook(payload, signature)
 	if err != nil {
 		logger.Errorf(ctx, "webhook verify failed [handlewebhook: %v]", err)
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_UNAUTHORIZED,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrUnauthorized
 	}
 	if event.Type == gatewaypayment.WebhookEventIgnored {
 		return nil
@@ -69,17 +59,12 @@ func (s *DepositService) HandleWebhook(ctx context.Context, providerName domains
 
 		if tx.ActorId == nil {
 			logger.Errorf(ctx, "completed webhook for transaction %s missing actor_id", tx.Id)
-			return response.NewResponseFromTemplate[any](
-				response.RES_ERR_TRANSACTION_FAILED,
-				nil,
-				nil,
-				nil,
-			)
+			return domains.ErrTransactionFailed
 		}
 
 		userAccount, errResp := s.accountRepo.GetUserWalletByOwnerId(ctx, *tx.ActorId)
 		if errResp != nil {
-			if errResp.Code != response.RES_ERR_ACCOUNT_NOT_FOUND_CODE {
+			if !errors.Is(errResp, domains.ErrAccountNotFound) {
 				return errResp
 			}
 			created, createErr := s.accountRepo.CreateUserWallet(ctx, *tx.ActorId)
