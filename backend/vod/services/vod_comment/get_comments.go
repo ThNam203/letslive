@@ -3,12 +3,11 @@ package vodcomment
 import (
 	"context"
 	"sen1or/letslive/vod/dto"
-	"sen1or/letslive/vod/response"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *VODCommentService) GetCommentsByVODId(ctx context.Context, vodId uuid.UUID, page int, limit int) ([]dto.VODCommentWithUser, int, *response.Response[any]) {
+func (s *VODCommentService) GetCommentsByVODId(ctx context.Context, vodId uuid.UUID, page int, limit int) ([]dto.VODCommentWithUser, int, error) {
 	comments, err := s.commentRepo.GetByVODId(ctx, vodId, page, limit)
 	if err != nil {
 		return nil, 0, err

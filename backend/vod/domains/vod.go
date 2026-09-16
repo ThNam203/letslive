@@ -2,7 +2,6 @@ package domains
 
 import (
 	"context"
-	response "sen1or/letslive/vod/response"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -64,20 +63,20 @@ type TranscodeJob struct {
 }
 
 type VODRepository interface {
-	GetById(ctx context.Context, id uuid.UUID) (*VOD, *response.Response[any])
-	GetByUser(ctx context.Context, userId uuid.UUID, page int, limit int) ([]VOD, *response.Response[any])
-	GetPublicVODsByUser(ctx context.Context, userId uuid.UUID, page int, limit int) ([]VOD, *response.Response[any])
-	GetPopular(ctx context.Context, page int, limit int) ([]VOD, int, *response.Response[any])
-	IncrementViewCount(ctx context.Context, id uuid.UUID) *response.Response[any]
-	Create(ctx context.Context, vod VOD) (*VOD, *response.Response[any])
-	Update(ctx context.Context, vod VOD) (*VOD, *response.Response[any])
-	UpdateStatus(ctx context.Context, vodId uuid.UUID, status VODStatus, playbackUrl *string, thumbnailUrl *string) *response.Response[any]
-	Delete(ctx context.Context, id uuid.UUID) *response.Response[any]
+	GetById(ctx context.Context, id uuid.UUID) (*VOD, error)
+	GetByUser(ctx context.Context, userId uuid.UUID, page int, limit int) ([]VOD, error)
+	GetPublicVODsByUser(ctx context.Context, userId uuid.UUID, page int, limit int) ([]VOD, error)
+	GetPopular(ctx context.Context, page int, limit int) ([]VOD, int, error)
+	IncrementViewCount(ctx context.Context, id uuid.UUID) error
+	Create(ctx context.Context, vod VOD) (*VOD, error)
+	Update(ctx context.Context, vod VOD) (*VOD, error)
+	UpdateStatus(ctx context.Context, vodId uuid.UUID, status VODStatus, playbackUrl *string, thumbnailUrl *string) error
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 type TranscodeJobRepository interface {
-	Create(ctx context.Context, job TranscodeJob) (*TranscodeJob, *response.Response[any])
-	GetPendingJob(ctx context.Context) (*TranscodeJob, *response.Response[any])
-	UpdateStatus(ctx context.Context, jobId uuid.UUID, status TranscodeJobStatus, errorMsg *string) *response.Response[any]
-	IncrementAttempts(ctx context.Context, jobId uuid.UUID) *response.Response[any]
+	Create(ctx context.Context, job TranscodeJob) (*TranscodeJob, error)
+	GetPendingJob(ctx context.Context) (*TranscodeJob, error)
+	UpdateStatus(ctx context.Context, jobId uuid.UUID, status TranscodeJobStatus, errorMsg *string) error
+	IncrementAttempts(ctx context.Context, jobId uuid.UUID) error
 }

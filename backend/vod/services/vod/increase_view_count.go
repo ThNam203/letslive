@@ -2,7 +2,7 @@ package vod
 
 import (
 	"context"
-	response "sen1or/letslive/vod/response"
+	"sen1or/letslive/vod/domains"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -12,7 +12,7 @@ const (
 	minWatchPercentage float64 = 0.10
 )
 
-func (s *VODService) RegisterView(ctx context.Context, vodId uuid.UUID, watchedSeconds int64) *response.Response[any] {
+func (s *VODService) RegisterView(ctx context.Context, vodId uuid.UUID, watchedSeconds int64) error {
 	// Fetch VOD to get the stored duration
 	vod, errResp := s.vodRepo.GetById(ctx, vodId)
 	if errResp != nil {
@@ -31,10 +31,7 @@ func (s *VODService) RegisterView(ctx context.Context, vodId uuid.UUID, watchedS
 	}
 
 	if watchedSeconds < threshold {
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_VOD_VIEW_THRESHOLD,
-			nil, nil, nil,
-		)
+		return domains.ErrVODViewThreshold
 	}
 
 	return s.vodRepo.IncrementViewCount(ctx, vodId)

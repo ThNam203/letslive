@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"sen1or/letslive/vod/domains"
 	"sen1or/letslive/shared/pkg/tracer"
+	"sen1or/letslive/vod/domains"
 	response "sen1or/letslive/vod/response"
 
 	"github.com/gofrs/uuid/v5"
@@ -44,7 +44,7 @@ func (h *VODHandler) UpdateVODStatusInternalHandler(w http.ResponseWriter, r *ht
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

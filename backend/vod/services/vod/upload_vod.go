@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
-	"sen1or/letslive/vod/domains"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/vod/response"
+	"sen1or/letslive/vod/domains"
 	"strings"
 	"time"
 
@@ -31,28 +30,18 @@ func (s *VODService) UploadVOD(
 	filename string,
 	fileSize int64,
 	fileReader io.Reader,
-) (*domains.VOD, *response.Response[any]) {
+) (*domains.VOD, error) {
 	// Validate file extension
 	ext := strings.ToLower(filepath.Ext(filename))
 	if !allowedVideoExtensions[ext] {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_INPUT,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInvalidInput
 	}
 
 	// Generate VOD ID upfront for the raw file path
 	vodId, err := uuid.NewV4()
 	if err != nil {
 		logger.Errorf(ctx, "failed to generate uuid: %v", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInternal
 	}
 
 	// Upload raw file to MinIO
@@ -60,12 +49,7 @@ func (s *VODService) UploadVOD(
 	rawFileURL, uploadErr := s.minioStorage.UploadFile(ctx, objectName, fileReader, fileSize, "video/"+strings.TrimPrefix(ext, "."))
 	if uploadErr != nil {
 		logger.Errorf(ctx, "failed to upload raw video to minio: %v", uploadErr)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInternal
 	}
 
 	// Determine visibility
@@ -121,7 +105,7 @@ func (s *VODService) UpdateStatus(
 	playbackUrl *string,
 	thumbnailUrl *string,
 	duration *int64,
-) *response.Response[any] {
+) error {
 	currentVOD, err := s.vodRepo.GetById(ctx, vodId)
 	if err != nil {
 		return err

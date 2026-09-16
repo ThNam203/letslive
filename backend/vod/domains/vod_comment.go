@@ -2,7 +2,6 @@ package domains
 
 import (
 	"context"
-	response "sen1or/letslive/vod/response"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -40,23 +39,23 @@ type VODCommentLike struct {
 
 type VODCommentRepository interface {
 	WithTx(tx pgx.Tx) VODCommentRepository
-	GetByVODId(ctx context.Context, vodId uuid.UUID, page int, limit int) ([]VODComment, *response.Response[any])
-	CountByVODId(ctx context.Context, vodId uuid.UUID) (int, *response.Response[any])
-	CountReplies(ctx context.Context, parentId uuid.UUID) (int, *response.Response[any])
-	GetReplies(ctx context.Context, parentId uuid.UUID, page int, limit int) ([]VODComment, *response.Response[any])
-	GetById(ctx context.Context, id uuid.UUID) (*VODComment, *response.Response[any])
-	Create(ctx context.Context, comment VODComment) (*VODComment, *response.Response[any])
-	IncrementReplyCount(ctx context.Context, commentId uuid.UUID) *response.Response[any]
-	DecrementReplyCount(ctx context.Context, commentId uuid.UUID) *response.Response[any]
-	SoftDelete(ctx context.Context, id uuid.UUID) *response.Response[any]
-	HardDelete(ctx context.Context, id uuid.UUID) *response.Response[any]
+	GetByVODId(ctx context.Context, vodId uuid.UUID, page int, limit int) ([]VODComment, error)
+	CountByVODId(ctx context.Context, vodId uuid.UUID) (int, error)
+	CountReplies(ctx context.Context, parentId uuid.UUID) (int, error)
+	GetReplies(ctx context.Context, parentId uuid.UUID, page int, limit int) ([]VODComment, error)
+	GetById(ctx context.Context, id uuid.UUID) (*VODComment, error)
+	Create(ctx context.Context, comment VODComment) (*VODComment, error)
+	IncrementReplyCount(ctx context.Context, commentId uuid.UUID) error
+	DecrementReplyCount(ctx context.Context, commentId uuid.UUID) error
+	SoftDelete(ctx context.Context, id uuid.UUID) error
+	HardDelete(ctx context.Context, id uuid.UUID) error
 }
 
 type VODCommentLikeRepository interface {
 	WithTx(tx pgx.Tx) VODCommentLikeRepository
-	GetUserLikedCommentIds(ctx context.Context, commentIds []uuid.UUID, userId uuid.UUID) ([]uuid.UUID, *response.Response[any])
-	InsertLike(ctx context.Context, commentId uuid.UUID, userId uuid.UUID) *response.Response[any]
-	DeleteLike(ctx context.Context, commentId uuid.UUID, userId uuid.UUID) *response.Response[any]
-	IncrementLikeCount(ctx context.Context, commentId uuid.UUID) *response.Response[any]
-	DecrementLikeCount(ctx context.Context, commentId uuid.UUID) *response.Response[any]
+	GetUserLikedCommentIds(ctx context.Context, commentIds []uuid.UUID, userId uuid.UUID) ([]uuid.UUID, error)
+	InsertLike(ctx context.Context, commentId uuid.UUID, userId uuid.UUID) error
+	DeleteLike(ctx context.Context, commentId uuid.UUID, userId uuid.UUID) error
+	IncrementLikeCount(ctx context.Context, commentId uuid.UUID) error
+	DecrementLikeCount(ctx context.Context, commentId uuid.UUID) error
 }

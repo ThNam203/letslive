@@ -20,7 +20,7 @@ func (h *VODHandler) GetRecommendedVODsPublicHandler(w http.ResponseWriter, r *h
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

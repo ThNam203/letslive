@@ -2,15 +2,14 @@ package vod
 
 import (
 	"context"
-	"sen1or/letslive/vod/domains"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/vod/response"
+	"sen1or/letslive/vod/domains"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 )
 
-func (r postgresVODRepo) GetPublicVODsByUser(ctx context.Context, userId uuid.UUID, page, limit int) ([]domains.VOD, *response.Response[any]) {
+func (r postgresVODRepo) GetPublicVODsByUser(ctx context.Context, userId uuid.UUID, page, limit int) ([]domains.VOD, error) {
 	offset := limit * page
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT *
@@ -22,24 +21,14 @@ func (r postgresVODRepo) GetPublicVODsByUser(ctx context.Context, userId uuid.UU
 	`, userId, offset, limit)
 	if err != nil {
 		logger.Errorf(ctx, "db exec error [getpublicvodsbyuser id=%s: %v]", userId, err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	vods, err := pgx.CollectRows(rows, pgx.RowToStructByName[domains.VOD])
 	if err != nil {
 		logger.Errorf(ctx, "db scan error [getpublicvodsbyuser: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 
 	return vods, nil
