@@ -8,7 +8,9 @@ export function useTransactionsInfinite(enabled: boolean) {
     return useInfiniteQuery({
         queryKey: ["wallet", "transactions"],
         queryFn: async ({ pageParam }) =>
-            unwrapPage(await GetTransactions(pageParam, TRANSACTIONS_PAGE_SIZE)),
+            unwrapPage(
+                await GetTransactions(pageParam, TRANSACTIONS_PAGE_SIZE),
+            ),
         initialPageParam: 0,
         getNextPageParam: (_lastPage, allPages) =>
             nextPageParam(allPages, TRANSACTIONS_PAGE_SIZE),
