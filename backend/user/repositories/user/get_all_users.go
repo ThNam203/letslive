@@ -2,14 +2,13 @@ package user
 
 import (
 	"context"
-	"sen1or/letslive/user/domains"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/user/response"
+	"sen1or/letslive/user/domains"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (r postgresUserRepo) GetAll(ctx context.Context, page int) ([]domains.User, *response.Response[any]) {
+func (r postgresUserRepo) GetAll(ctx context.Context, page int) ([]domains.User, error) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT id, username, email, status, created_at, phone_number, bio, profile_picture, background_picture
 		FROM users
@@ -18,22 +17,12 @@ func (r postgresUserRepo) GetAll(ctx context.Context, page int) ([]domains.User,
 
 	if err != nil {
 		logger.Errorf(ctx, "failed to get all users: %s", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseQuery
 	}
 
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[domains.User])
 	if err != nil {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 
 	return users, nil

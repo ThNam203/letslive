@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"sen1or/letslive/shared/pkg/tracer"
 	"sen1or/letslive/user/dto"
 	"sen1or/letslive/user/response"
-	"sen1or/letslive/shared/pkg/tracer"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid/v5"
@@ -37,7 +37,7 @@ func (h *InventoryHandler) AddInventoryInternalHandler(w http.ResponseWriter, r 
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

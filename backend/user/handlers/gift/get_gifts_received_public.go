@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"sen1or/letslive/user/response"
 	"sen1or/letslive/shared/pkg/tracer"
+	"sen1or/letslive/user/response"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -32,7 +32,7 @@ func (h *GiftHandler) GetGiftsReceivedPublicHandler(w http.ResponseWriter, r *ht
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

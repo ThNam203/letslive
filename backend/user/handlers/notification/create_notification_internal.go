@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"sen1or/letslive/user/dto"
 	"sen1or/letslive/shared/pkg/tracer"
+	"sen1or/letslive/user/dto"
 	"sen1or/letslive/user/response"
 
 	"github.com/go-playground/validator/v10"
@@ -35,7 +35,7 @@ func (h *NotificationHandler) CreateNotificationInternalHandler(w http.ResponseW
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

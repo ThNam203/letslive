@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"sen1or/letslive/shared/pkg/tracer"
 	"sen1or/letslive/user/handlers/utils"
 	"sen1or/letslive/user/response"
-	"sen1or/letslive/shared/pkg/tracer"
 )
 
 func (h *GiftHandler) GetGiftsSentPrivateHandler(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +31,7 @@ func (h *GiftHandler) GetGiftsSentPrivateHandler(w http.ResponseWriter, r *http.
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

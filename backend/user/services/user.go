@@ -3,10 +3,9 @@ package services
 import (
 	"context"
 	"mime/multipart"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/dto"
-	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/user/response"
 	"sen1or/letslive/user/utils"
 
 	"github.com/gofrs/uuid/v5"
@@ -36,7 +35,7 @@ func NewUserService(
 	}
 }
 
-func (s *UserService) GetUserPublicInfoById(ctx context.Context, userUUID uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *response.Response[any]) {
+func (s *UserService) GetUserPublicInfoById(ctx context.Context, userUUID uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, error) {
 	user, err := s.userRepo.GetPublicInfoById(ctx, userUUID, authenticatedUserId)
 	if err != nil {
 		return nil, err
@@ -45,7 +44,7 @@ func (s *UserService) GetUserPublicInfoById(ctx context.Context, userUUID uuid.U
 	return user, nil
 }
 
-func (s *UserService) GetUserByStreamAPIKey(ctx context.Context, key uuid.UUID) (*domains.User, *response.Response[any]) {
+func (s *UserService) GetUserByStreamAPIKey(ctx context.Context, key uuid.UUID) (*domains.User, error) {
 	user, err := s.userRepo.GetByAPIKey(ctx, key)
 	if err != nil {
 		return nil, err
@@ -54,7 +53,7 @@ func (s *UserService) GetUserByStreamAPIKey(ctx context.Context, key uuid.UUID) 
 	return user, nil
 }
 
-func (s *UserService) GetUserById(ctx context.Context, userUUID uuid.UUID) (*domains.User, *response.Response[any]) {
+func (s *UserService) GetUserById(ctx context.Context, userUUID uuid.UUID) (*domains.User, error) {
 	user, err := s.userRepo.GetById(ctx, userUUID)
 	if err != nil {
 		return nil, err
@@ -63,7 +62,7 @@ func (s *UserService) GetUserById(ctx context.Context, userUUID uuid.UUID) (*dom
 	return user, nil
 }
 
-func (s *UserService) GetFollowingUsers(ctx context.Context, authenticatedUserId uuid.UUID) ([]dto.GetUserPublicResponseDTO, *response.Response[any]) {
+func (s *UserService) GetFollowingUsers(ctx context.Context, authenticatedUserId uuid.UUID) ([]dto.GetUserPublicResponseDTO, error) {
 	ids, err := s.followRepo.GetFollowedUserIds(ctx, authenticatedUserId)
 	if err != nil {
 		return nil, err
@@ -75,7 +74,7 @@ func (s *UserService) GetFollowingUsers(ctx context.Context, authenticatedUserId
 	return users, nil
 }
 
-func (s *UserService) GetRecommendedUsers(ctx context.Context, authenticatedUserId *uuid.UUID, page int) ([]dto.GetUserPublicResponseDTO, *response.Response[any]) {
+func (s *UserService) GetRecommendedUsers(ctx context.Context, authenticatedUserId *uuid.UUID, page int) ([]dto.GetUserPublicResponseDTO, error) {
 	users, err := s.userRepo.GetRecommendedPublic(ctx, authenticatedUserId, page, 10)
 	if err != nil {
 		return nil, err
@@ -83,14 +82,9 @@ func (s *UserService) GetRecommendedUsers(ctx context.Context, authenticatedUser
 	return users, nil
 }
 
-func (s *UserService) SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, *response.Response[any]) {
+func (s *UserService) SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, error) {
 	if len(username) == 0 {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_INPUT,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInvalidInput
 	}
 
 	users, err := s.userRepo.SearchUsersByUsername(ctx, username, authenticatedUserId)
@@ -101,15 +95,10 @@ func (s *UserService) SearchUsersByUsername(ctx context.Context, username string
 	return users, nil
 }
 
-func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequestDTO) (*domains.User, *response.Response[any]) {
+func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequestDTO) (*domains.User, error) {
 	if err := utils.Validator.Struct(&data); err != nil {
 		logger.Debugf(ctx, "failed to validate user create resquest: %+v", data)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_INPUT,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInvalidInput
 	}
 
 	// TODO: transaction please
@@ -136,25 +125,15 @@ func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequ
 	return createdUser, nil
 }
 
-func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequestDTO) (*domains.User, *response.Response[any]) {
+func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequestDTO) (*domains.User, error) {
 	if err := utils.Validator.Struct(&data); err != nil {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_INPUT,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInvalidInput
 	}
 
 	existedData, err := s.userRepo.GetById(ctx, data.Id)
 	if err != nil {
 		logger.Errorf(ctx, "failed to get existedData for user id: %s", data.Id)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_USER_NOT_FOUND,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrUserNotFound
 	}
 
 	if data.Bio != nil {
@@ -199,15 +178,10 @@ func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequest
 	return updatedUser, nil
 }
 
-func (s *UserService) UpdateUserAPIKey(ctx context.Context, userId uuid.UUID) (string, *response.Response[any]) {
+func (s *UserService) UpdateUserAPIKey(ctx context.Context, userId uuid.UUID) (string, error) {
 	newStreamKey, genErr := uuid.NewGen().NewV4()
 	if genErr != nil {
-		return "", response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return "", domains.ErrInternal
 	}
 
 	err := s.userRepo.UpdateStreamAPIKey(ctx, userId, newStreamKey.String())
@@ -218,15 +192,10 @@ func (s *UserService) UpdateUserAPIKey(ctx context.Context, userId uuid.UUID) (s
 	return newStreamKey.String(), nil
 }
 
-func (s UserService) UpdateUserProfilePicture(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader, userId uuid.UUID) (string, *response.Response[any]) {
+func (s UserService) UpdateUserProfilePicture(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader, userId uuid.UUID) (string, error) {
 	savedPath, err := s.minioService.AddFile(ctx, file, fileHeader, "profile-pictures")
 	if err != nil {
-		return "", response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return "", domains.ErrInternal
 	}
 
 	updateErr := s.userRepo.UpdateProfilePicture(ctx, userId, savedPath)
@@ -237,15 +206,10 @@ func (s UserService) UpdateUserProfilePicture(ctx context.Context, file multipar
 	return savedPath, nil
 }
 
-func (s UserService) UpdateUserBackgroundPicture(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader, userId uuid.UUID) (string, *response.Response[any]) {
+func (s UserService) UpdateUserBackgroundPicture(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader, userId uuid.UUID) (string, error) {
 	savedPath, err := s.minioService.AddFile(ctx, file, fileHeader, "background-pictures")
 	if err != nil {
-		return "", response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return "", domains.ErrInternal
 	}
 
 	updateErr := s.userRepo.UpdateBackgroundPicture(ctx, userId, savedPath)
@@ -257,14 +221,9 @@ func (s UserService) UpdateUserBackgroundPicture(ctx context.Context, file multi
 }
 
 // INTERNAL USE
-func (s UserService) UpdateUserInternal(ctx context.Context, data dto.UpdateUserRequestDTO) (*domains.User, *response.Response[any]) {
+func (s UserService) UpdateUserInternal(ctx context.Context, data dto.UpdateUserRequestDTO) (*domains.User, error) {
 	if err := utils.Validator.Struct(&data); err != nil {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_INPUT,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInvalidInput
 	}
 
 	updatedUser, err := s.userRepo.Update(ctx, data)
@@ -275,15 +234,10 @@ func (s UserService) UpdateUserInternal(ctx context.Context, data dto.UpdateUser
 	return updatedUser, nil
 }
 
-func (s UserService) UploadFileToMinIO(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, *response.Response[any]) {
+func (s UserService) UploadFileToMinIO(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
 	savedPath, err := s.minioService.AddFile(ctx, file, fileHeader, "general-files")
 	if err != nil {
-		return "", response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return "", domains.ErrInternal
 	}
 
 	return savedPath, nil

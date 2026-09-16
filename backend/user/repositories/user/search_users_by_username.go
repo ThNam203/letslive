@@ -2,15 +2,15 @@ package user
 
 import (
 	"context"
-	"sen1or/letslive/user/dto"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/user/response"
+	"sen1or/letslive/user/domains"
+	"sen1or/letslive/user/dto"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, *response.Response[any]) {
+func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, error) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT
 		    u.id,
@@ -59,23 +59,13 @@ func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query stri
 
 	if err != nil {
 		logger.Errorf(ctx, "failed to search for users: %s", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseQuery
 	}
 
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[dto.GetUserPublicResponseDTO])
 	if err != nil {
 		logger.Errorf(ctx, "failed to collect rows: %s", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 
 	return users, nil

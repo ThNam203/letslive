@@ -38,9 +38,9 @@ func (h *UserHandler) GetUserByStreamAPIKeyInternalHandler(w http.ResponseWriter
 	ctx, span := tracer.MyTracer.Start(ctx, "get_user_by_stream_api_key_internal_handler.user_service.get_user_by_stream_api_key")
 	user, sErr := h.userService.GetUserByStreamAPIKey(ctx, streamAPIKey)
 	span.End()
-	
+
 	if sErr != nil {
-		h.WriteResponse(w, ctx, sErr)
+		h.WriteResponse(w, ctx, response.FromError(sErr))
 		return
 	}
 

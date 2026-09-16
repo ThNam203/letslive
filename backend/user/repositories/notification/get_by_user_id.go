@@ -2,15 +2,14 @@ package notification
 
 import (
 	"context"
-	"sen1or/letslive/user/domains"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/user/response"
+	"sen1or/letslive/user/domains"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 )
 
-func (r postgresNotificationRepo) GetByUserId(ctx context.Context, userId uuid.UUID, page int, pageSize int) ([]domains.Notification, int, *response.Response[any]) {
+func (r postgresNotificationRepo) GetByUserId(ctx context.Context, userId uuid.UUID, page int, pageSize int) ([]domains.Notification, int, error) {
 	offset := page * pageSize
 
 	// get total count
@@ -18,10 +17,7 @@ func (r postgresNotificationRepo) GetByUserId(ctx context.Context, userId uuid.U
 	err := r.dbConn.QueryRow(ctx, `SELECT COUNT(*) FROM notifications WHERE user_id = $1`, userId).Scan(&total)
 	if err != nil {
 		logger.Errorf(ctx, "failed to count notifications: %s", err)
-		return nil, 0, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil, nil, nil,
-		)
+		return nil, 0, domains.ErrDatabaseQuery
 	}
 
 	rows, err := r.dbConn.Query(ctx, `
@@ -33,20 +29,14 @@ func (r postgresNotificationRepo) GetByUserId(ctx context.Context, userId uuid.U
 	`, userId, pageSize, offset)
 	if err != nil {
 		logger.Errorf(ctx, "failed to query notifications: %s", err)
-		return nil, 0, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil, nil, nil,
-		)
+		return nil, 0, domains.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	notifications, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[domains.Notification])
 	if err != nil {
 		logger.Errorf(ctx, "failed to scan notifications: %s", err)
-		return nil, 0, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil, nil, nil,
-		)
+		return nil, 0, domains.ErrDatabaseQuery
 	}
 
 	return notifications, total, nil
