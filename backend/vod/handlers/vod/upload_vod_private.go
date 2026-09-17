@@ -9,7 +9,11 @@ import (
 	response "sen1or/letslive/vod/response"
 )
 
-const maxUploadSize = 2 << 30 // 2GB
+const maxUploadSize = 100 << 20 // 100MB
+
+// multipart form envelope (boundaries, part headers, other fields) is counted
+// against the request body, so allow a little more than the file limit itself
+const maxRequestSize = maxUploadSize + (1 << 20)
 
 func (h *VODHandler) UploadVODPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancelCtx := context.WithCancel(r.Context())
@@ -21,7 +25,7 @@ func (h *VODHandler) UploadVODPrivateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+	r.Body = http.MaxBytesReader(w, r.Body, maxRequestSize)
 
 	if parseErr := r.ParseMultipartForm(32 << 20); parseErr != nil { // 32MB memory buffer
 		var maxBytesErr *http.MaxBytesError

@@ -261,7 +261,7 @@ services:
               run_on_preflight: true
           - name: request-size-limiting
             config:
-              allowed_payload_size: 2048
+              allowed_payload_size: 101
               size_unit: megabytes
       - name: VOD_Author_Private_Route
         paths:
