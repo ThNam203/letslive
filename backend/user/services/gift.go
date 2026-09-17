@@ -13,7 +13,6 @@ import (
 
 type GiftService struct {
 	giftRepo            domains.GiftRepository
-	inventoryRepo       domains.InventoryRepository
 	userRepo            domains.UserRepository
 	financeGateway      financegateway.FinanceGateway
 	notificationService *NotificationService
@@ -21,48 +20,16 @@ type GiftService struct {
 
 func NewGiftService(
 	giftRepo domains.GiftRepository,
-	inventoryRepo domains.InventoryRepository,
 	userRepo domains.UserRepository,
 	financeGateway financegateway.FinanceGateway,
 	notificationService *NotificationService,
 ) *GiftService {
 	return &GiftService{
 		giftRepo:            giftRepo,
-		inventoryRepo:       inventoryRepo,
 		userRepo:            userRepo,
 		financeGateway:      financeGateway,
 		notificationService: notificationService,
 	}
-}
-
-// SendFromInventory deducts 1 item from sender's inventory, creates a gift record.
-func (s *GiftService) SendFromInventory(ctx context.Context, senderID uuid.UUID, req dto.SendGiftRequestDTO) (*domains.Gift, error) {
-	recipientID, err := uuid.FromString(req.RecipientUserId)
-	if err != nil {
-		return nil, domains.ErrInvalidInput
-	}
-	shopItemID, err := uuid.FromString(req.ShopItemId)
-	if err != nil {
-		return nil, domains.ErrInvalidInput
-	}
-
-	if _, serviceErr := s.inventoryRepo.Deduct(ctx, senderID, shopItemID); serviceErr != nil {
-		return nil, serviceErr
-	}
-
-	gift, serviceErr := s.giftRepo.Create(ctx, domains.Gift{
-		SenderUserId:    senderID,
-		RecipientUserId: recipientID,
-		ShopItemId:      shopItemID,
-		Quantity:        1,
-		Message:         req.Message,
-	})
-	if serviceErr != nil {
-		return nil, serviceErr
-	}
-
-	s.notifyRecipient(ctx, gift)
-	return gift, nil
 }
 
 // CreateFromPurchase used by internal finance→user quick-send call.

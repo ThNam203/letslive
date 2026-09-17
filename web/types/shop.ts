@@ -38,9 +38,3 @@ export type PurchaseResponse = {
     giftId: string | null;
     animationUrl: string;
 };
-
-export type SendGiftRequest = {
-    shopItemId: string;
-    recipientUserId: string;
-    message?: string;
-};

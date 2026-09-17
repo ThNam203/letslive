@@ -130,7 +130,7 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var notificationService = services.NewNotificationService(notificationRepo)
 	var inventoryService = services.NewInventoryService(inventoryRepo)
 	var financeGateway = financehttp.NewFinanceGateway(registry)
-	var giftService = services.NewGiftService(giftRepo, inventoryRepo, userRepo, financeGateway, notificationService)
+	var giftService = services.NewGiftService(giftRepo, userRepo, financeGateway, notificationService)
 
 	var userHandler = user.NewUserHandler(*userService)
 	var livestreamInfoHandler = livestream_information.NewLivestreamInformationHandler(*livestreamInfoService, *minioService)
