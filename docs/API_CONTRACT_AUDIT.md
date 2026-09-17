@@ -91,7 +91,7 @@ Fixed against the schema in `backend/*/migrations`:
 | `Payment.transactionId` | TS `string \| null` | TS `string` — column is NOT NULL |
 | `Payment.providerReference` | TS `string \| null` | TS `string` — column is NOT NULL |
 | `DepositResponse.checkoutUrl` | TS `string \| null` | TS `string` — both gateways always return one |
-| `PaymentProvider` | TS had `paypal` | `stripe` + `mock`, matching the registered gateways |
+| `PaymentProvider` | TS, OpenAPI and i18n had `paypal` | `stripe` + `mock`, matching the registered gateways |
 | `VOD.originalFileUrl` | Go `omitempty` vs TS `\| null` | Go always serializes it |
 | `Notification.actionUrl/actionLabel/referenceId` | TS optional | TS `\| null` — Go has no `omitempty` |
 | `CommentUser.username` | TS `string \| null` | TS `string` |
@@ -105,3 +105,12 @@ Fixed against the schema in `backend/*/migrations`:
 handler took `data: any`, so the declared contract was never enforced and the
 runtime read fields the types did not have. Handlers are now typed against the
 `DmClientEvent` union, with one guarded narrowing at the WebSocket entry point.
+
+### On paypal
+
+`paypal` was only ever a name. No PayPal gateway has existed at any point, and
+`DepositService.Initiate` writes a `payments` row only after
+`s.gateways[provider]` resolves, so a row with `provider = 'paypal'` cannot have
+been created even while the request validator still accepted the value. The name
+is now gone from the domain const, the client enum, `docs/openapi.yaml` and the
+wallet locales.

@@ -103,7 +103,8 @@ export type DmWsTyping = {
 export type DmWsMarkRead = {
     type: DmClientEventType.MARK_READ;
     conversationId: string;
-    messageId: string;
+    /** omitted means "mark everything up to the latest message read" */
+    messageId?: string;
 };
 
 export type DmWsClientEvent = DmWsSendMessage | DmWsTyping | DmWsMarkRead;
@@ -140,7 +141,8 @@ export type DmWsReadReceipt = {
     type: DmServerEventType.READ_RECEIPT;
     conversationId: string;
     userId: string;
-    messageId: string;
+    /** absent when the client marked read without naming a message */
+    messageId?: string;
     readAt: string;
 };
 

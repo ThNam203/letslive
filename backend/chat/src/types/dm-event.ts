@@ -25,7 +25,8 @@ export type DmTypingEvent = {
 export type DmMarkReadEvent = {
     type: DmClientEventType.MARK_READ
     conversationId: string
-    messageId: string
+    // omitted means "mark everything up to the latest message read"
+    messageId?: string
 }
 
 export type DmClientEvent = DmSendMessageEvent | DmTypingEvent | DmMarkReadEvent
