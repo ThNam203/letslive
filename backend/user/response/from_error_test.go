@@ -22,7 +22,6 @@ func TestFromErrorMapsToOriginalTemplate(t *testing.T) {
 		{domains.ErrUserNotFound, RES_ERR_USER_NOT_FOUND},
 		{domains.ErrUsernameTaken, RES_ERR_USERNAME_TAKEN},
 		{domains.ErrNotificationNotFound, RES_ERR_NOTIFICATION_NOT_FOUND},
-		{domains.ErrInsufficientInventory, RES_ERR_INSUFFICIENT_INVENTORY},
 	}
 
 	for _, tc := range cases {

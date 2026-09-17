@@ -17,5 +17,4 @@ var (
 	ErrUserNotFound          = errors.New("user not found")
 	ErrUsernameTaken         = errors.New("username already taken")
 	ErrNotificationNotFound  = errors.New("notification not found")
-	ErrInsufficientInventory = errors.New("insufficient inventory")
 )

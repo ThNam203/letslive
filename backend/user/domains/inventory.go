@@ -17,6 +17,5 @@ type UserInventory struct {
 
 type InventoryRepository interface {
 	Upsert(ctx context.Context, userID, shopItemID uuid.UUID, quantityToAdd int) (*UserInventory, error)
-	Deduct(ctx context.Context, userID, shopItemID uuid.UUID) (*UserInventory, error)
 	GetByUserId(ctx context.Context, userID uuid.UUID, page, limit int) ([]UserInventory, int, error)
 }

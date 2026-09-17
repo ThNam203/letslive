@@ -23,7 +23,6 @@
     "res_err_image_too_large": "Ảnh vượt quá giới hạn 10mb.",
     "res_err_notification_not_found": "Không tìm thấy thông báo.",
     "res_err_username_taken": "Tên người dùng đã được sử dụng.",
-    "res_err_insufficient_inventory": "Không đủ vật phẩm trong kho.",
 
     "res_err_livestream_update_after_ended": "Không thể cập nhật, livestream đã kết thúc.",
     "res_err_livestream_not_found": "Không tìm thấy livestream.",

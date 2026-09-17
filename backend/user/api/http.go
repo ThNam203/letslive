@@ -88,7 +88,6 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("POST /v1/internal/inventory/add", a.inventoryHandler.AddInventoryInternalHandler) // internal
 
 	// gifts
-	wrap("POST /v1/gifts", a.giftHandler.SendGiftPrivateHandler)
 	wrap("GET /v1/user/{userId}/gifts/received", a.giftHandler.GetGiftsReceivedPublicHandler)
 	wrap("GET /v1/user/me/gifts/sent", a.giftHandler.GetGiftsSentPrivateHandler)
 	wrap("POST /v1/internal/gifts/create", a.giftHandler.CreateGiftInternalHandler) // internal
