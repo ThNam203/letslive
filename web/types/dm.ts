@@ -38,7 +38,6 @@ export enum DmServerEventType {
 export type ConversationParticipant = {
     userId: string;
     username: string;
-    displayName: string | null;
     profilePicture: string | null;
     role: ParticipantRole;
     joinedAt: string;

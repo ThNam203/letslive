@@ -435,7 +435,6 @@ export const conversations: Conversation[] = [
             {
                 userId: ME_USER_ID,
                 username: "mockuser",
-                displayName: null,
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=mockuser",
                 role: ParticipantRole.OWNER,
@@ -446,7 +445,6 @@ export const conversations: Conversation[] = [
             {
                 userId: "user-002",
                 username: "streamer_jane",
-                displayName: null,
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=jane",
                 role: ParticipantRole.MEMBER,
@@ -475,7 +473,6 @@ export const conversations: Conversation[] = [
             {
                 userId: ME_USER_ID,
                 username: "mockuser",
-                displayName: null,
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=mockuser",
                 role: ParticipantRole.MEMBER,
@@ -486,7 +483,6 @@ export const conversations: Conversation[] = [
             {
                 userId: "user-003",
                 username: "coder_alex",
-                displayName: null,
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=alex",
                 role: ParticipantRole.OWNER,
@@ -497,7 +493,6 @@ export const conversations: Conversation[] = [
             {
                 userId: "user-004",
                 username: "music_sam",
-                displayName: null,
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=sam",
                 role: ParticipantRole.MEMBER,

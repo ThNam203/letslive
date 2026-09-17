@@ -116,7 +116,6 @@ export const dmHandlers = [
                 return {
                     userId,
                     username: user?.username ?? userId,
-                    displayName: null,
                     profilePicture: user?.profilePicture ?? null,
                     role:
                         i === 0
@@ -182,7 +181,6 @@ export const dmHandlers = [
             conv.participants.push({
                 userId: body.userId,
                 username: body.username ?? user?.username ?? body.userId,
-                displayName: null,
                 profilePicture:
                     body.profilePicture ?? user?.profilePicture ?? null,
                 role: ParticipantRole.MEMBER,

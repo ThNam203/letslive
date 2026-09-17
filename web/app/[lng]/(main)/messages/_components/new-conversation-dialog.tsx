@@ -79,22 +79,9 @@ export default function NewConversationDialog({
 
         setIsLoading(true);
         try {
-            const participantUsernames: Record<string, string> = {};
-            const participantProfilePictures: Record<string, string> = {};
-
-            for (const u of selectedUsers) {
-                if (u.username) participantUsernames[u.id] = u.username;
-                if (u.profilePicture)
-                    participantProfilePictures[u.id] = u.profilePicture;
-            }
-
             const res = await CreateConversation({
                 type: isGroup ? ConversationType.GROUP : ConversationType.DM,
                 participantIds: selectedUsers.map((u) => u.id),
-                participantUsernames,
-                participantProfilePictures,
-                creatorUsername: user.username ?? undefined,
-                creatorProfilePicture: user.profilePicture ?? undefined,
                 name: isGroup ? groupName || undefined : undefined,
             });
 

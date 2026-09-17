@@ -62,6 +62,27 @@ func (s *UserService) GetUserById(ctx context.Context, userUUID uuid.UUID) (*dom
 	return user, nil
 }
 
+// GetIdentitiesByIds returns the minimal identity of each user for peer services.
+// It is the authoritative answer to "what is this user called", so callers never
+// have to take a name on trust from their own clients.
+func (s *UserService) GetIdentitiesByIds(ctx context.Context, ids []uuid.UUID) ([]dto.UserIdentityInternalResponseDTO, error) {
+	users, err := s.userRepo.GetPublicInfosByIds(ctx, ids, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	identities := make([]dto.UserIdentityInternalResponseDTO, 0, len(users))
+	for _, user := range users {
+		identities = append(identities, dto.UserIdentityInternalResponseDTO{
+			Id:             user.Id,
+			Username:       user.Username,
+			ProfilePicture: user.ProfilePicture,
+		})
+	}
+
+	return identities, nil
+}
+
 func (s *UserService) GetFollowingUsers(ctx context.Context, authenticatedUserId uuid.UUID) ([]dto.GetUserPublicResponseDTO, error) {
 	ids, err := s.followRepo.GetFollowedUserIds(ctx, authenticatedUserId)
 	if err != nil {
