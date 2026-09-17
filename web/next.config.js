@@ -3,7 +3,9 @@ const { withSentryConfig } = require("@sentry/nextjs");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: false,
-    output: "standalone",
+    // Vercel runs its own output file tracing; "standalone" removes the
+    // .nft.json files its build adapter expects and fails onBuildComplete.
+    output: process.env.VERCEL ? undefined : "standalone",
     images: {
         formats: ["image/avif", "image/webp"],
         remotePatterns: [
