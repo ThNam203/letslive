@@ -13,7 +13,6 @@ type GetUserPublicResponseDTO struct {
 	Status            string    `json:"status"`
 	AuthProvider      string    `json:"authProvider"`
 	CreatedAt         time.Time `json:"createdAt"`
-	PhoneNumber       *string   `json:"phoneNumber,omitempty"`
 	Bio               *string   `json:"bio,omitempty"`
 	ProfilePicture    *string   `json:"profilePicture,omitempty"`
 	BackgroundPicture *string   `json:"backgroundPicture,omitempty"`

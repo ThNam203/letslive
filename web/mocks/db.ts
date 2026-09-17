@@ -412,6 +412,9 @@ export const notifications: Notification[] = [
         type: "system",
         title: "Welcome to LetsLive!",
         message: "Your account has been set up. Start streaming today!",
+        referenceId: null,
+        actionLabel: null,
+        actionUrl: null,
         isRead: true,
         createdAt: daysAgo(120),
     },
@@ -432,6 +435,7 @@ export const conversations: Conversation[] = [
             {
                 userId: ME_USER_ID,
                 username: "mockuser",
+                displayName: null,
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=mockuser",
                 role: ParticipantRole.OWNER,
@@ -442,6 +446,7 @@ export const conversations: Conversation[] = [
             {
                 userId: "user-002",
                 username: "streamer_jane",
+                displayName: null,
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=jane",
                 role: ParticipantRole.MEMBER,
@@ -470,6 +475,7 @@ export const conversations: Conversation[] = [
             {
                 userId: ME_USER_ID,
                 username: "mockuser",
+                displayName: null,
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=mockuser",
                 role: ParticipantRole.MEMBER,
@@ -480,6 +486,7 @@ export const conversations: Conversation[] = [
             {
                 userId: "user-003",
                 username: "coder_alex",
+                displayName: null,
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=alex",
                 role: ParticipantRole.OWNER,
@@ -490,6 +497,7 @@ export const conversations: Conversation[] = [
             {
                 userId: "user-004",
                 username: "music_sam",
+                displayName: null,
                 profilePicture:
                     "https://api.dicebear.com/9.x/avataaars/svg?seed=sam",
                 role: ParticipantRole.MEMBER,
@@ -521,6 +529,8 @@ export const dmMessages: Record<string, DmMessage[]> = {
             conversationId: "conv-001",
             senderId: ME_USER_ID,
             senderUsername: "mockuser",
+            replyTo: null,
+            imageUrls: [],
             type: DmMessageType.TEXT,
             text: "Hey Jane! Love your streams 🎮",
             isDeleted: false,
@@ -533,6 +543,8 @@ export const dmMessages: Record<string, DmMessage[]> = {
             conversationId: "conv-001",
             senderId: "user-002",
             senderUsername: "streamer_jane",
+            replyTo: null,
+            imageUrls: [],
             type: DmMessageType.TEXT,
             text: "Hey! Thanks for following 😊",
             isDeleted: false,
@@ -547,6 +559,8 @@ export const dmMessages: Record<string, DmMessage[]> = {
             conversationId: "conv-002",
             senderId: "user-004",
             senderUsername: "music_sam",
+            replyTo: null,
+            imageUrls: [],
             type: DmMessageType.TEXT,
             text: "Let's set up a collab stream! I'm thinking music + coding?",
             isDeleted: false,
@@ -559,6 +573,8 @@ export const dmMessages: Record<string, DmMessage[]> = {
             conversationId: "conv-002",
             senderId: "user-003",
             senderUsername: "coder_alex",
+            replyTo: null,
+            imageUrls: [],
             type: DmMessageType.TEXT,
             text: "Who's free for a collab stream this weekend?",
             isDeleted: false,
@@ -581,7 +597,6 @@ export const walletAccount: Account = {
     type: AccountType.USER_WALLET,
     status: AccountStatus.ACTIVE,
     createdAt: daysAgo(120),
-    updatedAt: now(),
 };
 
 export const walletBalances: AccountBalance[] = [
@@ -637,11 +652,9 @@ export const transactions: Transaction[] = [
         type: TransactionType.REWARD,
         status: TransactionStatus.COMPLETED,
         reference: null,
-        description: "Welcome bonus",
         actorId: ME_USER_ID,
         metadata: null,
         createdAt: daysAgo(30),
-        updatedAt: daysAgo(30),
         entries: [ledgerEntries[0]],
     },
     {
@@ -649,11 +662,9 @@ export const transactions: Transaction[] = [
         type: TransactionType.PURCHASE,
         status: TransactionStatus.COMPLETED,
         reference: "pay-001",
-        description: "Deposit via Stripe",
         actorId: ME_USER_ID,
         metadata: { provider: "stripe" },
         createdAt: daysAgo(10),
-        updatedAt: daysAgo(10),
         entries: [ledgerEntries[1]],
     },
     {
@@ -661,11 +672,9 @@ export const transactions: Transaction[] = [
         type: TransactionType.DONATE,
         status: TransactionStatus.COMPLETED,
         reference: null,
-        description: "Donation to streamer_jane",
         actorId: ME_USER_ID,
         metadata: { recipientId: "user-002" },
         createdAt: daysAgo(5),
-        updatedAt: daysAgo(5),
         entries: [ledgerEntries[2]],
     },
 ];
@@ -680,7 +689,6 @@ export const payments: Payment[] = [
         amount: "250.00",
         status: PaymentStatus.COMPLETED,
         createdAt: daysAgo(10),
-        updatedAt: daysAgo(10),
     },
 ];
 

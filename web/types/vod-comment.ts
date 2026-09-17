@@ -1,6 +1,6 @@
 export type CommentUser = {
     id: string;
-    username: string | null;
+    username: string;
     profilePicture?: string;
 };
 

@@ -344,4 +344,13 @@ export class ConversationService {
         if (!conversation) return []
         return conversation.participants.map((p) => p.userId)
     }
+
+    // Authoritative username for a participant. Never derive a display name from
+    // client input: the participant record is the only trusted source.
+    async getParticipantUsername(conversationId: string, userId: string): Promise<string | null> {
+        if (!Types.ObjectId.isValid(conversationId)) return null
+        const conversation = await Conversation.findById(conversationId)
+        if (!conversation) return null
+        return conversation.participants.find((p) => p.userId === userId)?.username ?? null
+    }
 }
