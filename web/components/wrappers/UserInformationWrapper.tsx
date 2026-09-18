@@ -25,7 +25,8 @@ export default function UserInformationWrapper({
         if (!user?.locale || !I18N_LANGUAGES.includes(user.locale)) return;
         const currentLocale = pathname.split("/")[1];
         if (currentLocale === user.locale) return;
-        switchLocale(router, pathname, user.locale, { syncToBackend: false });
+        // no syncLocale: this value came from the DB in the first place
+        switchLocale(router, pathname, user.locale);
     }, [user, pathname, router]);
 
     // A profile with no username has never finished sign-up

@@ -2,34 +2,48 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "@/components/utils/toast";
 import { Button } from "@/components/ui/button";
 import useUser from "@/hooks/user";
-import { UpdateProfile } from "@/lib/api/user";
+import { useUpdateProfile } from "@/hooks/queries/use-profile-mutations";
 import useT from "@/hooks/use-translation";
 import IconLoader from "@/components/icons/loader";
 import IconUserOutline from "@/components/icons/user";
 import { InputWithIconLabel } from "@/components/ui/input-with-icon-label";
-import { USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH } from "@/constant/field-limits";
+import {
+    USERNAME_MIN_LENGTH,
+    USERNAME_MAX_LENGTH,
+} from "@/constant/field-limits";
 
 export default function AccountSetupPage() {
-    const { t } = useT(["auth", "common", "error", "api-response", "fetch-error"]);
+    const { t } = useT([
+        "auth",
+        "common",
+        "error",
+        "api-response",
+        "fetch-error",
+    ]);
     const router = useRouter();
     const user = useUser((s) => s.user);
     const isLoading = useUser((s) => s.isLoading);
-    const updateUser = useUser((s) => s.updateUser);
+    const updateProfile = useUpdateProfile();
+    const isSubmitting = updateProfile.isPending;
 
     const [username, setUsername] = useState("");
     const [error, setError] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (isLoading) return;
-        if (!user) { router.replace("/login"); return; }
-        if (user.username !== "") { router.replace("/"); return; }
+        if (!user) {
+            router.replace("/login");
+            return;
+        }
+        if (user.username !== "") {
+            router.replace("/");
+            return;
+        }
     }, [user, isLoading, router]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const trimmed = username.trim();
         if (trimmed.length < USERNAME_MIN_LENGTH) {
@@ -37,22 +51,10 @@ export default function AccountSetupPage() {
             return;
         }
         setError("");
-        setIsSubmitting(true);
-        try {
-            const res = await UpdateProfile({ username: trimmed });
-            if (res.success && res.data) {
-                updateUser({ ...res.data });
-                router.replace("/");
-            } else {
-                toast.error(t(`api-response:${res.key}`), { toastId: res.requestId });
-            }
-        } catch {
-            toast.error(t("fetch-error:client_fetch_error"), {
-                toastId: "client-fetch-error",
-            });
-        } finally {
-            setIsSubmitting(false);
-        }
+        updateProfile.mutate(
+            { username: trimmed },
+            { onSuccess: () => router.replace("/") },
+        );
     };
 
     if (isLoading || !user || user.username !== "") return null;
@@ -68,7 +70,9 @@ export default function AccountSetupPage() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div>
                     <InputWithIconLabel
-                        icon={<IconUserOutline className="scale-125 opacity-40" />}
+                        icon={
+                            <IconUserOutline className="scale-125 opacity-40" />
+                        }
                         id="username"
                         aria-label={t("common:username")}
                         className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"

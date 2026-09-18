@@ -25,8 +25,7 @@ import { ResendOtpButton } from "./ResendButton";
 import IconLoader from "../icons/loader";
 import useT from "@/hooks/use-translation";
 import { signUpSchema } from "../../lib/validations/signUp";
-import { GetMeProfile } from "@/lib/api/user";
-import useUser from "@/hooks/user";
+import { useRefreshMeProfile } from "@/hooks/queries/use-profile-mutations";
 import { Input } from "../ui/input";
 import { EMAIL_MAX_LENGTH, USERNAME_MAX_LENGTH } from "@/constant/field-limits";
 import { PASSWORD_MAX_LENGTH } from "@/constant/password";
@@ -41,7 +40,7 @@ export default function SignUpForm() {
     const [turnstileToken, setTurnstileToken] = useState("");
     const [hidingConfirmPassword, setHidingConfirmPassword] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
-    const { setUser } = useUser();
+    const refreshMeProfile = useRefreshMeProfile();
     const router = useRouter();
     const [errors, setErrors] = useState({
         email: "",
@@ -127,12 +126,8 @@ export default function SignUpForm() {
                     toast.success(t("account_created_success"));
                     setIsOtpDialogOpen(false);
 
-                    GetMeProfile().then((res) => {
-                        if (res.success && res.data) {
-                            setUser(res.data);
-                            router.push("/");
-                        }
-                    });
+                    refreshMeProfile();
+                    router.push("/");
                 }
             })
             .catch((_) => {

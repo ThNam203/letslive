@@ -10,20 +10,21 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/utils/cn";
 import useT from "@/hooks/use-translation";
-import {
-    I18N_LANGUAGE_COUNTRY_MAP,
-    I18N_LANGUAGES,
-} from "@/lib/i18n/settings";
+import { I18N_LANGUAGE_COUNTRY_MAP, I18N_LANGUAGES } from "@/lib/i18n/settings";
 import { switchLocale } from "@/lib/i18n/switch-locale";
 import { usePathname, useRouter } from "next/navigation";
+import { useUpdateProfile } from "@/hooks/queries/use-profile-mutations";
 
 const LanguageSwitch = ({ className }: { className?: string }) => {
     const { i18n } = useT();
     const router = useRouter();
     const pathname = usePathname();
+    const updateProfile = useUpdateProfile();
 
     const handleChange = async (option: string) => {
-        await switchLocale(router, pathname, option);
+        await switchLocale(router, pathname, option, {
+            syncLocale: (locale) => updateProfile.mutate({ locale }),
+        });
     };
 
     return (
