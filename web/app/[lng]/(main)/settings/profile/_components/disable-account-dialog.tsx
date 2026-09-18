@@ -12,12 +12,10 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import useUser from "@/hooks/user";
-import { Logout } from "@/lib/api/auth";
+import { useLogout } from "@/hooks/queries/use-auth-mutations";
 import { useUpdateProfile } from "@/hooks/queries/use-profile-mutations";
 import { UserStatus } from "@/types/user";
 import { useState } from "react";
-import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 
 export default function DisableAccountDialog({
@@ -25,29 +23,16 @@ export default function DisableAccountDialog({
 }: {
     isUpdatingProfile: boolean;
 }) {
-    const clearUser = useUser((state) => state.clearUser);
     const updateProfile = useUpdateProfile();
+    const logout = useLogout();
     const [isOpen, setIsOpen] = useState(false);
     const { t } = useT(["settings", "api-response", "fetch-error"]);
-
-    const logoutHandler = async () => {
-        await Logout().then((res) => {
-            if (res.statusCode === 204) {
-                clearUser();
-            } else {
-                toast(t(`api-response:${res.key}`), {
-                    toastId: res.requestId,
-                    type: "error",
-                });
-            }
-        });
-    };
 
     const handleDisableAccount = () => {
         updateProfile.mutate(
             { status: UserStatus.DISABLED },
             {
-                onSuccess: () => logoutHandler(),
+                onSuccess: () => logout.mutate(),
                 onSettled: () => setIsOpen(false),
             },
         );

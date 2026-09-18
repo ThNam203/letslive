@@ -4,9 +4,6 @@ import { useState, useEffect } from "react";
 
 import Link from "next/link";
 import useT from "@/hooks/use-translation";
-import { PublicUser } from "@/types/user";
-import { SearchUsersByUsername } from "@/lib/api/user";
-import { toast } from "@/components/utils/toast";
 import { Input } from "@/components/ui/input";
 import IconClose from "@/components/icons/close";
 import IconSearch from "@/components/icons/search";
@@ -21,6 +18,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { useUserSearch } from "@/hooks/queries/use-user-search";
 
 export default function SearchBar({
     onSearch,
@@ -30,8 +28,7 @@ export default function SearchBar({
     className?: string;
 }) {
     const [query, setQuery] = useState("");
-    const [results, setResults] = useState<PublicUser[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [debouncedQuery, setDebouncedQuery] = useState("");
     const [showResults, setShowResults] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const isSmallScreen = useMediaQuery(MQ_MAX_MD);
@@ -42,48 +39,25 @@ export default function SearchBar({
         "accessibility",
     ]);
 
+    const { data: results = [], isFetching: isLoading } =
+        useUserSearch(debouncedQuery);
+
+    // The input stays responsive while the query the server sees only moves
+    // once typing pauses.
     useEffect(() => {
         const timer = setTimeout(() => {
-            if (query.trim()) {
-                setIsLoading(true);
-                const search = async () => {
-                    await SearchUsersByUsername(query)
-                        .then((res) => {
-                            if (res.success) {
-                                setResults(res.data ?? []);
-                            } else {
-                                toast(t(`api-response:${res.key}`), {
-                                    toastId: res.requestId,
-                                    type: "error",
-                                });
-                            }
-                        })
-                        .catch((_) => {
-                            toast(t("fetch-error:client_fetch_error"), {
-                                toastId: "client-fetch-error-id",
-                                type: "error",
-                            });
-                        })
-                        .finally(() => {
-                            setIsLoading(false);
-                            setShowResults(true);
-                        });
-                };
-
-                search();
-                if (onSearch) onSearch(query);
-            } else {
-                setResults([]);
-                setShowResults(false);
-            }
+            const trimmed = query.trim();
+            setDebouncedQuery(trimmed);
+            setShowResults(Boolean(trimmed));
+            if (trimmed && onSearch) onSearch(query);
         }, 1000);
 
         return () => clearTimeout(timer);
-    }, [query, onSearch, t]);
+    }, [query, onSearch]);
 
     const handleClear = () => {
         setQuery("");
-        setResults([]);
+        setDebouncedQuery("");
         setShowResults(false);
     };
 
@@ -177,7 +151,7 @@ export default function SearchBar({
                     <button
                         type="button"
                         aria-label={t("common:search_users")}
-                        className="flex-1 justify-end hover:bg-background-hover flex mr-2 rounded-full"
+                        className="hover:bg-background-hover mr-2 flex flex-1 justify-end rounded-full"
                     >
                         <IconSearch />
                     </button>
@@ -195,5 +169,14 @@ export default function SearchBar({
         );
     }
 
-    return <div className={cn("relative w-full flex flex-row justify-center", className)}>{searchInput}</div>;
+    return (
+        <div
+            className={cn(
+                "relative flex w-full flex-row justify-center",
+                className,
+            )}
+        >
+            {searchInput}
+        </div>
+    );
 }
