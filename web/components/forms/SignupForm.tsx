@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "@/components/utils/toast";
-import { RequestToSendVerification, SignUp } from "../../lib/api/auth";
+import {
+    useRequestEmailVerification,
+    useSignup,
+} from "@/hooks/queries/use-auth-mutations";
 import IconEmail from "../icons/email";
 import FormErrorText from "./FormErrorText";
 import IconUserOutline from "../icons/user";
@@ -39,8 +42,11 @@ export default function SignUpForm() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [turnstileToken, setTurnstileToken] = useState("");
     const [hidingConfirmPassword, setHidingConfirmPassword] = useState(true);
-    const [isLoading, setIsLoading] = useState(false);
     const refreshMeProfile = useRefreshMeProfile();
+    const signup = useSignup();
+    const requestEmailVerification = useRequestEmailVerification();
+    const isLoading = requestEmailVerification.isPending;
+    const isOtpSubmitting = signup.isPending;
     const router = useRouter();
     const [errors, setErrors] = useState({
         email: "",
@@ -53,7 +59,6 @@ export default function SignUpForm() {
 
     const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false);
     const [otpValue, setOtpValue] = useState("");
-    const [isOtpSubmitting, setIsOtpSubmitting] = useState(false);
     const [otpError, setOtpError] = useState("");
     const { t, i18n } = useT([
         "auth",
@@ -103,73 +108,52 @@ export default function SignUpForm() {
             return;
         }
 
-        setIsLoading(true);
-        setIsOtpSubmitting(true);
         setOtpError("");
 
-        await SignUp({
-            email,
-            username,
-            password,
-            turnstileToken,
-            otpCode: otpValue,
-        })
-            .then((res) => {
-                if (!res.success) {
+        signup.mutate(
+            {
+                email,
+                username,
+                password,
+                turnstileToken,
+                otpCode: otpValue,
+            },
+            {
+                onSuccess: () => {
+                    toast.success(t("account_created_success"));
+                    setIsOtpDialogOpen(false);
+                    refreshMeProfile();
+                    router.push("/");
+                },
+                // both the captcha token and the code are spent, whatever
+                // the reason for the rejection
+                onError: () => {
                     setTurnstileToken("");
                     turnstile.reset();
                     setOtpValue("");
-                    toast.error(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                    });
-                } else {
-                    toast.success(t("account_created_success"));
-                    setIsOtpDialogOpen(false);
-
-                    refreshMeProfile();
-                    router.push("/");
-                }
-            })
-            .catch((_) => {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-            })
-            .finally(() => {
-                setIsOtpSubmitting(false);
-                setIsLoading(false);
-            });
+                },
+            },
+        );
     };
 
-    const handleBeginEmailVerification = async () => {
+    const handleBeginEmailVerification = () => {
         if (!validate()) return;
 
-        setIsLoading(true);
-        await RequestToSendVerification(email, turnstileToken)
-            .then((res) => {
-                if (!res.success) {
-                    turnstile.reset();
-                    setTurnstileToken("");
-                    toast.error(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                    });
-                } else {
+        requestEmailVerification.mutate(
+            { email, turnstileToken },
+            {
+                onSuccess: (res) => {
                     toast.success(t(`api-response:${res.key}`));
                     setIsOtpDialogOpen(true);
                     setOtpValue("");
                     setOtpError("");
-                }
-            })
-            .catch((_) => {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
+                },
+                onError: () => {
+                    turnstile.reset();
+                    setTurnstileToken("");
+                },
+            },
+        );
     };
 
     return (
