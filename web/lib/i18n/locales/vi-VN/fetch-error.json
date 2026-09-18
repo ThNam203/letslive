@@ -1,3 +1,4 @@
 {
+    "load_failed": "Không tải được nội dung này. Kiểm tra kết nối và thử lại.",
     "client_fetch_error": "Có lỗi xảy ra khi tải dữ liệu, vui lòng thử lại sau."
 }

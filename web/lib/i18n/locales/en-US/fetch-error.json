@@ -1,3 +1,4 @@
 {
+    "load_failed": "Couldn't load this. Check your connection and try again.",
     "client_fetch_error": "Failed to fetch data, please try again."
 }

@@ -17,6 +17,7 @@ import {
     usePublicVodsOfUser,
     useVod,
 } from "@/hooks/queries/use-vods";
+import QueryError from "@/components/utils/query-error";
 
 export default function VODPage() {
     const { t } = useT(["fetch-error", "api-response", "common"]);
@@ -31,9 +32,13 @@ export default function VODPage() {
     // still in flight would otherwise let the same VOD be counted twice
     const registeringVodIdsRef = useRef(new Set<string>());
 
-    const { data: vod } = useVod(params.vodId);
-    const { data: user } = usePublicUser(params.userId);
-    const { data: vods } = usePublicVodsOfUser(params.userId);
+    const vodQuery = useVod(params.vodId);
+    const userQuery = usePublicUser(params.userId);
+    const vodsQuery = usePublicVodsOfUser(params.userId);
+
+    const vod = vodQuery.data;
+    const user = userQuery.data;
+    const vods = vodsQuery.data;
 
     const vodDuration = vod?.duration ?? 0;
 
@@ -111,11 +116,28 @@ export default function VODPage() {
         <div className="ml-4 flex h-full gap-6 overflow-hidden">
             {/* Main content area */}
             <div className="no-scrollbar flex-1 overflow-auto">
-                <VODFrame
-                    videoInfo={playerInfo}
-                    className="mt-1"
-                    onProgressSeconds={handleVODProgress}
-                />
+                {vodQuery.isError ? (
+                    // a blank player reads as a broken video rather than a
+                    // request that never landed
+                    <QueryError
+                        className="mt-1"
+                        onRetry={() => vodQuery.refetch()}
+                    />
+                ) : (
+                    <VODFrame
+                        videoInfo={playerInfo}
+                        className="mt-1"
+                        onProgressSeconds={handleVODProgress}
+                    />
+                )}
+
+                {userQuery.isError && (
+                    <QueryError
+                        className="mt-2"
+                        onRetry={() => userQuery.refetch()}
+                    />
+                )}
+
                 {user && (
                     <ProfileView
                         user={user}
@@ -140,6 +162,9 @@ export default function VODPage() {
                         {t("common:other_streams")}
                     </h2>
                     <div className="small-scrollbar h-full overflow-y-auto px-4">
+                        {vodsQuery.isError && (
+                            <QueryError onRetry={() => vodsQuery.refetch()} />
+                        )}
                         {otherVods.map((item) => (
                             <MediaCard
                                 key={item.id}

@@ -7,13 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import IconLoader from "@/components/icons/loader";
 import { useShopItems } from "@/hooks/queries/use-shop-items";
 import { useUserGiftsReceived } from "@/hooks/queries/use-user-gifts";
+import QueryError from "@/components/utils/query-error";
 
 export default function UserGiftsPage() {
     const { t } = useT(["shop", "api-response", "fetch-error"]);
     const params = useParams<{ userId: string }>();
     const { data: shopItems = [] } = useShopItems();
     const itemsById = Object.fromEntries(shopItems.map((i) => [i.id, i]));
-    const { data: gifts, isPending } = useUserGiftsReceived(params.userId);
+    const giftsQuery = useUserGiftsReceived(params.userId);
+    const { data: gifts, isPending } = giftsQuery;
 
     if (isPending) {
         return (
@@ -29,7 +31,11 @@ export default function UserGiftsPage() {
                 {t("shop:gifts_received.page_title")}
             </h1>
 
-            {(gifts ?? []).length === 0 ? (
+            {/* "no gifts received" is a claim about this person's profile, so
+                it must not stand in for a request that failed */}
+            {giftsQuery.isError ? (
+                <QueryError onRetry={() => giftsQuery.refetch()} />
+            ) : (gifts ?? []).length === 0 ? (
                 <p className="text-muted-foreground py-16 text-center">
                     {t("shop:gifts_received.empty")}
                 </p>

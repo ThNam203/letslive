@@ -17,6 +17,7 @@ import useT from "@/hooks/use-translation";
 import { publicUserQueryKey, usePublicUser } from "@/hooks/queries/use-users";
 import { useLivestreamOfUser } from "@/hooks/queries/use-livestream-of-user";
 import { usePublicVodsOfUser } from "@/hooks/queries/use-vods";
+import QueryError from "@/components/utils/query-error";
 
 export default function Livestreaming() {
     const { t } = useT(["common", "users", "fetch-error"]);
@@ -25,9 +26,13 @@ export default function Livestreaming() {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [timeVideoStart, setTimeVideoStart] = useState<Date>(new Date());
 
-    const { data: user } = usePublicUser(params.userId);
-    const { data: livestream } = useLivestreamOfUser(params.userId);
-    const { data: vods } = usePublicVodsOfUser(params.userId);
+    const userQuery = usePublicUser(params.userId);
+    const livestreamQuery = useLivestreamOfUser(params.userId);
+    const vodsQuery = usePublicVodsOfUser(params.userId);
+
+    const user = userQuery.data;
+    const livestream = livestreamQuery.data;
+    const vods = vodsQuery.data;
 
     // ProfileView edits the profile in place (follow, gift, socials), so the
     // cached copy is patched rather than refetched.
@@ -58,7 +63,13 @@ export default function Livestreaming() {
         <div className="ml-4 flex h-full gap-6 overflow-hidden">
             {/* Main content area */}
             <div className="no-scrollbar flex-1 overflow-auto">
-                {livestream ? (
+                {livestreamQuery.isError ? (
+                    // not the same as being offline: we never found out
+                    <QueryError
+                        className="mt-1 mb-4"
+                        onRetry={() => livestreamQuery.refetch()}
+                    />
+                ) : livestream ? (
                     <StreamingFrame
                         videoInfo={playerInfo}
                         onVideoStart={() => {
@@ -73,6 +84,21 @@ export default function Livestreaming() {
                         </h2>
                     </div>
                 )}
+
+                {userQuery.isError && (
+                    <QueryError
+                        className="mt-2"
+                        onRetry={() => userQuery.refetch()}
+                    />
+                )}
+
+                {vodsQuery.isError && (
+                    <QueryError
+                        className="mt-2"
+                        onRetry={() => vodsQuery.refetch()}
+                    />
+                )}
+
                 {user && (
                     <ProfileView
                         user={user}
