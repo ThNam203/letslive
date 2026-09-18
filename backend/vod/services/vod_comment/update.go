@@ -7,6 +7,7 @@ import (
 	"sen1or/letslive/vod/domains"
 	"sen1or/letslive/vod/dto"
 	"sen1or/letslive/vod/utils"
+	"strings"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -14,12 +15,31 @@ import (
 // UpdateComment replaces the content of a comment the caller wrote. The
 // superseded content is kept in the comment's edit history, so no version of
 // a comment is lost by editing it.
+//
+// Everything after validation happens inside one transaction against a locked
+// row: the history entry records what the comment said before this edit, so
+// reading that value outside the transaction would let two concurrent edits
+// record the same "before" text and drop one of the two versions.
 func (s *VODCommentService) UpdateComment(ctx context.Context, data dto.UpdateVODCommentRequestDTO, commentId uuid.UUID, userId uuid.UUID) (*domains.VODComment, error) {
+	// surrounding whitespace is not content: trimming first means "   " is
+	// rejected as empty rather than saved as a blank-looking comment
+	data.Content = strings.TrimSpace(data.Content)
+
 	if err := utils.Validator.Struct(&data); err != nil {
 		return nil, fmt.Errorf("%w: %w", domains.ErrInvalidInput, err)
 	}
 
-	comment, err := s.commentRepo.GetById(ctx, commentId)
+	tx, txErr := s.dbPool.Begin(ctx)
+	if txErr != nil {
+		logger.Errorf(ctx, "failed to begin tx [updatecomment: %v]", txErr)
+		return nil, domains.ErrDatabaseIssue
+	}
+	// also releases the row lock on every early return below
+	defer tx.Rollback(ctx)
+
+	txCommentRepo := s.commentRepo.WithTx(tx)
+
+	comment, err := txCommentRepo.GetByIdForUpdate(ctx, commentId)
 	if err != nil {
 		return nil, err
 	}
@@ -41,23 +61,12 @@ func (s *VODCommentService) UpdateComment(ctx context.Context, data dto.UpdateVO
 		return comment, nil
 	}
 
-	return s.updateWithTransaction(ctx, *comment, data.Content)
-}
-
-func (s *VODCommentService) updateWithTransaction(ctx context.Context, comment domains.VODComment, newContent string) (*domains.VODComment, error) {
-	tx, txErr := s.dbPool.Begin(ctx)
-	if txErr != nil {
-		logger.Errorf(ctx, "failed to begin tx [updatecomment: %v]", txErr)
-		return nil, domains.ErrDatabaseIssue
-	}
-	defer tx.Rollback(ctx)
-
 	// history first: the row records what the comment held before this edit
 	if histErr := s.commentEditRepo.WithTx(tx).Insert(ctx, comment.Id, comment.Content); histErr != nil {
 		return nil, histErr
 	}
 
-	updatedComment, updateErr := s.commentRepo.WithTx(tx).UpdateContent(ctx, comment.Id, newContent)
+	updatedComment, updateErr := txCommentRepo.UpdateContent(ctx, comment.Id, data.Content)
 	if updateErr != nil {
 		return nil, updateErr
 	}

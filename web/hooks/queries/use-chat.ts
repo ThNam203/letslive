@@ -12,9 +12,14 @@ export function roomChatCommandsQueryKey(roomId: string) {
 }
 
 /**
- * Backlog for a room, fetched once when the panel opens. Live messages arrive
- * over the WebSocket and are held separately by the panel, so this query is
- * never refetched underneath them: a refetch would reorder the transcript.
+ * Backlog for a room, fetched when the panel opens. Live messages arrive over
+ * the WebSocket and are held separately by the panel, which drops them when it
+ * unmounts — so the backlog is refetched on every mount, or reopening a room
+ * would hide everything said since the first fetch.
+ *
+ * It is not refetched while the panel stays open: the socket is the source of
+ * new messages there, and a refetch mid-session would reorder the transcript
+ * under the reader.
  */
 export function useRoomMessages(roomId: string | undefined) {
     return useQuery({
@@ -22,6 +27,7 @@ export function useRoomMessages(roomId: string | undefined) {
         queryFn: async () => (await GetMessages(roomId as string)).messages,
         enabled: Boolean(roomId),
         staleTime: Infinity,
+        refetchOnMount: "always",
         refetchOnWindowFocus: false,
     });
 }

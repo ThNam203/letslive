@@ -45,6 +45,7 @@ type VODCommentRepository interface {
 	CountReplies(ctx context.Context, parentId uuid.UUID) (int, error)
 	GetReplies(ctx context.Context, parentId uuid.UUID, page int, limit int) ([]VODComment, error)
 	GetById(ctx context.Context, id uuid.UUID) (*VODComment, error)
+	GetByIdForUpdate(ctx context.Context, id uuid.UUID) (*VODComment, error)
 	Create(ctx context.Context, comment VODComment) (*VODComment, error)
 	UpdateContent(ctx context.Context, id uuid.UUID, content string) (*VODComment, error)
 	IncrementReplyCount(ctx context.Context, commentId uuid.UUID) error

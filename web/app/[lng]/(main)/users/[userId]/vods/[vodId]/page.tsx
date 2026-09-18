@@ -27,7 +27,9 @@ export default function VODPage() {
     // reuses this component, and a boolean would carry the previous VOD's
     // "already counted" over to the next one.
     const [registeredVodId, setRegisteredVodId] = useState<string | null>(null);
-    const registeringVodIdRef = useRef<string | null>(null);
+    // a set, not one id: navigating away and back while a registration is
+    // still in flight would otherwise let the same VOD be counted twice
+    const registeringVodIdsRef = useRef(new Set<string>());
 
     const { data: vod } = useVod(params.vodId);
     const { data: user } = usePublicUser(params.userId);
@@ -72,7 +74,7 @@ export default function VODPage() {
         if (
             !params.vodId ||
             registeredVodId === params.vodId ||
-            registeringVodIdRef.current === params.vodId
+            registeringVodIdsRef.current.has(params.vodId)
         ) {
             return;
         }
@@ -83,7 +85,7 @@ export default function VODPage() {
         }
 
         const watchedSeconds = Math.floor(playedSeconds);
-        registeringVodIdRef.current = params.vodId;
+        registeringVodIdsRef.current.add(params.vodId);
         const res = await RegisterVODView(params.vodId, watchedSeconds).catch(
             () => null,
         );
@@ -102,7 +104,7 @@ export default function VODPage() {
             return;
         }
 
-        registeringVodIdRef.current = null;
+        registeringVodIdsRef.current.delete(params.vodId);
     };
 
     return (

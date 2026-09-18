@@ -39,8 +39,11 @@ export default function SearchBar({
         "accessibility",
     ]);
 
-    const { data: results = [], isFetching: isLoading } =
-        useUserSearch(debouncedQuery);
+    const {
+        data: results = [],
+        isFetching: isLoading,
+        isError,
+    } = useUserSearch(debouncedQuery);
 
     // The input stays responsive while the query the server sees only moves
     // once typing pauses.
@@ -134,13 +137,27 @@ export default function SearchBar({
                 </div>
             )}
 
-            {showResults && results.length === 0 && !isLoading && query && (
+            {/* a failed search is not an empty one: saying "no users found"
+                when the request never completed is a lie about the data */}
+            {showResults && isError && !isLoading && query && (
                 <div className="bg-background absolute mt-1 w-full rounded-sm border p-4 shadow-md">
                     <p className="text-muted-foreground text-sm">
-                        {t("common:no_users_found")}
+                        {t("fetch-error:client_fetch_error")}
                     </p>
                 </div>
             )}
+
+            {showResults &&
+                !isError &&
+                results.length === 0 &&
+                !isLoading &&
+                query && (
+                    <div className="bg-background absolute mt-1 w-full rounded-sm border p-4 shadow-md">
+                        <p className="text-muted-foreground text-sm">
+                            {t("common:no_users_found")}
+                        </p>
+                    </div>
+                )}
         </div>
     );
 

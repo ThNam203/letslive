@@ -2,7 +2,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DeleteVOD, UpdateVOD } from "@/lib/api/vod";
 import { UploadFile } from "@/lib/api/utils";
 import { ApiError, unwrapResponse } from "@/lib/api/api-error";
-import { AUTHOR_VODS_QUERY_KEY, vodQueryKey } from "./use-vods";
+import { vodQueryKey } from "./use-vods";
+
+// Every VOD list is keyed under "vods" (author, per-user, detail); the
+// recommendations feed is its own root key. A visibility change or a deletion
+// moves a VOD in or out of the public lists, so both roots are invalidated.
+const VOD_QUERY_ROOTS = [["vods"], ["vods-feed"]] as const;
 
 export type UpdateVodInput = {
     vodId: string;
@@ -46,11 +51,10 @@ export function useUpdateVod() {
                 ),
             );
         },
-        onSuccess: (_data, input) => {
-            queryClient.invalidateQueries({ queryKey: AUTHOR_VODS_QUERY_KEY });
-            queryClient.invalidateQueries({
-                queryKey: vodQueryKey(input.vodId),
-            });
+        onSuccess: () => {
+            for (const queryKey of VOD_QUERY_ROOTS) {
+                queryClient.invalidateQueries({ queryKey });
+            }
         },
     });
 }
@@ -62,8 +66,10 @@ export function useDeleteVod() {
         mutationFn: async (vodId: string) =>
             unwrapResponse(await DeleteVOD(vodId)),
         onSuccess: (_data, vodId) => {
-            queryClient.invalidateQueries({ queryKey: AUTHOR_VODS_QUERY_KEY });
             queryClient.removeQueries({ queryKey: vodQueryKey(vodId) });
+            for (const queryKey of VOD_QUERY_ROOTS) {
+                queryClient.invalidateQueries({ queryKey });
+            }
         },
     });
 }

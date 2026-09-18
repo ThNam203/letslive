@@ -16,16 +16,23 @@ export type UploadFilesResult = {
 export function useUploadFiles() {
     return useMutation({
         mutationFn: async (files: File[]): Promise<UploadFilesResult> => {
-            const results = await Promise.all(
+            // allSettled, not all: one upload rejecting must not discard the
+            // paths of the ones that already succeeded
+            const results = await Promise.allSettled(
                 files.map((file) => UploadFile(file)),
             );
 
             const uploadedUrls: string[] = [];
             let hasError = false;
 
-            for (const res of results) {
-                if (res.success && res.data?.newPath) {
-                    uploadedUrls.push(res.data.newPath);
+            for (const result of results) {
+                const path =
+                    result.status === "fulfilled" && result.value.success
+                        ? result.value.data?.newPath
+                        : undefined;
+
+                if (path) {
+                    uploadedUrls.push(path);
                 } else {
                     hasError = true;
                 }

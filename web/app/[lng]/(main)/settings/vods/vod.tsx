@@ -103,7 +103,7 @@ export default function VODEditCard({ vod }: { vod: VOD }) {
 
     const handleConfirmDelete = () => {
         deleteVod.mutate(vod.id, {
-            onSettled: () => setIsDeleteDialogOpen(false),
+            onSuccess: () => setIsDeleteDialogOpen(false),
         });
     };
 
@@ -117,12 +117,13 @@ export default function VODEditCard({ vod }: { vod: VOD }) {
                 image: formData.image,
             },
             {
+                // only on success: a failed save keeps the dialog open with
+                // the picked thumbnail still previewed, so it can be retried
+                // without redoing the edit
                 onSuccess: () => {
                     toast(t("settings:vods.edit_dialog.update_success"), {
                         type: "success",
                     });
-                },
-                onSettled: () => {
                     releaseSelectedImage();
                     setIsDialogOpen(false);
                 },

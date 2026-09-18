@@ -1,5 +1,12 @@
 import { http } from "msw";
-import { API_BASE, ok, notFound, noContent, created } from "../utils";
+import {
+    API_BASE,
+    ok,
+    notFound,
+    forbidden,
+    noContent,
+    created,
+} from "../utils";
 import {
     vods,
     vodComments,
@@ -200,6 +207,10 @@ export const vodHandlers = [
                     "res_err_vod_comment_not_found",
                     "Comment not found",
                 );
+            // the real endpoint lets only the author edit; without this a UI
+            // test could "pass" while editing someone else's comment
+            if (comment.userId !== ME_USER_ID)
+                return forbidden("res_err_forbidden", "Forbidden");
             comment.content = body.content;
             comment.isEdited = true;
             comment.updatedAt = now();

@@ -32,8 +32,10 @@ export default function DisableAccountDialog({
         updateProfile.mutate(
             { status: UserStatus.DISABLED },
             {
-                onSuccess: () => logout.mutate(),
-                onSettled: () => setIsOpen(false),
+                onSuccess: () => {
+                    setIsOpen(false);
+                    logout.mutate();
+                },
             },
         );
     };
