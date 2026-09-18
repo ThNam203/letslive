@@ -1,5 +1,9 @@
 import { ApiResponse } from "@/types/fetch-response";
-import { VODComment, CreateVODCommentRequest } from "@/types/vod-comment";
+import {
+    VODComment,
+    CreateVODCommentRequest,
+    UpdateVODCommentRequest,
+} from "@/types/vod-comment";
 import { fetchClient } from "@/utils/fetchClient";
 
 export async function GetVODComments(
@@ -28,6 +32,17 @@ export async function CreateVODComment(
 ): Promise<ApiResponse<VODComment>> {
     return fetchClient<ApiResponse<VODComment>>(`/vods/${vodId}/comments`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+}
+
+export async function UpdateVODComment(
+    commentId: string,
+    data: UpdateVODCommentRequest,
+): Promise<ApiResponse<VODComment>> {
+    return fetchClient<ApiResponse<VODComment>>(`/vod-comments/${commentId}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
     });

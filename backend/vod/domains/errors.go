@@ -24,6 +24,7 @@ var (
 	ErrCommentNotFound     = errors.New("comment not found")
 	ErrCommentCreateFailed = errors.New("failed to create comment")
 	ErrCommentDeleteFailed = errors.New("failed to delete comment")
+	ErrCommentUpdateFailed = errors.New("failed to update comment")
 	ErrCommentAlreadyLiked = errors.New("comment already liked")
 	ErrCommentNotLiked     = errors.New("comment has not been liked")
 )

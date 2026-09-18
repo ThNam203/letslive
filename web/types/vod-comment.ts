@@ -11,6 +11,7 @@ export type VODComment = {
     parentId: string | null;
     content: string;
     isDeleted: boolean;
+    isEdited: boolean;
     likeCount: number;
     replyCount: number;
     createdAt: string;
@@ -21,4 +22,8 @@ export type VODComment = {
 export type CreateVODCommentRequest = {
     content: string;
     parentId?: string;
+};
+
+export type UpdateVODCommentRequest = {
+    content: string;
 };

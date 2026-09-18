@@ -12,7 +12,7 @@ func (r *postgresVODCommentRepo) Create(ctx context.Context, comment domains.VOD
 	query := `
 		INSERT INTO vod_comments (vod_id, user_id, parent_id, content)
 		VALUES ($1, $2, $3, $4)
-		RETURNING id, vod_id, user_id, parent_id, content, is_deleted, like_count, reply_count, created_at, updated_at
+		RETURNING id, vod_id, user_id, parent_id, content, is_deleted, is_edited, like_count, reply_count, created_at, updated_at
 	`
 	rows, err := r.db.Query(ctx, query, comment.VODId, comment.UserId, comment.ParentId, comment.Content)
 	if err != nil {
