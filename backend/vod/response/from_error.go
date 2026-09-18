@@ -52,6 +52,8 @@ func FromError(err error) *Response[any] {
 		return NewResponseFromTemplate[any](RES_ERR_VOD_COMMENT_CREATE_FAILED, nil, nil, nil)
 	case errors.Is(err, domains.ErrCommentDeleteFailed):
 		return NewResponseFromTemplate[any](RES_ERR_VOD_COMMENT_DELETE_FAILED, nil, nil, nil)
+	case errors.Is(err, domains.ErrCommentUpdateFailed):
+		return NewResponseFromTemplate[any](RES_ERR_VOD_COMMENT_UPDATE_FAILED, nil, nil, nil)
 	case errors.Is(err, domains.ErrCommentAlreadyLiked):
 		return NewResponseFromTemplate[any](RES_ERR_VOD_COMMENT_ALREADY_LIKED, nil, nil, nil)
 	case errors.Is(err, domains.ErrCommentNotLiked):

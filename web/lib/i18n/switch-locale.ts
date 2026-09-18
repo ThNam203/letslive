@@ -1,5 +1,4 @@
 import useUser from "@/hooks/user";
-import { UpdateProfile } from "@/lib/api/user";
 import { I18N_COOKIE_NAME, I18N_FALLBACK_LNG } from "./settings";
 import i18next from "./i18next";
 
@@ -8,15 +7,20 @@ type LocaleRouter = {
 };
 
 type SwitchLocaleOptions = {
-    /** Write the new locale to the user's DB record. Skip when hydrating FE from a DB value that's already there. */
-    syncToBackend?: boolean;
+    /**
+     * Persists the new locale to the user's profile, called only when someone
+     * is signed in. This module runs outside React and cannot hold the
+     * mutation itself, so the caller passes it in. Omit it when hydrating the
+     * frontend from a value that already came from the DB.
+     */
+    syncLocale?: (locale: string) => void;
 };
 
 export async function switchLocale(
     router: LocaleRouter,
     pathname: string,
     newLocale: string,
-    { syncToBackend = true }: SwitchLocaleOptions = {},
+    { syncLocale }: SwitchLocaleOptions = {},
 ): Promise<void> {
     const locale = newLocale || I18N_FALLBACK_LNG;
 
@@ -28,9 +32,7 @@ export async function switchLocale(
     segments[1] = locale;
     router.replace(segments.join("/"));
 
-    if (syncToBackend && useUser.getState().user) {
-        UpdateProfile({ locale }).catch((err) => {
-            console.warn("failed to sync locale preference", err);
-        });
+    if (syncLocale && useUser.getState().user) {
+        syncLocale(locale);
     }
 }

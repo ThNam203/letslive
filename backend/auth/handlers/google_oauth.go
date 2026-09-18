@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	serviceresponse "sen1or/letslive/auth/response"
 	"time"
@@ -37,12 +38,12 @@ func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.
 	defer cancel()
 	GetRedirectURLOnFail := func(errMsg string) string {
 		clientAddr := os.Getenv("CLIENT_URL")
-		return fmt.Sprintf("%s/login?errorMessage=%s", clientAddr, errMsg)
+		return fmt.Sprintf("%s/login?errorMessage=%s", clientAddr, url.QueryEscape(errMsg))
 	}
 
 	GetRedirectURLOnSuccess := func(redirectUrl string) string {
 		clientAddr := os.Getenv("CLIENT_URL")
-		return fmt.Sprintf("%s/login?redirectUrl=%s", clientAddr, redirectUrl)
+		return fmt.Sprintf("%s/login?redirectUrl=%s", clientAddr, url.QueryEscape(redirectUrl))
 	}
 
 	oauthStateCookie, err := r.Cookie("oauthstate")

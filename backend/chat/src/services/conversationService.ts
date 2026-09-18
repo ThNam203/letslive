@@ -12,12 +12,10 @@ export class ConversationService {
         type: ConversationType,
         creatorId: string,
         creatorUsername: string,
-        creatorDisplayName: string | null,
         creatorProfilePicture: string | null,
         participantInfos: Array<{
             userId: string
             username: string
-            displayName: string | null
             profilePicture: string | null
         }>,
         name?: string
@@ -56,7 +54,6 @@ export class ConversationService {
             {
                 userId: creatorId,
                 username: creatorUsername,
-                displayName: creatorDisplayName,
                 profilePicture: creatorProfilePicture,
                 role: type === ConversationType.GROUP ? ParticipantRole.OWNER : ParticipantRole.MEMBER,
                 joinedAt: new Date(),
@@ -66,7 +63,6 @@ export class ConversationService {
             ...participantInfos.map((p) => ({
                 userId: p.userId,
                 username: p.username,
-                displayName: p.displayName,
                 profilePicture: p.profilePicture,
                 role: ParticipantRole.MEMBER,
                 joinedAt: new Date(),
@@ -162,7 +158,6 @@ export class ConversationService {
         newParticipant: {
             userId: string
             username: string
-            displayName: string | null
             profilePicture: string | null
         }
     ): Promise<ServiceResponse<IConversation>> {
@@ -200,7 +195,6 @@ export class ConversationService {
         conversation.participants.push({
             userId: newParticipant.userId,
             username: newParticipant.username,
-            displayName: newParticipant.displayName,
             profilePicture: newParticipant.profilePicture,
             role: ParticipantRole.MEMBER,
             joinedAt: new Date(),
@@ -343,5 +337,14 @@ export class ConversationService {
         const conversation = await Conversation.findById(conversationId)
         if (!conversation) return []
         return conversation.participants.map((p) => p.userId)
+    }
+
+    // Authoritative username for a participant. Never derive a display name from
+    // client input: the participant record is the only trusted source.
+    async getParticipantUsername(conversationId: string, userId: string): Promise<string | null> {
+        if (!Types.ObjectId.isValid(conversationId)) return null
+        const conversation = await Conversation.findById(conversationId)
+        if (!conversation) return null
+        return conversation.participants.find((p) => p.userId === userId)?.username ?? null
     }
 }

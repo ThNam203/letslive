@@ -31,6 +31,28 @@ export function prependVodComment(
     });
 }
 
+// An edit changes only the comment itself, so every page is rewritten the
+// same way and the running total stays put.
+export function updateVodCommentContent(
+    queryClient: QueryClient,
+    vodId: string,
+    commentId: string,
+    content: string,
+) {
+    queryClient.setQueryData<CommentsData>(vodCommentsQueryKey(vodId), (old) => {
+        if (!old) return old;
+        return {
+            ...old,
+            pages: old.pages.map((page) => ({
+                ...page,
+                items: page.items.map((c) =>
+                    c.id === commentId ? { ...c, content, isEdited: true } : c,
+                ),
+            })),
+        };
+    });
+}
+
 export function markVodCommentDeleted(
     queryClient: QueryClient,
     vodId: string,

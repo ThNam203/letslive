@@ -35,7 +35,7 @@ type VOD struct {
 	Duration        int64         `json:"duration" db:"duration"`
 	PlaybackURL     *string       `json:"playbackUrl" db:"playback_url"`
 	Status          VODStatus     `json:"status" db:"status"`
-	OriginalFileURL *string       `json:"originalFileUrl,omitempty" db:"original_file_url"`
+	OriginalFileURL *string       `json:"originalFileUrl" db:"original_file_url"`
 	CreatedAt       time.Time     `json:"createdAt" db:"created_at"`
 	UpdatedAt       time.Time     `json:"updatedAt" db:"updated_at"`
 }

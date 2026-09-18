@@ -58,9 +58,7 @@
         "max_amount": "Nạp tối đa: {{amount}}",
         "provider": {
             "stripe": "Thẻ tín dụng / ghi nợ",
-            "stripe_description": "Thanh toán an toàn qua Stripe",
-            "paypal": "PayPal",
-            "paypal_description": "Thanh toán bằng tài khoản PayPal"
+            "stripe_description": "Thanh toán an toàn qua Stripe"
         },
         "summary": "Tóm tắt",
         "you_pay": "Bạn trả",

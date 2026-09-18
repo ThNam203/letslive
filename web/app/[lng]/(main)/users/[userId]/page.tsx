@@ -1,116 +1,75 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { toast } from "@/components/utils/toast";
+import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { PublicUser } from "@/types/user";
 import {
     StreamingFrame,
     VideoInfo,
 } from "@/components/custom_react_player/streaming-frame";
-import { GetUserById } from "@/lib/api/user";
 import ProfileView from "./profile";
 import ChatUI from "./chat";
 import GLOBAL from "@/global";
-import { GetLivestreamOfUser } from "@/lib/api/livestream";
 import { Button } from "@/components/ui/button";
 import IconMenu from "@/components/icons/menu";
-import { VOD } from "@/types/vod";
-import { Livestream } from "@/types/livestream";
-import { GetPublicVODsOfUser } from "@/lib/api/vod";
 import useT from "@/hooks/use-translation";
+import { publicUserQueryKey, usePublicUser } from "@/hooks/queries/use-users";
+import { useLivestreamOfUser } from "@/hooks/queries/use-livestream-of-user";
+import { usePublicVodsOfUser } from "@/hooks/queries/use-vods";
+import QueryError from "@/components/utils/query-error";
 
 export default function Livestreaming() {
     const { t } = useT(["common", "users", "fetch-error"]);
-    const [user, setUser] = useState<PublicUser | null>(null);
-    const [livestream, setLivestream] = useState<Livestream | null>(null);
-    const [vods, setVods] = useState<VOD[]>([]);
-    const [isChatOpen, setIsChatOpen] = useState(false);
-
-    const updateUser = (newUserInfo: PublicUser) => {
-        setUser((prev) => {
-            if (prev) {
-                return {
-                    ...prev,
-                    ...newUserInfo,
-                };
-            }
-            return prev;
-        });
-    };
-
     const params = useParams<{ userId: string }>();
-    const [playerInfo, setPlayerInfo] = useState<VideoInfo>({
-        videoTitle: t("common:live_streaming"),
-        streamer: {
-            name: "",
-        },
-        videoUrl: null,
-    });
-
+    const queryClient = useQueryClient();
+    const [isChatOpen, setIsChatOpen] = useState(false);
     const [timeVideoStart, setTimeVideoStart] = useState<Date>(new Date());
 
-    useEffect(() => {
-        const fetchAll = async () => {
-            try {
-                const [userRes, livestreamRes, vodsRes] = await Promise.all([
-                    GetUserById(params.userId),
-                    GetLivestreamOfUser(params.userId),
-                    GetPublicVODsOfUser(params.userId),
-                ]);
+    const userQuery = usePublicUser(params.userId);
+    const livestreamQuery = useLivestreamOfUser(params.userId);
+    const vodsQuery = usePublicVodsOfUser(params.userId);
 
-                if (!userRes.success) {
-                    toast(t(`api-response:${userRes.key}`), {
-                        toastId: userRes.requestId,
-                        type: "error",
-                    });
-                    return;
-                }
+    const user = userQuery.data;
+    const livestream = livestreamQuery.data;
+    const vods = vodsQuery.data;
 
-                if (!userRes.data) {
-                    toast(t("api-response:res_err_user_not_found"), {
-                        toastId: userRes.requestId,
-                        type: "error",
-                    });
-                    return;
-                }
+    // ProfileView edits the profile in place (follow, gift, socials), so the
+    // cached copy is patched rather than refetched.
+    const updateUser = (newUserInfo: PublicUser) => {
+        queryClient.setQueryData<PublicUser>(
+            publicUserQueryKey(params.userId),
+            (prev) => (prev ? { ...prev, ...newUserInfo } : prev),
+        );
+    };
 
-                setUser(userRes.data);
-
-                if (livestreamRes.success && livestreamRes.data) {
-                    setLivestream(livestreamRes.data);
-
-                    setPlayerInfo({
-                        videoTitle: livestreamRes.data.title,
-                        streamer: {
-                            name: userRes.data.username,
-                        },
-                        videoUrl: `${GLOBAL.API_URL}/transcode/${livestreamRes.data.id}/index.m3u8`,
-                    });
-                }
-
-                if (!vodsRes.success) {
-                    toast(t(`api-response:${vodsRes.key}`), {
-                        toastId: vodsRes.requestId,
-                        type: "error",
-                    });
-                } else {
-                    setVods(vodsRes.data ?? []);
-                }
-            } catch (err) {
-                console.error(err);
-                toast(t("fetch-error:client_fetch_error"), { type: "error" });
-            }
-        };
-
-        fetchAll();
-    }, [params.userId, t]);
+    const playerInfo: VideoInfo = useMemo(
+        () =>
+            livestream
+                ? {
+                      videoTitle: livestream.title,
+                      streamer: { name: user?.username ?? "" },
+                      videoUrl: `${GLOBAL.API_URL}/transcode/${livestream.id}/index.m3u8`,
+                  }
+                : {
+                      videoTitle: t("common:live_streaming"),
+                      streamer: { name: "" },
+                      videoUrl: null,
+                  },
+        [livestream, user?.username, t],
+    );
 
     return (
         <div className="ml-4 flex h-full gap-6 overflow-hidden">
             {/* Main content area */}
             <div className="no-scrollbar flex-1 overflow-auto">
-                {livestream ? (
+                {livestreamQuery.isError ? (
+                    // not the same as being offline: we never found out
+                    <QueryError
+                        className="mt-1 mb-4"
+                        onRetry={() => livestreamQuery.refetch()}
+                    />
+                ) : livestream ? (
                     <StreamingFrame
                         videoInfo={playerInfo}
                         onVideoStart={() => {
@@ -125,11 +84,26 @@ export default function Livestreaming() {
                         </h2>
                     </div>
                 )}
+
+                {userQuery.isError && (
+                    <QueryError
+                        className="mt-2"
+                        onRetry={() => userQuery.refetch()}
+                    />
+                )}
+
+                {vodsQuery.isError && (
+                    <QueryError
+                        className="mt-2"
+                        onRetry={() => vodsQuery.refetch()}
+                    />
+                )}
+
                 {user && (
                     <ProfileView
                         user={user}
                         updateUser={updateUser}
-                        vods={vods}
+                        vods={vods ?? []}
                         className="mt-2"
                     />
                 )}

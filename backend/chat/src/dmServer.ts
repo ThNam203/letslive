@@ -3,7 +3,14 @@ import { DmRedisService } from './services/dmRedis'
 import { PresenceService } from './services/presenceService'
 import { ConversationService } from './services/conversationService'
 import { DmMessageService } from './services/dmMessageService'
-import { DmClientEventType, DmServerEventType } from './types/dm-event'
+import {
+    DmClientEvent,
+    DmClientEventType,
+    DmMarkReadEvent,
+    DmSendMessageEvent,
+    DmServerEventType,
+    DmTypingEvent
+} from './types/dm-event'
 import { DmMessageType } from './types/conversation'
 import logger from './lib/logger'
 
@@ -70,24 +77,30 @@ export class DmServer {
         }, 30000)
     }
 
-    private async handleClientEvent(data: any, userId: string) {
-        switch (data.type) {
+    private async handleClientEvent(data: unknown, userId: string) {
+        if (typeof data !== 'object' || data === null || !('type' in data)) {
+            logger.warn('malformed DM event, dropping')
+            return
+        }
+
+        const event = data as DmClientEvent
+        switch (event.type) {
             case DmClientEventType.SEND_MESSAGE:
-                await this.handleSendMessage(data, userId)
+                await this.handleSendMessage(event, userId)
                 break
             case DmClientEventType.TYPING_START:
             case DmClientEventType.TYPING_STOP:
-                await this.handleTyping(data, userId)
+                await this.handleTyping(event, userId)
                 break
             case DmClientEventType.MARK_READ:
-                await this.handleMarkRead(data, userId)
+                await this.handleMarkRead(event, userId)
                 break
             default:
-                logger.warn({ type: data.type }, 'unknown DM event type')
+                logger.warn({ type: (event as { type: string }).type }, 'unknown DM event type')
         }
     }
 
-    private async handleSendMessage(data: any, userId: string) {
+    private async handleSendMessage(data: DmSendMessageEvent, userId: string) {
         const { conversationId, text, messageType, imageUrls, replyTo } = data
 
         if (!conversationId || !text || typeof text !== 'string') {
@@ -98,13 +111,9 @@ export class DmServer {
             return
         }
 
-        // Get username from connection context — we trust the auth
-        const senderUsername = data.senderUsername || userId
-
         const result = await this.dmMessageService.sendMessage(
             conversationId,
             userId,
-            senderUsername,
             text,
             messageType || DmMessageType.TEXT,
             imageUrls,
@@ -136,13 +145,13 @@ export class DmServer {
         })
     }
 
-    private async handleTyping(data: any, userId: string) {
+    private async handleTyping(data: DmTypingEvent, userId: string) {
         const { conversationId, type } = data
 
         if (!conversationId) return
 
-        const isParticipant = await this.conversationService.isParticipant(conversationId, userId)
-        if (!isParticipant) return
+        const username = await this.conversationService.getParticipantUsername(conversationId, userId)
+        if (username === null) return
 
         const participantIds = await this.conversationService.getParticipantIds(conversationId)
 
@@ -156,12 +165,12 @@ export class DmServer {
             type: eventType,
             conversationId,
             userId,
-            username: data.username || userId,
+            username,
             recipientIds: participantIds.filter((id) => id !== userId)
         })
     }
 
-    private async handleMarkRead(data: any, userId: string) {
+    private async handleMarkRead(data: DmMarkReadEvent, userId: string) {
         const { conversationId, messageId } = data
 
         if (!conversationId) return

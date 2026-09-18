@@ -13,7 +13,11 @@ import { CommentEmpty } from "./comment-empty";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
 import { useVodCommentsInfinite } from "@/hooks/queries/use-vod-comments";
-import { prependVodComment, markVodCommentDeleted } from "@/lib/query/vod-comments-cache";
+import {
+    prependVodComment,
+    markVodCommentDeleted,
+    updateVodCommentContent,
+} from "@/lib/query/vod-comments-cache";
 
 interface CommentSectionProps {
     vodId: string;
@@ -85,6 +89,10 @@ export default function CommentSection({
         markVodCommentDeleted(queryClient, vodId, commentId);
     };
 
+    const handleCommentUpdated = (commentId: string, content: string) => {
+        updateVodCommentContent(queryClient, vodId, commentId, content);
+    };
+
     const handleLikedChanged = (commentId: string, liked: boolean) => {
         setLikedIds((prev) => {
             const next = new Set(prev);
@@ -129,6 +137,7 @@ export default function CommentSection({
                 vodOwnerId={vodOwnerId}
                 likedIds={likedIds}
                 onCommentDeleted={handleCommentDeleted}
+                onCommentUpdated={handleCommentUpdated}
                 onLikedChanged={handleLikedChanged}
             />
 

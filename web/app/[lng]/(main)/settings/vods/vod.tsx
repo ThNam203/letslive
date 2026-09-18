@@ -2,7 +2,7 @@
 
 import useT from "@/hooks/use-translation";
 import type React from "react";
-import { ChangeEvent, Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import {
     Dialog,
     DialogContent,
@@ -15,9 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { DeleteVOD, UpdateVOD } from "@/lib/api/vod";
 import { toast } from "@/components/utils/toast";
-import { UploadFile } from "@/lib/api/utils";
 import GLOBAL from "@/global";
 import IconSave from "@/components/icons/save";
 import { VOD } from "@/types/vod";
@@ -27,14 +25,9 @@ import {
 } from "@/constant/field-limits";
 import IconLoader from "@/components/icons/loader";
 import MediaCard from "@/components/livestream/media-card";
+import { useDeleteVod, useUpdateVod } from "@/hooks/queries/use-vod-mutations";
 
-export default function VODEditCard({
-    vod,
-    setVODS,
-}: {
-    vod: VOD;
-    setVODS: Dispatch<SetStateAction<VOD[]>>;
-}) {
+export default function VODEditCard({ vod }: { vod: VOD }) {
     const { t } = useT(["common", "settings", "api-response"]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -56,19 +49,30 @@ export default function VODEditCard({
         isPublic: vod.visibility === "public",
     });
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const selectedImageRef = useRef<string | null>(null);
+    const updateVod = useUpdateVod();
+    const deleteVod = useDeleteVod();
+    const isSubmitting = updateVod.isPending || deleteVod.isPending;
+
+    const releaseSelectedImage = () => {
+        if (selectedImageRef.current) {
+            URL.revokeObjectURL(selectedImageRef.current);
+            selectedImageRef.current = null;
+        }
+    };
 
     useEffect(() => {
         return () => {
-            if (selectedImageRef.current) URL.revokeObjectURL(selectedImageRef.current);
+            if (selectedImageRef.current)
+                URL.revokeObjectURL(selectedImageRef.current);
         };
     }, []);
 
     const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            if (selectedImageRef.current) URL.revokeObjectURL(selectedImageRef.current);
+            if (selectedImageRef.current)
+                URL.revokeObjectURL(selectedImageRef.current);
             const imageUrl = URL.createObjectURL(file);
             selectedImageRef.current = imageUrl;
             setFormData((prev) => ({
@@ -97,99 +101,38 @@ export default function VODEditCard({
         setIsDeleteDialogOpen(true);
     };
 
-    const handleConfirmDelete = async () => {
-        setIsSubmitting(true);
-        try {
-            const res = await DeleteVOD(vod.id);
-            if (res.success) {
-                setVODS((prev) => prev.filter((v) => v.id !== vod.id));
-            } else {
-                toast(t(`api-response:${res.key}`), { type: "error" });
-            }
-        } catch {
-            toast(t("fetch-error:client_fetch_error"), { type: "error" });
-        } finally {
-            setIsSubmitting(false);
-            setIsDeleteDialogOpen(false);
-        }
+    const handleConfirmDelete = () => {
+        deleteVod.mutate(vod.id, {
+            onSuccess: () => setIsDeleteDialogOpen(false),
+        });
     };
 
-    const handleSave = async () => {
-        setIsSubmitting(true);
-        let newThumbnailPath: string | undefined;
-
-        if (formData.image) {
-            const res = await UploadFile(formData.image);
-            if (!res.success) {
-                toast(t(`api-response:${res.key}`), { type: "error" });
-                setIsSubmitting(false);
-                return;
-            }
-
-            if (!res.data?.newPath) {
-                toast(t("api-response:res_err_invalid_payload"), {
-                    type: "error",
-                });
-                setIsSubmitting(false);
-                return;
-            }
-
-            newThumbnailPath = res.data.newPath;
-        }
-
-        await UpdateVOD(
-            vod.id,
-            formData.title,
-            formData.description,
-            formData.isPublic ? "public" : "private",
-            newThumbnailPath,
-        )
-            .then((res) => {
-                if (!res.success) {
-                    toast(t(`api-response:${res.key}`), { type: "error" });
-                    setIsSubmitting(false);
-                    setIsDialogOpen(false);
-                } else {
+    const handleSave = () => {
+        updateVod.mutate(
+            {
+                vodId: vod.id,
+                title: formData.title,
+                description: formData.description,
+                isPublic: Boolean(formData.isPublic),
+                image: formData.image,
+            },
+            {
+                // only on success: a failed save keeps the dialog open with
+                // the picked thumbnail still previewed, so it can be retried
+                // without redoing the edit
+                onSuccess: () => {
                     toast(t("settings:vods.edit_dialog.update_success"), {
                         type: "success",
                     });
-                    setVODS((prev) =>
-                        prev.map((v) =>
-                            v.id === vod.id
-                                ? {
-                                      ...v,
-                                      title: formData.title,
-                                      description: formData.description,
-                                      visibility: formData.isPublic
-                                          ? "public"
-                                          : "private",
-                                      thumbnailUrl:
-                                          newThumbnailPath
-                                              ? newThumbnailPath
-                                              : v.thumbnailUrl
-                                                ? v.thumbnailUrl
-                                                : `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`,
-                                  }
-                                : v,
-                        ),
-                    );
-                }
-            })
-            .finally(() => {
-                if (selectedImageRef.current) {
-                    URL.revokeObjectURL(selectedImageRef.current);
-                    selectedImageRef.current = null;
-                }
-                setIsSubmitting(false);
-                setIsDialogOpen(false);
-            });
+                    releaseSelectedImage();
+                    setIsDialogOpen(false);
+                },
+            },
+        );
     };
 
     const handleCancel = () => {
-        if (selectedImageRef.current) {
-            URL.revokeObjectURL(selectedImageRef.current);
-            selectedImageRef.current = null;
-        }
+        releaseSelectedImage();
         setIsDialogOpen(false);
     };
 
@@ -344,7 +287,9 @@ export default function VODEditCard({
                             disabled={isSubmitting}
                             onClick={handleConfirmDelete}
                         >
-                            {isSubmitting && <IconLoader className="mr-2 h-4 w-4" />}
+                            {isSubmitting && (
+                                <IconLoader className="mr-2 h-4 w-4" />
+                            )}
                             {t("settings:vods.delete_dialog.delete")}
                         </Button>
                     </DialogFooter>

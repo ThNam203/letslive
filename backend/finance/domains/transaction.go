@@ -2,6 +2,7 @@ package domains
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -36,7 +37,7 @@ type Transaction struct {
 	Reference *string         `json:"reference" db:"reference"`
 	Status    ProcessStatus   `json:"status" db:"status"`
 	ActorId   *uuid.UUID      `json:"actorId" db:"actor_id"`
-	Metadata  *string         `json:"metadata" db:"metadata"`
+	Metadata  json.RawMessage `json:"metadata" db:"metadata"`
 	CreatedAt time.Time       `json:"createdAt" db:"created_at"`
 }
 

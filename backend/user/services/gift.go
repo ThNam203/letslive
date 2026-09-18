@@ -73,7 +73,9 @@ func (s *GiftService) notifyRecipient(ctx context.Context, gift *domains.Gift) {
 		}
 	}
 
-	actionURL := "/user/me/gifts/received"
+	// must match the Next.js route app/[lng]/(main)/users/[userId]/gifts;
+	// the locale prefix is added by the web middleware
+	actionURL := fmt.Sprintf("/users/%s/gifts", gift.RecipientUserId.String())
 	refIDStr := gift.Id.String()
 	s.notificationService.CreateNotification(ctx, dto.CreateNotificationRequestDTO{
 		UserId:      gift.RecipientUserId.String(),

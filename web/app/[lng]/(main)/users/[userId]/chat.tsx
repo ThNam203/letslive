@@ -5,7 +5,6 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { toast } from "@/components/utils/toast";
 import useUser from "@/hooks/user";
 import { ReceivedMessage, SendMessage } from "@/types/message";
-import { GetMessages } from "@/lib/api/chat";
 import GLOBAL from "@/global";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,11 +21,10 @@ import {
     parseChatCommand,
     parseEmotes,
 } from "@/utils/chat-parser";
-import { GetRoomChatCommands } from "@/lib/api/chat-command";
-import { ChatCommand } from "@/types/chat-command";
 import useT from "@/hooks/use-translation";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/constant/field-limits";
 import { CHAT_MESSAGE_TYPE } from "@/constant/chat";
+import { useRoomChatCommands, useRoomMessages } from "@/hooks/queries/use-chat";
 
 type LocalMessage = {
     kind: "system";
@@ -42,11 +40,13 @@ export default function ChatPanel({
     onClose,
 }: {
     roomId: string;
-    onClose: () => any;
+    onClose: () => void;
 }) {
     const activeEmotePattern = /(^|\s):([a-z0-9_]*)$/i;
     const user = useUser((state) => state.user);
-    const [messages, setMessages] = useState<ChatLine[]>([]);
+    // Lines that arrived over the socket, or were produced locally by a
+    // command. The backlog lives in the query cache and is prepended below.
+    const [liveLines, setLiveLines] = useState<ChatLine[]>([]);
     const [inputMessage, setInputMessage] = useState("");
     const wsRef = useRef<WebSocket | null>(null);
     const [atBottom, setAtBottom] = useState(false);
@@ -58,8 +58,18 @@ export default function ChatPanel({
     useEffect(() => {
         tRef.current = t;
     }, [t]);
-    const [customChatCommands, setCustomChatCommands] = useState<ChatCommand[]>(
-        [],
+    const { data: backlog } = useRoomMessages(roomId);
+    const { data: customChatCommands = [] } = useRoomChatCommands(roomId);
+
+    const messages: ChatLine[] = useMemo(
+        () => [
+            ...(backlog ?? []).map((m): ChatLine => ({
+                kind: "remote",
+                data: m,
+            })),
+            ...liveLines,
+        ],
+        [backlog, liveLines],
     );
     const [suggestions, setSuggestions] = useState<ChatCommandSuggestion[]>([]);
     const [activeSuggestion, setActiveSuggestion] = useState(0);
@@ -72,15 +82,18 @@ export default function ChatPanel({
     );
 
     const appendLine = (line: ChatLine) =>
-        setMessages((prev) =>
+        setLiveLines((prev) =>
             prev.length >= 100 ? [...prev.slice(1), line] : [...prev, line],
         );
 
-    const sendText = (text: string, type: SendMessage["type"] = CHAT_MESSAGE_TYPE.MESSAGE) => {
-      if (!user) {
-        toast(t("chat:login_required"), { type: "error" });
-        return;
-      }
+    const sendText = (
+        text: string,
+        type: SendMessage["type"] = CHAT_MESSAGE_TYPE.MESSAGE,
+    ) => {
+        if (!user) {
+            toast(t("chat:login_required"), { type: "error" });
+            return;
+        }
         const newMessage: SendMessage = {
             userId: user!.id,
             roomId: roomId,
@@ -123,7 +136,9 @@ export default function ChatPanel({
             }
             sendText(
                 result.text.slice(0, CHAT_MESSAGE_MAX_LENGTH),
-                result.kind === "action" ? CHAT_MESSAGE_TYPE.ACTION : CHAT_MESSAGE_TYPE.MESSAGE,
+                result.kind === "action"
+                    ? CHAT_MESSAGE_TYPE.ACTION
+                    : CHAT_MESSAGE_TYPE.MESSAGE,
             );
             return;
         }
@@ -192,39 +207,6 @@ export default function ChatPanel({
             setSuggestions([]);
         }
     };
-
-    useEffect(() => {
-        const fetchMessages = async () => {
-            try {
-                const res = await GetMessages(roomId);
-                if (res.messages.length > 0) {
-                    const lines: ChatLine[] = res.messages.map((m) => ({
-                        kind: "remote",
-                        data: m,
-                    }));
-                    setMessages((prev) => [...lines, ...prev]);
-                }
-            } catch {
-                toast(t("fetch-error:client_fetch_error"), { type: "error" });
-            }
-        };
-
-        fetchMessages();
-    }, [roomId, t]);
-
-    useEffect(() => {
-        let cancelled = false;
-        GetRoomChatCommands(roomId)
-            .then((res) => {
-                if (!cancelled && res.success && res.data) {
-                    setCustomChatCommands(res.data);
-                }
-            })
-            .catch(() => {});
-        return () => {
-            cancelled = true;
-        };
-    }, [roomId, user?.id]);
 
     useEffect(() => {
         const container = messageContainerRef.current;

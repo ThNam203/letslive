@@ -22,6 +22,7 @@ import { dateDiffFromNow } from "@/utils/timeFormats";
 import IconHeart from "@/components/icons/heart";
 import IconHeartFilled from "@/components/icons/heart-filled";
 import IconReply from "@/components/icons/reply";
+import IconDotsVertical from "@/components/icons/dots-vertical";
 import {
     Dialog,
     DialogContent,
@@ -29,11 +30,17 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
     DialogClose,
 } from "@/components/ui/dialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/utils/cn";
 import CommentForm from "./comment-form";
+import CommentEditForm from "./comment-edit-form";
 import CommentList from "./comment-list";
 
 interface CommentItemProps {
@@ -42,6 +49,7 @@ interface CommentItemProps {
     vodOwnerId?: string;
     likedIds?: Set<string>;
     onCommentDeleted: (commentId: string) => void;
+    onCommentUpdated: (commentId: string, content: string) => void;
     onLikedChanged?: (commentId: string, liked: boolean) => void;
     depth?: number;
 }
@@ -52,6 +60,7 @@ export default function CommentItem({
     vodOwnerId,
     likedIds,
     onCommentDeleted,
+    onCommentUpdated,
     onLikedChanged,
     depth = 0,
 }: CommentItemProps) {
@@ -78,6 +87,7 @@ export default function CommentItem({
     );
     const [replyLikedIds, setReplyLikedIds] = useState<Set<string>>(new Set());
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const [isLoadingReplies, setIsLoadingReplies] = useState(false);
 
     const likeMutation = useMutation({
@@ -188,6 +198,19 @@ export default function CommentItem({
         setReplyCount((prev) => Math.max(prev - 1, 0));
     };
 
+    const handleReplyUpdated = (replyId: string, content: string) => {
+        setReplies((prev) =>
+            prev.map((r) =>
+                r.id === replyId ? { ...r, content, isEdited: true } : r,
+            ),
+        );
+    };
+
+    const handleCommentUpdated = (updated: VODComment) => {
+        setIsEditing(false);
+        onCommentUpdated(comment.id, updated.content);
+    };
+
     const handleReplyLikedChanged = (commentId: string, liked: boolean) => {
         setReplyLikedIds((prev) => {
             const next = new Set(prev);
@@ -274,11 +297,56 @@ export default function CommentItem({
                         <span className="text-muted-foreground text-xs">
                             {dateDiffFromNow(comment.createdAt, t)}
                         </span>
+                        {comment.isEdited && !comment.isDeleted && (
+                            <span className="text-muted-foreground text-xs italic">
+                                {t("comments:edited")}
+                            </span>
+                        )}
+                        {!comment.isDeleted && isAuthor && !isEditing && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="ml-auto h-7 w-7 shrink-0 cursor-pointer px-0"
+                                        aria-label={t(
+                                            "comments:comment_actions",
+                                        )}
+                                    >
+                                        <IconDotsVertical className="h-3.5 w-3.5" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="border-border bg-background"
+                                >
+                                    <DropdownMenuItem
+                                        onClick={() => setIsEditing(true)}
+                                    >
+                                        {t("comments:edit")}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        className="text-destructive focus:text-destructive"
+                                        onClick={() =>
+                                            setDeleteDialogOpen(true)
+                                        }
+                                    >
+                                        {t("comments:delete")}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
                     </div>
                     {comment.isDeleted ? (
                         <p className="text-muted-foreground mt-1 text-sm italic">
                             {t("comments:deleted_comment")}
                         </p>
+                    ) : isEditing ? (
+                        <CommentEditForm
+                            comment={comment}
+                            onCommentUpdated={handleCommentUpdated}
+                            onCancel={() => setIsEditing(false)}
+                        />
                     ) : (
                         <p className="mt-1 text-sm whitespace-pre-wrap">
                             {comment.content}
@@ -288,7 +356,7 @@ export default function CommentItem({
 
                 {/* Action buttons */}
                 <div className="mt-1 flex items-center gap-3">
-                    {!comment.isDeleted && (
+                    {!comment.isDeleted && !isEditing && (
                         <Button
                             variant="ghost"
                             size="sm"
@@ -312,7 +380,7 @@ export default function CommentItem({
                         </Button>
                     )}
 
-                    {currentUser && (
+                    {currentUser && !isEditing && (
                         <Button
                             variant="ghost"
                             size="sm"
@@ -329,15 +397,6 @@ export default function CommentItem({
                             open={deleteDialogOpen}
                             onOpenChange={setDeleteDialogOpen}
                         >
-                            <DialogTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-destructive hover:text-destructive h-7 cursor-pointer px-2 text-xs"
-                                >
-                                    {t("comments:delete")}
-                                </Button>
-                            </DialogTrigger>
                             <DialogContent className="max-w-sm">
                                 <DialogHeader>
                                     <DialogTitle>
@@ -404,6 +463,7 @@ export default function CommentItem({
                         vodOwnerId={vodOwnerId}
                         likedIds={replyLikedIds}
                         onCommentDeleted={handleReplyDeleted}
+                        onCommentUpdated={handleReplyUpdated}
                         onLikedChanged={handleReplyLikedChanged}
                         isReplyList
                         depth={depth + 1}

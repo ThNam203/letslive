@@ -175,7 +175,7 @@ components:
       properties:
         provider:
           type: string
-          enum: [stripe, paypal, mock]
+          enum: [stripe, mock]
         currencyCode:
           type: string
           example: SPARK
@@ -195,7 +195,7 @@ components:
           format: uuid
         provider:
           type: string
-          enum: [stripe, paypal, mock]
+          enum: [stripe, mock]
         providerReference:
           type: string
         currencyCode:

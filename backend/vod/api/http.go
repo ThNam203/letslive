@@ -64,6 +64,7 @@ func (a *APIServer) getHandler() http.Handler {
 
 	// Private VOD comment routes
 	wrap("POST /v1/vods/{vodId}/comments", a.vodCommentHandler.CreateCommentPrivateHandler)
+	wrap("PATCH /v1/vod-comments/{commentId}", a.vodCommentHandler.UpdateCommentPrivateHandler)
 	wrap("DELETE /v1/vod-comments/{commentId}", a.vodCommentHandler.DeleteCommentPrivateHandler)
 	wrap("POST /v1/vod-comments/{commentId}/like", a.vodCommentHandler.LikeCommentPrivateHandler)
 	wrap("DELETE /v1/vod-comments/{commentId}/like", a.vodCommentHandler.UnlikeCommentPrivateHandler)

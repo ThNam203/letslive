@@ -1,46 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
-import { GetUserGiftsReceived } from "@/lib/api/gift";
-import { Gift } from "@/types/shop";
 import { Badge } from "@/components/ui/badge";
 import IconLoader from "@/components/icons/loader";
 import { useShopItems } from "@/hooks/queries/use-shop-items";
+import { useUserGiftsReceived } from "@/hooks/queries/use-user-gifts";
+import QueryError from "@/components/utils/query-error";
 
 export default function UserGiftsPage() {
     const { t } = useT(["shop", "api-response", "fetch-error"]);
     const params = useParams<{ userId: string }>();
-    const [gifts, setGifts] = useState<Gift[]>([]);
     const { data: shopItems = [] } = useShopItems();
     const itemsById = Object.fromEntries(shopItems.map((i) => [i.id, i]));
-    const [isLoading, setIsLoading] = useState(true);
+    const giftsQuery = useUserGiftsReceived(params.userId);
+    const { data: gifts, isPending } = giftsQuery;
 
-    useEffect(() => {
-        const fetchGifts = async () => {
-            setIsLoading(true);
-            try {
-                const res = await GetUserGiftsReceived(params.userId);
-                if (res.success && res.data) {
-                    setGifts(res.data);
-                } else {
-                    toast.error(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                    });
-                }
-            } catch (_) {
-                toast.error(t("fetch-error:client_fetch_error"));
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchGifts();
-    }, [params.userId, t]);
-
-    if (isLoading) {
+    if (isPending) {
         return (
             <div className="flex justify-center py-20">
                 <IconLoader />
@@ -54,13 +31,17 @@ export default function UserGiftsPage() {
                 {t("shop:gifts_received.page_title")}
             </h1>
 
-            {gifts.length === 0 ? (
+            {/* "no gifts received" is a claim about this person's profile, so
+                it must not stand in for a request that failed */}
+            {giftsQuery.isError ? (
+                <QueryError onRetry={() => giftsQuery.refetch()} />
+            ) : (gifts ?? []).length === 0 ? (
                 <p className="text-muted-foreground py-16 text-center">
                     {t("shop:gifts_received.empty")}
                 </p>
             ) : (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    {gifts.map((gift) => {
+                    {(gifts ?? []).map((gift) => {
                         const shopItem = itemsById[gift.shopItemId];
                         const name =
                             shopItem?.name ?? t("shop:shop.unknown_item");
