@@ -40,7 +40,7 @@ export default function ChatPanel({
     onClose,
 }: {
     roomId: string;
-    onClose: () => any;
+    onClose: () => void;
 }) {
     const activeEmotePattern = /(^|\s):([a-z0-9_]*)$/i;
     const user = useUser((state) => state.user);

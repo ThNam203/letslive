@@ -6,9 +6,10 @@ import { cn } from "@/utils/cn";
 import useUser from "@/hooks/user";
 import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";
+import type { TFunction } from "i18next";
 import RequireAuth from "@/components/wrappers/RequireAuth";
 
-const getNavItems = (t: any) => [
+const getNavItems = (t: TFunction) => [
     { name: t("wallet:navigation.overview"), href: "/wallet/overview" },
     {
         name: t("wallet:navigation.transactions"),
