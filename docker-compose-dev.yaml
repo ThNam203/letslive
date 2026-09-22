@@ -4,9 +4,22 @@ services:
   #     context: ./web
   #     dockerfile: Dockerfile
   #   container_name: letslive_web
-  #   network_mode: "host"
   #   ports:
   #     - "5000:5000"
+  #   networks:
+  #     general_network:
+
+  admin-web:
+    build:
+      context: ./admin-web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_ADMIN_API_URL: ${NEXT_PUBLIC_ADMIN_API_URL}
+    container_name: letslive_admin_web
+    ports:
+      - "5001:5001"
+    networks:
+      general_network:
 
   auth:
     #image: sen1or/letslive-auth:latest
@@ -162,6 +175,29 @@ services:
       - FINANCE_DB_PASSWORD=${FINANCE_DB_PASSWORD}
       - FINANCE_STRIPE_API_KEY=${FINANCE_STRIPE_API_KEY}
       - FINANCE_STRIPE_WEBHOOK_SECRET=${FINANCE_STRIPE_WEBHOOK_SECRET}
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+
+  admin:
+    build:
+      context: ./backend/
+      dockerfile: admin/Dockerfile
+    container_name: letslive-admin
+    restart: always
+    ports:
+      - "7784:7784"
+    expose:
+      - "7784"
+    environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
+      - ADMIN_DB_USER=${ADMIN_DB_USER}
+      - ADMIN_DB_PASSWORD=${ADMIN_DB_PASSWORD}
+      - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
     networks:
       general_network:
     depends_on:
@@ -331,7 +367,7 @@ services:
         ipv4_address: 172.29.0.12
 
   tempo:
-    image: grafana/tempo:latest
+    image: grafana/tempo:2.8.1
     container_name: letslive-grafana-tempo
     command: ["-config.file=/etc/tempo.yaml"]
     volumes:
