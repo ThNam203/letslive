@@ -15,7 +15,7 @@ export default async function NotFound() {
                     width={400}
                     height={300}
                     className="mb-6 h-auto w-full"
-                    priority
+                    preload
                 />
                 <div>
                     <h1 className="mb-3 text-4xl font-bold">

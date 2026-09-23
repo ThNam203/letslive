@@ -72,8 +72,8 @@ export default function ProfileHeader({
                     alt={t("accessibility:profile_banner")}
                     className="object-cover"
                     fill={true}
-                    priority={true}
-                    unoptimized
+                    sizes="100vw"
+                    preload={true}
                 />
             </div>
             <div className="-mt-16 px-4 sm:-mt-24">

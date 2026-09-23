@@ -28,6 +28,10 @@ import {
 import { GetUserByIdCached } from "@/lib/api/user-cache";
 import { toast } from "@/components/utils/toast";
 
+// Matches the 1/2/3/4-column card grids (sm/md/lg breakpoints).
+const THUMBNAIL_SIZES =
+    "(min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw";
+
 export type VODVariant = "default" | "with-user" | "editable";
 
 export type MediaCardProps =
@@ -45,6 +49,7 @@ export type MediaCardProps =
           onEdit?: () => void;
           onDelete?: () => void;
           user?: PublicUser | null;
+          preload?: boolean;
       };
 
 export default function MediaCard(props: MediaCardProps) {
@@ -160,6 +165,8 @@ export default function MediaCard(props: MediaCardProps) {
                     )}
                     width={500}
                     height={500}
+                    sizes={THUMBNAIL_SIZES}
+                    preload={props.preload ?? false}
                     onClick={isEditable ? undefined : goToTarget}
                     fallbackSrc="/images/streaming.webp"
                     alwaysRefresh={false}
