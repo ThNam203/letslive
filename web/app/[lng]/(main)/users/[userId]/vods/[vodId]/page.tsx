@@ -1,6 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { VideoInfo } from "@/components/custom_react_player/streaming-frame";
 import { VODFrame } from "@/components/custom_react_player/vod-frame";
@@ -10,6 +10,8 @@ import { PublicUser } from "@/types/user";
 import { RegisterVODView } from "@/lib/api/vod";
 import ProfileView from "@/app/[lng]/(main)/users/[userId]/profile";
 import useT from "@/hooks/use-translation";
+import useMediaQuery from "@/hooks/use-media-query";
+import { MQ_MAX_MD } from "@/constant/breakpoints";
 import CommentSection from "@/components/vod-comments/comment-section";
 import { publicUserQueryKey, usePublicUser } from "@/hooks/queries/use-users";
 import {
@@ -22,7 +24,7 @@ export default function VODPage() {
     const { t } = useT(["fetch-error", "api-response", "common"]);
     const params = useParams<{ userId: string; vodId: string }>();
     const queryClient = useQueryClient();
-    const [isExtraOpen, setIsExtraOpen] = useState(false);
+    const isSmallScreen = useMediaQuery(MQ_MAX_MD);
     const countedVodIdRef = useRef<string | null>(null);
     // a set, not one id: navigating away and back while a registration is
     // still in flight would otherwise let the same VOD be counted twice
@@ -58,6 +60,16 @@ export default function VODPage() {
         () => (vods ?? []).filter((item) => item.id !== params.vodId),
         [vods, params.vodId],
     );
+
+    const otherStreamCards = otherVods.map((item) => (
+        <MediaCard
+            key={item.id}
+            kind="vod"
+            vod={item}
+            variant="with-user"
+            className="mb-2"
+        />
+    ));
 
     const getViewThreshold = () => {
         let threshold = 15;
@@ -128,6 +140,16 @@ export default function VODPage() {
                         className="mt-2"
                     />
                 )}
+                {/* below md the sidebar is hidden, so the list moves inline
+                    above the comments; only one copy is ever rendered */}
+                {isSmallScreen && (
+                    <section className="mt-4 md:hidden">
+                        <h2 className="mb-2 font-semibold">
+                            {t("common:other_streams")}
+                        </h2>
+                        {otherStreamCards}
+                    </section>
+                )}
                 <CommentSection
                     key={params.vodId}
                     vodId={params.vodId}
@@ -135,26 +157,18 @@ export default function VODPage() {
                     className="mt-4 pb-8"
                 />
             </div>
-            <div
-                className={`bg-background fixed top-0 right-2 z-40 h-[100%-48px] w-full transition-all duration-300 md:relative md:w-80 lg:w-96 ${isExtraOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}
-            >
-                <div className="border-border bg-background flex h-full w-full flex-col border-x font-sans">
-                    <h2 className="p-4 font-semibold">
-                        {t("common:other_streams")}
-                    </h2>
-                    <div className="small-scrollbar h-full overflow-y-auto px-4">
-                        {otherVods.map((item) => (
-                            <MediaCard
-                                key={item.id}
-                                kind="vod"
-                                vod={item}
-                                variant="with-user"
-                                className="mb-2"
-                            />
-                        ))}
+            {!isSmallScreen && (
+                <div className="hidden md:block md:w-80 lg:w-96">
+                    <div className="border-border bg-background flex h-full w-full flex-col border-x font-sans">
+                        <h2 className="p-4 font-semibold">
+                            {t("common:other_streams")}
+                        </h2>
+                        <div className="small-scrollbar h-full overflow-y-auto px-4">
+                            {otherStreamCards}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
