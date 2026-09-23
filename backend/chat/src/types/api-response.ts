@@ -16,6 +16,7 @@ export const RES_ERR_INSUFFICIENT_ROLE_CODE = 50022
 export const RES_ERR_DM_MESSAGE_NOT_FOUND_CODE = 50023
 export const RES_ERR_CANNOT_MESSAGE_SELF_CODE = 50024
 export const RES_ERR_TOO_MANY_PARTICIPANTS_CODE = 50025
+export const RES_ERR_USER_SETUP_INCOMPLETE_CODE = 50026
 
 // --- Error Keys ---
 export const RES_ERR_INVALID_INPUT_KEY = 'res_err_invalid_input'
@@ -34,6 +35,7 @@ export const RES_ERR_INSUFFICIENT_ROLE_KEY = 'res_err_insufficient_role'
 export const RES_ERR_DM_MESSAGE_NOT_FOUND_KEY = 'res_err_dm_message_not_found'
 export const RES_ERR_CANNOT_MESSAGE_SELF_KEY = 'res_err_cannot_message_self'
 export const RES_ERR_TOO_MANY_PARTICIPANTS_KEY = 'res_err_too_many_participants'
+export const RES_ERR_USER_SETUP_INCOMPLETE_KEY = 'res_err_user_setup_incomplete'
 
 // --- Success Codes & Keys ---
 export const RES_SUCC_OK_CODE = 100000
@@ -178,6 +180,13 @@ export const RESPONSE_TEMPLATES = {
         code: RES_ERR_TOO_MANY_PARTICIPANTS_CODE,
         key: RES_ERR_TOO_MANY_PARTICIPANTS_KEY,
         message: 'Too many participants'
+    },
+    RES_ERR_USER_SETUP_INCOMPLETE: {
+        success: false,
+        statusCode: HTTP_STATUS_BAD_REQUEST,
+        code: RES_ERR_USER_SETUP_INCOMPLETE_CODE,
+        key: RES_ERR_USER_SETUP_INCOMPLETE_KEY,
+        message: 'User has not finished account setup'
     }
 } as const
 

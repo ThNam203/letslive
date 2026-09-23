@@ -50,6 +50,7 @@
     "res_err_dm_message_not_found": "Message not found.",
     "res_err_cannot_message_self": "You cannot start a conversation with yourself.",
     "res_err_too_many_participants": "Too many participants.",
+    "res_err_user_setup_incomplete": "This user has not finished setting up their account yet.",
 
     "res_err_account_not_found": "Wallet account not found.",
     "res_err_account_frozen": "Your wallet account is currently frozen.",

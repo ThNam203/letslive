@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { ConversationService } from '../services/conversationService'
-import { UserServiceGateway } from '../gateway/userService'
+import { UserIdentity, UserServiceGateway } from '../gateway/userService'
 import { RESPONSE_TEMPLATES, newResponseFromTemplate, Response as ServiceResponse } from '../types/api-response'
 import {
     CreateConversationRequest,
@@ -12,6 +12,12 @@ import {
 function writeResponse(req: Request, res: Response, resData: ServiceResponse<any>) {
     resData.requestId = req.requestId ?? ''
     res.status(resData.statusCode).json(resData)
+}
+
+// Users who have not finished account setup have an empty username, which the
+// participant schema rejects. Report that plainly instead of failing the save.
+function hasFinishedSetup(identity: UserIdentity): boolean {
+    return identity.username.trim().length > 0
 }
 
 export class ConversationHandler {
@@ -57,12 +63,20 @@ export class ConversationHandler {
             writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_INVALID_INPUT))
             return
         }
+        if (!hasFinishedSetup(creator)) {
+            writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_USER_SETUP_INCOMPLETE))
+            return
+        }
 
         const participantInfos = []
         for (const id of body.participantIds) {
             const identity = identities.get(id)
             if (!identity) {
                 writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_INVALID_INPUT))
+                return
+            }
+            if (!hasFinishedSetup(identity)) {
+                writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_USER_SETUP_INCOMPLETE))
                 return
             }
             participantInfos.push({
@@ -139,6 +153,10 @@ export class ConversationHandler {
         const identity = identities.get(body.userId)
         if (!identity) {
             writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_INVALID_INPUT))
+            return
+        }
+        if (!hasFinishedSetup(identity)) {
+            writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_USER_SETUP_INCOMPLETE))
             return
         }
 

@@ -50,6 +50,7 @@
     "res_err_dm_message_not_found": "Không tìm thấy tin nhắn.",
     "res_err_cannot_message_self": "Bạn không thể tạo cuộc trò chuyện với chính mình.",
     "res_err_too_many_participants": "Quá nhiều thành viên.",
+    "res_err_user_setup_incomplete": "Người dùng này chưa hoàn tất thiết lập tài khoản.",
 
     "res_err_account_not_found": "Không tìm thấy tài khoản ví.",
     "res_err_account_frozen": "Tài khoản ví của bạn hiện đang bị đóng băng.",
