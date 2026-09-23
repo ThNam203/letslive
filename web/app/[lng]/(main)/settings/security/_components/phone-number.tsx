@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
-import { UpdateProfile } from "@/lib/api/user";
+import { useUpdateProfile } from "@/hooks/queries/use-profile-mutations";
 import { useState } from "react";
 import { toast } from "@/components/utils/toast";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
@@ -13,8 +13,9 @@ import { PHONE_NUMBER_MAX_LENGTH } from "@/constant/field-limits";
 
 export default function PhoneNumber() {
     const { t } = useT("settings");
-    const { user, updateUser } = useUser();
-    const [isUpdating, setIsUpdating] = useState(false);
+    const user = useUser((state) => state.user);
+    const updateProfile = useUpdateProfile();
+    const isUpdating = updateProfile.isPending;
     const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
     const [isEditing, setIsEditing] = useState(false);
 
@@ -24,7 +25,7 @@ export default function PhoneNumber() {
         return parsed ? parsed.isValid() : false;
     };
 
-    const handleSave = async () => {
+    const handleSave = () => {
         // ✅ Only validate if not empty
         if (!validatePhoneNumber(phoneNumber)) {
             toast.error(t("settings:security.contact.phone_invalid"));
@@ -36,27 +37,17 @@ export default function PhoneNumber() {
             return; // No changes made
         }
 
-        try {
-            setIsUpdating(true);
-            const res = await UpdateProfile({
-                phoneNumber: phoneNumber.trim() || "",
-            });
-
-            if (res.success) {
-                updateUser({ ...user!, phoneNumber: phoneNumber.trim() || "" });
-                setIsEditing(false);
-                toast.success(t(`api-response:${res.key}`), {
-                    toastId: res.requestId,
-                });
-            }
-        } catch {
-            toast.error(t("fetch-error:client_fetch_error"), {
-                toastId: "client-fetch-error-id",
-                type: "error",
-            });
-        } finally {
-            setIsUpdating(false);
-        }
+        updateProfile.mutate(
+            { phoneNumber: phoneNumber.trim() || "" },
+            {
+                onSuccess: (res) => {
+                    setIsEditing(false);
+                    toast.success(t(`api-response:${res.key}`), {
+                        toastId: res.requestId,
+                    });
+                },
+            },
+        );
     };
 
     return (

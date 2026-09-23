@@ -12,7 +12,7 @@ import (
 func (r *postgresVODCommentRepo) GetReplies(ctx context.Context, parentId uuid.UUID, page int, limit int) ([]domains.VODComment, error) {
 	offset := limit * page
 	query := `
-		SELECT id, vod_id, user_id, parent_id, content, is_deleted, like_count, reply_count, created_at, updated_at
+		SELECT id, vod_id, user_id, parent_id, content, is_deleted, is_edited, like_count, reply_count, created_at, updated_at
 		FROM vod_comments
 		WHERE parent_id = $1
 		ORDER BY created_at ASC

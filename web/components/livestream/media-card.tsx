@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { dateDiffFromNow, formatSeconds } from "@/utils/timeFormats";
 import GLOBAL from "../../global";
@@ -25,8 +24,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { GetUserByIdCached } from "@/lib/api/user-cache";
-import { toast } from "@/components/utils/toast";
+import { usePublicUser } from "@/hooks/queries/use-users";
 
 // Matches the 1/2/3/4-column card grids (sm/md/lg breakpoints).
 const THUMBNAIL_SIZES =
@@ -63,54 +61,31 @@ export default function MediaCard(props: MediaCardProps) {
 
     const { t } = useT(
         isEditable
-            ? ["common", "settings", "accessibility", "api-response", "fetch-error"]
+            ? [
+                  "common",
+                  "settings",
+                  "accessibility",
+                  "api-response",
+                  "fetch-error",
+              ]
             : ["common", "api-response", "fetch-error"],
     );
 
     const userId = isLive ? props.livestream.userId : props.vod.userId;
     const id = isLive ? props.livestream.id : props.vod.id;
     const title = isLive ? props.livestream.title : props.vod.title;
-    const viewCount = isLive
-        ? props.livestream.viewCount
-        : props.vod.viewCount;
+    const viewCount = isLive ? props.livestream.viewCount : props.vod.viewCount;
     const thumbnailUrl =
         (isLive ? props.livestream.thumbnailUrl : props.vod.thumbnailUrl) ??
         `${GLOBAL.API_URL}/files/livestreams/${id}/thumbnail.jpeg`;
 
+    // A card either receives the user from its parent (lists that already
+    // fetched them) or looks it up itself; only live cards and the
+    // with-user variant show one at all.
     const providedUser = props.user;
-    const [user, setUser] = useState<PublicUser | null>(providedUser ?? null);
-
-    useEffect(() => {
-        if (providedUser !== undefined) {
-            setUser(providedUser ?? null);
-            return;
-        }
-        const needsUser = isLive || isWithUser;
-        if (!needsUser) return;
-        let cancelled = false;
-        GetUserByIdCached(userId)
-            .then((res) => {
-                if (cancelled) return;
-                if (res.success) {
-                    setUser(res.data ?? null);
-                } else {
-                    toast(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                        type: "error",
-                    });
-                }
-            })
-            .catch(() => {
-                if (cancelled) return;
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [userId, isLive, isWithUser, providedUser, t]);
+    const needsLookup = providedUser === undefined && (isLive || isWithUser);
+    const { data: fetchedUser } = usePublicUser(userId, needsLookup);
+    const user = providedUser ?? (needsLookup ? (fetchedUser ?? null) : null);
 
     const goToTarget = () => {
         if (isLive) {

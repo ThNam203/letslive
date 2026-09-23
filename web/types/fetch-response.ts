@@ -4,7 +4,7 @@ export type Meta = {
     total?: number;
 };
 
-export type ErrorDetail = Record<string, any>;
+export type ErrorDetail = Record<string, unknown>;
 
 export type ErrorDetails = ErrorDetail[];
 

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { ConversationService } from '../services/conversationService'
+import { UserServiceGateway } from '../gateway/userService'
 import { RESPONSE_TEMPLATES, newResponseFromTemplate, Response as ServiceResponse } from '../types/api-response'
 import {
     CreateConversationRequest,
@@ -14,7 +15,10 @@ function writeResponse(req: Request, res: Response, resData: ServiceResponse<any
 }
 
 export class ConversationHandler {
-    constructor(private conversationService: ConversationService) {}
+    constructor(
+        private conversationService: ConversationService,
+        private userServiceGateway: UserServiceGateway
+    ) {}
 
     createConversation = async (req: Request, res: Response) => {
         const userId = req.userId!
@@ -38,22 +42,41 @@ export class ConversationHandler {
             }
         }
 
-        // For now, we only have userId info from the token. Participant usernames
-        // will need to be provided by the client or fetched from user service.
-        // Using minimal info here — the frontend sends participant info.
-        const participantInfos = body.participantIds.map((id) => ({
-            userId: id,
-            username: (req.body.participantUsernames?.[id] as string) || id,
-            displayName: (req.body.participantDisplayNames?.[id] as string) || null,
-            profilePicture: (req.body.participantProfilePictures?.[id] as string) || null
-        }))
+        // Identities come from the user service, never from the request body:
+        // the creator would otherwise get to choose what everyone is called.
+        let identities
+        try {
+            identities = await this.userServiceGateway.getIdentities([userId, ...body.participantIds])
+        } catch {
+            writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_INTERNAL_SERVER))
+            return
+        }
+
+        const creator = identities.get(userId)
+        if (!creator) {
+            writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_INVALID_INPUT))
+            return
+        }
+
+        const participantInfos = []
+        for (const id of body.participantIds) {
+            const identity = identities.get(id)
+            if (!identity) {
+                writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_INVALID_INPUT))
+                return
+            }
+            participantInfos.push({
+                userId: id,
+                username: identity.username,
+                profilePicture: identity.profilePicture
+            })
+        }
 
         const result = await this.conversationService.createConversation(
             body.type,
             userId,
-            req.body.creatorUsername || userId,
-            req.body.creatorDisplayName || null,
-            req.body.creatorProfilePicture || null,
+            creator.username,
+            creator.profilePicture,
             participantInfos,
             body.name
         )
@@ -105,11 +128,24 @@ export class ConversationHandler {
             return
         }
 
+        let identities
+        try {
+            identities = await this.userServiceGateway.getIdentities([body.userId])
+        } catch {
+            writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_INTERNAL_SERVER))
+            return
+        }
+
+        const identity = identities.get(body.userId)
+        if (!identity) {
+            writeResponse(req, res, newResponseFromTemplate<void>(RESPONSE_TEMPLATES.RES_ERR_INVALID_INPUT))
+            return
+        }
+
         const result = await this.conversationService.addParticipant(conversationId, userId, {
             userId: body.userId,
-            username: body.username,
-            displayName: body.displayName || null,
-            profilePicture: body.profilePicture || null
+            username: identity.username,
+            profilePicture: identity.profilePicture
         })
 
         writeResponse(req, res, result)

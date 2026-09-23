@@ -37,6 +37,7 @@
     "res_err_vod_comment_create_failed": "Failed to create comment.",
     "res_err_vod_comment_already_liked": "Comment already liked.",
     "res_err_vod_comment_not_liked": "Comment has not been liked.",
+    "res_err_vod_comment_update_failed": "Failed to update comment.",
     "res_err_vod_comment_delete_failed": "Failed to delete comment.",
     "res_err_vod_view_threshold": "Watch time threshold not met.",
     "res_err_video_too_large": "Video exceeds upload size limit.",

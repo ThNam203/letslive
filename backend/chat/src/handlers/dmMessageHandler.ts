@@ -36,12 +36,9 @@ export class DmMessageHandler {
             return
         }
 
-        const senderUsername = req.body.senderUsername || userId
-
         const result = await this.dmMessageService.sendMessage(
             conversationId,
             userId,
-            senderUsername,
             body.text,
             body.type || DmMessageType.TEXT,
             body.imageUrls,

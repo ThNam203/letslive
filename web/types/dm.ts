@@ -37,7 +37,7 @@ export enum DmServerEventType {
 
 export type ConversationParticipant = {
     userId: string;
-    username: string | null;
+    username: string;
     profilePicture: string | null;
     role: ParticipantRole;
     joinedAt: string;
@@ -77,8 +77,8 @@ export type DmMessage = {
     senderUsername: string;
     type: DmMessageType;
     text: string;
-    imageUrls?: string[];
-    replyTo?: string;
+    imageUrls: string[];
+    replyTo: string | null;
     isDeleted: boolean;
     readBy: ReadReceipt[];
     createdAt: string;
@@ -91,7 +91,6 @@ export type DmWsSendMessage = {
     conversationId: string;
     text: string;
     messageType: DmMessageType.TEXT | DmMessageType.IMAGE;
-    senderUsername: string;
     imageUrls?: string[];
     replyTo?: string;
 };
@@ -99,13 +98,13 @@ export type DmWsSendMessage = {
 export type DmWsTyping = {
     type: DmClientEventType.TYPING_START | DmClientEventType.TYPING_STOP;
     conversationId: string;
-    username: string;
 };
 
 export type DmWsMarkRead = {
     type: DmClientEventType.MARK_READ;
     conversationId: string;
-    messageId: string;
+    /** omitted means "mark everything up to the latest message read" */
+    messageId?: string;
 };
 
 export type DmWsClientEvent = DmWsSendMessage | DmWsTyping | DmWsMarkRead;
@@ -142,7 +141,8 @@ export type DmWsReadReceipt = {
     type: DmServerEventType.READ_RECEIPT;
     conversationId: string;
     userId: string;
-    messageId: string;
+    /** absent when the client marked read without naming a message */
+    messageId?: string;
     readAt: string;
 };
 

@@ -1,5 +1,12 @@
 import { http } from "msw";
-import { API_BASE, ok, notFound, noContent, created } from "../utils";
+import {
+    API_BASE,
+    ok,
+    notFound,
+    forbidden,
+    noContent,
+    created,
+} from "../utils";
 import {
     vods,
     vodComments,
@@ -167,6 +174,7 @@ export const vodHandlers = [
                 parentId: body.parentId ?? null,
                 content: body.content,
                 isDeleted: false,
+                isEdited: false,
                 likeCount: 0,
                 replyCount: 0,
                 createdAt: now(),
@@ -184,6 +192,29 @@ export const vodHandlers = [
             }
             vodComments.push(newComment);
             return created<VODComment>(newComment);
+        },
+    ),
+
+    // PATCH /vod-comments/:commentId
+    http.patch(
+        `${API_BASE}/vod-comments/:commentId`,
+        async ({ params, request }) => {
+            const { commentId } = params as { commentId: string };
+            const body = (await request.json()) as { content: string };
+            const comment = vodComments.find((c) => c.id === commentId);
+            if (!comment || comment.isDeleted)
+                return notFound(
+                    "res_err_vod_comment_not_found",
+                    "Comment not found",
+                );
+            // the real endpoint lets only the author edit; without this a UI
+            // test could "pass" while editing someone else's comment
+            if (comment.userId !== ME_USER_ID)
+                return forbidden("res_err_forbidden", "Forbidden");
+            comment.content = body.content;
+            comment.isEdited = true;
+            comment.updatedAt = now();
+            return ok<VODComment>(comment);
         },
     ),
 

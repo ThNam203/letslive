@@ -328,6 +328,7 @@ services:
           - /vod-comments
         methods:
           - POST
+          - PATCH
           - DELETE
         strip_path: false
         preserve_host: false

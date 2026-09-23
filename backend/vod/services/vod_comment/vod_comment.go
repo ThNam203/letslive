@@ -13,6 +13,7 @@ import (
 
 type VODCommentService struct {
 	commentRepo     domains.VODCommentRepository
+	commentEditRepo domains.VODCommentEditRepository
 	commentLikeRepo domains.VODCommentLikeRepository
 	vodRepo         domains.VODRepository
 	userGateway     usergateway.UserGateway
@@ -21,6 +22,7 @@ type VODCommentService struct {
 
 func NewVODCommentService(
 	commentRepo domains.VODCommentRepository,
+	commentEditRepo domains.VODCommentEditRepository,
 	commentLikeRepo domains.VODCommentLikeRepository,
 	vodRepo domains.VODRepository,
 	userGateway usergateway.UserGateway,
@@ -28,6 +30,7 @@ func NewVODCommentService(
 ) *VODCommentService {
 	return &VODCommentService{
 		commentRepo:     commentRepo,
+		commentEditRepo: commentEditRepo,
 		commentLikeRepo: commentLikeRepo,
 		vodRepo:         vodRepo,
 		userGateway:     userGateway,

@@ -21,6 +21,7 @@ const (
 	RES_ERR_VOD_COMMENT_ALREADY_LIKED_CODE = 40011
 	RES_ERR_VOD_COMMENT_NOT_LIKED_CODE     = 40012
 	RES_ERR_VOD_COMMENT_DELETE_FAILED_CODE = 40013
+	RES_ERR_VOD_COMMENT_UPDATE_FAILED_CODE = 40014
 	RES_ERR_VOD_VIEW_THRESHOLD_CODE        = 40015
 	RES_ERR_VIDEO_TOO_LARGE_CODE           = 40016
 )
@@ -44,6 +45,7 @@ const (
 	RES_ERR_VOD_COMMENT_ALREADY_LIKED_KEY = "res_err_vod_comment_already_liked"
 	RES_ERR_VOD_COMMENT_NOT_LIKED_KEY     = "res_err_vod_comment_not_liked"
 	RES_ERR_VOD_COMMENT_DELETE_FAILED_KEY = "res_err_vod_comment_delete_failed"
+	RES_ERR_VOD_COMMENT_UPDATE_FAILED_KEY = "res_err_vod_comment_update_failed"
 	RES_ERR_VOD_VIEW_THRESHOLD_KEY        = "res_err_vod_view_threshold"
 	RES_ERR_VIDEO_TOO_LARGE_KEY           = "res_err_video_too_large"
 )
@@ -176,6 +178,14 @@ var (
 		Code:       RES_ERR_VOD_COMMENT_DELETE_FAILED_CODE,
 		Key:        RES_ERR_VOD_COMMENT_DELETE_FAILED_KEY,
 		Message:    "Failed to delete comment.",
+	}
+
+	RES_ERR_VOD_COMMENT_UPDATE_FAILED = ResponseTemplate{
+		Success:    false,
+		StatusCode: http.StatusInternalServerError,
+		Code:       RES_ERR_VOD_COMMENT_UPDATE_FAILED_CODE,
+		Key:        RES_ERR_VOD_COMMENT_UPDATE_FAILED_KEY,
+		Message:    "Failed to update comment.",
 	}
 
 	RES_ERR_VOD_VIEW_THRESHOLD = ResponseTemplate{

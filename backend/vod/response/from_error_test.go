@@ -31,6 +31,7 @@ func TestFromErrorMapsToOriginalTemplate(t *testing.T) {
 		{domains.ErrCommentNotFound, RES_ERR_VOD_COMMENT_NOT_FOUND},
 		{domains.ErrCommentCreateFailed, RES_ERR_VOD_COMMENT_CREATE_FAILED},
 		{domains.ErrCommentDeleteFailed, RES_ERR_VOD_COMMENT_DELETE_FAILED},
+		{domains.ErrCommentUpdateFailed, RES_ERR_VOD_COMMENT_UPDATE_FAILED},
 		{domains.ErrCommentAlreadyLiked, RES_ERR_VOD_COMMENT_ALREADY_LIKED},
 		{domains.ErrCommentNotLiked, RES_ERR_VOD_COMMENT_NOT_LIKED},
 	}

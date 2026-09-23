@@ -11,7 +11,8 @@ type PaymentProvider string
 
 const (
 	PaymentProviderStripe PaymentProvider = "stripe"
-	PaymentProviderPayPal PaymentProvider = "paypal"
+	// mock is registered on the dev profile only; see cmd/main.go
+	PaymentProviderMock PaymentProvider = "mock"
 )
 
 type Payment struct {

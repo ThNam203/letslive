@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { toast } from "@/components/utils/toast";
 import useUser from "@/hooks/user";
-import { RequestToGenerateNewAPIKey } from "@/lib/api/user";
+import { useGenerateApiKey } from "@/hooks/queries/use-api-key-mutation";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,30 +14,12 @@ import useT from "@/hooks/use-translation";
 export default function ApiKeyTab() {
     const { t } = useT("settings");
     const user = useUser((state) => state.user);
-    const updateUser = useUser((state) => state.updateUser);
-    const [isGenerating, setIsGenerating] = useState(false);
+    const generateApiKey = useGenerateApiKey();
+    const isGenerating = generateApiKey.isPending;
 
-    const generateNewApiKey = async () => {
+    const generateNewApiKey = () => {
         if (!user) return;
-
-        setIsGenerating(true);
-        await RequestToGenerateNewAPIKey()
-            .then((res) => {
-                if (res.success) {
-                    updateUser({
-                        ...user,
-                        streamAPIKey: res.data!,
-                    });
-                } else {
-                    toast(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                        type: "error",
-                    });
-                }
-            })
-            .finally(() => {
-                setIsGenerating(false);
-            });
+        generateApiKey.mutate();
     };
 
     const copyApiKey = () => {

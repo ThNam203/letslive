@@ -19,7 +19,7 @@ func NewMockGateway() *MockGateway {
 }
 
 func (g *MockGateway) Provider() domains.PaymentProvider {
-	return domains.PaymentProvider("mock")
+	return domains.PaymentProviderMock
 }
 
 func (g *MockGateway) CreateCheckoutSession(ctx context.Context, idempotencyKey string, amount int64, currencyCode string, metadata map[string]string) (*gatewaypayment.CheckoutSession, error) {

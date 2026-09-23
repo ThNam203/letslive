@@ -1,44 +1,14 @@
 "use client";
 
 import useUser from "@/hooks/user";
-import { useEffect, useState } from "react";
-import { GetAllVODsAsAuthor } from "@/lib/api/vod";
-import { toast } from "@/components/utils/toast";
 import VODEditCard from "./vod";
-import { VOD } from "@/types/vod";
 import useT from "@/hooks/use-translation";
+import { useAuthorVods } from "@/hooks/queries/use-vods";
 
 export default function VODsEdit() {
     const { t } = useT(["settings", "api-response", "fetch-error"]);
     const user = useUser((state) => state.user);
-    const [vods, setVODS] = useState<VOD[]>([]);
-    useEffect(() => {
-        if (!user) {
-            return;
-        }
-
-        const fetchVODs = async () => {
-            await GetAllVODsAsAuthor()
-                .then((res) => {
-                    if (res.success) {
-                        setVODS(res.data ?? []);
-                    } else {
-                        toast(t(`api-response:${res.key}`), {
-                            toastId: res.requestId,
-                            type: "error",
-                        });
-                    }
-                })
-                .catch((_) => {
-                    toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "client-fetch-error-id",
-                        type: "error",
-                    });
-                });
-        };
-
-        fetchVODs();
-    }, [user, t]);
+    const { data: vods } = useAuthorVods(Boolean(user));
 
     return (
         <>
@@ -54,11 +24,9 @@ export default function VODsEdit() {
             </div>
 
             <div className="flex flex-row flex-wrap gap-4">
-                {vods.map((vod) => {
-                    return (
-                        <VODEditCard key={vod.id} vod={vod} setVODS={setVODS} />
-                    );
-                })}
+                {(vods ?? []).map((vod) => (
+                    <VODEditCard key={vod.id} vod={vod} />
+                ))}
             </div>
         </>
     );

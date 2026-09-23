@@ -95,6 +95,7 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("POST /v1/user", a.userHandler.CreateUserInternalHandler)                        // internal
 	wrap("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                // internal
 	wrap("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler) // internal
+	wrap("POST /v1/internal/users/batch", a.userHandler.GetUsersBatchInternalHandler)     // internal
 
 	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)
 	wrap("GET /", a.generalHandler.RouteNotFoundHandler)

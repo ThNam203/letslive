@@ -4,9 +4,9 @@ export type Notification = {
     type: string;
     title: string;
     message: string;
-    actionUrl?: string;
-    actionLabel?: string;
-    referenceId?: string;
+    actionUrl: string | null;
+    actionLabel: string | null;
+    referenceId: string | null;
     isRead: boolean;
     createdAt: string;
 };
