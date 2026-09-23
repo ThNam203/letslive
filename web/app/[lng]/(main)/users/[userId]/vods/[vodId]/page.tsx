@@ -1,6 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { VideoInfo } from "@/components/custom_react_player/streaming-frame";
 import { VODFrame } from "@/components/custom_react_player/vod-frame";
@@ -23,13 +23,14 @@ export default function VODPage() {
     const params = useParams<{ userId: string; vodId: string }>();
     const queryClient = useQueryClient();
     const [isExtraOpen, setIsExtraOpen] = useState(false);
-    // Keyed by VOD id rather than a plain boolean: navigating between VODs
-    // reuses this component, and a boolean would carry the previous VOD's
-    // "already counted" over to the next one.
-    const [registeredVodId, setRegisteredVodId] = useState<string | null>(null);
+    const countedVodIdRef = useRef<string | null>(null);
     // a set, not one id: navigating away and back while a registration is
     // still in flight would otherwise let the same VOD be counted twice
     const registeringVodIdsRef = useRef(new Set<string>());
+
+    useEffect(() => {
+        countedVodIdRef.current = null;
+    }, [params.vodId]);
 
     const { data: vod } = useVod(params.vodId);
     const { data: user } = usePublicUser(params.userId);
@@ -71,10 +72,11 @@ export default function VODPage() {
     };
 
     const handleVODProgress = async (playedSeconds: number) => {
+        const vodId = params.vodId;
         if (
-            !params.vodId ||
-            registeredVodId === params.vodId ||
-            registeringVodIdsRef.current.has(params.vodId)
+            !vodId ||
+            countedVodIdRef.current === vodId ||
+            registeringVodIdsRef.current.has(vodId)
         ) {
             return;
         }
@@ -85,26 +87,27 @@ export default function VODPage() {
         }
 
         const watchedSeconds = Math.floor(playedSeconds);
-        registeringVodIdsRef.current.add(params.vodId);
-        const res = await RegisterVODView(params.vodId, watchedSeconds).catch(
+        registeringVodIdsRef.current.add(vodId);
+        const res = await RegisterVODView(vodId, watchedSeconds).catch(
             () => null,
         );
 
+        // mark counted before releasing the in-flight guard, so no progress
+        // tick can slip between the two and register the same view again
         if (res?.success) {
-            setRegisteredVodId(params.vodId);
+            countedVodIdRef.current = vodId;
             queryClient.setQueryData<VOD[]>(
                 publicVodsOfUserQueryKey(params.userId),
                 (prev) =>
                     prev?.map((item) =>
-                        item.id === params.vodId
+                        item.id === vodId
                             ? { ...item, viewCount: item.viewCount + 1 }
                             : item,
                     ),
             );
-            return;
         }
 
-        registeringVodIdsRef.current.delete(params.vodId);
+        registeringVodIdsRef.current.delete(vodId);
     };
 
     return (
