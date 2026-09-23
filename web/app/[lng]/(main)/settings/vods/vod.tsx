@@ -251,7 +251,7 @@ export default function VODEditCard({ vod }: { vod: VOD }) {
                         <Button variant="outline" onClick={handleCancel}>
                             {t("settings:vods.edit_dialog.cancel")}
                         </Button>
-                        <Button onClick={handleSave}>
+                        <Button disabled={isSubmitting} onClick={handleSave}>
                             {isSubmitting ? (
                                 <IconLoader className="h-4 w-4" />
                             ) : (
