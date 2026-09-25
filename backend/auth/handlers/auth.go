@@ -318,5 +318,15 @@ func (h *AuthHandler) UpdatePasswordHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	if err := h.jwtService.RevokeAllTokensOfUser(ctx, *userUUID); err != nil {
+		writeResponse(w, ctx, err)
+		return
+	}
+
+	if err := h.setAuthJWTsInCookie(ctx, userUUID.String(), w); err != nil {
+		writeResponse(w, ctx, err)
+		return
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
