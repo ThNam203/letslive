@@ -2,8 +2,8 @@ package livestream
 
 import (
 	"context"
-	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/livestream/domains"
+	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
 )
