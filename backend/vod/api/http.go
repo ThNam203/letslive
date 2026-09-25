@@ -73,6 +73,8 @@ func (a *APIServer) getHandler() http.Handler {
 	// Internal routes (service-to-service, no JWT)
 	wrap("POST /v1/internal/vods", a.vodHandler.CreateVODInternalHandler)
 	wrap("PATCH /v1/internal/vods/{vodId}/status", a.vodHandler.UpdateVODStatusInternalHandler)
+	wrap("PUT /v1/internal/disabled-authors", a.vodHandler.ReplaceDisabledAuthorsInternalHandler)
+	wrap("PUT /v1/internal/disabled-authors/{userId}", a.vodHandler.SetAuthorDisabledInternalHandler)
 
 	// Health check
 	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)

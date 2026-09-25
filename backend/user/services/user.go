@@ -6,6 +6,7 @@ import (
 	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/dto"
+	contentgateway "sen1or/letslive/user/gateway/content"
 	"sen1or/letslive/user/utils"
 
 	"github.com/gofrs/uuid/v5"
@@ -17,6 +18,7 @@ type UserService struct {
 	notificationRepo          domains.NotificationRepository
 	followRepo                domains.FollowRepository
 	minioService              MinIOService
+	contentGateway            contentgateway.ContentGateway
 }
 
 func NewUserService(
@@ -25,6 +27,7 @@ func NewUserService(
 	notificationRepo domains.NotificationRepository,
 	followRepo domains.FollowRepository,
 	minioService MinIOService,
+	contentGateway contentgateway.ContentGateway,
 ) *UserService {
 	return &UserService{
 		userRepo:                  userRepo,
@@ -32,6 +35,7 @@ func NewUserService(
 		notificationRepo:          notificationRepo,
 		followRepo:                followRepo,
 		minioService:              minioService,
+		contentGateway:            contentGateway,
 	}
 }
 
@@ -161,6 +165,8 @@ func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequest
 		existedData.Bio = data.Bio
 	}
 
+	isStatusChanged := data.Status != nil && *data.Status != string(existedData.Status)
+
 	var statusPtr *string
 	if data.Status != nil {
 		statusPtr = data.Status
@@ -194,6 +200,12 @@ func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequest
 	updatedUser, err := s.userRepo.Update(ctx, finalDTO)
 	if err != nil {
 		return nil, err
+	}
+
+	if isStatusChanged {
+		if err := s.syncAuthorStatus(ctx, updatedUser.Id, *data.Status); err != nil {
+			return nil, err
+		}
 	}
 
 	return updatedUser, nil
@@ -250,6 +262,12 @@ func (s UserService) UpdateUserInternal(ctx context.Context, data dto.UpdateUser
 	updatedUser, err := s.userRepo.Update(ctx, data)
 	if err != nil {
 		return nil, err
+	}
+
+	if data.Status != nil {
+		if err := s.syncAuthorStatus(ctx, updatedUser.Id, *data.Status); err != nil {
+			return nil, err
+		}
 	}
 
 	return updatedUser, nil

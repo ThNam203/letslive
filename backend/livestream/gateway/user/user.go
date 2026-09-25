@@ -14,5 +14,4 @@ type UserPublicInfo struct {
 
 type UserGateway interface {
 	GetUserPublicInfo(ctx context.Context, userId uuid.UUID) (*UserPublicInfo, error)
-	GetUsersStatuses(ctx context.Context, userIds []uuid.UUID) (map[string]string, error)
 }

@@ -10,7 +10,6 @@ import (
 
 	"sen1or/letslive/livestream/api"
 	cfg "sen1or/letslive/livestream/config"
-	usergatewayhttp "sen1or/letslive/livestream/gateway/user/http"
 	vodgatewayhttp "sen1or/letslive/livestream/gateway/vod/http"
 	livestreamHandler "sen1or/letslive/livestream/handlers/livestream"
 	"sen1or/letslive/livestream/repositories"
@@ -113,9 +112,8 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var livestreamRepo = repositories.NewLivestreamRepository(dbConn)
 
 	var vodGateway = vodgatewayhttp.NewVODGateway(registry)
-	var userGateway = usergatewayhttp.NewUserGateway(registry)
 
-	var livestreamService = livestreamService.NewLivestreamService(livestreamRepo, vodGateway, userGateway)
+	var livestreamService = livestreamService.NewLivestreamService(livestreamRepo, vodGateway)
 
 	var livestreamHandler = livestreamHandler.NewLivestreamHandler(livestreamService)
 	return api.NewAPIServer(livestreamHandler, cfg, dbConn)

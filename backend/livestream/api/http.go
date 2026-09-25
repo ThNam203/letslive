@@ -48,6 +48,8 @@ func (a *APIServer) getHandler() http.Handler {
 
 	wrap("POST /v1/internal/livestreams/{livestreamId}/end", a.livestreamHandler.EndLivestreamAndCreateVODInternalHandler)
 	wrap("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)
+	wrap("PUT /v1/internal/disabled-authors", a.livestreamHandler.ReplaceDisabledAuthorsInternalHandler)
+	wrap("PUT /v1/internal/disabled-authors/{userId}", a.livestreamHandler.SetAuthorDisabledInternalHandler)
 
 	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)
 

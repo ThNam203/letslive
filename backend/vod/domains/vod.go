@@ -72,6 +72,8 @@ type VODRepository interface {
 	Update(ctx context.Context, vod VOD) (*VOD, error)
 	UpdateStatus(ctx context.Context, vodId uuid.UUID, status VODStatus, playbackUrl *string, thumbnailUrl *string) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	SetAuthorDisabled(ctx context.Context, userId uuid.UUID, disabled bool) error
+	ReplaceDisabledAuthors(ctx context.Context, userIds []uuid.UUID) error
 }
 
 type TranscodeJobRepository interface {
