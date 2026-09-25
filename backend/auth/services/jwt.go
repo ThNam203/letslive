@@ -60,16 +60,30 @@ func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*ty
 		return []byte(os.Getenv("REFRESH_TOKEN_SECRET")), nil
 	})
 
-	if err != nil {
-		logger.Errorf(ctx, "token parsing failed: %s", err)
+	if err != nil || !parsedToken.Valid {
+		logger.Errorf(ctx, "refresh token not valid: %v", err)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			serviceresponse.RES_ERR_UNAUTHORIZED,
 			nil,
 			nil,
 			nil,
 		)
-	} else if !parsedToken.Valid {
-		logger.Errorf(ctx, "token not valid")
+	}
+
+	record, findErr := c.repo.FindByValue(ctx, refreshToken)
+	if findErr != nil {
+		if findErr.Code != serviceresponse.RES_ERR_REFRESH_TOKEN_NOT_FOUND_CODE {
+			return nil, findErr
+		}
+		return nil, serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_UNAUTHORIZED,
+			nil,
+			nil,
+			nil,
+		)
+	}
+	if record.RevokedAt != nil || !record.ExpiresAt.After(time.Now()) {
+		logger.Errorf(ctx, "refresh token %s is revoked or expired", record.Id)
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_UNAUTHORIZED,
 			nil,
@@ -106,10 +120,20 @@ func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*ty
 func (c *JWTService) generateRefreshToken(ctx context.Context, userId string) (string, *serviceresponse.Response[any]) {
 	refreshTokenExpiresDuration := time.Duration(c.config.RefreshTokenMaxAge) * time.Second
 	refreshTokenExpiresAt := time.Now().Add(refreshTokenExpiresDuration)
+	tokenId, idErr := uuid.NewV4()
+	if idErr != nil {
+		return "", serviceresponse.NewResponseFromTemplate[any](
+			serviceresponse.RES_ERR_INTERNAL_SERVER,
+			nil,
+			nil,
+			nil,
+		)
+	}
 	myClaims := types.MyClaims{
 		UserId:   userId,
 		Consumer: c.config.Consumer,
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        tokenId.String(),
 			ExpiresAt: jwt.NewNumericDate(refreshTokenExpiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),

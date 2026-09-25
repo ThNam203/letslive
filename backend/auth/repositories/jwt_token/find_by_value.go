@@ -16,14 +16,6 @@ func (r *postgresRefreshTokenRepo) FindByValue(ctx context.Context, tokenVal str
 		WHERE token = $1
 	`, tokenVal)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, serviceresponse.NewResponseFromTemplate[any](
-				serviceresponse.RES_ERR_REFRESH_TOKEN_NOT_FOUND,
-				nil,
-				nil,
-				nil,
-			)
-		}
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_QUERY,
 			nil,
@@ -35,6 +27,14 @@ func (r *postgresRefreshTokenRepo) FindByValue(ctx context.Context, tokenVal str
 
 	token, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.RefreshToken])
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, serviceresponse.NewResponseFromTemplate[any](
+				serviceresponse.RES_ERR_REFRESH_TOKEN_NOT_FOUND,
+				nil,
+				nil,
+				nil,
+			)
+		}
 		return nil, serviceresponse.NewResponseFromTemplate[any](
 			serviceresponse.RES_ERR_DATABASE_ISSUE,
 			nil,
