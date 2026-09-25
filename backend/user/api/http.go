@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sen1or/letslive/shared/middlewares"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/user/config"
 	"sen1or/letslive/user/handlers/follow"
 	"sen1or/letslive/user/handlers/general"
@@ -12,8 +14,6 @@ import (
 	"sen1or/letslive/user/handlers/livestream_information"
 	"sen1or/letslive/user/handlers/notification"
 	"sen1or/letslive/user/handlers/user"
-	"sen1or/letslive/shared/middlewares"
-	"sen1or/letslive/shared/pkg/logger"
 
 	"time"
 
@@ -92,10 +92,11 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("GET /v1/user/me/gifts/sent", a.giftHandler.GetGiftsSentPrivateHandler)
 	wrap("POST /v1/internal/gifts/create", a.giftHandler.CreateGiftInternalHandler) // internal
 
-	wrap("POST /v1/user", a.userHandler.CreateUserInternalHandler)                        // internal
-	wrap("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                // internal
-	wrap("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler) // internal
-	wrap("POST /v1/internal/users/batch", a.userHandler.GetUsersBatchInternalHandler)     // internal
+	wrap("POST /v1/user", a.userHandler.CreateUserInternalHandler)                          // internal
+	wrap("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                  // internal
+	wrap("GET /v1/verify-stream-key", a.userHandler.GetUserByStreamAPIKeyInternalHandler)   // internal
+	wrap("POST /v1/internal/users/batch", a.userHandler.GetUsersBatchInternalHandler)       // internal
+	wrap("POST /v1/internal/users/statuses", a.userHandler.GetUsersStatusesInternalHandler) // internal
 
 	wrap("GET /v1/health", a.generalHandler.RouteServiceHealth)
 	wrap("GET /", a.generalHandler.RouteNotFoundHandler)

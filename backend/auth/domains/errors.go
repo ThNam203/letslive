@@ -26,6 +26,7 @@ var (
 	ErrSignUpOTPAlreadyUsed     = errors.New("sign up otp already used")
 	ErrFailedToCreateSignUpOTP  = errors.New("failed to create sign up otp")
 	ErrFailedToSendVerification = errors.New("failed to send verification")
+	ErrAccountDisabled          = errors.New("account disabled")
 )
 
 // DownstreamError carries a failure reported by another service verbatim.

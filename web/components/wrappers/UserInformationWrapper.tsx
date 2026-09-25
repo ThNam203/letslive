@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { I18N_LANGUAGES } from "@/lib/i18n/settings";
 import { switchLocale } from "@/lib/i18n/switch-locale";
+import ReactivateAccountDialog from "@/components/wrappers/ReactivateAccountDialog";
 import { useMeProfile } from "@/hooks/queries/use-users";
 
 export default function UserInformationWrapper({
@@ -37,5 +38,10 @@ export default function UserInformationWrapper({
     }, [profile, pathname, router]);
 
     // Render children immediately - user fetch happens in background
-    return <>{children}</>;
+    return (
+        <>
+            {children}
+            <ReactivateAccountDialog />
+        </>
+    );
 }

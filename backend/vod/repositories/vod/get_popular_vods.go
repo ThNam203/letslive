@@ -9,7 +9,11 @@ import (
 )
 
 func (r *postgresVODRepo) GetPopular(ctx context.Context, page int, limit int) ([]domains.VOD, int, error) {
-	countQuery := `select count(*) from vods where visibility = 'public' and status = 'ready'`
+	countQuery := `
+        select count(*) from vods
+        where visibility = 'public' and status = 'ready'
+            and not exists (select 1 from disabled_authors da where da.user_id = vods.user_id)
+    `
 	var total int
 	if err := r.dbConn.QueryRow(ctx, countQuery).Scan(&total); err != nil {
 		logger.Errorf(ctx, "db count error [getpopularvods: %v]", err)
@@ -21,6 +25,7 @@ func (r *postgresVODRepo) GetPopular(ctx context.Context, page int, limit int) (
         select id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, status, original_file_url, created_at, updated_at
         from vods
         where visibility = 'public' and status = 'ready'
+            and not exists (select 1 from disabled_authors da where da.user_id = vods.user_id)
         order by view_count desc
         offset $1 limit $2
     `

@@ -14,7 +14,7 @@ func (r *postgresRefreshTokenRepo) RevokeAllTokensOfUser(ctx context.Context, us
 	_, err := r.dbConn.Exec(ctx, `
 		UPDATE refresh_tokens 
 		SET revoked_at = $1 
-		WHERE user_id = $2
+		WHERE user_id = $2 AND revoked_at IS NULL
 	`, &timeNow, userId.String())
 	if err != nil {
 		logger.Errorf(ctx, "failed to revoke refresh tokens of user %s: %s", userId, err)

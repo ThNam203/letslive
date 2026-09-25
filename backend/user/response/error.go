@@ -13,6 +13,7 @@ const (
 	RES_ERR_IMAGE_TOO_LARGE_CODE        = 30001
 	RES_ERR_NOTIFICATION_NOT_FOUND_CODE = 30002
 	RES_ERR_USERNAME_TAKEN_CODE         = 30003
+	RES_ERR_ACCOUNT_DISABLED_CODE       = 30005
 	RES_ERR_DATABASE_QUERY_CODE         = 20015
 	RES_ERR_DATABASE_ISSUE_CODE         = 20016
 	RES_ERR_INTERNAL_SERVER_CODE        = 20017
@@ -29,6 +30,7 @@ const (
 	RES_ERR_IMAGE_TOO_LARGE_KEY        = "res_err_image_too_large"
 	RES_ERR_NOTIFICATION_NOT_FOUND_KEY = "res_err_notification_not_found"
 	RES_ERR_USERNAME_TAKEN_KEY         = "res_err_username_taken"
+	RES_ERR_ACCOUNT_DISABLED_KEY       = "res_err_account_disabled"
 	RES_ERR_DATABASE_QUERY_KEY         = "res_err_database_query"
 	RES_ERR_DATABASE_ISSUE_KEY         = "res_err_database_issue"
 	RES_ERR_INTERNAL_SERVER_KEY        = "res_err_internal_server"
@@ -106,6 +108,14 @@ var (
 		Code:       RES_ERR_USERNAME_TAKEN_CODE,
 		Key:        RES_ERR_USERNAME_TAKEN_KEY,
 		Message:    "Username already taken.",
+	}
+
+	RES_ERR_ACCOUNT_DISABLED = ResponseTemplate{
+		Success:    false,
+		StatusCode: http.StatusForbidden,
+		Code:       RES_ERR_ACCOUNT_DISABLED_CODE,
+		Key:        RES_ERR_ACCOUNT_DISABLED_KEY,
+		Message:    "This account has been disabled.",
 	}
 
 	RES_ERR_DATABASE_QUERY = ResponseTemplate{

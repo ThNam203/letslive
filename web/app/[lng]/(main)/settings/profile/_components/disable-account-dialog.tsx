@@ -12,7 +12,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { useLogout } from "@/hooks/queries/use-auth-mutations";
+import { useLogoutAll } from "@/hooks/queries/use-auth-mutations";
 import { useUpdateProfile } from "@/hooks/queries/use-profile-mutations";
 import { UserStatus } from "@/types/user";
 import { useState } from "react";
@@ -24,7 +24,7 @@ export default function DisableAccountDialog({
     isUpdatingProfile: boolean;
 }) {
     const updateProfile = useUpdateProfile();
-    const logout = useLogout();
+    const logout = useLogoutAll();
     const [isOpen, setIsOpen] = useState(false);
     const { t } = useT(["settings", "api-response", "fetch-error"]);
 

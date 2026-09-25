@@ -15,15 +15,15 @@ func (r *postgresRefreshTokenRepo) FindByValue(ctx context.Context, tokenVal str
 		WHERE token = $1
 	`, tokenVal)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, domains.ErrRefreshTokenNotFound
-		}
 		return nil, domains.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	token, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.RefreshToken])
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domains.ErrRefreshTokenNotFound
+		}
 		return nil, domains.ErrDatabaseIssue
 	}
 

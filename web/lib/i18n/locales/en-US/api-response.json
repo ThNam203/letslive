@@ -20,6 +20,7 @@
     "res_err_failed_to_send_verification": "Failed to send email verification, please try again later.",
 
     "res_err_user_not_found": "User not found.",
+    "res_err_account_disabled": "This account has been disabled.",
     "res_err_image_too_large": "Image exceeds 10mb limit.",
     "res_err_notification_not_found": "Notification not found.",
     "res_err_username_taken": "Username already taken.",

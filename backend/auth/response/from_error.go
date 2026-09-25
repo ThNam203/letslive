@@ -65,6 +65,8 @@ func FromError(err error) *Response[any] {
 		return NewResponseFromTemplate[any](RES_ERR_FAILED_TO_CREATE_SIGN_UP_OTP, nil, nil, nil)
 	case errors.Is(err, domains.ErrFailedToSendVerification):
 		return NewResponseFromTemplate[any](RES_ERR_FAILED_TO_SEND_VERIFICATION, nil, nil, nil)
+	case errors.Is(err, domains.ErrAccountDisabled):
+		return NewResponseFromTemplate[any](RES_ERR_ACCOUNT_DISABLED, nil, nil, nil)
 
 	default:
 		return NewResponseFromTemplate[any](RES_ERR_INTERNAL_SERVER, nil, nil, nil)

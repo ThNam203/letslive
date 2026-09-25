@@ -10,7 +10,7 @@ func (r *postgresRefreshTokenRepo) Update(ctx context.Context, token *domains.Re
 		UPDATE refresh_tokens 
 		SET revoked_at = $1 
 		WHERE token = $2
-	`, &token.ExpiresAt, &token.Token)
+	`, token.RevokedAt, token.Token)
 	if err != nil {
 		return domains.ErrDatabaseQuery
 	}

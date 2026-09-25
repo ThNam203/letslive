@@ -2,11 +2,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     LogIn,
     Logout,
+    LogoutAll,
     RequestToSendVerification,
     SignUp,
 } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/api-error";
 import useUser from "@/hooks/user";
+
+const ACCOUNT_DISABLED_KEY = "res_err_account_disabled";
 
 /**
  * Ends the session.
@@ -39,6 +42,23 @@ export function useLogout() {
  * with the server's own message. These mutations only throw; the forms decide
  * what to reset.
  */
+export function useLogoutAll() {
+    const queryClient = useQueryClient();
+    const clearUser = useUser((state) => state.clearUser);
+
+    return useMutation({
+        mutationFn: async () => {
+            const res = await LogoutAll();
+            if (res.statusCode !== 204) throw new ApiError(res);
+            return res;
+        },
+        onSuccess: () => {
+            clearUser();
+            queryClient.clear();
+        },
+    });
+}
+
 export function useLogin() {
     return useMutation({
         mutationFn: async (credentials: {
@@ -47,8 +67,14 @@ export function useLogin() {
             turnstileToken: string;
         }) => {
             const res = await LogIn(credentials);
-            if (!res.success) throw new ApiError(res);
-            return res;
+            const reactivationToken = res.data?.reactivationToken;
+            if (!res.success) {
+                if (res.key === ACCOUNT_DISABLED_KEY && reactivationToken) {
+                    return { reactivationToken };
+                }
+                throw new ApiError(res);
+            }
+            return { reactivationToken: undefined };
         },
     });
 }

@@ -27,7 +27,11 @@ function initialMockLoginPassword() {
     return process.env.NEXT_PUBLIC_MOCK_LOGIN_PASSWORD ?? "";
 }
 
-export default function LogInForm() {
+export default function LogInForm({
+    onAccountDisabled,
+}: {
+    onAccountDisabled: (reactivationToken: string) => void;
+}) {
     const [email, setEmail] = useState(initialMockLoginEmail);
     const [password, setPassword] = useState(initialMockLoginPassword);
     const [hidingPassword, setHidingPassword] = useState(true);
@@ -73,7 +77,13 @@ export default function LogInForm() {
         login.mutate(
             { email, password, turnstileToken },
             {
-                onSuccess: () => {
+                onSuccess: ({ reactivationToken }) => {
+                    if (reactivationToken) {
+                        turnstile.reset();
+                        setTurnstileToken("");
+                        onAccountDisabled(reactivationToken);
+                        return;
+                    }
                     // The profile query is mounted app-wide and fills the
                     // user store, so refetching it is what "sign in" means
                     // to the rest of the app.

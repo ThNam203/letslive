@@ -40,6 +40,8 @@ func FromError(err error) *Response[any] {
 		return NewResponseFromTemplate[any](RES_ERR_USERNAME_TAKEN, nil, nil, nil)
 	case errors.Is(err, domains.ErrNotificationNotFound):
 		return NewResponseFromTemplate[any](RES_ERR_NOTIFICATION_NOT_FOUND, nil, nil, nil)
+	case errors.Is(err, domains.ErrAccountDisabled):
+		return NewResponseFromTemplate[any](RES_ERR_ACCOUNT_DISABLED, nil, nil, nil)
 
 	default:
 		return NewResponseFromTemplate[any](RES_ERR_INTERNAL_SERVER, nil, nil, nil)

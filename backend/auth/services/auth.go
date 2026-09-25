@@ -149,3 +149,11 @@ func (s AuthService) UpdatePassword(ctx context.Context, dto dto.ChangePasswordR
 
 	return nil
 }
+
+func (s AuthService) GetUserStatus(ctx context.Context, userId uuid.UUID) (string, error) {
+	return s.userGateway.GetUserStatus(ctx, userId.String())
+}
+
+func (s AuthService) ReactivateUser(ctx context.Context, userId string) error {
+	return s.userGateway.UpdateUserStatus(ctx, userId, usergateway.UserStatusNormal)
+}

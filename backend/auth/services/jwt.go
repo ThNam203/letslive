@@ -2,26 +2,33 @@ package services
 
 import (
 	"context"
+	"errors"
 	"os"
 	"sen1or/letslive/auth/config"
 	"sen1or/letslive/auth/domains"
-	"sen1or/letslive/auth/types"
+	usergateway "sen1or/letslive/auth/gateway/user"
 	"sen1or/letslive/shared/pkg/logger"
+	"sen1or/letslive/auth/types"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const reactivationTokenMaxAge = 10 * time.Minute
+const reactivationTokenPurpose = "reactivation"
+
 type JWTService struct {
-	repo   domains.RefreshTokenRepository
-	config config.JWT
+	repo        domains.RefreshTokenRepository
+	config      config.JWT
+	userGateway usergateway.UserGateway
 }
 
-func NewJWTService(repo domains.RefreshTokenRepository, cfg config.JWT) *JWTService {
+func NewJWTService(repo domains.RefreshTokenRepository, cfg config.JWT, userGateway usergateway.UserGateway) *JWTService {
 	return &JWTService{
-		repo:   repo,
-		config: cfg,
+		repo:        repo,
+		config:      cfg,
+		userGateway: userGateway,
 	}
 }
 
@@ -49,16 +56,33 @@ func (c *JWTService) GenerateTokenPair(ctx context.Context, userId string) (*typ
 // the process is called "refresh token"
 func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*types.AccessTokenInformation, error) {
 	myClaims := types.MyClaims{}
-	parsedToken, err := jwt.NewParser().ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (any, error) {
+	parsedToken, err := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()})).ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (any, error) {
 		return []byte(os.Getenv("REFRESH_TOKEN_SECRET")), nil
 	})
 
-	if err != nil {
-		logger.Errorf(ctx, "token parsing failed: %s", err)
-		return nil, domains.ErrInternal
-	} else if !parsedToken.Valid {
-		logger.Errorf(ctx, "token not valid")
+	if err != nil || !parsedToken.Valid {
+		logger.Errorf(ctx, "refresh token not valid: %v", err)
 		return nil, domains.ErrUnauthorized
+	}
+
+	record, findErr := c.repo.FindByValue(ctx, refreshToken)
+	if findErr != nil {
+		if !errors.Is(findErr, domains.ErrRefreshTokenNotFound) {
+			return nil, findErr
+		}
+		return nil, domains.ErrUnauthorized
+	}
+	if record.RevokedAt != nil || !record.ExpiresAt.After(time.Now()) {
+		logger.Errorf(ctx, "refresh token %s is revoked or expired", record.Id)
+		return nil, domains.ErrUnauthorized
+	}
+
+	status, statusErr := c.userGateway.GetUserStatus(ctx, myClaims.UserId)
+	if statusErr != nil {
+		return nil, statusErr
+	}
+	if status == usergateway.UserStatusDisabled {
+		return nil, domains.ErrAccountDisabled
 	}
 
 	accessToken, genErr := c.generateAccessToken(myClaims.UserId)
@@ -76,10 +100,15 @@ func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*ty
 func (c *JWTService) generateRefreshToken(ctx context.Context, userId string) (string, error) {
 	refreshTokenExpiresDuration := time.Duration(c.config.RefreshTokenMaxAge) * time.Second
 	refreshTokenExpiresAt := time.Now().Add(refreshTokenExpiresDuration)
+	tokenId, idErr := uuid.NewV4()
+	if idErr != nil {
+		return "", domains.ErrInternal
+	}
 	myClaims := types.MyClaims{
 		UserId:   userId,
 		Consumer: c.config.Consumer,
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        tokenId.String(),
 			ExpiresAt: jwt.NewNumericDate(refreshTokenExpiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
@@ -147,4 +176,41 @@ func (c *JWTService) RevokeTokenByValue(ctx context.Context, tokenValue string) 
 
 func (c *JWTService) RevokeAllTokensOfUser(ctx context.Context, userID uuid.UUID) error {
 	return c.repo.RevokeAllTokensOfUser(ctx, userID)
+}
+
+func (c *JWTService) GenerateReactivationToken(ctx context.Context, userId string) (string, error) {
+	expiresAt := time.Now().Add(reactivationTokenMaxAge)
+	myClaims := types.MyClaims{
+		UserId:   userId,
+		Consumer: c.config.Consumer,
+		Purpose:  reactivationTokenPurpose,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Issuer:    c.config.Issuer,
+			Subject:   c.config.Subject,
+		},
+	}
+	unsignedToken := jwt.NewWithClaims(jwt.SigningMethodHS256, myClaims)
+
+	token, err := unsignedToken.SignedString([]byte(os.Getenv("REACTIVATION_TOKEN_SECRET")))
+	if err != nil {
+		return "", domains.ErrInternal
+	}
+
+	return token, nil
+}
+
+func (c *JWTService) VerifyReactivationToken(ctx context.Context, token string) (string, error) {
+	myClaims := types.MyClaims{}
+	parsedToken, err := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()})).ParseWithClaims(token, &myClaims, func(t *jwt.Token) (any, error) {
+		return []byte(os.Getenv("REACTIVATION_TOKEN_SECRET")), nil
+	})
+
+	if err != nil || !parsedToken.Valid || myClaims.Purpose != reactivationTokenPurpose {
+		return "", domains.ErrUnauthorized
+	}
+
+	return myClaims.UserId, nil
 }

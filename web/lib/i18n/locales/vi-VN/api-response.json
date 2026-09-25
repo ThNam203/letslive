@@ -20,6 +20,7 @@
     "res_err_failed_to_send_verification": "Gửi email xác minh thất bại, vui lòng thử lại sau.",
 
     "res_err_user_not_found": "Không tìm thấy người dùng.",
+    "res_err_account_disabled": "Tài khoản này đã bị vô hiệu hóa.",
     "res_err_image_too_large": "Ảnh vượt quá giới hạn 10mb.",
     "res_err_notification_not_found": "Không tìm thấy thông báo.",
     "res_err_username_taken": "Tên người dùng đã được sử dụng.",

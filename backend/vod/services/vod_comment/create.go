@@ -22,6 +22,15 @@ func (s *VODCommentService) CreateComment(ctx context.Context, data dto.CreateVO
 		return nil, vodErr
 	}
 
+	statuses, statusErr := s.userGateway.GetUsersStatuses(ctx, []uuid.UUID{userId})
+	if statusErr != nil {
+		logger.Errorf(ctx, "failed to check user status for comment creation: %v", statusErr)
+		return nil, domains.ErrForbidden
+	}
+	if status, ok := statuses[userId.String()]; !ok || status == "disabled" {
+		return nil, domains.ErrForbidden
+	}
+
 	comment := domains.VODComment{
 		VODId:   vodId,
 		UserId:  userId,

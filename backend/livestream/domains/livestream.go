@@ -36,4 +36,6 @@ type LivestreamRepository interface {
 	Create(ctx context.Context, ls Livestream) (*Livestream, error)
 	Update(ctx context.Context, ls Livestream) (*Livestream, error)
 	Delete(ctx context.Context, id uuid.UUID) error
+	SetAuthorDisabled(ctx context.Context, userId uuid.UUID, disabled bool) error
+	ReplaceDisabledAuthors(ctx context.Context, userIds []uuid.UUID) error
 }

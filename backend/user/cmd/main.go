@@ -10,6 +10,7 @@ import (
 
 	"sen1or/letslive/user/api"
 	cfg "sen1or/letslive/user/config"
+	contenthttp "sen1or/letslive/user/gateway/content/http"
 	financehttp "sen1or/letslive/user/gateway/finance/http"
 	"sen1or/letslive/user/handlers/follow"
 	gifthandler "sen1or/letslive/user/handlers/gift"
@@ -124,9 +125,11 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var giftRepo = repositories.NewGiftRepository(dbConn)
 
 	minioService := services.NewMinIOService(ctx, cfg.MinIO)
-	var userService = services.NewUserService(userRepo, livestreamInfoRepo, notificationRepo, followRepo, *minioService)
+	var contentGateway = contenthttp.NewContentGateway(registry)
+	var userService = services.NewUserService(userRepo, livestreamInfoRepo, notificationRepo, followRepo, *minioService, contentGateway)
+	go userService.SyncDisabledAuthors(ctx)
 	var livestreamInfoService = services.NewLivestreamInformationService(livestreamInfoRepo)
-	var followService = services.NewFollowService(followRepo)
+	var followService = services.NewFollowService(followRepo, userRepo)
 	var notificationService = services.NewNotificationService(notificationRepo)
 	var inventoryService = services.NewInventoryService(inventoryRepo)
 	var financeGateway = financehttp.NewFinanceGateway(registry)
