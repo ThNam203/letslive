@@ -4,7 +4,6 @@ import { ConversationType, ParticipantRole } from '../types/conversation'
 export interface IParticipant {
     userId: string
     username: string
-    displayName: string | null
     profilePicture: string | null
     role: ParticipantRole
     joinedAt: Date
@@ -36,7 +35,6 @@ const participantSchema = new mongoose.Schema(
     {
         userId: { type: String, required: true, maxlength: 36 },
         username: { type: String, required: true, maxlength: 50 },
-        displayName: { type: String, default: null, maxlength: 50 },
         profilePicture: { type: String, default: null, maxlength: 2048 },
         role: { type: String, required: true, enum: Object.values(ParticipantRole), default: ParticipantRole.MEMBER },
         joinedAt: { type: Date, default: Date.now },

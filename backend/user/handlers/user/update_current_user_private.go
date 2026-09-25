@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"sen1or/letslive/user/dto"
-	"sen1or/letslive/user/handlers/utils"
 	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/shared/pkg/tracer"
+	"sen1or/letslive/user/dto"
+	"sen1or/letslive/user/handlers/utils"
 	"sen1or/letslive/user/response"
 
 	"github.com/gofrs/uuid/v5"
@@ -47,7 +47,7 @@ func (h *UserHandler) UpdateCurrentUserPrivateHandler(w http.ResponseWriter, r *
 	span.End()
 
 	if err != nil {
-		h.WriteResponse(w, ctx, err)
+		h.WriteResponse(w, ctx, response.FromError(err))
 		return
 	}
 

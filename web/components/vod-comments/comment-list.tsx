@@ -9,6 +9,7 @@ interface CommentListProps {
     vodOwnerId?: string;
     likedIds?: Set<string>;
     onCommentDeleted: (commentId: string) => void;
+    onCommentUpdated: (commentId: string, content: string) => void;
     onLikedChanged?: (commentId: string, liked: boolean) => void;
     isReplyList?: boolean;
     depth?: number;
@@ -20,6 +21,7 @@ export default function CommentList({
     vodOwnerId,
     likedIds,
     onCommentDeleted,
+    onCommentUpdated,
     onLikedChanged,
     isReplyList = false,
     depth = 0,
@@ -42,6 +44,7 @@ export default function CommentList({
                     vodOwnerId={vodOwnerId}
                     likedIds={likedIds}
                     onCommentDeleted={onCommentDeleted}
+                    onCommentUpdated={onCommentUpdated}
                     onLikedChanged={onLikedChanged}
                     depth={depth}
                 />

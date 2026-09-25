@@ -3,8 +3,9 @@ import { Conversation, DmMessage } from "@/types/dm";
 import { CONVERSATIONS_QUERY_KEY } from "@/hooks/queries/use-conversations";
 import { DM_UNREAD_COUNTS_QUERY_KEY } from "@/hooks/queries/use-dm-unread-counts";
 import { dmMessagesQueryKey } from "@/hooks/queries/use-dm-messages";
+import { PaginatedPage } from "@/lib/query/paginated";
 
-type ConversationsData = InfiniteData<Conversation[]>;
+type ConversationsData = InfiniteData<PaginatedPage<Conversation>>;
 type MessagesData = InfiniteData<DmMessage[]>;
 
 export function prependConversation(
@@ -16,7 +17,13 @@ export function prependConversation(
         (old) => {
             if (!old) return old;
             const [first, ...rest] = old.pages;
-            return { ...old, pages: [[conversation, ...(first ?? [])], ...rest] };
+            // bump total too, otherwise the extra local item makes the loaded
+            // count reach total early and hides the remaining pages
+            const firstPage: PaginatedPage<Conversation> = {
+                items: [conversation, ...(first?.items ?? [])],
+                total: first?.total === undefined ? undefined : first.total + 1,
+            };
+            return { ...old, pages: [firstPage, ...rest] };
         },
     );
 }
@@ -31,11 +38,12 @@ export function updateConversationInCache(
         (old) =>
             old && {
                 ...old,
-                pages: old.pages.map((page) =>
-                    page.map((c) =>
+                pages: old.pages.map((page) => ({
+                    ...page,
+                    items: page.items.map((c) =>
                         c._id === conversationId ? { ...c, ...update } : c,
                     ),
-                ),
+                })),
             },
     );
 }

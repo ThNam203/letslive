@@ -1,114 +1,75 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { toast } from "@/components/utils/toast";
+import { useEffect, useMemo, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { VideoInfo } from "@/components/custom_react_player/streaming-frame";
 import { VODFrame } from "@/components/custom_react_player/vod-frame";
 import MediaCard from "@/components/livestream/media-card";
 import { VOD } from "@/types/vod";
 import { PublicUser } from "@/types/user";
-import {
-    GetPublicVODsOfUser,
-    GetVODInformation,
-    RegisterVODView,
-} from "@/lib/api/vod";
-import { GetUserById } from "@/lib/api/user";
+import { RegisterVODView } from "@/lib/api/vod";
 import ProfileView from "@/app/[lng]/(main)/users/[userId]/profile";
 import useT from "@/hooks/use-translation";
+import useMediaQuery from "@/hooks/use-media-query";
+import { MQ_MAX_MD } from "@/constant/breakpoints";
 import CommentSection from "@/components/vod-comments/comment-section";
+import { publicUserQueryKey, usePublicUser } from "@/hooks/queries/use-users";
+import {
+    publicVodsOfUserQueryKey,
+    usePublicVodsOfUser,
+    useVod,
+} from "@/hooks/queries/use-vods";
 
 export default function VODPage() {
     const { t } = useT(["fetch-error", "api-response", "common"]);
-    const [user, setUser] = useState<PublicUser | null>(null);
-    const [vods, setVods] = useState<VOD[]>([]);
-    const [isExtraOpen, setIsExtraOpen] = useState(false);
-    const [vodDuration, setVodDuration] = useState(0);
-    const [hasRegisteredView, setHasRegisteredView] = useState(false);
-    const isRegisteringViewRef = useRef(false);
-
-    const updateUser = (newUserInfo: PublicUser) => {
-        setUser((prev) => {
-            if (prev)
-                return {
-                    ...prev,
-                    ...newUserInfo,
-                };
-
-            return newUserInfo;
-        });
-    };
     const params = useParams<{ userId: string; vodId: string }>();
-
-    const [playerInfo, setPlayerInfo] = useState<VideoInfo>({
-        videoTitle: "",
-        streamer: {
-            name: "",
-        },
-        videoUrl: null,
-    });
+    const queryClient = useQueryClient();
+    const isSmallScreen = useMediaQuery(MQ_MAX_MD);
+    const countedVodIdRef = useRef<string | null>(null);
+    // a set, not one id: navigating away and back while a registration is
+    // still in flight would otherwise let the same VOD be counted twice
+    const registeringVodIdsRef = useRef(new Set<string>());
 
     useEffect(() => {
-        setHasRegisteredView(false);
-        isRegisteringViewRef.current = false;
+        countedVodIdRef.current = null;
+    }, [params.vodId]);
 
-        const fetchAll = async () => {
-            try {
-                const [vodRes, userRes, vodsRes] = await Promise.all([
-                    GetVODInformation(params.vodId),
-                    GetUserById(params.userId),
-                    GetPublicVODsOfUser(params.userId),
-                ]);
+    const { data: vod } = useVod(params.vodId);
+    const { data: user } = usePublicUser(params.userId);
+    const { data: vods } = usePublicVodsOfUser(params.userId);
 
-                const vodTitle = vodRes.success ? (vodRes.data?.title ?? "") : "";
-                const vodUrl = vodRes.success
-                    ? (vodRes.data?.playbackUrl ?? null)
-                    : null;
-                const streamerName = userRes.success
-                    ? (userRes.data?.username ?? "")
-                    : "";
+    const vodDuration = vod?.duration ?? 0;
 
-                setPlayerInfo({
-                    videoTitle: vodTitle,
-                    streamer: { name: streamerName },
-                    videoUrl: vodUrl,
-                });
+    const updateUser = (newUserInfo: PublicUser) => {
+        queryClient.setQueryData<PublicUser>(
+            publicUserQueryKey(params.userId),
+            (prev) => (prev ? { ...prev, ...newUserInfo } : newUserInfo),
+        );
+    };
 
-                if (vodRes.success) {
-                    setVodDuration(vodRes.data?.duration ?? 0);
-                } else {
-                    toast(t(`api-response:${vodRes.key}`), {
-                        toastId: vodRes.requestId,
-                        type: "error",
-                    });
-                }
+    const playerInfo: VideoInfo = useMemo(
+        () => ({
+            videoTitle: vod?.title ?? "",
+            streamer: { name: user?.username ?? "" },
+            videoUrl: vod?.playbackUrl ?? null,
+        }),
+        [vod?.title, vod?.playbackUrl, user?.username],
+    );
 
-                if (userRes.success) {
-                    setUser(userRes.data ?? null);
-                } else {
-                    toast(t(`api-response:${userRes.key}`), {
-                        toastId: userRes.requestId,
-                        type: "error",
-                    });
-                }
+    const otherVods = useMemo(
+        () => (vods ?? []).filter((item) => item.id !== params.vodId),
+        [vods, params.vodId],
+    );
 
-                if (vodsRes.success) {
-                    setVods(vodsRes.data ?? []);
-                } else {
-                    toast(t(`api-response:${vodsRes.key}`), {
-                        toastId: vodsRes.requestId,
-                        type: "error",
-                    });
-                }
-            } catch (_) {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-            }
-        };
-
-        fetchAll();
-    }, [params.vodId, params.userId, t]);
+    const otherStreamCards = otherVods.map((item) => (
+        <MediaCard
+            key={item.id}
+            kind="vod"
+            vod={item}
+            variant="with-user"
+            className="mb-2"
+        />
+    ));
 
     const getViewThreshold = () => {
         let threshold = 15;
@@ -123,10 +84,11 @@ export default function VODPage() {
     };
 
     const handleVODProgress = async (playedSeconds: number) => {
+        const vodId = params.vodId;
         if (
-            hasRegisteredView ||
-            isRegisteringViewRef.current ||
-            !params.vodId
+            !vodId ||
+            countedVodIdRef.current === vodId ||
+            registeringVodIdsRef.current.has(vodId)
         ) {
             return;
         }
@@ -137,24 +99,27 @@ export default function VODPage() {
         }
 
         const watchedSeconds = Math.floor(playedSeconds);
-        isRegisteringViewRef.current = true;
-        const res = await RegisterVODView(params.vodId, watchedSeconds).catch(
+        registeringVodIdsRef.current.add(vodId);
+        const res = await RegisterVODView(vodId, watchedSeconds).catch(
             () => null,
         );
 
+        // mark counted before releasing the in-flight guard, so no progress
+        // tick can slip between the two and register the same view again
         if (res?.success) {
-            setHasRegisteredView(true);
-            setVods((prev) =>
-                prev.map((vod) =>
-                    vod.id === params.vodId
-                        ? { ...vod, viewCount: vod.viewCount + 1 }
-                        : vod,
-                ),
+            countedVodIdRef.current = vodId;
+            queryClient.setQueryData<VOD[]>(
+                publicVodsOfUserQueryKey(params.userId),
+                (prev) =>
+                    prev?.map((item) =>
+                        item.id === vodId
+                            ? { ...item, viewCount: item.viewCount + 1 }
+                            : item,
+                    ),
             );
-            return;
         }
 
-        isRegisteringViewRef.current = false;
+        registeringVodIdsRef.current.delete(vodId);
     };
 
     return (
@@ -170,10 +135,20 @@ export default function VODPage() {
                     <ProfileView
                         user={user}
                         updateUser={updateUser}
-                        vods={vods.filter((v) => v.id !== params.vodId)}
+                        vods={otherVods}
                         showRecentActivity={false}
                         className="mt-2"
                     />
+                )}
+                {/* below md the sidebar is hidden, so the list moves inline
+                    above the comments; only one copy is ever rendered */}
+                {isSmallScreen && (
+                    <section className="mt-4 md:hidden">
+                        <h2 className="mb-2 font-semibold">
+                            {t("common:other_streams")}
+                        </h2>
+                        {otherStreamCards}
+                    </section>
                 )}
                 <CommentSection
                     key={params.vodId}
@@ -182,28 +157,18 @@ export default function VODPage() {
                     className="mt-4 pb-8"
                 />
             </div>
-            <div
-                className={`bg-background fixed top-0 right-2 z-40 h-[100%-48px] w-full transition-all duration-300 md:relative md:w-80 lg:w-96 ${isExtraOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}
-            >
-                <div className="border-border bg-background flex h-full w-full flex-col border-x font-sans">
-                    <h2 className="p-4 font-semibold">
-                        {t("common:other_streams")}
-                    </h2>
-                    <div className="small-scrollbar h-full overflow-y-auto px-4">
-                        {vods
-                            .filter((v) => v.id !== params.vodId)
-                            .map((vod, idx) => (
-                                <MediaCard
-                                    key={idx}
-                                    kind="vod"
-                                    vod={vod}
-                                    variant="with-user"
-                                    className="mb-2"
-                                />
-                            ))}
+            {!isSmallScreen && (
+                <div className="hidden md:block md:w-80 lg:w-96">
+                    <div className="border-border bg-background flex h-full w-full flex-col border-x font-sans">
+                        <h2 className="p-4 font-semibold">
+                            {t("common:other_streams")}
+                        </h2>
+                        <div className="small-scrollbar h-full overflow-y-auto px-4">
+                            {otherStreamCards}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

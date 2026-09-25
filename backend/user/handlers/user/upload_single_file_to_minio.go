@@ -53,7 +53,7 @@ func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *h
 	span.End()
 
 	if err != nil {
-		h.WriteResponse(w, ctx, err)
+		h.WriteResponse(w, ctx, response.FromError(err))
 		return
 	}
 

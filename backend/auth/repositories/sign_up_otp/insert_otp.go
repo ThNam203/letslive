@@ -4,12 +4,11 @@ import (
 	"context"
 	"sen1or/letslive/auth/domains"
 	"sen1or/letslive/shared/pkg/logger"
-	serviceresponse "sen1or/letslive/auth/response"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresSignUpOTPRepo) Insert(ctx context.Context, otp domains.SignUpOTP) *serviceresponse.Response[any] {
+func (r *postgresSignUpOTPRepo) Insert(ctx context.Context, otp domains.SignUpOTP) error {
 	_ = pgx.NamedArgs{
 		"code":       otp.Code,
 		"expires_at": otp.ExpiresAt,
@@ -22,20 +21,10 @@ func (r *postgresSignUpOTPRepo) Insert(ctx context.Context, otp domains.SignUpOT
 	`, otp.Code, otp.ExpiresAt, otp.Email)
 	if err != nil {
 		logger.Errorf(ctx, "failed to exec insert otp: %s", err)
-		return serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrDatabaseQuery
 	} else if result.RowsAffected() == 0 {
 		logger.Errorf(ctx, "failed to insert otp: %s", err)
-		return serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrDatabaseIssue
 	}
 
 	return nil

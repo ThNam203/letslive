@@ -5,7 +5,10 @@ import { meUser } from "../db";
 export const authHandlers = [
     // POST /auth/login — always succeeds, sets a fake cookie via header
     http.post(`${API_BASE}/auth/login`, async ({ request }) => {
-        const body = (await request.json()) as any;
+        const body = (await request.json()) as {
+            email?: string;
+            password?: string;
+        };
         if (!body?.email || !body?.password) {
             return badRequest(
                 "res_err_invalid_input",

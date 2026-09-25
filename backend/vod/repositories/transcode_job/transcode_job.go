@@ -3,9 +3,8 @@ package transcodejob
 import (
 	"context"
 	"errors"
-	"sen1or/letslive/vod/domains"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/vod/response"
+	"sen1or/letslive/vod/domains"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -23,7 +22,7 @@ func NewTranscodeJobRepository(conn *pgxpool.Pool) domains.TranscodeJobRepositor
 	}
 }
 
-func (r *postgresTranscodeJobRepo) Create(ctx context.Context, job domains.TranscodeJob) (*domains.TranscodeJob, *response.Response[any]) {
+func (r *postgresTranscodeJobRepo) Create(ctx context.Context, job domains.TranscodeJob) (*domains.TranscodeJob, error) {
 	query := `
 		INSERT INTO transcode_jobs (vod_id, status, attempts, max_attempts)
 		VALUES ($1, $2, $3, $4)
@@ -32,28 +31,18 @@ func (r *postgresTranscodeJobRepo) Create(ctx context.Context, job domains.Trans
 	rows, err := r.dbConn.Query(ctx, query, job.VodId, job.Status, job.Attempts, job.MaxAttempts)
 	if err != nil {
 		logger.Errorf(ctx, "db query error [create_transcode_job: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrInternal
 	}
 
 	createdJob, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.TranscodeJob])
 	if err != nil {
 		logger.Errorf(ctx, "db scan error [create_transcode_job: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 	return &createdJob, nil
 }
 
-func (r *postgresTranscodeJobRepo) GetPendingJob(ctx context.Context) (*domains.TranscodeJob, *response.Response[any]) {
+func (r *postgresTranscodeJobRepo) GetPendingJob(ctx context.Context) (*domains.TranscodeJob, error) {
 	query := `
 		SELECT id, vod_id, status, attempts, max_attempts, error_message, created_at, updated_at, started_at, completed_at
 		FROM transcode_jobs
@@ -65,12 +54,7 @@ func (r *postgresTranscodeJobRepo) GetPendingJob(ctx context.Context) (*domains.
 	rows, err := r.dbConn.Query(ctx, query)
 	if err != nil {
 		logger.Errorf(ctx, "db query error [get_pending_job: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseQuery
 	}
 
 	job, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.TranscodeJob])
@@ -79,17 +63,12 @@ func (r *postgresTranscodeJobRepo) GetPendingJob(ctx context.Context) (*domains.
 			return nil, nil // no pending jobs
 		}
 		logger.Errorf(ctx, "db scan error [get_pending_job: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 	return &job, nil
 }
 
-func (r *postgresTranscodeJobRepo) UpdateStatus(ctx context.Context, jobId uuid.UUID, status domains.TranscodeJobStatus, errorMsg *string) *response.Response[any] {
+func (r *postgresTranscodeJobRepo) UpdateStatus(ctx context.Context, jobId uuid.UUID, status domains.TranscodeJobStatus, errorMsg *string) error {
 	var query string
 	var err error
 
@@ -112,28 +91,18 @@ func (r *postgresTranscodeJobRepo) UpdateStatus(ctx context.Context, jobId uuid.
 
 	if err != nil {
 		logger.Errorf(ctx, "db query error [update_job_status id=%s: %v]", jobId, err)
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrInternal
 	}
 
 	return nil
 }
 
-func (r *postgresTranscodeJobRepo) IncrementAttempts(ctx context.Context, jobId uuid.UUID) *response.Response[any] {
+func (r *postgresTranscodeJobRepo) IncrementAttempts(ctx context.Context, jobId uuid.UUID) error {
 	query := `UPDATE transcode_jobs SET attempts = attempts + 1, updated_at = now() WHERE id = $1`
 	_, err := r.dbConn.Exec(ctx, query, jobId)
 	if err != nil {
 		logger.Errorf(ctx, "db query error [increment_attempts id=%s: %v]", jobId, err)
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrInternal
 	}
 	return nil
 }

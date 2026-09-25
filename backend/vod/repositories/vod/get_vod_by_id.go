@@ -3,15 +3,14 @@ package vod
 import (
 	"context"
 	"errors"
-	"sen1or/letslive/vod/domains"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/vod/response"
+	"sen1or/letslive/vod/domains"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 )
 
-func (r postgresVODRepo) GetById(ctx context.Context, id uuid.UUID) (*domains.VOD, *response.Response[any]) {
+func (r postgresVODRepo) GetById(ctx context.Context, id uuid.UUID) (*domains.VOD, error) {
 	query := `
         select id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, status, original_file_url, created_at, updated_at
         from vods
@@ -20,31 +19,16 @@ func (r postgresVODRepo) GetById(ctx context.Context, id uuid.UUID) (*domains.VO
 	rows, err := r.dbConn.Query(ctx, query, id)
 	if err != nil {
 		logger.Errorf(ctx, "db query error [getvodbyid: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseQuery
 	}
 
 	vod, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.VOD])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, response.NewResponseFromTemplate[any](
-				response.RES_ERR_VOD_NOT_FOUND,
-				nil,
-				nil,
-				nil,
-			)
+			return nil, domains.ErrVODNotFound
 		}
 		logger.Errorf(ctx, "db scan error [getvodbyid: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 	return &vod, nil
 }

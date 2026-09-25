@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"sen1or/letslive/auth/dto"
-	"sen1or/letslive/shared/pkg/logger"
 	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/services"
 	"sen1or/letslive/auth/utils"
+	"sen1or/letslive/shared/pkg/logger"
 	"strings"
 )
 
@@ -62,13 +62,13 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 
 	auth, err := h.authService.GetUserFromCredentials(ctx, userCredentials)
 	if err != nil {
-		writeResponse(w, ctx, err)
+		writeResponse(w, ctx, serviceresponse.FromError(err))
 		return
 	}
 
 	isDisabled, reactivationToken, statusErr := h.checkAccountStatus(ctx, *auth.UserId)
 	if statusErr != nil {
-		writeResponse(w, ctx, statusErr)
+		writeResponse(w, ctx, serviceresponse.FromError(statusErr))
 		return
 	}
 
@@ -79,7 +79,7 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.setAuthJWTsInCookie(ctx, auth.UserId.String(), w); err != nil {
-		writeResponse(w, ctx, err)
+		writeResponse(w, ctx, serviceresponse.FromError(err))
 		return
 	}
 
@@ -108,17 +108,17 @@ func (h *AuthHandler) ReactivateHandler(w http.ResponseWriter, r *http.Request) 
 
 	userId, tokenErr := h.jwtService.VerifyReactivationToken(ctx, reqBody.ReactivationToken)
 	if tokenErr != nil {
-		writeResponse(w, ctx, tokenErr)
+		writeResponse(w, ctx, serviceresponse.FromError(tokenErr))
 		return
 	}
 
 	if statusErr := h.authService.ReactivateUser(ctx, userId); statusErr != nil {
-		writeResponse(w, ctx, statusErr)
+		writeResponse(w, ctx, serviceresponse.FromError(statusErr))
 		return
 	}
 
 	if err := h.setAuthJWTsInCookie(ctx, userId, w); err != nil {
-		writeResponse(w, ctx, err)
+		writeResponse(w, ctx, serviceresponse.FromError(err))
 		return
 	}
 
@@ -148,7 +148,7 @@ func (h *AuthHandler) RequestEmailVerificationHandler(w http.ResponseWriter, r *
 	if !isMobileClient(r) {
 		ip := r.Header.Get("CF-Connecting-IP")
 		if err := utils.CheckCAPTCHA(requestDTO.TurnstileToken, ip); err != nil {
-			writeResponse(w, ctx, err)
+			writeResponse(w, ctx, serviceresponse.FromError(err))
 			return
 		}
 	}
@@ -156,12 +156,12 @@ func (h *AuthHandler) RequestEmailVerificationHandler(w http.ResponseWriter, r *
 	// if an auth is already existed with the email, no point to continue
 	err := h.authService.CheckIfAuthExistedForEmail(ctx, requestDTO)
 	if err != nil {
-		writeResponse(w, ctx, err)
+		writeResponse(w, ctx, serviceresponse.FromError(err))
 		return
 	}
 
 	if err := h.verificationService.CreateOTPAndSendEmailVerification(ctx, h.verificationGateway, requestDTO.Email); err != nil {
-		writeResponse(w, ctx, err)
+		writeResponse(w, ctx, serviceresponse.FromError(err))
 		return
 	}
 
@@ -203,7 +203,7 @@ func (h *AuthHandler) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 
 	accessTokenInfo, refreshErr := h.jwtService.RefreshToken(ctx, refreshTokenCookie.Value)
 	if refreshErr != nil {
-		writeResponse(w, ctx, refreshErr)
+		writeResponse(w, ctx, serviceresponse.FromError(refreshErr))
 		return
 	}
 
@@ -217,7 +217,7 @@ func (h *AuthHandler) LogOutHandler(w http.ResponseWriter, r *http.Request) {
 
 	if refreshTokenCookie, err := r.Cookie("REFRESH_TOKEN"); err == nil && len(refreshTokenCookie.Value) > 0 {
 		if revokeErr := h.jwtService.RevokeTokenByValue(ctx, refreshTokenCookie.Value); revokeErr != nil {
-			logger.Errorf(ctx, "failed to revoke refresh token on logout: %s", revokeErr.Message)
+			logger.Errorf(ctx, "failed to revoke refresh token on logout: %s", revokeErr)
 		}
 	}
 
@@ -237,7 +237,7 @@ func (h *AuthHandler) LogOutAllHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if revokeErr := h.jwtService.RevokeAllTokensOfUser(ctx, *userId); revokeErr != nil {
-		writeResponse(w, ctx, revokeErr)
+		writeResponse(w, ctx, serviceresponse.FromError(revokeErr))
 		return
 	}
 
@@ -264,18 +264,18 @@ func (h *AuthHandler) VerifyOTPAndSignUpHandler(w http.ResponseWriter, r *http.R
 	}
 
 	if verifyErr := h.verificationService.Verify(ctx, requestDTO.OTPCode, requestDTO.Email); verifyErr != nil {
-		writeResponse(w, ctx, verifyErr)
+		writeResponse(w, ctx, serviceresponse.FromError(verifyErr))
 		return
 	}
 
 	createdAuth, err := h.authService.CreateNewAuth(ctx, requestDTO)
 	if err != nil {
-		writeResponse(w, ctx, err)
+		writeResponse(w, ctx, serviceresponse.FromError(err))
 		return
 	}
 
 	if err := h.setAuthJWTsInCookie(ctx, createdAuth.UserId.String(), w); err != nil {
-		writeResponse(w, ctx, err)
+		writeResponse(w, ctx, serviceresponse.FromError(err))
 		return
 	}
 
@@ -314,17 +314,17 @@ func (h *AuthHandler) UpdatePasswordHandler(w http.ResponseWriter, r *http.Reque
 	defer r.Body.Close()
 
 	if err := h.authService.UpdatePassword(ctx, reqDTO, *userUUID); err != nil {
-		writeResponse(w, ctx, err)
+		writeResponse(w, ctx, serviceresponse.FromError(err))
 		return
 	}
 
 	if err := h.jwtService.RevokeAllTokensOfUser(ctx, *userUUID); err != nil {
-		writeResponse(w, ctx, err)
+		writeResponse(w, ctx, serviceresponse.FromError(err))
 		return
 	}
 
 	if err := h.setAuthJWTsInCookie(ctx, userUUID.String(), w); err != nil {
-		writeResponse(w, ctx, err)
+		writeResponse(w, ctx, serviceresponse.FromError(err))
 		return
 	}
 

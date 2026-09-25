@@ -77,7 +77,12 @@ export const dmHandlers = [
 
     // POST /conversations
     http.post(`${API_BASE}/conversations`, async ({ request }) => {
-        const body = (await request.json()) as any;
+        const body = (await request.json()) as {
+            type?: ConversationType;
+            participantIds?: string[];
+            name?: string | null;
+            avatarUrl?: string | null;
+        };
         const participantIds: string[] = body.participantIds ?? [];
 
         // For DMs, check no duplicate
@@ -176,7 +181,11 @@ export const dmHandlers = [
                     "res_err_conversation_not_found",
                     "Conversation not found",
                 );
-            const body = (await request.json()) as any;
+            const body = (await request.json()) as {
+                userId: string;
+                username?: string;
+                profilePicture?: string | null;
+            };
             const user = otherUsers.find((u) => u.id === body.userId);
             conv.participants.push({
                 userId: body.userId,
@@ -239,7 +248,12 @@ export const dmHandlers = [
         `${API_BASE}/conversations/:conversationId/messages`,
         async ({ params, request }) => {
             const { conversationId } = params as { conversationId: string };
-            const body = (await request.json()) as any;
+            const body = (await request.json()) as {
+                type?: DmMessageType;
+                text?: string;
+                imageUrls?: string[];
+                replyTo?: string;
+            };
             const newMsg: DmMessage = {
                 _id: uid(),
                 conversationId,
@@ -247,8 +261,8 @@ export const dmHandlers = [
                 senderUsername: meUser.username,
                 type: body.type ?? DmMessageType.TEXT,
                 text: body.text ?? "",
-                imageUrls: body.imageUrls,
-                replyTo: body.replyTo,
+                imageUrls: body.imageUrls ?? [],
+                replyTo: body.replyTo ?? null,
                 isDeleted: false,
                 readBy: [],
                 createdAt: now(),

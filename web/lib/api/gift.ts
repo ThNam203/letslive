@@ -1,5 +1,5 @@
 import { ApiResponse } from "@/types/fetch-response";
-import { Gift, UserInventory, SendGiftRequest } from "@/types/shop";
+import { Gift, UserInventory } from "@/types/shop";
 import { fetchClient } from "@/utils/fetchClient";
 
 export async function GetMyInventory(
@@ -19,13 +19,4 @@ export async function GetUserGiftsReceived(
     return fetchClient<ApiResponse<Gift[]>>(
         `/user/${userId}/gifts/received?page=${page}&limit=${pageSize}`,
     );
-}
-
-export async function SendGift(
-    data: SendGiftRequest,
-): Promise<ApiResponse<void>> {
-    return fetchClient<ApiResponse<void>>(`/gifts`, {
-        method: "POST",
-        body: JSON.stringify(data),
-    });
 }

@@ -3,12 +3,12 @@ package vodcomment
 import (
 	"context"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/vod/response"
+	"sen1or/letslive/vod/domains"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *VODCommentService) DeleteComment(ctx context.Context, commentId uuid.UUID, userId uuid.UUID) *response.Response[any] {
+func (s *VODCommentService) DeleteComment(ctx context.Context, commentId uuid.UUID, userId uuid.UUID) error {
 	comment, err := s.commentRepo.GetById(ctx, commentId)
 	if err != nil {
 		return err
@@ -16,12 +16,7 @@ func (s *VODCommentService) DeleteComment(ctx context.Context, commentId uuid.UU
 
 	// only the author can delete their own comment
 	if comment.UserId != userId {
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_FORBIDDEN,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrForbidden
 	}
 
 	// if this is a reply, soft-delete + decrement parent's reply_count atomically
@@ -32,11 +27,11 @@ func (s *VODCommentService) DeleteComment(ctx context.Context, commentId uuid.UU
 	return s.commentRepo.SoftDelete(ctx, commentId)
 }
 
-func (s *VODCommentService) deleteReplyWithTransaction(ctx context.Context, commentId uuid.UUID, parentId uuid.UUID) *response.Response[any] {
+func (s *VODCommentService) deleteReplyWithTransaction(ctx context.Context, commentId uuid.UUID, parentId uuid.UUID) error {
 	tx, txErr := s.dbPool.Begin(ctx)
 	if txErr != nil {
 		logger.Errorf(ctx, "failed to begin tx [deletecomment: %v]", txErr)
-		return response.NewResponseFromTemplate[any](response.RES_ERR_DATABASE_ISSUE, nil, nil, nil)
+		return domains.ErrDatabaseIssue
 	}
 	defer tx.Rollback(ctx)
 
@@ -52,7 +47,7 @@ func (s *VODCommentService) deleteReplyWithTransaction(ctx context.Context, comm
 
 	if commitErr := tx.Commit(ctx); commitErr != nil {
 		logger.Errorf(ctx, "failed to commit tx [deletecomment: %v]", commitErr)
-		return response.NewResponseFromTemplate[any](response.RES_ERR_DATABASE_ISSUE, nil, nil, nil)
+		return domains.ErrDatabaseIssue
 	}
 
 	return nil

@@ -4,16 +4,15 @@ import (
 	"context"
 
 	"sen1or/letslive/user/domains"
-	"sen1or/letslive/user/response"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresGiftRepo) ListByRecipient(ctx context.Context, recipientID uuid.UUID, page, limit int) ([]domains.Gift, int, *response.Response[any]) {
+func (r *postgresGiftRepo) ListByRecipient(ctx context.Context, recipientID uuid.UUID, page, limit int) ([]domains.Gift, int, error) {
 	var total int
 	if err := r.dbConn.QueryRow(ctx, `SELECT count(*) FROM gifts WHERE recipient_user_id = $1`, recipientID).Scan(&total); err != nil {
-		return nil, 0, response.NewResponseFromTemplate[any](response.RES_ERR_DATABASE_QUERY, nil, nil, nil)
+		return nil, 0, domains.ErrDatabaseQuery
 	}
 
 	rows, err := r.dbConn.Query(ctx, `
@@ -22,12 +21,12 @@ func (r *postgresGiftRepo) ListByRecipient(ctx context.Context, recipientID uuid
 		ORDER BY sent_at DESC LIMIT $2 OFFSET $3
 	`, recipientID, limit, page*limit)
 	if err != nil {
-		return nil, 0, response.NewResponseFromTemplate[any](response.RES_ERR_DATABASE_QUERY, nil, nil, nil)
+		return nil, 0, domains.ErrDatabaseQuery
 	}
 
 	gifts, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[domains.Gift])
 	if err != nil {
-		return nil, 0, response.NewResponseFromTemplate[any](response.RES_ERR_DATABASE_ISSUE, nil, nil, nil)
+		return nil, 0, domains.ErrDatabaseIssue
 	}
 
 	return gifts, total, nil

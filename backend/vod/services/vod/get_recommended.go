@@ -4,12 +4,11 @@ import (
 	"context"
 	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/vod/domains"
-	response "sen1or/letslive/vod/response"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *VODService) GetRecommendedVODs(ctx context.Context, page int, limit int) ([]domains.VOD, *response.Response[any]) {
+func (s *VODService) GetRecommendedVODs(ctx context.Context, page int, limit int) ([]domains.VOD, int, error) {
 	if page < 0 {
 		page = 0
 	}
@@ -22,13 +21,13 @@ func (s *VODService) GetRecommendedVODs(ctx context.Context, page int, limit int
 		limit = 50
 	}
 
-	vods, err := s.vodRepo.GetPopular(ctx, page, limit)
+	vods, total, err := s.vodRepo.GetPopular(ctx, page, limit)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	if len(vods) == 0 {
-		return vods, nil
+		return vods, total, nil
 	}
 
 	userIdSet := make(map[uuid.UUID]struct{}, len(vods))
@@ -43,7 +42,7 @@ func (s *VODService) GetRecommendedVODs(ctx context.Context, page int, limit int
 	statuses, statusErr := s.userGateway.GetUsersStatuses(ctx, userIds)
 	if statusErr != nil {
 		logger.Errorf(ctx, "failed to fetch author statuses, returning unfiltered results: %v", statusErr)
-		return vods, nil
+		return vods, total, nil
 	}
 
 	filtered := make([]domains.VOD, 0, len(vods))
@@ -53,5 +52,5 @@ func (s *VODService) GetRecommendedVODs(ctx context.Context, page int, limit int
 		}
 	}
 
-	return filtered, nil
+	return filtered, total - (len(vods) - len(filtered)), nil
 }

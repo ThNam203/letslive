@@ -3,12 +3,12 @@ package vodcomment
 import (
 	"context"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/vod/response"
+	"sen1or/letslive/vod/domains"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *VODCommentService) LikeComment(ctx context.Context, commentId uuid.UUID, userId uuid.UUID) *response.Response[any] {
+func (s *VODCommentService) LikeComment(ctx context.Context, commentId uuid.UUID, userId uuid.UUID) error {
 	// verify comment exists
 	_, err := s.commentRepo.GetById(ctx, commentId)
 	if err != nil {
@@ -19,7 +19,7 @@ func (s *VODCommentService) LikeComment(ctx context.Context, commentId uuid.UUID
 	tx, txErr := s.dbPool.Begin(ctx)
 	if txErr != nil {
 		logger.Errorf(ctx, "failed to begin tx [likecomment: %v]", txErr)
-		return response.NewResponseFromTemplate[any](response.RES_ERR_DATABASE_ISSUE, nil, nil, nil)
+		return domains.ErrDatabaseIssue
 	}
 	defer tx.Rollback(ctx)
 
@@ -35,13 +35,13 @@ func (s *VODCommentService) LikeComment(ctx context.Context, commentId uuid.UUID
 
 	if commitErr := tx.Commit(ctx); commitErr != nil {
 		logger.Errorf(ctx, "failed to commit tx [likecomment: %v]", commitErr)
-		return response.NewResponseFromTemplate[any](response.RES_ERR_DATABASE_ISSUE, nil, nil, nil)
+		return domains.ErrDatabaseIssue
 	}
 
 	return nil
 }
 
-func (s *VODCommentService) UnlikeComment(ctx context.Context, commentId uuid.UUID, userId uuid.UUID) *response.Response[any] {
+func (s *VODCommentService) UnlikeComment(ctx context.Context, commentId uuid.UUID, userId uuid.UUID) error {
 	// verify comment exists
 	_, err := s.commentRepo.GetById(ctx, commentId)
 	if err != nil {
@@ -52,7 +52,7 @@ func (s *VODCommentService) UnlikeComment(ctx context.Context, commentId uuid.UU
 	tx, txErr := s.dbPool.Begin(ctx)
 	if txErr != nil {
 		logger.Errorf(ctx, "failed to begin tx [unlikecomment: %v]", txErr)
-		return response.NewResponseFromTemplate[any](response.RES_ERR_DATABASE_ISSUE, nil, nil, nil)
+		return domains.ErrDatabaseIssue
 	}
 	defer tx.Rollback(ctx)
 
@@ -68,7 +68,7 @@ func (s *VODCommentService) UnlikeComment(ctx context.Context, commentId uuid.UU
 
 	if commitErr := tx.Commit(ctx); commitErr != nil {
 		logger.Errorf(ctx, "failed to commit tx [unlikecomment: %v]", commitErr)
-		return response.NewResponseFromTemplate[any](response.RES_ERR_DATABASE_ISSUE, nil, nil, nil)
+		return domains.ErrDatabaseIssue
 	}
 
 	return nil

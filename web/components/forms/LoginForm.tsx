@@ -2,8 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "@/components/utils/toast";
-import { LogIn } from "@/lib/api/auth";
+import { useLogin } from "@/hooks/queries/use-auth-mutations";
 import IconEmail from "../icons/email";
 import FormErrorText from "./FormErrorText";
 import IconPasswordOutline from "../icons/password";
@@ -13,12 +12,10 @@ import Turnstile, { useTurnstile } from "react-turnstile";
 import IconLoader from "../icons/loader";
 import useT from "@/hooks/use-translation";
 import { loginSchema } from "@/lib/validations/login";
-import { GetMeProfile } from "@/lib/api/user";
-import useUser from "@/hooks/user";
+import { useRefreshMeProfile } from "@/hooks/queries/use-profile-mutations";
 import { Input } from "../ui/input";
 import { EMAIL_MAX_LENGTH } from "@/constant/field-limits";
 import { PASSWORD_MAX_LENGTH } from "@/constant/password";
-import { ApiCode } from "@/types/fetch-response";
 
 function initialMockLoginEmail() {
     if (process.env.NEXT_PUBLIC_USE_MOCK_API !== "true") return "";
@@ -38,7 +35,6 @@ export default function LogInForm({
     const [email, setEmail] = useState(initialMockLoginEmail);
     const [password, setPassword] = useState(initialMockLoginPassword);
     const [hidingPassword, setHidingPassword] = useState(true);
-    const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
     const [errors, setErrors] = useState({
         email: "",
@@ -48,7 +44,9 @@ export default function LogInForm({
     const [turnstileToken, setTurnstileToken] = useState("");
     const turnstile = useTurnstile();
     const { t, i18n } = useT(["auth", "error", "api-response", "fetch-error"]);
-    const { setUser } = useUser();
+    const refreshMeProfile = useRefreshMeProfile();
+    const login = useLogin();
+    const isLoading = login.isPending;
     const validate = () => {
         const result = loginSchema(t).safeParse({
             email,
@@ -70,53 +68,35 @@ export default function LogInForm({
         return result.success;
     };
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         e.stopPropagation();
 
         if (!validate()) return;
 
-        setIsLoading(true);
-        await LogIn({
-            email,
-            password,
-            turnstileToken,
-        })
-            .then((res) => {
-                if (!res.success) {
-                    if (
-                        res.code === ApiCode.RES_ERR_ACCOUNT_DISABLED &&
-                        res.data?.reactivationToken
-                    ) {
+        login.mutate(
+            { email, password, turnstileToken },
+            {
+                onSuccess: ({ reactivationToken }) => {
+                    if (reactivationToken) {
                         turnstile.reset();
                         setTurnstileToken("");
-                        onAccountDisabled(res.data.reactivationToken);
+                        onAccountDisabled(reactivationToken);
                         return;
                     }
-
+                    // The profile query is mounted app-wide and fills the
+                    // user store, so refetching it is what "sign in" means
+                    // to the rest of the app.
+                    refreshMeProfile();
+                    router.push("/");
+                },
+                // a captcha token is single-use, so a retry needs a fresh one
+                onError: () => {
                     turnstile.reset();
                     setTurnstileToken("");
-                    toast.error(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                    });
-                } else {
-                    GetMeProfile().then((res) => {
-                        if (res.success && res.data) {
-                            setUser(res.data);
-                            router.push("/");
-                        }
-                    });
-                }
-            })
-            .catch((_) => {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
+                },
+            },
+        );
     };
 
     return (

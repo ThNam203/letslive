@@ -83,7 +83,6 @@ export const financeHandlers = [
             amount: body.amount,
             status: PaymentStatus.CREATED,
             createdAt: now(),
-            updatedAt: now(),
         };
         payments.push(newPayment);
 
@@ -92,11 +91,9 @@ export const financeHandlers = [
             type: TransactionType.PURCHASE,
             status: TransactionStatus.PROCESSING,
             reference: paymentId,
-            description: `Deposit via ${body.provider}`,
             actorId: ME_USER_ID,
             metadata: { provider: body.provider, amount: body.amount },
             createdAt: now(),
-            updatedAt: now(),
             entries: null,
         };
         transactions.push(newTx);

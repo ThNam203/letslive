@@ -26,7 +26,7 @@ func writeResponse(w http.ResponseWriter, ctx context.Context, res *servicerespo
 	json.NewEncoder(w).Encode(res)
 }
 
-func (h *AuthHandler) setAuthJWTsInCookie(ctx context.Context, userId string, w http.ResponseWriter) *serviceresponse.Response[any] {
+func (h *AuthHandler) setAuthJWTsInCookie(ctx context.Context, userId string, w http.ResponseWriter) error {
 	tokensInfo, err := h.jwtService.GenerateTokenPair(ctx, userId)
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func (h *AuthHandler) getUserIDFromCookie(r *http.Request) (*uuid.UUID, error) {
 	return &userUUID, nil
 }
 
-func (h *AuthHandler) checkAccountStatus(ctx context.Context, userId uuid.UUID) (isDisabled bool, reactivationToken string, errRes *serviceresponse.Response[any]) {
+func (h *AuthHandler) checkAccountStatus(ctx context.Context, userId uuid.UUID) (isDisabled bool, reactivationToken string, err error) {
 	status, statusErr := h.authService.GetUserStatus(ctx, userId)
 	if statusErr != nil {
 		return false, "", statusErr

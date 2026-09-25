@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid/v5"
-	"sen1or/letslive/user/response"
 )
 
 type UserInventory struct {
@@ -17,7 +16,6 @@ type UserInventory struct {
 }
 
 type InventoryRepository interface {
-	Upsert(ctx context.Context, userID, shopItemID uuid.UUID, quantityToAdd int) (*UserInventory, *response.Response[any])
-	Deduct(ctx context.Context, userID, shopItemID uuid.UUID) (*UserInventory, *response.Response[any])
-	GetByUserId(ctx context.Context, userID uuid.UUID, page, limit int) ([]UserInventory, int, *response.Response[any])
+	Upsert(ctx context.Context, userID, shopItemID uuid.UUID, quantityToAdd int) (*UserInventory, error)
+	GetByUserId(ctx context.Context, userID uuid.UUID, page, limit int) ([]UserInventory, int, error)
 }

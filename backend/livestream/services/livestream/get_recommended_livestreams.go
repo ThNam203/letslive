@@ -3,13 +3,12 @@ package livestream
 import (
 	"context"
 	"sen1or/letslive/livestream/domains"
-	"sen1or/letslive/livestream/response"
 	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *LivestreamService) GetRecommendedLivestreams(ctx context.Context, page int, limit int) ([]domains.Livestream, *response.Response[any]) {
+func (s *LivestreamService) GetRecommendedLivestreams(ctx context.Context, page int, limit int) ([]domains.Livestream, error) {
 	if page < 0 {
 		page = 0
 	}

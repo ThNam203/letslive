@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"sen1or/letslive/shared/pkg/tracer"
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/handlers/utils"
-	"sen1or/letslive/shared/pkg/tracer"
 	"sen1or/letslive/user/response"
 )
 
@@ -94,7 +94,7 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	span.End()
 
 	if updateErr != nil {
-		h.WriteResponse(w, ctx, updateErr)
+		h.WriteResponse(w, ctx, response.FromError(updateErr))
 		return
 	}
 

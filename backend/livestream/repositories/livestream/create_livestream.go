@@ -4,12 +4,11 @@ import (
 	"context"
 	"sen1or/letslive/livestream/domains"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/livestream/response"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresLivestreamRepo) Create(ctx context.Context, newLivestream domains.Livestream) (*domains.Livestream, *response.Response[any]) {
+func (r *postgresLivestreamRepo) Create(ctx context.Context, newLivestream domains.Livestream) (*domains.Livestream, error) {
 	query := `
 		INSERT INTO livestreams (user_id, title, description, thumbnail_url, visibility)
         	VALUES ($1, $2, $3, $4, $5)
@@ -25,23 +24,13 @@ func (r *postgresLivestreamRepo) Create(ctx context.Context, newLivestream domai
 
 	if err != nil {
 		logger.Errorf(ctx, "db query error [createlivestream: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_LIVESTREAM_CREATE_FAILED,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrLivestreamCreateFailed
 	}
 
 	createdLs, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.Livestream])
 	if err != nil {
 		logger.Errorf(ctx, "db scan error [createlivestream: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 	return &createdLs, nil
 }

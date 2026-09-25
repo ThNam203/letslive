@@ -29,7 +29,6 @@ export type UpdateConversationRequest = {
 export type AddParticipantRequest = {
     userId: string
     username: string
-    displayName?: string
     profilePicture?: string
 }
 

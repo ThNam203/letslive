@@ -3,9 +3,8 @@
 import Link from "next/link";
 
 import { useState } from "react";
-import { toast } from "@/components/utils/toast";
 import useUser from "../../../../../hooks/user";
-import { Logout } from "../../../../../lib/api/auth";
+import { useLogout } from "@/hooks/queries/use-auth-mutations";
 import { Button } from "../../../../../components/ui/button";
 import {
     Popover,
@@ -39,25 +38,9 @@ export default function UserInfo() {
         "accessibility",
     ]);
 
-    const logoutHandler = async () => {
-        await Logout()
-            .then((res) => {
-                if (res.statusCode === 204) {
-                    userState.clearUser();
-                } else {
-                    toast(t(`api-response:${res.key}`), {
-                        toastId: res.requestId,
-                        type: "error",
-                    });
-                }
-            })
-            .catch((err) => {
-                toast(t("fetch-error:client_fetch_error"), {
-                    toastId: "client-fetch-error-id",
-                    type: "error",
-                });
-            });
-    };
+    const logout = useLogout();
+
+    const logoutHandler = () => logout.mutate();
 
     return (
         <div className="flex flex-row gap-4">

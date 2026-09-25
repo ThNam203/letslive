@@ -14,7 +14,7 @@ import {
     FILE_SIZE_LIMIT_BYTES_UNIT,
     FILE_SIZE_LIMIT_MB_UNIT,
 } from "@/constant/image";
-import { UploadFile } from "@/lib/api/utils";
+import { useUploadFiles } from "@/hooks/queries/use-file-upload";
 import useT from "@/hooks/use-translation";
 
 const ACCEPTED_FILE_TYPES = "image/png,image/jpeg,image/gif,image/webp";
@@ -36,12 +36,13 @@ export default function MessageInput({
 }) {
     const [text, setText] = useState("");
     const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
-    const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isTypingRef = useRef(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { t } = useT("messages");
+    const uploadFiles = useUploadFiles();
+    const isUploading = uploadFiles.isPending;
 
     const handleTyping = useCallback(() => {
         if (!isTypingRef.current) {
@@ -139,45 +140,31 @@ export default function MessageInput({
         }
 
         if (selectedFiles.length > 0) {
-            setIsUploading(true);
             setUploadError(null);
-            try {
-                const uploadResults = await Promise.all(
-                    selectedFiles.map((sf) => UploadFile(sf.file)),
-                );
+            uploadFiles.mutate(
+                selectedFiles.map((sf) => sf.file),
+                {
+                    onSuccess: ({ uploadedUrls, hasError }) => {
+                        if (uploadedUrls.length > 0) {
+                            const msgText =
+                                trimmed ||
+                                (uploadedUrls.length === 1
+                                    ? "Sent an image"
+                                    : `Sent ${uploadedUrls.length} images`);
+                            onSend(msgText, uploadedUrls);
+                            setText("");
+                            clearAllFiles();
+                        }
 
-                const uploadedUrls: string[] = [];
-                let hasError = false;
-
-                for (const res of uploadResults) {
-                    if (res.success && res.data?.newPath) {
-                        uploadedUrls.push(res.data.newPath);
-                    } else {
-                        hasError = true;
-                    }
-                }
-
-                if (uploadedUrls.length > 0) {
-                    const msgText =
-                        trimmed ||
-                        (uploadedUrls.length === 1
-                            ? "Sent an image"
-                            : `Sent ${uploadedUrls.length} images`);
-                    onSend(msgText, uploadedUrls);
-                    setText("");
-                    clearAllFiles();
-                }
-
-                if (hasError && uploadedUrls.length === 0) {
-                    setUploadError(t("upload_failed"));
-                } else if (hasError) {
-                    setUploadError(t("upload_some_failed"));
-                }
-            } catch {
-                setUploadError(t("upload_failed"));
-            } finally {
-                setIsUploading(false);
-            }
+                        if (hasError && uploadedUrls.length === 0) {
+                            setUploadError(t("upload_failed"));
+                        } else if (hasError) {
+                            setUploadError(t("upload_some_failed"));
+                        }
+                    },
+                    onError: () => setUploadError(t("upload_failed")),
+                },
+            );
         } else {
             onSend(trimmed);
             setText("");

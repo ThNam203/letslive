@@ -112,6 +112,7 @@ func main() {
 func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
 	var vodRepo = repositories.NewVODRepository(dbConn)
 	var vodCommentRepo = repositories.NewVODCommentRepository(dbConn)
+	var vodCommentEditRepo = repositories.NewVODCommentEditRepository(dbConn)
 	var vodCommentLikeRepo = repositories.NewVODCommentLikeRepository(dbConn)
 	var transcodeJobRepo = repositories.NewTranscodeJobRepository(dbConn)
 
@@ -120,7 +121,7 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var minio = miniostorage.NewMinIOStorage(ctx, cfg.MinIO)
 
 	var vodService = vodService.NewVODService(vodRepo, transcodeJobRepo, minio, userGateway)
-	var vodCommentService = vodCommentService.NewVODCommentService(vodCommentRepo, vodCommentLikeRepo, vodRepo, userGateway, dbConn)
+	var vodCommentService = vodCommentService.NewVODCommentService(vodCommentRepo, vodCommentEditRepo, vodCommentLikeRepo, vodRepo, userGateway, dbConn)
 
 	var vodHandler = vodHandler.NewVODHandler(vodService)
 	var vodCommentHandler = vodCommentHandler.NewVODCommentHandler(vodCommentService)

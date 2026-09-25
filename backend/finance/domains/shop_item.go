@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid/v5"
-	"sen1or/letslive/finance/response"
 )
 
 type ShopItem struct {
@@ -21,6 +20,6 @@ type ShopItem struct {
 }
 
 type ShopItemRepository interface {
-	List(ctx context.Context) ([]ShopItem, *response.Response[any])
-	GetById(ctx context.Context, id uuid.UUID) (*ShopItem, *response.Response[any])
+	List(ctx context.Context) ([]ShopItem, error)
+	GetById(ctx context.Context, id uuid.UUID) (*ShopItem, error)
 }

@@ -17,7 +17,7 @@ import {
 } from "@/constant/field-limits";
 
 const ALLOWED_EXTENSIONS = [".mp4", ".mov", ".avi", ".mkv", ".webm"];
-const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_CONCURRENT = 3;
 
 function formatFileSize(bytes: number): string {

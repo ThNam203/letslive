@@ -2,10 +2,10 @@ package vodcomment
 
 import (
 	"context"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/vod/domains"
 	"sen1or/letslive/vod/dto"
 	usergateway "sen1or/letslive/vod/gateway/user"
-	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -13,6 +13,7 @@ import (
 
 type VODCommentService struct {
 	commentRepo     domains.VODCommentRepository
+	commentEditRepo domains.VODCommentEditRepository
 	commentLikeRepo domains.VODCommentLikeRepository
 	vodRepo         domains.VODRepository
 	userGateway     usergateway.UserGateway
@@ -21,6 +22,7 @@ type VODCommentService struct {
 
 func NewVODCommentService(
 	commentRepo domains.VODCommentRepository,
+	commentEditRepo domains.VODCommentEditRepository,
 	commentLikeRepo domains.VODCommentLikeRepository,
 	vodRepo domains.VODRepository,
 	userGateway usergateway.UserGateway,
@@ -28,6 +30,7 @@ func NewVODCommentService(
 ) *VODCommentService {
 	return &VODCommentService{
 		commentRepo:     commentRepo,
+		commentEditRepo: commentEditRepo,
 		commentLikeRepo: commentLikeRepo,
 		vodRepo:         vodRepo,
 		userGateway:     userGateway,

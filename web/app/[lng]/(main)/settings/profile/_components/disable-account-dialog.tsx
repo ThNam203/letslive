@@ -12,12 +12,10 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import useUser from "@/hooks/user";
-import { LogoutAll } from "@/lib/api/auth";
-import { UpdateProfile } from "@/lib/api/user";
+import { useLogoutAll } from "@/hooks/queries/use-auth-mutations";
+import { useUpdateProfile } from "@/hooks/queries/use-profile-mutations";
 import { UserStatus } from "@/types/user";
 import { useState } from "react";
-import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 
 export default function DisableAccountDialog({
@@ -25,58 +23,28 @@ export default function DisableAccountDialog({
 }: {
     isUpdatingProfile: boolean;
 }) {
-    const clearUser = useUser((state) => state.clearUser);
-    const [isDisablingAccount, setIsDisablingAccount] = useState(false);
+    const updateProfile = useUpdateProfile();
+    const logout = useLogoutAll();
     const [isOpen, setIsOpen] = useState(false);
     const { t } = useT(["settings", "api-response", "fetch-error"]);
 
-    const logoutHandler = async () => {
-        await LogoutAll().then((res) => {
-            if (res.statusCode === 204) {
-                clearUser();
-            } else {
-                toast(t(`api-response:${res.key}`), {
-                    toastId: res.requestId,
-                    type: "error",
-                });
-            }
-        });
-    };
-
-    const handleDisableAccount = async () => {
-        try {
-            setIsDisablingAccount(true);
-            await UpdateProfile({
-                status: UserStatus.DISABLED,
-            })
-                .then((res) => {
-                    if (res.success) return logoutHandler();
-                    else
-                        toast.error(t(`api-response:${res.key}`), {
-                            toastId: res.requestId,
-                            type: "error",
-                        });
-                })
-                .catch((_) => {
-                    toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "client-fetch-error-id",
-                        type: "error",
-                    });
-                })
-                .finally(() => setIsDisablingAccount(false));
-        } catch (error) {
-            toast.error(t("settings:disable.unknown_error"));
-        } finally {
-            setIsOpen(false);
-            setIsDisablingAccount(false);
-        }
+    const handleDisableAccount = () => {
+        updateProfile.mutate(
+            { status: UserStatus.DISABLED },
+            {
+                onSuccess: () => {
+                    setIsOpen(false);
+                    logout.mutate();
+                },
+            },
+        );
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <button
-                    disabled={isUpdatingProfile || isDisablingAccount}
+                    disabled={isUpdatingProfile || updateProfile.isPending}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive-hover rounded-md px-4 py-2 text-sm font-medium"
                 >
                     {t("settings:disable.button")}
@@ -97,11 +65,13 @@ export default function DisableAccountDialog({
                         <Button variant="outline">{t("common:cancel")}</Button>
                     </DialogClose>
                     <Button
-                        disabled={isUpdatingProfile || isDisablingAccount}
+                        disabled={isUpdatingProfile || updateProfile.isPending}
                         onClick={handleDisableAccount}
                     >
                         {t("settings:disable.dialog.confirm")}
-                        {isDisablingAccount && <IconLoader className="ml-1" />}
+                        {updateProfile.isPending && (
+                            <IconLoader className="ml-1" />
+                        )}
                     </Button>
                 </DialogFooter>
             </DialogContent>

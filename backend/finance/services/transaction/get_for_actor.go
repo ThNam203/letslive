@@ -2,28 +2,24 @@ package transaction
 
 import (
 	"context"
+	"errors"
+	"sen1or/letslive/finance/domains"
 	"sen1or/letslive/finance/dto"
-	response "sen1or/letslive/finance/response"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *TransactionService) GetForActor(ctx context.Context, transactionId uuid.UUID, actorId uuid.UUID) (*dto.TransactionResponse, *response.Response[any]) {
+func (s *TransactionService) GetForActor(ctx context.Context, transactionId uuid.UUID, actorId uuid.UUID) (*dto.TransactionResponse, error) {
 	tx, errResp := s.transactionRepo.GetById(ctx, transactionId)
 	if errResp != nil {
 		return nil, errResp
 	}
 	if tx.ActorId == nil || *tx.ActorId != actorId {
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_TRANSACTION_FAILED,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrTransactionFailed
 	}
 
 	account, accErr := s.accountRepo.GetUserWalletByOwnerId(ctx, actorId)
-	if accErr != nil && accErr.Code != response.RES_ERR_ACCOUNT_NOT_FOUND_CODE {
+	if accErr != nil && !errors.Is(accErr, domains.ErrAccountNotFound) {
 		return nil, accErr
 	}
 

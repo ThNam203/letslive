@@ -4,43 +4,27 @@ import (
 	"context"
 	"errors"
 	"sen1or/letslive/auth/domains"
-	serviceresponse "sen1or/letslive/auth/response"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresRefreshTokenRepo) FindByValue(ctx context.Context, tokenVal string) (*domains.RefreshToken, *serviceresponse.Response[any]) {
+func (r *postgresRefreshTokenRepo) FindByValue(ctx context.Context, tokenVal string) (*domains.RefreshToken, error) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT * 
 		FROM refresh_tokens 
 		WHERE token = $1
 	`, tokenVal)
 	if err != nil {
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseQuery
 	}
 	defer rows.Close()
 
 	token, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domains.RefreshToken])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, serviceresponse.NewResponseFromTemplate[any](
-				serviceresponse.RES_ERR_REFRESH_TOKEN_NOT_FOUND,
-				nil,
-				nil,
-				nil,
-			)
+			return nil, domains.ErrRefreshTokenNotFound
 		}
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 
 	return &token, nil

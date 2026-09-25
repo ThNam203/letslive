@@ -27,10 +27,6 @@ export async function GetConversation(
 export async function CreateConversation(body: {
     type: ConversationType;
     participantIds: string[];
-    participantUsernames?: Record<string, string>;
-    participantProfilePictures?: Record<string, string>;
-    creatorUsername?: string;
-    creatorProfilePicture?: string;
     name?: string;
 }): Promise<ApiResponse<Conversation>> {
     return fetchClient<ApiResponse<Conversation>>(`/conversations`, {

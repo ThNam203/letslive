@@ -72,8 +72,8 @@ export default function ProfileHeader({
                     alt={t("accessibility:profile_banner")}
                     className="object-cover"
                     fill={true}
-                    priority={true}
-                    unoptimized
+                    sizes="100vw"
+                    preload={true}
                 />
             </div>
             <div className="-mt-16 px-4 sm:-mt-24">
@@ -89,24 +89,28 @@ export default function ProfileHeader({
                     </Avatar>
                     {me?.id && me.id !== user.id && (
                         <>
-                            <Button
-                                variant={user.isFollowing ? "destructive" : "default"}
-                                disabled={followMutation.isPending || !me}
-                                onClick={onFollowClick}
-                                className="absolute right-0 bottom-4 flex translate-x-[50%] flex-row items-center justify-center gap-0"
-                            >
-                                {followMutation.isPending && (
-                                    <IconLoader className="mr-1" />
-                                )}
-                                {user.isFollowing ? t("common:unfollow") : t("common:follow")}
-                            </Button>
-                            <Button
-                                variant="outline"
-                                onClick={() => setIsGiftModalOpen(true)}
-                                className="absolute right-0 bottom-16 flex translate-x-[50%] flex-row items-center justify-center gap-1"
-                            >
-                                🎁 {t("shop:shop.gift_button")}
-                            </Button>
+                            <div className="absolute right-0 bottom-4 flex translate-x-[50%] flex-row items-center gap-2">
+                                <Button
+                                    variant={user.isFollowing ? "destructive" : "default"}
+                                    disabled={followMutation.isPending || !me}
+                                    onClick={onFollowClick}
+                                    className="flex flex-row items-center justify-center gap-0"
+                                >
+                                    {followMutation.isPending && (
+                                        <IconLoader className="mr-1" />
+                                    )}
+                                    {user.isFollowing
+                                        ? t("common:unfollow")
+                                        : t("common:follow")}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsGiftModalOpen(true)}
+                                    className="flex flex-row items-center justify-center gap-1"
+                                >
+                                    🎁 {t("shop:shop.gift_button")}
+                                </Button>
+                            </div>
                             <GiftModal
                                 open={isGiftModalOpen}
                                 onClose={() => setIsGiftModalOpen(false)}

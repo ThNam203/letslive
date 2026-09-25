@@ -85,8 +85,9 @@ export const fetchClient = async <T>(
         }
 
         return validateAndParseResponse<T>(response);
-    } catch (err: any) {
-        if (err.name === "AbortError") {
+    } catch (err: unknown) {
+        // an aborted request surfaces as a DOMException, which inherits Error
+        if (err instanceof Error && err.name === "AbortError") {
             throw new Error(
                 `request timed out after ${options.timeoutMs ?? DEFAULT_TIMEOUT_MS} ms`,
             );

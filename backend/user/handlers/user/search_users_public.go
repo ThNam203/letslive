@@ -3,8 +3,8 @@ package user
 import (
 	"context"
 	"net/http"
-	"sen1or/letslive/user/handlers/utils"
 	"sen1or/letslive/shared/pkg/tracer"
+	"sen1or/letslive/user/handlers/utils"
 	"sen1or/letslive/user/response"
 )
 
@@ -30,7 +30,7 @@ func (h *UserHandler) SearchUsersPublicHandler(w http.ResponseWriter, r *http.Re
 	span.End()
 
 	if err != nil {
-		h.WriteResponse(w, ctx, err)
+		h.WriteResponse(w, ctx, response.FromError(err))
 		return
 	}
 

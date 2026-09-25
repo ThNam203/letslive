@@ -9,7 +9,6 @@ export class DmMessageService {
     async sendMessage(
         conversationId: string,
         senderId: string,
-        senderUsername: string,
         text: string,
         type: DmMessageType = DmMessageType.TEXT,
         imageUrls?: string[],
@@ -24,10 +23,14 @@ export class DmMessageService {
             return newResponseFromTemplate(RESPONSE_TEMPLATES.RES_ERR_CONVERSATION_NOT_FOUND)
         }
 
-        const isParticipant = conversation.participants.some((p) => p.userId === senderId)
-        if (!isParticipant) {
+        const participant = conversation.participants.find((p) => p.userId === senderId)
+        if (!participant) {
             return newResponseFromTemplate(RESPONSE_TEMPLATES.RES_ERR_NOT_PARTICIPANT)
         }
+
+        // The display name is taken from the participant record, never from the
+        // caller's payload, so a client cannot send messages under another name.
+        const senderUsername = participant.username
 
         if (!text || text.trim().length === 0) {
             return newResponseFromTemplate(RESPONSE_TEMPLATES.RES_ERR_INVALID_INPUT)

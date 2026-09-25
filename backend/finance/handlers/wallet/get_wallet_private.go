@@ -23,7 +23,7 @@ func (h *WalletHandler) GetWalletPrivateHandler(w http.ResponseWriter, r *http.R
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

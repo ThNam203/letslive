@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"sen1or/letslive/user/handlers/utils"
 	"sen1or/letslive/shared/pkg/tracer"
+	"sen1or/letslive/user/handlers/utils"
 	"sen1or/letslive/user/response"
 )
 
@@ -66,7 +66,7 @@ func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWrit
 	span.End()
 
 	if err != nil {
-		h.WriteResponse(w, ctx, err)
+		h.WriteResponse(w, ctx, response.FromError(err))
 		return
 	}
 

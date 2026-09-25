@@ -2,7 +2,7 @@ package domains
 
 import (
 	"context"
-	response "sen1or/letslive/finance/response"
+	"encoding/json"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -37,7 +37,7 @@ type Transaction struct {
 	Reference *string         `json:"reference" db:"reference"`
 	Status    ProcessStatus   `json:"status" db:"status"`
 	ActorId   *uuid.UUID      `json:"actorId" db:"actor_id"`
-	Metadata  *string         `json:"metadata" db:"metadata"`
+	Metadata  json.RawMessage `json:"metadata" db:"metadata"`
 	CreatedAt time.Time       `json:"createdAt" db:"created_at"`
 }
 
@@ -59,15 +59,15 @@ type LedgerEntryDraft struct {
 }
 
 type TransactionRepository interface {
-	Create(ctx context.Context, tx Transaction) (*Transaction, *response.Response[any])
-	GetById(ctx context.Context, id uuid.UUID) (*Transaction, *response.Response[any])
-	GetEntriesForAccount(ctx context.Context, transactionId uuid.UUID, accountId uuid.UUID) ([]LedgerEntry, *response.Response[any])
-	ListByActor(ctx context.Context, actorId uuid.UUID, page int, limit int) ([]Transaction, int, *response.Response[any])
+	Create(ctx context.Context, tx Transaction) (*Transaction, error)
+	GetById(ctx context.Context, id uuid.UUID) (*Transaction, error)
+	GetEntriesForAccount(ctx context.Context, transactionId uuid.UUID, accountId uuid.UUID) ([]LedgerEntry, error)
+	ListByActor(ctx context.Context, actorId uuid.UUID, page int, limit int) ([]Transaction, int, error)
 	// UpdateStatus performs a status-only transition; the DB trigger rejects
 	// changes on completed transactions and non-status column updates.
-	UpdateStatus(ctx context.Context, id uuid.UUID, status ProcessStatus) *response.Response[any]
+	UpdateStatus(ctx context.Context, id uuid.UUID, status ProcessStatus) error
 	// CompleteWithEntries inserts ledger entries and transitions transaction status -> completed atomically.
 	// It is idempotent: an already-completed transaction is a no-op success. User wallets
 	// may not go negative; the DB zero-sum trigger enforces sum(entries.amount) = 0.
-	CompleteWithEntries(ctx context.Context, transactionId uuid.UUID, entries []LedgerEntryDraft) *response.Response[any]
+	CompleteWithEntries(ctx context.Context, transactionId uuid.UUID, entries []LedgerEntryDraft) error
 }

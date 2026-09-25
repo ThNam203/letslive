@@ -3,8 +3,8 @@ package vod
 import (
 	"context"
 	"net/http"
-	"sen1or/letslive/vod/handlers/utils"
 	"sen1or/letslive/shared/pkg/tracer"
+	"sen1or/letslive/vod/handlers/utils"
 	response "sen1or/letslive/vod/response"
 )
 
@@ -25,7 +25,7 @@ func (h *VODHandler) GetVODsOfAuthorPrivateHandler(w http.ResponseWriter, r *htt
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

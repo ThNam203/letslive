@@ -63,6 +63,18 @@ export function badRequest(key: string, message: string): Response {
     return HttpResponse.json(body, { status: 400 });
 }
 
+export function forbidden(key: string, message: string): Response {
+    const body: ApiResponse<null> = {
+        requestId: requestId(),
+        success: false,
+        statusCode: 403,
+        code: 0,
+        key,
+        message,
+    };
+    return HttpResponse.json(body, { status: 403 });
+}
+
 export function unauthorized(): Response {
     const body: ApiResponse<null> = {
         requestId: requestId(),

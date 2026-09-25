@@ -3,7 +3,6 @@ package domains
 import (
 	"context"
 	"sen1or/letslive/user/dto"
-	"sen1or/letslive/user/response"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -54,22 +53,22 @@ const (
 )
 
 type UserRepository interface {
-	GetById(ctx context.Context, userId uuid.UUID) (*User, *response.Response[any])
-	GetAll(ctx context.Context, page int) ([]User, *response.Response[any])
-	GetByUsername(ctx context.Context, username string) (*User, *response.Response[any])
-	GetByEmail(ctx context.Context, email string) (*User, *response.Response[any])
-	GetByAPIKey(ctx context.Context, apiKey uuid.UUID) (*User, *response.Response[any])
-	GetStatusesByIds(ctx context.Context, userIds []uuid.UUID) (map[uuid.UUID]UserStatus, *response.Response[any])
+	GetById(ctx context.Context, userId uuid.UUID) (*User, error)
+	GetAll(ctx context.Context, page int) ([]User, error)
+	GetByUsername(ctx context.Context, username string) (*User, error)
+	GetByEmail(ctx context.Context, email string) (*User, error)
+	GetByAPIKey(ctx context.Context, apiKey uuid.UUID) (*User, error)
+	GetStatusesByIds(ctx context.Context, userIds []uuid.UUID) (map[uuid.UUID]UserStatus, error)
 
 	// the authenticatedUserId is used for checking if the caller is following the userId
-	GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, *response.Response[any])
-	GetPublicInfosByIds(ctx context.Context, ids []uuid.UUID, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, *response.Response[any])
-	GetRecommendedPublic(ctx context.Context, excludeUserId *uuid.UUID, page, limit int) ([]dto.GetUserPublicResponseDTO, *response.Response[any])
-	SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, *response.Response[any])
+	GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, error)
+	GetPublicInfosByIds(ctx context.Context, ids []uuid.UUID, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, error)
+	GetRecommendedPublic(ctx context.Context, excludeUserId *uuid.UUID, page, limit int) ([]dto.GetUserPublicResponseDTO, error)
+	SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, error)
 
-	Create(ctx context.Context, username string, email string, authProvider AuthProvider) (*User, *response.Response[any])
-	Update(ctx context.Context, user dto.UpdateUserRequestDTO) (*User, *response.Response[any])
-	UpdateStreamAPIKey(ctx context.Context, userId uuid.UUID, newKey string) *response.Response[any]
-	UpdateProfilePicture(ctx context.Context, userId uuid.UUID, newProfilePictureURL string) *response.Response[any]
-	UpdateBackgroundPicture(ctx context.Context, userId uuid.UUID, newBackgroundPictureURL string) *response.Response[any]
+	Create(ctx context.Context, username string, email string, authProvider AuthProvider) (*User, error)
+	Update(ctx context.Context, user dto.UpdateUserRequestDTO) (*User, error)
+	UpdateStreamAPIKey(ctx context.Context, userId uuid.UUID, newKey string) error
+	UpdateProfilePicture(ctx context.Context, userId uuid.UUID, newProfilePictureURL string) error
+	UpdateBackgroundPicture(ctx context.Context, userId uuid.UUID, newBackgroundPictureURL string) error
 }

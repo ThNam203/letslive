@@ -18,24 +18,40 @@
     "res_err_database_issue": "Database issue, please try again.",
     "res_err_internal_server": "Something went wrong.",
     "res_err_failed_to_send_verification": "Failed to send email verification, please try again later.",
+
     "res_err_user_not_found": "User not found.",
     "res_err_account_disabled": "This account has been disabled.",
     "res_err_image_too_large": "Image exceeds 10mb limit.",
+    "res_err_notification_not_found": "Notification not found.",
+    "res_err_username_taken": "Username already taken.",
+
     "res_err_livestream_update_after_ended": "Failed to update, the livestream has ended.",
     "res_err_livestream_not_found": "Livestream not found.",
-    "res_err_vod_not_found": "VOD not found.",
     "res_err_end_already_ended_livestream": "The livestream has already been ended.",
-    "res_err_query_scan_failed": "Failed to scan query results.",
     "res_err_livestream_create_failed": "Failed to create livestream record.",
     "res_err_livestream_update_failed": "Failed to update livestream record.",
+
+    "res_err_vod_not_found": "VOD not found.",
     "res_err_vod_create_failed": "Failed to create VOD record.",
     "res_err_vod_update_failed": "Failed to update VOD record.",
     "res_err_vod_comment_not_found": "Comment not found.",
     "res_err_vod_comment_create_failed": "Failed to create comment.",
     "res_err_vod_comment_already_liked": "Comment already liked.",
     "res_err_vod_comment_not_liked": "Comment has not been liked.",
+    "res_err_vod_comment_update_failed": "Failed to update comment.",
     "res_err_vod_comment_delete_failed": "Failed to delete comment.",
-    "err_video_too_large": "Video exceeds upload size limit.",
+    "res_err_vod_view_threshold": "Watch time threshold not met.",
+    "res_err_video_too_large": "Video exceeds upload size limit.",
+
+    "res_err_room_not_found": "Room not found.",
+    "res_err_conversation_not_found": "Conversation not found.",
+    "res_err_dm_already_exists": "A conversation with this user already exists.",
+    "res_err_not_participant": "You are not a participant of this conversation.",
+    "res_err_insufficient_role": "You do not have permission for this action.",
+    "res_err_dm_message_not_found": "Message not found.",
+    "res_err_cannot_message_self": "You cannot start a conversation with yourself.",
+    "res_err_too_many_participants": "Too many participants.",
+    "res_err_user_setup_incomplete": "This user has not finished setting up their account yet.",
 
     "res_err_account_not_found": "Wallet account not found.",
     "res_err_account_frozen": "Your wallet account is currently frozen.",
@@ -50,9 +66,11 @@
     "res_err_user_service_error": "Could not deliver the item, your payment was refunded.",
     "res_err_transaction_not_found": "Transaction not found.",
 
-    "res_succ_sent_verification_email": "Verification email sent, please check your inbox",
     "res_succ_ok": "Success",
     "res_succ_login": "Login successfully",
     "res_succ_sign_up": "Sign up successfully",
+    "res_succ_sent_verification_email": "Verification email sent, please check your inbox",
+    "res_succ_email_verified": "Email verified successfully, please continue to sign up.",
+
     "default_error": "Something went wrong. Please try again."
 }

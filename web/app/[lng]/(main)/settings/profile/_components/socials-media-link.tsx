@@ -14,7 +14,7 @@ import IconTiktok from "@/components/icons/tiktok";
 import IconClose from "@/components/icons/close";
 import useT from "@/hooks/use-translation";
 import { toast } from "@/components/utils/toast";
-import { UpdateProfile } from "@/lib/api/user";
+import { useUpdateProfile } from "@/hooks/queries/use-profile-mutations";
 import IconCheck from "@/components/icons/check";
 import { SocialMediaLinks } from "@/types/user";
 import { SOCIAL_URL_MAX_LENGTH } from "@/constant/field-limits";
@@ -88,6 +88,7 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
     );
 
     const { t } = useT(["common", "accessibility"]);
+    const updateProfile = useUpdateProfile();
 
     const handleInputChange = (platform: string, value: string) => {
         setLinks((prev) => ({
@@ -120,7 +121,7 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
         }
     };
 
-    const handleSave = async (platform: string, value: string) => {
+    const handleSave = (platform: string, value: string) => {
         try {
             const trimmedValue = value.trim();
             if (trimmedValue.length === 0) {
@@ -129,24 +130,18 @@ export function SocialMediaEdit({ initialLinks = {} }: SocialMediaEditProps) {
             }
 
             new URL(trimmedValue); // ensures it's a valid URL
-            await UpdateProfile({
-                socialMediaLinks: { [platform]: trimmedValue },
-            })
-                .then((res) => {
-                    if (res.success) {
+            updateProfile.mutate(
+                { socialMediaLinks: { [platform]: trimmedValue } },
+                {
+                    onSuccess: (res) => {
                         toast.success(t(`api-response:${res.key}`), {
                             toastId: res.requestId,
                             type: "success",
                         });
                         collapseField(platform);
-                    }
-                })
-                .catch((_) => {
-                    toast(t("fetch-error:client_fetch_error"), {
-                        toastId: "client-fetch-error-id",
-                        type: "error",
-                    });
-                });
+                    },
+                },
+            );
         } catch (e) {
             if (e instanceof TypeError) {
                 toast.error(t("settings:social_media_links.invalid_url"));

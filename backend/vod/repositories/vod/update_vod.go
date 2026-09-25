@@ -3,14 +3,13 @@ package vod
 import (
 	"context"
 	"errors"
-	"sen1or/letslive/vod/domains"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/vod/response"
+	"sen1or/letslive/vod/domains"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresVODRepo) Update(ctx context.Context, vod domains.VOD) (*domains.VOD, *response.Response[any]) {
+func (r *postgresVODRepo) Update(ctx context.Context, vod domains.VOD) (*domains.VOD, error) {
 	query := `
         update vods
         set title = $1, description = $2, thumbnail_url = $3, visibility = $4, duration = $5, playback_url = $6, status = $7, updated_at = now()
@@ -23,31 +22,16 @@ func (r *postgresVODRepo) Update(ctx context.Context, vod domains.VOD) (*domains
 	)
 	if err != nil {
 		logger.Errorf(ctx, "db query error [updatevod id=%s: %v]", vod.Id, err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_VOD_UPDATE_FAILED,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrVODUpdateFailed
 	}
 
 	updatedVod, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.VOD])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, response.NewResponseFromTemplate[any](
-				response.RES_ERR_VOD_NOT_FOUND,
-				nil,
-				nil,
-				nil,
-			)
+			return nil, domains.ErrVODNotFound
 		}
 		logger.Errorf(ctx, "db scan error [updatevod id=%s: %v]", vod.Id, err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 	return &updatedVod, nil
 }

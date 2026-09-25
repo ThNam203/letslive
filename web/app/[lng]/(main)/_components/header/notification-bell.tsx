@@ -33,7 +33,7 @@ export default function NotificationBell() {
     const unreadCount = unreadData?.count ?? 0;
 
     const { data, isLoading } = useNotificationsInfinite(!!user && isOpen);
-    const notifications = data?.pages[0] ?? [];
+    const notifications = data?.pages[0]?.items ?? [];
 
     const markAsRead = useMarkNotificationAsRead();
     const markAllAsRead = useMarkAllNotificationsAsRead();

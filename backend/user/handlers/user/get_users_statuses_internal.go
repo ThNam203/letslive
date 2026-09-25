@@ -31,7 +31,7 @@ func (h *UserHandler) GetUsersStatusesInternalHandler(w http.ResponseWriter, r *
 
 	statuses, sErr := h.userService.GetUsersStatuses(ctx, reqBody.UserIds)
 	if sErr != nil {
-		h.WriteResponse(w, ctx, sErr)
+		h.WriteResponse(w, ctx, response.FromError(sErr))
 		return
 	}
 

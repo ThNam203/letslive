@@ -2,12 +2,12 @@ package services
 
 import (
 	"context"
+	"errors"
 	"os"
 	"sen1or/letslive/auth/config"
 	"sen1or/letslive/auth/domains"
 	usergateway "sen1or/letslive/auth/gateway/user"
 	"sen1or/letslive/shared/pkg/logger"
-	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/types"
 	"time"
 
@@ -33,7 +33,7 @@ func NewJWTService(repo domains.RefreshTokenRepository, cfg config.JWT, userGate
 }
 
 // generate the refresh token with access token (for login and signup)
-func (c *JWTService) GenerateTokenPair(ctx context.Context, userId string) (*types.TokenPairInformation, *serviceresponse.Response[any]) {
+func (c *JWTService) GenerateTokenPair(ctx context.Context, userId string) (*types.TokenPairInformation, error) {
 	refreshToken, err := c.generateRefreshToken(ctx, userId)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (c *JWTService) GenerateTokenPair(ctx context.Context, userId string) (*typ
 
 // create a new access token for the refresh token
 // the process is called "refresh token"
-func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*types.AccessTokenInformation, *serviceresponse.Response[any]) {
+func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*types.AccessTokenInformation, error) {
 	myClaims := types.MyClaims{}
 	parsedToken, err := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()})).ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (any, error) {
 		return []byte(os.Getenv("REFRESH_TOKEN_SECRET")), nil
@@ -62,34 +62,19 @@ func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*ty
 
 	if err != nil || !parsedToken.Valid {
 		logger.Errorf(ctx, "refresh token not valid: %v", err)
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_UNAUTHORIZED,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrUnauthorized
 	}
 
 	record, findErr := c.repo.FindByValue(ctx, refreshToken)
 	if findErr != nil {
-		if findErr.Code != serviceresponse.RES_ERR_REFRESH_TOKEN_NOT_FOUND_CODE {
+		if !errors.Is(findErr, domains.ErrRefreshTokenNotFound) {
 			return nil, findErr
 		}
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_UNAUTHORIZED,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrUnauthorized
 	}
 	if record.RevokedAt != nil || !record.ExpiresAt.After(time.Now()) {
 		logger.Errorf(ctx, "refresh token %s is revoked or expired", record.Id)
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_UNAUTHORIZED,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrUnauthorized
 	}
 
 	status, statusErr := c.userGateway.GetUserStatus(ctx, myClaims.UserId)
@@ -97,12 +82,7 @@ func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*ty
 		return nil, statusErr
 	}
 	if status == usergateway.UserStatusDisabled {
-		return nil, serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_ACCOUNT_DISABLED,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrAccountDisabled
 	}
 
 	accessToken, genErr := c.generateAccessToken(myClaims.UserId)
@@ -117,17 +97,12 @@ func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*ty
 	}, nil
 }
 
-func (c *JWTService) generateRefreshToken(ctx context.Context, userId string) (string, *serviceresponse.Response[any]) {
+func (c *JWTService) generateRefreshToken(ctx context.Context, userId string) (string, error) {
 	refreshTokenExpiresDuration := time.Duration(c.config.RefreshTokenMaxAge) * time.Second
 	refreshTokenExpiresAt := time.Now().Add(refreshTokenExpiresDuration)
 	tokenId, idErr := uuid.NewV4()
 	if idErr != nil {
-		return "", serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return "", domains.ErrInternal
 	}
 	myClaims := types.MyClaims{
 		UserId:   userId,
@@ -145,12 +120,7 @@ func (c *JWTService) generateRefreshToken(ctx context.Context, userId string) (s
 
 	refreshToken, err := unsignedRefreshToken.SignedString([]byte(os.Getenv("REFRESH_TOKEN_SECRET")))
 	if err != nil {
-		return "", serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return "", domains.ErrInternal
 	}
 
 	userIdUUID := uuid.FromStringOrNil(userId)
@@ -167,7 +137,7 @@ func (c *JWTService) generateRefreshToken(ctx context.Context, userId string) (s
 	return refreshToken, nil
 }
 
-func (c *JWTService) generateAccessToken(userId string) (string, *serviceresponse.Response[any]) {
+func (c *JWTService) generateAccessToken(userId string) (string, error) {
 	accessTokenDuration := time.Duration(c.config.AccessTokenMaxAge) * time.Second
 	accessTokenExpiresAt := time.Now().Add(accessTokenDuration)
 	myClaims := types.MyClaims{
@@ -185,18 +155,13 @@ func (c *JWTService) generateAccessToken(userId string) (string, *servicerespons
 
 	accessToken, err := unsignedAccessToken.SignedString([]byte(os.Getenv("ACCESS_TOKEN_SECRET")))
 	if err != nil {
-		return "", serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return "", domains.ErrInternal
 	}
 
 	return accessToken, nil
 }
 
-func (c *JWTService) RevokeTokenByValue(ctx context.Context, tokenValue string) *serviceresponse.Response[any] {
+func (c *JWTService) RevokeTokenByValue(ctx context.Context, tokenValue string) error {
 	token, err := c.repo.FindByValue(ctx, tokenValue)
 	if err != nil {
 		return err
@@ -209,11 +174,11 @@ func (c *JWTService) RevokeTokenByValue(ctx context.Context, tokenValue string) 
 	return err
 }
 
-func (c *JWTService) RevokeAllTokensOfUser(ctx context.Context, userID uuid.UUID) *serviceresponse.Response[any] {
+func (c *JWTService) RevokeAllTokensOfUser(ctx context.Context, userID uuid.UUID) error {
 	return c.repo.RevokeAllTokensOfUser(ctx, userID)
 }
 
-func (c *JWTService) GenerateReactivationToken(ctx context.Context, userId string) (string, *serviceresponse.Response[any]) {
+func (c *JWTService) GenerateReactivationToken(ctx context.Context, userId string) (string, error) {
 	expiresAt := time.Now().Add(reactivationTokenMaxAge)
 	myClaims := types.MyClaims{
 		UserId:   userId,
@@ -231,30 +196,20 @@ func (c *JWTService) GenerateReactivationToken(ctx context.Context, userId strin
 
 	token, err := unsignedToken.SignedString([]byte(os.Getenv("REACTIVATION_TOKEN_SECRET")))
 	if err != nil {
-		return "", serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		)
+		return "", domains.ErrInternal
 	}
 
 	return token, nil
 }
 
-func (c *JWTService) VerifyReactivationToken(ctx context.Context, token string) (string, *serviceresponse.Response[any]) {
+func (c *JWTService) VerifyReactivationToken(ctx context.Context, token string) (string, error) {
 	myClaims := types.MyClaims{}
 	parsedToken, err := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()})).ParseWithClaims(token, &myClaims, func(t *jwt.Token) (any, error) {
 		return []byte(os.Getenv("REACTIVATION_TOKEN_SECRET")), nil
 	})
 
 	if err != nil || !parsedToken.Valid || myClaims.Purpose != reactivationTokenPurpose {
-		return "", serviceresponse.NewResponseFromTemplate[any](
-			serviceresponse.RES_ERR_UNAUTHORIZED,
-			nil,
-			nil,
-			nil,
-		)
+		return "", domains.ErrUnauthorized
 	}
 
 	return myClaims.UserId, nil

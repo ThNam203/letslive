@@ -32,11 +32,11 @@ export enum AccountStatus {
 
 export type Account = {
     id: string;
-    ownerId: string;
+    /** null for platform, escrow and fee accounts — only user wallets have an owner */
+    ownerId: string | null;
     type: AccountType;
     status: AccountStatus;
     createdAt: string;
-    updatedAt: string;
 };
 
 export type AccountBalance = {
@@ -79,11 +79,10 @@ export type Transaction = {
     type: TransactionType;
     status: TransactionStatus;
     reference: string | null;
-    description: string | null;
-    actorId: string;
-    metadata: Record<string, any> | null;
+    /** null for transactions initiated by a service rather than a user */
+    actorId: string | null;
+    metadata: Record<string, unknown> | null;
     createdAt: string;
-    updatedAt: string;
     entries: LedgerEntry[] | null;
 };
 
@@ -110,19 +109,19 @@ export enum PaymentStatus {
 
 export enum PaymentProvider {
     STRIPE = "stripe",
-    PAYPAL = "paypal",
+    /** registered on the dev profile only */
+    MOCK = "mock",
 }
 
 export type Payment = {
     id: string;
-    transactionId: string | null;
+    transactionId: string;
     provider: PaymentProvider;
-    providerReference: string | null;
+    providerReference: string;
     currencyCode: CurrencyCode;
     amount: string;
     status: PaymentStatus;
     createdAt: string;
-    updatedAt: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -137,5 +136,5 @@ export type CreateDepositRequest = {
 
 export type DepositResponse = {
     payment: Payment;
-    checkoutUrl: string | null;
+    checkoutUrl: string;
 };

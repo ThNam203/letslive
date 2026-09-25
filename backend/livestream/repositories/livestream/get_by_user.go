@@ -5,13 +5,12 @@ import (
 	"errors"
 	"sen1or/letslive/livestream/domains"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/livestream/response"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresLivestreamRepo) GetByUser(ctx context.Context, userId uuid.UUID) (*domains.Livestream, *response.Response[any]) {
+func (r *postgresLivestreamRepo) GetByUser(ctx context.Context, userId uuid.UUID) (*domains.Livestream, error) {
 	query := `
 		SELECT id, user_id, title, description, thumbnail_url, visibility, view_count, started_at, ended_at, created_at, updated_at, vod_id
 		FROM livestreams
@@ -23,12 +22,7 @@ func (r *postgresLivestreamRepo) GetByUser(ctx context.Context, userId uuid.UUID
 	rows, err := r.dbConn.Query(ctx, query, userId)
 	if err != nil {
 		logger.Errorf(ctx, "db query error [getlivestreambyuser: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseQuery
 	}
 
 	livestream, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[domains.Livestream])
@@ -37,12 +31,7 @@ func (r *postgresLivestreamRepo) GetByUser(ctx context.Context, userId uuid.UUID
 			return nil, nil
 		}
 		logger.Errorf(ctx, "db scan error [getlivestreambyuser: %v]", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 	return &livestream, nil
 }

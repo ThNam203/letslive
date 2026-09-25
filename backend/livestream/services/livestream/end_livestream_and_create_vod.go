@@ -2,19 +2,19 @@ package livestream
 
 import (
 	"context"
+	"sen1or/letslive/livestream/domains"
 	"sen1or/letslive/livestream/dto"
 	vodgateway "sen1or/letslive/livestream/gateway/vod"
-	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/livestream/response"
 	"sen1or/letslive/livestream/utils"
+	"sen1or/letslive/shared/pkg/logger"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *LivestreamService) EndLivestreamAndCreateVOD(ctx context.Context, streamId uuid.UUID, endReqDTO dto.EndLivestreamRequestDTO) *response.Response[any] {
+func (s *LivestreamService) EndLivestreamAndCreateVOD(ctx context.Context, streamId uuid.UUID, endReqDTO dto.EndLivestreamRequestDTO) error {
 	if err := utils.Validator.Struct(&endReqDTO); err != nil {
-		return response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil)
+		return domains.ErrInvalidPayload
 	}
 
 	currentLivestream, err := s.livestreamRepo.GetById(ctx, streamId)
@@ -23,12 +23,7 @@ func (s *LivestreamService) EndLivestreamAndCreateVOD(ctx context.Context, strea
 	}
 
 	if currentLivestream.EndedAt != nil {
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_END_ALREADY_ENDED_LIVESTREAM,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrEndAlreadyEndedLivestream
 	}
 
 	now := time.Now()
@@ -65,7 +60,7 @@ func (s *LivestreamService) EndLivestreamAndCreateVOD(ctx context.Context, strea
 	vodId, createErr := s.vodGateway.CreateVOD(ctx, createReq)
 	if createErr != nil {
 		logger.Warnf(ctx, "failed to create VOD via gateway for livestream %s: %v", currentLivestream.Id, createErr)
-		return response.NewResponseFromTemplate[any](response.RES_ERR_VOD_CREATE_FAILED, nil, nil, nil)
+		return domains.ErrVODCreateFailed
 	}
 
 	if vodId != nil {

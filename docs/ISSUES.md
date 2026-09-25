@@ -1,6 +1,6 @@
 # Issues — letslive
 
-_Last updated: 2026-07-14_
+_Last updated: 2026-09-08_
 
 ---
 
@@ -253,6 +253,147 @@ Files: [web/hooks/queries/use-conversations.ts](web/hooks/queries/use-conversati
 
 **W5. Settings mutations** — profile (username/bio/pictures), stream info, password change, chat-commands CRUD. Straightforward `useMutation` wraps of existing logic; spot-check each save button once.
 **W6. VOD comment create/delete/like** — optimistic local state preserved as-is, only the API-call plumbing changed.
+
+---
+
+## Design Consistency Issues
+
+_Added 2026-09-08 from a full-repo review. Scope is **code vs. code design** — convention drift, duplicated or dead registries, half-finished migrations. Not behavioral bugs (see Logic/Consistency above) and not TODOs. Nothing here is a security issue._
+
+### ✅ Resolved — commit `fad2525` (`fix/response-registry-consistency`)
+
+**C1. 13 backend response keys had no translation**
+``t(`api-response:${res.key}`)`` renders the raw key string when a key is missing, so users saw e.g. `res_err_notification_not_found`. Missing: notification-not-found, username-taken, insufficient-inventory, vod-view-threshold, email-verified, and all 8 chat DM/conversation keys.
+Files: [web/lib/i18n/locales/en-US/api-response.json](web/lib/i18n/locales/en-US/api-response.json), [web/lib/i18n/locales/vi-VN/api-response.json](web/lib/i18n/locales/vi-VN/api-response.json)
+
+**C2. `err_video_too_large` broke the `res_err_` prefix convention**
+Renamed to `res_err_video_too_large` in the backend, both locales, and the web enum.
+File: [backend/vod/response/error.go](backend/vod/response/error.go)
+
+**C3. Orphan `res_err_query_scan_failed` key + dead `_CODE` constants**
+The key existed only in i18n — the backend never defined its `_KEY` and no template emitted it. Removed the i18n entries and the dead `RES_ERR_QUERY_SCAN_FAILED_CODE = 40004` constants in livestream and vod.
+
+**C4. Error code `30002` collided across services**
+Meant `NOTIFICATION_NOT_FOUND` in user but `IMAGE_TOO_LARGE` in livestream/vod/chat — and the latter sat inside user's `3xxxx` block. Only user ever emits `IMAGE_TOO_LARGE` (at 30001), so the other three were dead duplicates; deleting them resolved the collision with **no wire-visible change**. A registry scan now reports 64 codes with no name collisions.
+
+**C5. livestream carried vod-domain templates left over from the vod split**
+5 × `VOD_COMMENT_*`, plus `VOD_NOT_FOUND` and `VOD_UPDATE_FAILED` — none emitted there. `VOD_CREATE_FAILED` is still used by end-livestream and was kept.
+File: [backend/livestream/response/error.go](backend/livestream/response/error.go)
+
+**C6. `ApiCode` / `ApiKey` enums were a dead fourth key registry**
+Zero consumers anywhere in web, and already missing six entries. Deleted; `ApiResponse`/`Meta`/`ErrorDetail` (actually used) retained.
+File: [web/types/fetch-response.ts](web/types/fetch-response.ts)
+
+**C7. vi-VN `time.*` keys did not use en-US's plural-suffix scheme**
+Aligned on i18next JSON-v4 (`_other`, the only plural category for Vietnamese). Also dropped the unused `open` key, which had no en-US counterpart.
+File: [web/lib/i18n/locales/vi-VN/common.json](web/lib/i18n/locales/vi-VN/common.json)
+
+> **Two corrections to the original review, recorded so they aren't re-derived:**
+> 1. C7 was first written up as "vi-VN falls back to English for relative times". That was wrong — i18next falls back from a missing plural-suffixed key to the *base* key, so Vietnamese already rendered correctly. C7 is convention alignment only, with no user-visible change.
+> 2. C3 was first written up as an i18n-only orphan. Accurate, but the cause is that the backend never defined the `_KEY`, not that it was removed at some point.
+
+---
+
+### 🟠 HIGH — structural
+
+**C8. `auth` was never migrated to the per-feature handler layout**
+Every other service uses `handlers/<feature>/<one_op_per_file>_{public,private,internal}.go` with a shared `basehandler`. `auth` still has 4 flat files, no `basehandler` (its own package-level `writeResponse` instead), and no `Public/Private/Internal` handler suffixes. Its services layer is flat too.
+Files: [backend/auth/handlers/](backend/auth/handlers/), [backend/auth/services/](backend/auth/services/)
+
+**C9. `auth` has zero distributed tracing**
+`tracer.MyTracer.Start` call sites per service: user 28, vod 17, finance 11, livestream 5, **auth 0**. Tempo tracing is stated architecture, so auth is a blind spot in every login/signup trace.
+
+**C10. The NATS event bus is fully built and completely unwired**
+[backend/shared/pkg/eventbus/](backend/shared/pkg/eventbus/) has producer, consumer, admin, event_builder and 7 domain event files (finance, livestream, notification, transcode, user, vod) — with **zero imports outside `shared/`**. A NATS container runs in [docker-compose.yaml](docker-compose.yaml) and no service is given `NATS_URL`. All inter-service calls go over HTTP gateways. [docs/NATS_SETUP.md](docs/NATS_SETUP.md) documents the unused path.
+
+**C11. `user` is half-migrated**
+Handlers are split per-operation, but [backend/user/services/](backend/user/services/) is still flat one-file-per-domain (`user.go` is 290 lines). It also has no `handlers/utils/query.go`: pagination is parsed inline and `limit` is unsupported, where peers use `utils.GetPageAndLimitQuery`.
+File: [backend/user/handlers/user/get_recommended_channels_public.go](backend/user/handlers/user/get_recommended_channels_public.go)
+
+---
+
+### 🟡 MEDIUM
+
+**C12. `basehandler` duplicated 4× instead of living in `shared/`**
+finance/livestream/user/vod each carry a copy. user's has already drifted: `res interface{}` instead of `res any`, capitalized comments, trailing whitespace.
+File: [backend/user/handlers/basehandler/basehandler.go](backend/user/handlers/basehandler/basehandler.go)
+
+**C13. `gateway/utils.go` duplicated 5× byte-identical**
+auth/finance/livestream/user/vod are identical; transcode's differs. Never extracted to `shared/`, unlike `response`.
+
+**C14. `handlers/utils/cookie.go` duplicated 4× identical** modulo the import path.
+
+**C15. `shared/response` delegation is only half-adopted**
+auth/user/vod/finance re-export [backend/shared/response](backend/shared/response/response.go) via type aliases; **livestream and transcode still carry full local copies** of the same types.
+
+**C16. `auth`'s response package is named `serviceresponse`, not `response`**
+Directory is `response/` in all 7 services but auth declares `package serviceresponse`, which also forces a different import alias at all 27 of its call sites.
+
+**C17. Gateway naming: `user` vs `userservice`**
+finance uses `gateway/userservice/` + `UserServiceGateway`; auth/livestream/vod use `gateway/user/` + `UserGateway`.
+
+**C18. Gateway DTO placement is inconsistent**
+auth = `gateway/user/dto/` (3 files); transcode = `gateway/user/dto.go` (a file) *and* `gateway/livestream/dto/dto.go` (a package); finance = none. transcode's `gateway/user/` also declares no gateway interface, unlike every other gateway.
+
+**C19. The frontend runs two data-fetching architectures at once**
+Newer domains (wallet, shop, notifications, dm, vod-comments, channels) use react-query hooks + `unwrapResponse`/`ApiError` (throw). Older ones use `useEffect` + manual `.success` checks: [user profile page](<web/app/[lng]/(main)/users/[userId]/page.tsx>), [settings/vods/page.tsx](<web/app/[lng]/(main)/settings/vods/page.tsx>), [_components/header/search.tsx](<web/app/[lng]/(main)/_components/header/search.tsx>), [wrappers/UserInformationWrapper.tsx](web/components/wrappers/UserInformationWrapper.tsx), [livestream/media-card.tsx](web/components/livestream/media-card.tsx), + 4 more. Note all of [web/lib/api/](web/lib/api/) returns `ApiResponse<T>`, so the throw convention exists only in the hook layer.
+
+**C20. Query-cache helpers live in two places**
+[web/lib/query/dm-cache.ts](web/lib/query/dm-cache.ts) and `vod-comments-cache.ts` vs [web/lib/api/user-cache.ts](web/lib/api/user-cache.ts).
+
+**C21. `_components/` colocation is applied inconsistently**
+Used in messages/notifications/settings/wallet, but [the user profile route](<web/app/[lng]/(main)/users/[userId]/>) puts `chat.tsx`, `gift-modal.tsx`, `profile.tsx`, `profile-header.tsx` next to `page.tsx`; same for `settings/vods/vod.tsx` and `wallet/inventory/send-gift-dialog.tsx`.
+
+**C22. Route paths mix singular and plural**
+The user service serves both `/v1/users/...` and `/v1/user/...`; vod serves `/v1/vods` and `/v1/vod-comments`.
+File: [backend/user/api/http.go](backend/user/api/http.go)
+
+**C23. One-operation-per-file is violated in a few places**
+[backend/vod/services/vod_comment/like.go](backend/vod/services/vod_comment/like.go) holds both `LikeComment` and `UnlikeComment`; [backend/vod/handlers/general/general.go](backend/vod/handlers/general/general.go) holds both routes where peers split them into `route_not_found.go` + `route_service_health.go`; `user/handlers/follow/` and `user/handlers/user/upload_single_file_to_minio.go` lack the visibility suffix.
+
+**C24. `chat` diverges from the Go services' layering and from its own naming**
+No repository layer — services hit mongoose models directly. Within `src/` it mixes three conventions at once: `services/chatCommandService.ts` (camelCase), `models/Conversation.ts` (PascalCase), `types/chat-event.ts` (kebab-case).
+
+---
+
+### 🟢 LOW
+
+**C25. Frontend filename casing has four conventions**
+kebab-case dominates; PascalCase islands in [web/components/forms/](web/components/forms/) and [web/components/wrappers/](web/components/wrappers/); camelCase in `utils/fetchClient.ts`, `uploadClient.ts`, `timeFormats.ts`, `lib/validations/changePassword.ts`, `signUp.ts`; snake_case in `components/custom_react_player/` and `_components/header/header_utils_for_non_logged.tsx`.
+
+**C26. [web/hooks/user.ts](web/hooks/user.ts) is a zustand store** but is not named `use-*-store.ts` like `use-dm-store.ts` and `use-upload-store.ts`.
+
+**C27. `web/constant/` is singular** where `contexts/`, `hooks/`, `types/`, `utils/` are plural.
+
+**C28. The two TypeScript codebases have opposing prettier configs**
+[web/.prettierrc.js](web/.prettierrc.js): `semi: true, singleQuote: false`. [backend/chat/.prettierrc](backend/chat/.prettierrc): `semi: false, singleQuote: true, printWidth: 120`.
+
+**C29. Root [.prettierignore](.prettierignore) is stale** — ignores `web/` (which has its own config) and `mobile/`, which is not tracked in this repo at all.
+
+**C30. `docs/openapi.yaml` is missing for vod and transcode** (auth/finance/livestream/user have one; chat keeps its spec at `src/docs/openapi.yaml`).
+
+**C31. Test coverage is very uneven**
+The whole Go backend has 4 `_test.go` files (all under finance + shared/natsbus). chat has jest and one test. **web has zero tests and no `typecheck` script**, despite CI.
+
+**C32. First-migration filenames differ per service** — `0001_create_tables.sql` (auth) vs `0001_init_tables.sql` (finance, livestream) vs `0001_add_user_table.sql` (user) vs `0001_init_vod_tables.sql` (vod).
+
+**C33. [README.md](README.md) still documents IPFS ports 4001/8888** in the PORTS section while stating IPFS is no longer supported.
+
+**C34. `shared/middlewares/cors.go` is used only by transcode's webserver.** The 5 API servers apply only `LoggingMiddleware` + `RequestIDMiddleware`.
+
+**C35. Response-package import aliases vary** — `serviceresponse "…/auth/response"`, bare `"…/vod/response"`, and redundant `response "…/vod/response"` all appear (50 sites use the redundant alias).
+
+---
+
+### Suggested order for the consistency work
+
+1. **C10** — decide the event bus's fate: wire it or delete it. It is the largest piece of unused machinery in the repo and it shapes every later inter-service decision.
+2. **C8 + C9** — bring `auth` up to the layout every other service uses, and instrument it. Auth is currently invisible in traces.
+3. **C15 + C12 + C13 + C14** — finish the `shared/` extraction that `response` started; each duplicate is an independent drift source (C12 has already drifted).
+4. **C11** — finish the `user` migration, including the pagination helper.
+5. **C19 + C20** — pick one frontend data-fetching architecture and converge on it.
+6. **C31** — add a `typecheck` script to web, then tests where they pay off.
+7. Everything else is mechanical and safe to batch: C16–C18, C21–C30, C32–C35.
 
 ---
 

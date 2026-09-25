@@ -3,12 +3,11 @@ package vodcomment
 import (
 	"context"
 	"sen1or/letslive/vod/dto"
-	"sen1or/letslive/vod/response"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *VODCommentService) GetReplies(ctx context.Context, parentId uuid.UUID, page int, limit int) ([]dto.VODCommentWithUser, int, *response.Response[any]) {
+func (s *VODCommentService) GetReplies(ctx context.Context, parentId uuid.UUID, page int, limit int) ([]dto.VODCommentWithUser, int, error) {
 	comments, err := s.commentRepo.GetReplies(ctx, parentId, page, limit)
 	if err != nil {
 		return nil, 0, err

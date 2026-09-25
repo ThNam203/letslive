@@ -7,6 +7,7 @@ import { TransactionType } from "@/types/wallet";
 import TransactionList from "../_components/transaction-list";
 import { cn } from "@/utils/cn";
 import { useTransactionsInfinite } from "@/hooks/queries/use-transactions";
+import { flattenPages } from "@/lib/query/paginated";
 
 const FILTER_OPTIONS: (TransactionType | "all")[] = [
     "all",
@@ -25,7 +26,7 @@ export default function TransactionsPage() {
 
     const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
         useTransactionsInfinite(!!user);
-    const transactions = data?.pages.flat() ?? [];
+    const transactions = flattenPages(data);
 
     const filteredTxns =
         filter === "all"

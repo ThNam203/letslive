@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"sen1or/letslive/user/domains"
-	"sen1or/letslive/user/response"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -23,16 +22,11 @@ func NewFollowService(
 	}
 }
 
-func (s FollowService) Follow(ctx context.Context, followId, followedId string) *response.Response[any] {
+func (s FollowService) Follow(ctx context.Context, followId, followedId string) error {
 	followUUID, err1 := uuid.FromString(followId)
 	followedUUID, err2 := uuid.FromString(followedId)
 	if err1 != nil || err2 != nil || followId == followedId {
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_INPUT,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrInvalidInput
 	}
 
 	follower, followerErr := s.userRepo.GetById(ctx, followUUID)
@@ -40,7 +34,7 @@ func (s FollowService) Follow(ctx context.Context, followId, followedId string) 
 		return followerErr
 	}
 	if follower.Status == domains.UserStatusDisabled {
-		return response.NewResponseFromTemplate[any](response.RES_ERR_ACCOUNT_DISABLED, nil, nil, nil)
+		return domains.ErrAccountDisabled
 	}
 
 	followed, followedErr := s.userRepo.GetById(ctx, followedUUID)
@@ -48,7 +42,7 @@ func (s FollowService) Follow(ctx context.Context, followId, followedId string) 
 		return followedErr
 	}
 	if followed.Status == domains.UserStatusDisabled {
-		return response.NewResponseFromTemplate[any](response.RES_ERR_ACCOUNT_DISABLED, nil, nil, nil)
+		return domains.ErrAccountDisabled
 	}
 
 	err := s.followRepo.FollowUser(ctx, followUUID, followedUUID)
@@ -59,16 +53,11 @@ func (s FollowService) Follow(ctx context.Context, followId, followedId string) 
 	return nil
 }
 
-func (s FollowService) Unfollow(ctx context.Context, followId, followedId string) *response.Response[any] {
+func (s FollowService) Unfollow(ctx context.Context, followId, followedId string) error {
 	followUUID, err1 := uuid.FromString(followId)
 	followedUUID, err2 := uuid.FromString(followedId)
 	if err1 != nil || err2 != nil || followId == followedId {
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_INPUT,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrInvalidInput
 	}
 	err := s.followRepo.UnfollowUser(ctx, followUUID, followedUUID)
 	if err != nil {

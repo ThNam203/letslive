@@ -17,6 +17,7 @@ import { authMiddleware, extractUserIdFromCookie } from './middlewares/auth'
 import esMain from 'es-main'
 import { createServer, Server } from 'http'
 import ConsulRegistry from 'services/discovery'
+import { UserServiceGateway } from './gateway/userService'
 import { RESPONSE_TEMPLATES, Response as ServiceResponse, newResponseFromTemplate } from './types/api-response'
 import express, { NextFunction, Request, Response } from 'express'
 import requestIdMiddleware from 'middlewares/requestId'
@@ -36,7 +37,7 @@ function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => P
     }
 }
 
-function CreateExpressServer() {
+function CreateExpressServer(registry: ConsulRegistry) {
     const app = express()
     const pinoM = pinohttp({
         logger: logger,
@@ -83,7 +84,7 @@ function CreateExpressServer() {
     // --- DM/Group Conversation Routes ---
     const conversationService = new ConversationService()
     const dmMessageService = new DmMessageService()
-    const conversationHandler = new ConversationHandler(conversationService)
+    const conversationHandler = new ConversationHandler(conversationService, new UserServiceGateway(registry))
     const dmMessageHandler = new DmMessageHandler(dmMessageService)
 
     // Conversations
@@ -194,13 +195,13 @@ function CreateConsulRegistry() {
 
 // no need actually
 if (esMain(import.meta)) {
-    const server = CreateExpressServer()
+    const consul = CreateConsulRegistry()
+    const server = CreateExpressServer(consul)
 
     SetupWebSocketServer(server)
         .then(() => logger.info('Server started'))
         .catch((err) => logger.error(err))
 
-    const consul = CreateConsulRegistry()
     consul.register()
 
     server.listen('7780', () => {

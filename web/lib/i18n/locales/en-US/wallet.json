@@ -58,9 +58,7 @@
         "max_amount": "Maximum deposit: {{amount}}",
         "provider": {
             "stripe": "Credit / Debit Card",
-            "stripe_description": "Pay securely with Stripe",
-            "paypal": "PayPal",
-            "paypal_description": "Pay with your PayPal account"
+            "stripe_description": "Pay securely with Stripe"
         },
         "summary": "Summary",
         "you_pay": "You pay",

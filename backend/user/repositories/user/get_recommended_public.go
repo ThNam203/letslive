@@ -3,18 +3,18 @@ package user
 import (
 	"context"
 	"encoding/json"
-	"sen1or/letslive/user/dto"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/user/response"
+	"sen1or/letslive/user/domains"
+	"sen1or/letslive/user/dto"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresUserRepo) GetRecommendedPublic(ctx context.Context, excludeUserId *uuid.UUID, page, limit int) ([]dto.GetUserPublicResponseDTO, *response.Response[any]) {
+func (r *postgresUserRepo) GetRecommendedPublic(ctx context.Context, excludeUserId *uuid.UUID, page, limit int) ([]dto.GetUserPublicResponseDTO, error) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT
-			u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.phone_number, u.bio, u.profile_picture, u.background_picture,
+			u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.bio, u.profile_picture, u.background_picture,
 			l.title, l.description, l.thumbnail_url,
 			(COUNT(f.follower_id))::int AS follower_count,
 			CASE
@@ -33,29 +33,19 @@ func (r *postgresUserRepo) GetRecommendedPublic(ctx context.Context, excludeUser
 		WHERE u.status != 'disabled'
 		  AND ($1::uuid IS NULL OR u.id != $1)
 		  AND ($2::uuid IS NULL OR NOT EXISTS (SELECT 1 FROM followers f_ex WHERE f_ex.follower_id = $2 AND f_ex.user_id = u.id))
-		GROUP BY u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.phone_number, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
+		GROUP BY u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.bio, u.profile_picture, u.background_picture, l.user_id, l.title, l.description, l.thumbnail_url
 		ORDER BY (COUNT(f.follower_id)) DESC
 		LIMIT $3 OFFSET $4
 	`, excludeUserId, excludeUserId, limit, page*limit)
 	if err != nil {
 		logger.Errorf(ctx, "failed to get recommended public users: %s", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseQuery
 	}
 
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[dto.GetUserPublicResponseDTO])
 	if err != nil {
 		logger.Errorf(ctx, "failed to collect recommended public users: %s", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 
 	for i := range users {

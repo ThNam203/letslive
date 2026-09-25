@@ -3,24 +3,19 @@ package follower
 import (
 	"context"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/user/response"
+	"sen1or/letslive/user/domains"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 )
 
-func (r postgresFollowRepo) GetFollowedUserIds(ctx context.Context, followerId uuid.UUID) ([]uuid.UUID, *response.Response[any]) {
+func (r postgresFollowRepo) GetFollowedUserIds(ctx context.Context, followerId uuid.UUID) ([]uuid.UUID, error) {
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT user_id FROM followers WHERE follower_id = $1
 	`, followerId)
 	if err != nil {
 		logger.Errorf(ctx, "failed to get followed user ids: %s", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_QUERY,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseQuery
 	}
 
 	ids, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (uuid.UUID, error) {
@@ -30,12 +25,7 @@ func (r postgresFollowRepo) GetFollowedUserIds(ctx context.Context, followerId u
 	})
 	if err != nil {
 		logger.Errorf(ctx, "failed to collect followed user ids: %s", err)
-		return nil, response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return nil, domains.ErrDatabaseIssue
 	}
 
 	return ids, nil

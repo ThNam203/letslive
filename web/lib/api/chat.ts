@@ -1,11 +1,12 @@
 import { ReceivedMessage } from "../../types/message";
+import { ApiResponse } from "@/types/fetch-response";
 import { fetchClient } from "@/utils/fetchClient";
 
 export async function GetMessages(roomId: string): Promise<{
     messages: ReceivedMessage[];
 }> {
-    const data = (await fetchClient<ReceivedMessage[]>(
+    const res = await fetchClient<ApiResponse<ReceivedMessage[]>>(
         `/messages?roomId=${roomId}`,
-    )) as any;
-    return { messages: data.data ?? [] };
+    );
+    return { messages: res.data ?? [] };
 }

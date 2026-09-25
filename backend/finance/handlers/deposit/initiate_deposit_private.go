@@ -36,7 +36,7 @@ func (h *DepositHandler) InitiateDepositPrivateHandler(w http.ResponseWriter, r 
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"sen1or/letslive/finance/domains"
-	"sen1or/letslive/finance/response"
 	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
@@ -20,25 +19,15 @@ import (
 // anything. User wallets are rejected if an entry would drive their balance negative,
 // which also closes the check-then-debit race between concurrent purchases. The DB
 // zero-sum trigger validates sum(entries.amount) = 0 on the status transition.
-func (r postgresTransactionRepo) CompleteWithEntries(ctx context.Context, transactionId uuid.UUID, entries []domains.LedgerEntryDraft) *response.Response[any] {
+func (r postgresTransactionRepo) CompleteWithEntries(ctx context.Context, transactionId uuid.UUID, entries []domains.LedgerEntryDraft) error {
 	if len(entries) == 0 {
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_INPUT,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrInvalidInput
 	}
 
 	dbTx, err := r.dbConn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		logger.Errorf(ctx, "db begin error [completewithentries: %v]", err)
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrDatabaseIssue
 	}
 	defer dbTx.Rollback(ctx)
 
@@ -46,20 +35,10 @@ func (r postgresTransactionRepo) CompleteWithEntries(ctx context.Context, transa
 	err = dbTx.QueryRow(ctx, `select status from transactions where id = $1 for update`, transactionId).Scan(&status)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return response.NewResponseFromTemplate[any](
-				response.RES_ERR_TRANSACTION_NOT_FOUND,
-				nil,
-				nil,
-				nil,
-			)
+			return domains.ErrTransactionNotFound
 		}
 		logger.Errorf(ctx, "db lock transaction error [completewithentries: %v]", err)
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrDatabaseIssue
 	}
 
 	switch status {
@@ -70,12 +49,7 @@ func (r postgresTransactionRepo) CompleteWithEntries(ctx context.Context, transa
 		// completable
 	default:
 		logger.Errorf(ctx, "cannot complete transaction %s in status %s [completewithentries]", transactionId, status)
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_TRANSACTION_FAILED,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrTransactionFailed
 	}
 
 	insertEntry := `
@@ -97,23 +71,13 @@ func (r postgresTransactionRepo) CompleteWithEntries(ctx context.Context, transa
 		var entryId uuid.UUID
 		if err := dbTx.QueryRow(ctx, insertEntry, transactionId, e.AccountId, e.CurrencyCode, e.Amount).Scan(&entryId); err != nil {
 			logger.Errorf(ctx, "db insert ledger entry error [completewithentries: %v]", err)
-			return response.NewResponseFromTemplate[any](
-				response.RES_ERR_TRANSACTION_FAILED,
-				nil,
-				nil,
-				nil,
-			)
+			return domains.ErrTransactionFailed
 		}
 
 		var newBalance int64
 		if err := dbTx.QueryRow(ctx, upsertBalance, e.AccountId, e.CurrencyCode, e.Amount, entryId).Scan(&newBalance); err != nil {
 			logger.Errorf(ctx, "db upsert balance error [completewithentries: %v]", err)
-			return response.NewResponseFromTemplate[any](
-				response.RES_ERR_TRANSACTION_FAILED,
-				nil,
-				nil,
-				nil,
-			)
+			return domains.ErrTransactionFailed
 		}
 
 		// user wallets may not be overdrawn; platform-side accounts (escrow) may go
@@ -122,20 +86,10 @@ func (r postgresTransactionRepo) CompleteWithEntries(ctx context.Context, transa
 			var accountType domains.AccountType
 			if err := dbTx.QueryRow(ctx, `select type from accounts where id = $1`, e.AccountId).Scan(&accountType); err != nil {
 				logger.Errorf(ctx, "db select account type error [completewithentries: %v]", err)
-				return response.NewResponseFromTemplate[any](
-					response.RES_ERR_TRANSACTION_FAILED,
-					nil,
-					nil,
-					nil,
-				)
+				return domains.ErrTransactionFailed
 			}
 			if accountType == domains.AccountTypeUserWallet {
-				return response.NewResponseFromTemplate[any](
-					response.RES_ERR_INSUFFICIENT_BALANCE,
-					nil,
-					nil,
-					nil,
-				)
+				return domains.ErrInsufficientBalance
 			}
 		}
 	}
@@ -143,22 +97,12 @@ func (r postgresTransactionRepo) CompleteWithEntries(ctx context.Context, transa
 	// Transition transaction -> completed. The zero-sum trigger validates the ledger here.
 	if _, err := dbTx.Exec(ctx, `update transactions set status = 'completed' where id = $1`, transactionId); err != nil {
 		logger.Errorf(ctx, "db update transaction status error [completewithentries: %v]", err)
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_TRANSACTION_FAILED,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrTransactionFailed
 	}
 
 	if err := dbTx.Commit(ctx); err != nil {
 		logger.Errorf(ctx, "db commit error [completewithentries: %v]", err)
-		return response.NewResponseFromTemplate[any](
-			response.RES_ERR_DATABASE_ISSUE,
-			nil,
-			nil,
-			nil,
-		)
+		return domains.ErrDatabaseIssue
 	}
 	return nil
 }

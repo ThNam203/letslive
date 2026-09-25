@@ -3,8 +3,8 @@ package notification
 import (
 	"context"
 	"net/http"
-	"sen1or/letslive/user/handlers/utils"
 	"sen1or/letslive/shared/pkg/tracer"
+	"sen1or/letslive/user/handlers/utils"
 	"sen1or/letslive/user/response"
 )
 
@@ -26,7 +26,7 @@ func (h *NotificationHandler) MarkAllAsReadPrivateHandler(w http.ResponseWriter,
 	span.End()
 
 	if serviceErr != nil {
-		h.WriteResponse(w, ctx, serviceErr)
+		h.WriteResponse(w, ctx, response.FromError(serviceErr))
 		return
 	}
 
