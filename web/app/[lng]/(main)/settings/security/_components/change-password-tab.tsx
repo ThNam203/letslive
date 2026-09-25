@@ -28,7 +28,7 @@ export default function ChangePasswordTab() {
         mutationFn: (payload: { oldPassword: string; newPassword: string }) =>
             ChangePassword(payload),
         onSuccess: (res) => {
-            if (!res.success) {
+            if (res.statusCode !== 204) {
                 setErrors((prev) => ({
                     ...prev,
                     confirmPassword: t(`api-response:${res.key}`),

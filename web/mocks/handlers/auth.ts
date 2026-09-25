@@ -47,7 +47,7 @@ export const authHandlers = [
 
     // PATCH /auth/password
     http.patch(`${API_BASE}/auth/password`, async () => {
-        return ok<void>(undefined);
+        return noContent();
     }),
 
     // POST /auth/verify-email
