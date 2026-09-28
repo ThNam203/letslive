@@ -52,7 +52,10 @@ export default function UserAvatar({
 
     return (
         <Avatar className={cn(userAvatarVariants({ size }), className)}>
-            <AvatarFallback delayMs={0} className={fallbackClassName}>
+            <AvatarFallback
+                delayMs={0}
+                className={cn("border-border border", fallbackClassName)}
+            >
                 {fallback ?? (name || "U").charAt(0).toUpperCase()}
             </AvatarFallback>
             {showImage && src && (

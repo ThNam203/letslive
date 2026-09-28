@@ -115,7 +115,7 @@ export default function SearchBar({
                                 size="sm"
                                 src={user.profilePicture}
                                 name={user.username}
-                                alt="user image"
+                                alt={t("accessibility:user_avatar")}
                             />
                             <div>
                                 <p className="text-sm font-medium">

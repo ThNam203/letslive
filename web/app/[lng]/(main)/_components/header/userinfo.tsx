@@ -47,6 +47,7 @@ export default function UserInfo() {
                         name={userState.user?.username}
                         alt={t("accessibility:user_avatar")}
                         className="border-border border"
+                        fallbackClassName="border-0"
                         fallback={
                             userState.user ? undefined : (
                                 <IconUser className="size-6" />

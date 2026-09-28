@@ -39,7 +39,6 @@ function ChannelUserCard({
                         src={user.profilePicture}
                         name={user.username}
                         alt={t("accessibility:user_avatar")}
-                        fallbackClassName="border-border border"
                     />
                     {!isMinimized && (
                         <span className="text-sm font-semibold">
@@ -54,7 +53,6 @@ function ChannelUserCard({
                         src={user.profilePicture}
                         name={user.username}
                         alt={t("accessibility:user_avatar")}
-                        fallbackClassName="border-border border"
                     />
                     <div className="space-y-1">
                         <h4 className="text-sm font-semibold">
