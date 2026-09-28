@@ -16,7 +16,7 @@ export default function MessagesIcon() {
 
     return (
         <Link
-            href={user ? "/messages" : "/login"}
+            href="/messages"
             className="hover:bg-muted relative cursor-pointer rounded-md p-1.5 transition-colors"
         >
             <IconMessage className="size-5" />

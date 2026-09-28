@@ -45,7 +45,7 @@ export default function NotificationBell() {
     if (!user) {
         return (
             <Link
-                href="/login"
+                href="/notifications"
                 className="hover:bg-muted relative cursor-pointer rounded-md p-1.5 transition-colors"
             >
                 <IconBell className="size-5" />
