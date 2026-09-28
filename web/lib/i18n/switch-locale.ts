@@ -31,7 +31,7 @@ export async function switchLocale(
 
     await i18next.changeLanguage(locale);
 
-    // server components read the locale from the cookie via middleware
+    // server components read the locale from the cookie via proxy.ts
     router.refresh();
 
     if (syncLocale && useUser.getState().user) {

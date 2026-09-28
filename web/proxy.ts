@@ -28,7 +28,7 @@ function findLegacyLocalePrefix(pathname: string): string | undefined {
  * request header. The locale is not part of the URL: the cookie (kept in sync
  * with the user's profile on the client) wins, then Accept-Language.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname, search } = request.nextUrl;
     const cookieLocale = request.cookies.get(I18N_COOKIE_NAME)?.value;
     const hasValidCookie = isSupportedLocale(cookieLocale);

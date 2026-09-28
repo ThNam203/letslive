@@ -11,8 +11,8 @@ import { useEffect, useState } from "react";
  * Renders children only after the worker is ready so the first
  * fetch calls are already intercepted.
  *
- * NOTE: The middleware must exclude /mockServiceWorker.js from
- * the locale-redirect logic (see middleware.ts matcher).
+ * NOTE: The proxy must exclude /mockServiceWorker.js from the
+ * locale handling (see the proxy.ts matcher).
  */
 export default function MockProvider({
     children,
