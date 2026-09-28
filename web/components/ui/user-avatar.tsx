@@ -1,9 +1,12 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/utils/cn";
+
+type UserAvatarSize = "sm" | "md" | "lg";
 
 const userAvatarVariants = cva("shrink-0", {
     variants: {
@@ -17,6 +20,12 @@ const userAvatarVariants = cva("shrink-0", {
         size: "md",
     },
 });
+
+const IMAGE_SIZES: Record<UserAvatarSize, string> = {
+    sm: "32px",
+    md: "40px",
+    lg: "(min-width: 640px) 128px, 80px",
+};
 
 type UserAvatarProps = VariantProps<typeof userAvatarVariants> & {
     src?: string | null;
@@ -38,16 +47,27 @@ export default function UserAvatar({
     fallbackClassName,
     children,
 }: UserAvatarProps) {
+    const [failedSrc, setFailedSrc] = React.useState<string | null>(null);
+    const showImage = Boolean(src) && src !== failedSrc;
+
     return (
         <Avatar className={cn(userAvatarVariants({ size }), className)}>
-            <AvatarImage
-                src={src ?? undefined}
-                alt={alt ?? name ?? undefined}
-                className="object-cover"
-            />
-            <AvatarFallback className={fallbackClassName}>
+            <AvatarFallback delayMs={0} className={fallbackClassName}>
                 {fallback ?? (name || "U").charAt(0).toUpperCase()}
             </AvatarFallback>
+            {showImage && src && (
+                <Image
+                    src={src}
+                    alt={alt ?? name ?? ""}
+                    fill
+                    sizes={IMAGE_SIZES[size ?? "md"]}
+                    className="object-cover"
+                    // blob: previews, and http://localhost storage in dev,
+                    // can't go through the optimizer.
+                    unoptimized={!src.startsWith("https://")}
+                    onError={() => setFailedSrc(src)}
+                />
+            )}
             {children}
         </Avatar>
     );
