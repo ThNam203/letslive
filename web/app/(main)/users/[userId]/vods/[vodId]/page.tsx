@@ -8,7 +8,7 @@ import MediaCard from "@/components/livestream/media-card";
 import { VOD } from "@/types/vod";
 import { PublicUser } from "@/types/user";
 import { RegisterVODView } from "@/lib/api/vod";
-import ProfileView from "@/app/[lng]/(main)/users/[userId]/profile";
+import ProfileView from "@/app/(main)/users/[userId]/profile";
 import useT from "@/hooks/use-translation";
 import useMediaQuery from "@/hooks/use-media-query";
 import { MQ_MAX_MD } from "@/constant/breakpoints";

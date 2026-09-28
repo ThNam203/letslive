@@ -14,7 +14,7 @@ import TextField from "../_components/text-field";
 import ProfileBanner from "./_components/profile-banner";
 import Section from "../_components/section";
 import TextAreaField from "../_components/textarea-field";
-import ThemeList from "@/app/[lng]/(main)/settings/profile/_components/theme-list";
+import ThemeList from "@/app/(main)/settings/profile/_components/theme-list";
 import IconLoader from "@/components/icons/loader";
 import DisableAccountDialog from "./_components/disable-account-dialog";
 import useT from "@/hooks/use-translation";
@@ -22,8 +22,8 @@ import {
     USERNAME_MAX_LENGTH,
     BIO_MAX_LENGTH,
 } from "@/constant/field-limits";
-import LanguageList from "@/app/[lng]/(main)/settings/profile/_components/language-list";
-import { SocialMediaEdit } from "@/app/[lng]/(main)/settings/profile/_components/socials-media-link";
+import LanguageList from "@/app/(main)/settings/profile/_components/language-list";
+import { SocialMediaEdit } from "@/app/(main)/settings/profile/_components/socials-media-link";
 
 export default function ProfileSettings() {
     const { t } = useT(["settings", "common"]);

@@ -12,7 +12,7 @@ import { AuthProvider, MeUser } from "@/types/user";
 import Section from "../../_components/section";
 import ApiKeyTab from "./api-key-tab";
 import ChangePasswordTab from "./change-password-tab";
-import PhoneNumber from "@/app/[lng]/(main)/settings/security/_components/phone-number";
+import PhoneNumber from "@/app/(main)/settings/security/_components/phone-number";
 
 export default function ContactSettings({ user }: { user: MeUser }) {
     const { t } = useT("settings");

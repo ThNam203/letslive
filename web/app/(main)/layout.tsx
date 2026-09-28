@@ -1,5 +1,5 @@
-import { Header } from "@/app/[lng]/(main)/_components/header/header";
-import { MainBodyLayout } from "@/app/[lng]/(main)/_components/main-body-layout";
+import { Header } from "@/app/(main)/_components/header/header";
+import { MainBodyLayout } from "@/app/(main)/_components/main-body-layout";
 
 export default function RootLayout({
     children,
