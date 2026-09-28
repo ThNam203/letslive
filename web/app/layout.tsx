@@ -1,7 +1,6 @@
 import { Inter } from "next/font/google";
 import "@/app/globals.css";
 import React, { Suspense } from "react";
-import Loading from "./loading";
 import Toast from "@/components/utils/toast";
 import UploadManager from "@/components/upload-manager/upload-manager";
 import { dir } from "i18next";
@@ -36,10 +35,11 @@ export default async function RootLayout({
         <QueryProvider>
             <TranslationsProvider lng={lng}>
                 <ThemeProviderWrapper>
-                    <Suspense fallback={<Loading />}>
-                        <UserInformationWrapper>
-                            {children}
-                        </UserInformationWrapper>
+                    {/* no boundary above the page: once a fallback streams, the
+                        status is fixed at 200 and notFound() cannot send 404.
+                        Segments own their loading.tsx and skeletons instead. */}
+                    <UserInformationWrapper>{children}</UserInformationWrapper>
+                    <Suspense fallback={null}>
                         <Toast />
                         <UploadManager />
                         <CookieConsentBanner />
