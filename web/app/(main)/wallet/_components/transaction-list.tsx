@@ -4,6 +4,7 @@ import { Transaction } from "@/types/wallet";
 import { Button } from "@/components/ui/button";
 import IconLoader from "@/components/icons/loader";
 import TransactionRow from "./transaction-row";
+import { TransactionRowsSkeleton } from "./wallet-skeleton";
 
 interface Props {
     transactions: Transaction[];
@@ -33,6 +34,10 @@ export default function TransactionList({
                 )}
             </div>
         );
+    }
+
+    if (isLoading && transactions.length === 0) {
+        return <TransactionRowsSkeleton />;
     }
 
     return (

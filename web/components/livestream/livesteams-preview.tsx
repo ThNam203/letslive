@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { MediaCardGridSkeleton } from "@/components/skeletons/media-card-skeleton";
 import MediaCard from "./media-card";
 import IconChevronDown from "../icons/chevron-down";
 import { Separator } from "../ui/separator";
 import IconPlay from "../icons/play";
 import useT from "@/hooks/use-translation";
-import { Card, CardContent } from "../ui/card";
-import { Skeleton } from "../ui/skeleton";
 import { usePopularLivestreams } from "@/hooks/queries/use-popular-livestreams";
 
 const LivestreamsPreviewView = () => {
@@ -16,7 +15,7 @@ const LivestreamsPreviewView = () => {
     const { t } = useT(["common"]);
 
     if (isLoading) {
-        return <LoadingSkeleton />;
+        return <MediaCardGridSkeleton />;
     }
 
     return (
@@ -69,27 +68,5 @@ const StreamsSeparator = ({ onClick }: { onClick: () => void }) => {
         </div>
     );
 };
-
-function LoadingSkeleton() {
-    return (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="overflow-hidden">
-                    <Skeleton className="aspect-video w-full" />
-                    <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                            <Skeleton className="h-10 w-10 flex-shrink-0 rounded-full" />
-                            <div className="flex-1">
-                                <Skeleton className="mb-2 h-5 w-full" />
-                                <Skeleton className="mb-2 h-4 w-3/4" />
-                                <Skeleton className="h-3 w-1/2" />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
-    );
-}
 
 export default LivestreamsPreviewView;

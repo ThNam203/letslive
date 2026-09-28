@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { ItemGridSkeleton } from "@/components/skeletons/item-grid-skeleton";
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
 import { Badge } from "@/components/ui/badge";
-import IconLoader from "@/components/icons/loader";
 import { useShopItems } from "@/hooks/queries/use-shop-items";
 import { useMyInventory } from "@/hooks/queries/use-inventory";
 
@@ -15,21 +15,15 @@ export default function InventoryPage() {
     const itemsById = Object.fromEntries(shopItems.map((i) => [i.id, i]));
     const { data: items = [], isLoading } = useMyInventory(!!user);
 
-    if (isLoading) {
-        return (
-            <div className="flex justify-center py-20">
-                <IconLoader />
-            </div>
-        );
-    }
-
     return (
         <section>
             <h2 className="text-foreground mb-4 text-xl font-semibold">
                 {t("shop:inventory.page_title")}
             </h2>
 
-            {items.length === 0 ? (
+            {isLoading ? (
+                <ItemGridSkeleton count={8} className="grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4" imageClassName="h-16 w-16" />
+            ) : items.length === 0 ? (
                 <p className="text-muted-foreground py-8 text-center text-sm">
                     {t("shop:inventory.empty")}
                 </p>

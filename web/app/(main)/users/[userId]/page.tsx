@@ -9,6 +9,8 @@ import {
     VideoInfo,
 } from "@/components/custom_react_player/streaming-frame";
 import ProfileView from "./profile";
+import ProfileSkeleton from "./profile-skeleton";
+import { PlayerSkeleton } from "@/components/skeletons/player-skeleton";
 import ChatUI from "./chat";
 import GLOBAL from "@/global";
 import { Button } from "@/components/ui/button";
@@ -25,9 +27,14 @@ export default function Livestreaming() {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [timeVideoStart, setTimeVideoStart] = useState<Date>(new Date());
 
-    const { data: user } = usePublicUser(params.userId);
-    const { data: livestream } = useLivestreamOfUser(params.userId);
-    const { data: vods } = usePublicVodsOfUser(params.userId);
+    const { data: user, isLoading: isLoadingUser } = usePublicUser(
+        params.userId,
+    );
+    const { data: livestream, isLoading: isLoadingLivestream } =
+        useLivestreamOfUser(params.userId);
+    const { data: vods, isLoading: isLoadingVods } = usePublicVodsOfUser(
+        params.userId,
+    );
 
     // ProfileView edits the profile in place (follow, gift, socials), so the
     // cached copy is patched rather than refetched.
@@ -58,7 +65,9 @@ export default function Livestreaming() {
         <div className="ml-4 flex h-full gap-6 overflow-hidden">
             {/* Main content area */}
             <div className="no-scrollbar flex-1 overflow-auto">
-                {livestream ? (
+                {isLoadingLivestream ? (
+                    <PlayerSkeleton className="mt-1 mb-4" />
+                ) : livestream ? (
                     <StreamingFrame
                         videoInfo={playerInfo}
                         onVideoStart={() => {
@@ -73,13 +82,17 @@ export default function Livestreaming() {
                         </h2>
                     </div>
                 )}
-                {user && (
-                    <ProfileView
-                        user={user}
-                        updateUser={updateUser}
-                        vods={vods ?? []}
-                        className="mt-2"
-                    />
+                {isLoadingUser || isLoadingVods ? (
+                    <ProfileSkeleton className="mt-2" />
+                ) : (
+                    user && (
+                        <ProfileView
+                            user={user}
+                            updateUser={updateUser}
+                            vods={vods ?? []}
+                            className="mt-2"
+                        />
+                    )
                 )}
             </div>
             {/* Mobile chat toggle button */}

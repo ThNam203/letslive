@@ -4,6 +4,7 @@ import { Conversation } from "@/types/dm";
 import ConversationListItem from "./conversation-list-item";
 import { Button } from "@/components/ui/button";
 import useT from "@/hooks/use-translation";
+import { ConversationListSkeleton } from "./messages-skeleton";
 
 export default function ConversationList({
     conversations,
@@ -23,11 +24,7 @@ export default function ConversationList({
     const { t } = useT("messages");
 
     if (isLoading) {
-        return (
-            <div className="flex flex-1 items-center justify-center p-4">
-                <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
-            </div>
-        );
+        return <ConversationListSkeleton />;
     }
 
     if (conversations.length === 0) {

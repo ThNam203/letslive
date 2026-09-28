@@ -8,6 +8,7 @@ import IconClose from "@/components/icons/close";
 import IconLoader from "@/components/icons/loader";
 import IconPencil from "@/components/icons/pencil";
 import Section from "../_components/section";
+import { ListSkeleton } from "@/components/skeletons/list-skeleton";
 import TextField from "../_components/text-field";
 import {
     CreateChatCommand,
@@ -61,6 +62,7 @@ export default function ChatCommandsSettings() {
                 description={t("chat-commands:page.personal_description")}
                 scope="user"
                 items={commands.user}
+                isLoading={isLoading}
                 onDelete={(id) => deleteMutation.mutate(id)}
             />
             <ChatCommandScopeSection
@@ -68,6 +70,7 @@ export default function ChatCommandsSettings() {
                 description={t("chat-commands:page.channel_description")}
                 scope="channel"
                 items={commands.channel}
+                isLoading={isLoading}
                 onDelete={(id) => deleteMutation.mutate(id)}
             />
             <Section
@@ -86,11 +89,6 @@ export default function ChatCommandsSettings() {
                     ))}
                 </ul>
             </Section>
-            {isLoading && (
-                <div className="flex justify-center py-4">
-                    <IconLoader />
-                </div>
-            )}
         </div>
     );
 }
@@ -100,12 +98,14 @@ function ChatCommandScopeSection({
     description,
     scope,
     items,
+    isLoading,
     onDelete,
 }: {
     title: string;
     description: string;
     scope: ChatCommandScope;
     items: ChatCommand[];
+    isLoading: boolean;
     onDelete: (id: string) => void;
 }) {
     const { t } = useT("chat-commands");
@@ -200,7 +200,14 @@ function ChatCommandScopeSection({
             description={description}
             contentClassName="p-4 space-y-4"
         >
-            {items.length === 0 ? (
+            {isLoading ? (
+                <ListSkeleton
+                    rows={2}
+                    avatar="none"
+                    className="gap-2"
+                    rowClassName="border-border rounded-md border p-3"
+                />
+            ) : items.length === 0 ? (
                 <p className="text-muted-foreground text-sm">
                     {t("chat-commands:page.empty")}
                 </p>

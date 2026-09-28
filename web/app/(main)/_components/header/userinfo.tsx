@@ -20,6 +20,7 @@ import useT from "@/hooks/use-translation";
 import LanguageSwitch from "@/components/utils/language-switch";
 import ThemeSwitch from "@/components/utils/theme-switch";
 import IconUser from "@/components/icons/user";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function UserInfo() {
     const userState = useUser();
@@ -37,6 +38,10 @@ export default function UserInfo() {
     const logout = useLogout();
 
     const logoutHandler = () => logout.mutate();
+
+    if (!userState.user && userState.isLoading) {
+        return <Skeleton className="h-10 w-10 rounded-full" />;
+    }
 
     return (
         <div className="flex flex-row gap-4">

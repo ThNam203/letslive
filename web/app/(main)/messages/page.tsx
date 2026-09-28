@@ -11,6 +11,7 @@ import IconClose from "@/components/icons/close";
 import RequireAuth from "@/components/wrappers/RequireAuth";
 import { useConversationsInfinite } from "@/hooks/queries/use-conversations";
 import { flattenPages } from "@/lib/query/paginated";
+import { MessagesPageSkeleton } from "./_components/messages-skeleton";
 
 export default function MessagesPage() {
     const router = useRouter();
@@ -22,7 +23,7 @@ export default function MessagesPage() {
     const { t } = useT("messages");
 
     return (
-        <RequireAuth>
+        <RequireAuth fallback={<MessagesPageSkeleton />}>
             <div className="flex h-full w-full">
                 <div className="flex h-full w-full flex-col md:w-80 md:border-r">
                     <div className="flex items-center justify-between gap-2 border-b p-4">

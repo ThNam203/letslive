@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import useUser from "@/hooks/user";
@@ -57,7 +58,17 @@ export default function AccountSetupPage() {
         );
     };
 
-    if (isLoading || !user || user.username !== "") return null;
+    if (isLoading) {
+        return (
+            <div className="flex flex-col gap-4" aria-busy="true">
+                <Skeleton className="h-8 w-2/3" />
+                <Skeleton className="mb-2 h-5 w-1/2" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="mt-2 h-12 w-full" />
+            </div>
+        );
+    }
+    if (!user || user.username !== "") return null;
 
     return (
         <>

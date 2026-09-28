@@ -26,6 +26,7 @@ import { useConversationsInfinite } from "@/hooks/queries/use-conversations";
 import { useDmMessagesInfinite } from "@/hooks/queries/use-dm-messages";
 import { clearDmUnread } from "@/lib/query/dm-cache";
 import { flattenPages } from "@/lib/query/paginated";
+import { MessagesPageSkeleton } from "../_components/messages-skeleton";
 
 export default function ConversationPage() {
     const params = useParams();
@@ -39,7 +40,8 @@ export default function ConversationPage() {
     const { t } = useT("api-response");
     const { t: tMessages } = useT("messages");
 
-    const { data: conversationsData } = useConversationsInfinite(!!user);
+    const { data: conversationsData, isLoading: isLoadingConversations } =
+        useConversationsInfinite(!!user);
     const conversations = useMemo(
         () => flattenPages(conversationsData),
         [conversationsData],
@@ -139,11 +141,11 @@ export default function ConversationPage() {
     }, [user, conversationId, send]);
 
     if (!user) {
-        return <RequireAuth>{null}</RequireAuth>;
+        return <RequireAuth fallback={<MessagesPageSkeleton withThread />}>{null}</RequireAuth>;
     }
 
     return (
-        <RequireAuth>
+        <RequireAuth fallback={<MessagesPageSkeleton withThread />}>
             <div className="flex h-full w-full">
                 {/* Conversation list sidebar (hidden on mobile) */}
                 <div className="hidden h-full w-80 border-r md:block">
@@ -166,7 +168,7 @@ export default function ConversationPage() {
                     </div>
                     <ConversationList
                         conversations={conversations}
-                        isLoading={false}
+                        isLoading={isLoadingConversations}
                         activeId={conversationId}
                     />
                 </div>

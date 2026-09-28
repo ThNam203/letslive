@@ -6,6 +6,7 @@ import UserAvatar from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
 import IconClose from "@/components/icons/close";
 import useT from "@/hooks/use-translation";
+import { ConversationHeaderSkeleton } from "./messages-skeleton";
 
 export default function ConversationHeader({
     conversation,
@@ -22,7 +23,7 @@ export default function ConversationHeader({
     const { t } = useT("messages");
 
     if (!conversation) {
-        return <div className="border-b p-4" />;
+        return <ConversationHeaderSkeleton />;
     }
 
     let name: string;

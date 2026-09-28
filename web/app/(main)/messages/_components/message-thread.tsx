@@ -3,6 +3,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import { DmMessage } from "@/types/dm";
 import MessageBubble from "./message-bubble";
+import { MessageThreadSkeleton } from "./messages-skeleton";
 import useT from "@/hooks/use-translation";
 
 export default function MessageThread({
@@ -58,7 +59,9 @@ export default function MessageThread({
             onScroll={handleScroll}
             className="flex-1 overflow-y-auto px-4 py-2"
         >
-            {isLoading && (
+            {isLoading && messages.length === 0 && <MessageThreadSkeleton />}
+
+            {isLoading && messages.length > 0 && (
                 <div className="flex justify-center py-2">
                     <div className="border-primary h-5 w-5 animate-spin rounded-full border-2 border-t-transparent" />
                 </div>

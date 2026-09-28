@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import { ListSkeleton } from "@/components/skeletons/list-skeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import { CommentUser, VODComment } from "@/types/vod-comment";
 import { GetUserLikedCommentIds } from "@/lib/api/vod-comment";
@@ -129,6 +130,10 @@ export default function CommentSection({
 
             {comments.length === 0 && !isLoading && (
                 <CommentEmpty message={t("comments:no_comments")} />
+            )}
+
+            {isLoading && comments.length === 0 && (
+                <ListSkeleton rows={3} avatar="sm" className="gap-4" />
             )}
 
             <CommentList

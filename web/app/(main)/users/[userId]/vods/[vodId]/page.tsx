@@ -9,6 +9,9 @@ import { VOD } from "@/types/vod";
 import { PublicUser } from "@/types/user";
 import { RegisterVODView } from "@/lib/api/vod";
 import ProfileView from "@/app/(main)/users/[userId]/profile";
+import ProfileSkeleton from "@/app/(main)/users/[userId]/profile-skeleton";
+import { PlayerSkeleton } from "@/components/skeletons/player-skeleton";
+import { MediaCardSkeleton } from "@/components/skeletons/media-card-skeleton";
 import useT from "@/hooks/use-translation";
 import useMediaQuery from "@/hooks/use-media-query";
 import { MQ_MAX_MD } from "@/constant/breakpoints";
@@ -19,6 +22,8 @@ import {
     usePublicVodsOfUser,
     useVod,
 } from "@/hooks/queries/use-vods";
+
+const OTHER_STREAMS_SKELETON_COUNT = 3;
 
 export default function VODPage() {
     const { t } = useT(["fetch-error", "api-response", "common"]);
@@ -34,9 +39,13 @@ export default function VODPage() {
         countedVodIdRef.current = null;
     }, [params.vodId]);
 
-    const { data: vod } = useVod(params.vodId);
-    const { data: user } = usePublicUser(params.userId);
-    const { data: vods } = usePublicVodsOfUser(params.userId);
+    const { data: vod, isLoading: isLoadingVod } = useVod(params.vodId);
+    const { data: user, isLoading: isLoadingUser } = usePublicUser(
+        params.userId,
+    );
+    const { data: vods, isLoading: isLoadingVods } = usePublicVodsOfUser(
+        params.userId,
+    );
 
     const vodDuration = vod?.duration ?? 0;
 
@@ -61,15 +70,21 @@ export default function VODPage() {
         [vods, params.vodId],
     );
 
-    const otherStreamCards = otherVods.map((item) => (
-        <MediaCard
-            key={item.id}
-            kind="vod"
-            vod={item}
-            variant="with-user"
-            className="mb-2"
-        />
-    ));
+    const otherStreamCards = isLoadingVods
+        ? Array.from({ length: OTHER_STREAMS_SKELETON_COUNT }, (_, i) => (
+              <div key={i} className="mb-2">
+                  <MediaCardSkeleton />
+              </div>
+          ))
+        : otherVods.map((item) => (
+              <MediaCard
+                  key={item.id}
+                  kind="vod"
+                  vod={item}
+                  variant="with-user"
+                  className="mb-2"
+              />
+          ));
 
     const getViewThreshold = () => {
         let threshold = 15;
@@ -126,19 +141,30 @@ export default function VODPage() {
         <div className="ml-4 flex h-full gap-6 overflow-hidden">
             {/* Main content area */}
             <div className="no-scrollbar flex-1 overflow-auto">
-                <VODFrame
-                    videoInfo={playerInfo}
-                    className="mt-1"
-                    onProgressSeconds={handleVODProgress}
-                />
-                {user && (
-                    <ProfileView
-                        user={user}
-                        updateUser={updateUser}
-                        vods={otherVods}
+                {isLoadingVod ? (
+                    <PlayerSkeleton className="mt-1" />
+                ) : (
+                    <VODFrame
+                        videoInfo={playerInfo}
+                        className="mt-1"
+                        onProgressSeconds={handleVODProgress}
+                    />
+                )}
+                {isLoadingUser ? (
+                    <ProfileSkeleton
                         showRecentActivity={false}
                         className="mt-2"
                     />
+                ) : (
+                    user && (
+                        <ProfileView
+                            user={user}
+                            updateUser={updateUser}
+                            vods={otherVods}
+                            showRecentActivity={false}
+                            className="mt-2"
+                        />
+                    )
                 )}
                 {/* below md the sidebar is hidden, so the list moves inline
                     above the comments; only one copy is ever rendered */}

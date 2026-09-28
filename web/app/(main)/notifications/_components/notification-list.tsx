@@ -37,7 +37,8 @@ export function NotificationList({
         return (
             <NotificationLoading
                 message={tNotif("loading")}
-                className={emptyClassName}
+                variant="full"
+                rows={6}
             />
         );
     }

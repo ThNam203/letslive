@@ -17,7 +17,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import IconLoader from "@/components/icons/loader";
+import { ItemGridSkeleton } from "@/components/skeletons/item-grid-skeleton";
 
 type GiftModalProps = {
     open: boolean;
@@ -107,9 +107,11 @@ export default function GiftModal({
                 </DialogHeader>
 
                 {isLoadingItems ? (
-                    <div className="flex justify-center py-8">
-                        <IconLoader />
-                    </div>
+                    <ItemGridSkeleton
+                        count={6}
+                        className="grid-cols-3 gap-3 py-2"
+                        imageClassName="h-16 w-16"
+                    />
                 ) : items.length === 0 ? (
                     <p className="text-muted-foreground py-8 text-center text-sm">
                         {t("shop:shop.gift_no_items")}

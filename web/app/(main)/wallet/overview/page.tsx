@@ -6,23 +6,22 @@ import { CurrencyCode } from "@/types/wallet";
 import BalanceCard from "../_components/balance-card";
 import TransactionRow from "../_components/transaction-row";
 import Link from "next/link";
-import IconLoader from "@/components/icons/loader";
-import { useRecentTransactions, useWalletBalance } from "@/hooks/queries/use-wallet";
+import {
+    BalanceCardsSkeleton,
+    TransactionRowsSkeleton,
+} from "../_components/wallet-skeleton";
+import {
+    useRecentTransactions,
+    useWalletBalance,
+} from "@/hooks/queries/use-wallet";
 
 export default function WalletOverviewPage() {
     const { t } = useT(["wallet", "api-response", "fetch-error"]);
     const user = useUser((s) => s.user);
-    const { data: wallet, isLoading: isLoadingWallet } = useWalletBalance(!!user);
+    const { data: wallet, isLoading: isLoadingWallet } =
+        useWalletBalance(!!user);
     const { data: recentTxns = [], isLoading: isLoadingTxns } =
         useRecentTransactions(!!user);
-
-    if (isLoadingWallet || isLoadingTxns) {
-        return (
-            <div className="flex justify-center py-20">
-                <IconLoader />
-            </div>
-        );
-    }
 
     return (
         <>
@@ -30,24 +29,30 @@ export default function WalletOverviewPage() {
                 <h2 className="text-foreground mb-4 text-xl font-semibold">
                     {t("wallet:overview.title")}
                 </h2>
-                <div className="grid gap-4 sm:grid-cols-2">
-                    <BalanceCard
-                        currencyCode={CurrencyCode.SPARK}
-                        balance={
-                            wallet?.balances.find(
-                                (b) => b.currencyCode === CurrencyCode.SPARK,
-                            )?.balance ?? "0"
-                        }
-                    />
-                    <BalanceCard
-                        currencyCode={CurrencyCode.FLARE}
-                        balance={
-                            wallet?.balances.find(
-                                (b) => b.currencyCode === CurrencyCode.FLARE,
-                            )?.balance ?? "0"
-                        }
-                    />
-                </div>
+                {isLoadingWallet ? (
+                    <BalanceCardsSkeleton />
+                ) : (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <BalanceCard
+                            currencyCode={CurrencyCode.SPARK}
+                            balance={
+                                wallet?.balances.find(
+                                    (b) =>
+                                        b.currencyCode === CurrencyCode.SPARK,
+                                )?.balance ?? "0"
+                            }
+                        />
+                        <BalanceCard
+                            currencyCode={CurrencyCode.FLARE}
+                            balance={
+                                wallet?.balances.find(
+                                    (b) =>
+                                        b.currencyCode === CurrencyCode.FLARE,
+                                )?.balance ?? "0"
+                            }
+                        />
+                    </div>
+                )}
             </section>
 
             <section>
@@ -63,7 +68,9 @@ export default function WalletOverviewPage() {
                     </Link>
                 </div>
                 <div className="border-border rounded-lg border">
-                    {recentTxns.length === 0 ? (
+                    {isLoadingTxns ? (
+                        <TransactionRowsSkeleton />
+                    ) : recentTxns.length === 0 ? (
                         <p className="text-muted-foreground py-8 text-center text-sm">
                             {t("wallet:overview.no_transactions")}
                         </p>

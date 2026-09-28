@@ -4,6 +4,7 @@ import useT from "@/hooks/use-translation";
 import { NotificationPageHeader } from "./_components/notification-page-header";
 import { NotificationList } from "./_components/notification-list";
 import RequireAuth from "@/components/wrappers/RequireAuth";
+import { NotificationLoading } from "@/components/notification/notification-loading";
 import { useNotificationsInfinite } from "@/hooks/queries/use-notifications";
 import { flattenPages } from "@/lib/query/paginated";
 import {
@@ -23,7 +24,17 @@ export default function NotificationsPage() {
     const deleteNotification = useDeleteNotification();
 
     return (
-        <RequireAuth>
+        <RequireAuth
+            fallback={
+                <div className="mx-auto w-full px-4 py-6">
+                    <NotificationLoading
+                        message={t("notification:loading")}
+                        variant="full"
+                        rows={6}
+                    />
+                </div>
+            }
+        >
             <div className="small-scrollbar h-full min-h-0 overflow-auto">
                 <div className="mx-auto w-full px-4 py-6">
                     <NotificationPageHeader
