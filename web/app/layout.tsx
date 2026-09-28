@@ -4,9 +4,8 @@ import React, { Suspense } from "react";
 import Loading from "./loading";
 import Toast from "@/components/utils/toast";
 import UploadManager from "@/components/upload-manager/upload-manager";
-import { I18N_LANGUAGES } from "@/lib/i18n/settings";
 import { dir } from "i18next";
-import { myGetT } from "@/lib/i18n";
+import { getLocale, myGetT } from "@/lib/i18n";
 import TranslationsProvider from "@/components/utils/i18n-provider";
 import { ThemeProviderWrapper } from "@/components/utils/theme-provider-wrapper";
 import UserInformationWrapper from "@/components/wrappers/UserInformationWrapper";
@@ -17,13 +16,6 @@ import CookieConsentBanner from "@/components/utils/cookie-consent-banner";
 const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
 
 const inter = Inter({ subsets: ["latin"] });
-type Params = Promise<{ lng: string }>;
-
-export async function generateStaticParams() {
-    return I18N_LANGUAGES.map((language) => ({
-        lng: language,
-    }));
-}
 
 export async function generateMetadata() {
     const { t } = await myGetT("common");
@@ -35,16 +27,14 @@ export async function generateMetadata() {
 
 export default async function RootLayout({
     children,
-    params,
 }: {
     children: React.ReactNode;
-    params: Params;
 }) {
-    const { lng } = await params;
+    const lng = await getLocale();
 
     const content = (
         <QueryProvider>
-            <TranslationsProvider>
+            <TranslationsProvider lng={lng}>
                 <ThemeProviderWrapper>
                     <Suspense fallback={<Loading />}>
                         <UserInformationWrapper>

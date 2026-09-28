@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import useUser from "@/hooks/user";
 import ConversationList from "./_components/conversation-list";
 import NewConversationDialog from "./_components/new-conversation-dialog";
@@ -13,7 +13,6 @@ import { useConversationsInfinite } from "@/hooks/queries/use-conversations";
 import { flattenPages } from "@/lib/query/paginated";
 
 export default function MessagesPage() {
-    const params = useParams();
     const router = useRouter();
     const user = useUser((state) => state.user);
     const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
@@ -31,7 +30,7 @@ export default function MessagesPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() =>
-                                router.push(`/${params.lng as string}`)
+                                router.push("/")
                             }
                             title={t("close_section")}
                             aria-label={t("close_section")}

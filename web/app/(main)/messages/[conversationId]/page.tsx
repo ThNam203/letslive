@@ -152,7 +152,7 @@ export default function ConversationPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() =>
-                                router.push(`/${params.lng as string}`)
+                                router.push("/")
                             }
                             title={tMessages("close_section")}
                             aria-label={tMessages("close_section")}
@@ -177,10 +177,10 @@ export default function ConversationPage() {
                         conversation={conversation}
                         currentUserId={user.id}
                         onBack={() =>
-                            router.push(`/${params.lng as string}/messages`)
+                            router.push("/messages")
                         }
                         onCloseSection={() =>
-                            router.push(`/${params.lng as string}`)
+                            router.push("/")
                         }
                     />
 

@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { CommentUser, VODComment } from "@/types/vod-comment";
 import {
@@ -64,13 +63,12 @@ export default function CommentItem({
     onLikedChanged,
     depth = 0,
 }: CommentItemProps) {
-    const params = useParams();
-    const lng = params?.lng as string | undefined;
     const { t } = useT(["comments", "common", "fetch-error", "api-response"]);
     const currentUser = useUser((state) => state.user);
     const commentUser = comment.user ?? null;
-    const userProfileHref =
-        lng && commentUser?.id ? `/${lng}/users/${commentUser.id}` : "#";
+    const userProfileHref = commentUser?.id
+        ? `/users/${commentUser.id}`
+        : "#";
     const [isLiked, setIsLiked] = useState(likedIds?.has(comment.id) ?? false);
     const [likeCount, setLikeCount] = useState(comment.likeCount);
 

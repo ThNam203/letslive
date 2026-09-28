@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { Conversation, ConversationType } from "@/types/dm";
 import useDmStore from "@/hooks/use-dm-store";
 import useUser from "@/hooks/user";
 import UserAvatar from "@/components/ui/user-avatar";
 import useT from "@/hooks/use-translation";
-import { I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
 import { useDmUnreadCounts } from "@/hooks/queries/use-dm-unread-counts";
 import { formatLocaleDate } from "@/utils/timeFormats";
 
@@ -75,12 +73,11 @@ export default function ConversationListItem({
     conversation: Conversation;
     isActive?: boolean;
 }) {
-    const params = useParams();
     const user = useUser((state) => state.user);
     const { onlineUsers } = useDmStore();
     const { data: unreadCounts = {} } = useDmUnreadCounts(!!user);
-    const { t } = useT("messages");
-    const lng = (params.lng as string) ?? I18N_FALLBACK_LNG;
+    const { t, i18n } = useT("messages");
+    const lng = i18n.resolvedLanguage ?? i18n.language;
 
     if (!user) return null;
 
@@ -100,7 +97,7 @@ export default function ConversationListItem({
 
     return (
         <Link
-            href={`/${lng}/messages/${conversation._id}`}
+            href={`/messages/${conversation._id}`}
             className={`hover:bg-accent flex items-center gap-3 px-4 py-3 transition-colors ${
                 isActive ? "bg-accent" : ""
             }`}

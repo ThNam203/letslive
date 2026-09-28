@@ -3,7 +3,8 @@
 import useUser from "@/hooks/user";
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { I18N_LANGUAGES } from "@/lib/i18n/settings";
+import i18next from "@/lib/i18n/i18next";
+import { isSupportedLocale } from "@/lib/i18n/settings";
 import { switchLocale } from "@/lib/i18n/switch-locale";
 import { useMeProfile } from "@/hooks/queries/use-users";
 
@@ -21,13 +22,13 @@ export default function UserInformationWrapper({
     const { data: profile } = useMeProfile();
 
     // hydrate FE locale from the user's saved preference (login or session-restore)
+    const savedLocale = user?.locale;
     useEffect(() => {
-        if (!user?.locale || !I18N_LANGUAGES.includes(user.locale)) return;
-        const currentLocale = pathname.split("/")[1];
-        if (currentLocale === user.locale) return;
+        if (!isSupportedLocale(savedLocale)) return;
+        if (i18next.language === savedLocale) return;
         // no syncLocale: this value came from the DB in the first place
-        switchLocale(router, pathname, user.locale);
-    }, [user, pathname, router]);
+        switchLocale(router, savedLocale);
+    }, [savedLocale, router]);
 
     // A profile with no username has never finished sign-up
     useEffect(() => {

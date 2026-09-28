@@ -1,80 +1,61 @@
 import {
+    I18N_COOKIE_MAX_AGE_SECONDS,
     I18N_COOKIE_NAME,
     I18N_FALLBACK_LNG,
     I18N_HEADER_NAME,
     I18N_LANGUAGES,
+    isSupportedLocale,
+    matchAcceptLanguage,
 } from "@/lib/i18n/settings";
 import { NextRequest, NextResponse } from "next/server";
 
-function setUpCookieLocale(
-    request: NextRequest,
-    response: NextResponse,
-): string {
-    // check cookie
-    const localeCookie = request.cookies.get(I18N_COOKIE_NAME)?.value;
-    if (localeCookie) return localeCookie;
-
-    let finalLng = I18N_FALLBACK_LNG;
-
-    // then check Accept-Language, matching by primary subtag since
-    // browsers rarely send a full region-qualified tag (e.g. "en" not "en-US")
-    const acceptLang = request.headers.get("accept-language")?.split(",")[0];
-    if (acceptLang) {
-        const primarySubtag = acceptLang.split("-")[0].toLowerCase();
-        finalLng =
-            I18N_LANGUAGES.find(
-                (l) => l.split("-")[0].toLowerCase() === primarySubtag,
-            ) || "";
-    } else if (request.headers.has("referer")) {
-        const refererUrl = new URL(request.headers.get("referer") || "");
-        finalLng =
-            I18N_LANGUAGES.find((l) =>
-                refererUrl.pathname.startsWith(`/${l}`),
-            ) || "";
-    }
-
-    if (!I18N_LANGUAGES.includes(finalLng)) finalLng = I18N_FALLBACK_LNG;
-
-    response.cookies.set(I18N_COOKIE_NAME, finalLng, {
-        maxAge: 60 * 60 * 24 * 365,
+function setLocaleCookie(response: NextResponse, locale: string) {
+    response.cookies.set(I18N_COOKIE_NAME, locale, {
+        path: "/",
+        maxAge: I18N_COOKIE_MAX_AGE_SECONDS,
+        sameSite: "lax",
     });
-    return finalLng;
+}
+
+function findLegacyLocalePrefix(pathname: string): string | undefined {
+    return I18N_LANGUAGES.find(
+        (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`),
+    );
 }
 
 /**
- * Middleware to handle locale selection.
+ * Resolves the request's locale and hands it to server components through a
+ * request header. The locale is not part of the URL: the cookie (kept in sync
+ * with the user's profile on the client) wins, then Accept-Language.
  */
 export async function middleware(request: NextRequest) {
-    let redirectUrl = request.nextUrl.href;
-    let response = NextResponse.redirect(redirectUrl, 307);
+    const { pathname, search } = request.nextUrl;
+    const cookieLocale = request.cookies.get(I18N_COOKIE_NAME)?.value;
+    const hasValidCookie = isSupportedLocale(cookieLocale);
 
-    const deprivedLocale = setUpCookieLocale(request, response);
-    const localeInPath = I18N_LANGUAGES.find((loc) =>
-        request.nextUrl.pathname.startsWith(`/${loc}`),
-    );
+    // old links still carry the locale prefix, e.g. /vi-VN/users/1
+    const legacyLocale = findLegacyLocalePrefix(pathname);
+    if (legacyLocale) {
+        const stripped = pathname.slice(legacyLocale.length + 1) || "/";
+        const response = NextResponse.redirect(
+            new URL(`${stripped}${search}`, request.url),
+            308,
+        );
+        if (!hasValidCookie) setLocaleCookie(response, legacyLocale);
+        return response;
+    }
 
-    // if locale is already in pathname, use it
-    // if not then use locale from cookie or accept-language header
-    const locale = localeInPath || deprivedLocale;
+    const locale = hasValidCookie
+        ? cookieLocale
+        : (matchAcceptLanguage(request.headers.get("accept-language")) ??
+          I18N_FALLBACK_LNG);
 
     const headers = new Headers(request.headers);
     headers.set(I18N_HEADER_NAME, locale);
 
-    if (!localeInPath && !request.nextUrl.pathname.startsWith("/_next")) {
-        return NextResponse.redirect(
-            new URL(
-                `/${locale}${request.nextUrl.pathname}${request.nextUrl.search}`,
-                request.url,
-            ),
-        );
-    }
-
-    // check if the url is a static asset
-    if (request.nextUrl.pathname.includes(".")) {
-        return NextResponse.next({ headers });
-    }
-
-    return NextResponse.next({ headers });
+    const response = NextResponse.next({ request: { headers } });
+    if (!hasValidCookie) setLocaleCookie(response, locale);
+    return response;
 }
 
 export const config = {

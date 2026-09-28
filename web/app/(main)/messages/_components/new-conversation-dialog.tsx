@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,6 @@ import { ConversationType } from "@/types/dm";
 import UserAvatar from "@/components/ui/user-avatar";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
-import { I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
 
 export default function NewConversationDialog({
     onClose,
@@ -22,7 +21,6 @@ export default function NewConversationDialog({
     onClose: () => void;
 }) {
     const router = useRouter();
-    const params = useParams();
     const user = useUser((state) => state.user);
     const queryClient = useQueryClient();
     const { t } = useT("api-response");
@@ -88,8 +86,7 @@ export default function NewConversationDialog({
             if (res.data) {
                 prependConversation(queryClient, res.data);
                 onClose();
-                const lng = (params.lng as string) ?? I18N_FALLBACK_LNG;
-                router.push(`/${lng}/messages/${res.data._id}`);
+                router.push(`/messages/${res.data._id}`);
             } else if (!res.success && res.key) {
                 toast.error(t(res.key));
             }

@@ -1,9 +1,13 @@
 import useUser from "@/hooks/user";
-import { I18N_COOKIE_NAME, I18N_FALLBACK_LNG } from "./settings";
+import {
+    I18N_COOKIE_MAX_AGE_SECONDS,
+    I18N_COOKIE_NAME,
+    I18N_FALLBACK_LNG,
+} from "./settings";
 import i18next from "./i18next";
 
 type LocaleRouter = {
-    replace: (href: string) => void;
+    refresh: () => void;
 };
 
 type SwitchLocaleOptions = {
@@ -18,19 +22,17 @@ type SwitchLocaleOptions = {
 
 export async function switchLocale(
     router: LocaleRouter,
-    pathname: string,
     newLocale: string,
     { syncLocale }: SwitchLocaleOptions = {},
 ): Promise<void> {
     const locale = newLocale || I18N_FALLBACK_LNG;
 
+    document.cookie = `${I18N_COOKIE_NAME}=${locale}; path=/; max-age=${I18N_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
+
     await i18next.changeLanguage(locale);
 
-    document.cookie = `${I18N_COOKIE_NAME}=${locale}; path=/; max-age=${30 * 24 * 60 * 60}`;
-
-    const segments = pathname.split("/");
-    segments[1] = locale;
-    router.replace(segments.join("/"));
+    // server components read the locale from the cookie via middleware
+    router.refresh();
 
     if (syncLocale && useUser.getState().user) {
         syncLocale(locale);

@@ -1,15 +1,11 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import Link from "next/link";
 import useUser from "@/hooks/user";
 import IconMessage from "@/components/icons/message";
-import { I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
 import { useDmUnreadCounts } from "@/hooks/queries/use-dm-unread-counts";
 
 export default function MessagesIcon() {
-    const params = useParams();
-    const lng = (params?.lng as string) ?? I18N_FALLBACK_LNG;
     const user = useUser((state) => state.user);
     const { data: unreadCounts = {} } = useDmUnreadCounts(!!user);
 
@@ -20,7 +16,7 @@ export default function MessagesIcon() {
 
     return (
         <Link
-            href={user ? `/${lng}/messages` : `/${lng}/login`}
+            href={user ? "/messages" : "/login"}
             className="hover:bg-muted relative cursor-pointer rounded-md p-1.5 transition-colors"
         >
             <IconMessage className="size-5" />

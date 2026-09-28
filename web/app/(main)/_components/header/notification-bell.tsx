@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useState } from "react";
-import { useParams } from "next/navigation";
 import useUser from "@/hooks/user";
 import useT from "@/hooks/use-translation";
 import {
@@ -12,7 +11,6 @@ import {
 } from "@/components/ui/popover";
 import IconBell from "@/components/icons/bell";
 import { NotificationPopupContent } from "@/components/notification";
-import { I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
 import {
     useNotificationsInfinite,
     useUnreadNotificationCount,
@@ -24,8 +22,6 @@ import {
 
 export default function NotificationBell() {
     const { t } = useT(["notification"]);
-    const params = useParams();
-    const lng = (params?.lng as string) ?? I18N_FALLBACK_LNG;
     const user = useUser((state) => state.user);
     const [isOpen, setIsOpen] = useState(false);
 
@@ -49,7 +45,7 @@ export default function NotificationBell() {
     if (!user) {
         return (
             <Link
-                href={`/${lng}/login`}
+                href="/login"
                 className="hover:bg-muted relative cursor-pointer rounded-md p-1.5 transition-colors"
             >
                 <IconBell className="size-5" />
@@ -77,7 +73,7 @@ export default function NotificationBell() {
                     notifications={notifications}
                     isLoading={isLoading}
                     unreadCount={unreadCount}
-                    viewAllHref={`/${lng}/notifications`}
+                    viewAllHref="/notifications"
                     t={t}
                     onMarkAllAsRead={() => markAllAsRead.mutate()}
                     onNotificationClick={handleNotificationClick}

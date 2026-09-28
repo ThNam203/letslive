@@ -11,10 +11,10 @@ export async function generateMetadata() {
 }
 
 export default async function CookiePolicyPage() {
-    const { t, i18n } = await myGetT("legal");
+    const { t, lng } = await myGetT("legal");
     const lastUpdated = formatLocaleDate(
         new Date(POLICY_LAST_UPDATED),
-        i18n.resolvedLanguage,
+        lng,
         { dateStyle: "long" },
     );
 
