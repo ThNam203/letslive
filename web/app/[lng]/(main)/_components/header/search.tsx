@@ -7,7 +7,7 @@ import useT from "@/hooks/use-translation";
 import { Input } from "@/components/ui/input";
 import IconClose from "@/components/icons/close";
 import IconSearch from "@/components/icons/search";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/ui/user-avatar";
 import { cn } from "@/utils/cn";
 import { MQ_MAX_MD } from "@/constant/breakpoints";
 import { SEARCH_QUERY_MAX_LENGTH } from "@/constant/field-limits";
@@ -111,19 +111,12 @@ export default function SearchBar({
                             onClick={handleResultClick}
                             className="flex w-full cursor-pointer flex-row items-center gap-3 p-2 hover:bg-gray-400"
                         >
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage
-                                    src={user.profilePicture}
-                                    alt={"user image"}
-                                    width={32}
-                                    height={32}
-                                />
-                                <AvatarFallback>
-                                    {(user.username ?? "U")
-                                        .charAt(0)
-                                        .toUpperCase()}
-                                </AvatarFallback>
-                            </Avatar>
+                            <UserAvatar
+                                size="sm"
+                                src={user.profilePicture}
+                                name={user.username}
+                                alt="user image"
+                            />
                             <div>
                                 <p className="text-sm font-medium">
                                     {user.username}

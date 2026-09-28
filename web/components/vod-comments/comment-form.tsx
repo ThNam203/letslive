@@ -9,7 +9,7 @@ import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/ui/user-avatar";
 import { VOD_COMMENT_MAX_LENGTH } from "@/constant/field-limits";
 
 interface CommentFormProps {
@@ -54,15 +54,11 @@ export default function CommentForm({
 
     return (
         <div className="flex items-start gap-3">
-            <Avatar className="h-8 w-8 flex-shrink-0">
-                <AvatarImage
-                    src={user?.profilePicture}
-                    alt={user?.username ?? undefined}
-                />
-                <AvatarFallback>
-                    {user?.username?.charAt(0).toUpperCase()}
-                </AvatarFallback>
-            </Avatar>
+            <UserAvatar
+                size="sm"
+                src={user?.profilePicture}
+                name={user?.username}
+            />
             <div className="flex-1 space-y-2">
                 <Textarea
                     value={content}

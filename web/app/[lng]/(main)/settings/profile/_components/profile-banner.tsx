@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/ui/user-avatar";
 import useUser from "@/hooks/user";
 import { cn } from "@/utils/cn";
 import Image from "next/image";
@@ -130,14 +130,14 @@ export default function ProfileBanner({
                 />
             </div>
             <div className="absolute left-1/2 z-20 -translate-x-1/2 -translate-y-2/3">
-                <Avatar className="relative flex h-32 w-32 overflow-hidden rounded-full border-4 border-white">
-                    <AvatarImage
-                        src={displayProfilePicture}
-                        alt={t("user_avatar")}
-                    />
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                        {user && (user.username ?? "U")[0].toUpperCase()}
-                    </AvatarFallback>
+                <UserAvatar
+                    size="lg"
+                    src={displayProfilePicture}
+                    name={user?.username}
+                    alt={t("user_avatar")}
+                    className="border-4 border-white"
+                    fallbackClassName="bg-primary text-primary-foreground"
+                >
                     <ImageHover
                         inputRef={profileImageInputRef}
                         onValueChange={handleProfileImageChange}
@@ -146,7 +146,7 @@ export default function ProfileBanner({
                         onCloseIconClick={handleRemoveProfileImage}
                         showCloseIcon={Boolean(displayProfilePicture)}
                     />
-                </Avatar>
+                </UserAvatar>
             </div>
         </div>
     );

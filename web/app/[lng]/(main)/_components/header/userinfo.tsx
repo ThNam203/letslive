@@ -11,11 +11,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "../../../../../components/ui/popover";
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-} from "../../../../../components/ui/avatar";
+import UserAvatar from "@/components/ui/user-avatar";
 import IconSettings from "../../../../../components/icons/settings";
 import IconLogOut from "../../../../../components/icons/log-out";
 import IconGlobe from "../../../../../components/icons/globe";
@@ -46,25 +42,17 @@ export default function UserInfo() {
         <div className="flex flex-row gap-4">
             <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger>
-                    <Avatar className="border-border border">
-                        {userState.user ? (
-                            <>
-                                <AvatarImage
-                                    src={userState.user.profilePicture}
-                                    alt={t("accessibility:user_avatar")}
-                                />
-                                <AvatarFallback>
-                                    {(userState.user.username ?? "U")
-                                        .charAt(0)
-                                        .toUpperCase()}
-                                </AvatarFallback>
-                            </>
-                        ) : (
-                            <AvatarFallback>
+                    <UserAvatar
+                        src={userState.user?.profilePicture}
+                        name={userState.user?.username}
+                        alt={t("accessibility:user_avatar")}
+                        className="border-border border"
+                        fallback={
+                            userState.user ? undefined : (
                                 <IconUser className="size-6" />
-                            </AvatarFallback>
-                        )}
-                    </Avatar>
+                            )
+                        }
+                    />
                 </PopoverTrigger>
                 <PopoverContent className="border-border bg-muted mr-4 w-fit">
                     <div className="flex w-52 flex-col gap-2 rounded-md px-2 pb-2">

@@ -16,7 +16,7 @@ import { unwrapResponse } from "@/lib/api/api-error";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
 import { dateDiffFromNow } from "@/utils/timeFormats";
 import IconHeart from "@/components/icons/heart";
@@ -238,32 +238,19 @@ export default function CommentItem({
                     )}
                     aria-label={commentUser?.username ?? "View profile"}
                 >
-                    <Avatar className="h-8 w-8">
-                        <AvatarImage
-                            src={commentUser?.profilePicture}
-                            alt={commentUser?.username ?? undefined}
-                        />
-                        <AvatarFallback>
-                            {commentUser?.username?.charAt(0).toUpperCase() ??
-                                "?"}
-                        </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar
+                        size="sm"
+                        src={commentUser?.profilePicture}
+                        name={commentUser?.username}
+                    />
                 </Link>
             ) : (
-                <Avatar
-                    className={cn(
-                        "h-8 w-8 shrink-0",
-                        comment.isDeleted && "opacity-60",
-                    )}
-                >
-                    <AvatarImage
-                        src={commentUser?.profilePicture}
-                        alt={commentUser?.username ?? undefined}
-                    />
-                    <AvatarFallback>
-                        {commentUser?.username?.charAt(0).toUpperCase() ?? "?"}
-                    </AvatarFallback>
-                </Avatar>
+                <UserAvatar
+                    size="sm"
+                    src={commentUser?.profilePicture}
+                    name={commentUser?.username}
+                    className={cn(comment.isDeleted && "opacity-60")}
+                />
             )}
             <div className="flex-1">
                 <div className={cn(comment.isDeleted && "opacity-60")}>

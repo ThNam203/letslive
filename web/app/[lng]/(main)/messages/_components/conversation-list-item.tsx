@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { Conversation, ConversationType } from "@/types/dm";
 import useDmStore from "@/hooks/use-dm-store";
 import useUser from "@/hooks/user";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/ui/user-avatar";
 import useT from "@/hooks/use-translation";
 import { I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
 import { useDmUnreadCounts } from "@/hooks/queries/use-dm-unread-counts";
@@ -106,10 +106,11 @@ export default function ConversationListItem({
             }`}
         >
             <div className="relative">
-                <Avatar className="h-10 w-10">
-                    {display.avatar && <AvatarImage src={display.avatar} />}
-                    <AvatarFallback>{display.initials}</AvatarFallback>
-                </Avatar>
+                <UserAvatar
+                    src={display.avatar}
+                    name={display.name}
+                    fallback={display.initials}
+                />
                 {isOnline && (
                     <span className="absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />
                 )}

@@ -11,7 +11,7 @@ import { prependConversation } from "@/lib/query/dm-cache";
 import { SearchUsersByUsername } from "@/lib/api/user";
 import { PublicUser } from "@/types/user";
 import { ConversationType } from "@/types/dm";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/ui/user-avatar";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import { I18N_FALLBACK_LNG } from "@/lib/i18n/settings";
@@ -182,16 +182,11 @@ export default function NewConversationDialog({
                             onClick={() => handleSelectUser(result)}
                             className="hover:bg-accent flex w-full items-center gap-3 rounded px-3 py-2"
                         >
-                            <Avatar className="h-8 w-8">
-                                {result.profilePicture && (
-                                    <AvatarImage src={result.profilePicture} />
-                                )}
-                                <AvatarFallback>
-                                    {(result.username ?? "U")
-                                        .charAt(0)
-                                        .toUpperCase()}
-                                </AvatarFallback>
-                            </Avatar>
+                            <UserAvatar
+                                size="sm"
+                                src={result.profilePicture}
+                                name={result.username}
+                            />
                             <div className="text-left">
                                 <p className="text-sm font-medium">
                                     {result.username}

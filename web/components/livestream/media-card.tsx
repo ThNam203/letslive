@@ -12,7 +12,7 @@ import { cn } from "@/utils/cn";
 import useT from "@/hooks/use-translation";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import UserAvatar from "@/components/ui/user-avatar";
 import IconEye from "../icons/eye";
 import IconEyeOff from "../icons/eye-off";
 import IconClock from "../icons/clock";
@@ -240,20 +240,11 @@ export default function MediaCard(props: MediaCardProps) {
                         aria-label={user?.username ?? "user"}
                         className="bg-muted h-10 w-10 flex-shrink-0 overflow-hidden rounded-full hover:cursor-pointer"
                     >
-                        <Avatar>
-                            <AvatarImage
-                                src={user?.profilePicture}
-                                alt={`${user?.username} avatar`}
-                                className="h-full w-full object-cover"
-                                width={40}
-                                height={40}
-                            />
-                            <AvatarFallback>
-                                {(user?.username ?? "U")
-                                    .charAt(0)
-                                    .toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
+                        <UserAvatar
+                            src={user?.profilePicture}
+                            name={user?.username}
+                            alt={`${user?.username} avatar`}
+                        />
                     </button>
                     <div className="min-w-0 flex-1">
                         <h3

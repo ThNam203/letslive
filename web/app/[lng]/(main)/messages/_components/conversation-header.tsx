@@ -2,7 +2,7 @@
 
 import { Conversation, ConversationType } from "@/types/dm";
 import useDmStore from "@/hooks/use-dm-store";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
 import IconClose from "@/components/icons/close";
 import useT from "@/hooks/use-translation";
@@ -80,10 +80,12 @@ export default function ConversationHeader({
             )}
 
             <div className="relative">
-                <Avatar className="h-9 w-9">
-                    {avatar && <AvatarImage src={avatar} />}
-                    <AvatarFallback>{initials}</AvatarFallback>
-                </Avatar>
+                <UserAvatar
+                    src={avatar}
+                    name={name}
+                    fallback={initials}
+                    className="h-9 w-9"
+                />
                 {isOnline && (
                     <span className="absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-green-500" />
                 )}

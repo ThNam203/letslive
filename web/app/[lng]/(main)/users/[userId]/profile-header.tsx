@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { PublicUser } from "@/types/user";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/ui/user-avatar";
 import useUser from "@/hooks/user";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -78,15 +78,13 @@ export default function ProfileHeader({
             </div>
             <div className="-mt-16 px-4 sm:-mt-24">
                 <div className="relative inline-block">
-                    <Avatar className="h-32 w-32 rounded-full border-4 border-white">
-                        <AvatarImage
-                            src={user.profilePicture}
-                            alt={t("accessibility:user_avatar")}
-                        />
-                        <AvatarFallback>
-                            {(user.username || "U")[0].toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar
+                        size="lg"
+                        src={user.profilePicture}
+                        name={user.username}
+                        alt={t("accessibility:user_avatar")}
+                        className="border-4 border-white"
+                    />
                     {me?.id && me.id !== user.id && (
                         <>
                             <div className="absolute right-0 bottom-4 flex translate-x-[50%] flex-row items-center gap-2">

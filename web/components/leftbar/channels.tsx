@@ -3,7 +3,7 @@
 import Link from "next/link";
 import useUser from "../../hooks/user";
 import { PublicUser } from "../../types/user";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import UserAvatar from "@/components/ui/user-avatar";
 import { cn } from "@/utils/cn";
 import {
     HoverCard,
@@ -35,16 +35,12 @@ function ChannelUserCard({
                         isMinimized ? "" : "w-full",
                     )}
                 >
-                    <Avatar>
-                        <AvatarImage
-                            src={user.profilePicture}
-                            alt={t("accessibility:user_avatar")}
-                            className="h-10 w-10 rounded-full"
-                        />
-                        <AvatarFallback className="border-border h-10 w-10 rounded-full border">
-                            {(user.username ?? "U").charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar
+                        src={user.profilePicture}
+                        name={user.username}
+                        alt={t("accessibility:user_avatar")}
+                        fallbackClassName="border-border border"
+                    />
                     {!isMinimized && (
                         <span className="text-sm font-semibold">
                             {user.username}
@@ -54,16 +50,12 @@ function ChannelUserCard({
             </HoverCardTrigger>
             <HoverCardContent className="border-border bg-muted z-10 w-80">
                 <div className="flex gap-4">
-                    <Avatar>
-                        <AvatarImage
-                            src={user.profilePicture}
-                            alt={t("accessibility:user_avatar")}
-                            className="h-10 w-10 rounded-full"
-                        />
-                        <AvatarFallback className="border-border h-10 w-10 rounded-full border">
-                            {(user.username ?? "U").charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar
+                        src={user.profilePicture}
+                        name={user.username}
+                        alt={t("accessibility:user_avatar")}
+                        fallbackClassName="border-border border"
+                    />
                     <div className="space-y-1">
                         <h4 className="text-sm font-semibold">
                             {user.username}
