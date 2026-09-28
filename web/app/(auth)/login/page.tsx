@@ -33,10 +33,10 @@ export default function LogInPage() {
             redirectUrl.startsWith("/") &&
             !redirectUrl.startsWith("//")
         ) {
-            router.push(redirectUrl);
+            router.replace(redirectUrl);
             return;
         }
-        router.push("/");
+        router.replace("/");
     }, [user, searchParams, router]);
 
     return (

@@ -20,7 +20,8 @@ export default function RequireAuth({
         router.replace(`/login?redirectUrl=${encodeURIComponent(pathname)}`);
     }, [isLoading, user, pathname, router]);
 
-    if (isLoading || !user) return <>{fallback}</>;
+    // a background refetch must not unmount the page the user is on
+    if (!user) return <>{fallback}</>;
 
     return <>{children}</>;
 }
