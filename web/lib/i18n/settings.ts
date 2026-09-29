@@ -1,6 +1,9 @@
 export const I18N_FALLBACK_LNG = "en-US";
 export const I18N_LANGUAGES = [I18N_FALLBACK_LNG, "vi-VN"];
 export const I18N_DEFAULT_NS = "translation";
+// loaded at startup: error toasts translate these outside React, so they
+// must not depend on some mounted component having requested them
+export const I18N_PRELOADED_NS = ["common", "api-response", "fetch-error"];
 export const I18N_COOKIE_NAME = "lng";
 // keep in sync with legal:cookie_policy_row_lng_duration
 export const I18N_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;

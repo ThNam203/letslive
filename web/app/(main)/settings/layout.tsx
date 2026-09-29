@@ -1,70 +1,32 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/utils/cn";
-import useT from "@/hooks/use-translation";
-import type { TFunction } from "i18next";
-import RequireAuth from "@/components/wrappers/RequireAuth";
+import TabbedPageLayout from "@/components/navigation/tabbed-page-layout";
+import { myGetT } from "@/lib/i18n";
 import SettingsLoading from "./loading";
 
-const getNavItems = (t: TFunction) => [
-    { name: t("settings:navigation.profile"), href: "/settings/profile" },
-    { name: t("settings:navigation.security"), href: "/settings/security" },
-    { name: t("settings:navigation.stream"), href: "/settings/stream" },
-    {
-        name: t("settings:navigation.chat_commands"),
-        href: "/settings/chat-commands",
-    },
-    { name: t("settings:navigation.vods"), href: "/settings/vods" },
-    { name: t("settings:navigation.upload"), href: "/settings/upload" },
-];
-
-export default function SettingsNav({
+export default async function SettingsLayout({
     children,
 }: Readonly<{ children: React.ReactNode }>) {
-    const pathname = usePathname();
-    const { t } = useT(["settings", "fetch-error"]);
-    const navItems = getNavItems(t);
+    const { t } = await myGetT("settings");
+
+    const tabs = [
+        { name: t("navigation.profile"), href: "/settings/profile" },
+        { name: t("navigation.security"), href: "/settings/security" },
+        { name: t("navigation.stream"), href: "/settings/stream" },
+        {
+            name: t("navigation.chat_commands"),
+            href: "/settings/chat-commands",
+        },
+        { name: t("navigation.vods"), href: "/settings/vods" },
+        { name: t("navigation.upload"), href: "/settings/upload" },
+    ];
 
     return (
-        <div className="bg-background text-foreground flex h-full flex-col">
-            <div className="max-w-7xl px-6">
-                <div className="mt-6 flex items-center">
-                    <h1 className="text-4xl font-bold">
-                        {t("settings:page_title")}
-                    </h1>
-                </div>
-                <nav className="border-border border-b">
-                    <ul className="flex">
-                        {navItems.map((item) => {
-                            const isActive = pathname.endsWith(item.href);
-                            return (
-                                <li key={item.href}>
-                                    <Link
-                                        href={item.href}
-                                        className={cn(
-                                            "hover:text-primary relative inline-block w-fit px-4 py-4 text-center text-sm transition-colors",
-                                            isActive
-                                                ? "text-primary border-primary border-b-2"
-                                                : "text-foreground",
-                                        )}
-                                    >
-                                        {item.name}
-                                    </Link>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </nav>
-            </div>
-            <div className="text-foreground flex-1 overflow-y-auto p-6">
-                <div className="max-w-4xl space-y-8">
-                    <RequireAuth fallback={<SettingsLoading />}>
-                        {children}
-                    </RequireAuth>
-                </div>
-            </div>
-        </div>
+        <TabbedPageLayout
+            title={t("page_title")}
+            tabs={tabs}
+            tabClassName="w-fit px-4"
+            fallback={<SettingsLoading />}
+        >
+            {children}
+        </TabbedPageLayout>
     );
 }

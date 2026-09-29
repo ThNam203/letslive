@@ -5,6 +5,7 @@ import {
     I18N_FALLBACK_LNG,
     I18N_LANGUAGES,
     I18N_DEFAULT_NS,
+    I18N_PRELOADED_NS,
     isSupportedLocale,
 } from "./settings";
 
@@ -31,6 +32,7 @@ i18next
         supportedLngs: I18N_LANGUAGES,
         fallbackLng: I18N_FALLBACK_LNG,
         lng: initialLanguage(),
+        ns: I18N_PRELOADED_NS,
         fallbackNS: I18N_DEFAULT_NS,
         defaultNS: I18N_DEFAULT_NS,
     });

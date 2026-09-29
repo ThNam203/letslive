@@ -1,68 +1,27 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/utils/cn";
-import useT from "@/hooks/use-translation";
-import type { TFunction } from "i18next";
-import RequireAuth from "@/components/wrappers/RequireAuth";
+import TabbedPageLayout from "@/components/navigation/tabbed-page-layout";
+import { myGetT } from "@/lib/i18n";
 import WalletLoading from "./loading";
 
-const getNavItems = (t: TFunction) => [
-    { name: t("wallet:navigation.overview"), href: "/wallet/overview" },
-    {
-        name: t("wallet:navigation.transactions"),
-        href: "/wallet/transactions",
-    },
-    { name: t("wallet:navigation.deposit"), href: "/wallet/deposit" },
-    { name: t("wallet:navigation.inventory"), href: "/wallet/inventory" },
-];
-
-export default function WalletLayout({
+export default async function WalletLayout({
     children,
 }: Readonly<{ children: React.ReactNode }>) {
-    const pathname = usePathname();
-    const { t } = useT(["wallet", "fetch-error"]);
-    const navItems = getNavItems(t);
+    const { t } = await myGetT("wallet");
+
+    const tabs = [
+        { name: t("navigation.overview"), href: "/wallet/overview" },
+        { name: t("navigation.transactions"), href: "/wallet/transactions" },
+        { name: t("navigation.deposit"), href: "/wallet/deposit" },
+        { name: t("navigation.inventory"), href: "/wallet/inventory" },
+    ];
 
     return (
-        <div className="bg-background text-foreground flex h-full flex-col">
-            <div className="max-w-7xl px-6">
-                <div className="mt-6 flex items-center">
-                    <h1 className="text-4xl font-bold">
-                        {t("wallet:page_title")}
-                    </h1>
-                </div>
-                <nav className="border-border border-b">
-                    <ul className="flex">
-                        {navItems.map((item) => {
-                            const isActive = pathname.endsWith(item.href);
-                            return (
-                                <li key={item.href}>
-                                    <Link
-                                        href={item.href}
-                                        className={cn(
-                                            "hover:text-primary relative inline-block w-28 py-4 text-center text-sm transition-colors",
-                                            isActive
-                                                ? "text-primary border-primary border-b-2"
-                                                : "text-foreground",
-                                        )}
-                                    >
-                                        {item.name}
-                                    </Link>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </nav>
-            </div>
-            <div className="text-foreground flex-1 overflow-y-auto p-6">
-                <div className="max-w-4xl space-y-8">
-                    <RequireAuth fallback={<WalletLoading />}>
-                        {children}
-                    </RequireAuth>
-                </div>
-            </div>
-        </div>
+        <TabbedPageLayout
+            title={t("page_title")}
+            tabs={tabs}
+            tabClassName="w-28"
+            fallback={<WalletLoading />}
+        >
+            {children}
+        </TabbedPageLayout>
     );
 }
