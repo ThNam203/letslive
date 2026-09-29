@@ -6,6 +6,7 @@ import { vodHandlers } from "./handlers/vod";
 import { chatHandlers } from "./handlers/chat";
 import { dmHandlers } from "./handlers/dm";
 import { financeHandlers } from "./handlers/finance";
+import { shopHandlers } from "./handlers/shop";
 
 export const worker = setupWorker(
     ...authHandlers,
@@ -15,4 +16,5 @@ export const worker = setupWorker(
     ...chatHandlers,
     ...dmHandlers,
     ...financeHandlers,
+    ...shopHandlers,
 );
