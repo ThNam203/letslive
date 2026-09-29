@@ -1,11 +1,9 @@
-"use client";
-
 import Link from "next/link";
-import useT from "@/hooks/use-translation";
 import IconUpload from "@/components/icons/upload";
+import { myGetT } from "@/lib/i18n";
 
-export default function UploadIcon() {
-    const { t } = useT("settings");
+export default async function UploadIcon() {
+    const { t } = await myGetT("settings");
 
     return (
         <Link

@@ -1,5 +1,3 @@
-"use client";
-
 import { DmWebSocketProvider } from "@/contexts/dm-websocket-context";
 
 export default function MessagesLayout({

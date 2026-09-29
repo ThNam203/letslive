@@ -1,12 +1,11 @@
-"use client";
 import Link from "next/link";
 import IconGoogle from "@/components/icons/google";
 import GLOBAL from "@/global";
 import SignUpForm from "@/components/forms/SignupForm";
-import useT from "@/hooks/use-translation";
+import { myGetT } from "@/lib/i18n";
 
-export default function SignUpPage() {
-    const { t } = useT(["auth", "common"]);
+export default async function SignUpPage() {
+    const { t } = await myGetT(["auth", "common"]);
 
     return (
         <>

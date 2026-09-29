@@ -1,11 +1,9 @@
-"use client";
-
 import Link from "next/link";
 import IconWallet from "@/components/icons/wallet";
-import useT from "@/hooks/use-translation";
+import { myGetT } from "@/lib/i18n";
 
-export default function WalletIcon() {
-    const { t } = useT("accessibility");
+export default async function WalletIcon() {
+    const { t } = await myGetT("accessibility");
 
     return (
         <Link
