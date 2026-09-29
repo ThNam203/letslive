@@ -22,9 +22,9 @@ export async function Header() {
                 </Link>
             </div>
 
-            <SearchBar className="flex flex-1 mx-2 w-full" />
+            <SearchBar className="mx-2 flex w-full flex-1" />
 
-            <div className="flex flex-row items-center justify-end md:gap-4 gap-2">
+            <div className="flex flex-row items-center justify-end gap-2 md:gap-4">
                 <StreamGuide />
                 <MessagesIcon />
                 <WalletIcon />

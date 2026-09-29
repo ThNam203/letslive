@@ -141,7 +141,11 @@ export default function ConversationPage() {
     }, [user, conversationId, send]);
 
     if (!user) {
-        return <RequireAuth fallback={<MessagesPageSkeleton withThread />}>{null}</RequireAuth>;
+        return (
+            <RequireAuth fallback={<MessagesPageSkeleton withThread />}>
+                {null}
+            </RequireAuth>
+        );
     }
 
     return (
@@ -153,9 +157,7 @@ export default function ConversationPage() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() =>
-                                router.push("/")
-                            }
+                            onClick={() => router.push("/")}
                             title={tMessages("close_section")}
                             aria-label={tMessages("close_section")}
                             className="h-9 w-9 shrink-0"
@@ -178,12 +180,8 @@ export default function ConversationPage() {
                     <ConversationHeader
                         conversation={conversation}
                         currentUserId={user.id}
-                        onBack={() =>
-                            router.push("/messages")
-                        }
-                        onCloseSection={() =>
-                            router.push("/")
-                        }
+                        onBack={() => router.push("/messages")}
+                        onCloseSection={() => router.push("/")}
                     />
 
                     <MessageThread

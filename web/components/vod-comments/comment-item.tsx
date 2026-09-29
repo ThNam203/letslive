@@ -66,9 +66,7 @@ export default function CommentItem({
     const { t } = useT(["comments", "common", "fetch-error", "api-response"]);
     const currentUser = useUser((state) => state.user);
     const commentUser = comment.user ?? null;
-    const userProfileHref = commentUser?.id
-        ? `/users/${commentUser.id}`
-        : "#";
+    const userProfileHref = commentUser?.id ? `/users/${commentUser.id}` : "#";
     const [isLiked, setIsLiked] = useState(likedIds?.has(comment.id) ?? false);
     const [likeCount, setLikeCount] = useState(comment.likeCount);
 
@@ -108,7 +106,8 @@ export default function CommentItem({
     };
 
     const deleteMutation = useMutation({
-        mutationFn: async () => unwrapResponse(await DeleteVODComment(comment.id)),
+        mutationFn: async () =>
+            unwrapResponse(await DeleteVODComment(comment.id)),
         onSuccess: () => onCommentDeleted(comment.id),
     });
 

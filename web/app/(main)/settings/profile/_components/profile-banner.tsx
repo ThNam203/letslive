@@ -25,16 +25,22 @@ export default function ProfileBanner({
     const profileImageInputRef = useRef<HTMLInputElement>(null);
     const backgroundImageInputRef = useRef<HTMLInputElement>(null);
 
-    const [previewProfileUrl, setPreviewProfileUrl] = useState<string | null>(null);
-    const [previewBackgroundUrl, setPreviewBackgroundUrl] = useState<string | null>(null);
+    const [previewProfileUrl, setPreviewProfileUrl] = useState<string | null>(
+        null,
+    );
+    const [previewBackgroundUrl, setPreviewBackgroundUrl] = useState<
+        string | null
+    >(null);
     const previewProfileUrlRef = useRef<string | null>(null);
     const previewBackgroundUrlRef = useRef<string | null>(null);
 
     // Revoke blob URLs on unmount
     useEffect(() => {
         return () => {
-            if (previewProfileUrlRef.current) URL.revokeObjectURL(previewProfileUrlRef.current);
-            if (previewBackgroundUrlRef.current) URL.revokeObjectURL(previewBackgroundUrlRef.current);
+            if (previewProfileUrlRef.current)
+                URL.revokeObjectURL(previewProfileUrlRef.current);
+            if (previewBackgroundUrlRef.current)
+                URL.revokeObjectURL(previewBackgroundUrlRef.current);
         };
     }, []);
 
@@ -68,7 +74,8 @@ export default function ProfileBanner({
     };
 
     const handleBackgroundImageChange = (file: File) => {
-        if (previewBackgroundUrlRef.current) URL.revokeObjectURL(previewBackgroundUrlRef.current);
+        if (previewBackgroundUrlRef.current)
+            URL.revokeObjectURL(previewBackgroundUrlRef.current);
         const blobUrl = URL.createObjectURL(file);
         previewBackgroundUrlRef.current = blobUrl;
         setPreviewBackgroundUrl(blobUrl);
@@ -76,7 +83,8 @@ export default function ProfileBanner({
     };
 
     const handleProfileImageChange = (file: File) => {
-        if (previewProfileUrlRef.current) URL.revokeObjectURL(previewProfileUrlRef.current);
+        if (previewProfileUrlRef.current)
+            URL.revokeObjectURL(previewProfileUrlRef.current);
         const blobUrl = URL.createObjectURL(file);
         previewProfileUrlRef.current = blobUrl;
         setPreviewProfileUrl(blobUrl);
@@ -104,7 +112,8 @@ export default function ProfileBanner({
     };
 
     const displayBackground = previewBackgroundUrl ?? user?.backgroundPicture;
-    const displayProfilePicture = previewProfileUrl ?? (user ? user.profilePicture : "");
+    const displayProfilePicture =
+        previewProfileUrl ?? (user ? user.profilePicture : "");
 
     return (
         <div className={cn("relative w-full", className)}>

@@ -22,11 +22,7 @@ const LivestreamsPreviewView = () => {
         <div className="flex flex-col gap-2 pr-2">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {livestreams.slice(0, limitView).map((livestream, idx) => (
-                    <MediaCard
-                        key={idx}
-                        kind="live"
-                        livestream={livestream}
-                    />
+                    <MediaCard key={idx} kind="live" livestream={livestream} />
                 ))}
             </div>
             {livestreams.length > limitView && (

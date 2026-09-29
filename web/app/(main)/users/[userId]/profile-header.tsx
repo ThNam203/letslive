@@ -89,7 +89,11 @@ export default function ProfileHeader({
                         <>
                             <div className="absolute right-0 bottom-4 flex translate-x-[50%] flex-row items-center gap-2">
                                 <Button
-                                    variant={user.isFollowing ? "destructive" : "default"}
+                                    variant={
+                                        user.isFollowing
+                                            ? "destructive"
+                                            : "default"
+                                    }
                                     disabled={followMutation.isPending || !me}
                                     onClick={onFollowClick}
                                     className="flex flex-row items-center justify-center gap-0"

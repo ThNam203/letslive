@@ -43,10 +43,8 @@ export default function MockProvider({
                     "[MockProvider] Failed to start MSW worker:",
                     err,
                 );
-                
-                setError(
-                    err instanceof Error ? err : new Error(String(err)),
-                );
+
+                setError(err instanceof Error ? err : new Error(String(err)));
             }
         }
         startWorker();
@@ -55,7 +53,7 @@ export default function MockProvider({
     if (error) {
         return (
             <div className="p-6 font-mono">
-                <h2 className="text-red-600 font-bold">
+                <h2 className="font-bold text-red-600">
                     {t("msw_failed_title")}
                 </h2>
                 <p>{t("msw_failed_description")}</p>

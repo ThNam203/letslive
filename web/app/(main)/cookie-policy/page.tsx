@@ -12,11 +12,9 @@ export async function generateMetadata() {
 
 export default async function CookiePolicyPage() {
     const { t, lng } = await myGetT("legal");
-    const lastUpdated = formatLocaleDate(
-        new Date(POLICY_LAST_UPDATED),
-        lng,
-        { dateStyle: "long" },
-    );
+    const lastUpdated = formatLocaleDate(new Date(POLICY_LAST_UPDATED), lng, {
+        dateStyle: "long",
+    });
 
     const rows = [
         {
@@ -88,7 +86,9 @@ export default async function CookiePolicyPage() {
                                     <td className="p-3">{row.purpose}</td>
                                     <td className="p-3">{row.duration}</td>
                                     <td className="p-3">
-                                        {t("legal:cookie_policy_type_essential")}
+                                        {t(
+                                            "legal:cookie_policy_type_essential",
+                                        )}
                                     </td>
                                 </tr>
                             ))}

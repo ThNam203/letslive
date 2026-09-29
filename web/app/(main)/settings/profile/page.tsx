@@ -18,10 +18,7 @@ import ThemeList from "@/app/(main)/settings/profile/_components/theme-list";
 import IconLoader from "@/components/icons/loader";
 import DisableAccountDialog from "./_components/disable-account-dialog";
 import useT from "@/hooks/use-translation";
-import {
-    USERNAME_MAX_LENGTH,
-    BIO_MAX_LENGTH,
-} from "@/constant/field-limits";
+import { USERNAME_MAX_LENGTH, BIO_MAX_LENGTH } from "@/constant/field-limits";
 import LanguageList from "@/app/(main)/settings/profile/_components/language-list";
 import { SocialMediaEdit } from "@/app/(main)/settings/profile/_components/socials-media-link";
 
@@ -37,8 +34,7 @@ export default function ProfileSettings() {
         null,
     );
 
-    const isUsernameChanged =
-        user != null && user.username !== username;
+    const isUsernameChanged = user != null && user.username !== username;
     const isBioChanged = user != null && (user.bio ?? "") !== bio;
     const isButtonDisabled =
         !isUsernameChanged &&
@@ -115,7 +111,7 @@ export default function ProfileSettings() {
 
     useEffect(() => {
         if (!user) return;
-        
+
         queueMicrotask(() => {
             setUsername(user.username);
             setBio(user.bio ?? "");
@@ -157,7 +153,10 @@ export default function ProfileSettings() {
 
                     <div className="mt-6 flex justify-end">
                         <Button
-                            disabled={updateProfileMutation.isPending || isButtonDisabled}
+                            disabled={
+                                updateProfileMutation.isPending ||
+                                isButtonDisabled
+                            }
                             type="submit"
                         >
                             {updateProfileMutation.isPending && <IconLoader />}{" "}

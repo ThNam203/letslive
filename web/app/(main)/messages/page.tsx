@@ -30,9 +30,7 @@ export default function MessagesPage() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() =>
-                                router.push("/")
-                            }
+                            onClick={() => router.push("/")}
                             title={t("close_section")}
                             aria-label={t("close_section")}
                             className="shrink-0"

@@ -38,11 +38,14 @@ export default function GiftModal({
         enabled: open,
     });
     const [animationUrl, setAnimationUrl] = useState<string | null>(null);
-    const animationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const animationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+        null,
+    );
 
     useEffect(() => {
         return () => {
-            if (animationTimerRef.current) clearTimeout(animationTimerRef.current);
+            if (animationTimerRef.current)
+                clearTimeout(animationTimerRef.current);
         };
     }, []);
 
@@ -63,7 +66,9 @@ export default function GiftModal({
             ),
         onSuccess: (data) => {
             toast.success(t("shop:shop.gift_sent"));
-            queryClient.invalidateQueries({ queryKey: WALLET_BALANCE_QUERY_KEY });
+            queryClient.invalidateQueries({
+                queryKey: WALLET_BALANCE_QUERY_KEY,
+            });
             if (data?.animationUrl) {
                 setAnimationUrl(data.animationUrl);
                 animationTimerRef.current = setTimeout(dismissAnimation, 3000);
@@ -141,7 +146,10 @@ export default function GiftModal({
                                     <p className="text-foreground text-center text-xs font-medium">
                                         {item.name}
                                     </p>
-                                    <Badge variant="secondary" className="text-xs">
+                                    <Badge
+                                        variant="secondary"
+                                        className="text-xs"
+                                    >
                                         {t("shop:shop.price_label", {
                                             price: item.price,
                                         })}
