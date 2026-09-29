@@ -1,0 +1,212 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import useUser from "@/hooks/user";
+import { CreateConversation } from "@/lib/api/dm";
+import { prependConversation } from "@/lib/query/dm-cache";
+import { SearchUsersByUsername } from "@/lib/api/user";
+import { PublicUser } from "@/types/user";
+import { ConversationType } from "@/types/dm";
+import UserAvatar from "@/components/ui/user-avatar";
+import { toast } from "@/components/utils/toast";
+import useT from "@/hooks/use-translation";
+
+export default function NewConversationDialog({
+    onClose,
+}: {
+    onClose: () => void;
+}) {
+    const router = useRouter();
+    const user = useUser((state) => state.user);
+    const queryClient = useQueryClient();
+    const { t } = useT("api-response");
+    const { t: tMessages } = useT("messages");
+
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<PublicUser[]>([]);
+    const [selectedUsers, setSelectedUsers] = useState<PublicUser[]>([]);
+    const [isGroup, setIsGroup] = useState(false);
+    const [groupName, setGroupName] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+
+    const handleSearch = async (query: string) => {
+        setSearchQuery(query);
+        if (query.trim().length < 2) {
+            setSearchResults([]);
+            return;
+        }
+
+        setIsSearching(true);
+        try {
+            const res = await SearchUsersByUsername(query.trim());
+            if (res.data) {
+                // Filter out current user and already selected users
+                const filtered = res.data.filter(
+                    (u) =>
+                        u.id !== user?.id &&
+                        !selectedUsers.some((s) => s.id === u.id),
+                );
+                setSearchResults(filtered);
+            }
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleSelectUser = (selectedUser: PublicUser) => {
+        if (isGroup) {
+            setSelectedUsers([...selectedUsers, selectedUser]);
+        } else {
+            setSelectedUsers([selectedUser]);
+        }
+        setSearchQuery("");
+        setSearchResults([]);
+    };
+
+    const handleRemoveUser = (userId: string) => {
+        setSelectedUsers(selectedUsers.filter((u) => u.id !== userId));
+    };
+
+    const handleCreate = async () => {
+        if (selectedUsers.length === 0 || !user) return;
+
+        setIsLoading(true);
+        try {
+            const res = await CreateConversation({
+                type: isGroup ? ConversationType.GROUP : ConversationType.DM,
+                participantIds: selectedUsers.map((u) => u.id),
+                name: isGroup ? groupName || undefined : undefined,
+            });
+
+            if (res.data) {
+                prependConversation(queryClient, res.data);
+                onClose();
+                router.push(`/messages/${res.data._id}`);
+            } else if (!res.success && res.key) {
+                toast.error(t(res.key));
+            }
+        } catch {
+            toast.error(t("fetch-error:client_fetch_error"));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
+            <div className="bg-background w-full max-w-md rounded-lg border p-6 shadow-lg">
+                <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-lg font-semibold">
+                        {tMessages("new_conversation")}
+                    </h2>
+                    <Button variant="ghost" size="sm" onClick={onClose}>
+                        &times;
+                    </Button>
+                </div>
+
+                <div className="mb-4 flex items-center gap-2">
+                    <Button
+                        variant={!isGroup ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                            setIsGroup(false);
+                            setSelectedUsers(selectedUsers.slice(0, 1));
+                        }}
+                    >
+                        {tMessages("direct_message")}
+                    </Button>
+                    <Button
+                        variant={isGroup ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setIsGroup(true)}
+                    >
+                        {tMessages("group")}
+                    </Button>
+                </div>
+
+                {isGroup && (
+                    <Input
+                        placeholder={tMessages("group_name_placeholder")}
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        className="mb-3"
+                    />
+                )}
+
+                {/* Selected users */}
+                {selectedUsers.length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-2">
+                        {selectedUsers.map((u) => (
+                            <span
+                                key={u.id}
+                                className="bg-muted flex items-center gap-1 rounded-full px-3 py-1 text-sm"
+                            >
+                                {u.username}
+                                <button
+                                    onClick={() => handleRemoveUser(u.id)}
+                                    className="text-muted-foreground ml-1 hover:text-red-500"
+                                >
+                                    &times;
+                                </button>
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                {/* Search */}
+                <Input
+                    placeholder={tMessages("search_users_placeholder")}
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="mb-3"
+                />
+
+                {/* Search results */}
+                <div className="max-h-48 overflow-y-auto">
+                    {isSearching && (
+                        <p className="text-muted-foreground py-2 text-center text-sm">
+                            {tMessages("searching")}
+                        </p>
+                    )}
+                    {searchResults.map((result) => (
+                        <button
+                            key={result.id}
+                            onClick={() => handleSelectUser(result)}
+                            className="hover:bg-accent flex w-full items-center gap-3 rounded px-3 py-2"
+                        >
+                            <UserAvatar
+                                size="sm"
+                                src={result.profilePicture}
+                                name={result.username}
+                            />
+                            <div className="text-left">
+                                <p className="text-sm font-medium">
+                                    {result.username}
+                                </p>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+
+                <div className="mt-4 flex justify-end gap-2">
+                    <Button variant="outline" onClick={onClose}>
+                        {tMessages("cancel")}
+                    </Button>
+                    <Button
+                        disabled={selectedUsers.length === 0 || isLoading}
+                        onClick={handleCreate}
+                    >
+                        {isLoading
+                            ? tMessages("creating")
+                            : tMessages("create")}
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
+}

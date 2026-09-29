@@ -11,8 +11,8 @@ import { useEffect, useState } from "react";
  * Renders children only after the worker is ready so the first
  * fetch calls are already intercepted.
  *
- * NOTE: The middleware must exclude /mockServiceWorker.js from
- * the locale-redirect logic (see middleware.ts matcher).
+ * NOTE: The proxy must exclude /mockServiceWorker.js from the
+ * locale handling (see the proxy.ts matcher).
  */
 export default function MockProvider({
     children,
@@ -43,10 +43,8 @@ export default function MockProvider({
                     "[MockProvider] Failed to start MSW worker:",
                     err,
                 );
-                
-                setError(
-                    err instanceof Error ? err : new Error(String(err)),
-                );
+
+                setError(err instanceof Error ? err : new Error(String(err)));
             }
         }
         startWorker();
@@ -55,7 +53,7 @@ export default function MockProvider({
     if (error) {
         return (
             <div className="p-6 font-mono">
-                <h2 className="text-red-600 font-bold">
+                <h2 className="font-bold text-red-600">
                     {t("msw_failed_title")}
                 </h2>
                 <p>{t("msw_failed_description")}</p>

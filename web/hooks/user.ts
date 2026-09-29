@@ -12,7 +12,9 @@ export type UserState = {
 
 const useUser = create<UserState>((set) => ({
     user: null,
-    isLoading: false,
+    // the profile query starts after the first render; until it settles
+    // nobody can tell a signed-out visitor from a signed-in one
+    isLoading: true,
 
     setUser: (user) => set({ user }),
     clearUser: () => set({ user: null }),

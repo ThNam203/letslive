@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ListSkeleton } from "@/components/skeletons/list-skeleton";
 import useUser from "../../hooks/user";
 import { PublicUser } from "../../types/user";
 import UserAvatar from "@/components/ui/user-avatar";
@@ -89,8 +90,10 @@ export default function AllChannelsView({
     minimizeLeftBarIcon?: React.ReactNode;
 }) {
     const curUser = useUser((state) => state.user);
-    const { data: followingUsers = [] } = useFollowingChannels(!!curUser);
-    const { data: recommendedUsers = [] } = useRecommendedChannels(0);
+    const { data: followingUsers = [], isLoading: isLoadingFollowing } =
+        useFollowingChannels(!!curUser);
+    const { data: recommendedUsers = [], isLoading: isLoadingRecommended } =
+        useRecommendedChannels(0);
     const { t } = useT(["common"]);
 
     const followingIds = new Set(followingUsers.map((user) => user.id));
@@ -111,6 +114,14 @@ export default function AllChannelsView({
                 ) : null}
                 {minimizeLeftBarIcon}
             </div>
+
+            {(isLoadingFollowing || isLoadingRecommended) && (
+                <ListSkeleton
+                    rows={5}
+                    lines={isMinimized ? 0 : 1}
+                    className={cn("gap-2", isMinimized ? "" : "w-full")}
+                />
+            )}
 
             {curUser && followingUsers.length > 0 && (
                 <>
