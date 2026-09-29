@@ -10,6 +10,7 @@ import { Livestream } from "@/types/livestream";
 import { VOD } from "@/types/vod";
 import { VODComment } from "@/types/vod-comment";
 import { ChatCommand } from "@/types/chat-command";
+import { Gift, ShopItem, UserInventory } from "@/types/shop";
 import {
     Conversation,
     ConversationType,
@@ -741,3 +742,120 @@ export const chatMessages: Record<string, ChatMessage[]> = {
         },
     ],
 };
+
+// ---------------------------------------------------------------------------
+// Seed: Shop, inventory and gifts
+// ---------------------------------------------------------------------------
+
+const twemoji = (codepoint: string) =>
+    `https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/${codepoint}.svg`;
+
+// Rose, Crown and Rocket mirror the finance service seed (0003_add_shop_items).
+export const shopItems: ShopItem[] = [
+    {
+        id: "item-heart",
+        name: "Heart",
+        description: "Show some love",
+        imageUrl: twemoji("2764"),
+        animationUrl: twemoji("2764"),
+        price: 50,
+        currencyCode: CurrencyCode.SPARK,
+        createdAt: daysAgo(60),
+    },
+    {
+        id: "item-rose",
+        name: "Rose",
+        description: "A beautiful red rose",
+        imageUrl: twemoji("1f339"),
+        animationUrl: twemoji("1f339"),
+        price: 100,
+        currencyCode: CurrencyCode.SPARK,
+        createdAt: daysAgo(60),
+    },
+    {
+        id: "item-star",
+        name: "Star",
+        description: null,
+        imageUrl: twemoji("2b50"),
+        animationUrl: twemoji("2b50"),
+        price: 200,
+        currencyCode: CurrencyCode.SPARK,
+        createdAt: daysAgo(60),
+    },
+    {
+        id: "item-crown",
+        name: "Crown",
+        description: "A golden crown",
+        imageUrl: twemoji("1f451"),
+        animationUrl: twemoji("1f451"),
+        price: 500,
+        currencyCode: CurrencyCode.SPARK,
+        createdAt: daysAgo(60),
+    },
+    {
+        id: "item-rocket",
+        name: "Rocket",
+        description: "A blazing rocket",
+        imageUrl: twemoji("1f680"),
+        animationUrl: twemoji("1f680"),
+        price: 1000,
+        currencyCode: CurrencyCode.SPARK,
+        createdAt: daysAgo(60),
+    },
+];
+
+export const inventory: UserInventory[] = [
+    {
+        id: "inv-001",
+        userId: ME_USER_ID,
+        shopItemId: "item-rose",
+        quantity: 3,
+        updatedAt: daysAgo(7),
+    },
+    {
+        id: "inv-002",
+        userId: ME_USER_ID,
+        shopItemId: "item-crown",
+        quantity: 1,
+        updatedAt: daysAgo(2),
+    },
+];
+
+export const gifts: Gift[] = [
+    {
+        id: "gift-001",
+        senderUserId: "user-003",
+        recipientUserId: ME_USER_ID,
+        shopItemId: "item-rose",
+        quantity: 2,
+        message: "Great stream!",
+        sentAt: daysAgo(4),
+    },
+    {
+        id: "gift-002",
+        senderUserId: "user-004",
+        recipientUserId: ME_USER_ID,
+        shopItemId: "item-heart",
+        quantity: 1,
+        message: null,
+        sentAt: daysAgo(1),
+    },
+    {
+        id: "gift-003",
+        senderUserId: ME_USER_ID,
+        recipientUserId: "user-002",
+        shopItemId: "item-crown",
+        quantity: 1,
+        message: "You earned it",
+        sentAt: daysAgo(3),
+    },
+    {
+        id: "gift-004",
+        senderUserId: "user-003",
+        recipientUserId: "user-002",
+        shopItemId: "item-rocket",
+        quantity: 1,
+        message: null,
+        sentAt: daysAgo(6),
+    },
+];
