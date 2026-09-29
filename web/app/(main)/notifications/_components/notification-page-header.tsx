@@ -4,20 +4,20 @@ import useT from "@/hooks/use-translation";
 import { Button } from "@/components/ui/button";
 
 type NotificationPageHeaderProps = {
+    heading: React.ReactNode;
     hasUnread: boolean;
     onMarkAllAsRead: () => void;
 };
 
 export function NotificationPageHeader({
+    heading,
     hasUnread,
     onMarkAllAsRead,
 }: NotificationPageHeaderProps) {
     const { t } = useT(["notification"]);
     return (
         <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-foreground text-xl font-semibold">
-                {t("title")}
-            </h1>
+            {heading}
             {hasUnread && (
                 <Button
                     variant="ghost"

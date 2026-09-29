@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useShopItems } from "@/hooks/queries/use-shop-items";
 import { useUserGiftsReceived } from "@/hooks/queries/use-user-gifts";
 
-export default function UserGiftsPage() {
+export default function GiftGrid() {
     const { t } = useT(["shop", "api-response", "fetch-error"]);
     const params = useParams<{ userId: string }>();
     const { data: shopItems = [] } = useShopItems();
@@ -16,11 +16,7 @@ export default function UserGiftsPage() {
     const { data: gifts, isPending } = useUserGiftsReceived(params.userId);
 
     return (
-        <div className="p-6">
-            <h1 className="text-foreground mb-6 text-3xl font-bold">
-                {t("shop:gifts_received.page_title")}
-            </h1>
-
+        <>
             {isPending ? (
                 <ItemGridSkeleton
                     count={10}
@@ -71,6 +67,6 @@ export default function UserGiftsPage() {
                     })}
                 </div>
             )}
-        </div>
+        </>
     );
 }

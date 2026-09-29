@@ -1,10 +1,8 @@
 "use client";
 
 import useT from "@/hooks/use-translation";
-import { NotificationPageHeader } from "./_components/notification-page-header";
-import { NotificationList } from "./_components/notification-list";
-import RequireAuth from "@/components/wrappers/RequireAuth";
-import { NotificationLoading } from "@/components/notification/notification-loading";
+import { NotificationPageHeader } from "./notification-page-header";
+import { NotificationList } from "./notification-list";
 import { useNotificationsInfinite } from "@/hooks/queries/use-notifications";
 import { flattenPages } from "@/lib/query/paginated";
 import {
@@ -13,7 +11,11 @@ import {
     useMarkNotificationAsRead,
 } from "@/hooks/queries/use-notification-mutations";
 
-export default function NotificationsPage() {
+export default function NotificationsView({
+    heading,
+}: {
+    heading: React.ReactNode;
+}) {
     const { t } = useT(["notification", "common"]);
     const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
         useNotificationsInfinite();
@@ -24,35 +26,22 @@ export default function NotificationsPage() {
     const deleteNotification = useDeleteNotification();
 
     return (
-        <RequireAuth
-            fallback={
-                <div className="mx-auto w-full px-4 py-6">
-                    <NotificationLoading
-                        message={t("notification:loading")}
-                        variant="full"
-                        rows={6}
-                    />
-                </div>
-            }
-        >
-            <div className="small-scrollbar h-full min-h-0 overflow-auto">
-                <div className="mx-auto w-full px-4 py-6">
-                    <NotificationPageHeader
-                        hasUnread={notifications.some((n) => !n.isRead)}
-                        onMarkAllAsRead={() => markAllAsRead.mutate()}
-                    />
+        <>
+            <NotificationPageHeader
+                heading={heading}
+                hasUnread={notifications.some((n) => !n.isRead)}
+                onMarkAllAsRead={() => markAllAsRead.mutate()}
+            />
 
-                    <NotificationList
-                        notifications={notifications}
-                        isLoading={isLoading || isFetchingNextPage}
-                        hasMore={!!hasNextPage}
-                        t={t}
-                        onMarkAsRead={(id) => markAsRead.mutate(id)}
-                        onDelete={(id) => deleteNotification.mutate(id)}
-                        onLoadMore={() => fetchNextPage()}
-                    />
-                </div>
-            </div>
-        </RequireAuth>
+            <NotificationList
+                notifications={notifications}
+                isLoading={isLoading || isFetchingNextPage}
+                hasMore={!!hasNextPage}
+                t={t}
+                onMarkAsRead={(id) => markAsRead.mutate(id)}
+                onDelete={(id) => deleteNotification.mutate(id)}
+                onLoadMore={() => fetchNextPage()}
+            />
+        </>
     );
 }

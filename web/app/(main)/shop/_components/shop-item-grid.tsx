@@ -15,7 +15,7 @@ import { useShopItems } from "@/hooks/queries/use-shop-items";
 import { WALLET_BALANCE_QUERY_KEY } from "@/hooks/queries/use-wallet";
 import { INVENTORY_QUERY_KEY } from "@/hooks/queries/use-inventory";
 
-export default function ShopPage() {
+export default function ShopItemGrid() {
     const { t } = useT(["shop", "api-response", "fetch-error"]);
     const user = useUser((s) => s.user);
     const queryClient = useQueryClient();
@@ -28,7 +28,9 @@ export default function ShopPage() {
             ),
         onSuccess: () => {
             toast.success(t("shop:shop.purchase_success"));
-            queryClient.invalidateQueries({ queryKey: WALLET_BALANCE_QUERY_KEY });
+            queryClient.invalidateQueries({
+                queryKey: WALLET_BALANCE_QUERY_KEY,
+            });
             queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEY });
         },
     });
@@ -39,15 +41,15 @@ export default function ShopPage() {
     };
 
     return (
-        <div className="p-6">
-            <h1 className="text-foreground mb-6 text-3xl font-bold">
-                {t("shop:shop.page_title")}
-            </h1>
-
+        <>
             {isLoading ? (
-                <ItemGridSkeleton count={10} className="grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" withAction />
+                <ItemGridSkeleton
+                    count={10}
+                    className="grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+                    withAction
+                />
             ) : items.length === 0 ? (
-                <p className="text-muted-foreground text-center py-16">
+                <p className="text-muted-foreground py-16 text-center">
                     {t("shop:shop.empty")}
                 </p>
             ) : (
@@ -103,6 +105,6 @@ export default function ShopPage() {
                     })}
                 </div>
             )}
-        </div>
+        </>
     );
 }
