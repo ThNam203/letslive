@@ -438,7 +438,7 @@ services:
         condition: service_healthy
 
   minio:
-    image: quay.io/minio/minio:latest
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     command: server --console-address ":9090" /mnt/data
     container_name: letslive-minio
     restart: always
