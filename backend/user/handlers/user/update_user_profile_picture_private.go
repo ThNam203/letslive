@@ -24,7 +24,7 @@ func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWrit
 	}
 	defer r.Body.Close()
 
-	file, fileHeader, uploadErr := utils.ParseUploadedFile(w, r, "profile-picture")
+	file, _, uploadErr := utils.ParseUploadedFile(w, r, "profile-picture")
 	if uploadErr != nil {
 		h.WriteResponse(w, ctx, uploadErr)
 		return
@@ -32,7 +32,7 @@ func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWrit
 	defer file.Close()
 
 	ctx, span := tracer.MyTracer.Start(ctx, "update_user_profile_picture_private_handler.user_service.update_user_profile_picture")
-	savedPath, err := h.userService.UpdateUserProfilePicture(ctx, file, fileHeader, *userUUID)
+	savedPath, err := h.userService.UpdateUserProfilePicture(ctx, file, *userUUID)
 	span.End()
 
 	if err != nil {

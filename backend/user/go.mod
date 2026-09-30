@@ -12,6 +12,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.99
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.67.0
 	go.uber.org/zap v1.27.1
+	golang.org/x/image v0.38.0
 	sen1or/letslive/shared v0.0.0
 )
 
