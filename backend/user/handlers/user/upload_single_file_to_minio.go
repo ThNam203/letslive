@@ -2,9 +2,9 @@ package user
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"sen1or/letslive/shared/pkg/tracer"
+	"sen1or/letslive/user/handlers/utils"
 	"sen1or/letslive/user/response"
 )
 
@@ -12,41 +12,14 @@ func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *h
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
-	const maxUploadSize = 10 * 1024 * 1024
 	defer r.Body.Close()
 
-	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
-	if err := r.ParseMultipartForm(0); err != nil {
-		var maxByteError *http.MaxBytesError
-		if errors.As(err, &maxByteError) {
-			h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
-				response.RES_ERR_IMAGE_TOO_LARGE,
-				nil,
-				nil,
-				nil,
-			))
-			return
-		}
-
-		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_PAYLOAD,
-			nil,
-			nil,
-			nil,
-		))
+	file, fileHeader, uploadErr := utils.ParseUploadedFile(w, r, "file")
+	if uploadErr != nil {
+		h.WriteResponse(w, ctx, uploadErr)
 		return
 	}
-
-	file, fileHeader, formErr := r.FormFile("file")
-	if formErr != nil {
-		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_PAYLOAD,
-			nil,
-			nil,
-			nil,
-		))
-		return
-	}
+	defer file.Close()
 
 	ctx, span := tracer.MyTracer.Start(ctx, "upload_single_file_to_min_io_handler.user_service.upload_file_to_min_io")
 	savedPath, err := h.userService.UploadFileToMinIO(ctx, file, fileHeader)

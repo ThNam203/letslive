@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"mime/multipart"
 	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/user/domains"
@@ -214,6 +216,13 @@ func (s *UserService) UpdateUserAPIKey(ctx context.Context, userId uuid.UUID) (s
 }
 
 func (s UserService) UpdateUserProfilePicture(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader, userId uuid.UUID) (string, error) {
+	if err := checkAvatarDimensions(file); err != nil {
+		return "", err
+	}
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		return "", fmt.Errorf("rewind avatar upload: %w: %w", domains.ErrInternal, err)
+	}
+
 	savedPath, err := s.minioService.AddFile(ctx, file, fileHeader, "profile-pictures")
 	if err != nil {
 		return "", domains.ErrInternal

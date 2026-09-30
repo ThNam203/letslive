@@ -300,6 +300,9 @@ paths:
   /users/me/profile-picture:
     put:
       summary: Update user profile picture
+      description: |
+        Accepts JPEG, PNG, GIF or WebP up to 10 MiB, with both sides between
+        80 and 4096 pixels.
       operationId: updateProfilePicture
       security:
         - BearerAuth: []
@@ -322,7 +325,7 @@ paths:
                 type: string
                 example: "/path/to/profile-picture.jpg"
         "400":
-          description: Invalid input
+          description: Invalid payload (res_err_invalid_payload), unsupported image (res_err_invalid_image) or dimensions outside 80-4096 px (res_err_image_dimensions_out_of_range)
           content:
             application/json:
               schema:
@@ -334,7 +337,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
         "413":
-          description: File too large
+          description: File larger than 10 MiB
           content:
             application/json:
               schema:

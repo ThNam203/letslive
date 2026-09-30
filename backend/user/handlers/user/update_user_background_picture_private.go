@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"sen1or/letslive/shared/pkg/tracer"
 	"sen1or/letslive/user/handlers/utils"
@@ -13,7 +12,6 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
-	const maxUploadSize = 10 * 1024 * 1024
 	userUUID, cookieErr := utils.GetUserIdFromCookie(r)
 	if cookieErr != nil {
 		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
@@ -26,37 +24,9 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 	}
 	defer r.Body.Close()
 
-	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
-
-	if err := r.ParseMultipartForm(0); err != nil {
-		var maxByteError *http.MaxBytesError
-		if errors.As(err, &maxByteError) {
-			h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
-				response.RES_ERR_IMAGE_TOO_LARGE,
-				nil,
-				nil,
-				nil,
-			))
-			return
-		}
-
-		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_PAYLOAD,
-			nil,
-			nil,
-			nil,
-		))
-		return
-	}
-
-	file, fileHeader, formErr := r.FormFile("background-picture")
-	if formErr != nil {
-		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INVALID_PAYLOAD,
-			nil,
-			nil,
-			nil,
-		))
+	file, fileHeader, uploadErr := utils.ParseUploadedFile(w, r, "background-picture")
+	if uploadErr != nil {
+		h.WriteResponse(w, ctx, uploadErr)
 		return
 	}
 	defer file.Close()
