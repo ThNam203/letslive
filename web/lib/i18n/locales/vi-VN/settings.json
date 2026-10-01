@@ -16,7 +16,11 @@
         "bio": "Tiểu sử",
         "update_success": "Cập nhật thông tin hồ sơ thành công!",
         "update_background": "Cập nhật ảnh nền",
-        "update_profile_picture": "Cập nhật ảnh đại diện"
+        "update_profile_picture": "Cập nhật ảnh đại diện",
+        "crop_title": "Cắt ảnh đại diện",
+        "crop_apply": "Áp dụng",
+        "crop_image_alt": "Ảnh cần cắt",
+        "image_load_failed": "Không đọc được ảnh này. Vui lòng chọn tệp khác."
     },
     "social_media_links": {
         "title": "Chỉnh sửa liên kết mạng xã hội",

@@ -40,6 +40,9 @@ import {
 
 let _seq = 1;
 export const uid = () => `mock-${_seq++}`;
+// served avatars are 80x80 webp, see the user service
+const mockAvatar = (seed: string) =>
+    `https://api.dicebear.com/9.x/avataaars/webp?seed=${seed}&size=80`;
 export const now = () => new Date().toISOString();
 export const daysAgo = (d: number) =>
     new Date(Date.now() - d * 86400_000).toISOString();
@@ -58,7 +61,7 @@ export const meUser: MeUser = {
     authProvider: AuthProvider.LOCAL,
     createdAt: daysAgo(120),
     bio: "Just a mock user for local UI testing.",
-    profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=mockuser",
+    profilePicture: mockAvatar("mockuser"),
     backgroundPicture:
         "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
     followerCount: 42,
@@ -84,7 +87,7 @@ export const otherUsers: PublicUser[] = [
         authProvider: AuthProvider.LOCAL,
         createdAt: daysAgo(200),
         bio: "Gaming & Tech streamer",
-        profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=jane",
+        profilePicture: mockAvatar("jane"),
         followerCount: 1340,
         livestreamInformation: {
             title: "Jane's Gaming Zone",
@@ -102,7 +105,7 @@ export const otherUsers: PublicUser[] = [
         authProvider: AuthProvider.LOCAL,
         createdAt: daysAgo(90),
         bio: "Live coding sessions every weekday",
-        profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=alex",
+        profilePicture: mockAvatar("alex"),
         followerCount: 882,
         livestreamInformation: {
             title: "Coding with Alex",
@@ -120,7 +123,7 @@ export const otherUsers: PublicUser[] = [
         authProvider: AuthProvider.LOCAL,
         createdAt: daysAgo(60),
         bio: "Producer & DJ streaming live sessions",
-        profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=sam",
+        profilePicture: mockAvatar("sam"),
         followerCount: 3201,
         livestreamInformation: {
             title: "Sam's Studio Sessions",
@@ -138,7 +141,7 @@ export const otherUsers: PublicUser[] = [
         authProvider: AuthProvider.LOCAL,
         createdAt: daysAgo(30),
         bio: "Travel vlogger streaming from around the world",
-        profilePicture: "https://api.dicebear.com/9.x/avataaars/svg?seed=mia",
+        profilePicture: mockAvatar("mia"),
         followerCount: 7890,
         livestreamInformation: {
             title: "Live from Somewhere New",
@@ -299,8 +302,7 @@ export const vodComments: VODComment[] = [
         user: {
             id: "user-002",
             username: "streamer_jane",
-            profilePicture:
-                "https://api.dicebear.com/9.x/avataaars/svg?seed=jane",
+            profilePicture: mockAvatar("jane"),
         },
     },
     {
@@ -318,8 +320,7 @@ export const vodComments: VODComment[] = [
         user: {
             id: "user-003",
             username: "coder_alex",
-            profilePicture:
-                "https://api.dicebear.com/9.x/avataaars/svg?seed=alex",
+            profilePicture: mockAvatar("alex"),
         },
     },
     {
@@ -337,8 +338,7 @@ export const vodComments: VODComment[] = [
         user: {
             id: ME_USER_ID,
             username: "mockuser",
-            profilePicture:
-                "https://api.dicebear.com/9.x/avataaars/svg?seed=mockuser",
+            profilePicture: mockAvatar("mockuser"),
         },
     },
 ];
@@ -439,8 +439,7 @@ export const conversations: Conversation[] = [
             {
                 userId: ME_USER_ID,
                 username: "mockuser",
-                profilePicture:
-                    "https://api.dicebear.com/9.x/avataaars/svg?seed=mockuser",
+                profilePicture: mockAvatar("mockuser"),
                 role: ParticipantRole.OWNER,
                 joinedAt: daysAgo(10),
                 lastReadMessageId: "msg-002",
@@ -449,8 +448,7 @@ export const conversations: Conversation[] = [
             {
                 userId: "user-002",
                 username: "streamer_jane",
-                profilePicture:
-                    "https://api.dicebear.com/9.x/avataaars/svg?seed=jane",
+                profilePicture: mockAvatar("jane"),
                 role: ParticipantRole.MEMBER,
                 joinedAt: daysAgo(10),
                 lastReadMessageId: "msg-002",
@@ -477,8 +475,7 @@ export const conversations: Conversation[] = [
             {
                 userId: ME_USER_ID,
                 username: "mockuser",
-                profilePicture:
-                    "https://api.dicebear.com/9.x/avataaars/svg?seed=mockuser",
+                profilePicture: mockAvatar("mockuser"),
                 role: ParticipantRole.MEMBER,
                 joinedAt: daysAgo(5),
                 lastReadMessageId: null,
@@ -487,8 +484,7 @@ export const conversations: Conversation[] = [
             {
                 userId: "user-003",
                 username: "coder_alex",
-                profilePicture:
-                    "https://api.dicebear.com/9.x/avataaars/svg?seed=alex",
+                profilePicture: mockAvatar("alex"),
                 role: ParticipantRole.OWNER,
                 joinedAt: daysAgo(5),
                 lastReadMessageId: "msg-004",
@@ -497,8 +493,7 @@ export const conversations: Conversation[] = [
             {
                 userId: "user-004",
                 username: "music_sam",
-                profilePicture:
-                    "https://api.dicebear.com/9.x/avataaars/svg?seed=sam",
+                profilePicture: mockAvatar("sam"),
                 role: ParticipantRole.MEMBER,
                 joinedAt: daysAgo(5),
                 lastReadMessageId: "msg-004",

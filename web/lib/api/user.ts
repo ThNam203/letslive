@@ -1,5 +1,10 @@
 import { ApiResponse } from "@/types/fetch-response";
-import { LivestreamInformation, MeUser, PublicUser } from "../../types/user";
+import {
+    AvatarCrop,
+    LivestreamInformation,
+    MeUser,
+    PublicUser,
+} from "../../types/user";
 import { fetchClient } from "@/utils/fetchClient";
 
 export async function SearchUsersByUsername(
@@ -45,9 +50,15 @@ export async function UpdateProfile(
 
 export async function UpdateProfilePicture(
     file: File,
+    crop?: AvatarCrop,
 ): Promise<ApiResponse<string>> {
     const formData = new FormData();
     formData.append("profile-picture", file);
+    if (crop) {
+        formData.append("crop-x", String(crop.x));
+        formData.append("crop-y", String(crop.y));
+        formData.append("crop-size", String(crop.size));
+    }
 
     return fetchClient<ApiResponse<string>>(`/user/me/profile-picture`, {
         method: "PATCH",

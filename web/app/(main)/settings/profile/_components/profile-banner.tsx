@@ -4,116 +4,131 @@ import UserAvatar from "@/components/ui/user-avatar";
 import useUser from "@/hooks/user";
 import { cn } from "@/utils/cn";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import DefaultBackgound from "./default-background";
 import ImageHover from "../../_components/image-hover";
 import useT from "@/hooks/use-translation";
+import AvatarCropDialog from "./avatar-crop-dialog";
+import { toast } from "@/components/utils/toast";
+import { AVATAR_ACCEPTED_TYPES, AVATAR_PREVIEW_SIZE } from "@/constant/image";
+import type { AvatarCrop } from "@/types/user";
+import { readFileAsDataUrl } from "@/utils/file";
+import {
+    isAllowedAvatarSize,
+    loadImage,
+    naturalSize,
+    renderCroppedSquare,
+} from "@/utils/avatar-crop";
+
+// an upload waiting for the save button, and what to show until it is saved
+export type PendingImage = { file: File; previewUrl: string };
+export type PendingAvatar = PendingImage & { crop: AvatarCrop };
+
+type CroppingImage = { pick: number; file: File; img: HTMLImageElement };
 
 interface Props {
     className?: string;
-    onProfileImageChange?: (file: File | null) => void;
-    onBackgroundImageChange?: (file: File | null) => void;
+    pendingAvatar: PendingAvatar | null;
+    pendingBackground: PendingImage | null;
+    onAvatarChange: (avatar: PendingAvatar | null) => void;
+    onBackgroundChange: (background: PendingImage | null) => void;
 }
+
 export default function ProfileBanner({
     className,
-    onBackgroundImageChange,
-    onProfileImageChange,
+    pendingAvatar,
+    pendingBackground,
+    onAvatarChange,
+    onBackgroundChange,
 }: Props) {
-    const { t } = useT("accessibility");
+    const { t } = useT(["accessibility", "settings", "api-response"]);
     const user = useUser((state) => state.user);
     const updateUser = useUser((state) => state.updateUser);
     const profileImageInputRef = useRef<HTMLInputElement>(null);
     const backgroundImageInputRef = useRef<HTMLInputElement>(null);
+    const [cropping, setCropping] = useState<CroppingImage | null>(null);
+    // a large image can still be loading when the next one is picked; only
+    // the latest pick may open the dialog
+    const avatarPickRef = useRef(0);
 
-    const [previewProfileUrl, setPreviewProfileUrl] = useState<string | null>(
-        null,
-    );
-    const [previewBackgroundUrl, setPreviewBackgroundUrl] = useState<
-        string | null
-    >(null);
-    const previewProfileUrlRef = useRef<string | null>(null);
-    const previewBackgroundUrlRef = useRef<string | null>(null);
-
-    // Revoke blob URLs on unmount
-    useEffect(() => {
-        return () => {
-            if (previewProfileUrlRef.current)
-                URL.revokeObjectURL(previewProfileUrlRef.current);
-            if (previewBackgroundUrlRef.current)
-                URL.revokeObjectURL(previewBackgroundUrlRef.current);
-        };
-    }, []);
-
-    // When the store is updated with a real server URL after save, clear the local preview
-    useEffect(() => {
-        if (!user?.profilePicture?.startsWith("blob:")) {
-            if (previewProfileUrlRef.current) {
-                URL.revokeObjectURL(previewProfileUrlRef.current);
-                previewProfileUrlRef.current = null;
-            }
-            setPreviewProfileUrl(null);
+    const handleBackgroundImageChange = async (file: File) => {
+        try {
+            onBackgroundChange({
+                file,
+                previewUrl: await readFileAsDataUrl(file),
+            });
+        } catch {
+            toast.error(t("settings:profile.image_load_failed"));
         }
-    }, [user?.profilePicture]);
+    };
 
-    useEffect(() => {
-        if (!user?.backgroundPicture?.startsWith("blob:")) {
-            if (previewBackgroundUrlRef.current) {
-                URL.revokeObjectURL(previewBackgroundUrlRef.current);
-                previewBackgroundUrlRef.current = null;
+    // lets the same file be picked again after cancelling or a rejection
+    const resetProfileImageInput = () => {
+        if (profileImageInputRef.current)
+            profileImageInputRef.current.value = "";
+    };
+
+    const closeCropDialog = () => {
+        avatarPickRef.current += 1;
+        setCropping(null);
+        resetProfileImageInput();
+    };
+
+    const handleProfileImageChange = async (file: File) => {
+        const pick = ++avatarPickRef.current;
+
+        try {
+            const img = await loadImage(await readFileAsDataUrl(file));
+            if (pick !== avatarPickRef.current) return;
+
+            if (!isAllowedAvatarSize(naturalSize(img))) {
+                toast.error(
+                    t("api-response:res_err_image_dimensions_out_of_range"),
+                );
+                resetProfileImageInput();
+                return;
             }
-            setPreviewBackgroundUrl(null);
+            setCropping({ pick, file, img });
+        } catch {
+            if (pick !== avatarPickRef.current) return;
+            toast.error(t("settings:profile.image_load_failed"));
+            resetProfileImageInput();
         }
-    }, [user?.backgroundPicture]);
-
-    const handleProfileUpdateButtonClick = () => {
-        profileImageInputRef.current?.click();
     };
 
-    const handleBackgroundUpdateButtonClick = () => {
-        backgroundImageInputRef.current?.click();
-    };
+    const handleCropApply = (crop: AvatarCrop) => {
+        if (!cropping) return;
 
-    const handleBackgroundImageChange = (file: File) => {
-        if (previewBackgroundUrlRef.current)
-            URL.revokeObjectURL(previewBackgroundUrlRef.current);
-        const blobUrl = URL.createObjectURL(file);
-        previewBackgroundUrlRef.current = blobUrl;
-        setPreviewBackgroundUrl(blobUrl);
-        onBackgroundImageChange?.(file);
-    };
-
-    const handleProfileImageChange = (file: File) => {
-        if (previewProfileUrlRef.current)
-            URL.revokeObjectURL(previewProfileUrlRef.current);
-        const blobUrl = URL.createObjectURL(file);
-        previewProfileUrlRef.current = blobUrl;
-        setPreviewProfileUrl(blobUrl);
-        onProfileImageChange?.(file);
+        try {
+            onAvatarChange({
+                file: cropping.file,
+                crop,
+                previewUrl: renderCroppedSquare(
+                    cropping.img,
+                    crop,
+                    AVATAR_PREVIEW_SIZE,
+                ),
+            });
+            closeCropDialog();
+        } catch {
+            toast.error(t("settings:profile.image_load_failed"));
+        }
     };
 
     const handleRemoveBackgroundImage = () => {
-        if (previewBackgroundUrlRef.current) {
-            URL.revokeObjectURL(previewBackgroundUrlRef.current);
-            previewBackgroundUrlRef.current = null;
-        }
-        setPreviewBackgroundUrl(null);
         updateUser({ ...user!, backgroundPicture: "" });
-        onBackgroundImageChange?.(null);
+        onBackgroundChange(null);
     };
 
     const handleRemoveProfileImage = () => {
-        if (previewProfileUrlRef.current) {
-            URL.revokeObjectURL(previewProfileUrlRef.current);
-            previewProfileUrlRef.current = null;
-        }
-        setPreviewProfileUrl(null);
         updateUser({ ...user!, profilePicture: "" });
-        onProfileImageChange?.(null);
+        onAvatarChange(null);
     };
 
-    const displayBackground = previewBackgroundUrl ?? user?.backgroundPicture;
+    const displayBackground =
+        pendingBackground?.previewUrl ?? user?.backgroundPicture;
     const displayProfilePicture =
-        previewProfileUrl ?? (user ? user.profilePicture : "");
+        pendingAvatar?.previewUrl ?? user?.profilePicture;
 
     return (
         <div className={cn("relative w-full", className)}>
@@ -125,6 +140,7 @@ export default function ProfileBanner({
                         alt={t("profile_banner")}
                         fill={true}
                         className="object-cover"
+                        loading="eager"
                         unoptimized
                     />
                 ) : (
@@ -133,7 +149,7 @@ export default function ProfileBanner({
                 <ImageHover
                     inputRef={backgroundImageInputRef}
                     onValueChange={handleBackgroundImageChange}
-                    onClick={handleBackgroundUpdateButtonClick}
+                    onClick={() => backgroundImageInputRef.current?.click()}
                     onCloseIconClick={handleRemoveBackgroundImage}
                     showCloseIcon={Boolean(displayBackground)}
                 />
@@ -150,13 +166,20 @@ export default function ProfileBanner({
                     <ImageHover
                         inputRef={profileImageInputRef}
                         onValueChange={handleProfileImageChange}
-                        onClick={handleProfileUpdateButtonClick}
+                        onClick={() => profileImageInputRef.current?.click()}
                         closeIconPosition="bottom"
                         onCloseIconClick={handleRemoveProfileImage}
                         showCloseIcon={Boolean(displayProfilePicture)}
+                        accept={AVATAR_ACCEPTED_TYPES}
                     />
                 </UserAvatar>
             </div>
+            <AvatarCropDialog
+                key={cropping?.pick ?? 0}
+                image={cropping?.img ?? null}
+                onCancel={closeCropDialog}
+                onApply={handleCropApply}
+            />
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import { http } from "msw";
-import { API_BASE, ok, notFound, noContent } from "../utils";
+import { API_BASE, ok, notFound, noContent, badRequest } from "../utils";
 import {
     meUser,
     otherUsers,
@@ -8,11 +8,42 @@ import {
     notifications,
     likedCommentIds,
 } from "../db";
-import { MeUser, PublicUser } from "@/types/user";
+import { AvatarCrop, MeUser, PublicUser } from "@/types/user";
 import { Notification, UnreadCountResponse } from "@/types/notification";
+import { AVATAR_SERVED_SIZE } from "@/constant/image";
+import { readFileAsDataUrl } from "@/utils/file";
+import {
+    centerSquare,
+    loadImage,
+    naturalSize,
+    renderCroppedSquare,
+} from "@/utils/avatar-crop";
 
 // Combined list for look-ups
 const getAllUsers = (): (PublicUser | MeUser)[] => [meUser, ...otherUsers];
+
+function readMockCrop(form: FormData): AvatarCrop | undefined {
+    const [x, y, size] = ["crop-x", "crop-y", "crop-size"].map((name) =>
+        form.get(name),
+    );
+    if (x === null || y === null || size === null) return undefined;
+    return { x: Number(x), y: Number(y), size: Number(size) };
+}
+
+// Mirrors the user service: the crop square (or the center square) shrunk to
+// the served avatar size.
+async function mockServedAvatar(
+    file: File,
+    crop: AvatarCrop | undefined,
+): Promise<string> {
+    const img = await loadImage(await readFileAsDataUrl(file));
+    return renderCroppedSquare(
+        img,
+        crop ?? centerSquare(naturalSize(img)),
+        AVATAR_SERVED_SIZE,
+        "image/webp",
+    );
+}
 
 export const userHandlers = [
     // GET /user/me
@@ -28,10 +59,17 @@ export const userHandlers = [
     }),
 
     // PATCH /user/me/profile-picture
-    http.patch(`${API_BASE}/user/me/profile-picture`, async () => {
-        const fakeUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${Date.now()}`;
-        meUser.profilePicture = fakeUrl;
-        return ok<string>(fakeUrl);
+    http.patch(`${API_BASE}/user/me/profile-picture`, async ({ request }) => {
+        const form = await request.formData();
+        const file = form.get("profile-picture");
+        if (!(file instanceof File)) {
+            return badRequest("res_err_invalid_payload", "Payload invalid.");
+        }
+        meUser.profilePicture = await mockServedAvatar(
+            file,
+            readMockCrop(form),
+        );
+        return ok<string>(meUser.profilePicture);
     }),
 
     // PATCH /user/me/background-picture
