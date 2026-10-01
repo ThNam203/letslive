@@ -40,7 +40,6 @@ import {
 
 let _seq = 1;
 export const uid = () => `mock-${_seq++}`;
-// served avatars are 80x80 webp, see the user service
 const mockAvatar = (seed: string) =>
     `https://api.dicebear.com/9.x/avataaars/webp?seed=${seed}&size=80`;
 export const now = () => new Date().toISOString();

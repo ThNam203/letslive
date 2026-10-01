@@ -8,41 +8,27 @@ import {
     notifications,
     likedCommentIds,
 } from "../db";
-import { AvatarCrop, MeUser, PublicUser } from "@/types/user";
+import { MeUser, PublicUser } from "@/types/user";
 import { Notification, UnreadCountResponse } from "@/types/notification";
 import { AVATAR_SERVED_SIZE } from "@/constant/image";
 import { readFileAsDataUrl } from "@/utils/file";
 import {
     centerSquare,
+    drawSquare,
     loadImage,
     naturalSize,
-    renderCroppedSquare,
 } from "@/utils/avatar-crop";
 
 // Combined list for look-ups
 const getAllUsers = (): (PublicUser | MeUser)[] => [meUser, ...otherUsers];
 
-function readMockCrop(form: FormData): AvatarCrop | undefined {
-    const [x, y, size] = ["crop-x", "crop-y", "crop-size"].map((name) =>
-        form.get(name),
-    );
-    if (x === null || y === null || size === null) return undefined;
-    return { x: Number(x), y: Number(y), size: Number(size) };
-}
-
-// Mirrors the user service: the crop square (or the center square) shrunk to
-// the served avatar size.
-async function mockServedAvatar(
-    file: File,
-    crop: AvatarCrop | undefined,
-): Promise<string> {
+async function mockServedAvatar(file: File): Promise<string> {
     const img = await loadImage(await readFileAsDataUrl(file));
-    return renderCroppedSquare(
+    return drawSquare(
         img,
-        crop ?? centerSquare(naturalSize(img)),
+        centerSquare(naturalSize(img)),
         AVATAR_SERVED_SIZE,
-        "image/webp",
-    );
+    ).toDataURL("image/webp");
 }
 
 export const userHandlers = [
@@ -65,10 +51,7 @@ export const userHandlers = [
         if (!(file instanceof File)) {
             return badRequest("res_err_invalid_payload", "Payload invalid.");
         }
-        meUser.profilePicture = await mockServedAvatar(
-            file,
-            readMockCrop(form),
-        );
+        meUser.profilePicture = await mockServedAvatar(file);
         return ok<string>(meUser.profilePicture);
     }),
 

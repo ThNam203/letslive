@@ -11,13 +11,17 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import useT from "@/hooks/use-translation";
-import type { AvatarCrop } from "@/types/user";
-import { avatarMaxZoom, naturalSize, toAvatarCrop } from "@/utils/avatar-crop";
+import {
+    avatarMaxZoom,
+    naturalSize,
+    toCropSquare,
+    type CropSquare,
+} from "@/utils/avatar-crop";
 
 type Props = {
     image: HTMLImageElement | null;
     onCancel: () => void;
-    onApply: (crop: AvatarCrop) => void;
+    onApply: (square: CropSquare) => Promise<void>;
 };
 
 // Give each picked image its own key so it starts centered at zoom 1.
@@ -31,12 +35,18 @@ export default function AvatarCropDialog({ image, onCancel, onApply }: Props) {
     // (scale and slide). Remounting when that animation ends makes it measure
     // the settled dialog; crop and zoom live here, so they survive.
     const [measureKey, setMeasureKey] = useState(0);
+    const [isApplying, setIsApplying] = useState(false);
 
     const size = image ? naturalSize(image) : null;
 
-    const handleApply = () => {
+    const handleApply = async () => {
         if (!size || !area) return;
-        onApply(toAvatarCrop(area, size));
+        setIsApplying(true);
+        try {
+            await onApply(toCropSquare(area, size));
+        } finally {
+            setIsApplying(false);
+        }
     };
 
     return (
@@ -89,7 +99,7 @@ export default function AvatarCropDialog({ image, onCancel, onApply }: Props) {
                     <Button
                         type="button"
                         onClick={handleApply}
-                        disabled={!area}
+                        disabled={!area || isApplying}
                     >
                         {t("settings:profile.crop_apply")}
                     </Button>

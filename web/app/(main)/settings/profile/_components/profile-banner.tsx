@@ -10,27 +10,25 @@ import ImageHover from "../../_components/image-hover";
 import useT from "@/hooks/use-translation";
 import AvatarCropDialog from "./avatar-crop-dialog";
 import { toast } from "@/components/utils/toast";
-import { AVATAR_ACCEPTED_TYPES, AVATAR_PREVIEW_SIZE } from "@/constant/image";
-import type { AvatarCrop } from "@/types/user";
+import { AVATAR_ACCEPTED_TYPES } from "@/constant/image";
 import { readFileAsDataUrl } from "@/utils/file";
 import {
+    exportAvatar,
     isAllowedAvatarSize,
     loadImage,
     naturalSize,
-    renderCroppedSquare,
+    type CropSquare,
 } from "@/utils/avatar-crop";
 
-// an upload waiting for the save button, and what to show until it is saved
 export type PendingImage = { file: File; previewUrl: string };
-export type PendingAvatar = PendingImage & { crop: AvatarCrop };
 
-type CroppingImage = { pick: number; file: File; img: HTMLImageElement };
+type CroppingImage = { pick: number; img: HTMLImageElement };
 
 interface Props {
     className?: string;
-    pendingAvatar: PendingAvatar | null;
+    pendingAvatar: PendingImage | null;
     pendingBackground: PendingImage | null;
-    onAvatarChange: (avatar: PendingAvatar | null) => void;
+    onAvatarChange: (avatar: PendingImage | null) => void;
     onBackgroundChange: (background: PendingImage | null) => void;
 }
 
@@ -62,7 +60,7 @@ export default function ProfileBanner({
         }
     };
 
-    // lets the same file be picked again after cancelling or a rejection
+    // a file input fires no change event when the same file is picked again
     const resetProfileImageInput = () => {
         if (profileImageInputRef.current)
             profileImageInputRef.current.value = "";
@@ -88,7 +86,7 @@ export default function ProfileBanner({
                 resetProfileImageInput();
                 return;
             }
-            setCropping({ pick, file, img });
+            setCropping({ pick, img });
         } catch {
             if (pick !== avatarPickRef.current) return;
             toast.error(t("settings:profile.image_load_failed"));
@@ -96,19 +94,12 @@ export default function ProfileBanner({
         }
     };
 
-    const handleCropApply = (crop: AvatarCrop) => {
+    const handleCropApply = async (square: CropSquare) => {
         if (!cropping) return;
 
         try {
-            onAvatarChange({
-                file: cropping.file,
-                crop,
-                previewUrl: renderCroppedSquare(
-                    cropping.img,
-                    crop,
-                    AVATAR_PREVIEW_SIZE,
-                ),
-            });
+            const file = await exportAvatar(cropping.img, square);
+            onAvatarChange({ file, previewUrl: await readFileAsDataUrl(file) });
             closeCropDialog();
         } catch {
             toast.error(t("settings:profile.image_load_failed"));

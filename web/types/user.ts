@@ -57,10 +57,3 @@ export type MeUser = BaseUser & {
 
 /** Union for code that can receive either (e.g. profile header when viewing self vs others). */
 export type User = PublicUser | MeUser;
-
-// a square in the image as the browser shows it (EXIF orientation applied)
-export type AvatarCrop = {
-    x: number;
-    y: number;
-    size: number;
-};

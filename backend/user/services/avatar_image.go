@@ -38,12 +38,6 @@ var avatarFormats = map[string]struct{ ext, contentType string }{
 	"webp": {"webp", "image/webp"},
 }
 
-// AvatarCrop is a square in the image as browsers display it, i.e. after the
-// EXIF orientation is applied.
-type AvatarCrop struct {
-	X, Y, Size int
-}
-
 type processedAvatar struct {
 	original            []byte
 	originalExt         string
@@ -69,7 +63,7 @@ func avatarDecodeCost(cfg image.Config) int64 {
 	return min(int64(cfg.Width)*int64(cfg.Height)*avatarDecodeBytesPerPx, avatarDecodeBudgetBytes)
 }
 
-func processAvatar(ctx context.Context, r io.Reader, crop *AvatarCrop) (*processedAvatar, error) {
+func processAvatar(ctx context.Context, r io.Reader) (*processedAvatar, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, fmt.Errorf("read avatar upload: %w: %w", domains.ErrInternal, err)
@@ -90,7 +84,7 @@ func processAvatar(ctx context.Context, r io.Reader, crop *AvatarCrop) (*process
 	}
 	defer avatarDecodeBudget.Release(cost)
 
-	served, err := encodeAvatar(data, format, cfg, crop)
+	served, err := encodeAvatar(data, format, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -103,16 +97,13 @@ func processAvatar(ctx context.Context, r io.Reader, crop *AvatarCrop) (*process
 	}, nil
 }
 
-func encodeAvatar(data []byte, format string, cfg image.Config, crop *AvatarCrop) ([]byte, error) {
+func encodeAvatar(data []byte, format string, cfg image.Config) ([]byte, error) {
 	img, err := decodeAvatar(data, format, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("decode avatar: %w: %w", domains.ErrInvalidImage, err)
 	}
 
-	square, err := renderAvatar(img, avatarOrientation(data, format), crop)
-	if err != nil {
-		return nil, err
-	}
+	square := renderAvatar(img, avatarOrientation(data, format))
 
 	var served bytes.Buffer
 	if err := webp.Encode(&served, square, webp.Options{Quality: avatarWebPQuality, Method: 6}); err != nil {
@@ -139,40 +130,16 @@ func decodeAvatar(data []byte, format string, cfg image.Config) (image.Image, er
 	return canvas, nil
 }
 
-// renderAvatar scales the crop (the center square when nil) to avatarSize.
-// The crop is mapped onto the stored pixels so that only the small result
-// needs rotating, never the full image.
-func renderAvatar(img image.Image, orientation int, crop *AvatarCrop) (*image.RGBA, error) {
+// renderAvatar scales the center square to avatarSize and turns it upright.
+// A center square rotates onto the center square, so orienting the small
+// result is the same as orienting the full image first.
+func renderAvatar(img image.Image, orientation int) *image.RGBA {
 	b := img.Bounds()
-	storedW, storedH := b.Dx(), b.Dy()
-	shownW, shownH := storedW, storedH
-	if orientation >= 5 {
-		shownW, shownH = storedH, storedW
-	}
-
-	region, err := avatarRegion(shownW, shownH, crop)
-	if err != nil {
-		return nil, err
-	}
-	src := storedRect(region, orientation, storedW, storedH).Add(b.Min)
+	side := min(b.Dx(), b.Dy())
+	x0 := b.Min.X + (b.Dx()-side)/2
+	y0 := b.Min.Y + (b.Dy()-side)/2
 
 	dst := image.NewRGBA(image.Rect(0, 0, avatarSize, avatarSize))
-	draw.CatmullRom.Scale(dst, dst.Bounds(), img, src, draw.Src, nil)
-	return orientImage(dst, orientation), nil
-}
-
-func avatarRegion(width, height int, crop *AvatarCrop) (image.Rectangle, error) {
-	if crop == nil {
-		side := min(width, height)
-		x0, y0 := (width-side)/2, (height-side)/2
-		return image.Rect(x0, y0, x0+side, y0+side), nil
-	}
-
-	if crop.Size < minAvatarDimension || crop.X < 0 || crop.Y < 0 ||
-		crop.Size > width || crop.Size > height ||
-		crop.X > width-crop.Size || crop.Y > height-crop.Size {
-		return image.Rectangle{}, fmt.Errorf("crop %+v outside %dx%d: %w", *crop, width, height, domains.ErrInvalidInput)
-	}
-
-	return image.Rect(crop.X, crop.Y, crop.X+crop.Size, crop.Y+crop.Size), nil
+	draw.CatmullRom.Scale(dst, dst.Bounds(), img, image.Rect(x0, y0, x0+side, y0+side), draw.Src, nil)
+	return orientImage(dst, orientation)
 }

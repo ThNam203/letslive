@@ -5,13 +5,11 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"image"
 	"image/color"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
-	"math"
 	"testing"
 
 	"github.com/gen2brain/webp"
@@ -29,7 +27,6 @@ func solidImage(width, height int) image.Image {
 	return stripedImage(width, height, color.RGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff})
 }
 
-// stripedImage fills equal-width vertical stripes, left to right.
 func stripedImage(width, height int, stripes ...color.RGBA) image.Image {
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 	for x := 0; x < width; x++ {
@@ -166,7 +163,7 @@ func TestProcessAvatarServesSquareWebPAndKeepsOriginal(t *testing.T) {
 		t.Run(tc.format, func(t *testing.T) {
 			data := encodeImage(t, tc.format, solidImage(300, 200))
 
-			avatar, err := processAvatar(context.Background(), bytes.NewReader(data), nil)
+			avatar, err := processAvatar(context.Background(), bytes.NewReader(data))
 			if err != nil {
 				t.Fatalf("got %v, want nil", err)
 			}
@@ -188,7 +185,7 @@ func TestProcessAvatarServesSquareWebPAndKeepsOriginal(t *testing.T) {
 func TestProcessAvatarCropsTheCenter(t *testing.T) {
 	data := encodeImage(t, "png", stripedImage(480, 160, red, green, blue))
 
-	avatar, err := processAvatar(context.Background(), bytes.NewReader(data), nil)
+	avatar, err := processAvatar(context.Background(), bytes.NewReader(data))
 	if err != nil {
 		t.Fatalf("got %v, want nil", err)
 	}
@@ -199,9 +196,17 @@ func TestProcessAvatarCropsTheCenter(t *testing.T) {
 	}
 }
 
-func TestProcessAvatarAppliesJPEGOrientation(t *testing.T) {
+func TestProcessAvatarAppliesEXIFOrientation(t *testing.T) {
 	// left half red, right half blue as stored; the tag says how to display it
-	stored := encodeImage(t, "jpeg", stripedImage(160, 80, red, blue))
+	striped := stripedImage(160, 80, red, blue)
+	tagged := map[string]func(orientation uint16) []byte{
+		"jpeg": func(o uint16) []byte {
+			return withEXIFOrientation(encodeImage(t, "jpeg", striped), binary.BigEndian, o)
+		},
+		"webp": func(o uint16) []byte {
+			return withWebPEXIFOrientation(encodeImage(t, "webp", striped), o)
+		},
+	}
 
 	cases := []struct {
 		name        string
@@ -212,19 +217,19 @@ func TestProcessAvatarAppliesJPEGOrientation(t *testing.T) {
 		{"rotate 90 counter-clockwise", 8, blue, red},
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			data := withEXIFOrientation(stored, binary.BigEndian, tc.orientation)
+	for format, tag := range tagged {
+		for _, tc := range cases {
+			t.Run(format+" "+tc.name, func(t *testing.T) {
+				avatar, err := processAvatar(context.Background(), bytes.NewReader(tag(tc.orientation)))
+				if err != nil {
+					t.Fatalf("got %v, want nil", err)
+				}
 
-			avatar, err := processAvatar(context.Background(), bytes.NewReader(data), nil)
-			if err != nil {
-				t.Fatalf("got %v, want nil", err)
-			}
-
-			img := decodeServedAvatar(t, avatar)
-			assertColorNear(t, img, avatarSize/2, 8, tc.top)
-			assertColorNear(t, img, avatarSize/2, avatarSize-9, tc.bottom)
-		})
+				img := decodeServedAvatar(t, avatar)
+				assertColorNear(t, img, avatarSize/2, 8, tc.top)
+				assertColorNear(t, img, avatarSize/2, avatarSize-9, tc.bottom)
+			})
+		}
 	}
 }
 
@@ -243,7 +248,7 @@ func TestProcessAvatarPlacesPartialGIFFrameOnItsCanvas(t *testing.T) {
 		t.Fatalf("encode gif: %v", err)
 	}
 
-	avatar, err := processAvatar(context.Background(), bytes.NewReader(buf.Bytes()), nil)
+	avatar, err := processAvatar(context.Background(), bytes.NewReader(buf.Bytes()))
 	if err != nil {
 		t.Fatalf("got %v, want nil", err)
 	}
@@ -264,7 +269,7 @@ func TestProcessAvatarLimitedGivesUpWhenTheRequestEnds(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err := processAvatar(ctx, bytes.NewReader(encodeImage(t, "png", solidImage(100, 100))), nil)
+	_, err := processAvatar(ctx, bytes.NewReader(encodeImage(t, "png", solidImage(100, 100))))
 	if !errors.Is(err, context.Canceled) {
 		t.Errorf("got %v, want %v", err, context.Canceled)
 	}
@@ -290,110 +295,6 @@ func TestAvatarDecodeCost(t *testing.T) {
 	}
 }
 
-// displayedQuadrants is how the browser shows the photo: top-left red,
-// top-right green, bottom half blue.
-func displayedQuadrants() *image.RGBA {
-	img := image.NewRGBA(image.Rect(0, 0, 240, 160))
-	for y := 0; y < 160; y++ {
-		for x := 0; x < 240; x++ {
-			switch {
-			case y >= 80:
-				img.SetRGBA(x, y, blue)
-			case x < 120:
-				img.SetRGBA(x, y, red)
-			default:
-				img.SetRGBA(x, y, green)
-			}
-		}
-	}
-	return img
-}
-
-// storedForOrientation returns the pixels a camera would store so that
-// applying the EXIF orientation shows the displayed image.
-func storedForOrientation(displayed *image.RGBA, orientation int) *image.RGBA {
-	b := displayed.Bounds()
-	w, h := b.Dx(), b.Dy()
-	if orientation >= 5 {
-		w, h = h, w
-	}
-	stored := image.NewRGBA(image.Rect(0, 0, w, h))
-	for y := 0; y < b.Dy(); y++ {
-		for x := 0; x < b.Dx(); x++ {
-			p := storedPoint(orientation, w, h, x, y)
-			stored.SetRGBA(p.X, p.Y, displayed.RGBAAt(x, y))
-		}
-	}
-	return stored
-}
-
-func TestProcessAvatarCropsInDisplayedCoordinates(t *testing.T) {
-	crops := []struct {
-		crop AvatarCrop
-		want color.RGBA
-	}{
-		{AvatarCrop{X: 0, Y: 0, Size: 80}, red},
-		{AvatarCrop{X: 160, Y: 0, Size: 80}, green},
-		{AvatarCrop{X: 80, Y: 80, Size: 80}, blue},
-	}
-
-	withOrientation := map[string]func(stored []byte, orientation uint16) []byte{
-		"jpeg": func(stored []byte, o uint16) []byte { return withEXIFOrientation(stored, binary.BigEndian, o) },
-		"webp": withWebPEXIFOrientation,
-	}
-
-	for format, tag := range withOrientation {
-		for orientation := 1; orientation <= 8; orientation++ {
-			stored := encodeImage(t, format, storedForOrientation(displayedQuadrants(), orientation))
-			data := tag(stored, uint16(orientation))
-
-			for _, tc := range crops {
-				t.Run(fmt.Sprintf("%s orientation %d crop %+v", format, orientation, tc.crop), func(t *testing.T) {
-					crop := tc.crop
-					avatar, err := processAvatar(context.Background(), bytes.NewReader(data), &crop)
-					if err != nil {
-						t.Fatalf("got %v, want nil", err)
-					}
-
-					assertColorNear(t, decodeServedAvatar(t, avatar), avatarSize/2, avatarSize/2, tc.want)
-				})
-			}
-		}
-	}
-}
-
-func TestProcessAvatarRejectsCropOutsideTheDisplayedImage(t *testing.T) {
-	// stored 240x160 shown rotated, so the browser sees 160x240
-	rotated := withEXIFOrientation(encodeImage(t, "jpeg", solidImage(240, 160)), binary.BigEndian, 6)
-	plain := encodeImage(t, "png", solidImage(240, 160))
-
-	cases := []struct {
-		name    string
-		data    []byte
-		crop    AvatarCrop
-		wantErr error
-	}{
-		{"fits", plain, AvatarCrop{X: 160, Y: 80, Size: 80}, nil},
-		{"past the right edge", plain, AvatarCrop{X: 161, Y: 0, Size: 80}, domains.ErrInvalidInput},
-		{"past the bottom edge", plain, AvatarCrop{X: 0, Y: 81, Size: 80}, domains.ErrInvalidInput},
-		{"negative offset", plain, AvatarCrop{X: -1, Y: 0, Size: 80}, domains.ErrInvalidInput},
-		{"smaller than the avatar", plain, AvatarCrop{X: 0, Y: 0, Size: 79}, domains.ErrInvalidInput},
-		{"huge size", plain, AvatarCrop{X: 1, Y: 1, Size: math.MaxInt}, domains.ErrInvalidInput},
-		{"fits the rotated view", rotated, AvatarCrop{X: 0, Y: 150, Size: 80}, nil},
-		{"only fits the stored pixels", rotated, AvatarCrop{X: 150, Y: 0, Size: 80}, domains.ErrInvalidInput},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			crop := tc.crop
-			_, err := processAvatar(context.Background(), bytes.NewReader(tc.data), &crop)
-			if !errors.Is(err, tc.wantErr) {
-				t.Errorf("got %v, want %v", err, tc.wantErr)
-			}
-		})
-	}
-}
-
 func TestProcessAvatarRejectsBadInput(t *testing.T) {
 	valid := encodeImage(t, "jpeg", solidImage(200, 200))
 
@@ -409,7 +310,7 @@ func TestProcessAvatarRejectsBadInput(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := processAvatar(context.Background(), bytes.NewReader(tc.data), nil)
+			_, err := processAvatar(context.Background(), bytes.NewReader(tc.data))
 			if !errors.Is(err, tc.wantErr) {
 				t.Errorf("got %v, want %v", err, tc.wantErr)
 			}

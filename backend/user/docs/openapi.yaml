@@ -304,8 +304,9 @@ paths:
         Accepts JPEG, PNG, GIF or WebP up to 10 MiB, with both sides between
         80 and 10000 pixels. The upload is kept unchanged in the private
         profile-pictures-original bucket; the returned URL points to an
-        80x80 WebP in the public profile-pictures bucket, cut from the
-        crop square or, without one, the center square.
+        80x80 WebP of its center square in the public profile-pictures
+        bucket. The web client crops in the browser and uploads only the
+        chosen square, so nothing the user cut away is stored.
       operationId: updateProfilePicture
       security:
         - BearerAuth: []
@@ -319,18 +320,6 @@ paths:
                 profile-picture:
                   type: string
                   format: binary
-                crop-x:
-                  type: integer
-                  minimum: 0
-                  description: Left edge of the crop square, in pixels of the image as displayed (EXIF orientation applied). Send all three crop fields or none.
-                crop-y:
-                  type: integer
-                  minimum: 0
-                  description: Top edge of the crop square, in displayed pixels.
-                crop-size:
-                  type: integer
-                  minimum: 80
-                  description: Side of the crop square, in displayed pixels. The square must lie inside the image.
       responses:
         "200":
           description: Profile picture updated successfully
@@ -340,7 +329,7 @@ paths:
                 type: string
                 example: "https://storage.example.com/profile-pictures/0b9e6c1e-2f7a-4d8e-9a51-3c0f6d2b7e41.webp"
         "400":
-          description: Invalid payload or partial crop fields (res_err_invalid_payload), crop square outside the image (res_err_invalid_input), unsupported image (res_err_invalid_image) or dimensions outside 80-10000 px (res_err_image_dimensions_out_of_range)
+          description: Invalid payload (res_err_invalid_payload), unsupported image (res_err_invalid_image) or dimensions outside 80-10000 px (res_err_image_dimensions_out_of_range)
           content:
             application/json:
               schema:

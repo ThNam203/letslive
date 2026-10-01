@@ -129,14 +129,6 @@ func storedPoint(orientation, w, h, x, y int) image.Point {
 	}
 }
 
-// storedRect maps a rectangle of the upright image onto the stored pixels.
-func storedRect(r image.Rectangle, orientation, w, h int) image.Rectangle {
-	a := storedPoint(orientation, w, h, r.Min.X, r.Min.Y)
-	b := storedPoint(orientation, w, h, r.Max.X-1, r.Max.Y-1)
-	return image.Rect(min(a.X, b.X), min(a.Y, b.Y), max(a.X, b.X)+1, max(a.Y, b.Y)+1)
-}
-
-// orientImage turns an image stored with the given EXIF orientation upright.
 func orientImage(src *image.RGBA, orientation int) *image.RGBA {
 	if orientation < 2 || orientation > 8 {
 		return src

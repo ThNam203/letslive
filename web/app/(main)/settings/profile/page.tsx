@@ -11,10 +11,7 @@ import {
     UpdateProfilePicture,
 } from "@/lib/api/user";
 import TextField from "../_components/text-field";
-import ProfileBanner, {
-    type PendingAvatar,
-    type PendingImage,
-} from "./_components/profile-banner";
+import ProfileBanner, { type PendingImage } from "./_components/profile-banner";
 import Section from "../_components/section";
 import TextAreaField from "../_components/textarea-field";
 import ThemeList from "@/app/(main)/settings/profile/_components/theme-list";
@@ -32,7 +29,7 @@ export default function ProfileSettings() {
 
     const [username, setUsername] = useState("");
     const [bio, setBio] = useState("");
-    const [pendingAvatar, setPendingAvatar] = useState<PendingAvatar | null>(
+    const [pendingAvatar, setPendingAvatar] = useState<PendingImage | null>(
         null,
     );
     const [pendingBackground, setPendingBackground] =
@@ -66,10 +63,7 @@ export default function ProfileSettings() {
             }
 
             if (pendingAvatar) {
-                const res = await UpdateProfilePicture(
-                    pendingAvatar.file,
-                    pendingAvatar.crop,
-                );
+                const res = await UpdateProfilePicture(pendingAvatar.file);
                 if (res.success) {
                     setPendingAvatar(null);
                     updateUser({ ...user!, profilePicture: res.data });

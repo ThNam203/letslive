@@ -218,8 +218,8 @@ func (s *UserService) UpdateUserAPIKey(ctx context.Context, userId uuid.UUID) (s
 	return newStreamKey.String(), nil
 }
 
-func (s UserService) UpdateUserProfilePicture(ctx context.Context, file io.Reader, crop *AvatarCrop, userId uuid.UUID) (string, error) {
-	avatar, err := processAvatar(ctx, file, crop)
+func (s UserService) UpdateUserProfilePicture(ctx context.Context, file io.Reader, userId uuid.UUID) (string, error) {
+	avatar, err := processAvatar(ctx, file)
 	if err != nil {
 		return "", err
 	}
