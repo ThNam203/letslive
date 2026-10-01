@@ -14,6 +14,8 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
+const orphanCleanupTimeout = 10 * time.Second
+
 type UserService struct {
 	userRepo                  domains.UserRepository
 	livestreamInformationRepo domains.LivestreamInformationRepository
@@ -216,8 +218,8 @@ func (s *UserService) UpdateUserAPIKey(ctx context.Context, userId uuid.UUID) (s
 	return newStreamKey.String(), nil
 }
 
-func (s UserService) UpdateUserProfilePicture(ctx context.Context, file io.Reader, userId uuid.UUID) (string, error) {
-	avatar, err := processAvatarLimited(ctx, file)
+func (s UserService) UpdateUserProfilePicture(ctx context.Context, file io.Reader, crop *AvatarCrop, userId uuid.UUID) (string, error) {
+	avatar, err := processAvatar(ctx, file, crop)
 	if err != nil {
 		return "", err
 	}
@@ -229,26 +231,24 @@ func (s UserService) UpdateUserProfilePicture(ctx context.Context, file io.Reade
 	originalName := objectId.String() + "." + avatar.originalExt
 	servedName := objectId.String() + ".webp"
 
-	if err := s.minioService.PutObject(ctx, ProfilePicturesOriginalBucket, originalName, avatar.original, avatar.originalContentType); err != nil {
+	if err := s.minioService.PutObject(ctx, profilePicturesOriginalBucket, originalName, avatar.original, avatar.originalContentType); err != nil {
 		return "", fmt.Errorf("store original avatar: %w: %w", domains.ErrInternal, err)
 	}
 
-	if err := s.minioService.PutObject(ctx, ProfilePicturesBucket, servedName, avatar.webp, "image/webp"); err != nil {
-		s.removeOrphanedObject(ctx, ProfilePicturesOriginalBucket, originalName)
+	if err := s.minioService.PutObject(ctx, profilePicturesBucket, servedName, avatar.webp, "image/webp"); err != nil {
+		s.removeOrphanedObject(ctx, profilePicturesOriginalBucket, originalName)
 		return "", fmt.Errorf("store avatar: %w: %w", domains.ErrInternal, err)
 	}
 
-	servedURL := s.minioService.PublicURL(ProfilePicturesBucket, servedName)
+	servedURL := s.minioService.PublicURL(profilePicturesBucket, servedName)
 	if err := s.userRepo.UpdateProfilePicture(ctx, userId, servedURL); err != nil {
-		s.removeOrphanedObject(ctx, ProfilePicturesBucket, servedName)
-		s.removeOrphanedObject(ctx, ProfilePicturesOriginalBucket, originalName)
+		s.removeOrphanedObject(ctx, profilePicturesBucket, servedName)
+		s.removeOrphanedObject(ctx, profilePicturesOriginalBucket, originalName)
 		return "", err
 	}
 
 	return servedURL, nil
 }
-
-const orphanCleanupTimeout = 10 * time.Second
 
 func (s UserService) removeOrphanedObject(ctx context.Context, bucketName, objectName string) {
 	cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), orphanCleanupTimeout)

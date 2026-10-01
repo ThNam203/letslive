@@ -22,7 +22,7 @@
     "res_err_user_not_found": "User not found.",
     "res_err_image_too_large": "Image exceeds 10mb limit.",
     "res_err_invalid_image": "Unsupported image, use JPEG, PNG, GIF or WebP.",
-    "res_err_image_dimensions_out_of_range": "Image must be between 80x80 and 4096x4096 pixels.",
+    "res_err_image_dimensions_out_of_range": "Image must be between 80x80 and 10000x10000 pixels.",
     "res_err_notification_not_found": "Notification not found.",
     "res_err_username_taken": "Username already taken.",
 

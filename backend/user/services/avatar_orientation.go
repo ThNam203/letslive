@@ -4,12 +4,31 @@ import (
 	"bytes"
 	"encoding/binary"
 	"image"
+
+	"github.com/gen2brain/webp"
 )
 
 const (
 	exifOrientationTag = 0x0112
 	exifTypeShort      = 3
 )
+
+// avatarOrientation reads the EXIF orientation (1-8) of an upload, 1 when the
+// format carries none or the metadata is malformed.
+func avatarOrientation(data []byte, format string) int {
+	switch format {
+	case "jpeg":
+		return jpegOrientation(data)
+	case "webp":
+		exif, err := webp.DecodeExif(bytes.NewReader(data))
+		if err != nil || exif.Orientation < 1 || exif.Orientation > 8 {
+			return 1
+		}
+		return exif.Orientation
+	default:
+		return 1
+	}
+}
 
 // jpegOrientation reads the EXIF orientation (1-8) from a JPEG, returning 1
 // when there is none or the metadata is malformed.
@@ -87,6 +106,36 @@ func tiffOrientation(tiff []byte) int {
 	return 1
 }
 
+// storedPoint maps pixel (x, y) of the upright image to the pixel that holds
+// it in a w x h image stored with the given EXIF orientation.
+func storedPoint(orientation, w, h, x, y int) image.Point {
+	switch orientation {
+	case 2:
+		return image.Pt(w-1-x, y)
+	case 3:
+		return image.Pt(w-1-x, h-1-y)
+	case 4:
+		return image.Pt(x, h-1-y)
+	case 5:
+		return image.Pt(y, x)
+	case 6:
+		return image.Pt(y, h-1-x)
+	case 7:
+		return image.Pt(w-1-y, h-1-x)
+	case 8:
+		return image.Pt(w-1-y, x)
+	default:
+		return image.Pt(x, y)
+	}
+}
+
+// storedRect maps a rectangle of the upright image onto the stored pixels.
+func storedRect(r image.Rectangle, orientation, w, h int) image.Rectangle {
+	a := storedPoint(orientation, w, h, r.Min.X, r.Min.Y)
+	b := storedPoint(orientation, w, h, r.Max.X-1, r.Max.Y-1)
+	return image.Rect(min(a.X, b.X), min(a.Y, b.Y), max(a.X, b.X)+1, max(a.Y, b.Y)+1)
+}
+
 // orientImage turns an image stored with the given EXIF orientation upright.
 func orientImage(src *image.RGBA, orientation int) *image.RGBA {
 	if orientation < 2 || orientation > 8 {
@@ -103,24 +152,8 @@ func orientImage(src *image.RGBA, orientation int) *image.RGBA {
 	dst := image.NewRGBA(image.Rect(0, 0, dw, dh))
 	for y := 0; y < dh; y++ {
 		for x := 0; x < dw; x++ {
-			var sx, sy int
-			switch orientation {
-			case 2:
-				sx, sy = w-1-x, y
-			case 3:
-				sx, sy = w-1-x, h-1-y
-			case 4:
-				sx, sy = x, h-1-y
-			case 5:
-				sx, sy = y, x
-			case 6:
-				sx, sy = y, h-1-x
-			case 7:
-				sx, sy = w-1-y, h-1-x
-			case 8:
-				sx, sy = w-1-y, x
-			}
-			dst.SetRGBA(x, y, src.RGBAAt(b.Min.X+sx, b.Min.Y+sy))
+			p := storedPoint(orientation, w, h, x, y)
+			dst.SetRGBA(x, y, src.RGBAAt(b.Min.X+p.X, b.Min.Y+p.Y))
 		}
 	}
 

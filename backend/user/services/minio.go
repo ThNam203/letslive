@@ -29,8 +29,8 @@ func getPolicy(bucketName string) string {
 }
 
 const (
-	ProfilePicturesBucket         = "profile-pictures"
-	ProfilePicturesOriginalBucket = "profile-pictures-original"
+	profilePicturesBucket         = "profile-pictures"
+	profilePicturesOriginalBucket = "profile-pictures-original"
 )
 
 type MinIOService struct {
@@ -70,7 +70,7 @@ func (s *MinIOService) SetUp() error {
 	}
 
 	// TODO: remove all these, use general-files instead
-	if err := s.createIfNotExists(ProfilePicturesBucket, true); err != nil {
+	if err := s.createIfNotExists(profilePicturesBucket, true); err != nil {
 		return err
 	}
 	if err := s.createIfNotExists("thumbnails", true); err != nil {
@@ -80,7 +80,7 @@ func (s *MinIOService) SetUp() error {
 		return err
 	}
 
-	if err := s.createIfNotExists(ProfilePicturesOriginalBucket, false); err != nil {
+	if err := s.createIfNotExists(profilePicturesOriginalBucket, false); err != nil {
 		return err
 	}
 

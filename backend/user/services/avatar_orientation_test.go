@@ -8,16 +8,10 @@ import (
 	"testing"
 )
 
-var (
-	bigEndian    binary.ByteOrder = binary.BigEndian
-	littleEndian binary.ByteOrder = binary.LittleEndian
-)
-
-// withEXIFOrientation inserts an APP1 segment holding a single-entry IFD0
-// with the orientation tag right after the JPEG SOI marker.
-func withEXIFOrientation(jpegData []byte, order binary.ByteOrder, orientation uint16) []byte {
+// exifTIFF is a TIFF block with a single-entry IFD0 holding the orientation.
+func exifTIFF(order binary.ByteOrder, orientation uint16) []byte {
 	tiff := make([]byte, 26)
-	if order == littleEndian {
+	if order == binary.LittleEndian {
 		copy(tiff, "II")
 	} else {
 		copy(tiff, "MM")
@@ -29,8 +23,12 @@ func withEXIFOrientation(jpegData []byte, order binary.ByteOrder, orientation ui
 	order.PutUint16(tiff[12:], exifTypeShort)
 	order.PutUint32(tiff[14:], 1)
 	order.PutUint16(tiff[18:], orientation)
+	return tiff
+}
 
-	payload := append([]byte("Exif\x00\x00"), tiff...)
+// withEXIFOrientation inserts an APP1 segment right after the JPEG SOI marker.
+func withEXIFOrientation(jpegData []byte, order binary.ByteOrder, orientation uint16) []byte {
+	payload := append([]byte("Exif\x00\x00"), exifTIFF(order, orientation)...)
 	segment := []byte{0xFF, 0xE1, 0, 0}
 	binary.BigEndian.PutUint16(segment[2:], uint16(len(payload)+2))
 
@@ -38,6 +36,41 @@ func withEXIFOrientation(jpegData []byte, order binary.ByteOrder, orientation ui
 	out = append(out, segment...)
 	out = append(out, payload...)
 	return append(out, jpegData[2:]...)
+}
+
+// withWebPEXIFOrientation appends an EXIF chunk and fixes up the RIFF size.
+func withWebPEXIFOrientation(webpData []byte, orientation uint16) []byte {
+	tiff := exifTIFF(binary.LittleEndian, orientation)
+	chunk := append([]byte("EXIF\x00\x00\x00\x00"), tiff...)
+	binary.LittleEndian.PutUint32(chunk[4:], uint32(len(tiff)))
+
+	out := append(append([]byte{}, webpData...), chunk...)
+	binary.LittleEndian.PutUint32(out[4:], uint32(len(out)-8))
+	return out
+}
+
+func TestAvatarOrientation(t *testing.T) {
+	plainWebP := encodeImage(t, "webp", solidImage(80, 80))
+
+	cases := []struct {
+		name   string
+		data   []byte
+		format string
+		want   int
+	}{
+		{"jpeg", withEXIFOrientation(encodeImage(t, "jpeg", solidImage(80, 80)), binary.BigEndian, 6), "jpeg", 6},
+		{"webp", withWebPEXIFOrientation(plainWebP, 8), "webp", 8},
+		{"webp without exif", plainWebP, "webp", 1},
+		{"png", encodeImage(t, "png", solidImage(80, 80)), "png", 1},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := avatarOrientation(tc.data, tc.format); got != tc.want {
+				t.Errorf("got %d, want %d", got, tc.want)
+			}
+		})
+	}
 }
 
 func TestJPEGOrientation(t *testing.T) {
@@ -49,9 +82,9 @@ func TestJPEGOrientation(t *testing.T) {
 		want int
 	}{
 		{"no exif", plain, 1},
-		{"big endian", withEXIFOrientation(plain, bigEndian, 6), 6},
-		{"little endian", withEXIFOrientation(plain, littleEndian, 8), 8},
-		{"out of range value", withEXIFOrientation(plain, bigEndian, 9), 1},
+		{"big endian", withEXIFOrientation(plain, binary.BigEndian, 6), 6},
+		{"little endian", withEXIFOrientation(plain, binary.LittleEndian, 8), 8},
+		{"out of range value", withEXIFOrientation(plain, binary.BigEndian, 9), 1},
 		{"not a jpeg", []byte("hello world"), 1},
 	}
 
@@ -65,7 +98,7 @@ func TestJPEGOrientation(t *testing.T) {
 }
 
 func TestJPEGOrientationSurvivesTruncation(t *testing.T) {
-	data := withEXIFOrientation(encodeImage(t, "jpeg", solidImage(80, 80)), littleEndian, 3)
+	data := withEXIFOrientation(encodeImage(t, "jpeg", solidImage(80, 80)), binary.LittleEndian, 3)
 
 	for i := range data {
 		if got := jpegOrientation(data[:i]); got < 1 || got > 8 {
