@@ -1,11 +1,4 @@
 import type { Area } from "react-easy-crop";
-import {
-    AVATAR_MAX_DIMENSION,
-    AVATAR_MAX_ZOOM,
-    AVATAR_MIN_DIMENSION,
-    AVATAR_UPLOAD_MAX_SIZE,
-    AVATAR_UPLOAD_QUALITY,
-} from "@/constant/image";
 
 export type ImageSize = { width: number; height: number };
 
@@ -25,18 +18,26 @@ export function naturalSize(img: HTMLImageElement): ImageSize {
     return { width: img.naturalWidth, height: img.naturalHeight };
 }
 
-export function isAllowedAvatarSize({ width, height }: ImageSize): boolean {
+export function isWithinDimensions(
+    { width, height }: ImageSize,
+    minDimension: number,
+    maxDimension: number,
+): boolean {
     return (
-        Math.min(width, height) >= AVATAR_MIN_DIMENSION &&
-        Math.max(width, height) <= AVATAR_MAX_DIMENSION
+        Math.min(width, height) >= minDimension &&
+        Math.max(width, height) <= maxDimension
     );
 }
 
-// at zoom 1 the crop square spans the image's short side; stop zooming
-// before the square would cover fewer source pixels than the avatar has
-export function avatarMaxZoom({ width, height }: ImageSize): number {
-    const zoom = Math.min(width, height) / AVATAR_MIN_DIMENSION;
-    return Math.min(AVATAR_MAX_ZOOM, Math.max(1, zoom));
+// at zoom 1 the crop square spans the image's short side; zooming in past
+// this would leave the square covering fewer than minCropSize source pixels
+export function maxCropZoom(
+    { width, height }: ImageSize,
+    minCropSize: number,
+    zoomCap: number,
+): number {
+    const zoom = Math.min(width, height) / minCropSize;
+    return Math.min(zoomCap, Math.max(1, zoom));
 }
 
 // react-easy-crop rounds x, y, width and height separately, so the square can
@@ -97,7 +98,11 @@ export function drawSquare(
     return canvas;
 }
 
-function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob> {
+function canvasToBlob(
+    canvas: HTMLCanvasElement,
+    type: string,
+    quality: number,
+): Promise<Blob> {
     return new Promise((resolve, reject) => {
         canvas.toBlob(
             (blob) =>
@@ -105,30 +110,39 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob> {
                     ? resolve(blob)
                     : reject(new Error("canvas export failed")),
             type,
-            AVATAR_UPLOAD_QUALITY,
+            quality,
         );
     });
 }
 
+type ExportSquareOptions = {
+    maxDimension: number;
+    quality: number;
+    fileName: string;
+};
+
 // Safari cannot encode WebP and hands back a PNG instead; JPEG has no alpha,
 // hence the white background.
-export async function exportAvatar(
+export async function exportSquare(
     img: HTMLImageElement,
     square: CropSquare,
+    { maxDimension, quality, fileName }: ExportSquareOptions,
 ): Promise<File> {
-    const size = Math.min(square.size, AVATAR_UPLOAD_MAX_SIZE);
+    const size = Math.min(square.size, maxDimension);
 
     const webp = await canvasToBlob(
         drawSquare(img, square, size),
         "image/webp",
+        quality,
     );
     if (webp.type === "image/webp") {
-        return new File([webp], "avatar.webp", { type: webp.type });
+        return new File([webp], `${fileName}.webp`, { type: webp.type });
     }
 
     const jpeg = await canvasToBlob(
         drawSquare(img, square, size, "#ffffff"),
         "image/jpeg",
+        quality,
     );
-    return new File([jpeg], "avatar.jpg", { type: jpeg.type });
+    return new File([jpeg], `${fileName}.jpg`, { type: jpeg.type });
 }

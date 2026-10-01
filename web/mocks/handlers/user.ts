@@ -10,14 +10,14 @@ import {
 } from "../db";
 import { MeUser, PublicUser } from "@/types/user";
 import { Notification, UnreadCountResponse } from "@/types/notification";
-import { AVATAR_SERVED_SIZE } from "@/constant/image";
+import { AVATAR_SERVED_DIMENSION } from "@/constant/image";
 import { readFileAsDataUrl } from "@/utils/file";
 import {
     centerSquare,
     drawSquare,
     loadImage,
     naturalSize,
-} from "@/utils/avatar-crop";
+} from "@/utils/image-crop";
 
 // Combined list for look-ups
 const getAllUsers = (): (PublicUser | MeUser)[] => [meUser, ...otherUsers];
@@ -27,7 +27,7 @@ async function mockServedAvatar(file: File): Promise<string> {
     return drawSquare(
         img,
         centerSquare(naturalSize(img)),
-        AVATAR_SERVED_SIZE,
+        AVATAR_SERVED_DIMENSION,
     ).toDataURL("image/webp");
 }
 

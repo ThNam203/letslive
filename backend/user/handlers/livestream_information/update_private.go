@@ -24,7 +24,7 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	}
 	defer r.Body.Close()
 
-	if errRes := utils.ParseUploadForm(w, r); errRes != nil {
+	if errRes := utils.ParseUploadForm(w, r, utils.LivestreamThumbnailMaxFileBytes); errRes != nil {
 		h.WriteResponse(w, ctx, errRes)
 		return
 	}
@@ -45,7 +45,7 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	thumbnailUrl := r.FormValue("thumbnailUrl")
 
 	if _, hasThumbnail := r.MultipartForm.File["thumbnail"]; hasThumbnail {
-		file, fileHeader, errRes := utils.UploadedFile(r, "thumbnail")
+		file, fileHeader, errRes := utils.UploadedFile(r, "thumbnail", utils.LivestreamThumbnailMaxFileBytes)
 		if errRes != nil {
 			h.WriteResponse(w, ctx, errRes)
 			return

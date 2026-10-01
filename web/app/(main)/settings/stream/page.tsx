@@ -13,6 +13,7 @@ import TextField from "../_components/text-field";
 import TextAreaField from "../_components/textarea-field";
 import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";
+import { LIVESTREAM_THUMBNAIL_MAX_FILE_MB } from "@/constant/image";
 import {
     STREAM_TITLE_MAX_LENGTH,
     STREAM_DESCRIPTION_MAX_LENGTH,
@@ -133,6 +134,7 @@ export default function StreamEdit() {
                 />
                 <ImageField
                     label={t("settings:stream.thumbnail_label")}
+                    maxFileMB={LIVESTREAM_THUMBNAIL_MAX_FILE_MB}
                     description={t("settings:stream.thumbnail_description")}
                     imageUrl={imageUrl}
                     hoverText={t("settings:stream.thumbnail_hover")}

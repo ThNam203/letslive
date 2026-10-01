@@ -10,10 +10,8 @@ import IconPaperclip from "@/components/icons/paperclip";
 import IconClose from "@/components/icons/close";
 import EmotePicker from "@/components/emote-picker";
 import { DM_MESSAGE_MAX_LENGTH } from "@/constant/field-limits";
-import {
-    FILE_SIZE_LIMIT_BYTES_UNIT,
-    FILE_SIZE_LIMIT_MB_UNIT,
-} from "@/constant/image";
+import { GENERAL_UPLOAD_MAX_FILE_MB } from "@/constant/image";
+import { IsValidFileSizeInMB } from "@/utils/file";
 import { useUploadFiles } from "@/hooks/queries/use-file-upload";
 import useT from "@/hooks/use-translation";
 
@@ -77,11 +75,11 @@ export default function MessageInput({
             const count = Math.min(files.length, remaining);
             for (let i = 0; i < count; i++) {
                 const file = files[i];
-                if (file.size > FILE_SIZE_LIMIT_BYTES_UNIT) {
+                if (!IsValidFileSizeInMB(file, GENERAL_UPLOAD_MAX_FILE_MB)) {
                     setUploadError(
                         t("file_exceeds_limit", {
                             name: file.name,
-                            size: FILE_SIZE_LIMIT_MB_UNIT,
+                            size: GENERAL_UPLOAD_MAX_FILE_MB,
                         }),
                     );
                     continue;

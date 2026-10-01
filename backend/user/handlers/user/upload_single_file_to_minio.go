@@ -14,7 +14,7 @@ func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *h
 
 	defer r.Body.Close()
 
-	file, fileHeader, uploadErr := utils.ParseUploadedFile(w, r, "file")
+	file, fileHeader, uploadErr := utils.ParseUploadedFile(w, r, "file", utils.GeneralUploadMaxFileBytes)
 	if uploadErr != nil {
 		h.WriteResponse(w, ctx, uploadErr)
 		return

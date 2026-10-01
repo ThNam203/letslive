@@ -24,7 +24,7 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 	}
 	defer r.Body.Close()
 
-	file, fileHeader, uploadErr := utils.ParseUploadedFile(w, r, "background-picture")
+	file, fileHeader, uploadErr := utils.ParseUploadedFile(w, r, "background-picture", utils.BackgroundMaxFileBytes)
 	if uploadErr != nil {
 		h.WriteResponse(w, ctx, uploadErr)
 		return

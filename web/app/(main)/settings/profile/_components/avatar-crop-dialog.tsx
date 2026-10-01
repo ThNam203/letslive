@@ -11,12 +11,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import useT from "@/hooks/use-translation";
+import { AVATAR_MAX_ZOOM, AVATAR_MIN_DIMENSION } from "@/constant/image";
 import {
-    avatarMaxZoom,
+    maxCropZoom,
     naturalSize,
     toCropSquare,
     type CropSquare,
-} from "@/utils/avatar-crop";
+} from "@/utils/image-crop";
 
 type Props = {
     image: HTMLImageElement | null;
@@ -78,7 +79,11 @@ export default function AvatarCropDialog({ image, onCancel, onApply }: Props) {
                             crop={crop}
                             zoom={zoom}
                             minZoom={1}
-                            maxZoom={avatarMaxZoom(size)}
+                            maxZoom={maxCropZoom(
+                                size,
+                                AVATAR_MIN_DIMENSION,
+                                AVATAR_MAX_ZOOM,
+                            )}
                             aspect={1}
                             cropShape="round"
                             showGrid={false}

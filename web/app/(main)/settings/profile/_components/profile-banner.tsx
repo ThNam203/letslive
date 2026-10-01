@@ -10,15 +10,23 @@ import ImageHover from "../../_components/image-hover";
 import useT from "@/hooks/use-translation";
 import AvatarCropDialog from "./avatar-crop-dialog";
 import { toast } from "@/components/utils/toast";
-import { AVATAR_ACCEPTED_TYPES } from "@/constant/image";
+import {
+    AVATAR_ACCEPTED_TYPES,
+    AVATAR_MAX_DIMENSION,
+    AVATAR_MAX_FILE_MB,
+    AVATAR_MIN_DIMENSION,
+    AVATAR_UPLOAD_MAX_DIMENSION,
+    AVATAR_UPLOAD_QUALITY,
+    BACKGROUND_MAX_FILE_MB,
+} from "@/constant/image";
 import { readFileAsDataUrl } from "@/utils/file";
 import {
-    exportAvatar,
-    isAllowedAvatarSize,
+    exportSquare,
+    isWithinDimensions,
     loadImage,
     naturalSize,
     type CropSquare,
-} from "@/utils/avatar-crop";
+} from "@/utils/image-crop";
 
 export type PendingImage = { file: File; previewUrl: string };
 
@@ -45,17 +53,20 @@ export default function ProfileBanner({
     const profileImageInputRef = useRef<HTMLInputElement>(null);
     const backgroundImageInputRef = useRef<HTMLInputElement>(null);
     const [cropping, setCropping] = useState<CroppingImage | null>(null);
-    // a large image can still be loading when the next one is picked; only
-    // the latest pick may open the dialog
+    // a large image can still be reading when the next one is picked; only
+    // the latest pick may apply
     const avatarPickRef = useRef(0);
+    const backgroundPickRef = useRef(0);
 
     const handleBackgroundImageChange = async (file: File) => {
+        const pick = ++backgroundPickRef.current;
+
         try {
-            onBackgroundChange({
-                file,
-                previewUrl: await readFileAsDataUrl(file),
-            });
+            const previewUrl = await readFileAsDataUrl(file);
+            if (pick !== backgroundPickRef.current) return;
+            onBackgroundChange({ file, previewUrl });
         } catch {
+            if (pick !== backgroundPickRef.current) return;
             toast.error(t("settings:profile.image_load_failed"));
         }
     };
@@ -79,7 +90,13 @@ export default function ProfileBanner({
             const img = await loadImage(await readFileAsDataUrl(file));
             if (pick !== avatarPickRef.current) return;
 
-            if (!isAllowedAvatarSize(naturalSize(img))) {
+            if (
+                !isWithinDimensions(
+                    naturalSize(img),
+                    AVATAR_MIN_DIMENSION,
+                    AVATAR_MAX_DIMENSION,
+                )
+            ) {
                 toast.error(
                     t("api-response:res_err_image_dimensions_out_of_range"),
                 );
@@ -98,7 +115,11 @@ export default function ProfileBanner({
         if (!cropping) return;
 
         try {
-            const file = await exportAvatar(cropping.img, square);
+            const file = await exportSquare(cropping.img, square, {
+                maxDimension: AVATAR_UPLOAD_MAX_DIMENSION,
+                quality: AVATAR_UPLOAD_QUALITY,
+                fileName: "avatar",
+            });
             onAvatarChange({ file, previewUrl: await readFileAsDataUrl(file) });
             closeCropDialog();
         } catch {
@@ -107,11 +128,13 @@ export default function ProfileBanner({
     };
 
     const handleRemoveBackgroundImage = () => {
+        backgroundPickRef.current += 1;
         updateUser({ ...user!, backgroundPicture: "" });
         onBackgroundChange(null);
     };
 
     const handleRemoveProfileImage = () => {
+        avatarPickRef.current += 1;
         updateUser({ ...user!, profilePicture: "" });
         onAvatarChange(null);
     };
@@ -138,6 +161,7 @@ export default function ProfileBanner({
                     <DefaultBackgound />
                 )}
                 <ImageHover
+                    maxFileMB={BACKGROUND_MAX_FILE_MB}
                     inputRef={backgroundImageInputRef}
                     onValueChange={handleBackgroundImageChange}
                     onClick={() => backgroundImageInputRef.current?.click()}
@@ -155,6 +179,7 @@ export default function ProfileBanner({
                     fallbackClassName="bg-primary text-primary-foreground"
                 >
                     <ImageHover
+                        maxFileMB={AVATAR_MAX_FILE_MB}
                         inputRef={profileImageInputRef}
                         onValueChange={handleProfileImageChange}
                         onClick={() => profileImageInputRef.current?.click()}

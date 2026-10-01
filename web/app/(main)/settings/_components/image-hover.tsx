@@ -1,5 +1,4 @@
 import IconClose from "@/components/icons/close";
-import { FILE_SIZE_LIMIT_MB_UNIT } from "@/constant/image";
 import { cn } from "@/utils/cn";
 import { IsValidFileSizeInMB } from "@/utils/file";
 import React from "react";
@@ -10,6 +9,7 @@ type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 type Props = {
     className?: string;
+    maxFileMB: number;
     onClick?: () => void;
     inputRef?: React.RefObject<HTMLInputElement | null>;
     onValueChange?: (file: File) => void;
@@ -21,6 +21,7 @@ type Props = {
 
 export default function ImageHover({
     className,
+    maxFileMB,
     onClick,
     inputRef,
     onValueChange,
@@ -34,11 +35,9 @@ export default function ImageHover({
     const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            if (!IsValidFileSizeInMB(file, FILE_SIZE_LIMIT_MB_UNIT)) {
+            if (!IsValidFileSizeInMB(file, maxFileMB)) {
                 toast.error(
-                    t("settings:file_size_exceeds", {
-                        size: FILE_SIZE_LIMIT_MB_UNIT,
-                    }),
+                    t("settings:file_size_exceeds", { size: maxFileMB }),
                 );
                 return;
             }
