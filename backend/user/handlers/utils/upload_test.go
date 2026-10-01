@@ -33,7 +33,7 @@ func newUploadRequest(t *testing.T, field string, size int) *http.Request {
 }
 
 func TestParseUploadedFileAcceptsFileAtTheLimit(t *testing.T) {
-	req := newUploadRequest(t, "profile-picture", MaxUploadFileBytes)
+	req := newUploadRequest(t, "profile-picture", maxUploadFileBytes)
 
 	file, header, errRes := ParseUploadedFile(httptest.NewRecorder(), req, "profile-picture")
 	if errRes != nil {
@@ -41,15 +41,15 @@ func TestParseUploadedFileAcceptsFileAtTheLimit(t *testing.T) {
 	}
 	defer file.Close()
 
-	if header.Size != MaxUploadFileBytes {
-		t.Errorf("size = %d, want %d", header.Size, MaxUploadFileBytes)
+	if header.Size != maxUploadFileBytes {
+		t.Errorf("size = %d, want %d", header.Size, maxUploadFileBytes)
 	}
 }
 
 func TestParseUploadedFileRejectsOversizedFiles(t *testing.T) {
 	cases := map[string]int{
-		"one byte over":             MaxUploadFileBytes + 1,
-		"beyond the request budget": MaxUploadFileBytes + 2*multipartOverheadBytes,
+		"one byte over":             maxUploadFileBytes + 1,
+		"beyond the request budget": maxUploadFileBytes + 2*multipartOverheadBytes,
 	}
 
 	for name, size := range cases {

@@ -2,7 +2,6 @@ package livestream_information
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"sen1or/letslive/shared/pkg/tracer"
 	"sen1or/letslive/user/domains"
@@ -13,7 +12,6 @@ import (
 func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
-	const maxUploadSize = 11 * 1024 * 1024 // for other information outside of image
 	userUUID, err := utils.GetUserIdFromCookie(r)
 	if err != nil {
 		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
@@ -26,26 +24,8 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	}
 	defer r.Body.Close()
 
-	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
-
-	if err := r.ParseMultipartForm(0); err != nil {
-		var maxByteError *http.MaxBytesError
-		if errors.As(err, &maxByteError) {
-			h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
-				response.RES_ERR_IMAGE_TOO_LARGE,
-				nil,
-				nil,
-				nil,
-			))
-			return
-		}
-
-		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
-			response.RES_ERR_INTERNAL_SERVER,
-			nil,
-			nil,
-			nil,
-		))
+	if errRes := utils.ParseUploadForm(w, r); errRes != nil {
+		h.WriteResponse(w, ctx, errRes)
 		return
 	}
 
@@ -62,12 +42,16 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 		return
 	}
 
-	var thumbnailUrl string
+	thumbnailUrl := r.FormValue("thumbnailUrl")
 
-	file, fileHeader, formErr := r.FormFile("thumbnail")
-	if formErr != nil {
-		thumbnailUrl = r.FormValue("thumbnailUrl")
-	} else {
+	if _, hasThumbnail := r.MultipartForm.File["thumbnail"]; hasThumbnail {
+		file, fileHeader, errRes := utils.UploadedFile(r, "thumbnail")
+		if errRes != nil {
+			h.WriteResponse(w, ctx, errRes)
+			return
+		}
+		defer file.Close()
+
 		savedPath, err := h.minioService.AddFile(ctx, file, fileHeader, "thumbnails")
 		if err != nil {
 			h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
