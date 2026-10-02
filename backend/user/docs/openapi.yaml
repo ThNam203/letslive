@@ -301,12 +301,11 @@ paths:
     put:
       summary: Update user profile picture
       description: |
-        Accepts JPEG, PNG, GIF or WebP up to 10 MiB, with both sides between
-        80 and 10000 pixels. The upload is kept unchanged in the private
-        profile-pictures-original bucket; the returned URL points to an
-        80x80 WebP of its center square in the public profile-pictures
-        bucket. The web client crops in the browser and uploads only the
-        chosen square, so nothing the user cut away is stored.
+        Expects the avatar already cropped by the client: JPEG or WebP up
+        to 10 MiB, both sides between 80 and 2048 pixels. The upload is kept
+        unchanged in the private profile-pictures-original bucket; the
+        returned URL points to an 80x80 WebP of its center square in the
+        public profile-pictures bucket.
       operationId: updateProfilePicture
       security:
         - BearerAuth: []
@@ -329,7 +328,7 @@ paths:
                 type: string
                 example: "https://storage.example.com/profile-pictures/0b9e6c1e-2f7a-4d8e-9a51-3c0f6d2b7e41.webp"
         "400":
-          description: Invalid payload (res_err_invalid_payload), unsupported image (res_err_invalid_image) or dimensions outside 80-10000 px (res_err_image_dimensions_out_of_range)
+          description: Invalid payload (res_err_invalid_payload), unsupported image (res_err_invalid_image) or dimensions outside 80-2048 px (res_err_image_dimensions_out_of_range)
           content:
             application/json:
               schema:

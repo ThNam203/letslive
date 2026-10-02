@@ -219,7 +219,7 @@ func (s *UserService) UpdateUserAPIKey(ctx context.Context, userId uuid.UUID) (s
 }
 
 func (s UserService) UpdateUserProfilePicture(ctx context.Context, file io.Reader, userId uuid.UUID) (string, error) {
-	avatar, err := processAvatar(ctx, file)
+	avatar, err := processAvatar(file)
 	if err != nil {
 		return "", err
 	}

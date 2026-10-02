@@ -12,7 +12,7 @@ import AvatarCropDialog from "./avatar-crop-dialog";
 import { toast } from "@/components/utils/toast";
 import {
     AVATAR_ACCEPTED_TYPES,
-    AVATAR_MAX_DIMENSION,
+    AVATAR_SOURCE_MAX_DIMENSION,
     AVATAR_MAX_FILE_MB,
     AVATAR_MIN_DIMENSION,
     AVATAR_UPLOAD_MAX_DIMENSION,
@@ -94,11 +94,14 @@ export default function ProfileBanner({
                 !isWithinDimensions(
                     naturalSize(img),
                     AVATAR_MIN_DIMENSION,
-                    AVATAR_MAX_DIMENSION,
+                    AVATAR_SOURCE_MAX_DIMENSION,
                 )
             ) {
                 toast.error(
-                    t("api-response:res_err_image_dimensions_out_of_range"),
+                    t("settings:profile.photo_dimensions_out_of_range", {
+                        min: AVATAR_MIN_DIMENSION,
+                        max: AVATAR_SOURCE_MAX_DIMENSION,
+                    }),
                 );
                 resetProfileImageInput();
                 return;

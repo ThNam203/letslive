@@ -20,7 +20,8 @@
         "crop_title": "Crop profile picture",
         "crop_apply": "Apply",
         "crop_image_alt": "Photo to crop",
-        "image_load_failed": "This image couldn't be read. Please choose another file."
+        "image_load_failed": "This image couldn't be read. Please choose another file.",
+        "photo_dimensions_out_of_range": "Photo must be between {{min}}x{{min}} and {{max}}x{{max}} pixels."
     },
     "social_media_links": {
         "title": "Edit Social Media Links",

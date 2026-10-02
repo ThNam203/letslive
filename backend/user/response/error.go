@@ -117,7 +117,7 @@ var (
 		StatusCode: http.StatusBadRequest,
 		Code:       RES_ERR_INVALID_IMAGE_CODE,
 		Key:        RES_ERR_INVALID_IMAGE_KEY,
-		Message:    "Unsupported image, use JPEG, PNG, GIF or WebP.",
+		Message:    "Unsupported image, use JPEG or WebP.",
 	}
 
 	RES_ERR_IMAGE_DIMENSIONS = ResponseTemplate{
@@ -125,7 +125,7 @@ var (
 		StatusCode: http.StatusBadRequest,
 		Code:       RES_ERR_IMAGE_DIMENSIONS_CODE,
 		Key:        RES_ERR_IMAGE_DIMENSIONS_KEY,
-		Message:    "Image must be between 80x80 and 10000x10000 pixels.",
+		Message:    "Image must be between 80x80 and 2048x2048 pixels.",
 	}
 
 	RES_ERR_DATABASE_QUERY = ResponseTemplate{
