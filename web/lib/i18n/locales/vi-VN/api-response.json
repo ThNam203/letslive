@@ -21,6 +21,8 @@
 
     "res_err_user_not_found": "Không tìm thấy người dùng.",
     "res_err_image_too_large": "Ảnh vượt quá giới hạn 10mb.",
+    "res_err_invalid_image": "Định dạng ảnh không được hỗ trợ, vui lòng dùng JPEG hoặc WebP.",
+    "res_err_image_dimensions_out_of_range": "Ảnh phải có kích thước từ 80x80 đến 2048x2048 pixel.",
     "res_err_notification_not_found": "Không tìm thấy thông báo.",
     "res_err_username_taken": "Tên người dùng đã được sử dụng.",
 

@@ -32,31 +32,31 @@ export default async function RootLayout({
     const lng = await getLocale();
 
     const content = (
-        <QueryProvider>
-            <TranslationsProvider lng={lng}>
-                <ThemeProviderWrapper>
-                    {/* no boundary above the page: once a fallback streams, the
-                        status is fixed at 200 and notFound() cannot send 404.
-                        Segments own their loading.tsx and skeletons instead. */}
-                    <UserInformationWrapper>{children}</UserInformationWrapper>
-                    <Suspense fallback={null}>
-                        <Toast />
-                        <UploadManager />
-                        <CookieConsentBanner />
-                    </Suspense>
-                </ThemeProviderWrapper>
-            </TranslationsProvider>
-        </QueryProvider>
+        <ThemeProviderWrapper>
+            {/* no boundary above the page: once a fallback streams, the
+                status is fixed at 200 and notFound() cannot send 404.
+                Segments own their loading.tsx and skeletons instead. */}
+            <UserInformationWrapper>{children}</UserInformationWrapper>
+            <Suspense fallback={null}>
+                <Toast />
+                <UploadManager />
+                <CookieConsentBanner />
+            </Suspense>
+        </ThemeProviderWrapper>
     );
 
     return (
         <html lang={lng} dir={dir(lng)}>
             <body className={inter.className}>
-                {USE_MOCK_API ? (
-                    <MockProvider>{content}</MockProvider>
-                ) : (
-                    content
-                )}
+                <QueryProvider>
+                    <TranslationsProvider lng={lng}>
+                        {USE_MOCK_API ? (
+                            <MockProvider>{content}</MockProvider>
+                        ) : (
+                            content
+                        )}
+                    </TranslationsProvider>
+                </QueryProvider>
             </body>
         </html>
     );

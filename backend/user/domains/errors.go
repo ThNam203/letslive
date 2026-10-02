@@ -14,7 +14,10 @@ var (
 	ErrDatabaseIssue = errors.New("database issue")
 	ErrInternal      = errors.New("internal error")
 
-	ErrUserNotFound          = errors.New("user not found")
-	ErrUsernameTaken         = errors.New("username already taken")
-	ErrNotificationNotFound  = errors.New("notification not found")
+	ErrUserNotFound         = errors.New("user not found")
+	ErrUsernameTaken        = errors.New("username already taken")
+	ErrNotificationNotFound = errors.New("notification not found")
+
+	ErrInvalidImage              = errors.New("unsupported or corrupt image")
+	ErrImageDimensionsOutOfRange = errors.New("image dimensions out of range")
 )

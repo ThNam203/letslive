@@ -2,14 +2,19 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"mime/multipart"
 	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/dto"
 	"sen1or/letslive/user/utils"
+	"time"
 
 	"github.com/gofrs/uuid/v5"
 )
+
+const orphanCleanupTimeout = 10 * time.Second
 
 type UserService struct {
 	userRepo                  domains.UserRepository
@@ -213,18 +218,45 @@ func (s *UserService) UpdateUserAPIKey(ctx context.Context, userId uuid.UUID) (s
 	return newStreamKey.String(), nil
 }
 
-func (s UserService) UpdateUserProfilePicture(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader, userId uuid.UUID) (string, error) {
-	savedPath, err := s.minioService.AddFile(ctx, file, fileHeader, "profile-pictures")
+func (s UserService) UpdateUserProfilePicture(ctx context.Context, file io.Reader, userId uuid.UUID) (string, error) {
+	avatar, err := processAvatar(file)
 	if err != nil {
-		return "", domains.ErrInternal
+		return "", err
 	}
 
-	updateErr := s.userRepo.UpdateProfilePicture(ctx, userId, savedPath)
-	if updateErr != nil {
-		return "", updateErr
+	objectId, err := uuid.NewV4()
+	if err != nil {
+		return "", fmt.Errorf("generate avatar object id: %w: %w", domains.ErrInternal, err)
+	}
+	originalName := objectId.String() + "." + avatar.originalExt
+	servedName := objectId.String() + ".webp"
+
+	if err := s.minioService.PutObject(ctx, profilePicturesOriginalBucket, originalName, avatar.original, avatar.originalContentType); err != nil {
+		return "", fmt.Errorf("store original avatar: %w: %w", domains.ErrInternal, err)
 	}
 
-	return savedPath, nil
+	if err := s.minioService.PutObject(ctx, profilePicturesBucket, servedName, avatar.webp, "image/webp"); err != nil {
+		s.removeOrphanedObject(ctx, profilePicturesOriginalBucket, originalName)
+		return "", fmt.Errorf("store avatar: %w: %w", domains.ErrInternal, err)
+	}
+
+	servedURL := s.minioService.PublicURL(profilePicturesBucket, servedName)
+	if err := s.userRepo.UpdateProfilePicture(ctx, userId, servedURL); err != nil {
+		s.removeOrphanedObject(ctx, profilePicturesBucket, servedName)
+		s.removeOrphanedObject(ctx, profilePicturesOriginalBucket, originalName)
+		return "", err
+	}
+
+	return servedURL, nil
+}
+
+func (s UserService) removeOrphanedObject(ctx context.Context, bucketName, objectName string) {
+	cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), orphanCleanupTimeout)
+	defer cancel()
+
+	if err := s.minioService.RemoveObject(cleanupCtx, bucketName, objectName); err != nil {
+		logger.Errorf(ctx, "failed to remove orphaned object: %s", err)
+	}
 }
 
 func (s UserService) UpdateUserBackgroundPicture(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader, userId uuid.UUID) (string, error) {

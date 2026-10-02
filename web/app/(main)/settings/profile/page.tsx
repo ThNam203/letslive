@@ -11,7 +11,7 @@ import {
     UpdateProfilePicture,
 } from "@/lib/api/user";
 import TextField from "../_components/text-field";
-import ProfileBanner from "./_components/profile-banner";
+import ProfileBanner, { type PendingImage } from "./_components/profile-banner";
 import Section from "../_components/section";
 import TextAreaField from "../_components/textarea-field";
 import ThemeList from "@/app/(main)/settings/profile/_components/theme-list";
@@ -29,35 +29,30 @@ export default function ProfileSettings() {
 
     const [username, setUsername] = useState("");
     const [bio, setBio] = useState("");
-    const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
-    const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(
+    const [pendingAvatar, setPendingAvatar] = useState<PendingImage | null>(
         null,
     );
+    const [pendingBackground, setPendingBackground] =
+        useState<PendingImage | null>(null);
 
     const isUsernameChanged = user != null && user.username !== username;
     const isBioChanged = user != null && (user.bio ?? "") !== bio;
     const isButtonDisabled =
         !isUsernameChanged &&
         !isBioChanged &&
-        profileImageFile === null &&
-        backgroundImageFile === null;
-
-    const handleProfileImageChange = (file: File | null) => {
-        setProfileImageFile(file);
-    };
-
-    const handleBackgroundImageChange = (file: File | null) => {
-        setBackgroundImageFile(file);
-    };
+        pendingAvatar === null &&
+        pendingBackground === null;
 
     const updateProfileMutation = useMutation({
         mutationFn: async () => {
             let hasError = false;
 
-            if (backgroundImageFile) {
-                const res = await UpdateBackgroundPicture(backgroundImageFile);
+            if (pendingBackground) {
+                const res = await UpdateBackgroundPicture(
+                    pendingBackground.file,
+                );
                 if (res.success) {
-                    setBackgroundImageFile(null);
+                    setPendingBackground(null);
                     updateUser({ ...user!, backgroundPicture: res.data });
                 } else {
                     toast.error(t(`api-response:${res.key}`), {
@@ -67,10 +62,10 @@ export default function ProfileSettings() {
                 }
             }
 
-            if (profileImageFile) {
-                const res = await UpdateProfilePicture(profileImageFile);
+            if (pendingAvatar) {
+                const res = await UpdateProfilePicture(pendingAvatar.file);
                 if (res.success) {
-                    setProfileImageFile(null);
+                    setPendingAvatar(null);
                     updateUser({ ...user!, profilePicture: res.data });
                 } else {
                     toast.error(t(`api-response:${res.key}`), {
@@ -132,8 +127,10 @@ export default function ProfileSettings() {
                 >
                     <ProfileBanner
                         className="mb-10"
-                        onProfileImageChange={handleProfileImageChange}
-                        onBackgroundImageChange={handleBackgroundImageChange}
+                        pendingAvatar={pendingAvatar}
+                        pendingBackground={pendingBackground}
+                        onAvatarChange={setPendingAvatar}
+                        onBackgroundChange={setPendingBackground}
                     />
                     <TextField
                         label={t("settings:profile.username")}

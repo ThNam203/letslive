@@ -1,5 +1,5 @@
 import { http } from "msw";
-import { API_BASE, ok, notFound, noContent } from "../utils";
+import { API_BASE, ok, notFound, noContent, badRequest } from "../utils";
 import {
     meUser,
     otherUsers,
@@ -10,9 +10,26 @@ import {
 } from "../db";
 import { MeUser, PublicUser } from "@/types/user";
 import { Notification, UnreadCountResponse } from "@/types/notification";
+import { AVATAR_SERVED_DIMENSION } from "@/constant/image";
+import { readFileAsDataUrl } from "@/utils/file";
+import {
+    centerSquare,
+    drawSquare,
+    loadImage,
+    naturalSize,
+} from "@/utils/image-crop";
 
 // Combined list for look-ups
 const getAllUsers = (): (PublicUser | MeUser)[] => [meUser, ...otherUsers];
+
+async function mockServedAvatar(file: File): Promise<string> {
+    const img = await loadImage(await readFileAsDataUrl(file));
+    return drawSquare(
+        img,
+        centerSquare(naturalSize(img)),
+        AVATAR_SERVED_DIMENSION,
+    ).toDataURL("image/webp");
+}
 
 export const userHandlers = [
     // GET /user/me
@@ -28,10 +45,14 @@ export const userHandlers = [
     }),
 
     // PATCH /user/me/profile-picture
-    http.patch(`${API_BASE}/user/me/profile-picture`, async () => {
-        const fakeUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${Date.now()}`;
-        meUser.profilePicture = fakeUrl;
-        return ok<string>(fakeUrl);
+    http.patch(`${API_BASE}/user/me/profile-picture`, async ({ request }) => {
+        const form = await request.formData();
+        const file = form.get("profile-picture");
+        if (!(file instanceof File)) {
+            return badRequest("res_err_invalid_payload", "Payload invalid.");
+        }
+        meUser.profilePicture = await mockServedAvatar(file);
+        return ok<string>(meUser.profilePicture);
     }),
 
     // PATCH /user/me/background-picture

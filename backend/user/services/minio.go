@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"mime/multipart"
@@ -26,6 +27,11 @@ func getPolicy(bucketName string) string {
   		]
 	}`, bucketName)
 }
+
+const (
+	profilePicturesBucket         = "profile-pictures"
+	profilePicturesOriginalBucket = "profile-pictures-original"
+)
 
 type MinIOService struct {
 	minioClient *minio.Client
@@ -59,25 +65,29 @@ func (s *MinIOService) SetUp() error {
 
 	s.minioClient = minioClient
 
-	if err := s.createIfNotExists("general-files"); err != nil {
+	if err := s.createIfNotExists("general-files", true); err != nil {
 		return err
 	}
 
 	// TODO: remove all these, use general-files instead
-	if err := s.createIfNotExists("profile-pictures"); err != nil {
+	if err := s.createIfNotExists(profilePicturesBucket, true); err != nil {
 		return err
 	}
-	if err := s.createIfNotExists("thumbnails"); err != nil {
+	if err := s.createIfNotExists("thumbnails", true); err != nil {
 		return err
 	}
-	if err := s.createIfNotExists("background-pictures"); err != nil {
+	if err := s.createIfNotExists("background-pictures", true); err != nil {
+		return err
+	}
+
+	if err := s.createIfNotExists(profilePicturesOriginalBucket, false); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *MinIOService) createIfNotExists(bucketName string) error {
+func (s *MinIOService) createIfNotExists(bucketName string, publicRead bool) error {
 	exists, err := s.minioClient.BucketExists(s.ctx, bucketName)
 	if err != nil {
 		return fmt.Errorf("failed to check bucket: %v", err)
@@ -88,6 +98,10 @@ func (s *MinIOService) createIfNotExists(bucketName string) error {
 			return fmt.Errorf("failed to create bucket: %v", err)
 		}
 
+		if !publicRead {
+			return nil
+		}
+
 		err = s.minioClient.SetBucketPolicy(s.ctx, bucketName, getPolicy(bucketName))
 		if err != nil {
 			return fmt.Errorf("failed to set bucket policy: %v", err)
@@ -95,6 +109,30 @@ func (s *MinIOService) createIfNotExists(bucketName string) error {
 	}
 
 	return nil
+}
+
+func (s *MinIOService) PutObject(ctx context.Context, bucketName, objectName string, data []byte, contentType string) error {
+	_, err := s.minioClient.PutObject(ctx, bucketName, objectName, bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{
+		ContentType:  contentType,
+		CacheControl: "max-age=86400",
+	})
+	if err != nil {
+		return fmt.Errorf("failed to upload %s/%s to minio: %w", bucketName, objectName, err)
+	}
+
+	return nil
+}
+
+func (s *MinIOService) RemoveObject(ctx context.Context, bucketName, objectName string) error {
+	if err := s.minioClient.RemoveObject(ctx, bucketName, objectName, minio.RemoveObjectOptions{}); err != nil {
+		return fmt.Errorf("failed to remove %s/%s from minio: %w", bucketName, objectName, err)
+	}
+
+	return nil
+}
+
+func (s *MinIOService) PublicURL(bucketName, objectName string) string {
+	return fmt.Sprintf("%s/%s/%s", s.config.ReturnURL, bucketName, objectName)
 }
 
 // uploads a file to MinIO and returns the permanent URL
@@ -111,8 +149,5 @@ func (s *MinIOService) AddFile(ctx context.Context, file multipart.File, fileHea
 		return "", fmt.Errorf("failed to upload file to minio: %v", err)
 	}
 
-	// Construct the final URL (public access)
-	finalURL := fmt.Sprintf("%s/%s/%s", s.config.ReturnURL, bucketName, fileName)
-
-	return finalURL, nil
+	return s.PublicURL(bucketName, fileName), nil
 }

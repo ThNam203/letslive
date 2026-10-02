@@ -5,6 +5,7 @@ import ImageHover from "./image-hover";
 
 type Props = {
     label: string;
+    maxFileMB: number;
     description?: string;
     onImageChange?: (file: File | null) => void;
     onResetImage?: () => void;
@@ -16,6 +17,7 @@ type Props = {
 
 export default function ImageField({
     label,
+    maxFileMB,
     description,
     className,
     onImageChange,
@@ -46,6 +48,7 @@ export default function ImageField({
                 />
                 <ImageHover
                     id={label}
+                    maxFileMB={maxFileMB}
                     inputRef={inputRef}
                     onValueChange={onImageChange}
                     onClick={handleClick}
