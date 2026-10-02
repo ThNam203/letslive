@@ -116,16 +116,20 @@ export default function ProfileBanner({
 
     const handleCropApply = async (square: CropSquare) => {
         if (!cropping) return;
+        const { pick, img } = cropping;
 
         try {
-            const file = await exportSquare(cropping.img, square, {
+            const file = await exportSquare(img, square, {
                 maxDimension: AVATAR_UPLOAD_MAX_DIMENSION,
                 quality: AVATAR_UPLOAD_QUALITY,
                 fileName: "avatar",
             });
-            onAvatarChange({ file, previewUrl: await readFileAsDataUrl(file) });
+            const previewUrl = await readFileAsDataUrl(file);
+            if (pick !== avatarPickRef.current) return;
+            onAvatarChange({ file, previewUrl });
             closeCropDialog();
         } catch {
+            if (pick !== avatarPickRef.current) return;
             toast.error(t("settings:profile.image_load_failed"));
         }
     };
