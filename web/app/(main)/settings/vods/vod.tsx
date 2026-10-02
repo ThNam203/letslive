@@ -2,7 +2,7 @@
 
 import useT from "@/hooks/use-translation";
 import type React from "react";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import {
     Dialog,
     DialogContent,
@@ -26,6 +26,14 @@ import {
 import IconLoader from "@/components/icons/loader";
 import MediaCard from "@/components/livestream/media-card";
 import { useDeleteVod, useUpdateVod } from "@/hooks/queries/use-vod-mutations";
+import {
+    GENERAL_UPLOAD_MAX_FILE_MB,
+    IMAGE_INPUT_ACCEPT,
+    VOD_THUMBNAIL_IMAGE,
+} from "@/constant/image";
+import { IsValidFileSizeInMB } from "@/utils/file";
+import ImageCropDialog from "../_components/image-crop-dialog";
+import useImageCrop from "../_components/use-image-crop";
 
 export default function VODEditCard({ vod }: { vod: VOD }) {
     const { t } = useT(["common", "settings", "api-response"]);
@@ -49,38 +57,40 @@ export default function VODEditCard({ vod }: { vod: VOD }) {
         isPublic: vod.visibility === "public",
     });
 
-    const selectedImageRef = useRef<string | null>(null);
     const updateVod = useUpdateVod();
     const deleteVod = useDeleteVod();
     const isSubmitting = updateVod.isPending || deleteVod.isPending;
-
-    const releaseSelectedImage = () => {
-        if (selectedImageRef.current) {
-            URL.revokeObjectURL(selectedImageRef.current);
-            selectedImageRef.current = null;
-        }
-    };
-
-    useEffect(() => {
-        return () => {
-            if (selectedImageRef.current)
-                URL.revokeObjectURL(selectedImageRef.current);
-        };
-    }, []);
-
-    const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            if (selectedImageRef.current)
-                URL.revokeObjectURL(selectedImageRef.current);
-            const imageUrl = URL.createObjectURL(file);
-            selectedImageRef.current = imageUrl;
+    const thumbnailCrop = useImageCrop(
+        VOD_THUMBNAIL_IMAGE,
+        "thumbnail",
+        ({ file, previewUrl }) =>
             setFormData((prev) => ({
                 ...prev,
                 image: file,
-                selectedImage: imageUrl,
-            }));
+                selectedImage: previewUrl,
+            })),
+    );
+
+    const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        // a file input fires no change event when the same file is picked again
+        event.target.value = "";
+        if (!file) return;
+
+        if (!IsValidFileSizeInMB(file, GENERAL_UPLOAD_MAX_FILE_MB)) {
+            toast.error(
+                t("settings:file_size_exceeds", {
+                    size: GENERAL_UPLOAD_MAX_FILE_MB,
+                }),
+            );
+            return;
         }
+        thumbnailCrop.pick(file);
+    };
+
+    const closeEditDialog = () => {
+        thumbnailCrop.cancel();
+        setIsDialogOpen(false);
     };
 
     const handleEdit = () => {
@@ -124,16 +134,10 @@ export default function VODEditCard({ vod }: { vod: VOD }) {
                     toast(t("settings:vods.edit_dialog.update_success"), {
                         type: "success",
                     });
-                    releaseSelectedImage();
-                    setIsDialogOpen(false);
+                    closeEditDialog();
                 },
             },
         );
-    };
-
-    const handleCancel = () => {
-        releaseSelectedImage();
-        setIsDialogOpen(false);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,7 +166,12 @@ export default function VODEditCard({ vod }: { vod: VOD }) {
                 className="w-[350px]"
             />
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog
+                open={isDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open) closeEditDialog();
+                }}
+            >
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>
@@ -190,7 +199,7 @@ export default function VODEditCard({ vod }: { vod: VOD }) {
                                     <input
                                         id="image-upload"
                                         type="file"
-                                        accept="image/*"
+                                        accept={IMAGE_INPUT_ACCEPT}
                                         onChange={handleImageChange}
                                         className="hidden"
                                     />
@@ -248,7 +257,7 @@ export default function VODEditCard({ vod }: { vod: VOD }) {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={handleCancel}>
+                        <Button variant="outline" onClick={closeEditDialog}>
                             {t("settings:vods.edit_dialog.cancel")}
                         </Button>
                         <Button disabled={isSubmitting} onClick={handleSave}>
@@ -262,6 +271,12 @@ export default function VODEditCard({ vod }: { vod: VOD }) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <ImageCropDialog
+                key={thumbnailCrop.dialogKey}
+                crop={thumbnailCrop}
+                title={t("settings:crop.thumbnail_title")}
+                cropShape="rect"
+            />
             <Dialog
                 open={isDeleteDialogOpen}
                 onOpenChange={setIsDeleteDialogOpen}

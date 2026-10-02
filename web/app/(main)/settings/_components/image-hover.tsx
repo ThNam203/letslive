@@ -4,6 +4,7 @@ import { IsValidFileSizeInMB } from "@/utils/file";
 import React from "react";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
+import { IMAGE_INPUT_ACCEPT } from "@/constant/image";
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
@@ -29,11 +30,14 @@ export default function ImageHover({
     showCloseIcon = true,
     closeIconPosition = "top-right",
     onCloseIconClick,
+    accept = IMAGE_INPUT_ACCEPT,
     ...props
 }: Props) {
     const { t } = useT("settings");
     const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
+        // a file input fires no change event when the same file is picked again
+        event.target.value = "";
         if (file) {
             if (!IsValidFileSizeInMB(file, maxFileMB)) {
                 toast.error(
@@ -53,7 +57,6 @@ export default function ImageHover({
 
     const handleCloseIconClick = (event: React.MouseEvent) => {
         event.stopPropagation();
-        if (inputRef?.current) inputRef.current.value = "";
         onCloseIconClick?.();
     };
 
@@ -70,6 +73,7 @@ export default function ImageHover({
                 ref={inputRef}
                 className="hidden"
                 onChange={handleValueChange}
+                accept={accept}
                 {...props}
             />
             <div className="text-foreground flex flex-row gap-2">{title}</div>

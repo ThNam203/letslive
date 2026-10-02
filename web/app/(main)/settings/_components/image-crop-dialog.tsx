@@ -11,30 +11,26 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import useT from "@/hooks/use-translation";
-import { AVATAR_MAX_ZOOM, AVATAR_MIN_DIMENSION } from "@/constant/image";
-import {
-    maxCropZoom,
-    naturalSize,
-    toCropSquare,
-    type CropSquare,
-} from "@/utils/image-crop";
+import { maxCropZoom, naturalSize, toCropRect } from "@/utils/image-crop";
+import type { ImageCrop } from "./use-image-crop";
 
 type Props = {
-    image: HTMLImageElement | null;
-    onCancel: () => void;
-    onApply: (square: CropSquare) => Promise<void>;
+    crop: ImageCrop;
+    title: string;
+    cropShape: "rect" | "round";
 };
 
-// Give each picked image its own key so it starts centered at zoom 1.
-export default function AvatarCropDialog({ image, onCancel, onApply }: Props) {
+// Key it with crop.dialogKey so each picked image starts centered at zoom 1.
+export default function ImageCropDialog({ crop, title, cropShape }: Props) {
+    const { image, spec } = crop;
     const { t } = useT(["settings", "common"]);
-    const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
+    const [position, setPosition] = useState<Point>({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [area, setArea] = useState<Area | null>(null);
     // react-easy-crop measures its size and position once, with
     // getBoundingClientRect, which includes the dialog's open animation
     // (scale and slide). Remounting when that animation ends makes it measure
-    // the settled dialog; crop and zoom live here, so they survive.
+    // the settled dialog; position and zoom live here, so they survive.
     const [measureKey, setMeasureKey] = useState(0);
     const [isApplying, setIsApplying] = useState(false);
 
@@ -44,7 +40,7 @@ export default function AvatarCropDialog({ image, onCancel, onApply }: Props) {
         if (!size || !area) return;
         setIsApplying(true);
         try {
-            await onApply(toCropSquare(area, size));
+            await crop.apply(toCropRect(area, size, spec));
         } finally {
             setIsApplying(false);
         }
@@ -54,7 +50,7 @@ export default function AvatarCropDialog({ image, onCancel, onApply }: Props) {
         <Dialog
             open={image !== null}
             onOpenChange={(open) => {
-                if (!open) onCancel();
+                if (!open) crop.cancel();
             }}
         >
             <DialogContent
@@ -66,9 +62,7 @@ export default function AvatarCropDialog({ image, onCancel, onApply }: Props) {
                 }}
             >
                 <DialogHeader>
-                    <DialogTitle>
-                        {t("settings:profile.crop_title")}
-                    </DialogTitle>
+                    <DialogTitle>{title}</DialogTitle>
                 </DialogHeader>
 
                 <div className="bg-muted relative h-72 w-full overflow-hidden rounded-md sm:h-80">
@@ -76,29 +70,29 @@ export default function AvatarCropDialog({ image, onCancel, onApply }: Props) {
                         <Cropper
                             key={measureKey}
                             image={image.src}
-                            crop={crop}
+                            crop={position}
                             zoom={zoom}
                             minZoom={1}
-                            maxZoom={maxCropZoom(
-                                size,
-                                AVATAR_MIN_DIMENSION,
-                                AVATAR_MAX_ZOOM,
-                            )}
-                            aspect={1}
-                            cropShape="round"
+                            maxZoom={maxCropZoom(size, spec)}
+                            aspect={spec.aspect}
+                            cropShape={cropShape}
                             showGrid={false}
-                            onCropChange={setCrop}
+                            onCropChange={setPosition}
                             onZoomChange={setZoom}
                             onCropComplete={(_, pixels) => setArea(pixels)}
                             mediaProps={{
-                                alt: t("settings:profile.crop_image_alt"),
+                                alt: t("settings:crop.image_alt"),
                             }}
                         />
                     )}
                 </div>
 
                 <DialogFooter>
-                    <Button type="button" variant="outline" onClick={onCancel}>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={crop.cancel}
+                    >
                         {t("common:cancel")}
                     </Button>
                     <Button
@@ -106,7 +100,7 @@ export default function AvatarCropDialog({ image, onCancel, onApply }: Props) {
                         onClick={handleApply}
                         disabled={!area || isApplying}
                     >
-                        {t("settings:profile.crop_apply")}
+                        {t("settings:crop.apply")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

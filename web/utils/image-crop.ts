@@ -1,11 +1,26 @@
 import type { Area } from "react-easy-crop";
+import { readFileAsDataUrl } from "@/utils/file";
 
 export type ImageSize = { width: number; height: number };
 
-// a square in the image as the browser shows it (EXIF orientation applied)
-export type CropSquare = { x: number; y: number; size: number };
+// a rectangle in the image as the browser shows it (EXIF orientation applied)
+export type CropRect = { x: number; y: number; width: number; height: number };
 
-export function loadImage(src: string): Promise<HTMLImageElement> {
+export type ExportImageSpec = {
+    quality: number;
+};
+
+export type SourceImageSpec = ExportImageSpec & {
+    sourceMaxDimension: number;
+};
+
+export type CropImageSpec = SourceImageSpec & {
+    aspect: number;
+    minCropWidth: number;
+    maxZoom: number;
+};
+
+function loadImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(img);
@@ -14,86 +29,105 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
     });
 }
 
+export async function loadImageFile(file: Blob): Promise<HTMLImageElement> {
+    return loadImage(await readFileAsDataUrl(file));
+}
+
 export function naturalSize(img: HTMLImageElement): ImageSize {
     return { width: img.naturalWidth, height: img.naturalHeight };
 }
 
-export function isWithinDimensions(
+function fullRect({ width, height }: ImageSize): CropRect {
+    return { x: 0, y: 0, width, height };
+}
+
+export function minCropSize({
+    aspect,
+    minCropWidth,
+}: CropImageSpec): ImageSize {
+    return {
+        width: minCropWidth,
+        height: Math.ceil(minCropWidth / aspect),
+    };
+}
+
+export function fitsSourceLimit(
     { width, height }: ImageSize,
-    minDimension: number,
-    maxDimension: number,
+    { sourceMaxDimension }: SourceImageSpec,
 ): boolean {
+    return Math.max(width, height) <= sourceMaxDimension;
+}
+
+export function fitsCrop(size: ImageSize, spec: CropImageSpec): boolean {
+    const min = minCropSize(spec);
     return (
-        Math.min(width, height) >= minDimension &&
-        Math.max(width, height) <= maxDimension
+        size.width >= min.width &&
+        size.height >= min.height &&
+        fitsSourceLimit(size, spec)
     );
 }
 
-// at zoom 1 the crop square spans the image's short side; zooming in past
-// this would leave the square covering fewer than minCropSize source pixels
+// at zoom 1 the crop spans the image's limiting side; zooming in past this
+// would leave the crop narrower than minCropWidth source pixels
 export function maxCropZoom(
     { width, height }: ImageSize,
-    minCropSize: number,
-    zoomCap: number,
+    { aspect, minCropWidth, maxZoom }: CropImageSpec,
 ): number {
-    const zoom = Math.min(width, height) / minCropSize;
-    return Math.min(zoomCap, Math.max(1, zoom));
+    const zoom = Math.min(width, height * aspect) / minCropWidth;
+    return Math.min(maxZoom, Math.max(1, zoom));
 }
 
-// react-easy-crop rounds x, y, width and height separately, so the square can
-// be off by a pixel or stick out of the image
-export function toCropSquare(area: Area, image: ImageSize): CropSquare {
-    const size = Math.min(
-        Math.round(Math.min(area.width, area.height)),
+// react-easy-crop rounds x, y, width and height separately, so the crop can
+// be off by a pixel, off the aspect, or stick out of the image
+export function toCropRect(
+    area: Area,
+    image: ImageSize,
+    { aspect, minCropWidth }: CropImageSpec,
+): CropRect {
+    const width = Math.min(
+        Math.max(Math.round(area.width), minCropWidth),
         image.width,
-        image.height,
+        Math.floor(image.height * aspect),
     );
+    const height = Math.min(Math.round(width / aspect), image.height);
     const clamp = (value: number, max: number) =>
         Math.min(Math.max(Math.round(value), 0), max);
 
     return {
-        x: clamp(area.x, image.width - size),
-        y: clamp(area.y, image.height - size),
-        size,
+        x: clamp(area.x, image.width - width),
+        y: clamp(area.y, image.height - height),
+        width,
+        height,
     };
 }
 
-export function centerSquare({ width, height }: ImageSize): CropSquare {
-    const size = Math.min(width, height);
-    return {
-        x: Math.floor((width - size) / 2),
-        y: Math.floor((height - size) / 2),
-        size,
-    };
-}
-
-export function drawSquare(
+function drawRect(
     img: HTMLImageElement,
-    square: CropSquare,
-    outputSize: number,
+    rect: CropRect,
+    output: ImageSize,
     background?: string,
 ): HTMLCanvasElement {
     const canvas = document.createElement("canvas");
-    canvas.width = outputSize;
-    canvas.height = outputSize;
+    canvas.width = output.width;
+    canvas.height = output.height;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("canvas 2d context unavailable");
 
     if (background) {
         ctx.fillStyle = background;
-        ctx.fillRect(0, 0, outputSize, outputSize);
+        ctx.fillRect(0, 0, output.width, output.height);
     }
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(
         img,
-        square.x,
-        square.y,
-        square.size,
-        square.size,
+        rect.x,
+        rect.y,
+        rect.width,
+        rect.height,
         0,
         0,
-        outputSize,
-        outputSize,
+        output.width,
+        output.height,
     );
     return canvas;
 }
@@ -115,23 +149,18 @@ function canvasToBlob(
     });
 }
 
-type ExportSquareOptions = {
-    maxDimension: number;
-    quality: number;
-    fileName: string;
-};
-
 // Safari cannot encode WebP and hands back a PNG instead; JPEG has no alpha,
 // hence the white background.
-export async function exportSquare(
+export async function exportImage(
     img: HTMLImageElement,
-    square: CropSquare,
-    { maxDimension, quality, fileName }: ExportSquareOptions,
+    rect: CropRect,
+    { quality }: ExportImageSpec,
+    fileName: string,
 ): Promise<File> {
-    const size = Math.min(square.size, maxDimension);
+    const output = { width: rect.width, height: rect.height };
 
     const webp = await canvasToBlob(
-        drawSquare(img, square, size),
+        drawRect(img, rect, output),
         "image/webp",
         quality,
     );
@@ -140,9 +169,17 @@ export async function exportSquare(
     }
 
     const jpeg = await canvasToBlob(
-        drawSquare(img, square, size, "#ffffff"),
+        drawRect(img, rect, output, "#ffffff"),
         "image/jpeg",
         quality,
     );
     return new File([jpeg], `${fileName}.jpg`, { type: jpeg.type });
+}
+
+export function exportWholeImage(
+    img: HTMLImageElement,
+    spec: ExportImageSpec,
+    fileName: string,
+): Promise<File> {
+    return exportImage(img, fullRect(naturalSize(img)), spec, fileName);
 }

@@ -10,26 +10,10 @@ import {
 } from "../db";
 import { MeUser, PublicUser } from "@/types/user";
 import { Notification, UnreadCountResponse } from "@/types/notification";
-import { AVATAR_SERVED_DIMENSION } from "@/constant/image";
 import { readFileAsDataUrl } from "@/utils/file";
-import {
-    centerSquare,
-    drawSquare,
-    loadImage,
-    naturalSize,
-} from "@/utils/image-crop";
 
 // Combined list for look-ups
 const getAllUsers = (): (PublicUser | MeUser)[] => [meUser, ...otherUsers];
-
-async function mockServedAvatar(file: File): Promise<string> {
-    const img = await loadImage(await readFileAsDataUrl(file));
-    return drawSquare(
-        img,
-        centerSquare(naturalSize(img)),
-        AVATAR_SERVED_DIMENSION,
-    ).toDataURL("image/webp");
-}
 
 export const userHandlers = [
     // GET /user/me
@@ -51,16 +35,26 @@ export const userHandlers = [
         if (!(file instanceof File)) {
             return badRequest("res_err_invalid_payload", "Payload invalid.");
         }
-        meUser.profilePicture = await mockServedAvatar(file);
+        meUser.profilePicture = await readFileAsDataUrl(file);
         return ok<string>(meUser.profilePicture);
     }),
 
     // PATCH /user/me/background-picture
-    http.patch(`${API_BASE}/user/me/background-picture`, async () => {
-        const fakeUrl = `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80&t=${Date.now()}`;
-        meUser.backgroundPicture = fakeUrl;
-        return ok<string>(fakeUrl);
-    }),
+    http.patch(
+        `${API_BASE}/user/me/background-picture`,
+        async ({ request }) => {
+            const form = await request.formData();
+            const file = form.get("background-picture");
+            if (!(file instanceof File)) {
+                return badRequest(
+                    "res_err_invalid_payload",
+                    "Payload invalid.",
+                );
+            }
+            meUser.backgroundPicture = await readFileAsDataUrl(file);
+            return ok<string>(meUser.backgroundPicture);
+        },
+    ),
 
     // PATCH /user/me/livestream-information
     http.patch(
@@ -69,15 +63,28 @@ export const userHandlers = [
             const formData = await request.formData();
             const title = formData.get("title") as string | null;
             const description = formData.get("description") as string | null;
-            const thumbnailUrl = formData.get("thumbnailUrl") as string | null;
+            const thumbnail = formData.get("thumbnail");
+            const thumbnailUrl =
+                thumbnail instanceof File
+                    ? await readFileAsDataUrl(thumbnail)
+                    : (formData.get("thumbnailUrl") as string | null);
             if (title !== null) meUser.livestreamInformation.title = title;
             if (description !== null)
                 meUser.livestreamInformation.description = description;
-            if (thumbnailUrl !== null)
-                meUser.livestreamInformation.thumbnailUrl = thumbnailUrl;
+            meUser.livestreamInformation.thumbnailUrl = thumbnailUrl;
             return ok(meUser.livestreamInformation);
         },
     ),
+
+    // POST /upload-file
+    http.post(`${API_BASE}/upload-file`, async ({ request }) => {
+        const form = await request.formData();
+        const file = form.get("file");
+        if (!(file instanceof File)) {
+            return badRequest("res_err_invalid_payload", "Payload invalid.");
+        }
+        return ok<string>(await readFileAsDataUrl(file));
+    }),
 
     // PATCH /user/me/api-key
     http.patch(`${API_BASE}/user/me/api-key`, () => {

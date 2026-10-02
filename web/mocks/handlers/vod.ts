@@ -77,7 +77,7 @@ export const vodHandlers = [
         if (!vod) return notFound("res_err_vod_not_found", "VOD not found");
         const body = (await request.json()) as Partial<VOD>;
         Object.assign(vod, body, { updatedAt: now() });
-        return noContent();
+        return ok<VOD>(vod);
     }),
 
     // DELETE /vods/:vodId
