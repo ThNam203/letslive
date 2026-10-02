@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -44,14 +45,18 @@ func newUploadRequest(t *testing.T, field string, size int) *http.Request {
 func TestParseUploadedFileAcceptsFileAtTheLimit(t *testing.T) {
 	req := newUploadRequest(t, "profile-picture", testMaxFileBytes)
 
-	file, header, errRes := ParseUploadedFile(httptest.NewRecorder(), req, "profile-picture", testMaxFileBytes)
+	file, errRes := ParseUploadedFile(httptest.NewRecorder(), req, "profile-picture", testMaxFileBytes)
 	if errRes != nil {
 		t.Fatalf("got error response %q, want none", errRes.Key)
 	}
 	defer file.Close()
 
-	if header.Size != testMaxFileBytes {
-		t.Errorf("size = %d, want %d", header.Size, testMaxFileBytes)
+	data, err := io.ReadAll(file)
+	if err != nil {
+		t.Fatalf("read file: %v", err)
+	}
+	if len(data) != testMaxFileBytes {
+		t.Errorf("size = %d, want %d", len(data), testMaxFileBytes)
 	}
 }
 
@@ -65,7 +70,7 @@ func TestParseUploadedFileRejectsOversizedFiles(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			req := newUploadRequest(t, "profile-picture", size)
 
-			_, _, errRes := ParseUploadedFile(httptest.NewRecorder(), req, "profile-picture", testMaxFileBytes)
+			_, errRes := ParseUploadedFile(httptest.NewRecorder(), req, "profile-picture", testMaxFileBytes)
 			if errRes == nil {
 				t.Fatal("got no error response, want image too large")
 			}
@@ -79,7 +84,7 @@ func TestParseUploadedFileRejectsOversizedFiles(t *testing.T) {
 func TestParseUploadedFileRejectsMissingField(t *testing.T) {
 	req := newUploadRequest(t, "something-else", 10)
 
-	_, _, errRes := ParseUploadedFile(httptest.NewRecorder(), req, "profile-picture", testMaxFileBytes)
+	_, errRes := ParseUploadedFile(httptest.NewRecorder(), req, "profile-picture", testMaxFileBytes)
 	if errRes == nil {
 		t.Fatal("got no error response, want invalid payload")
 	}

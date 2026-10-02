@@ -16,12 +16,7 @@
         "bio": "Bio",
         "update_success": "Profile information updated successfully!",
         "update_background": "Update background",
-        "update_profile_picture": "Update profile picture",
-        "crop_title": "Crop profile picture",
-        "crop_apply": "Apply",
-        "crop_image_alt": "Photo to crop",
-        "image_load_failed": "This image couldn't be read. Please choose another file.",
-        "photo_dimensions_out_of_range": "Photo must be between {{min}}x{{min}} and {{max}}x{{max}} pixels."
+        "update_profile_picture": "Update profile picture"
     },
     "social_media_links": {
         "title": "Edit Social Media Links",
@@ -51,6 +46,15 @@
     },
     "save_changes": "Save Changes",
     "file_size_exceeds": "File size exceeds {{size}} MB",
+    "image_load_failed": "This image couldn't be read. Please choose another file.",
+    "image_dimensions_out_of_range": "Image must be at least {{minWidth}}x{{minHeight}} and at most {{max}}x{{max}} pixels.",
+    "image_too_large_dimensions": "Image must be at most {{max}}x{{max}} pixels.",
+    "crop": {
+        "avatar_title": "Crop profile picture",
+        "thumbnail_title": "Crop thumbnail",
+        "apply": "Apply",
+        "image_alt": "Image to crop"
+    },
     "vods": {
         "title": "VODs Manager",
         "description": "Manage your VODs and edit their information here.",

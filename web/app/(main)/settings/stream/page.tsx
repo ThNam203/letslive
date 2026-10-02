@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "@/components/utils/toast";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,17 @@ import useUser from "@/hooks/user";
 import { UpdateLivestreamInformation } from "@/lib/api/user";
 import { unwrapResponse } from "@/lib/api/api-error";
 import ImageField from "../_components/image-field";
+import ImageCropDialog from "../_components/image-crop-dialog";
+import useImageCrop from "../_components/use-image-crop";
 import Section from "../_components/section";
 import TextField from "../_components/text-field";
 import TextAreaField from "../_components/textarea-field";
 import IconLoader from "@/components/icons/loader";
 import useT from "@/hooks/use-translation";
-import { LIVESTREAM_THUMBNAIL_MAX_FILE_MB } from "@/constant/image";
+import {
+    LIVESTREAM_THUMBNAIL_IMAGE,
+    LIVESTREAM_THUMBNAIL_MAX_FILE_MB,
+} from "@/constant/image";
 import {
     STREAM_TITLE_MAX_LENGTH,
     STREAM_DESCRIPTION_MAX_LENGTH,
@@ -31,29 +36,21 @@ export default function StreamEdit() {
     // use null to indicate that user has reset the image
     const [image, setImage] = useState<File | null | undefined>(undefined);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const blobUrlRef = useRef<string | null>(null);
-
-    useEffect(() => {
-        return () => {
-            if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
-        };
-    }, []);
+    const thumbnailCrop = useImageCrop(
+        LIVESTREAM_THUMBNAIL_IMAGE,
+        "thumbnail",
+        ({ file, previewUrl }) => {
+            setImage(file);
+            setImageUrl(previewUrl);
+        },
+    );
 
     const handleImageChange = (file: File | null) => {
-        if (file) {
-            if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
-            const url = URL.createObjectURL(file);
-            blobUrlRef.current = url;
-            setImage(file);
-            setImageUrl(url);
-        }
+        if (file) thumbnailCrop.pick(file);
     };
 
     const handleResetImage = () => {
-        if (blobUrlRef.current) {
-            URL.revokeObjectURL(blobUrlRef.current);
-            blobUrlRef.current = null;
-        }
+        thumbnailCrop.cancel();
         setImage(null);
         setImageUrl(null);
     };
@@ -64,7 +61,7 @@ export default function StreamEdit() {
             setTitle(user.livestreamInformation.title || "");
             setDescription(user.livestreamInformation.description || "");
             setImageUrl(user.livestreamInformation.thumbnailUrl || null);
-            setImage(null);
+            setImage(undefined);
         });
     }, [user]);
 
@@ -82,10 +79,6 @@ export default function StreamEdit() {
             ),
         onSuccess: (data) => {
             if (!user || !data) return;
-            if (blobUrlRef.current) {
-                URL.revokeObjectURL(blobUrlRef.current);
-                blobUrlRef.current = null;
-            }
             updateUser({
                 ...user,
                 livestreamInformation: {
@@ -154,6 +147,12 @@ export default function StreamEdit() {
                     </Button>
                 </div>
             </form>
+            <ImageCropDialog
+                key={thumbnailCrop.dialogKey}
+                crop={thumbnailCrop}
+                title={t("settings:crop.thumbnail_title")}
+                cropShape="rect"
+            />
         </Section>
     );
 }

@@ -10,18 +10,29 @@ import IconPaperclip from "@/components/icons/paperclip";
 import IconClose from "@/components/icons/close";
 import EmotePicker from "@/components/emote-picker";
 import { DM_MESSAGE_MAX_LENGTH } from "@/constant/field-limits";
-import { GENERAL_UPLOAD_MAX_FILE_MB } from "@/constant/image";
+import {
+    CHAT_ATTACHMENT_IMAGE,
+    GENERAL_UPLOAD_MAX_FILE_MB,
+    IMAGE_INPUT_ACCEPT,
+} from "@/constant/image";
 import { IsValidFileSizeInMB } from "@/utils/file";
+import {
+    exportWholeImage,
+    fitsSourceLimit,
+    loadImageFile,
+    naturalSize,
+} from "@/utils/image-crop";
 import { useUploadFiles } from "@/hooks/queries/use-file-upload";
 import useT from "@/hooks/use-translation";
 
-const ACCEPTED_FILE_TYPES = "image/png,image/jpeg,image/gif,image/webp";
 const MAX_FILES = 10;
 
 type SelectedFile = {
     file: File;
     previewUrl: string;
 };
+
+type PreparedAttachment = { file: File } | { error: string };
 
 export default function MessageInput({
     onSend,
@@ -35,12 +46,14 @@ export default function MessageInput({
     const [text, setText] = useState("");
     const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
     const [uploadError, setUploadError] = useState<string | null>(null);
+    const [isPreparing, setIsPreparing] = useState(false);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isTypingRef = useRef(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { t } = useT("messages");
     const uploadFiles = useUploadFiles();
     const isUploading = uploadFiles.isPending;
+    const isBusy = isUploading || isPreparing;
 
     const handleTyping = useCallback(() => {
         if (!isTypingRef.current) {
@@ -58,49 +71,77 @@ export default function MessageInput({
         }, 2000);
     }, [onTypingStart, onTypingStop]);
 
-    const handleFileSelect = useCallback(
-        (e: React.ChangeEvent<HTMLInputElement>) => {
-            const files = e.target.files;
-            if (!files || files.length === 0) return;
+    const prepareAttachment = async (
+        file: File,
+    ): Promise<PreparedAttachment> => {
+        const img = await loadImageFile(file);
+        if (!fitsSourceLimit(naturalSize(img), CHAT_ATTACHMENT_IMAGE)) {
+            return {
+                error: t("image_exceeds_dimensions", {
+                    name: file.name,
+                    max: CHAT_ATTACHMENT_IMAGE.sourceMaxDimension,
+                }),
+            };
+        }
+        // a canvas export keeps only the first frame of a GIF
+        if (file.type === "image/gif") return { file };
 
-            setUploadError(null);
+        return {
+            file: await exportWholeImage(
+                img,
+                CHAT_ATTACHMENT_IMAGE,
+                "attachment",
+            ),
+        };
+    };
 
-            const newFiles: SelectedFile[] = [];
-            const remaining = MAX_FILES - selectedFiles.length;
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files ?? []);
+        // Reset input so the same files can be re-selected
+        e.target.value = "";
+        if (files.length === 0) return;
 
-            if (files.length > remaining) {
-                setUploadError(t("attach_images_limit", { max: MAX_FILES }));
+        setUploadError(null);
+
+        const remaining = MAX_FILES - selectedFiles.length;
+        if (files.length > remaining) {
+            setUploadError(t("attach_images_limit", { max: MAX_FILES }));
+        }
+
+        setIsPreparing(true);
+        const newFiles: SelectedFile[] = [];
+        // one at a time: each decoded photo can take hundreds of MB
+        for (const file of files.slice(0, remaining)) {
+            if (!IsValidFileSizeInMB(file, GENERAL_UPLOAD_MAX_FILE_MB)) {
+                setUploadError(
+                    t("file_exceeds_limit", {
+                        name: file.name,
+                        size: GENERAL_UPLOAD_MAX_FILE_MB,
+                    }),
+                );
+                continue;
             }
 
-            const count = Math.min(files.length, remaining);
-            for (let i = 0; i < count; i++) {
-                const file = files[i];
-                if (!IsValidFileSizeInMB(file, GENERAL_UPLOAD_MAX_FILE_MB)) {
-                    setUploadError(
-                        t("file_exceeds_limit", {
-                            name: file.name,
-                            size: GENERAL_UPLOAD_MAX_FILE_MB,
-                        }),
-                    );
+            try {
+                const prepared = await prepareAttachment(file);
+                if ("error" in prepared) {
+                    setUploadError(prepared.error);
                     continue;
                 }
                 newFiles.push({
-                    file,
-                    previewUrl: URL.createObjectURL(file),
+                    file: prepared.file,
+                    previewUrl: URL.createObjectURL(prepared.file),
                 });
+            } catch {
+                setUploadError(t("image_unreadable", { name: file.name }));
             }
+        }
+        setIsPreparing(false);
 
-            if (newFiles.length > 0) {
-                setSelectedFiles((prev) => [...prev, ...newFiles]);
-            }
-
-            // Reset input so the same files can be re-selected
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
-        },
-        [selectedFiles.length, t],
-    );
+        if (newFiles.length > 0) {
+            setSelectedFiles((prev) => [...prev, ...newFiles]);
+        }
+    };
 
     const removeFile = useCallback((index: number) => {
         setSelectedFiles((prev) => {
@@ -205,7 +246,7 @@ export default function MessageInput({
                 <input
                     ref={fileInputRef}
                     type="file"
-                    accept={ACCEPTED_FILE_TYPES}
+                    accept={IMAGE_INPUT_ACCEPT}
                     multiple
                     className="hidden"
                     onChange={handleFileSelect}
@@ -216,7 +257,7 @@ export default function MessageInput({
                     size="icon"
                     className="h-9 w-9 shrink-0"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading || selectedFiles.length >= MAX_FILES}
+                    disabled={isBusy || selectedFiles.length >= MAX_FILES}
                 >
                     <IconPaperclip className="!h-5 !w-5" />
                 </Button>
@@ -246,8 +287,7 @@ export default function MessageInput({
                 <Button
                     type="submit"
                     disabled={
-                        (!text.trim() && selectedFiles.length === 0) ||
-                        isUploading
+                        (!text.trim() && selectedFiles.length === 0) || isBusy
                     }
                     className="h-9 w-12 shrink-0 p-0"
                 >

@@ -22,6 +22,8 @@
     "cancel": "Hủy",
     "attach_images_limit": "Bạn có thể đính kèm tối đa {{max}} ảnh",
     "file_exceeds_limit": "{{name}} vượt quá giới hạn {{size}}MB",
+    "image_exceeds_dimensions": "{{name}} lớn hơn {{max}}x{{max}} pixel",
+    "image_unreadable": "Không đọc được {{name}}",
     "sent_an_image": "Đã gửi một ảnh",
     "sent_images_count": "Đã gửi {{count}} ảnh",
     "upload_failed": "Tải lên thất bại",
