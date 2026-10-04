@@ -40,13 +40,15 @@ export async function generateMetadata({
     // a private or missing VOD must not leak its title into a chat preview
     if (!vod || vod.visibility !== "public") {
         return {
-            title: appTitle,
+            // absolute: nothing to name, so skip the "<page> | <app>" template
+            title: { absolute: appTitle },
             robots: { index: false, follow: false },
             openGraph: { title: appTitle, url: pageUrl, siteName: appTitle },
         };
     }
 
-    const title = vod.title?.trim() || appTitle;
+    const vodTitle = vod.title?.trim() ?? "";
+    const title = vodTitle || appTitle;
     const author = user?.username?.trim() ?? "";
     const description = vod.description?.trim()
         ? truncate(vod.description, OG_DESCRIPTION_MAX_LENGTH)
@@ -59,8 +61,8 @@ export async function generateMetadata({
         `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`;
 
     return {
-        metadataBase: new URL(siteUrl),
-        title: `${title} | ${appTitle}`,
+        // an untitled VOD has nothing to prefix the app name with
+        title: vodTitle || { absolute: appTitle },
         description,
         alternates: { canonical: pageUrl },
         openGraph: {

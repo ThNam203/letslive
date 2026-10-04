@@ -1,5 +1,6 @@
 {
     "app_title": "Let's Live",
+    "app_description": "Go live, watch streams, and keep every broadcast as a video you can share.",
     "vod_share_description": "Watch {{username}}'s video on Let's Live",
     "loading": "Loading...",
     "setting": "Setting",
