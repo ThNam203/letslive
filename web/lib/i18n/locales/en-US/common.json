@@ -1,5 +1,6 @@
 {
     "app_title": "Let's Live",
+    "vod_share_description": "Watch {{username}}'s video on Let's Live",
     "loading": "Loading...",
     "setting": "Setting",
     "save": "Save",

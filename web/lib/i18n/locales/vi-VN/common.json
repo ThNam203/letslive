@@ -1,5 +1,6 @@
 {
     "app_title": "Let's Live",
+    "vod_share_description": "Xem video của {{username}} trên Let's Live",
     "loading": "Đang tải...",
     "setting": "Cài đặt",
     "save": "Lưu",
