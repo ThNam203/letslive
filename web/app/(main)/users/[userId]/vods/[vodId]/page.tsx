@@ -37,13 +37,15 @@ export async function generateMetadata({
             .catch(() => null),
     ]);
 
-    // a private or missing VOD must not leak its title into a chat preview
+    // A private or missing VOD must not leak its title into a chat preview.
+    // Declaring no openGraph here is deliberate: a page's block replaces the
+    // inherited one wholesale, so staying silent is what keeps the site-wide
+    // card from app/opengraph-image.tsx.
     if (!vod || vod.visibility !== "public") {
         return {
             // absolute: nothing to name, so skip the "<page> | <app>" template
             title: { absolute: appTitle },
             robots: { index: false, follow: false },
-            openGraph: { title: appTitle, url: pageUrl, siteName: appTitle },
         };
     }
 
