@@ -1,7 +1,7 @@
 "use client";
 import { Slider } from "@/components/ui/slider";
 import { ClassValue } from "clsx";
-import { useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import screenfull from "screenfull";
 import { cn } from "@/utils/cn";
 import {
@@ -32,6 +32,15 @@ type HlsCapableVideo = HTMLVideoElement & {
     } | null;
 };
 
+// hls.js switches quality through a property setter; doing the write here keeps
+// the React Compiler from treating it as a mutation of `playerRef`.
+function setHlsLevel(
+    hlsPlayer: NonNullable<HlsCapableVideo["api"]>,
+    level: number,
+) {
+    hlsPlayer.currentLevel = level;
+}
+
 export const formatTime = (seconds: number) => {
     if (isNaN(seconds) || seconds < 0) return "00:00";
     const hrs = Math.floor(seconds / 3600);
@@ -49,6 +58,23 @@ const PLAYBACK_RATES: Record<string, number> = {
     "1.5x": 1.5,
     "2x": 2.0,
 };
+
+const SKIP_SECONDS = 10;
+
+// Keys typed into a field (chat box, search) or used by a focused control must
+// not drive the player.
+function shouldIgnoreShortcut(e: KeyboardEvent) {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return true;
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) return false;
+    if (target.isContentEditable) return true;
+    if (target.closest("input, textarea, select, [role='slider']")) return true;
+    // Space already activates a focused button
+    return (
+        e.key === " " &&
+        target.closest("button, [role='button'], [role='menuitem']") !== null
+    );
+}
 
 export type VideoInfo = {
     videoUrl: string | null;
@@ -115,6 +141,36 @@ export function VideoPlayer({
         }
     };
 
+    const skipBy = (seconds: number) =>
+        seekToTime(Math.min(duration, Math.max(0, currentTime + seconds)));
+
+    // YouTube-style shortcuts: J/← and L/→ skip, K/Space toggle playback.
+    const handleShortcut = useEffectEvent((e: KeyboardEvent) => {
+        if (shouldIgnoreShortcut(e)) return;
+
+        const key = e.key.toLowerCase();
+        if (key === "k" || key === " ") {
+            if (isPlaying) pauseVideo();
+            else playVideo();
+        } else if (skipButtons && (key === "j" || key === "arrowleft")) {
+            skipBy(-SKIP_SECONDS);
+        } else if (skipButtons && (key === "l" || key === "arrowright")) {
+            skipBy(SKIP_SECONDS);
+        } else {
+            return;
+        }
+        // stop Space/arrows from scrolling the page
+        e.preventDefault();
+        // reveal the controls so the user sees what changed
+        setIdleCount(0);
+    });
+
+    useEffect(() => {
+        if (videoInfo.videoUrl == null) return;
+        document.addEventListener("keydown", handleShortcut);
+        return () => document.removeEventListener("keydown", handleShortcut);
+    }, [videoInfo.videoUrl]);
+
     const enterFullscreen = () => {
         if (screenfull.isEnabled && containerRef.current) {
             screenfull.request(containerRef.current);
@@ -134,7 +190,7 @@ export function VideoPlayer({
         if (!hlsPlayer) return;
         setConfig((prev) => ({ ...prev, resolution: value }));
         if (value === "Auto") {
-            hlsPlayer.currentLevel = -1;
+            setHlsLevel(hlsPlayer, -1);
         } else {
             const selectedHeight = getResolutionHeight(value);
             if (selectedHeight === null) return;
@@ -143,7 +199,7 @@ export function VideoPlayer({
                 return getResolutionHeight(reso) === selectedHeight;
             });
             if (levelIndex !== -1) {
-                hlsPlayer.currentLevel = levelIndex - 1;
+                setHlsLevel(hlsPlayer, levelIndex - 1);
             }
         }
     };
@@ -203,6 +259,7 @@ export function VideoPlayer({
                         onPlay={playVideo}
                         onPause={pauseVideo}
                         onSeek={seekToTime}
+                        onSkip={skipBy}
                         onVolumeChange={(v) =>
                             setConfig((prev) => ({ ...prev, volumeValue: v }))
                         }
@@ -235,6 +292,7 @@ type OverlayProps = {
     onPlay: () => void;
     onPause: () => void;
     onSeek: (time: number) => void;
+    onSkip: (seconds: number) => void;
     onVolumeChange: (value: number) => void;
     onFullScreen: () => void;
     onExitFullScreen: () => void;
@@ -329,6 +387,7 @@ function PlayerControls({
     onPlay,
     onPause,
     onSeek,
+    onSkip,
     onVolumeChange,
     onFullScreen,
     onExitFullScreen,
@@ -412,9 +471,7 @@ function PlayerControls({
                     {enableSkipButtons && (
                         <>
                             <ControlButton
-                                onClick={() =>
-                                    onSeek(Math.max(0, currentTime - 10))
-                                }
+                                onClick={() => onSkip(-SKIP_SECONDS)}
                                 title={t("accessibility:seek_back_10")}
                             >
                                 <IconFastForward
@@ -425,9 +482,7 @@ function PlayerControls({
                                 />
                             </ControlButton>
                             <ControlButton
-                                onClick={() =>
-                                    onSeek(Math.min(duration, currentTime + 10))
-                                }
+                                onClick={() => onSkip(SKIP_SECONDS)}
                                 title={t("accessibility:seek_forward_10")}
                             >
                                 <IconFastForward
