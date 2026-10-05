@@ -15,7 +15,6 @@ func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query stri
 		SELECT
 		    u.id,
 		    u.username,
-		    u.email,
 		    u.status,
 		    u.auth_provider,
 		    u.created_at,
@@ -48,7 +47,7 @@ func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query stri
 		WHERE 
 		    u.username % $1 OR levenshtein(u.username, $1) <= 5
 		GROUP BY 
-		    u.id, u.username, u.email, u.status, u.auth_provider, u.created_at, u.bio, u.profile_picture, u.background_picture,
+		    u.id, u.username, u.status, u.auth_provider, u.created_at, u.bio, u.profile_picture, u.background_picture,
 		    l.user_id, l.title, l.description, l.thumbnail_url
 		ORDER BY
 		    similarity(u.username, $1) DESC,

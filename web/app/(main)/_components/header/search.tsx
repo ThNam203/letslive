@@ -117,14 +117,9 @@ export default function SearchBar({
                                 name={user.username}
                                 alt={t("accessibility:user_avatar")}
                             />
-                            <div>
-                                <p className="text-sm font-medium">
-                                    {user.username}
-                                </p>
-                                <p className="text-muted-foreground text-xs">
-                                    {user.email}
-                                </p>
-                            </div>
+                            <p className="text-sm font-medium">
+                                {user.username}
+                            </p>
                         </Link>
                     ))}
                 </div>

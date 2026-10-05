@@ -81,7 +81,6 @@ export const otherUsers: PublicUser[] = [
     {
         id: "user-002",
         username: "streamer_jane",
-        email: "jane@letslive.dev",
         status: UserStatus.NORMAL,
         authProvider: AuthProvider.LOCAL,
         createdAt: daysAgo(200),
@@ -99,7 +98,6 @@ export const otherUsers: PublicUser[] = [
     {
         id: "user-003",
         username: "coder_alex",
-        email: "alex@letslive.dev",
         status: UserStatus.NORMAL,
         authProvider: AuthProvider.LOCAL,
         createdAt: daysAgo(90),
@@ -117,7 +115,6 @@ export const otherUsers: PublicUser[] = [
     {
         id: "user-004",
         username: "music_sam",
-        email: "sam@letslive.dev",
         status: UserStatus.NORMAL,
         authProvider: AuthProvider.LOCAL,
         createdAt: daysAgo(60),
@@ -135,7 +132,6 @@ export const otherUsers: PublicUser[] = [
     {
         id: "user-005",
         username: "travel_mia",
-        email: "mia@letslive.dev",
         status: UserStatus.NORMAL,
         authProvider: AuthProvider.LOCAL,
         createdAt: daysAgo(30),

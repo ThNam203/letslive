@@ -41,8 +41,6 @@ export type BaseUser = {
 };
 
 export type PublicUser = BaseUser & {
-    email: string;
-
     /** AUTH ONLY - indicates if the current user is following this public user*/
     isFollowing?: boolean;
 };
