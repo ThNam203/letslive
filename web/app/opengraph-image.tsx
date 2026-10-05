@@ -8,6 +8,10 @@ export const alt = "Let's Live";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+/**
+ * Returns the site's 1200-by-630 PNG preview with a localized title and
+ * description. Translation errors propagate to the caller.
+ */
 export default async function OpenGraphImage() {
     const { t } = await myGetT("common");
 

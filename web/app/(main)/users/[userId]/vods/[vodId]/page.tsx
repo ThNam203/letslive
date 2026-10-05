@@ -12,11 +12,22 @@ const OG_IMAGE_WIDTH = 1280;
 const OG_IMAGE_HEIGHT = 720;
 const OG_DESCRIPTION_MAX_LENGTH = 200;
 
+/**
+ * Trims surrounding whitespace and, when needed, replaces the tail with an
+ * ellipsis. `max` is a positive integer limit in UTF-16 code units, including
+ * the ellipsis; text already within the limit is returned trimmed.
+ */
 function truncate(text: string, max: number): string {
     const trimmed = text.trim();
     return trimmed.length <= max ? trimmed : `${trimmed.slice(0, max - 1)}…`;
 }
 
+/**
+ * Builds localized canonical and sharing metadata for a public VOD. Missing,
+ * nonpublic, or failed VOD lookups return only the app title and noindex/nofollow.
+ * Failed user lookups omit the author from the fallback description.
+ * Errors resolving route params, translations, or the site URL propagate.
+ */
 export async function generateMetadata({
     params,
 }: {
@@ -92,6 +103,7 @@ export async function generateMetadata({
     };
 }
 
+/** Renders the client view for VOD playback, the owner profile, and comments. */
 export default function VODPage() {
     return <VODView />;
 }

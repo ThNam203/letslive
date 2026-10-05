@@ -19,14 +19,15 @@ const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
 const inter = Inter({ subsets: ["latin"] });
 
 /**
- * Site-wide defaults. Every page inherits these unless it exports metadata of
- * its own, and a page that does only has to state what differs: Next merges
- * each field with the value resolved here. A page setting a plain `title`
- * gets it run through the template below; one that needs to stand alone uses
- * `title: { absolute: ... }`.
+ * Localized site-wide defaults. Next shallowly merges a page's metadata with
+ * these values; nested blocks such as openGraph are replaced as a whole.
+ * A page setting a plain `title` gets it run through the template below; one
+ * that needs to stand alone uses `title: { absolute: ... }`.
  *
  * The default card image is app/opengraph-image.tsx, which Next attaches to
  * any level that does not set openGraph.images itself.
+ * Translation and request-header errors propagate; an invalid site URL throws
+ * a TypeError when constructing metadataBase.
  */
 export async function generateMetadata(): Promise<Metadata> {
     const { t, lng } = await myGetT("common");

@@ -25,6 +25,10 @@ import {
 
 const OTHER_STREAMS_SKELETON_COUNT = 3;
 
+/**
+ * Loads the route's VOD, owner, and other public VODs for playback and comments.
+ * Registers a view once playback progress reaches the duration-based threshold.
+ */
 export default function VODView() {
     const { t } = useT(["fetch-error", "api-response", "common"]);
     const params = useParams<{ userId: string; vodId: string }>();
@@ -49,6 +53,7 @@ export default function VODView() {
 
     const vodDuration = vod?.duration ?? 0;
 
+    /** Merges profile updates into the route user's cache, creating it if absent. */
     const updateUser = (newUserInfo: PublicUser) => {
         queryClient.setQueryData<PublicUser>(
             publicUserQueryKey(params.userId),
@@ -86,6 +91,11 @@ export default function VODView() {
               />
           ));
 
+    /**
+     * Returns the view threshold in seconds: 10% of the duration, rounded down
+     * and capped at 15. Positive durations have a minimum of 1; zero or missing
+     * duration yields 0.
+     */
     const getViewThreshold = () => {
         let threshold = 15;
         const tenPercent = Math.floor(vodDuration * 0.1);
@@ -98,6 +108,12 @@ export default function VODView() {
         return threshold;
     };
 
+    /**
+     * Registers a view when the current playback position in seconds, rounded
+     * down, reaches the threshold. Skips missing, counted, or in-flight VOD IDs.
+     * Success increments the cached public VOD's view count; request failures
+     * are swallowed and allow a later progress update to retry.
+     */
     const handleVODProgress = async (playedSeconds: number) => {
         const vodId = params.vodId;
         if (
