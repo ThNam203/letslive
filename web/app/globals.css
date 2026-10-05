@@ -6,6 +6,8 @@
     --color-background-hover: hsl(var(--background-hover));
     --color-foreground: hsl(var(--foreground));
     --color-foreground-muted: hsl(var(--foreground-muted));
+    --color-popover: hsl(var(--background));
+    --color-popover-foreground: hsl(var(--foreground));
     --color-primary: hsl(var(--primary));
     --color-primary-hover: hsl(var(--primary-hover));
     --color-primary-foreground: hsl(var(--primary-foreground));
