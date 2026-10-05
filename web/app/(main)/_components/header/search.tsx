@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import Link from "next/link";
 import useT from "@/hooks/use-translation";
@@ -32,6 +32,7 @@ export default function SearchBar({
     const [showResults, setShowResults] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const isSmallScreen = useMediaQuery(MQ_MAX_MD);
+    const containerRef = useRef<HTMLDivElement>(null);
     const { t } = useT([
         "common",
         "api-response",
@@ -58,6 +59,28 @@ export default function SearchBar({
         return () => clearTimeout(timer);
     }, [query, onSearch]);
 
+    // Close the results when the user clicks outside the search or hits Escape;
+    // focusing the input again reopens them.
+    useEffect(() => {
+        if (!showResults) return;
+
+        const handlePointerDown = (e: PointerEvent) => {
+            if (!containerRef.current?.contains(e.target as Node)) {
+                setShowResults(false);
+            }
+        };
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setShowResults(false);
+        };
+
+        document.addEventListener("pointerdown", handlePointerDown);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("pointerdown", handlePointerDown);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [showResults]);
+
     const handleClear = () => {
         setQuery("");
         setDebouncedQuery("");
@@ -65,11 +88,12 @@ export default function SearchBar({
     };
 
     const handleResultClick = () => {
+        setShowResults(false);
         setMobileOpen(false);
     };
 
     const searchInput = (
-        <div className="relative w-[300px] lg:w-[400px]">
+        <div ref={containerRef} className="relative w-[300px] lg:w-[400px]">
             <div className="relative">
                 <Input
                     type="text"
@@ -92,7 +116,7 @@ export default function SearchBar({
                 )}
             </div>
 
-            {isLoading && query && (
+            {showResults && isLoading && query && (
                 <div className="bg-background absolute mt-1 w-full rounded-sm border p-4 shadow-md">
                     <div className="flex items-center justify-center">
                         <p className="text-muted-foreground text-sm">
