@@ -45,7 +45,6 @@ export async function generateMetadata(): Promise<Metadata> {
         robots: { index: true, follow: true },
         openGraph: {
             type: "website",
-            url: siteUrl,
             siteName: appTitle,
             title: appTitle,
             description,

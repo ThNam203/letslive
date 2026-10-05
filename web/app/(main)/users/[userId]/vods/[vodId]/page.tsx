@@ -23,7 +23,7 @@ export async function generateMetadata({
     params: Promise<VODPageParams>;
 }): Promise<Metadata> {
     const { userId, vodId } = await params;
-    const { t } = await myGetT("common");
+    const { t, lng } = await myGetT("common");
     const siteUrl = await getSiteUrl();
     const appTitle = t("common:app_title");
     const pageUrl = `${siteUrl}/users/${userId}/vods/${vodId}`;
@@ -73,6 +73,7 @@ export async function generateMetadata({
             siteName: appTitle,
             title,
             description,
+            locale: lng.replace("-", "_"),
             images: [
                 {
                     url: imageUrl,
