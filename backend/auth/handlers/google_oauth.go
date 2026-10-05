@@ -7,10 +7,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	serviceresponse "sen1or/letslive/auth/response"
 	"time"
 )
+
+const oauthRedirectCookieName = "oauthredirect"
 
 func (h *AuthHandler) OAuthGoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
 	oauthState, err := generateOAuthCookieState(w)
@@ -27,6 +30,7 @@ func (h *AuthHandler) OAuthGoogleLoginHandler(w http.ResponseWriter, r *http.Req
 		)
 		return
 	}
+	rememberOAuthRedirect(w, r.URL.Query().Get("redirectUrl"))
 
 	u := h.googleAuthService.GenerateAuthCodeURL(oauthState)
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
@@ -38,11 +42,6 @@ func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.
 	GetRedirectURLOnFail := func(errMsg string) string {
 		clientAddr := os.Getenv("CLIENT_URL")
 		return fmt.Sprintf("%s/login?errorMessage=%s", clientAddr, errMsg)
-	}
-
-	GetRedirectURLOnSuccess := func(redirectUrl string) string {
-		clientAddr := os.Getenv("CLIENT_URL")
-		return fmt.Sprintf("%s/login?redirectUrl=%s", clientAddr, redirectUrl)
 	}
 
 	oauthStateCookie, err := r.Cookie("oauthstate")
@@ -68,7 +67,9 @@ func (h *AuthHandler) OAuthGoogleCallBackHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	http.Redirect(w, r, GetRedirectURLOnSuccess("/account-setup"), http.StatusMovedPermanently)
+	successURL := oauthSuccessRedirectURL(r)
+	clearOAuthRedirect(w)
+	http.Redirect(w, r, successURL, http.StatusTemporaryRedirect)
 }
 
 // OAuthGoogleMobileHandler handles Google sign-in from mobile clients.
@@ -101,6 +102,45 @@ func (h *AuthHandler) OAuthGoogleMobileHandler(w http.ResponseWriter, r *http.Re
 	writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate[any](
 		serviceresponse.RES_SUCC_LOGIN, nil, nil, nil,
 	))
+}
+
+func rememberOAuthRedirect(w http.ResponseWriter, redirectPath string) {
+	if redirectPath == "" {
+		clearOAuthRedirect(w)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     oauthRedirectCookieName,
+		Value:    url.QueryEscape(redirectPath),
+		Expires:  time.Now().Add(1 * time.Hour),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func clearOAuthRedirect(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     oauthRedirectCookieName,
+		MaxAge:   -1,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func oauthSuccessRedirectURL(r *http.Request) string {
+	loginURL := os.Getenv("CLIENT_URL") + "/login"
+
+	c, err := r.Cookie(oauthRedirectCookieName)
+	if err != nil {
+		return loginURL
+	}
+	redirectPath, err := url.QueryUnescape(c.Value)
+	if err != nil {
+		return loginURL
+	}
+	return loginURL + "?redirectUrl=" + url.QueryEscape(redirectPath)
 }
 
 func generateOAuthCookieState(w http.ResponseWriter) (string, error) {

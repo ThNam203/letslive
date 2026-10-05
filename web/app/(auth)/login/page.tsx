@@ -15,6 +15,16 @@ export default function LogInPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const user = useUser((userState) => userState.user);
+    const redirectUrl = searchParams.get("redirectUrl");
+    const redirectPath =
+        redirectUrl &&
+        redirectUrl.startsWith("/") &&
+        !redirectUrl.startsWith("//")
+            ? redirectUrl
+            : null;
+    const googleLoginUrl = redirectPath
+        ? `${GLOBAL.API_URL}/auth/google?redirectUrl=${encodeURIComponent(redirectPath)}`
+        : `${GLOBAL.API_URL}/auth/google`;
 
     useEffect(() => {
         const err = searchParams.get("errorMessage");
@@ -27,17 +37,12 @@ export default function LogInPage() {
 
     useEffect(() => {
         if (!user) return;
-        const redirectUrl = searchParams.get("redirectUrl");
-        if (
-            redirectUrl &&
-            redirectUrl.startsWith("/") &&
-            !redirectUrl.startsWith("//")
-        ) {
-            router.replace(redirectUrl);
+        if (user.username === "") {
+            router.replace("/account-setup");
             return;
         }
-        router.replace("/");
-    }, [user, searchParams, router]);
+        router.replace(redirectPath ?? "/");
+    }, [user, redirectPath, router]);
 
     return (
         <>
@@ -46,7 +51,7 @@ export default function LogInPage() {
             <div className="mt-4 mb-2 flex gap-2">
                 <div className="w-full">
                     <Link
-                        href={GLOBAL.API_URL + "/auth/google"}
+                        href={googleLoginUrl}
                         className="border-border flex h-12 flex-1 flex-row items-center justify-center gap-4 rounded-lg border bg-white py-2 text-black hover:bg-[#ebebeb]"
                     >
                         <IconGoogle /> Google
@@ -60,7 +65,7 @@ export default function LogInPage() {
                 </p>
                 <hr className="bg-border h-[2px] flex-1" />
             </div>
-            <LogInForm />
+            <LogInForm redirectPath={redirectPath} />
             <p className="mt-4 text-end text-sm opacity-80">
                 {t("no_account")}
                 <Link

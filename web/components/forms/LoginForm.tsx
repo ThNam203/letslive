@@ -27,7 +27,11 @@ function initialMockLoginPassword() {
     return process.env.NEXT_PUBLIC_MOCK_LOGIN_PASSWORD ?? "";
 }
 
-export default function LogInForm() {
+export default function LogInForm({
+    redirectPath,
+}: {
+    redirectPath: string | null;
+}) {
     const [email, setEmail] = useState(initialMockLoginEmail);
     const [password, setPassword] = useState(initialMockLoginPassword);
     const [hidingPassword, setHidingPassword] = useState(true);
@@ -78,7 +82,7 @@ export default function LogInForm() {
                     // user store, so refetching it is what "sign in" means
                     // to the rest of the app.
                     refreshMeProfile();
-                    router.push("/");
+                    router.push(redirectPath ?? "/");
                 },
                 // a captcha token is single-use, so a retry needs a fresh one
                 onError: () => {
