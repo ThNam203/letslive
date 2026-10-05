@@ -12,7 +12,7 @@ export function useLivestreamOfUser(userId: string | undefined) {
     return useQuery({
         queryKey: livestreamOfUserQueryKey(userId ?? ""),
         queryFn: async () =>
-            unwrapResponse(await GetLivestreamOfUser(userId as string)),
+            unwrapResponse(await GetLivestreamOfUser(userId as string)) ?? null,
         enabled: Boolean(userId),
     });
 }
