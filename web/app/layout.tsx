@@ -5,6 +5,8 @@ import Toast from "@/components/utils/toast";
 import UploadManager from "@/components/upload-manager/upload-manager";
 import { dir } from "i18next";
 import { getLocale, myGetT } from "@/lib/i18n";
+import { getSiteUrl } from "@/utils/siteUrl";
+import type { Metadata } from "next";
 import TranslationsProvider from "@/components/utils/i18n-provider";
 import { ThemeProviderWrapper } from "@/components/utils/theme-provider-wrapper";
 import UserInformationWrapper from "@/components/wrappers/UserInformationWrapper";
@@ -16,11 +18,43 @@ const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export async function generateMetadata() {
-    const { t } = await myGetT("common");
+/**
+ * Site-wide defaults. Every page inherits these unless it exports metadata of
+ * its own, and a page that does only has to state what differs: Next merges
+ * each field with the value resolved here. A page setting a plain `title`
+ * gets it run through the template below; one that needs to stand alone uses
+ * `title: { absolute: ... }`.
+ *
+ * The default card image is app/opengraph-image.tsx, which Next attaches to
+ * any level that does not set openGraph.images itself.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+    const { t, lng } = await myGetT("common");
+    const siteUrl = await getSiteUrl();
+    const appTitle = t("common:app_title");
+    const description = t("common:app_description");
 
     return {
-        title: t("app_title"),
+        metadataBase: new URL(siteUrl),
+        title: {
+            default: appTitle,
+            template: `%s | ${appTitle}`,
+        },
+        description,
+        applicationName: appTitle,
+        robots: { index: true, follow: true },
+        openGraph: {
+            type: "website",
+            siteName: appTitle,
+            title: appTitle,
+            description,
+            locale: lng.replace("-", "_"),
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: appTitle,
+            description,
+        },
     };
 }
 

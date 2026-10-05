@@ -1,200 +1,97 @@
-"use client";
-import { useParams } from "next/navigation";
-import { useEffect, useMemo, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { VideoInfo } from "@/components/custom_react_player/streaming-frame";
-import { VODFrame } from "@/components/custom_react_player/vod-frame";
-import MediaCard from "@/components/livestream/media-card";
-import { VOD } from "@/types/vod";
-import { PublicUser } from "@/types/user";
-import { RegisterVODView } from "@/lib/api/vod";
-import ProfileView from "@/app/(main)/users/[userId]/profile";
-import ProfileSkeleton from "@/app/(main)/users/[userId]/profile-skeleton";
-import { PlayerSkeleton } from "@/components/skeletons/player-skeleton";
-import { MediaCardSkeleton } from "@/components/skeletons/media-card-skeleton";
-import useT from "@/hooks/use-translation";
-import useMediaQuery from "@/hooks/use-media-query";
-import { MQ_MAX_MD } from "@/constant/breakpoints";
-import CommentSection from "@/components/vod-comments/comment-section";
-import { publicUserQueryKey, usePublicUser } from "@/hooks/queries/use-users";
-import {
-    publicVodsOfUserQueryKey,
-    usePublicVodsOfUser,
-    useVod,
-} from "@/hooks/queries/use-vods";
+import type { Metadata } from "next";
+import { GetVODInformation } from "@/lib/api/vod";
+import { GetUserById } from "@/lib/api/user";
+import { myGetT } from "@/lib/i18n";
+import { getSiteUrl, toAbsoluteUrl } from "@/utils/siteUrl";
+import GLOBAL from "@/global";
+import VODView from "./vod-view";
 
-const OTHER_STREAMS_SKELETON_COUNT = 3;
+type VODPageParams = { userId: string; vodId: string };
+
+const OG_IMAGE_WIDTH = 1280;
+const OG_IMAGE_HEIGHT = 720;
+const OG_DESCRIPTION_MAX_LENGTH = 200;
+
+function truncate(text: string, max: number): string {
+    const trimmed = text.trim();
+    return trimmed.length <= max ? trimmed : `${trimmed.slice(0, max - 1)}…`;
+}
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<VODPageParams>;
+}): Promise<Metadata> {
+    const { userId, vodId } = await params;
+    const { t, lng } = await myGetT("common");
+    const siteUrl = await getSiteUrl();
+    const appTitle = t("common:app_title");
+    const pageUrl = `${siteUrl}/users/${userId}/vods/${vodId}`;
+
+    const [vod, user] = await Promise.all([
+        GetVODInformation(vodId)
+            .then((res) => res.data ?? null)
+            .catch(() => null),
+        GetUserById(userId)
+            .then((res) => res.data ?? null)
+            .catch(() => null),
+    ]);
+
+    // A private or missing VOD must not leak its title into a chat preview.
+    // Declaring no openGraph here is deliberate: a page's block replaces the
+    // inherited one wholesale, so staying silent is what keeps the site-wide
+    // card from app/opengraph-image.tsx.
+    if (!vod || vod.visibility !== "public") {
+        return {
+            // absolute: nothing to name, so skip the "<page> | <app>" template
+            title: { absolute: appTitle },
+            robots: { index: false, follow: false },
+        };
+    }
+
+    const vodTitle = vod.title?.trim() ?? "";
+    const title = vodTitle || appTitle;
+    const author = user?.username?.trim() ?? "";
+    const description = vod.description?.trim()
+        ? truncate(vod.description, OG_DESCRIPTION_MAX_LENGTH)
+        : author
+          ? t("common:vod_share_description", { username: author })
+          : appTitle;
+
+    const imageUrl =
+        toAbsoluteUrl(vod.thumbnailUrl, siteUrl) ??
+        `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`;
+
+    return {
+        // an untitled VOD has nothing to prefix the app name with
+        title: vodTitle || { absolute: appTitle },
+        description,
+        alternates: { canonical: pageUrl },
+        openGraph: {
+            type: "video.other",
+            url: pageUrl,
+            siteName: appTitle,
+            title,
+            description,
+            locale: lng.replace("-", "_"),
+            images: [
+                {
+                    url: imageUrl,
+                    width: OG_IMAGE_WIDTH,
+                    height: OG_IMAGE_HEIGHT,
+                    alt: title,
+                },
+            ],
+        },
+        twitter: {
+            card: "summary_large_image",
+            title,
+            description,
+            images: [imageUrl],
+        },
+    };
+}
 
 export default function VODPage() {
-    const { t } = useT(["fetch-error", "api-response", "common"]);
-    const params = useParams<{ userId: string; vodId: string }>();
-    const queryClient = useQueryClient();
-    const isSmallScreen = useMediaQuery(MQ_MAX_MD);
-    const countedVodIdRef = useRef<string | null>(null);
-    // a set, not one id: navigating away and back while a registration is
-    // still in flight would otherwise let the same VOD be counted twice
-    const registeringVodIdsRef = useRef(new Set<string>());
-
-    useEffect(() => {
-        countedVodIdRef.current = null;
-    }, [params.vodId]);
-
-    const { data: vod, isLoading: isLoadingVod } = useVod(params.vodId);
-    const { data: user, isLoading: isLoadingUser } = usePublicUser(
-        params.userId,
-    );
-    const { data: vods, isLoading: isLoadingVods } = usePublicVodsOfUser(
-        params.userId,
-    );
-
-    const vodDuration = vod?.duration ?? 0;
-
-    const updateUser = (newUserInfo: PublicUser) => {
-        queryClient.setQueryData<PublicUser>(
-            publicUserQueryKey(params.userId),
-            (prev) => (prev ? { ...prev, ...newUserInfo } : newUserInfo),
-        );
-    };
-
-    const playerInfo: VideoInfo = useMemo(
-        () => ({
-            videoTitle: vod?.title ?? "",
-            streamer: { name: user?.username ?? "" },
-            videoUrl: vod?.playbackUrl ?? null,
-        }),
-        [vod?.title, vod?.playbackUrl, user?.username],
-    );
-
-    const otherVods = useMemo(
-        () => (vods ?? []).filter((item) => item.id !== params.vodId),
-        [vods, params.vodId],
-    );
-
-    const otherStreamCards = isLoadingVods
-        ? Array.from({ length: OTHER_STREAMS_SKELETON_COUNT }, (_, i) => (
-              <div key={i} className="mb-2">
-                  <MediaCardSkeleton />
-              </div>
-          ))
-        : otherVods.map((item) => (
-              <MediaCard
-                  key={item.id}
-                  kind="vod"
-                  vod={item}
-                  variant="with-user"
-                  className="mb-2"
-              />
-          ));
-
-    const getViewThreshold = () => {
-        let threshold = 15;
-        const tenPercent = Math.floor(vodDuration * 0.1);
-        if (tenPercent < threshold) {
-            threshold = tenPercent;
-        }
-        if (vodDuration > 0 && threshold < 1) {
-            threshold = 1;
-        }
-        return threshold;
-    };
-
-    const handleVODProgress = async (playedSeconds: number) => {
-        const vodId = params.vodId;
-        if (
-            !vodId ||
-            countedVodIdRef.current === vodId ||
-            registeringVodIdsRef.current.has(vodId)
-        ) {
-            return;
-        }
-
-        const threshold = getViewThreshold();
-        if (Math.floor(playedSeconds) < threshold) {
-            return;
-        }
-
-        const watchedSeconds = Math.floor(playedSeconds);
-        registeringVodIdsRef.current.add(vodId);
-        const res = await RegisterVODView(vodId, watchedSeconds).catch(
-            () => null,
-        );
-
-        // mark counted before releasing the in-flight guard, so no progress
-        // tick can slip between the two and register the same view again
-        if (res?.success) {
-            countedVodIdRef.current = vodId;
-            queryClient.setQueryData<VOD[]>(
-                publicVodsOfUserQueryKey(params.userId),
-                (prev) =>
-                    prev?.map((item) =>
-                        item.id === vodId
-                            ? { ...item, viewCount: item.viewCount + 1 }
-                            : item,
-                    ),
-            );
-        }
-
-        registeringVodIdsRef.current.delete(vodId);
-    };
-
-    return (
-        <div className="ml-4 flex h-full gap-6 overflow-hidden">
-            {/* Main content area */}
-            <div className="no-scrollbar flex-1 overflow-auto">
-                {isLoadingVod ? (
-                    <PlayerSkeleton className="mt-1" />
-                ) : (
-                    <VODFrame
-                        videoInfo={playerInfo}
-                        className="mt-1"
-                        onProgressSeconds={handleVODProgress}
-                    />
-                )}
-                {isLoadingUser ? (
-                    <ProfileSkeleton
-                        showRecentActivity={false}
-                        className="mt-2"
-                    />
-                ) : (
-                    user && (
-                        <ProfileView
-                            user={user}
-                            updateUser={updateUser}
-                            vods={otherVods}
-                            showRecentActivity={false}
-                            className="mt-2"
-                        />
-                    )
-                )}
-                {/* below md the sidebar is hidden, so the list moves inline
-                    above the comments; only one copy is ever rendered */}
-                {isSmallScreen && (
-                    <section className="mt-4 md:hidden">
-                        <h2 className="mb-2 font-semibold">
-                            {t("common:other_streams")}
-                        </h2>
-                        {otherStreamCards}
-                    </section>
-                )}
-                <CommentSection
-                    key={params.vodId}
-                    vodId={params.vodId}
-                    vodOwnerId={params.userId}
-                    className="mt-4 pb-8"
-                />
-            </div>
-            {!isSmallScreen && (
-                <div className="hidden md:block md:w-80 lg:w-96">
-                    <div className="border-border bg-background flex h-full w-full flex-col border-x font-sans">
-                        <h2 className="p-4 font-semibold">
-                            {t("common:other_streams")}
-                        </h2>
-                        <div className="small-scrollbar h-full overflow-y-auto px-4">
-                            {otherStreamCards}
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
+    return <VODView />;
 }

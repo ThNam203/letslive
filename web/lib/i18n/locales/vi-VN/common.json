@@ -1,5 +1,7 @@
 {
     "app_title": "Let's Live",
+    "app_description": "Phát trực tiếp, xem livestream và lưu lại mọi buổi phát thành video để chia sẻ.",
+    "vod_share_description": "Xem video của {{username}} trên Let's Live",
     "loading": "Đang tải...",
     "setting": "Cài đặt",
     "save": "Lưu",
