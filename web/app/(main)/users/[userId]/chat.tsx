@@ -49,7 +49,7 @@ export default function ChatPanel({
     const [liveLines, setLiveLines] = useState<ChatLine[]>([]);
     const [inputMessage, setInputMessage] = useState("");
     const wsRef = useRef<WebSocket | null>(null);
-    const [atBottom, setAtBottom] = useState(false);
+    const [atBottom, setAtBottom] = useState(true);
     const messageContainerRef = useRef<HTMLDivElement | null>(null);
     const { t } = useT(["chat", "chat-commands"]);
     // Ref so the WebSocket effect doesn't depend on `t` — a language
