@@ -5,26 +5,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-chat-nodejs-service:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [20.x, 22.x]
-
-    steps:
-      - uses: actions/checkout@v7
-      - name: test chat service with Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v7
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-          cache-dependency-path: "./backend/chat-legacy"
-      - run: npm ci
-        working-directory: "./backend/chat-legacy"
-      - run: npm test
-        working-directory: "./backend/chat-legacy"
-
   test-go-services:
     runs-on: ubuntu-latest
 

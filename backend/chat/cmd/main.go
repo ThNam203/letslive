@@ -12,9 +12,11 @@ import (
 	cfg "sen1or/letslive/chat/config"
 	"sen1or/letslive/chat/events"
 	"sen1or/letslive/chat/gateway/userservice"
+	"sen1or/letslive/chat/handlers/chatcommand"
 	"sen1or/letslive/chat/handlers/conversation"
 	"sen1or/letslive/chat/handlers/dmmessage"
 	"sen1or/letslive/chat/handlers/general"
+	"sen1or/letslive/chat/handlers/livechat"
 	"sen1or/letslive/chat/mongodb"
 	"sen1or/letslive/chat/presence"
 	"sen1or/letslive/chat/repositories"
@@ -84,15 +86,19 @@ func main() {
 		logger.Panicf(ctx, "failed to subscribe to presence events: %v", err)
 	}
 
-	conversationService := services.NewConversationService(conversationRepo, dmMessageRepo, userservice.NewGateway(registry))
+	usersGateway := userservice.NewGateway(registry)
+	conversationService := services.NewConversationService(conversationRepo, dmMessageRepo, usersGateway)
 	dmMessageService := services.NewDmMessageService(conversationRepo, dmMessageRepo, notifier)
+	liveChatService := services.NewLiveChatService(repositories.NewLiveMessageRepository(db), usersGateway, notifier)
+	chatCommandService := services.NewChatCommandService(repositories.NewChatCommandRepository(db))
 
-	server := api.NewAPIServer(
-		config,
-		general.NewGeneralHandler(mongoClient, natsConn.IsConnected),
-		conversation.NewConversationHandler(conversationService),
-		dmmessage.NewDmMessageHandler(dmMessageService),
-	)
+	server := api.NewAPIServer(config, api.Handlers{
+		General:      general.NewGeneralHandler(mongoClient, natsConn.IsConnected),
+		Conversation: conversation.NewConversationHandler(conversationService),
+		DmMessage:    dmmessage.NewDmMessageHandler(dmMessageService),
+		LiveChat:     livechat.NewLiveChatHandler(liveChatService),
+		ChatCommand:  chatcommand.NewChatCommandHandler(chatCommandService),
+	})
 
 	go func() {
 		logger.Infof(ctx, "starting server on %s:%d...", config.Service.Hostname, config.Service.APIPort)

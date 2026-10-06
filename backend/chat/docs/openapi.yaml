@@ -1,0 +1,451 @@
+openapi: 3.0.0
+info:
+  title: Chat Service API
+  version: 2.0.0
+  description: |
+    REST API of the Go chat service: DMs and group conversations, live chat
+    and custom chat commands.
+
+    Nothing here is a socket. Every write is REST; updates reach clients as
+    pushes on the realtime gateway (see the Realtime Gateway spec):
+    `chat.message` on `room:<roomId>`, and `dm:*` events on `user:<id>`.
+
+    Every response uses the envelope below. Private routes need the
+    `ACCESS_TOKEN` cookie, which Kong verifies.
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+components:
+  securitySchemes:
+    accessToken:
+      type: apiKey
+      in: cookie
+      name: ACCESS_TOKEN
+
+  parameters:
+    ConversationId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, description: ObjectId hex }
+    RoomId:
+      name: roomId
+      in: query
+      required: true
+      schema: { type: string, maxLength: 36, description: The channel owner's user id }
+
+  schemas:
+    Envelope:
+      type: object
+      properties:
+        requestId: { type: string }
+        success: { type: boolean }
+        code: { type: integer, example: 100000 }
+        key: { type: string, example: res_succ_ok, description: i18n key }
+        message: { type: string }
+        data: { description: Payload; omitted when there is none }
+        meta:
+          type: object
+          properties:
+            page: { type: integer }
+            page_size: { type: integer }
+            total: { type: integer }
+
+    Participant:
+      type: object
+      properties:
+        userId: { type: string }
+        username: { type: string }
+        profilePicture: { type: string, nullable: true }
+        role: { type: string, enum: [owner, admin, member] }
+        joinedAt: { type: string, format: date-time }
+        lastReadMessageId: { type: string, nullable: true }
+        isMuted: { type: boolean }
+
+    Conversation:
+      type: object
+      properties:
+        _id: { type: string }
+        type: { type: string, enum: [dm, group] }
+        name: { type: string, nullable: true }
+        avatarUrl: { type: string, nullable: true }
+        createdBy: { type: string }
+        participants:
+          type: array
+          items: { $ref: "#/components/schemas/Participant" }
+        lastMessage:
+          type: object
+          nullable: true
+          properties:
+            _id: { type: string }
+            senderId: { type: string }
+            senderUsername: { type: string }
+            text: { type: string, maxLength: 100 }
+            createdAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        __v: { type: integer }
+
+    DmMessage:
+      type: object
+      properties:
+        _id: { type: string }
+        conversationId: { type: string }
+        senderId: { type: string }
+        senderUsername: { type: string }
+        type: { type: string, enum: [text, image, system] }
+        text: { type: string, description: Empty once deleted }
+        imageUrls: { type: array, items: { type: string } }
+        replyTo: { type: string, nullable: true }
+        isDeleted: { type: boolean }
+        readBy:
+          type: array
+          items:
+            type: object
+            properties:
+              userId: { type: string }
+              readAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        __v: { type: integer }
+
+    LiveMessage:
+      type: object
+      properties:
+        _id: { type: string }
+        roomId: { type: string }
+        userId: { type: string }
+        username: { type: string }
+        text: { type: string, maxLength: 500 }
+        profilePicture: { type: string, nullable: true }
+        timestamp: { type: string, format: date-time }
+        __v: { type: integer }
+
+    ChatCommand:
+      type: object
+      properties:
+        id: { type: string }
+        scope: { type: string, enum: [user, channel] }
+        ownerId: { type: string }
+        name: { type: string, pattern: "^[a-z0-9_-]{1,32}$" }
+        response: { type: string, maxLength: 500 }
+        description: { type: string, maxLength: 120 }
+        createdAt: { type: string, format: date-time }
+
+  responses:
+    Ok:
+      description: Success (code 100000)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Envelope" }
+    Created:
+      description: Created (code 100000)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Envelope" }
+    BadRequest:
+      description: |
+        20000 invalid_input, 20001 invalid_payload (malformed JSON),
+        50024 cannot_message_self, 50025 too_many_participants,
+        50026 user_setup_incomplete
+    Unauthorized:
+      description: 20005 unauthorized (from Kong or a missing userId claim)
+    Forbidden:
+      description: 20008 forbidden, 50021 not_participant, 50022 insufficient_role
+    NotFound:
+      description: 50018 room_not_found, 50019 conversation_not_found, 50023 dm_message_not_found, 20012 route_not_found
+
+security:
+  - accessToken: []
+
+paths:
+  /health:
+    get:
+      summary: Health of the service, Mongo and NATS
+      security: []
+      responses:
+        "200": { description: Healthy }
+        "503": { description: Mongo or NATS unavailable }
+
+  # --- Live chat ---
+  /messages:
+    get:
+      summary: Latest 50 live chat lines of a room, oldest first
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      summary: Send a live chat line as the signed-in user
+      description: |
+        The sender's name and avatar come from the user service. The line is
+        pushed to `room:<roomId>` as `chat.message`
+        (`{id, userId, username, text, profilePicture, timestamp}`, timestamp
+        in epoch milliseconds).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [roomId, text]
+              properties:
+                roomId: { type: string, pattern: "^[A-Za-z0-9-]{1,36}$" }
+                text: { type: string, minLength: 1, maxLength: 500 }
+      responses:
+        "201": { $ref: "#/components/responses/Created" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # --- Chat commands ---
+  /chat-commands:
+    get:
+      summary: A room's channel commands, plus the viewer's own user commands when signed in
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      summary: Create a command (at most 50 per scope per owner; names are unique per scope)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scope, name, response]
+              properties:
+                scope: { type: string, enum: [user, channel] }
+                name: { type: string, description: "Trimmed and lowercased, then must match ^[a-z0-9_-]{1,32}$" }
+                response: { type: string, minLength: 1, maxLength: 500 }
+                description: { type: string, maxLength: 120, default: "" }
+      responses:
+        "201": { $ref: "#/components/responses/Created" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /chat-commands/mine:
+    get:
+      summary: The signed-in user's commands as {user, channel}, each sorted by name
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /chat-commands/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    patch:
+      summary: Update your own command (a missing command is 400)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                response: { type: string }
+                description: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    delete:
+      summary: Delete your own command (deleting a missing command succeeds)
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  # --- Conversations ---
+  /conversations:
+    get:
+      summary: Your conversations, most recently updated first
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+    post:
+      summary: Create a DM or group (an existing DM between the same two users is returned with 200)
+      description: Participant names and avatars come from the user service. Duplicate ids are ignored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, participantIds]
+              properties:
+                type: { type: string, enum: [dm, group] }
+                participantIds: { type: array, minItems: 1, items: { type: string, maxLength: 36 } }
+                name: { type: string, maxLength: 100, description: Groups only }
+      responses:
+        "200": { description: Existing DM }
+        "201": { $ref: "#/components/responses/Created" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+  /conversations/unread-counts:
+    get:
+      summary: Map of conversation id to unread count (only counts above zero)
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+  /conversations/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ConversationId"
+    get:
+      summary: One conversation you take part in
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      summary: Rename a group or change its avatar (owner or admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, nullable: true, maxLength: 100 }
+                avatarUrl: { type: string, nullable: true, maxLength: 2048 }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      summary: Leave (a DM is deleted; a group's ownership passes on, and an empty group is deleted)
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /conversations/{id}/participants:
+    parameters:
+      - $ref: "#/components/parameters/ConversationId"
+    post:
+      summary: Add a member to a group (owner or admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, username]
+              properties:
+                userId: { type: string }
+                username: { type: string, description: Required but ignored; the stored name comes from the user service }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /conversations/{id}/participants/{userId}:
+    parameters:
+      - $ref: "#/components/parameters/ConversationId"
+      - { name: userId, in: path, required: true, schema: { type: string } }
+    delete:
+      summary: Remove a non-owner member from a group (owner or admin)
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # --- DM messages ---
+  /conversations/{id}/messages:
+    parameters:
+      - $ref: "#/components/parameters/ConversationId"
+    get:
+      summary: A page of messages, oldest first
+      parameters:
+        - { name: before, in: query, schema: { type: string }, description: Only messages with a smaller id }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      summary: Send a message; pushes dm:new_message to every participant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, maxLength: 2000 }
+                type: { type: string, enum: [text, image, system], default: text }
+                imageUrls: { type: array, items: { type: string }, description: Kept only for image messages }
+                replyTo: { type: string }
+      responses:
+        "201": { description: The message plus participantIds }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /conversations/{id}/messages/{msgId}:
+    parameters:
+      - $ref: "#/components/parameters/ConversationId"
+      - { name: msgId, in: path, required: true, schema: { type: string } }
+    patch:
+      summary: Edit your own message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, maxLength: 2000 }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      summary: Delete your own message (soft delete; text becomes empty)
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /conversations/{id}/read:
+    parameters:
+      - $ref: "#/components/parameters/ConversationId"
+    post:
+      summary: Mark read up to a message (or the latest); pushes dm:read_receipt to the others
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                messageId: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /conversations/{id}/typing:
+    parameters:
+      - $ref: "#/components/parameters/ConversationId"
+    post:
+      summary: Relay a typing start or stop to the other participants (nothing is stored)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [state]
+              properties:
+                state: { type: string, enum: [start, stop] }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }

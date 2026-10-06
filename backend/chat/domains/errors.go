@@ -9,6 +9,7 @@ var (
 	ErrForbidden     = errors.New("forbidden")
 	ErrDatabaseIssue = errors.New("database issue")
 	ErrUserService   = errors.New("user service error")
+	ErrAlreadyExists = errors.New("already exists")
 
 	ErrConversationNotFound = errors.New("conversation not found")
 	ErrNotParticipant       = errors.New("not a participant")
@@ -17,4 +18,5 @@ var (
 	ErrCannotMessageSelf    = errors.New("cannot message self")
 	ErrTooManyParticipants  = errors.New("too many participants")
 	ErrUserSetupIncomplete  = errors.New("user setup incomplete")
+	ErrRoomNotFound         = errors.New("room not found")
 )

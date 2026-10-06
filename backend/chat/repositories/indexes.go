@@ -7,6 +7,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 // EnsureIndexes creates the same indexes the Mongoose schemas declare. With
@@ -22,6 +23,17 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) {
 		DmMessagesCollection: {
 			{Keys: bson.D{{Key: "conversationId", Value: 1}}},
 			{Keys: bson.D{{Key: "conversationId", Value: 1}, {Key: "createdAt", Value: -1}}},
+		},
+		LiveMessagesCollection: {
+			{Keys: bson.D{{Key: "roomId", Value: 1}}},
+		},
+		ChatCommandsCollection: {
+			{Keys: bson.D{{Key: "scope", Value: 1}}},
+			{Keys: bson.D{{Key: "ownerId", Value: 1}}},
+			{
+				Keys:    bson.D{{Key: "scope", Value: 1}, {Key: "ownerId", Value: 1}, {Key: "name", Value: 1}},
+				Options: options.Index().SetUnique(true),
+			},
 		},
 	}
 

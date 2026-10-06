@@ -28,15 +28,15 @@ Built-in chat commands are hardcoded on the client and always available.
 │             │             │                                                    │
 │             │ expands to plain text ("🎲 rolled 42 (1-100)")                   │
 │             ▼             │                                                    │
-│  ┌─────────────────────┐  │   wss /v1/ws  →  ChatServer  →  Redis pub/sub      │
-│  │ wsRef.current.send  │──┼──────────────────────────────────────────────────► │
+│  ┌─────────────────────┐  │   POST /v1/messages → chat → NATS → realtime gw    │
+│  │ SendChatMessage     │──┼──────────────────────────────────────────────────► │
 │  └─────────────────────┘  │                                                    │
 └───────────────────────────┘                                                    │
                                                                                  ▼
                                                                   receiver renders text
 ```
 
-**Key design choice:** all chat-command parsing happens client-side. Chat commands expand to plain message text *before* hitting the WebSocket. The chat backend never learns that chat commands exist on the realtime path — the only new backend surface is a CRUD API for the custom chat-command registry.
+**Key design choice:** all chat-command parsing happens client-side. Chat commands expand to plain message text *before* the message is sent. The chat backend never learns that chat commands exist on the realtime path — the only new backend surface is a CRUD API for the custom chat-command registry.
 
 This keeps the realtime path untouched, eliminates a class of message-shape changes, and avoids introducing a new "system message" type. Trade-off: no server-authoritative behavior (e.g. `/roll` is trivially riggable by a malicious client). Acceptable for this scale.
 
@@ -44,20 +44,23 @@ This keeps the realtime path untouched, eliminates a class of message-shape chan
 
 ## Files added / changed
 
-### Backend (`backend/chat/`)
+### Backend (`backend/chat/`, Go)
+
+The service was ported from Node to Go with the same routes, rules and response shape.
 
 | File | Purpose |
 |---|---|
-| `src/models/ChatCommand.ts` | Mongoose schema. Indexed `(scope, ownerId, name)` unique. Mongo collection `chat_commands`. |
-| `src/services/chatCommandService.ts` | `listForRoom`, `listMine`, `create`, `delete` with ownership + validation. |
-| `src/handlers/chatCommandHandler.ts` | Express handlers. |
-| `src/index.ts` | Route wiring. |
+| `domains/chat_command.go` | Document shape. Mongo collection `chat_commands`, indexed `(scope, ownerId, name)` unique (created in `repositories/indexes.go`). |
+| `repositories/chat_command.go` | Mongo access; a duplicate name surfaces as `ErrAlreadyExists`. |
+| `services/chat_command.go` | `ListForRoom`, `ListMine`, `Create`, `Update`, `Delete` with ownership + validation. |
+| `handlers/chatcommand/` | One handler per route. |
+| `api/server.go` | Route wiring. |
 
 ### Gateway
 
 | File | Change |
 |---|---|
-| `configs/kong.yml` | Added `Chat_Commands` route under the `Chat` service exposing `/chat-commands`. |
+| `configs/kong.yml` | `GET /chat-commands` is in the public `Chat_Public` route; every other `/chat-commands` call goes through `Chat_Private`, which checks the JWT. |
 
 ### Frontend (`web/`)
 
@@ -218,11 +221,12 @@ Both layers enforce the same rules so a malicious client can't bypass.
 ## File index
 
 ```
-backend/chat/src/models/ChatCommand.ts
-backend/chat/src/services/chatCommandService.ts
-backend/chat/src/handlers/chatCommandHandler.ts
-backend/chat/src/index.ts                                     (routes wired)
-configs/kong.yml                                              (Chat_Commands route)
+backend/chat/domains/chat_command.go
+backend/chat/repositories/chat_command.go
+backend/chat/services/chat_command.go
+backend/chat/handlers/chatcommand/
+backend/chat/api/server.go                                    (routes wired)
+configs/kong.yml                                              (Chat_Public / Chat_Private routes)
 
 web/utils/chat-parser/index.ts                                (barrel)
 web/utils/chat-parser/command.ts

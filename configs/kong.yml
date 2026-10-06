@@ -358,7 +358,6 @@ services:
         request_buffering: true
         response_buffering: true
 
-  # Go chat service: DMs and conversations
   - name: Chat
     host: chat.service.consul
     port: 7780
@@ -367,11 +366,29 @@ services:
     read_timeout: 60000
     write_timeout: 60000
     routes:
-      - name: DM_Conversations
+      # live chat history and a room's commands are readable without login;
+      # the methods condition makes these win over Chat_Private for GET
+      - name: Chat_Public
         protocols:
           - http
           - https
         paths:
+          - ~/messages$
+          - ~/chat-commands$
+        methods:
+          - GET
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+      - name: Chat_Private
+        protocols:
+          - http
+          - https
+        paths:
+          - /messages
+          - /chat-commands
           - /conversations
         strip_path: false
         preserve_host: false
@@ -388,54 +405,6 @@ services:
                 - ACCESS_TOKEN
               key_claim_name: consumer
               run_on_preflight: true
-
-  # Node chat service: live chat and chat commands until they move to Go
-  - name: Chat_Legacy
-    host: chat-legacy.service.consul
-    port: 7780
-    path: /v1
-    connect_timeout: 60000
-    read_timeout: 60000
-    write_timeout: 60000
-    routes:
-      - name: Chat_Messages
-        protocols:
-          - http
-          - https
-        paths:
-          - /messages
-        strip_path: false
-        preserve_host: false
-        https_redirect_status_code: 426
-        request_buffering: true
-        response_buffering: true
-      - name: Chat_Commands
-        protocols:
-          - http
-          - https
-        paths:
-          - /chat-commands
-        strip_path: false
-        preserve_host: false
-        https_redirect_status_code: 426
-        request_buffering: true
-        response_buffering: true
-
-  - name: Chat_WS
-    host: chat-legacy.service.consul
-    port: 7780
-    path: /
-    connect_timeout: 60000
-    read_timeout: 60000
-    write_timeout: 60000
-    routes:
-      - name: Chat_Socket
-        paths:
-          - /ws
-        strip_path: false
-        protocols:
-          - http
-          - https
 
   - name: Realtime
     host: realtime.service.consul

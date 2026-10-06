@@ -8,6 +8,7 @@ import (
 
 const (
 	EventNotificationCreated = "notification.created"
+	EventChatMessage         = "chat.message"
 	EventMemberJoined        = "member.joined"
 	EventMemberLeft          = "member.left"
 )

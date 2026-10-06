@@ -1,11 +1,15 @@
 "use client";
 
 import type React from "react";
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/utils/toast";
 import useUser from "@/hooks/user";
-import { ReceivedMessage, SendMessage } from "@/types/message";
-import GLOBAL from "@/global";
+import { ChatMemberEvent, ReceivedMessage } from "@/types/message";
+import { useRealtime } from "@/contexts/realtime-context";
+import { REALTIME_EVENT, realtimeRoomTopic } from "@/constant/realtime";
+import { SendChatMessage } from "@/lib/api/chat";
+import { usePublicUser } from "@/hooks/queries/use-users";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import IconClose from "@/components/icons/close";
@@ -24,8 +28,11 @@ import {
 } from "@/utils/chat-parser";
 import useT from "@/hooks/use-translation";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/constant/field-limits";
-import { CHAT_MESSAGE_TYPE } from "@/constant/chat";
-import { useRoomChatCommands, useRoomMessages } from "@/hooks/queries/use-chat";
+import {
+    roomMessagesQueryKey,
+    useRoomChatCommands,
+    useRoomMessages,
+} from "@/hooks/queries/use-chat";
 import { formatLocaleDate } from "@/utils/timeFormats";
 import UserAvatar from "@/components/ui/user-avatar";
 import {
@@ -40,9 +47,33 @@ type LocalMessage = {
     text: string;
 };
 
+type MemberLine = {
+    userId: string;
+    joined: boolean;
+    timestamp: number;
+};
+
 type ChatLine =
     | { kind: "remote"; data: ReceivedMessage }
+    | { kind: "member"; data: MemberLine }
     | { kind: "local"; data: LocalMessage };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null;
+}
+
+function isReceivedMessage(value: unknown): value is ReceivedMessage {
+    return (
+        isRecord(value) &&
+        typeof value.userId === "string" &&
+        typeof value.username === "string" &&
+        typeof value.text === "string"
+    );
+}
+
+function isMemberEvent(value: unknown): value is ChatMemberEvent {
+    return isRecord(value) && typeof value.userId === "string";
+}
 
 function ChatMessageRow({ message }: { message: ReceivedMessage }) {
     const { t, i18n } = useT("chat");
@@ -68,11 +99,7 @@ function ChatMessageRow({ message }: { message: ReceivedMessage }) {
                         {message.username}:
                     </span>
                     <span className="text-foreground">
-                        {message.type === CHAT_MESSAGE_TYPE.JOIN
-                            ? t("chat:joined")
-                            : message.type === CHAT_MESSAGE_TYPE.LEAVE
-                              ? t("chat:left")
-                              : parseEmotes(message.text)}
+                        {parseEmotes(message.text)}
                     </span>
                 </div>
             </TooltipTrigger>
@@ -91,6 +118,26 @@ function ChatMessageRow({ message }: { message: ReceivedMessage }) {
     );
 }
 
+// Join/leave events carry only the user id; the name and avatar come from the
+// cached public profile.
+function MemberEventRow({ member }: { member: MemberLine }) {
+    const { t } = useT("chat");
+    const { data: profile } = usePublicUser(member.userId);
+    if (!profile) return null;
+
+    return (
+        <ChatMessageRow
+            message={{
+                userId: member.userId,
+                username: profile.username,
+                profilePicture: profile.profilePicture ?? null,
+                text: member.joined ? t("chat:joined") : t("chat:left"),
+                timestamp: member.timestamp,
+            }}
+        />
+    );
+}
+
 export default function ChatPanel({
     roomId,
     onClose,
@@ -104,16 +151,12 @@ export default function ChatPanel({
     // command. The backlog lives in the query cache and is prepended below.
     const [liveLines, setLiveLines] = useState<ChatLine[]>([]);
     const [inputMessage, setInputMessage] = useState("");
-    const wsRef = useRef<WebSocket | null>(null);
     const [atBottom, setAtBottom] = useState(true);
     const messageContainerRef = useRef<HTMLDivElement | null>(null);
     const { t } = useT(["chat", "chat-commands"]);
-    // Ref so the WebSocket effect doesn't depend on `t` — a language
-    // change must not tear down and reconnect the socket
-    const tRef = useRef(t);
-    useEffect(() => {
-        tRef.current = t;
-    }, [t]);
+    const { t: tApi } = useT("api-response");
+    const { subscribe, onEvent, onReconnect } = useRealtime();
+    const queryClient = useQueryClient();
     const { data: backlog } = useRoomMessages(roomId);
     const { data: customChatCommands = [] } = useRoomChatCommands(roomId);
 
@@ -139,24 +182,32 @@ export default function ChatPanel({
         [customChatCommands, t],
     );
 
-    const appendLine = (line: ChatLine) =>
-        setLiveLines((prev) =>
-            prev.length >= 100 ? [...prev.slice(1), line] : [...prev, line],
-        );
+    const appendLine = useCallback(
+        (line: ChatLine) =>
+            setLiveLines((prev) =>
+                prev.length >= 100 ? [...prev.slice(1), line] : [...prev, line],
+            ),
+        [],
+    );
 
+    // the line shows up when its chat.message push arrives, so only
+    // failures are handled here
     const sendText = (text: string) => {
         if (!user) {
             toast(t("chat:login_required"), { type: "error" });
             return;
         }
-        const newMessage: SendMessage = {
-            userId: user!.id,
-            roomId: roomId,
-            type: CHAT_MESSAGE_TYPE.MESSAGE,
-            username: user!.username,
-            text,
-        };
-        wsRef.current?.send(JSON.stringify(newMessage));
+        SendChatMessage(roomId, text)
+            .then((res) => {
+                if (!res.success) {
+                    toast(tApi(res.key) || res.message, { type: "error" });
+                }
+            })
+            .catch(() => {
+                toast(tApi("fetch-error:client_fetch_error"), {
+                    type: "error",
+                });
+            });
     };
 
     const handleSendMessage = (e: React.FormEvent) => {
@@ -293,64 +344,48 @@ export default function ChatPanel({
         }
     }, [messages, atBottom]);
 
+    // Viewers, signed in or not, receive the room's lines over the shared
+    // realtime socket; join/leave come from the gateway's membership events.
     useEffect(() => {
-        let cancelled = false;
-        const ws = new WebSocket(GLOBAL.WS_SERVER_URL);
-        wsRef.current = ws;
+        const topic = realtimeRoomTopic(roomId);
+        const memberHandler = (joined: boolean) =>
+            onEvent(
+                joined
+                    ? REALTIME_EVENT.MEMBER_JOINED
+                    : REALTIME_EVENT.MEMBER_LEFT,
+                (frame) => {
+                    if (frame.topic !== topic || !isMemberEvent(frame.data))
+                        return;
+                    appendLine({
+                        kind: "member",
+                        data: {
+                            userId: frame.data.userId,
+                            joined,
+                            timestamp: Date.now(),
+                        },
+                    });
+                },
+            );
 
-        ws.onopen = () => {
-            if (cancelled) {
-                ws.close();
-                return;
-            }
-            if (user) {
-                ws.send(
-                    JSON.stringify({
-                        type: CHAT_MESSAGE_TYPE.JOIN,
-                        roomId: roomId,
-                        userId: user.id,
-                        username: user.username,
-                    }),
-                );
-            }
-        };
-
-        ws.onmessage = (event) => {
-            if (cancelled) return;
-            try {
-                const data: ReceivedMessage = JSON.parse(event.data);
-                appendLine({ kind: "remote", data });
-            } catch {
-                console.error(
-                    "[ChatPanel] Malformed WebSocket message:",
-                    event.data,
-                );
-            }
-        };
-
-        ws.onerror = () => {
-            if (cancelled) return;
-            toast(tRef.current("chat:connection_error"), { type: "error" });
-        };
-
-        return () => {
-            cancelled = true;
-            if (ws.readyState === WebSocket.OPEN) {
-                if (user) {
-                    ws.send(
-                        JSON.stringify({
-                            type: CHAT_MESSAGE_TYPE.LEAVE,
-                            roomId: roomId,
-                            userId: user.id,
-                            username: user.username,
-                        }),
-                    );
-                }
-                ws.close();
-            }
-            wsRef.current = null;
-        };
-    }, [user, roomId]);
+        const cleanups = [
+            subscribe(topic),
+            onEvent(REALTIME_EVENT.CHAT_MESSAGE, (frame) => {
+                if (frame.topic !== topic || !isReceivedMessage(frame.data))
+                    return;
+                appendLine({ kind: "remote", data: frame.data });
+            }),
+            memberHandler(true),
+            memberHandler(false),
+            // lines sent while the socket was down are only in the backlog
+            onReconnect(() => {
+                setLiveLines([]);
+                queryClient.invalidateQueries({
+                    queryKey: roomMessagesQueryKey(roomId),
+                });
+            }),
+        ];
+        return () => cleanups.forEach((cleanup) => cleanup());
+    }, [roomId, subscribe, onEvent, onReconnect, queryClient, appendLine]);
 
     return (
         <div className="relative flex h-full w-full flex-col">
@@ -378,6 +413,8 @@ export default function ChatPanel({
                             >
                                 {line.data.text}
                             </div>
+                        ) : line.kind === "member" ? (
+                            <MemberEventRow key={idx} member={line.data} />
                         ) : (
                             <ChatMessageRow key={idx} message={line.data} />
                         ),

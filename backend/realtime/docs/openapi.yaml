@@ -1,0 +1,83 @@
+openapi: 3.0.0
+info:
+  title: Realtime Gateway
+  version: 1.0.0
+  description: |
+    One WebSocket per browser tab carries every live update. The gateway only
+    pushes: all writes go to the owning service over REST.
+
+    ## Connecting
+    `GET /realtime` with a WebSocket upgrade, from an allowed origin (others
+    get 403). The `ACCESS_TOKEN` cookie is optional:
+    - **valid token:** the socket is that user's and is subscribed to
+      `user:<userId>` automatically
+    - **missing or invalid token:** the socket is anonymous and can only
+      subscribe to `room:` topics
+
+    ## Topics
+    | Topic | Who | Events |
+    |---|---|---|
+    | `user:<id>` | that user only, joined automatically | `notification.created`, `dm:new_message`, `dm:user_typing`, `dm:user_stopped_typing`, `dm:read_receipt`, `dm:user_online`, `dm:user_offline` |
+    | `room:<id>` | anyone who subscribes (live chat; the id is the channel owner's user id) | `chat.message`, `member.joined`, `member.left` |
+
+    Topic ids match `^[A-Za-z0-9-]{1,36}$`.
+
+    ## Frames (JSON text)
+    Client to server:
+    ```json
+    {"op":"subscribe","topic":"room:<id>"}
+    {"op":"unsubscribe","topic":"room:<id>"}
+    {"op":"ping"}
+    ```
+    Server to client:
+    ```json
+    {"op":"event","topic":"room:<id>","type":"chat.message","data":{...}}
+    {"op":"pong"}
+    {"op":"error","code":"invalid_topic | forbidden_topic | too_many_subscriptions | bad_frame | unavailable"}
+    ```
+    `member.joined` / `member.left` (`{"userId": "..."}`) are sent when a
+    signed-in user's first socket subscribes to a room, and when their last
+    one leaves it.
+
+    ## Limits
+    - frames from the client: 1 KiB (a larger frame closes the socket)
+    - 50 subscriptions per socket
+    - a socket that falls 64 frames behind is closed; the client reconnects
+      and refetches
+    - the server pings every 30s
+
+    ## Delivery
+    Best effort over core NATS. Every event's data is saved before it is
+    pushed, so after a reconnect the client refetches what it shows instead
+    of replaying missed events.
+
+    ## Publishing (services)
+    Services publish `{"type": "...", "data": {...}}` to the NATS subjects
+    `rt.user.<id>` / `rt.room.<id>` through `shared/pkg/realtime.Publisher`.
+    The gateway publishes presence changes as `{"userId", "online"}` on
+    `rt.presence`.
+
+servers:
+  - url: /
+    description: Through Kong (the route has no JWT plugin)
+
+paths:
+  /realtime:
+    get:
+      summary: Open the realtime WebSocket
+      security: []
+      parameters:
+        - name: ACCESS_TOKEN
+          in: cookie
+          required: false
+          schema: { type: string }
+      responses:
+        "101": { description: Switching protocols; the socket is open }
+        "403": { description: Origin not allowed }
+  /v1/health:
+    get:
+      summary: Health of the gateway and its NATS connection
+      security: []
+      responses:
+        "200": { description: Healthy }
+        "503": { description: NATS unavailable }

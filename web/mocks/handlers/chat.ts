@@ -13,6 +13,22 @@ export const chatHandlers = [
         return ok<ChatMessage[]>(messages);
     }),
 
+    // POST /messages — stored only; mocks have no realtime socket to push it
+    http.post(`${API_BASE}/messages`, async ({ request }) => {
+        const body = (await request.json()) as { roomId: string; text: string };
+        const message: ChatMessage = {
+            id: uid(),
+            roomId: body.roomId,
+            userId: ME_USER_ID,
+            username: "mockuser",
+            text: body.text,
+            profilePicture: null,
+            timestamp: now(),
+        };
+        (chatMessages[body.roomId] ??= []).push(message);
+        return created<ChatMessage>(message);
+    }),
+
     // GET /chat-commands?roomId=  — channel-scoped commands for a room
     http.get(`${API_BASE}/chat-commands`, ({ request }) => {
         const url = new URL(request.url);

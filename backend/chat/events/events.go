@@ -43,6 +43,17 @@ type Presence struct {
 	UserID string `json:"userId"`
 }
 
+// ChatMessage is a live chat line as the web's ReceivedMessage expects it;
+// timestamp is epoch milliseconds, as the Node socket sent it.
+type ChatMessage struct {
+	ID             string  `json:"id"`
+	UserID         string  `json:"userId"`
+	Username       string  `json:"username"`
+	Text           string  `json:"text"`
+	ProfilePicture *string `json:"profilePicture"`
+	Timestamp      int64   `json:"timestamp"`
+}
+
 // Notifier pushes an event to each user's topic. Pushes are hints: the data is
 // already saved, so a failure is logged and never fails the caller.
 type Notifier struct {
@@ -58,5 +69,11 @@ func (n *Notifier) ToUsers(ctx context.Context, userIDs []string, eventType stri
 		if err := n.publisher.Publish(ctx, realtime.UserTopic(userID), eventType, data); err != nil {
 			logger.Errorf(ctx, "failed to push %s to user %s: %v", eventType, userID, err)
 		}
+	}
+}
+
+func (n *Notifier) ToRoom(ctx context.Context, roomID string, eventType string, data any) {
+	if err := n.publisher.Publish(ctx, realtime.RoomTopic(roomID), eventType, data); err != nil {
+		logger.Errorf(ctx, "failed to push %s to room %s: %v", eventType, roomID, err)
 	}
 }

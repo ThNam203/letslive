@@ -56,7 +56,6 @@ function getWsUrl(path: string): string {
 
 const GLOBAL = Object.freeze({
     API_URL: getBackendUrl(),
-    WS_SERVER_URL: getWsUrl("/ws"),
     REALTIME_URL: getWsUrl("/realtime"),
 });
 

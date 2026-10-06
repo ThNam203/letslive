@@ -52,11 +52,6 @@ jobs:
               context: "./backend",
             },
             {
-              path: "./backend/chat-legacy",
-              name: "letslive-chat-legacy",
-              context: "./backend/chat-legacy",
-            },
-            {
               path: "./backend/vod",
               name: "letslive-vod",
               context: "./backend",

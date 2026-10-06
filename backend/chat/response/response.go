@@ -97,8 +97,10 @@ var (
 func FromError(err error) *Response[any] {
 	template := RES_ERR_INTERNAL_SERVER
 	switch {
-	case errors.Is(err, domains.ErrInvalidInput):
+	case errors.Is(err, domains.ErrInvalidInput), errors.Is(err, domains.ErrAlreadyExists):
 		template = RES_ERR_INVALID_INPUT
+	case errors.Is(err, domains.ErrRoomNotFound):
+		template = RES_ERR_ROOM_NOT_FOUND
 	case errors.Is(err, domains.ErrForbidden):
 		template = RES_ERR_FORBIDDEN
 	case errors.Is(err, domains.ErrDatabaseIssue):

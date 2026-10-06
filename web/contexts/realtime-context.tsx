@@ -23,6 +23,8 @@ type EventHandler = (frame: RealtimeEventFrame) => void;
 type Unsubscribe = () => void;
 
 export type RealtimeContextValue = {
+    /** Joins a topic such as `room:<id>` until the returned function runs. */
+    subscribe: (topic: string) => Unsubscribe;
     onEvent: (type: string, handler: EventHandler) => Unsubscribe;
     onReconnect: (handler: () => void) => Unsubscribe;
 };
@@ -33,6 +35,20 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
     const userId = useUser((state) => state.user?.id ?? null);
     const eventHandlersRef = useRef(new Map<string, Set<EventHandler>>());
     const reconnectHandlersRef = useRef(new Set<() => void>());
+    // topic -> number of components that asked for it; the socket is
+    // subscribed while the count is above zero
+    const topicCountsRef = useRef(new Map<string, number>());
+    const socketRef = useRef<WebSocket | null>(null);
+
+    const sendFrame = useCallback(
+        (op: "subscribe" | "unsubscribe", topic: string) => {
+            const ws = socketRef.current;
+            if (ws?.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ op, topic }));
+            }
+        },
+        [],
+    );
 
     // userId is a dependency so login/logout reopens the socket with the new
     // cookie identity
@@ -57,9 +73,15 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
 
             const ws = new WebSocket(GLOBAL.REALTIME_URL);
             socket = ws;
+            socketRef.current = ws;
 
             ws.onopen = () => {
                 delay = REALTIME_RECONNECT_INITIAL_DELAY_MS;
+                // a new socket starts with no topics; restore every one
+                // still in use
+                topicCountsRef.current.forEach((_, topic) =>
+                    sendFrame("subscribe", topic),
+                );
                 if (hasOpened) {
                     reconnectHandlersRef.current.forEach((handler) =>
                         handler(),
@@ -92,8 +114,32 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
             disposed = true;
             if (retryTimer) clearTimeout(retryTimer);
             socket?.close();
+            socketRef.current = null;
         };
-    }, [userId]);
+    }, [userId, sendFrame]);
+
+    const subscribe = useCallback(
+        (topic: string): Unsubscribe => {
+            const counts = topicCountsRef.current;
+            const count = (counts.get(topic) ?? 0) + 1;
+            counts.set(topic, count);
+            if (count === 1) sendFrame("subscribe", topic);
+
+            let active = true;
+            return () => {
+                if (!active) return;
+                active = false;
+                const remaining = (counts.get(topic) ?? 1) - 1;
+                if (remaining > 0) {
+                    counts.set(topic, remaining);
+                    return;
+                }
+                counts.delete(topic);
+                sendFrame("unsubscribe", topic);
+            };
+        },
+        [sendFrame],
+    );
 
     const onEvent = useCallback(
         (type: string, handler: EventHandler): Unsubscribe => {
@@ -119,8 +165,8 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const value = useMemo(
-        () => ({ onEvent, onReconnect }),
-        [onEvent, onReconnect],
+        () => ({ subscribe, onEvent, onReconnect }),
+        [subscribe, onEvent, onReconnect],
     );
 
     return (
