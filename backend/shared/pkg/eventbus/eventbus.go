@@ -8,7 +8,7 @@ import (
 
 // Event represents a domain event with metadata and a typed payload.
 // This struct is engine-agnostic — it can be serialized and transported
-// over Kafka, NATS, Redis Streams, RabbitMQ, or any other message broker.
+// over NATS, Kafka, RabbitMQ, or any other message broker.
 type Event struct {
 	// ID is a unique identifier for the event (UUID).
 	ID string `json:"id"`
@@ -23,7 +23,7 @@ type Event struct {
 }
 
 // Producer defines the interface for publishing events to a message broker.
-// Implementations are engine-specific (Kafka, NATS, Redis Streams, etc.).
+// Implementations are engine-specific (NATS, Kafka, etc.).
 type Producer interface {
 	// Publish sends an event to the specified topic.
 	// The key is used for ordering/partition routing (e.g., userId, streamId).
@@ -34,7 +34,7 @@ type Producer interface {
 }
 
 // Consumer defines the interface for consuming events from a message broker.
-// Implementations are engine-specific (Kafka, NATS, Redis Streams, etc.).
+// Implementations are engine-specific (NATS, Kafka, etc.).
 type Consumer interface {
 	// Subscribe starts consuming events from the given topics.
 	// The handler is called for each received event.

@@ -34,8 +34,6 @@ This separates ingestion from delivery, and using HLS + MinIO allows horizontal 
 - **Core NATS** carries realtime pushes (chat lines, DMs, notifications, presence) from services to the realtime gateway. It is fire-and-forget with no disk write, which suits pushes: the data is already saved in Mongo or Postgres before the push, so a lost push only means the client refetches on reconnect.
 - **JetStream** carries cross-service business events (stream started, VOD created, payment made). It gives durability, replay and durable consumers — the same value Kafka would give, at a fraction of the operational footprint (one binary, no partitions/brokers/controller quorum to run).
 
-Live chat used to fan out over Redis pub/sub inside the Node chat service. Moving it to core NATS removed a second broker without changing the trade-off: pushes are fast and not durable.
-
 ---
 
 ## 5. Why MongoDB for chat and PostgreSQL for everything else?
@@ -216,7 +214,7 @@ Gaps: no mutual TLS between services (traffic inside Docker network is unencrypt
 
 ## 25. Walk me through the email verification (OTP) flow at signup.
 
-**Answer:** When a user signs up with email+password, the Auth service generates a 6-digit numeric OTP using `crypto/rand` (not `math/rand`, so it's cryptographically secure). The OTP is stored in PostgreSQL (`sign_up_otp` table) with a 5-minute TTL and an `email` foreign key. The OTP is delivered via SMTP using Go's `net/smtp`. To verify, the client posts the code; the service looks up by `(code, email)`, checks `used_at IS NULL` and `expires_at > now()`, and stamps `used_at` on success. The trade-off: storing OTPs in the same Postgres as auth credentials simplifies operations but couples OTP read load to the auth DB; a dedicated Redis store with native TTL would scale better and avoid manual expiry checks.
+**Answer:** When a user signs up with email+password, the Auth service generates a 6-digit numeric OTP using `crypto/rand` (not `math/rand`, so it's cryptographically secure). The OTP is stored in PostgreSQL (`sign_up_otp` table) with a 5-minute TTL and an `email` foreign key. The OTP is delivered via SMTP using Go's `net/smtp`. To verify, the client posts the code; the service looks up by `(code, email)`, checks `used_at IS NULL` and `expires_at > now()`, and stamps `used_at` on success. The trade-off: storing OTPs in the same Postgres as auth credentials simplifies operations but couples OTP read load to the auth DB; a dedicated key-value store with native TTL would scale better and avoid manual expiry checks.
 
 ---
 

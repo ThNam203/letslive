@@ -14,8 +14,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-// LiveChatService stores live chat lines and pushes them to the room topic,
-// which replaces the Node /ws socket and its Redis fan-out.
+// LiveChatService stores live chat lines and pushes them to the room topic
+// through the realtime gateway.
 type LiveChatService struct {
 	messages *repositories.LiveMessageRepository
 	users    *userservice.Gateway
