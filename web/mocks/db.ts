@@ -387,7 +387,7 @@ export const notifications: Notification[] = [
         type: "follow",
         title: "New Follower",
         message: "streamer_jane started following you",
-        actionUrl: "/en/user/user-002",
+        actionUrl: "/users/user-002",
         actionLabel: "View Profile",
         referenceId: "user-002",
         isRead: false,
@@ -399,7 +399,7 @@ export const notifications: Notification[] = [
         type: "vod_comment",
         title: "New Comment",
         message: 'coder_alex commented on your VOD: "Great stream!"',
-        actionUrl: "/en/vod/vod-001",
+        actionUrl: `/users/${ME_USER_ID}/vods/vod-001`,
         actionLabel: "View VOD",
         referenceId: "vod-001",
         isRead: false,
@@ -690,8 +690,8 @@ export type ChatMessage = {
     roomId: string;
     userId: string;
     username: string;
-    content: string;
-    createdAt: string;
+    text: string;
+    timestamp: string;
 };
 
 export const chatMessages: Record<string, ChatMessage[]> = {
@@ -701,16 +701,16 @@ export const chatMessages: Record<string, ChatMessage[]> = {
             roomId: ME_USER_ID,
             userId: "user-002",
             username: "streamer_jane",
-            content: "Hey mockuser! Chat room looks great 👋",
-            createdAt: daysAgo(0),
+            text: "Hey mockuser! Chat room looks great 👋",
+            timestamp: daysAgo(1),
         },
         {
             id: "chat-004",
             roomId: ME_USER_ID,
             userId: "user-003",
             username: "coder_alex",
-            content: "Ready for your next stream?",
-            createdAt: daysAgo(0),
+            text: "Ready for your next stream?",
+            timestamp: daysAgo(0),
         },
     ],
     "user-002": [
@@ -719,16 +719,16 @@ export const chatMessages: Record<string, ChatMessage[]> = {
             roomId: "user-002",
             userId: "user-003",
             username: "coder_alex",
-            content: "Let's goooo! 🎮",
-            createdAt: daysAgo(0),
+            text: "Let's goooo! 🎮",
+            timestamp: daysAgo(1),
         },
         {
             id: "chat-002",
             roomId: "user-002",
             userId: "user-004",
             username: "music_sam",
-            content: "first!!",
-            createdAt: daysAgo(0),
+            text: "first!!",
+            timestamp: daysAgo(0),
         },
     ],
 };

@@ -25,6 +25,15 @@ import useT from "@/hooks/use-translation";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/constant/field-limits";
 import { CHAT_MESSAGE_TYPE } from "@/constant/chat";
 import { useRoomChatCommands, useRoomMessages } from "@/hooks/queries/use-chat";
+import { formatLocaleDate } from "@/utils/timeFormats";
+import { usePublicUser } from "@/hooks/queries/use-users";
+import UserAvatar from "@/components/ui/user-avatar";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type LocalMessage = {
     kind: "system";
@@ -34,6 +43,73 @@ type LocalMessage = {
 type ChatLine =
     | { kind: "remote"; data: ReceivedMessage }
     | { kind: "local"; data: LocalMessage };
+
+function ChatAvatar({
+    userId,
+    username,
+}: {
+    userId: string;
+    username: string;
+}) {
+    const { data: owner } = usePublicUser(userId);
+    return (
+        <UserAvatar
+            src={owner?.profilePicture}
+            name={username}
+            size="sm"
+            className="mr-2 inline-flex h-6 w-6 align-middle"
+            fallbackClassName="text-xs"
+        />
+    );
+}
+
+function ChatMessageRow({ message }: { message: ReceivedMessage }) {
+    const { t, i18n } = useT("chat");
+    const isAction = message.type === CHAT_MESSAGE_TYPE.ACTION;
+    const sentAt = new Date(message.timestamp);
+
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <div className="mb-3">
+                    <ChatAvatar
+                        userId={message.userId}
+                        username={message.username}
+                    />
+                    <span
+                        style={{
+                            color: `${uuidToReadableHexColor(message.userId)}`,
+                        }}
+                        className="mr-2 font-semibold"
+                    >
+                        {message.username}
+                        {isAction ? "" : ":"}
+                    </span>
+                    <span
+                        className={`text-foreground ${isAction ? "italic" : ""}`}
+                    >
+                        {message.type === CHAT_MESSAGE_TYPE.JOIN
+                            ? t("chat:joined")
+                            : message.type === CHAT_MESSAGE_TYPE.LEAVE
+                              ? t("chat:left")
+                              : parseEmotes(message.text)}
+                    </span>
+                </div>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+                <time dateTime={sentAt.toISOString()}>
+                    {formatLocaleDate(sentAt, i18n.resolvedLanguage, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    })}
+                </time>
+            </TooltipContent>
+        </Tooltip>
+    );
+}
 
 export default function ChatPanel({
     roomId,
@@ -309,45 +385,20 @@ export default function ChatPanel({
                 ref={messageContainerRef}
                 className="border-border mb-18 flex-1 overflow-y-auto rounded-md rounded-t-none border border-t-0 px-4 py-2"
             >
-                {messages.map((line, idx) => {
-                    if (line.kind === "local") {
-                        return (
+                <TooltipProvider delayDuration={300}>
+                    {messages.map((line, idx) =>
+                        line.kind === "local" ? (
                             <div
                                 key={idx}
                                 className="text-muted-foreground mb-3 text-sm whitespace-pre-wrap italic"
                             >
                                 {line.data.text}
                             </div>
-                        );
-                    }
-                    const message = line.data;
-                    const isAction = message.type === CHAT_MESSAGE_TYPE.ACTION;
-                    const displayText = message.text;
-                    return (
-                        <div key={idx} className="mb-3">
-                            <span
-                                style={{
-                                    color: `${uuidToReadableHexColor(
-                                        message.userId,
-                                    )}`,
-                                }}
-                                className="mr-2 font-semibold"
-                            >
-                                {message.username}
-                                {isAction ? "" : ":"}
-                            </span>
-                            <span
-                                className={`text-foreground ${isAction ? "italic" : ""}`}
-                            >
-                                {message.type === CHAT_MESSAGE_TYPE.JOIN
-                                    ? t("chat:joined")
-                                    : message.type === CHAT_MESSAGE_TYPE.LEAVE
-                                      ? t("chat:left")
-                                      : parseEmotes(displayText)}
-                            </span>
-                        </div>
-                    );
-                })}
+                        ) : (
+                            <ChatMessageRow key={idx} message={line.data} />
+                        ),
+                    )}
+                </TooltipProvider>
             </div>
             {/* Message input form */}
             <form

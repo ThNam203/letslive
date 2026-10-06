@@ -16,5 +16,6 @@ export type ReceivedMessage = {
     userId: string;
     username: string;
     text: string;
-    timestamp: number;
+    // epoch ms over the socket, ISO string from the history endpoint
+    timestamp: number | string;
 };

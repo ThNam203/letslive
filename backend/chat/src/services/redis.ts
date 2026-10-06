@@ -30,7 +30,8 @@ export class RedisService {
         const eventObj: ChatEvent = {
             type: event,
             userId: userId ?? null,
-            username: userName ?? null
+            username: userName ?? null,
+            timestamp: Date.now()
         }
         await this.pub.publish(`room:${room}:events`, JSON.stringify(eventObj))
     }
