@@ -27,7 +27,6 @@ import { CHAT_MESSAGE_MAX_LENGTH } from "@/constant/field-limits";
 import { CHAT_MESSAGE_TYPE } from "@/constant/chat";
 import { useRoomChatCommands, useRoomMessages } from "@/hooks/queries/use-chat";
 import { formatLocaleDate } from "@/utils/timeFormats";
-import { usePublicUser } from "@/hooks/queries/use-users";
 import UserAvatar from "@/components/ui/user-avatar";
 import {
     Tooltip,
@@ -45,25 +44,6 @@ type ChatLine =
     | { kind: "remote"; data: ReceivedMessage }
     | { kind: "local"; data: LocalMessage };
 
-function ChatAvatar({
-    userId,
-    username,
-}: {
-    userId: string;
-    username: string;
-}) {
-    const { data: owner } = usePublicUser(userId);
-    return (
-        <UserAvatar
-            src={owner?.profilePicture}
-            name={username}
-            size="sm"
-            className="mr-2 inline-flex h-6 w-6 align-middle"
-            fallbackClassName="text-xs"
-        />
-    );
-}
-
 function ChatMessageRow({ message }: { message: ReceivedMessage }) {
     const { t, i18n } = useT("chat");
     const sentAt = new Date(message.timestamp);
@@ -72,9 +52,12 @@ function ChatMessageRow({ message }: { message: ReceivedMessage }) {
         <Tooltip>
             <TooltipTrigger asChild>
                 <div className="mb-3">
-                    <ChatAvatar
-                        userId={message.userId}
-                        username={message.username}
+                    <UserAvatar
+                        src={message.profilePicture}
+                        name={message.username}
+                        size="sm"
+                        className="mr-2 inline-flex h-6 w-6 align-middle"
+                        fallbackClassName="text-xs"
                     />
                     <span
                         style={{

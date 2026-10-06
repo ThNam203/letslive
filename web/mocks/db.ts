@@ -700,6 +700,7 @@ export type ChatMessage = {
     userId: string;
     username: string;
     text: string;
+    profilePicture: string | null;
     timestamp: string;
 };
 
@@ -710,6 +711,7 @@ export const chatMessages: Record<string, ChatMessage[]> = {
             roomId: ME_USER_ID,
             userId: "user-002",
             username: "streamer_jane",
+            profilePicture: mockAvatar("jane"),
             text: "Hey mockuser! Chat room looks great 👋",
             timestamp: daysAgo(1),
         },
@@ -718,6 +720,7 @@ export const chatMessages: Record<string, ChatMessage[]> = {
             roomId: ME_USER_ID,
             userId: "user-003",
             username: "coder_alex",
+            profilePicture: mockAvatar("alex"),
             text: "Ready for your next stream?",
             timestamp: daysAgo(0),
         },
@@ -728,6 +731,7 @@ export const chatMessages: Record<string, ChatMessage[]> = {
             roomId: "user-002",
             userId: "user-003",
             username: "coder_alex",
+            profilePicture: mockAvatar("alex"),
             text: "Let's goooo! 🎮",
             timestamp: daysAgo(1),
         },
@@ -736,6 +740,7 @@ export const chatMessages: Record<string, ChatMessage[]> = {
             roomId: "user-002",
             userId: "user-004",
             username: "music_sam",
+            profilePicture: mockAvatar("sam"),
             text: "first!!",
             timestamp: daysAgo(0),
         },

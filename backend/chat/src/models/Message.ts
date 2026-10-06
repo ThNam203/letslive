@@ -24,6 +24,7 @@ const Message = mongoose.model(
             required: true,
             maxlength: 500
         },
+        profilePicture: { type: String, default: null },
         timestamp: { type: Date, default: Date.now }
     })
 )
