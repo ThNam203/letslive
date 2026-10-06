@@ -64,7 +64,7 @@ export default function StreamEdit() {
             setTitle(user.livestreamInformation.title || "");
             setDescription(user.livestreamInformation.description || "");
             setImageUrl(user.livestreamInformation.thumbnailUrl || null);
-            setImage(null);
+            setImage(undefined);
         });
     }, [user]);
 

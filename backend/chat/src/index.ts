@@ -67,7 +67,8 @@ function CreateExpressServer(registry: ConsulRegistry) {
                 return
             }
 
-            const messages = await Message.find({ roomId }).sort({ timestamp: 1 }).limit(50)
+            const latest = await Message.find({ roomId }).sort({ timestamp: -1 }).limit(50)
+            const messages = latest.reverse()
             writeResponse(req, res, newResponseFromTemplate<any>(RESPONSE_TEMPLATES.RES_SUCC_OK, messages))
         })
     )
