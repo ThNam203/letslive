@@ -17,9 +17,13 @@ export const chatHandlers = [
     http.get(`${API_BASE}/chat-commands`, ({ request }) => {
         const url = new URL(request.url);
         const roomId = url.searchParams.get("roomId") ?? "";
-        const cmds = chatCommands.filter(
-            (c) => c.scope === "channel" && c.ownerId === roomId,
-        );
+        const cmds = chatCommands
+            .filter(
+                (c) =>
+                    (c.scope === "channel" && c.ownerId === roomId) ||
+                    (c.scope === "user" && c.ownerId === ME_USER_ID),
+            )
+            .sort((a, b) => a.name.localeCompare(b.name));
         return ok<ChatCommand[]>(cmds);
     }),
 

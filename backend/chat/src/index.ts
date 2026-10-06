@@ -67,7 +67,8 @@ function CreateExpressServer(registry: ConsulRegistry) {
                 return
             }
 
-            const messages = await Message.find({ roomId }).sort({ timestamp: 1 }).limit(50)
+            const latest = await Message.find({ roomId }).sort({ timestamp: -1 }).limit(50)
+            const messages = latest.reverse()
             writeResponse(req, res, newResponseFromTemplate<any>(RESPONSE_TEMPLATES.RES_SUCC_OK, messages))
         })
     )
@@ -121,7 +122,7 @@ function CreateExpressServer(registry: ConsulRegistry) {
     return createServer(app)
 }
 
-async function SetupWebSocketServer(server: Server) {
+async function SetupWebSocketServer(server: Server, registry: ConsulRegistry) {
     const pub = new Redis(6379, 'chat_pubsub')
     const sub = new Redis(6379, 'chat_pubsub')
     const roomManager = new Redis(6379, 'chat_pubsub')
@@ -133,7 +134,7 @@ async function SetupWebSocketServer(server: Server) {
     // Live chat WebSocket
     const redisService = new RedisService(pub, sub, roomManager)
     const wss = new WebSocketServer({ noServer: true })
-    const chatServer = new ChatServer(redisService, Message, wss)
+    const chatServer = new ChatServer(redisService, Message, wss, new UserServiceGateway(registry))
 
     // DM WebSocket
     const dmPub = new Redis(6379, 'chat_pubsub')
@@ -198,7 +199,7 @@ if (esMain(import.meta)) {
     const consul = CreateConsulRegistry()
     const server = CreateExpressServer(consul)
 
-    SetupWebSocketServer(server)
+    SetupWebSocketServer(server, consul)
         .then(() => logger.info('Server started'))
         .catch((err) => logger.error(err))
 

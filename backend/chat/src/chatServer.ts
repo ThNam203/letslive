@@ -3,9 +3,15 @@ import { Message } from './models/Message'
 import { RedisService } from './services/redis'
 import { ChatEventType } from './types/chat-event'
 import { ChatMessage, ChatMessageType } from './types/chat-message'
+import { UserServiceGateway } from './gateway/userService'
 import logger from './lib/logger'
 
-type UserInfo = { currentRoom: string | null; id: string | null; name: string | null }
+type UserInfo = {
+    currentRoom: string | null
+    id: string | null
+    name: string | null
+    profilePicture: string | null
+}
 
 export class ChatServer {
     private connections: Map<string, WebSocket> = new Map()
@@ -13,7 +19,8 @@ export class ChatServer {
     constructor(
         private redisService: RedisService,
         private messageModel: typeof Message,
-        private wss: WebSocketServer
+        private wss: WebSocketServer,
+        private userServiceGateway: UserServiceGateway
     ) {
         this.initialize()
     }
@@ -31,7 +38,8 @@ export class ChatServer {
         let userInfo: UserInfo = {
             currentRoom: null,
             id: null,
-            name: null
+            name: null,
+            profilePicture: null
         }
 
         ws.on('message', async (rawMessage) => {
@@ -61,7 +69,8 @@ export class ChatServer {
                 userInfo = {
                     currentRoom: data.roomId,
                     id: data.userId,
-                    name: data.username
+                    name: data.username,
+                    profilePicture: userInfo.id === data.userId ? userInfo.profilePicture : null
                 }
                 this.connections.set(userInfo.id!, ws)
             } catch (err) {
@@ -75,14 +84,21 @@ export class ChatServer {
         ws.on('close', () => {
             if (userInfo.currentRoom) {
                 this.redisService.removeUserFromRoom(userInfo.id!, userInfo.currentRoom)
-                this.redisService.publishEvent(userInfo.currentRoom, ChatEventType.LEAVE, userInfo.id!, userInfo.name!)
+                this.redisService.publishEvent(
+                    userInfo.currentRoom,
+                    ChatEventType.LEAVE,
+                    userInfo.id!,
+                    userInfo.name!,
+                    userInfo.profilePicture
+                )
             }
 
             this.connections.delete(userInfo.id!)
             userInfo = {
                 currentRoom: null,
                 id: null,
-                name: null
+                name: null,
+                profilePicture: null
             }
         })
 
@@ -120,8 +136,25 @@ export class ChatServer {
         }
 
         userInfo.currentRoom = data.roomId
+        userInfo.profilePicture = await this.resolveProfilePicture(data.userId)
         await this.redisService.addUserToRoom(data.userId, data.roomId)
-        await this.redisService.publishEvent(data.roomId, ChatEventType.JOIN, data.userId, data.username)
+        await this.redisService.publishEvent(
+            data.roomId,
+            ChatEventType.JOIN,
+            data.userId,
+            data.username,
+            userInfo.profilePicture
+        )
+    }
+
+    private async resolveProfilePicture(userId: string): Promise<string | null> {
+        try {
+            const identities = await this.userServiceGateway.getIdentities([userId])
+            return identities.get(userId)?.profilePicture ?? null
+        } catch {
+            // the gateway already logged it; chat keeps working without the avatar
+            return null
+        }
     }
 
     private async handleLeave(data: ChatMessage, userInfo: UserInfo) {
@@ -138,7 +171,13 @@ export class ChatServer {
         }
 
         await this.redisService.removeUserFromRoom(data.userId, userInfo.currentRoom)
-        await this.redisService.publishEvent(data.roomId, ChatEventType.LEAVE, data.userId, data.username)
+        await this.redisService.publishEvent(
+            data.roomId,
+            ChatEventType.LEAVE,
+            data.userId,
+            data.username,
+            userInfo.profilePicture
+        )
         userInfo.currentRoom = null
         this.connections.delete(data.userId)
     }
@@ -156,8 +195,8 @@ export class ChatServer {
             return
         }
 
-        await this.redisService.publishMessage(data.roomId, data)
-        await new this.messageModel(data).save()
+        await this.redisService.publishMessage(data.roomId, data, userInfo.profilePicture)
+        await new this.messageModel({ ...data, profilePicture: userInfo.profilePicture }).save()
     }
 
     private async handleRedisMessage(channel: string, message: string) {

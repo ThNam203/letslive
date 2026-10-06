@@ -196,12 +196,12 @@ func (s *UserService) UpdateUser(ctx context.Context, data dto.UpdateUserRequest
 		SocialMediaLinks: data.SocialMediaLinks,
 	}
 
-	updatedUser, err := s.userRepo.Update(ctx, finalDTO)
-	if err != nil {
+	// Update returns only the users row; the client replaces its profile with this response
+	if _, err := s.userRepo.Update(ctx, finalDTO); err != nil {
 		return nil, err
 	}
 
-	return updatedUser, nil
+	return s.userRepo.GetById(ctx, data.Id)
 }
 
 func (s *UserService) UpdateUserAPIKey(ctx context.Context, userId uuid.UUID) (string, error) {

@@ -22,7 +22,7 @@ export default function ChatCommandSuggestions({
             <ul className="text-sm">
                 {suggestions.map((s, i) => (
                     <li
-                        key={s.name}
+                        key={s.id}
                         onMouseDown={(e) => {
                             e.preventDefault();
                             onPick(s);

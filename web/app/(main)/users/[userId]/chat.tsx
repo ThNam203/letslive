@@ -17,6 +17,7 @@ import {
     buildChatCommandHelpText,
     buildChatCommandIndex,
     ChatCommandSuggestion,
+    chatCommandName,
     filterChatCommandSuggestions,
     parseChatCommand,
     parseEmotes,
@@ -25,6 +26,14 @@ import useT from "@/hooks/use-translation";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/constant/field-limits";
 import { CHAT_MESSAGE_TYPE } from "@/constant/chat";
 import { useRoomChatCommands, useRoomMessages } from "@/hooks/queries/use-chat";
+import { formatLocaleDate } from "@/utils/timeFormats";
+import UserAvatar from "@/components/ui/user-avatar";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type LocalMessage = {
     kind: "system";
@@ -34,6 +43,53 @@ type LocalMessage = {
 type ChatLine =
     | { kind: "remote"; data: ReceivedMessage }
     | { kind: "local"; data: LocalMessage };
+
+function ChatMessageRow({ message }: { message: ReceivedMessage }) {
+    const { t, i18n } = useT("chat");
+    const sentAt = new Date(message.timestamp);
+
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <div className="mb-3">
+                    <UserAvatar
+                        src={message.profilePicture}
+                        name={message.username}
+                        size="sm"
+                        className="mr-2 inline-flex h-6 w-6 align-middle"
+                        fallbackClassName="text-xs"
+                    />
+                    <span
+                        style={{
+                            color: `${uuidToReadableHexColor(message.userId)}`,
+                        }}
+                        className="mr-2 font-semibold"
+                    >
+                        {message.username}:
+                    </span>
+                    <span className="text-foreground">
+                        {message.type === CHAT_MESSAGE_TYPE.JOIN
+                            ? t("chat:joined")
+                            : message.type === CHAT_MESSAGE_TYPE.LEAVE
+                              ? t("chat:left")
+                              : parseEmotes(message.text)}
+                    </span>
+                </div>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+                <time dateTime={sentAt.toISOString()}>
+                    {formatLocaleDate(sentAt, i18n.resolvedLanguage, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    })}
+                </time>
+            </TooltipContent>
+        </Tooltip>
+    );
+}
 
 export default function ChatPanel({
     roomId,
@@ -49,7 +105,7 @@ export default function ChatPanel({
     const [liveLines, setLiveLines] = useState<ChatLine[]>([]);
     const [inputMessage, setInputMessage] = useState("");
     const wsRef = useRef<WebSocket | null>(null);
-    const [atBottom, setAtBottom] = useState(false);
+    const [atBottom, setAtBottom] = useState(true);
     const messageContainerRef = useRef<HTMLDivElement | null>(null);
     const { t } = useT(["chat", "chat-commands"]);
     // Ref so the WebSocket effect doesn't depend on `t` — a language
@@ -73,6 +129,8 @@ export default function ChatPanel({
     );
     const [suggestions, setSuggestions] = useState<ChatCommandSuggestion[]>([]);
     const [activeSuggestion, setActiveSuggestion] = useState(0);
+    const [pickedCommand, setPickedCommand] =
+        useState<ChatCommandSuggestion | null>(null);
     const [emotePickerOpen, setEmotePickerOpen] = useState(false);
     const [emoteSearch, setEmoteSearch] = useState("");
 
@@ -86,10 +144,7 @@ export default function ChatPanel({
             prev.length >= 100 ? [...prev.slice(1), line] : [...prev, line],
         );
 
-    const sendText = (
-        text: string,
-        type: SendMessage["type"] = CHAT_MESSAGE_TYPE.MESSAGE,
-    ) => {
+    const sendText = (text: string) => {
         if (!user) {
             toast(t("chat:login_required"), { type: "error" });
             return;
@@ -97,7 +152,7 @@ export default function ChatPanel({
         const newMessage: SendMessage = {
             userId: user!.id,
             roomId: roomId,
-            type,
+            type: CHAT_MESSAGE_TYPE.MESSAGE,
             username: user!.username,
             text,
         };
@@ -110,10 +165,16 @@ export default function ChatPanel({
         if (!raw || !user) return;
 
         if (raw.startsWith("/")) {
-            const result = parseChatCommand(raw, customChatCommands, t);
+            const result = parseChatCommand(
+                raw,
+                customChatCommands,
+                t,
+                pickedCommand?.id,
+            );
             setInputMessage("");
             setSuggestions([]);
-            if (!result || result.kind === "noop") return;
+            setPickedCommand(null);
+            if (!result) return;
             if (result.kind === "error") {
                 appendLine({
                     kind: "local",
@@ -134,12 +195,7 @@ export default function ChatPanel({
                 });
                 return;
             }
-            sendText(
-                result.text.slice(0, CHAT_MESSAGE_MAX_LENGTH),
-                result.kind === "action"
-                    ? CHAT_MESSAGE_TYPE.ACTION
-                    : CHAT_MESSAGE_TYPE.MESSAGE,
-            );
+            sendText(result.text.slice(0, CHAT_MESSAGE_MAX_LENGTH));
             return;
         }
 
@@ -150,12 +206,16 @@ export default function ChatPanel({
 
     const applySuggestion = (s: ChatCommandSuggestion) => {
         setInputMessage(`/${s.name} `);
+        setPickedCommand(s);
         setSuggestions([]);
         setActiveSuggestion(0);
     };
 
     const handleInputChange = (value: string) => {
         setInputMessage(value);
+        if (pickedCommand && chatCommandName(value) !== pickedCommand.name) {
+            setPickedCommand(null);
+        }
         const next = filterChatCommandSuggestions(chatCommandIndex, value);
         setSuggestions(next);
         setActiveSuggestion(0);
@@ -309,45 +369,20 @@ export default function ChatPanel({
                 ref={messageContainerRef}
                 className="border-border mb-18 flex-1 overflow-y-auto rounded-md rounded-t-none border border-t-0 px-4 py-2"
             >
-                {messages.map((line, idx) => {
-                    if (line.kind === "local") {
-                        return (
+                <TooltipProvider delayDuration={300}>
+                    {messages.map((line, idx) =>
+                        line.kind === "local" ? (
                             <div
                                 key={idx}
                                 className="text-muted-foreground mb-3 text-sm whitespace-pre-wrap italic"
                             >
                                 {line.data.text}
                             </div>
-                        );
-                    }
-                    const message = line.data;
-                    const isAction = message.type === CHAT_MESSAGE_TYPE.ACTION;
-                    const displayText = message.text;
-                    return (
-                        <div key={idx} className="mb-3">
-                            <span
-                                style={{
-                                    color: `${uuidToReadableHexColor(
-                                        message.userId,
-                                    )}`,
-                                }}
-                                className="mr-2 font-semibold"
-                            >
-                                {message.username}
-                                {isAction ? "" : ":"}
-                            </span>
-                            <span
-                                className={`text-foreground ${isAction ? "italic" : ""}`}
-                            >
-                                {message.type === CHAT_MESSAGE_TYPE.JOIN
-                                    ? t("chat:joined")
-                                    : message.type === CHAT_MESSAGE_TYPE.LEAVE
-                                      ? t("chat:left")
-                                      : parseEmotes(displayText)}
-                            </span>
-                        </div>
-                    );
-                })}
+                        ) : (
+                            <ChatMessageRow key={idx} message={line.data} />
+                        ),
+                    )}
+                </TooltipProvider>
             </div>
             {/* Message input form */}
             <form

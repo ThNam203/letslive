@@ -25,6 +25,7 @@ func (r *postgresUserRepo) GetById(ctx context.Context, userId uuid.UUID) (*doma
 			u.bio,
 			u.profile_picture,
 			u.background_picture,
+			u.locale,
 			(SELECT (COUNT(*))::int FROM followers f WHERE f.user_id = u.id) AS follower_count,
 			l.title,
 			l.description,
@@ -39,7 +40,7 @@ func (r *postgresUserRepo) GetById(ctx context.Context, userId uuid.UUID) (*doma
 		WHERE u.id = $1
 		GROUP BY
 			u.id, u.username, u.email, u.status, u.created_at, u.auth_provider,
-			u.stream_api_key, u.phone_number, u.bio, u.profile_picture, u.background_picture,
+			u.stream_api_key, u.phone_number, u.bio, u.profile_picture, u.background_picture, u.locale,
 			l.user_id, l.title, l.description, l.thumbnail_url
 	`, userId.String())
 	if err != nil {

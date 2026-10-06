@@ -16,5 +16,8 @@ export type ReceivedMessage = {
     userId: string;
     username: string;
     text: string;
-    timestamp: number;
+    // null when the sender has no avatar; absent on messages stored before it was added
+    profilePicture?: string | null;
+    // epoch ms over the socket, ISO string from the history endpoint
+    timestamp: number | string;
 };

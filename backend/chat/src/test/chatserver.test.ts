@@ -7,6 +7,20 @@ import { ChatMessage, ChatMessageType } from '../types/chat-message'
 import { ChatServer } from '../chatServer'
 import { RedisService } from '../services/redis'
 import { ChatEvent } from '../types/chat-event'
+import { UserIdentity, UserServiceGateway } from '../gateway/userService'
+
+const AVATAR_URL = 'https://cdn.example/user1.png'
+
+function makeGateway(identities: UserIdentity[]): UserServiceGateway {
+    return {
+        getIdentities: jest.fn(async () => new Map(identities.map((i) => [i.id, i])))
+    } as unknown as UserServiceGateway
+}
+
+const gateway = makeGateway([
+    { id: 'user1', username: 'Test User', profilePicture: AVATAR_URL },
+    { id: 'user2', username: 'Test User 2', profilePicture: null }
+])
 
 describe('test join and leave events', () => {
     const serverPort = 8080
@@ -30,7 +44,7 @@ describe('test join and leave events', () => {
         // Setup WebSocket Server
         wss = new WebSocketServer({ port: serverPort })
 
-        chatServer = new ChatServer(redisService, Message, wss)
+        chatServer = new ChatServer(redisService, Message, wss, gateway)
     })
 
     afterAll(async () => {
@@ -323,7 +337,7 @@ describe('test messaging', () => {
         // Setup WebSocket Server
         wss = new WebSocketServer({ port: serverPort })
 
-        chatServer = new ChatServer(redisService, Message, wss)
+        chatServer = new ChatServer(redisService, Message, wss, gateway)
     })
 
     afterAll(async () => {
@@ -472,5 +486,71 @@ describe('test messaging', () => {
 
         ws.close()
         ws2.close()
+    })
+
+    it('stamps the sender avatar from the user service on pushed and stored messages', async () => {
+        const ws = new WebSocket(`ws://localhost:${serverPort}`)
+        await new Promise((resolve) => ws.on('open', resolve))
+
+        const received: Record<string, unknown>[] = []
+        ws.on('message', (rawData) => received.push(JSON.parse(rawData.toString())))
+
+        ws.send(
+            JSON.stringify({ type: ChatMessageType.JOIN, roomId: 'test-room', userId: 'user1', username: 'Test User' })
+        )
+        await new Promise((resolve) => setTimeout(resolve, 50))
+
+        ws.send(
+            JSON.stringify({
+                type: ChatMessageType.MESSAGE,
+                roomId: 'test-room',
+                userId: 'user1',
+                username: 'Test User',
+                text: 'Hello World',
+                profilePicture: 'https://evil.example/spoof.png'
+            })
+        )
+        await new Promise((resolve) => setTimeout(resolve, 50))
+
+        const joinEvent = received.find((m) => m.type === ChatMessageType.JOIN)
+        const pushed = received.find((m) => m.text === 'Hello World')
+        const stored = await Message.findOne({ roomId: 'test-room' }).lean()
+
+        expect(joinEvent?.profilePicture).toBe(AVATAR_URL)
+        expect(pushed?.profilePicture).toBe(AVATAR_URL)
+        expect(stored?.profilePicture).toBe(AVATAR_URL)
+
+        ws.close()
+    })
+
+    it('sends a null avatar when the user service is unavailable', async () => {
+        jest.mocked(gateway.getIdentities).mockRejectedValueOnce(new Error('user service down'))
+
+        const ws = new WebSocket(`ws://localhost:${serverPort}`)
+        await new Promise((resolve) => ws.on('open', resolve))
+
+        const received: Record<string, unknown>[] = []
+        ws.on('message', (rawData) => received.push(JSON.parse(rawData.toString())))
+
+        ws.send(
+            JSON.stringify({ type: ChatMessageType.JOIN, roomId: 'test-room', userId: 'user1', username: 'Test User' })
+        )
+        await new Promise((resolve) => setTimeout(resolve, 50))
+
+        ws.send(
+            JSON.stringify({
+                type: ChatMessageType.MESSAGE,
+                roomId: 'test-room',
+                userId: 'user1',
+                username: 'Test User',
+                text: 'still works'
+            })
+        )
+        await new Promise((resolve) => setTimeout(resolve, 50))
+
+        const pushed = received.find((m) => m.text === 'still works')
+        expect(pushed?.profilePicture).toBeNull()
+
+        ws.close()
     })
 })

@@ -26,16 +26,24 @@ export class RedisService {
         return await this.roomManager.smembers(`room:${room}:members`)
     }
 
-    async publishEvent(room: string, event: ChatEventType, userId: string | undefined, userName: string | undefined) {
+    async publishEvent(
+        room: string,
+        event: ChatEventType,
+        userId: string | undefined,
+        userName: string | undefined,
+        profilePicture: string | null
+    ) {
         const eventObj: ChatEvent = {
             type: event,
             userId: userId ?? null,
-            username: userName ?? null
+            username: userName ?? null,
+            profilePicture,
+            timestamp: Date.now()
         }
         await this.pub.publish(`room:${room}:events`, JSON.stringify(eventObj))
     }
 
-    async publishMessage(room: string, data: ChatMessage) {
+    async publishMessage(room: string, data: ChatMessage, profilePicture: string | null) {
         const timestamp = Date.now()
         await this.pub.publish(
             `room:${room}:messages`,
@@ -43,6 +51,7 @@ export class RedisService {
                 userId: data.userId,
                 username: data.username,
                 text: data.text,
+                profilePicture,
                 timestamp
             })
         )

@@ -73,7 +73,7 @@ func (s *GiftService) notifyRecipient(ctx context.Context, gift *domains.Gift) {
 		}
 	}
 
-	actionURL := "/user/me/gifts/received"
+	actionURL := "/users/" + gift.RecipientUserId.String() + "/gifts"
 	refIDStr := gift.Id.String()
 	s.notificationService.CreateNotification(ctx, dto.CreateNotificationRequestDTO{
 		UserId:      gift.RecipientUserId.String(),
