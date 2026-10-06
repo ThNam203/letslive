@@ -187,10 +187,10 @@ async function SetupWebSocketServer(server: Server, registry: ConsulRegistry) {
 // TODO: add config instead of hard-coded
 function CreateConsulRegistry() {
     return new ConsulRegistry('consul', 8500, {
-        serviceName: 'chat',
-        hostname: 'chat',
+        serviceName: 'chat-legacy',
+        hostname: 'chat-legacy',
         port: 7780,
-        healthCheckURL: 'http://chat:7780/v1/health'
+        healthCheckURL: 'http://chat-legacy:7780/v1/health'
     })
 }
 

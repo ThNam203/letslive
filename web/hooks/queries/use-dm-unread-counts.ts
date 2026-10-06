@@ -9,7 +9,5 @@ export function useDmUnreadCounts(enabled: boolean) {
         queryKey: DM_UNREAD_COUNTS_QUERY_KEY,
         queryFn: async () => unwrapResponse(await GetUnreadCounts()),
         enabled,
-        refetchInterval: 30_000,
-        refetchIntervalInBackground: false,
     });
 }

@@ -57,6 +57,14 @@ export function appendDmMessage(
         dmMessagesQueryKey(conversationId),
         (old) => {
             if (!old) return old;
+            // a refetch after reconnect can already hold the pushed message
+            if (
+                old.pages.some((page) =>
+                    page.some((m) => m._id === message._id),
+                )
+            ) {
+                return old;
+            }
             const [first, ...rest] = old.pages;
             return { ...old, pages: [[...(first ?? []), message], ...rest] };
         },

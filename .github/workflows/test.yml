@@ -19,18 +19,18 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-          cache-dependency-path: "./backend/chat"
+          cache-dependency-path: "./backend/chat-legacy"
       - run: npm ci
-        working-directory: "./backend/chat"
+        working-directory: "./backend/chat-legacy"
       - run: npm test
-        working-directory: "./backend/chat"
+        working-directory: "./backend/chat-legacy"
 
   test-go-services:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        service: [auth, transcode, livestream, user, finance, vod, realtime] # list of go services
+        service: [auth, transcode, livestream, user, finance, vod, realtime, chat] # list of go services
 
     steps:
       - name: Checkout repository

@@ -101,7 +101,6 @@ export async function SendDmMessage(
     body: {
         text: string;
         type?: DmMessageType;
-        senderUsername: string;
         imageUrls?: string[];
         replyTo?: string;
     },
@@ -112,6 +111,22 @@ export async function SendDmMessage(
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
+        },
+    );
+}
+
+// Tells the other participants the user started or stopped typing; the
+// server only relays it.
+export async function SendDmTyping(
+    conversationId: string,
+    state: "start" | "stop",
+): Promise<ApiResponse<void>> {
+    return fetchClient<ApiResponse<void>>(
+        `/conversations/${conversationId}/typing`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ state }),
         },
     );
 }

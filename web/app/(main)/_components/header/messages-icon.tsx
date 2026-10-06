@@ -4,10 +4,12 @@ import Link from "next/link";
 import useUser from "@/hooks/user";
 import IconMessage from "@/components/icons/message";
 import { useDmUnreadCounts } from "@/hooks/queries/use-dm-unread-counts";
+import useDmRealtime from "@/hooks/use-dm-realtime";
 
 export default function MessagesIcon() {
     const user = useUser((state) => state.user);
     const { data: unreadCounts = {} } = useDmUnreadCounts(!!user);
+    useDmRealtime(!!user);
 
     const totalUnread = Object.values(unreadCounts).reduce(
         (sum, count) => sum + count,

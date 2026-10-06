@@ -196,10 +196,34 @@ services:
   chat:
     image: sen1or/letslive-chat:latest
     container_name: letslive-chat
-    command: npm run start
     restart: always
     ports:
       - "7780:7780"
+    expose:
+      - "7780"
+    environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
+      - CHAT_DB_USER=${CHAT_DB_USER}
+      - CHAT_DB_PASSWORD=${CHAT_DB_PASSWORD}
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      chat_db:
+        condition: service_healthy
+
+  chat-legacy:
+    image: sen1or/letslive-chat-legacy:latest
+    container_name: letslive-chat-legacy
+    command: npm run start
+    restart: always
+    ports:
+      - "7786:7780"
     networks:
       general_network:
     environment:
@@ -222,7 +246,7 @@ services:
       - "11111:8080"
     volumes:
       - ./backend/auth/docs/openapi.yaml:/usr/share/nginx/html/specs/auth.yaml:ro
-      - ./backend/chat/src/docs/openapi.yaml:/usr/share/nginx/html/specs/chat.yaml:ro
+      - ./backend/chat-legacy/src/docs/openapi.yaml:/usr/share/nginx/html/specs/chat.yaml:ro
       - ./backend/user/docs/openapi.yaml:/usr/share/nginx/html/specs/user.yaml:ro
       - ./backend/livestream/docs/openapi.yaml:/usr/share/nginx/html/specs/livestream.yaml:ro
     environment:
