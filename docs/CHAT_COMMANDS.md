@@ -1,6 +1,6 @@
 # Chat Commands
 
-Slash chat-command system for the live chat. Lets viewers run built-in chat-command shortcuts (e.g. `/me`, `/roll`) and lets users define their own custom chat commands at two scopes:
+Slash chat-command system for the live chat. Lets viewers run built-in chat-command shortcuts (e.g. `/shrug`, `/roll`) and lets users define their own custom chat commands at two scopes:
 
 - **User-scoped** — created by a user, available to that user in any channel they chat in.
 - **Channel-scoped** — created by a streamer, available to any viewer chatting in that streamer's channel.
@@ -136,7 +136,6 @@ Auth uses the existing `authMiddleware` (cookie-based JWT). The Kong route does 
 
 | Chat command | Behavior |
 |---|---|
-| `/me <text>` | Wraps text in `_..._`; renderer shows it italic, name without colon. |
 | `/shrug [text]` | Appends `¯\_(ツ)_/¯`. |
 | `/tableflip [text]` | Appends `(╯°□°)╯︵ ┻━┻`. |
 | `/unflip [text]` | Appends `┬─┬ ノ( ゜-゜ノ)`. |
@@ -150,15 +149,14 @@ Custom chat commands are pure text expansions: `/discord` → "Join us at discor
 ## Client-side flow
 
 1. **On chat mount** — `GET /v1/chat-commands?roomId=<roomId>` populates a local registry of channel + user chat commands. Anonymous viewers still get channel chat commands.
-2. **On keystroke** — if input starts with `/` and contains no space, `filterChatCommandSuggestions` matches by prefix (max 8) and renders the autocomplete dropdown. Arrow keys cycle, Tab applies, Esc dismisses.
+2. **On keystroke** — if input starts with `/` and contains no space, `filterChatCommandSuggestions` matches by prefix (max 8) and renders the autocomplete dropdown. Every command is listed, including ones that share a name, each labelled with its source (built-in / channel / yours). Arrow keys cycle, Tab applies, Esc dismisses. Applying a suggestion remembers which command was picked until the command name in the input changes.
 3. **On submit** —
    - Plain text → sent as a normal chat message (existing path).
    - Starts with `/` → `parseChatCommand`:
-     - `noop` → swallow (e.g. empty `/me`).
      - `error` → render a local-only system message visible only to sender.
      - `help` → render local help text.
      - `send` → forward expanded text via WebSocket like any other message.
-4. **On render** — text matching `^_(.+)_$` is shown italic with the colon dropped after the username (the `/me` style).
+   - When several commands share the typed name, the picked suggestion runs. Without a pick the order is built-in > channel > user.
 
 `buildChatCommandIndex` and `buildChatCommandHelpText` accept a `t` function so all surfaced strings (descriptions, headers, errors, the `/roll` message, the suggestion source label) are localized.
 
@@ -196,8 +194,8 @@ Both layers enforce the same rules so a malicious client can't bypass.
 - **Client-side `/roll`** — not server-authoritative; a determined user could rig it. Trivial to address later by moving roll execution to the chat server, but out of scope for "simple feature."
 - **No moderation hooks** — no block-list of reserved names, no rate limiting, no abuse reporting on custom chat commands. The 500-char `response` cap and 50-per-scope cap are the only protections.
 - **Edit endpoint** — `PATCH /v1/chat-commands/:id` updates name/response/description in place; scope and ownerId are immutable. Settings UI exposes it via a pencil button on each tile.
-- **Custom chat-command shadowing** — built-ins win over user/channel chat commands of the same name. There is no warning when creating a custom chat command that shadows a user-scoped one with the same name in the channel-scope set (or vice versa); the parser just checks built-ins first, then customs in list order.
-- **No "kind" field on chat messages** — the existing `ChatMessage` shape (`type: join|leave|message`, plus `text`) is unchanged. `/me` italic styling rides on a marker convention (`_text_`) in the message body. Pragmatic, but means anyone typing `_foo_` gets italicized too.
+- **Same-name commands** — names are not reserved, so a custom command can share a name with a built-in or with a command of the other scope. All of them appear in the dropdown and `/help` with a source label; picking one from the dropdown runs that one, and typing the name by hand resolves built-in > channel > user.
+- **No `/me`** — removed. Chat messages carry no styling kind (`type: join|leave|message`).
 - **Help/error messages are local-only** — sender sees them; no one else does.
 
 ---
@@ -206,7 +204,7 @@ Both layers enforce the same rules so a malicious client can't bypass.
 
 - [ ] `docker compose up` and visit a stream's chat as a logged-in viewer.
 - [ ] Type `/` — autocomplete dropdown appears with built-in chat commands.
-- [ ] `/me waves` — appears as italic action to all viewers.
+- [ ] Create a personal and a channel command with the same name — both appear in the dropdown with labels; picking each sends its own response.
 - [ ] `/roll 6` — renders localized rolled message; reload in `vi` and re-roll to confirm sender locale.
 - [ ] `/help` — local-only system message listing chat commands; not visible to other viewers.
 - [ ] `/unknownthing` — local-only error.

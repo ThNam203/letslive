@@ -3,14 +3,12 @@ import { ChatCommand } from "@/types/chat-command";
 
 export type ChatCommandResult =
     | { kind: "send"; text: string }
-    | { kind: "action"; text: string }
     | { kind: "help" }
     | {
           kind: "error";
           messageKey: string;
           params?: Record<string, string | number>;
-      }
-    | { kind: "noop" };
+      };
 
 export type BuiltinChatCommand = {
     name: string;
@@ -24,16 +22,6 @@ const TABLEFLIP = "(╯°□°)╯︵ ┻━┻";
 const UNFLIP = "┬─┬ ノ( ゜-゜ノ)";
 
 export const BUILTIN_CHAT_COMMANDS: BuiltinChatCommand[] = [
-    {
-        name: "me",
-        usage: "/me <text>",
-        descriptionKey: "chat-commands:builtin.me",
-        run: (args) => {
-            const trimmed = args.trim();
-            if (!trimmed) return { kind: "noop" };
-            return { kind: "action", text: trimmed };
-        },
-    },
     {
         name: "shrug",
         usage: "/shrug [text]",
@@ -105,40 +93,44 @@ export const BUILTIN_CHAT_COMMANDS: BuiltinChatCommand[] = [
 const BUILTIN_MAP = new Map(BUILTIN_CHAT_COMMANDS.map((c) => [c.name, c]));
 
 export type ChatCommandSuggestion = {
+    id: string;
     name: string;
     description: string;
     usage: string;
     source: "builtin" | "user" | "channel";
 };
 
+const builtinId = (name: string) => `builtin:${name}`;
+
+// a typed name that several commands share resolves in this order
+const SCOPE_ORDER: ChatCommand["scope"][] = ["channel", "user"];
+
+function orderedCustom(custom: ChatCommand[]): ChatCommand[] {
+    return SCOPE_ORDER.flatMap((scope) =>
+        custom.filter((c) => c.scope === scope),
+    );
+}
+
 export function buildChatCommandIndex(
     custom: ChatCommand[],
     t: TFunction,
 ): ChatCommandSuggestion[] {
-    const seen = new Set<string>();
-    const out: ChatCommandSuggestion[] = [];
-
-    for (const c of BUILTIN_CHAT_COMMANDS) {
-        if (seen.has(c.name)) continue;
-        seen.add(c.name);
-        out.push({
+    return [
+        ...BUILTIN_CHAT_COMMANDS.map((c): ChatCommandSuggestion => ({
+            id: builtinId(c.name),
             name: c.name,
             description: t(c.descriptionKey),
             usage: c.usage,
             source: "builtin",
-        });
-    }
-    for (const c of custom) {
-        if (seen.has(c.name)) continue;
-        seen.add(c.name);
-        out.push({
+        })),
+        ...orderedCustom(custom).map((c): ChatCommandSuggestion => ({
+            id: c.id,
             name: c.name,
             description: c.description || c.response,
             usage: `/${c.name}`,
             source: c.scope,
-        });
-    }
-    return out;
+        })),
+    ];
 }
 
 export function filterChatCommandSuggestions(
@@ -152,24 +144,36 @@ export function filterChatCommandSuggestions(
     return index.filter((c) => c.name.startsWith(q)).slice(0, 8);
 }
 
+export function chatCommandName(input: string): string {
+    if (!input.startsWith("/")) return "";
+    const space = input.indexOf(" ");
+    return (space === -1 ? input.slice(1) : input.slice(1, space))
+        .trim()
+        .toLowerCase();
+}
+
+// pickedId is the suggestion the user chose; it decides between commands
+// that share a name, otherwise the built-in > channel > user order applies
 export function parseChatCommand(
     input: string,
     custom: ChatCommand[],
     t: TFunction,
+    pickedId: string | null = null,
 ): ChatCommandResult | null {
-    if (!input.startsWith("/")) return null;
-    const space = input.indexOf(" ");
-    const name = (space === -1 ? input.slice(1) : input.slice(1, space))
-        .trim()
-        .toLowerCase();
-    const args = space === -1 ? "" : input.slice(space + 1);
+    const name = chatCommandName(input);
     if (!name) return null;
+    const space = input.indexOf(" ");
+    const args = space === -1 ? "" : input.slice(space + 1);
 
     const builtin = BUILTIN_MAP.get(name);
-    if (builtin) return builtin.run(args, t);
+    const customMatches = orderedCustom(custom).filter((c) => c.name === name);
+    const picked = customMatches.find((c) => c.id === pickedId);
 
-    const customMatch = custom.find((c) => c.name === name);
-    if (customMatch) return { kind: "send", text: customMatch.response };
+    if (picked) return { kind: "send", text: picked.response };
+    if (builtin) return builtin.run(args, t);
+    if (customMatches.length > 0) {
+        return { kind: "send", text: customMatches[0].response };
+    }
 
     return {
         kind: "error",
@@ -190,8 +194,10 @@ export function buildChatCommandHelpText(
     ];
     if (custom.length > 0) {
         lines.push(t("chat-commands:help.custom_header"));
-        for (const c of custom) {
-            lines.push(`/${c.name} — ${c.description || c.response}`);
+        for (const c of orderedCustom(custom)) {
+            lines.push(
+                `/${c.name} — ${c.description || c.response} (${t(`chat-commands:source.${c.scope}`)})`,
+            );
         }
     }
     return lines.join("\n");

@@ -17,6 +17,7 @@ import {
     buildChatCommandHelpText,
     buildChatCommandIndex,
     ChatCommandSuggestion,
+    chatCommandName,
     filterChatCommandSuggestions,
     parseChatCommand,
     parseEmotes,
@@ -65,7 +66,6 @@ function ChatAvatar({
 
 function ChatMessageRow({ message }: { message: ReceivedMessage }) {
     const { t, i18n } = useT("chat");
-    const isAction = message.type === CHAT_MESSAGE_TYPE.ACTION;
     const sentAt = new Date(message.timestamp);
 
     return (
@@ -82,12 +82,9 @@ function ChatMessageRow({ message }: { message: ReceivedMessage }) {
                         }}
                         className="mr-2 font-semibold"
                     >
-                        {message.username}
-                        {isAction ? "" : ":"}
+                        {message.username}:
                     </span>
-                    <span
-                        className={`text-foreground ${isAction ? "italic" : ""}`}
-                    >
+                    <span className="text-foreground">
                         {message.type === CHAT_MESSAGE_TYPE.JOIN
                             ? t("chat:joined")
                             : message.type === CHAT_MESSAGE_TYPE.LEAVE
@@ -149,6 +146,8 @@ export default function ChatPanel({
     );
     const [suggestions, setSuggestions] = useState<ChatCommandSuggestion[]>([]);
     const [activeSuggestion, setActiveSuggestion] = useState(0);
+    const [pickedCommand, setPickedCommand] =
+        useState<ChatCommandSuggestion | null>(null);
     const [emotePickerOpen, setEmotePickerOpen] = useState(false);
     const [emoteSearch, setEmoteSearch] = useState("");
 
@@ -162,10 +161,7 @@ export default function ChatPanel({
             prev.length >= 100 ? [...prev.slice(1), line] : [...prev, line],
         );
 
-    const sendText = (
-        text: string,
-        type: SendMessage["type"] = CHAT_MESSAGE_TYPE.MESSAGE,
-    ) => {
+    const sendText = (text: string) => {
         if (!user) {
             toast(t("chat:login_required"), { type: "error" });
             return;
@@ -173,7 +169,7 @@ export default function ChatPanel({
         const newMessage: SendMessage = {
             userId: user!.id,
             roomId: roomId,
-            type,
+            type: CHAT_MESSAGE_TYPE.MESSAGE,
             username: user!.username,
             text,
         };
@@ -186,10 +182,16 @@ export default function ChatPanel({
         if (!raw || !user) return;
 
         if (raw.startsWith("/")) {
-            const result = parseChatCommand(raw, customChatCommands, t);
+            const result = parseChatCommand(
+                raw,
+                customChatCommands,
+                t,
+                pickedCommand?.id,
+            );
             setInputMessage("");
             setSuggestions([]);
-            if (!result || result.kind === "noop") return;
+            setPickedCommand(null);
+            if (!result) return;
             if (result.kind === "error") {
                 appendLine({
                     kind: "local",
@@ -210,12 +212,7 @@ export default function ChatPanel({
                 });
                 return;
             }
-            sendText(
-                result.text.slice(0, CHAT_MESSAGE_MAX_LENGTH),
-                result.kind === "action"
-                    ? CHAT_MESSAGE_TYPE.ACTION
-                    : CHAT_MESSAGE_TYPE.MESSAGE,
-            );
+            sendText(result.text.slice(0, CHAT_MESSAGE_MAX_LENGTH));
             return;
         }
 
@@ -226,12 +223,16 @@ export default function ChatPanel({
 
     const applySuggestion = (s: ChatCommandSuggestion) => {
         setInputMessage(`/${s.name} `);
+        setPickedCommand(s);
         setSuggestions([]);
         setActiveSuggestion(0);
     };
 
     const handleInputChange = (value: string) => {
         setInputMessage(value);
+        if (pickedCommand && chatCommandName(value) !== pickedCommand.name) {
+            setPickedCommand(null);
+        }
         const next = filterChatCommandSuggestions(chatCommandIndex, value);
         setSuggestions(next);
         setActiveSuggestion(0);

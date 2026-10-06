@@ -34,7 +34,6 @@
         "channel": "channel"
     },
     "builtin": {
-        "me": "Send a message styled as an action",
         "shrug": "Append a shrug to your message",
         "tableflip": "Flip a table",
         "unflip": "Put the table back",

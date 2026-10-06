@@ -350,7 +350,7 @@ export const chatCommands: ChatCommand[] = [
         id: "cmd-001",
         scope: "user",
         ownerId: ME_USER_ID,
-        name: "!hello",
+        name: "hello",
         response: "Hello there! Welcome to the stream! 👋",
         description: "Greeting command",
         createdAt: daysAgo(30),
@@ -359,7 +359,7 @@ export const chatCommands: ChatCommand[] = [
         id: "cmd-002",
         scope: "user",
         ownerId: ME_USER_ID,
-        name: "!socials",
+        name: "socials",
         response:
             "Follow me on Twitter: @mockuser | GitHub: github.com/mockuser",
         description: "Social links",
@@ -369,10 +369,19 @@ export const chatCommands: ChatCommand[] = [
         id: "cmd-003",
         scope: "channel",
         ownerId: "user-002",
-        name: "!discord",
+        name: "discord",
         response: "Join Jane's Discord: discord.gg/janestreams",
         description: "Jane's Discord invite",
         createdAt: daysAgo(15),
+    },
+    {
+        id: "cmd-004",
+        scope: "user",
+        ownerId: ME_USER_ID,
+        name: "discord",
+        response: "My Discord: discord.gg/mockuser",
+        description: "My Discord invite",
+        createdAt: daysAgo(10),
     },
 ];
 

@@ -3,6 +3,7 @@ export {
     BUILTIN_CHAT_COMMANDS,
     buildChatCommandHelpText,
     buildChatCommandIndex,
+    chatCommandName,
     filterChatCommandSuggestions,
     parseChatCommand,
 } from "./command";
