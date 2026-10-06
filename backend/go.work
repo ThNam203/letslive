@@ -1,13 +1,14 @@
 go 1.26.0
 
 use (
-	./shared
+	./admin
 	./auth
-	./user
-	./livestream
-	./vod
-	./transcode
 	./finance
+	./livestream
+	./shared
+	./transcode
+	./user
+	./vod
 )
 
 replace sen1or/letslive/shared v0.0.0 => ./shared

@@ -49,6 +49,9 @@ jobs:
           ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
           REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
 
+          # Admin service
+          ADMIN_JWT_SECRET=${{ secrets.ADMIN_JWT_SECRET }}
+
           # Email service
           GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}
 
@@ -81,6 +84,8 @@ jobs:
           AUTH_DB_PASSWORD=${{ secrets.AUTH_DB_PASSWORD }}
           FINANCE_DB_USER=${{ secrets.FINANCE_DB_USER }}
           FINANCE_DB_PASSWORD=${{ secrets.FINANCE_DB_PASSWORD }}
+          ADMIN_DB_USER=${{ secrets.ADMIN_DB_USER }}
+          ADMIN_DB_PASSWORD=${{ secrets.ADMIN_DB_PASSWORD }}
 
           # Stripe (finance deposits)
           FINANCE_STRIPE_API_KEY=${{ secrets.FINANCE_STRIPE_API_KEY }}
@@ -101,6 +106,7 @@ jobs:
           NEXT_PUBLIC_BACKEND_PORT=${{ secrets.NEXT_PUBLIC_BACKEND_PORT }}
           NEXT_PUBLIC_ENVIRONMENT=${{ secrets.NEXT_PUBLIC_ENVIRONMENT }}
           NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=${{ secrets.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY }}
+          NEXT_PUBLIC_ADMIN_API_URL=${{ secrets.NEXT_PUBLIC_ADMIN_API_URL }}
           EOF
 
       - name: Deploy with Docker Compose
