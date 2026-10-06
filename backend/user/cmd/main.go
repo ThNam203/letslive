@@ -23,6 +23,8 @@ import (
 	sharedconfig "sen1or/letslive/shared/config"
 	"sen1or/letslive/shared/pkg/discovery"
 	"sen1or/letslive/shared/pkg/logger"
+	"sen1or/letslive/shared/pkg/natsconn"
+	"sen1or/letslive/shared/pkg/realtime"
 	"sen1or/letslive/shared/pkg/tracer"
 	sharedutils "sen1or/letslive/shared/utils"
 
@@ -71,7 +73,13 @@ func main() {
 	dbConn := sharedutils.ConnectDB(ctx, config.Database.ConnectionString)
 	defer dbConn.Close()
 
-	server := SetupServer(ctx, dbConn, registry, config)
+	natsConn, err := natsconn.Connect(ctx, config.NATS.URL)
+	if err != nil {
+		logger.Panicf(ctx, "failed to connect to nats: %v", err)
+	}
+	realtimePublisher := realtime.NewNATSPublisher(natsConn)
+
+	server := SetupServer(ctx, dbConn, registry, config, realtimePublisher)
 	go func() {
 		logger.Infof(ctx, "starting server on %s:%d...", config.Service.Hostname, config.Service.APIPort)
 		// ListenAndServe should ideally block until an error occurs (e.g., server stopped)
@@ -111,11 +119,19 @@ func main() {
 		shutdownWg.Done()
 	})()
 
+	shutdownWg.Add(1)
+	go (func() {
+		if err := natsConn.Drain(); err != nil {
+			logger.Errorf(shutdownCtx, "failed to drain nats connection: %v", err)
+		}
+		shutdownWg.Done()
+	})()
+
 	shutdownWg.Wait()
 	logger.Infof(shutdownCtx, "service shut down complete.")
 }
 
-func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config) *api.APIServer {
+func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config, publisher realtime.Publisher) *api.APIServer {
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var livestreamInfoRepo = repositories.NewLivestreamInformationRepository(dbConn)
 	var followRepo = repositories.NewFollowRepository(dbConn)
@@ -127,7 +143,7 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var userService = services.NewUserService(userRepo, livestreamInfoRepo, notificationRepo, followRepo, *minioService)
 	var livestreamInfoService = services.NewLivestreamInformationService(livestreamInfoRepo)
 	var followService = services.NewFollowService(followRepo)
-	var notificationService = services.NewNotificationService(notificationRepo)
+	var notificationService = services.NewNotificationService(notificationRepo, publisher)
 	var inventoryService = services.NewInventoryService(inventoryRepo)
 	var financeGateway = financehttp.NewFinanceGateway(registry)
 	var giftService = services.NewGiftService(giftRepo, userRepo, financeGateway, notificationService)

@@ -19,6 +19,7 @@ import {
     useMarkAllNotificationsAsRead,
     useMarkNotificationAsRead,
 } from "@/hooks/queries/use-notification-mutations";
+import useNotificationRealtime from "@/hooks/use-notification-realtime";
 
 export default function NotificationBell() {
     const { t } = useT(["notification"]);
@@ -27,6 +28,7 @@ export default function NotificationBell() {
 
     const { data: unreadData } = useUnreadNotificationCount(!!user);
     const unreadCount = unreadData?.count ?? 0;
+    useNotificationRealtime(!!user);
 
     const { data, isLoading } = useNotificationsInfinite(!!user && isOpen);
     const notifications = data?.pages[0]?.items ?? [];

@@ -56,6 +56,11 @@ jobs:
               name: "letslive-vod",
               context: "./backend",
             },
+            {
+              path: "./backend/realtime",
+              name: "letslive-realtime",
+              context: "./backend",
+            },
           ]
 
     steps:

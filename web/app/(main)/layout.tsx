@@ -1,5 +1,6 @@
 import { Header } from "@/app/(main)/_components/header/header";
 import { MainBodyLayout } from "@/app/(main)/_components/main-body-layout";
+import { RealtimeProvider } from "@/contexts/realtime-context";
 
 export default function RootLayout({
     children,
@@ -7,9 +8,11 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <div className="flex h-screen w-screen flex-col overflow-hidden">
-            <Header />
-            <MainBodyLayout>{children}</MainBodyLayout>
-        </div>
+        <RealtimeProvider>
+            <div className="flex h-screen w-screen flex-col overflow-hidden">
+                <Header />
+                <MainBodyLayout>{children}</MainBodyLayout>
+            </div>
+        </RealtimeProvider>
     );
 }

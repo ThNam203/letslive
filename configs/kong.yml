@@ -443,6 +443,22 @@ services:
               key_claim_name: consumer
               run_on_preflight: true
 
+  - name: Realtime
+    host: realtime.service.consul
+    port: 7785
+    path: /
+    connect_timeout: 60000
+    read_timeout: 60000
+    write_timeout: 60000
+    routes:
+      - name: Realtime_Socket
+        paths:
+          - /realtime
+        strip_path: false
+        protocols:
+          - http
+          - https
+
   - name: Finance
     host: finance.service.consul
     port: 7783

@@ -55,6 +55,8 @@ services:
     depends_on:
       consul:
         condition: service_healthy
+      nats:
+        condition: service_healthy
 
   transcode:
     image: sen1or/letslive-transcode:latest
@@ -148,6 +150,27 @@ services:
       general_network:
     depends_on:
       consul:
+        condition: service_healthy
+
+  realtime:
+    image: sen1or/letslive-realtime:latest
+    container_name: letslive-realtime
+    restart: always
+    ports:
+      - "7785:7785"
+    expose:
+      - "7785"
+    environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+      nats:
         condition: service_healthy
 
   configserver:
