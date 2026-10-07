@@ -14,6 +14,12 @@ const (
 	VODPrivateVisibility VODVisibility = "private"
 )
 
+const (
+	VODTitleMinLength       = 1
+	VODTitleMaxLength       = 255
+	VODDescriptionMaxLength = 1000
+)
+
 type VODStatus string
 
 const (

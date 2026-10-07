@@ -86,6 +86,10 @@ func (s *ConversationService) Create(ctx context.Context, input CreateConversati
 	}
 	participantIDs := dedupe(input.ParticipantIDs, exclude)
 
+	if input.Type == domains.ConversationTypeGroup && len(participantIDs)+1 > domains.MaxGroupParticipants {
+		return nil, false, domains.ErrTooManyParticipants
+	}
+
 	identities, err := s.users.GetIdentities(ctx, append([]string{input.CreatorID}, participantIDs...))
 	if err != nil {
 		return nil, false, err
@@ -129,9 +133,6 @@ func (s *ConversationService) Create(ctx context.Context, input CreateConversati
 	case domains.ConversationTypeGroup:
 		if len(participantIDs) < 1 {
 			return nil, false, domains.ErrInvalidInput
-		}
-		if len(participantIDs)+1 > domains.MaxGroupParticipants {
-			return nil, false, domains.ErrTooManyParticipants
 		}
 	}
 

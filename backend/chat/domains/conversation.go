@@ -25,7 +25,8 @@ const (
 	ParticipantRoleMember ParticipantRole = "member"
 )
 
-const MaxGroupParticipants = 50
+// the user service batch lookup accepts at most 100 ids
+const MaxGroupParticipants = 100
 
 // schema limits the Mongoose models enforced on save
 const (

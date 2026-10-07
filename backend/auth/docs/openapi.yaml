@@ -55,7 +55,7 @@ components:
         username:
           type: string
           minLength: 6
-          maxLength: 50
+          maxLength: 30
           example: sen1or
         email:
           type: string

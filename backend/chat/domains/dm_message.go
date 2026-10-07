@@ -19,6 +19,7 @@ const (
 
 const (
 	MaxDmMessageLength    = 2000
+	MaxDmImages           = 10
 	LastMessagePreviewLen = 100
 )
 

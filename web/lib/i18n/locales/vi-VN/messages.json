@@ -21,6 +21,7 @@
     "create": "Tạo",
     "cancel": "Hủy",
     "attach_images_limit": "Bạn có thể đính kèm tối đa {{max}} ảnh",
+    "group_member_limit": "Nhóm có tối đa {{max}} thành viên, tính cả bạn",
     "file_exceeds_limit": "{{name}} vượt quá giới hạn {{size}}MB",
     "sent_an_image": "Đã gửi một ảnh",
     "sent_images_count": "Đã gửi {{count}} ảnh",

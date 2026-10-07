@@ -50,9 +50,6 @@ func (h *VODHandler) UploadVODPrivateHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	title := r.FormValue("title")
-	if title == "" {
-		title = header.Filename
-	}
 	description := r.FormValue("description")
 	visibility := r.FormValue("visibility")
 	if visibility == "" {

@@ -13,3 +13,4 @@ export const VOD_DESCRIPTION_MAX_LENGTH = 1000;
 export const VOD_COMMENT_MAX_LENGTH = 2000;
 export const DM_MESSAGE_MAX_LENGTH = 2000;
 export const GROUP_NAME_MAX_LENGTH = 100;
+export const GROUP_MAX_MEMBERS = 100;
