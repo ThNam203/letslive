@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the event bus infrastructure added to the LetsLive project. The design is **engine-agnostic** — services program against abstract `Producer`, `Consumer`, and `Admin` interfaces defined in the `eventbus` package. The actual transport (NATS, Kafka, Redis Streams, RabbitMQ, etc.) is selected at initialization time by choosing an implementation sub-package.
+This document describes the event bus infrastructure added to the LetsLive project. The design is **engine-agnostic** — services program against abstract `Producer`, `Consumer`, and `Admin` interfaces defined in the `eventbus` package. The actual transport (NATS, Kafka, RabbitMQ, etc.) is selected at initialization time by choosing an implementation sub-package.
 
 **Currently provided engine:** NATS JetStream (via `eventbus/natsbus`). An earlier iteration used Kafka (`eventbus/kafkabus`); it was replaced because nothing in this project's services was wired to it yet, and running a full Kafka broker (KRaft controller, partitions, consumer-group offset management) is disproportionate infrastructure for this project's scale. JetStream gives the same durability/replay/consumer-group properties over a single lightweight binary.
 
@@ -30,7 +30,7 @@ This document describes the event bus infrastructure added to the LetsLive proje
 │   natsbus/           │          │   (future engines)   │
 │                     │          │                     │
 │  NewProducer()      │          │   kafkabus/          │
-│  NewConsumer()      │          │   redisbus/         │
+│  NewConsumer()      │          │                     │
 │  NewAdmin()         │          │   rabbitbus/        │
 └─────────────────────┘          └─────────────────────┘
 ```

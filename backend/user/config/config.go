@@ -36,6 +36,11 @@ type Config struct {
 	Database `yaml:"database"`
 	MinIO    `yaml:"minio"`
 	Tracer   `yaml:"tracer"`
+	NATS     `yaml:"nats"`
+}
+
+type NATS struct {
+	URL string `yaml:"url"`
 }
 
 type Tracer struct {
@@ -68,6 +73,10 @@ func PostProcess(config *Config) error {
 		dbURL.RawQuery = strings.Join(config.Database.Params, "&")
 	}
 	config.Database.ConnectionString = dbURL.String()
+
+	if config.NATS.URL == "" {
+		return fmt.Errorf("nats.url is not configured")
+	}
 
 	return nil
 }

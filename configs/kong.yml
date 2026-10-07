@@ -366,33 +366,29 @@ services:
     read_timeout: 60000
     write_timeout: 60000
     routes:
-      - name: Chat_Messages
+      # live chat history and a room's commands are readable without login;
+      # the methods condition makes these win over Chat_Private for GET
+      - name: Chat_Public
+        protocols:
+          - http
+          - https
+        paths:
+          - ~/messages$
+          - ~/chat-commands$
+        methods:
+          - GET
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+      - name: Chat_Private
         protocols:
           - http
           - https
         paths:
           - /messages
-        strip_path: false
-        preserve_host: false
-        https_redirect_status_code: 426
-        request_buffering: true
-        response_buffering: true
-      - name: Chat_Commands
-        protocols:
-          - http
-          - https
-        paths:
           - /chat-commands
-        strip_path: false
-        preserve_host: false
-        https_redirect_status_code: 426
-        request_buffering: true
-        response_buffering: true
-      - name: DM_Conversations
-        protocols:
-          - http
-          - https
-        paths:
           - /conversations
         strip_path: false
         preserve_host: false
@@ -410,38 +406,21 @@ services:
               key_claim_name: consumer
               run_on_preflight: true
 
-  - name: Chat_WS
-    host: chat.service.consul
-    port: 7780
+  - name: Realtime
+    host: realtime.service.consul
+    port: 7785
     path: /
     connect_timeout: 60000
     read_timeout: 60000
     write_timeout: 60000
     routes:
-      - name: Chat_Socket
+      - name: Realtime_Socket
         paths:
-          - /ws
+          - /realtime
         strip_path: false
         protocols:
           - http
           - https
-      - name: DM_Socket
-        paths:
-          - /dm-ws
-        strip_path: false
-        protocols:
-          - http
-          - https
-        plugins:
-          - name: jwt
-            enabled: true
-            config:
-              claims_to_verify:
-                - exp
-              cookie_names:
-                - ACCESS_TOKEN
-              key_claim_name: consumer
-              run_on_preflight: true
 
   - name: Finance
     host: finance.service.consul

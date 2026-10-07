@@ -3,6 +3,7 @@ import { GetNotifications, GetUnreadCount } from "@/lib/api/notification";
 import { unwrapResponse } from "@/lib/api/api-error";
 import { nextPageParam, unwrapPage } from "@/lib/query/paginated";
 
+export const NOTIFICATIONS_ROOT_QUERY_KEY = ["notifications"] as const;
 export const NOTIFICATIONS_QUERY_KEY = ["notifications", "list"] as const;
 export const NOTIFICATIONS_UNREAD_COUNT_QUERY_KEY = [
     "notifications",
@@ -29,7 +30,5 @@ export function useUnreadNotificationCount(enabled: boolean) {
         queryKey: NOTIFICATIONS_UNREAD_COUNT_QUERY_KEY,
         queryFn: async () => unwrapResponse(await GetUnreadCount()),
         enabled,
-        refetchInterval: 30_000,
-        refetchIntervalInBackground: false,
     });
 }

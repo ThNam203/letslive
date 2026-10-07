@@ -49,11 +49,16 @@ jobs:
             {
               path: "./backend/chat",
               name: "letslive-chat",
-              context: "./backend/chat",
+              context: "./backend",
             },
             {
               path: "./backend/vod",
               name: "letslive-vod",
+              context: "./backend",
+            },
+            {
+              path: "./backend/realtime",
+              name: "letslive-realtime",
               context: "./backend",
             },
           ]

@@ -55,6 +55,8 @@ services:
     depends_on:
       consul:
         condition: service_healthy
+      nats:
+        condition: service_healthy
 
   transcode:
     image: sen1or/letslive-transcode:latest
@@ -150,6 +152,27 @@ services:
       consul:
         condition: service_healthy
 
+  realtime:
+    image: sen1or/letslive-realtime:latest
+    container_name: letslive-realtime
+    restart: always
+    ports:
+      - "7785:7785"
+    expose:
+      - "7785"
+    environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+    networks:
+      general_network:
+    depends_on:
+      consul:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+
   configserver:
     image: sen1or/letslive-configserver:latest
     container_name: letslive-configserver
@@ -173,21 +196,23 @@ services:
   chat:
     image: sen1or/letslive-chat:latest
     container_name: letslive-chat
-    command: npm run start
     restart: always
     ports:
       - "7780:7780"
-    networks:
-      general_network:
+    expose:
+      - "7780"
     environment:
+      - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
+      - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
+      - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
       - CHAT_DB_USER=${CHAT_DB_USER}
       - CHAT_DB_PASSWORD=${CHAT_DB_PASSWORD}
+    networks:
+      general_network:
     depends_on:
       consul:
         condition: service_healthy
-      configserver:
-        condition: service_healthy
-      chat_pubsub:
+      nats:
         condition: service_healthy
       chat_db:
         condition: service_healthy
@@ -199,11 +224,12 @@ services:
       - "11111:8080"
     volumes:
       - ./backend/auth/docs/openapi.yaml:/usr/share/nginx/html/specs/auth.yaml:ro
-      - ./backend/chat/src/docs/openapi.yaml:/usr/share/nginx/html/specs/chat.yaml:ro
+      - ./backend/chat/docs/openapi.yaml:/usr/share/nginx/html/specs/chat.yaml:ro
+      - ./backend/realtime/docs/openapi.yaml:/usr/share/nginx/html/specs/realtime.yaml:ro
       - ./backend/user/docs/openapi.yaml:/usr/share/nginx/html/specs/user.yaml:ro
       - ./backend/livestream/docs/openapi.yaml:/usr/share/nginx/html/specs/livestream.yaml:ro
     environment:
-      URLS: '[{"url": "/specs/auth.yaml", "name": "Auth Service"}, {"url": "/specs/chat.yaml", "name": "Chat Service"}, {"url": "/specs/user.yaml", "name": "User Service"}, {"url": "/specs/livestream.yaml", "name": "Livestream Service"}]'
+      URLS: '[{"url": "/specs/auth.yaml", "name": "Auth Service"}, {"url": "/specs/chat.yaml", "name": "Chat Service"}, {"url": "/specs/realtime.yaml", "name": "Realtime Gateway"}, {"url": "/specs/user.yaml", "name": "User Service"}, {"url": "/specs/livestream.yaml", "name": "Livestream Service"}]'
       URLS_PRIMARY_NAME: "LetsLive API Documentation"
 
   main_db:
@@ -249,20 +275,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
-
-  chat_pubsub:
-    image: redis:7.4.2-alpine
-    container_name: letslive-chat-pubsub
-    restart: always
-    ports:
-      - "6379:6379"
-    command: redis-server --save 60 1 --loglevel warning
-    volumes:
-      - chat_pubsub_data:/data
-    networks:
-      general_network:
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
 
   chat_db:
     image: mongo:7
@@ -468,7 +480,6 @@ networks:
 volumes:
   letslive_data:
   mongodb_chat_data:
-  chat_pubsub_data:
   minio_data:
   consul_data:
   grafana_data:

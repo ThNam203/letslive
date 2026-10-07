@@ -4,20 +4,20 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import useDmStore from "@/hooks/use-dm-store";
-import { useDmWebSocketContext } from "@/contexts/dm-websocket-context";
 import useUser from "@/hooks/user";
-import { GetConversation, MarkConversationRead } from "@/lib/api/dm";
+import {
+    GetConversation,
+    MarkConversationRead,
+    SendDmMessage,
+    SendDmTyping,
+} from "@/lib/api/dm";
 import ConversationList from "../_components/conversation-list";
 import ConversationHeader from "../_components/conversation-header";
 import MessageThread from "../_components/message-thread";
 import MessageInput from "../_components/message-input";
 import TypingIndicator from "../_components/typing-indicator";
 import { Button } from "@/components/ui/button";
-import {
-    type Conversation,
-    DmClientEventType,
-    DmMessageType,
-} from "@/types/dm";
+import { type Conversation, DmMessageType } from "@/types/dm";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import IconClose from "@/components/icons/close";
@@ -36,7 +36,6 @@ export default function ConversationPage() {
     const user = useUser((state) => state.user);
     const queryClient = useQueryClient();
     const { setActiveConversationId, typingUsers } = useDmStore();
-    const { send } = useDmWebSocketContext();
     const { t } = useT("api-response");
     const { t: tMessages } = useT("messages");
 
@@ -108,37 +107,44 @@ export default function ConversationPage() {
         (text: string, imageUrls?: string[]) => {
             if (!user) return;
 
-            send({
-                type: DmClientEventType.SEND_MESSAGE,
-                conversationId,
+            // the thread picks the message up from the dm:new_message push,
+            // so only failures are handled here
+            SendDmMessage(conversationId, {
                 text,
-                messageType:
+                type:
                     imageUrls && imageUrls.length > 0
                         ? DmMessageType.IMAGE
                         : DmMessageType.TEXT,
                 imageUrls,
-            });
+            })
+                .then((res) => {
+                    if (!res.success) {
+                        toast.error(
+                            t(res.key) ||
+                                res.message ||
+                                "Failed to send message",
+                        );
+                    }
+                })
+                .catch(() => {
+                    toast.error(t("fetch-error:client_fetch_error"));
+                });
         },
-        [user, conversationId, send],
+        [user, conversationId, t],
     );
 
     const handleTypingStart = useCallback(() => {
         if (!user) return;
 
-        send({
-            type: DmClientEventType.TYPING_START,
-            conversationId,
-        });
-    }, [user, conversationId, send]);
+        // best effort: a lost typing hint is not worth surfacing
+        SendDmTyping(conversationId, "start").catch(() => {});
+    }, [user, conversationId]);
 
     const handleTypingStop = useCallback(() => {
         if (!user) return;
 
-        send({
-            type: DmClientEventType.TYPING_STOP,
-            conversationId,
-        });
-    }, [user, conversationId, send]);
+        SendDmTyping(conversationId, "stop").catch(() => {});
+    }, [user, conversationId]);
 
     if (!user) {
         return (

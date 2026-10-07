@@ -15,13 +15,6 @@ export enum ParticipantRole {
     MEMBER = "member",
 }
 
-export enum DmClientEventType {
-    SEND_MESSAGE = "dm:send_message",
-    TYPING_START = "dm:typing_start",
-    TYPING_STOP = "dm:typing_stop",
-    MARK_READ = "dm:mark_read",
-}
-
 export enum DmServerEventType {
     NEW_MESSAGE = "dm:new_message",
     MESSAGE_EDITED = "dm:message_edited",
@@ -32,7 +25,6 @@ export enum DmServerEventType {
     USER_ONLINE = "dm:user_online",
     USER_OFFLINE = "dm:user_offline",
     CONVERSATION_UPDATED = "dm:conversation_updated",
-    SEND_FAILED = "dm:send_failed",
 }
 
 export type ConversationParticipant = {
@@ -85,31 +77,8 @@ export type DmMessage = {
     updatedAt: string;
 };
 
-// WebSocket event types (client → server)
-export type DmWsSendMessage = {
-    type: DmClientEventType.SEND_MESSAGE;
-    conversationId: string;
-    text: string;
-    messageType: DmMessageType.TEXT | DmMessageType.IMAGE;
-    imageUrls?: string[];
-    replyTo?: string;
-};
-
-export type DmWsTyping = {
-    type: DmClientEventType.TYPING_START | DmClientEventType.TYPING_STOP;
-    conversationId: string;
-};
-
-export type DmWsMarkRead = {
-    type: DmClientEventType.MARK_READ;
-    conversationId: string;
-    /** omitted means "mark everything up to the latest message read" */
-    messageId?: string;
-};
-
-export type DmWsClientEvent = DmWsSendMessage | DmWsTyping | DmWsMarkRead;
-
-// WebSocket event types (server → client)
+// Realtime DM events (server → client). The gateway delivers `type` in the
+// frame and the rest as its data.
 export type DmWsNewMessage = {
     type: DmServerEventType.NEW_MESSAGE;
     conversationId: string;
@@ -157,12 +126,6 @@ export type DmWsConversationUpdated = {
     update: Partial<Conversation>;
 };
 
-export type DmWsSendFailed = {
-    type: DmServerEventType.SEND_FAILED;
-    key: string;
-    message?: string;
-};
-
 export type DmWsServerEvent =
     | DmWsNewMessage
     | DmWsMessageEdited
@@ -170,5 +133,4 @@ export type DmWsServerEvent =
     | DmWsUserTyping
     | DmWsReadReceipt
     | DmWsPresence
-    | DmWsConversationUpdated
-    | DmWsSendFailed;
+    | DmWsConversationUpdated;

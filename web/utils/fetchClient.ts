@@ -9,21 +9,20 @@ type WithStatusCode<T> = T & { statusCode: number };
 // Singleton promise for token refresh
 let refreshTokenPromise: Promise<ApiResponse<void>> | null = null;
 
-const refreshToken = async (): Promise<ApiResponse<void>> => {
+export const refreshToken = async (): Promise<ApiResponse<void>> => {
     if (!refreshTokenPromise) {
+        // reset in finally on the outer promise too, so a network failure in
+        // fetch itself does not leave every later refresh awaiting a rejected promise
         refreshTokenPromise = (async () => {
             const refreshResponse = await fetch(
                 `${GLOBAL.API_URL}/auth/refresh-token`,
                 { method: "POST", credentials: "include" },
             );
 
-            return await refreshResponse
-                .json()
-                .catch(() => null)
-                .finally(() => {
-                    refreshTokenPromise = null;
-                });
-        })();
+            return await refreshResponse.json().catch(() => null);
+        })().finally(() => {
+            refreshTokenPromise = null;
+        });
     }
     return refreshTokenPromise;
 };
@@ -143,7 +142,7 @@ function hasRefreshToken(): boolean {
     );
 }
 
-function hasAccessToken(): boolean {
+export function hasAccessToken(): boolean {
     return (
         document.cookie.match(/^(.*;)?\s*ACCESS_TOKEN\s*=\s*[^;]+(.*)?$/) !=
         null

@@ -4,7 +4,7 @@
 
 ## 1. Walk me through the overall architecture of this system.
 
-**Answer:** LETS LIVE is a microservices-based livestreaming platform — think Twitch. The backend has 7 Go services (Auth, User, Livestream, VOD, Transcode, Finance) plus a Node.js/TypeScript Chat service. All traffic enters through a **Kong API Gateway**, which handles JWT validation, rate limiting, CORS, and routes requests to internal services discovered via **HashiCorp Consul**. Config is externalized to a **Spring Cloud Config Server**. For observability, the stack includes OpenTelemetry tracing (Grafana Tempo), log aggregation (Loki + Promtail), and Grafana dashboards.
+**Answer:** LETS LIVE is a microservices-based livestreaming platform — think Twitch. The backend is all Go: Auth, User, Livestream, VOD, Transcode, Finance, Chat, and a Realtime gateway that holds every WebSocket. All traffic enters through a **Kong API Gateway**, which handles JWT validation, rate limiting, CORS, and routes requests to internal services discovered via **HashiCorp Consul**. Config is externalized to a **Spring Cloud Config Server**. For observability, the stack includes OpenTelemetry tracing (Grafana Tempo), log aggregation (Loki + Promtail), and Grafana dashboards.
 
 ---
 
@@ -28,13 +28,11 @@ This separates ingestion from delivery, and using HLS + MinIO allows horizontal 
 
 ---
 
-## 4. Why two message brokers — NATS AND Redis?
+## 4. Why both core NATS and JetStream?
 
-**Answer:** They solve different problems:
-- **Redis Pub/Sub** is used for live chat — it has sub-millisecond latency and is ideal for fire-and-forget fan-out to WebSocket connections. Messages don't need to be durable.
-- **NATS (JetStream)** is used for cross-service business events (stream started, VOD created, payment made). JetStream gives durability, replay capability, and decoupled consumers via durable consumers — the same value Kafka would give, at a fraction of the operational footprint (one binary, no partitions/brokers/controller quorum to run).
-
-Using Redis for chat avoids a persistent broker's overhead (streams, durable consumers, acks) for something that needs to be fast but not durable. The trade-off is Redis pub/sub has no message persistence — if a subscriber drops, it misses messages.
+**Answer:** They solve different problems on the same NATS server:
+- **Core NATS** carries realtime pushes (chat lines, DMs, notifications, presence) from services to the realtime gateway. It is fire-and-forget with no disk write, which suits pushes: the data is already saved in Mongo or Postgres before the push, so a lost push only means the client refetches on reconnect.
+- **JetStream** carries cross-service business events (stream started, VOD created, payment made). It gives durability, replay and durable consumers — the same value Kafka would give, at a fraction of the operational footprint (one binary, no partitions/brokers/controller quorum to run).
 
 ---
 
@@ -59,9 +57,9 @@ Using Redis for chat avoids a persistent broker's overhead (streams, durable con
 ## 8. How would you scale this system under high load?
 
 **Answer:**
-- **Stateless services** (all Go/Node services) scale horizontally behind Kong
+- **Stateless services** (all Go services except the realtime gateway) scale horizontally behind Kong
 - **Transcode** is CPU-intensive — scale with a worker pool; each worker handles one RTMP stream
-- **Chat** bottleneck is Redis pub/sub — at scale, replace with Redis Cluster or switch to a distributed messaging system
+- **Realtime gateway** holds every socket; it is single-instance because presence is counted in memory. Fan-out already goes through NATS, so scaling out only needs presence moved to a shared store
 - **PostgreSQL** needs read replicas for query-heavy services (User, Livestream); write throughput goes through the primary
 - **NATS** moves from a single node to a clustered JetStream deployment with stream replication
 - **MinIO** clusters (erasure coding mode) or migrate to S3 for HLS delivery + CloudFront CDN in front of it
@@ -73,14 +71,14 @@ The current docker-compose setup is single-instance everything — designed for 
 
 ## 9. How does real-time chat work technically?
 
-**Answer:**
-1. Client connects via WebSocket to the Chat service (`/ws?roomId=xxx`)
-2. Chat service subscribes to a Redis channel for that room (`chat:room:{roomId}`)
-3. When a message is sent, it's saved to MongoDB and published to the Redis channel
-4. All connected WebSocket clients subscribed to that channel receive the broadcast
-5. For DMs, JWT-authenticated WebSocket (`/dm-ws`) with per-conversation Redis channels
+**Answer:** Sockets and chat logic live in separate services (the split Discord uses):
+1. Each browser tab opens one WebSocket to the **realtime gateway** (`/realtime`). A valid `ACCESS_TOKEN` cookie makes it that user's socket, subscribed to `user:<id>`; without one it is anonymous.
+2. The live chat panel subscribes the socket to `room:<roomId>`.
+3. Sending is plain REST: `POST /v1/messages` to the Go **chat** service, which takes the sender from the cookie, saves the line to MongoDB, and publishes `chat.message` to the NATS subject `rt.room.<roomId>`.
+4. The gateway holds one NATS subscription per topic that has local sockets and fans the event out to them.
+5. DMs work the same way over `user:<id>` topics: sending, typing and read receipts are REST calls, and the chat service pushes `dm:*` events to each participant.
 
-This is a classic **fan-out on write** pattern. The Chat service acts as a stateful WebSocket server, but the pub/sub state lives in Redis, so multiple Chat service instances can handle the same room.
+This is **fan-out on write**. The gateway knows nothing about chat rules, and the chat service holds no sockets, so either can be deployed without dropping the other's work.
 
 ---
 
@@ -96,7 +94,7 @@ This is a classic **fan-out on write** pattern. The Chat service acts as a state
 - **Kong down**: All traffic blocked — it's a SPOF in this setup. Production fix: Kong clustering + load balancer
 - **Consul down**: Service discovery fails, no new routing. Services use exponential backoff to reconnect. Cached DNS can sustain briefly.
 - **NATS down**: Async events are lost — VOD archiving, notifications, finance events fail silently. Production fix: local retry queues + DLTs
-- **Redis down**: Live chat goes dark. Chat service WebSockets still connect but no fan-out. Fix: Redis Sentinel/Cluster
+- **Realtime gateway down**: Live updates stop, but every write still succeeds over REST; clients reconnect with backoff and refetch. Fix: run several gateways once presence moves to a shared store
 - **MinIO down**: HLS delivery fails, streams go black. Fix: MinIO clustering or S3 fallback
 - **PostgreSQL down**: Most services degrade to read-only or fail entirely — no mitigation currently
 
@@ -116,7 +114,7 @@ This is a classic **fan-out on write** pattern. The Chat service acts as a state
 
 ## 14. How are WebSocket connections kept alive and cleaned up?
 
-**Answer:** The Chat service implements a keep-alive mechanism using periodic ping/pong frames over WebSocket. A background goroutine/timer sends pings at a fixed interval; if a pong isn't received within the deadline, the connection is marked dead and closed. This prevents ghost connections from accumulating (e.g., when a mobile client loses signal without sending a TCP FIN). Without this, the server would hold open file descriptors for dead sockets indefinitely, exhausting OS limits. On disconnect (clean or dead), the service unsubscribes the socket from its Redis pub/sub channel.
+**Answer:** The realtime gateway pings every socket every 30s (Kong closes idle upstreams at 60s), and each write has a 10s timeout. A socket whose pong or write fails is closed, which stops ghost connections from piling up (e.g., when a mobile client loses signal without sending a TCP FIN). A socket that falls 64 frames behind is closed as a slow consumer. On close, the gateway drops the socket's topics, unsubscribes from NATS when a topic has no local sockets left, and marks the user offline after a 5s grace period.
 
 ---
 
@@ -142,7 +140,7 @@ This is a classic **fan-out on write** pattern. The Chat service acts as a state
 
 **Answer:** The stack has three pillars:
 - **Tracing**: Every service instruments with OpenTelemetry SDK, exporting spans via OTLP to Grafana Tempo. Kong injects a `correlation-id` header and propagates W3C trace context, so a single user request can be traced across Kong → Auth → User → Livestream.
-- **Logging**: Services use structured loggers (Zap in Go, Pino in Node). Promtail tails container stdout/stderr and ships to Grafana Loki, labeled by service name.
+- **Logging**: Services use a structured logger (Zap). Promtail tails container stdout/stderr and ships to Grafana Loki, labeled by service name.
 - **Dashboards**: Grafana connects to both Tempo and Loki, enabling trace-to-log correlation — you can click a slow span and jump directly to the logs from that service at that timestamp.
 
 In dev, 100% of traces are sampled. In production this would be reduced (e.g., 1–5%) to control storage costs.
@@ -216,7 +214,7 @@ Gaps: no mutual TLS between services (traffic inside Docker network is unencrypt
 
 ## 25. Walk me through the email verification (OTP) flow at signup.
 
-**Answer:** When a user signs up with email+password, the Auth service generates a 6-digit numeric OTP using `crypto/rand` (not `math/rand`, so it's cryptographically secure). The OTP is stored in PostgreSQL (`sign_up_otp` table) with a 5-minute TTL and an `email` foreign key. The OTP is delivered via SMTP using Go's `net/smtp`. To verify, the client posts the code; the service looks up by `(code, email)`, checks `used_at IS NULL` and `expires_at > now()`, and stamps `used_at` on success. The trade-off: storing OTPs in the same Postgres as auth credentials simplifies operations but couples OTP read load to the auth DB; a dedicated Redis store with native TTL would scale better and avoid manual expiry checks.
+**Answer:** When a user signs up with email+password, the Auth service generates a 6-digit numeric OTP using `crypto/rand` (not `math/rand`, so it's cryptographically secure). The OTP is stored in PostgreSQL (`sign_up_otp` table) with a 5-minute TTL and an `email` foreign key. The OTP is delivered via SMTP using Go's `net/smtp`. To verify, the client posts the code; the service looks up by `(code, email)`, checks `used_at IS NULL` and `expires_at > now()`, and stamps `used_at` on success. The trade-off: storing OTPs in the same Postgres as auth credentials simplifies operations but couples OTP read load to the auth DB; a dedicated key-value store with native TTL would scale better and avoid manual expiry checks.
 
 ---
 
@@ -289,7 +287,7 @@ Same JWT cookies are issued at the end. The trade-off of separate flows: more co
 
 ## 35. What's the testing strategy, and what are its gaps?
 
-**Answer:** There is essentially no automated test coverage in the Go services — no `*_test.go` files exist across the seven Go modules. The Chat service has a single `chatserver.test.ts`. Validation happens manually via `docker-compose-dev.yaml` running the full stack locally. The trade-off is honest: this is a personal/portfolio project optimized for breadth of system integration over test rigor. In production, you'd want at minimum: unit tests for each service's domain logic, integration tests that spin up Postgres + NATS via `testcontainers`, and contract tests at gateway boundaries (e.g., between Auth and User).
+**Answer:** There is essentially no automated test coverage in the Go services — no `*_test.go` files exist across the seven Go modules. Validation happens manually via `docker-compose-dev.yaml` running the full stack locally. The trade-off is honest: this is a personal/portfolio project optimized for breadth of system integration over test rigor. In production, you'd want at minimum: unit tests for each service's domain logic, integration tests that spin up Postgres + NATS via `testcontainers`, and contract tests at gateway boundaries (e.g., between Auth and User).
 
 ---
 

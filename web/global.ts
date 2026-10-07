@@ -26,7 +26,7 @@ function getBackendUrl(): string {
     return `${protocol}://${ipAddress}:${port}`;
 }
 
-function getWebSocketUrl(): string {
+function getWsUrl(path: string): string {
     const wsProtocol = process.env.NEXT_PUBLIC_BACKEND_WS_PROTOCOL?.trim();
     const ipAddress = process.env.NEXT_PUBLIC_BACKEND_IP_ADDRESS?.trim();
     const port = process.env.NEXT_PUBLIC_BACKEND_PORT?.trim();
@@ -51,41 +51,12 @@ function getWebSocketUrl(): string {
         );
     }
 
-    return `${wsProtocol}://${ipAddress}:${port}/ws`;
-}
-
-function getDmWebSocketUrl(): string {
-    const wsProtocol = process.env.NEXT_PUBLIC_BACKEND_WS_PROTOCOL?.trim();
-    const ipAddress = process.env.NEXT_PUBLIC_BACKEND_IP_ADDRESS?.trim();
-    const port = process.env.NEXT_PUBLIC_BACKEND_PORT?.trim();
-
-    if (
-        !wsProtocol ||
-        !ipAddress ||
-        !port ||
-        wsProtocol === "" ||
-        ipAddress === "" ||
-        port === ""
-    ) {
-        if (typeof window !== "undefined") {
-            console.error("Missing or empty WebSocket environment variables:", {
-                wsProtocol: wsProtocol || "(empty or undefined)",
-                ipAddress: ipAddress || "(empty or undefined)",
-                port: port || "(empty or undefined)",
-            });
-        }
-        throw new Error(
-            "Missing or empty required environment variables: NEXT_PUBLIC_BACKEND_WS_PROTOCOL, NEXT_PUBLIC_BACKEND_IP_ADDRESS, NEXT_PUBLIC_BACKEND_PORT",
-        );
-    }
-
-    return `${wsProtocol}://${ipAddress}:${port}/dm-ws`;
+    return `${wsProtocol}://${ipAddress}:${port}${path}`;
 }
 
 const GLOBAL = Object.freeze({
     API_URL: getBackendUrl(),
-    WS_SERVER_URL: getWebSocketUrl(),
-    DM_WS_SERVER_URL: getDmWebSocketUrl(),
+    REALTIME_URL: getWsUrl("/realtime"),
 });
 
 export default GLOBAL;
