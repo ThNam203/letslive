@@ -25,9 +25,7 @@ const (
 	ParticipantRoleMember ParticipantRole = "member"
 )
 
-// MaxGroupParticipants counts the owner. Creating a group looks every member
-// up in one user service batch call, which accepts at most 100 ids, so this
-// cannot go higher without batching that call.
+// the user service batch lookup accepts at most 100 ids
 const MaxGroupParticipants = 100
 
 // schema limits the Mongoose models enforced on save

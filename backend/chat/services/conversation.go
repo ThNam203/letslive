@@ -86,8 +86,6 @@ func (s *ConversationService) Create(ctx context.Context, input CreateConversati
 	}
 	participantIDs := dedupe(input.ParticipantIDs, exclude)
 
-	// before the identity lookup, whose batch call would reject an oversized
-	// list with a less useful error
 	if input.Type == domains.ConversationTypeGroup && len(participantIDs)+1 > domains.MaxGroupParticipants {
 		return nil, false, domains.ErrTooManyParticipants
 	}

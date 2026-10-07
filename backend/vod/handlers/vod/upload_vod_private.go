@@ -49,7 +49,6 @@ func (h *VODHandler) UploadVODPrivateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// a blank title falls back to the file name in the service
 	title := r.FormValue("title")
 	description := r.FormValue("description")
 	visibility := r.FormValue("visibility")

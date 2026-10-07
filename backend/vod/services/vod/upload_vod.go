@@ -37,7 +37,6 @@ func (s *VODService) UploadVOD(
 		return nil, domains.ErrInvalidInput
 	}
 
-	// checked before the upload so a rejected form stores nothing
 	title, validTitle := uploadTitle(title, filename)
 	if !validTitle || !validDescription(description) {
 		return nil, domains.ErrInvalidInput

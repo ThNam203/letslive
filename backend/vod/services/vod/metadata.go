@@ -7,14 +7,10 @@ import (
 	"sen1or/letslive/vod/domains"
 )
 
-// normalizeTitle trims the title; a whitespace-only title counts as empty.
 func normalizeTitle(title string) string {
 	return strings.TrimSpace(title)
 }
 
-// uploadTitle returns the title an upload is stored with. A blank title falls
-// back to the file name, cut to the maximum length because the user never
-// typed it; a typed title that is too long is rejected instead.
 func uploadTitle(title, filename string) (string, bool) {
 	title = normalizeTitle(title)
 	if title == "" {

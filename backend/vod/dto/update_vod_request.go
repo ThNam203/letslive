@@ -1,7 +1,5 @@
 package dto
 
-// the title and description limits are domains.VODTitle*Length and
-// domains.VODDescriptionMaxLength; omitnil keeps an explicit "" title invalid
 type UpdateVODRequestDTO struct {
 	Title        *string `json:"title,omitempty" validate:"omitnil,min=1,max=255"`
 	Description  *string `json:"description,omitempty" validate:"omitnil,max=1000"`

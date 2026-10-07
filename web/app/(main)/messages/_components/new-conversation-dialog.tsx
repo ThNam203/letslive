@@ -61,7 +61,6 @@ export default function NewConversationDialog({
 
     const handleSelectUser = (selectedUser: PublicUser) => {
         if (isGroup) {
-            // the creator takes one of the seats
             if (selectedUsers.length + 1 >= GROUP_MAX_MEMBERS) {
                 toast.error(
                     tMessages("group_member_limit", { max: GROUP_MAX_MEMBERS }),
