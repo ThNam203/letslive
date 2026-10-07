@@ -34,7 +34,6 @@ import {
     useRoomMessages,
 } from "@/hooks/queries/use-chat";
 import { formatLocaleDate } from "@/utils/timeFormats";
-import { truncateText } from "@/utils/truncate";
 import UserAvatar from "@/components/ui/user-avatar";
 import {
     Tooltip,
@@ -247,7 +246,7 @@ export default function ChatPanel({
                 });
                 return;
             }
-            sendText(truncateText(result.text, CHAT_MESSAGE_MAX_LENGTH));
+            sendText(result.text.slice(0, CHAT_MESSAGE_MAX_LENGTH));
             return;
         }
 
