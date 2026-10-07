@@ -62,7 +62,11 @@ export default function UploadVODPage() {
 
         setFile(selected);
         if (!title) {
-            setTitle(selected.name.replace(/\.[^/.]+$/, ""));
+            setTitle(
+                selected.name
+                    .replace(/\.[^/.]+$/, "")
+                    .slice(0, VOD_TITLE_MAX_LENGTH),
+            );
         }
     };
 

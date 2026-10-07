@@ -96,6 +96,10 @@ func (s *DmMessageService) Send(ctx context.Context, input SendDmMessageInput) (
 		return nil, nil, domains.ErrInvalidInput
 	}
 
+	if !validImageURLs(input.ImageURLs) {
+		return nil, nil, domains.ErrInvalidInput
+	}
+
 	imageURLs := []string{}
 	if input.Type == domains.DmMessageTypeImage && input.ImageURLs != nil {
 		imageURLs = input.ImageURLs
@@ -144,6 +148,18 @@ func (s *DmMessageService) Send(ctx context.Context, input SendDmMessageInput) (
 	})
 
 	return message, participantIDs, nil
+}
+
+func validImageURLs(urls []string) bool {
+	if len(urls) > domains.MaxDmImages {
+		return false
+	}
+	for _, url := range urls {
+		if jsutil.Length(url) > domains.MaxURLLength {
+			return false
+		}
+	}
+	return true
 }
 
 func parseMessageIDs(conversationID, messageID string) (bson.ObjectID, bson.ObjectID, bool) {

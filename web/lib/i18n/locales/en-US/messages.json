@@ -21,6 +21,7 @@
     "create": "Create",
     "cancel": "Cancel",
     "attach_images_limit": "You can attach up to {{max}} images",
+    "group_member_limit": "A group can have up to {{max}} members, including you",
     "file_exceeds_limit": "{{name}} exceeds {{size}}MB limit",
     "sent_an_image": "Sent an image",
     "sent_images_count": "Sent {{count}} images",

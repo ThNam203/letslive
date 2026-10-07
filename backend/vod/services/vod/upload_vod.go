@@ -37,6 +37,12 @@ func (s *VODService) UploadVOD(
 		return nil, domains.ErrInvalidInput
 	}
 
+	// checked before the upload so a rejected form stores nothing
+	title, validTitle := uploadTitle(title, filename)
+	if !validTitle || !validDescription(description) {
+		return nil, domains.ErrInvalidInput
+	}
+
 	// Generate VOD ID upfront for the raw file path
 	vodId, err := uuid.NewV4()
 	if err != nil {

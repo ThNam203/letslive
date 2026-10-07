@@ -108,10 +108,16 @@ export default function VODEditCard({ vod }: { vod: VOD }) {
     };
 
     const handleSave = () => {
+        const title = formData.title.trim();
+        if (!title) {
+            toast(t("settings:upload.error_no_title"), { type: "error" });
+            return;
+        }
+
         updateVod.mutate(
             {
                 vodId: vod.id,
-                title: formData.title,
+                title,
                 description: formData.description,
                 isPublic: Boolean(formData.isPublic),
                 image: formData.image,

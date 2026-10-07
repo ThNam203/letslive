@@ -14,6 +14,7 @@ import { ConversationType } from "@/types/dm";
 import UserAvatar from "@/components/ui/user-avatar";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
+import { GROUP_MAX_MEMBERS } from "@/constant/field-limits";
 
 export default function NewConversationDialog({
     onClose,
@@ -60,6 +61,13 @@ export default function NewConversationDialog({
 
     const handleSelectUser = (selectedUser: PublicUser) => {
         if (isGroup) {
+            // the creator takes one of the seats
+            if (selectedUsers.length + 1 >= GROUP_MAX_MEMBERS) {
+                toast.error(
+                    tMessages("group_member_limit", { max: GROUP_MAX_MEMBERS }),
+                );
+                return;
+            }
             setSelectedUsers([...selectedUsers, selectedUser]);
         } else {
             setSelectedUsers([selectedUser]);

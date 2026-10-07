@@ -10,6 +10,10 @@ import (
 )
 
 func (s *VODService) UpdateVODMetadata(ctx context.Context, data dto.UpdateVODRequestDTO, vodId uuid.UUID, authorId uuid.UUID) (*domains.VOD, error) {
+	if data.Title != nil {
+		title := normalizeTitle(*data.Title)
+		data.Title = &title
+	}
 	if err := utils.Validator.Struct(&data); err != nil {
 		return nil, domains.ErrInvalidPayload
 	}

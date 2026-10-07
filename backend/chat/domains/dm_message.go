@@ -17,8 +17,11 @@ const (
 	DmMessageTypeSystem DmMessageType = "system"
 )
 
+// MaxDmMessageLength and MaxDmImages mirror DM_MESSAGE_MAX_LENGTH and
+// MAX_FILES in web/app/(main)/messages/_components/message-input.tsx
 const (
 	MaxDmMessageLength    = 2000
+	MaxDmImages           = 10
 	LastMessagePreviewLen = 100
 )
 

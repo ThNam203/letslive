@@ -14,6 +14,14 @@ const (
 	VODPrivateVisibility VODVisibility = "private"
 )
 
+// mirror VOD_TITLE_MAX_LENGTH and VOD_DESCRIPTION_MAX_LENGTH in
+// web/constant/field-limits.ts and the vods table columns
+const (
+	VODTitleMinLength       = 1
+	VODTitleMaxLength       = 255
+	VODDescriptionMaxLength = 1000
+)
+
 type VODStatus string
 
 const (
