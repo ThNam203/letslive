@@ -11,6 +11,7 @@ import Section from "../_components/section";
 import TextField from "../_components/text-field";
 import TextAreaField from "../_components/textarea-field";
 import useT from "@/hooks/use-translation";
+import { truncateText } from "@/utils/truncate";
 import {
     VOD_TITLE_MAX_LENGTH,
     VOD_DESCRIPTION_MAX_LENGTH,
@@ -63,9 +64,10 @@ export default function UploadVODPage() {
         setFile(selected);
         if (!title) {
             setTitle(
-                selected.name
-                    .replace(/\.[^/.]+$/, "")
-                    .slice(0, VOD_TITLE_MAX_LENGTH),
+                truncateText(
+                    selected.name.replace(/\.[^/.]+$/, ""),
+                    VOD_TITLE_MAX_LENGTH,
+                ),
             );
         }
     };
