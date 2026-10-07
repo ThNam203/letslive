@@ -1,14 +1,15 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sen1or/letslive/vod/gateway"
-	usergateway "sen1or/letslive/vod/gateway/user"
 	"sen1or/letslive/shared/pkg/discovery"
 	"sen1or/letslive/shared/pkg/logger"
+	"sen1or/letslive/vod/gateway"
+	usergateway "sen1or/letslive/vod/gateway/user"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -24,7 +25,7 @@ func NewUserGateway(registry discovery.Registry) usergateway.UserGateway {
 }
 
 type userServiceResponse struct {
-	Success bool                       `json:"success"`
+	Success bool                        `json:"success"`
 	Data    *usergateway.UserPublicInfo `json:"data,omitempty"`
 }
 
@@ -64,4 +65,43 @@ func (g *userHTTPGateway) GetUserPublicInfo(ctx context.Context, userId uuid.UUI
 	}
 
 	return result.Data, nil
+}
+
+func (g *userHTTPGateway) CreateNotification(ctx context.Context, data usergateway.CreateNotificationRequest) error {
+	addr, err := g.registry.ServiceAddress(ctx, "user")
+	if err != nil {
+		logger.Errorf(ctx, "failed to get user service address: %v", err)
+		return fmt.Errorf("user service unavailable")
+	}
+
+	body, err := json.Marshal(data)
+	if err != nil {
+		logger.Errorf(ctx, "failed to marshal CreateNotification request: %v", err)
+		return fmt.Errorf("failed to marshal request")
+	}
+
+	url := fmt.Sprintf("http://%s/v1/notifications", addr)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		logger.Errorf(ctx, "failed to create CreateNotification request: %v", err)
+		return fmt.Errorf("failed to create request")
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
+		logger.Warnf(ctx, "failed to set request id header: %v", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		logger.Errorf(ctx, "failed to call user service CreateNotification: %v", err)
+		return fmt.Errorf("failed to call user service")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 != 2 {
+		return fmt.Errorf("user service returned status %d on CreateNotification", resp.StatusCode)
+	}
+
+	return nil
 }

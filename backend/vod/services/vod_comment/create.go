@@ -17,7 +17,7 @@ func (s *VODCommentService) CreateComment(ctx context.Context, data dto.CreateVO
 	}
 
 	// verify VOD exists
-	_, vodErr := s.vodRepo.GetById(ctx, vodId)
+	vod, vodErr := s.vodRepo.GetById(ctx, vodId)
 	if vodErr != nil {
 		return nil, vodErr
 	}
@@ -29,16 +29,18 @@ func (s *VODCommentService) CreateComment(ctx context.Context, data dto.CreateVO
 	}
 
 	// if replying, verify parent exists and belongs to the same VOD
+	var parentComment *domains.VODComment
 	if data.ParentId != nil {
 		parentUUID, err := uuid.FromString(*data.ParentId)
 		if err != nil {
 			return nil, domains.ErrInvalidInput
 		}
 
-		parentComment, parentErr := s.commentRepo.GetById(ctx, parentUUID)
+		parent, parentErr := s.commentRepo.GetById(ctx, parentUUID)
 		if parentErr != nil {
 			return nil, parentErr
 		}
+		parentComment = parent
 
 		if parentComment.VODId != vodId {
 			return nil, domains.ErrInvalidInput
@@ -48,11 +50,22 @@ func (s *VODCommentService) CreateComment(ctx context.Context, data dto.CreateVO
 	}
 
 	// if this is a reply, create comment + increment parent reply count atomically
+	var createdComment *domains.VODComment
+	var createErr error
 	if comment.ParentId != nil {
-		return s.createReplyWithTransaction(ctx, comment)
+		createdComment, createErr = s.createReplyWithTransaction(ctx, comment)
+	} else {
+		createdComment, createErr = s.commentRepo.Create(ctx, comment)
+	}
+	if createErr != nil {
+		return nil, createErr
 	}
 
-	return s.commentRepo.Create(ctx, comment)
+	// the request context is cancelled once the handler returns, so detach it
+	notifyCtx := context.WithoutCancel(ctx)
+	go s.notifyNewComment(notifyCtx, *vod, parentComment, *createdComment)
+
+	return createdComment, nil
 }
 
 func (s *VODCommentService) createReplyWithTransaction(ctx context.Context, comment domains.VODComment) (*domains.VODComment, error) {
