@@ -9,10 +9,19 @@ export type VOD = {
     thumbnailUrl: string | null;
     visibility: "public" | "private";
     viewCount: number;
+    likeCount: number;
     duration: number;
     playbackUrl: string | null;
     status: VODStatus;
     originalFileUrl: string | null;
     createdAt: string; // ISO 8601 timestamp
     updatedAt: string; // ISO 8601 timestamp
+};
+
+export type VODReaction = "like" | "dislike";
+
+// the caller's own reaction plus the public like count; dislikes are never counted publicly
+export type VODReactionState = {
+    likeCount: number;
+    reaction: VODReaction | null;
 };

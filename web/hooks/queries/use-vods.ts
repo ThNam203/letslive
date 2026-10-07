@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
     GetAllVODsAsAuthor,
+    GetMyVODReaction,
     GetPublicVODsOfUser,
     GetVODInformation,
 } from "@/lib/api/vod";
@@ -14,6 +15,10 @@ export function publicVodsOfUserQueryKey(userId: string) {
 
 export function vodQueryKey(vodId: string) {
     return ["vods", "detail", vodId] as const;
+}
+
+export function myVodReactionQueryKey(vodId: string) {
+    return ["vods", "my-reaction", vodId] as const;
 }
 
 export function usePublicVodsOfUser(userId: string | undefined) {
@@ -41,5 +46,15 @@ export function useVod(vodId: string | undefined) {
         queryFn: async () =>
             unwrapResponse(await GetVODInformation(vodId as string)),
         enabled: Boolean(vodId),
+    });
+}
+
+// The signed-in viewer's own like/dislike on a VOD.
+export function useMyVodReaction(vodId: string | undefined, enabled: boolean) {
+    return useQuery({
+        queryKey: myVodReactionQueryKey(vodId ?? ""),
+        queryFn: async () =>
+            unwrapResponse(await GetMyVODReaction(vodId as string)),
+        enabled: enabled && Boolean(vodId),
     });
 }

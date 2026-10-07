@@ -1,7 +1,13 @@
 "use client";
 import { Slider } from "@/components/ui/slider";
 import { ClassValue } from "clsx";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import {
+    useEffect,
+    useEffectEvent,
+    useImperativeHandle,
+    useRef,
+    useState,
+} from "react";
 import screenfull from "screenfull";
 import { cn } from "@/utils/cn";
 import {
@@ -84,6 +90,12 @@ export type VideoInfo = {
 
 export type PlayerMode = "live" | "vod";
 
+// Lets the page drive the player, e.g. a clicked timestamp in a comment.
+export type VideoPlayerHandle = {
+    seekTo: (seconds: number) => void;
+    getCurrentTime: () => number;
+};
+
 type PlayerConfig = {
     playbackRate: number;
     resolution: string;
@@ -101,6 +113,8 @@ export function VideoPlayer({
     onVideoStart,
     onProgressSeconds,
     enableSkipButtons,
+    controlRef,
+    startAt,
 }: {
     videoInfo: VideoInfo;
     mode: PlayerMode;
@@ -108,10 +122,17 @@ export function VideoPlayer({
     onVideoStart?: () => void;
     onProgressSeconds?: (seconds: number) => void;
     enableSkipButtons?: boolean;
+    controlRef?: React.Ref<VideoPlayerHandle>;
+    /** seconds to jump to once the video can play */
+    startAt?: number;
 }) {
     const skipButtons = enableSkipButtons ?? mode === "vod";
     const containerRef = useRef<HTMLDivElement>(null);
     const playerRef = useRef<HlsCapableVideo>(null);
+    // a seek requested before the stream can play is held until it can,
+    // since setting currentTime before hls.js attaches is dropped
+    const pendingSeekRef = useRef<number | null>(startAt ?? null);
+    const canPlayRef = useRef(false);
 
     const [idleCount, setIdleCount] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -143,6 +164,19 @@ export function VideoPlayer({
 
     const skipBy = (seconds: number) =>
         seekToTime(Math.min(duration, Math.max(0, currentTime + seconds)));
+
+    useImperativeHandle(controlRef, () => ({
+        seekTo: (seconds: number) => {
+            const target = Math.max(0, seconds);
+            if (canPlayRef.current) {
+                seekToTime(target);
+            } else {
+                pendingSeekRef.current = target;
+            }
+            playVideo();
+        },
+        getCurrentTime: () => playerRef.current?.currentTime ?? 0,
+    }));
 
     // YouTube-style shortcuts: J/← and L/→ skip, K/Space toggle playback.
     const handleShortcut = useEffectEvent((e: KeyboardEvent) => {
@@ -237,6 +271,11 @@ export function VideoPlayer({
                         onEnded={pauseVideo}
                         onCanPlay={() => {
                             setIsLoading(false);
+                            canPlayRef.current = true;
+                            if (pendingSeekRef.current !== null) {
+                                seekToTime(pendingSeekRef.current);
+                                pendingSeekRef.current = null;
+                            }
                             const hlsPlayer = playerRef.current?.api;
                             if (!hlsPlayer) return;
                             const newResolutions = hlsPlayer.levels.map(

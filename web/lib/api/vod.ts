@@ -1,5 +1,5 @@
 import { ApiResponse } from "@/types/fetch-response";
-import { VOD } from "@/types/vod";
+import { VOD, VODReaction, VODReactionState } from "@/types/vod";
 import { fetchClient } from "@/utils/fetchClient";
 
 export async function GetAllVODsAsAuthor(): Promise<ApiResponse<VOD[]>> {
@@ -68,6 +68,41 @@ export async function RegisterVODView(
         },
         body: JSON.stringify({ watchedSeconds }),
     });
+}
+
+export async function GetMyVODReaction(
+    vodId: string,
+): Promise<ApiResponse<VODReactionState>> {
+    return fetchClient<ApiResponse<VODReactionState>>(
+        `/vods/${vodId}/reaction`,
+    );
+}
+
+export async function SetVODReaction(
+    vodId: string,
+    reaction: VODReaction,
+): Promise<ApiResponse<VODReactionState>> {
+    return fetchClient<ApiResponse<VODReactionState>>(
+        `/vods/${vodId}/reaction`,
+        {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ reaction }),
+        },
+    );
+}
+
+export async function RemoveVODReaction(
+    vodId: string,
+): Promise<ApiResponse<VODReactionState>> {
+    return fetchClient<ApiResponse<VODReactionState>>(
+        `/vods/${vodId}/reaction`,
+        {
+            method: "DELETE",
+        },
+    );
 }
 
 export async function UploadVOD(
