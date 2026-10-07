@@ -7,6 +7,7 @@ import (
 	vodcommentrepo "sen1or/letslive/vod/repositories/vod_comment"
 	vodcommenteditrepo "sen1or/letslive/vod/repositories/vod_comment_edit"
 	vodcommentlikerepo "sen1or/letslive/vod/repositories/vod_comment_like"
+	vodreactionrepo "sen1or/letslive/vod/repositories/vod_reaction"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -29,4 +30,8 @@ func NewVODCommentLikeRepository(conn *pgxpool.Pool) domains.VODCommentLikeRepos
 
 func NewTranscodeJobRepository(conn *pgxpool.Pool) domains.TranscodeJobRepository {
 	return transcodejobrepo.NewTranscodeJobRepository(conn)
+}
+
+func NewVODReactionRepository(conn *pgxpool.Pool) domains.VODReactionRepository {
+	return vodreactionrepo.NewVODReactionRepository(conn)
 }

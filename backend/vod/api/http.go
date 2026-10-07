@@ -57,6 +57,9 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("POST /v1/vods/upload", a.vodHandler.UploadVODPrivateHandler)
 	wrap("PATCH /v1/vods/{vodId}", a.vodHandler.UpdateVODMetadataPrivateHandler)
 	wrap("DELETE /v1/vods/{vodId}", a.vodHandler.DeleteVODPrivateHandler)
+	wrap("GET /v1/vods/{vodId}/reaction", a.vodHandler.GetMyReactionPrivateHandler)
+	wrap("PUT /v1/vods/{vodId}/reaction", a.vodHandler.SetReactionPrivateHandler)
+	wrap("DELETE /v1/vods/{vodId}/reaction", a.vodHandler.RemoveReactionPrivateHandler)
 
 	// Public VOD comment routes
 	wrap("GET /v1/vods/{vodId}/comments", a.vodCommentHandler.GetCommentsPublicHandler)

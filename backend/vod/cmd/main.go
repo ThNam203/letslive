@@ -16,6 +16,7 @@ import (
 	"sen1or/letslive/vod/repositories"
 	vodService "sen1or/letslive/vod/services/vod"
 	vodCommentService "sen1or/letslive/vod/services/vod_comment"
+	vodReactionService "sen1or/letslive/vod/services/vod_reaction"
 	miniostorage "sen1or/letslive/vod/storage/minio"
 
 	sharedconfig "sen1or/letslive/shared/config"
@@ -115,6 +116,7 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var vodCommentEditRepo = repositories.NewVODCommentEditRepository(dbConn)
 	var vodCommentLikeRepo = repositories.NewVODCommentLikeRepository(dbConn)
 	var transcodeJobRepo = repositories.NewTranscodeJobRepository(dbConn)
+	var vodReactionRepo = repositories.NewVODReactionRepository(dbConn)
 
 	var userGateway = usergatewayhttp.NewUserGateway(registry)
 
@@ -123,7 +125,9 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var vodService = vodService.NewVODService(vodRepo, transcodeJobRepo, minio)
 	var vodCommentService = vodCommentService.NewVODCommentService(vodCommentRepo, vodCommentEditRepo, vodCommentLikeRepo, vodRepo, userGateway, dbConn)
 
-	var vodHandler = vodHandler.NewVODHandler(vodService)
+	var vodReactionService = vodReactionService.NewVODReactionService(vodReactionRepo, vodRepo, dbConn)
+
+	var vodHandler = vodHandler.NewVODHandler(vodService, vodReactionService)
 	var vodCommentHandler = vodCommentHandler.NewVODCommentHandler(vodCommentService)
 	return api.NewAPIServer(vodHandler, vodCommentHandler, cfg, dbConn)
 }

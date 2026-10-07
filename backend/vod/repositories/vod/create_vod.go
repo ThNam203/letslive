@@ -21,7 +21,7 @@ func (r *postgresVODRepo) Create(ctx context.Context, vod domains.VOD) (*domains
 	query := `
         insert into vods (id, livestream_id, user_id, title, description, thumbnail_url, visibility, duration, playback_url, view_count, status, original_file_url, created_at)
         values (coalesce($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-        returning id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, duration, playback_url, status, original_file_url, created_at, updated_at
+        returning id, livestream_id, user_id, title, description, thumbnail_url, visibility, view_count, like_count, duration, playback_url, status, original_file_url, created_at, updated_at
     `
 	rows, err := r.dbConn.Query(ctx, query,
 		id, vod.LivestreamId, vod.UserId, vod.Title, vod.Description, vod.ThumbnailURL,

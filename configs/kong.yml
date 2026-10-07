@@ -306,6 +306,33 @@ services:
                 - ACCESS_TOKEN
               key_claim_name: consumer
               run_on_preflight: true
+      # a viewer's own like/dislike; the methods condition makes this win
+      # over VOD_Public_Routes, so GET is jwt-checked too
+      - name: VOD_Reaction_Private_Route
+        protocols:
+          - http
+          - https
+        paths:
+          - ~/vods/[^/]+/reaction$
+        methods:
+          - GET
+          - PUT
+          - DELETE
+        strip_path: false
+        preserve_host: false
+        https_redirect_status_code: 426
+        request_buffering: true
+        response_buffering: true
+        plugins:
+          - name: jwt
+            enabled: true
+            config:
+              claims_to_verify:
+                - exp
+              cookie_names:
+                - ACCESS_TOKEN
+              key_claim_name: consumer
+              run_on_preflight: true
       - name: VOD_Comments_Public_Route
         protocols:
           - http
