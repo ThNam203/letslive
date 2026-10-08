@@ -441,6 +441,25 @@ static_resources:
                   envoy.filters.http.jwt_authn:
                     '@type': type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig
                     requirement_name: access_token_required
+              # must stay above the public /user/{id} route, which also matches /user/me
+              - match:
+                  path: /user/me
+                route:
+                  cluster: user
+                  auto_host_rewrite: true
+                  timeout: 0s
+                  idle_timeout: 60s
+                  regex_rewrite:
+                    pattern:
+                      regex: ^/
+                    substitution: /v1/
+                  retry_policy:
+                    retry_on: connect-failure,refused-stream
+                    num_retries: 3
+                typed_per_filter_config:
+                  envoy.filters.http.jwt_authn:
+                    '@type': type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig
+                    requirement_name: access_token_required
               - match:
                   safe_regex:
                     regex: ^/user/[^/]+$
