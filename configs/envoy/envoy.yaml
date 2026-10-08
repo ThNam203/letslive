@@ -444,6 +444,12 @@ static_resources:
               - match:
                   safe_regex:
                     regex: ^/user/[^/]+$
+                  # public profile reads only; writes under /user/{id} (e.g. the
+                  # internal status update) must not get through without a token
+                  headers:
+                  - name: :method
+                    string_match:
+                      exact: GET
                 route:
                   cluster: user
                   auto_host_rewrite: true
