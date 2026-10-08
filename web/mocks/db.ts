@@ -7,7 +7,7 @@
 import { AuthProvider, MeUser, PublicUser, UserStatus } from "@/types/user";
 import { Notification } from "@/types/notification";
 import { Livestream } from "@/types/livestream";
-import { VOD } from "@/types/vod";
+import { VOD, VODReaction } from "@/types/vod";
 import { VODComment } from "@/types/vod-comment";
 import { ChatCommand } from "@/types/chat-command";
 import { Gift, ShopItem, UserInventory } from "@/types/shop";
@@ -215,6 +215,7 @@ export const vods: VOD[] = [
             "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=640&q=80",
         visibility: "public",
         viewCount: 17,
+        likeCount: 3,
         duration: 210,
         playbackUrl:
             "https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8",
@@ -232,6 +233,7 @@ export const vods: VOD[] = [
         thumbnailUrl: null,
         visibility: "private",
         viewCount: 2,
+        likeCount: 0,
         duration: 600,
         playbackUrl: null,
         status: "ready",
@@ -249,6 +251,7 @@ export const vods: VOD[] = [
             "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=640&q=80",
         visibility: "public",
         viewCount: 441,
+        likeCount: 58,
         duration: 210,
         playbackUrl:
             "https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8",
@@ -262,11 +265,13 @@ export const vods: VOD[] = [
         livestreamId: null,
         userId: "user-002",
         title: "Jane's Best Moments — Highlight Reel",
-        description: "Compilation of the best gaming moments",
+        description:
+            "Compilation of the best gaming moments from this month.\n\nChapters:\n0:00 Intro\n0:45 The clutch\n1:30 Boss fight\n2:50 Outro\n\nThanks for watching! Drop your favourite moment in the comments and follow for more highlight reels every week.",
         thumbnailUrl:
             "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=640&q=80",
         visibility: "public",
         viewCount: 1102,
+        likeCount: 240,
         duration: 210,
         playbackUrl:
             "https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8",
@@ -323,7 +328,7 @@ export const vodComments: VODComment[] = [
         vodId: "vod-004",
         userId: ME_USER_ID,
         parentId: null,
-        content: "This highlight reel is insane",
+        content: "This highlight reel is insane, 1:30 is the best part",
         isDeleted: false,
         isEdited: false,
         likeCount: 3,
@@ -336,10 +341,31 @@ export const vodComments: VODComment[] = [
             profilePicture: mockAvatar("mockuser"),
         },
     },
+    {
+        id: "comment-004",
+        vodId: "vod-004",
+        userId: "user-003",
+        parentId: null,
+        content: "The clutch at 0:45 😱 and that ending at 2:50",
+        isDeleted: false,
+        isEdited: false,
+        likeCount: 7,
+        replyCount: 0,
+        createdAt: daysAgo(6),
+        updatedAt: daysAgo(6),
+        user: {
+            id: "user-003",
+            username: "coder_alex",
+            profilePicture: mockAvatar("alex"),
+        },
+    },
 ];
 
 // Track which comment IDs the current user has liked
 export const likedCommentIds: Set<string> = new Set(["comment-001"]);
+
+// The current user's like/dislike per VOD id
+export const myVodReactions: Map<string, VODReaction> = new Map();
 
 // ---------------------------------------------------------------------------
 // Seed: Chat Commands

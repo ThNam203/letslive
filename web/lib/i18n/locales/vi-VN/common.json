@@ -54,5 +54,24 @@
     "recommended": "Gợi ý",
     "other_streams": "Các luồng khác",
     "close": "Đóng",
-    "accept": "Đồng ý"
+    "accept": "Đồng ý",
+    "vod": {
+        "views_other": "{{count}} lượt xem",
+        "like": "Thích",
+        "dislike": "Không thích",
+        "remove_like": "Bỏ thích",
+        "remove_dislike": "Bỏ không thích",
+        "login_to_react": "Đăng nhập để thích hoặc không thích video này",
+        "show_more": "...thêm",
+        "show_less": "Ẩn bớt",
+        "followers_other": "{{formatted}} người theo dõi",
+        "share": "Chia sẻ",
+        "share_description": "Bất kỳ ai có liên kết này đều có thể xem video.",
+        "share_link": "Liên kết video",
+        "copy": "Sao chép",
+        "link_copied": "Đã sao chép liên kết",
+        "copy_failed": "Không thể sao chép liên kết",
+        "start_at": "Bắt đầu tại {{time}}",
+        "seek_to": "Tua đến {{time}}"
+    }
 }

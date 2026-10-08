@@ -61,5 +61,26 @@
     "recommended": "Recommended",
     "other_streams": "Other streams",
     "close": "Close",
-    "accept": "Accept"
+    "accept": "Accept",
+    "vod": {
+        "views_one": "{{count}} view",
+        "views_other": "{{count}} views",
+        "like": "Like",
+        "dislike": "Dislike",
+        "remove_like": "Remove like",
+        "remove_dislike": "Remove dislike",
+        "login_to_react": "Log in to like or dislike this video",
+        "show_more": "...more",
+        "show_less": "Show less",
+        "followers_one": "{{formatted}} follower",
+        "followers_other": "{{formatted}} followers",
+        "share": "Share",
+        "share_description": "Anyone with this link can watch the video.",
+        "share_link": "Video link",
+        "copy": "Copy",
+        "link_copied": "Link copied",
+        "copy_failed": "Couldn't copy the link",
+        "start_at": "Start at {{time}}",
+        "seek_to": "Jump to {{time}}"
+    }
 }

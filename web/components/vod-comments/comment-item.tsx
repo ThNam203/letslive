@@ -38,6 +38,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/utils/cn";
+import TimestampedText from "@/components/vod/timestamped-text";
 import CommentForm from "./comment-form";
 import CommentEditForm from "./comment-edit-form";
 import CommentList from "./comment-list";
@@ -333,7 +334,7 @@ export default function CommentItem({
                         />
                     ) : (
                         <p className="mt-1 text-sm whitespace-pre-wrap">
-                            {comment.content}
+                            <TimestampedText text={comment.content} />
                         </p>
                     )}
                 </div>

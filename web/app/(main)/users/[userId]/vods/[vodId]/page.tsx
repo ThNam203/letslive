@@ -4,6 +4,7 @@ import { GetUserById } from "@/lib/api/user";
 import { myGetT } from "@/lib/i18n";
 import { getSiteUrl, toAbsoluteUrl } from "@/utils/siteUrl";
 import GLOBAL from "@/global";
+import { parseStartTime } from "@/utils/vod-timestamps";
 import VODView from "./vod-view";
 
 type VODPageParams = { userId: string; vodId: string };
@@ -92,6 +93,11 @@ export async function generateMetadata({
     };
 }
 
-export default function VODPage() {
-    return <VODView />;
+export default async function VODPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ t?: string | string[] }>;
+}) {
+    const { t } = await searchParams;
+    return <VODView startAt={parseStartTime(t)} />;
 }

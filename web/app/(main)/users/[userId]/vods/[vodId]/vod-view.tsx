@@ -1,21 +1,24 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { VideoInfo } from "@/components/custom_react_player/streaming-frame";
-import { VODFrame } from "@/components/custom_react_player/vod-frame";
+import {
+    VODFrame,
+    VideoPlayerHandle,
+} from "@/components/custom_react_player/vod-frame";
 import MediaCard from "@/components/livestream/media-card";
 import { VOD } from "@/types/vod";
 import { PublicUser } from "@/types/user";
 import { RegisterVODView } from "@/lib/api/vod";
-import ProfileView from "@/app/(main)/users/[userId]/profile";
-import ProfileSkeleton from "@/app/(main)/users/[userId]/profile-skeleton";
 import { PlayerSkeleton } from "@/components/skeletons/player-skeleton";
 import { MediaCardSkeleton } from "@/components/skeletons/media-card-skeleton";
 import useT from "@/hooks/use-translation";
 import useMediaQuery from "@/hooks/use-media-query";
 import { MQ_MAX_MD } from "@/constant/breakpoints";
 import CommentSection from "@/components/vod-comments/comment-section";
+import { VODPlaybackProvider } from "@/contexts/vod-playback-context";
+import VODDetails from "./vod-details";
 import { publicUserQueryKey, usePublicUser } from "@/hooks/queries/use-users";
 import {
     publicVodsOfUserQueryKey,
@@ -25,7 +28,7 @@ import {
 
 const OTHER_STREAMS_SKELETON_COUNT = 3;
 
-export default function VODView() {
+export default function VODView({ startAt }: { startAt?: number }) {
     const { t } = useT(["fetch-error", "api-response", "common"]);
     const params = useParams<{ userId: string; vodId: string }>();
     const queryClient = useQueryClient();
@@ -34,6 +37,8 @@ export default function VODView() {
     // a set, not one id: navigating away and back while a registration is
     // still in flight would otherwise let the same VOD be counted twice
     const registeringVodIdsRef = useRef(new Set<string>());
+    const playerRef = useRef<VideoPlayerHandle>(null);
+    const playerWrapperRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         countedVodIdRef.current = null;
@@ -48,6 +53,23 @@ export default function VODView() {
     );
 
     const vodDuration = vod?.duration ?? 0;
+
+    // a timestamp clicked down in the comments brings the player back into view
+    const seekTo = useCallback((seconds: number) => {
+        playerRef.current?.seekTo(seconds);
+        playerWrapperRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+        });
+    }, []);
+    const getCurrentTime = useCallback(
+        () => playerRef.current?.getCurrentTime() ?? 0,
+        [],
+    );
+    const playback = useMemo(
+        () => ({ seekTo, duration: vodDuration }),
+        [seekTo, vodDuration],
+    );
 
     const updateUser = (newUserInfo: PublicUser) => {
         queryClient.setQueryData<PublicUser>(
@@ -140,49 +162,52 @@ export default function VODView() {
     return (
         <div className="ml-4 flex h-full gap-6 overflow-hidden">
             {/* Main content area */}
-            <div className="no-scrollbar flex-1 overflow-auto">
-                {isLoadingVod ? (
-                    <PlayerSkeleton className="mt-1" />
-                ) : (
-                    <VODFrame
-                        videoInfo={playerInfo}
-                        className="mt-1"
-                        onProgressSeconds={handleVODProgress}
-                    />
-                )}
-                {isLoadingUser ? (
-                    <ProfileSkeleton
-                        showRecentActivity={false}
-                        className="mt-2"
-                    />
-                ) : (
-                    user && (
-                        <ProfileView
+            <VODPlaybackProvider value={playback}>
+                <div className="no-scrollbar flex-1 overflow-auto">
+                    <div ref={playerWrapperRef} className="scroll-mt-1">
+                        {isLoadingVod ? (
+                            <PlayerSkeleton className="mt-1" />
+                        ) : (
+                            <VODFrame
+                                // remount per VOD so playback state and the
+                                // pending start time never carry over
+                                key={params.vodId}
+                                videoInfo={playerInfo}
+                                className="mt-1"
+                                onProgressSeconds={handleVODProgress}
+                                controlRef={playerRef}
+                                startAt={startAt}
+                            />
+                        )}
+                    </div>
+                    {vod && (
+                        <VODDetails
+                            vod={vod}
                             user={user}
+                            isLoadingUser={isLoadingUser}
                             updateUser={updateUser}
-                            vods={otherVods}
-                            showRecentActivity={false}
-                            className="mt-2"
+                            getCurrentTime={getCurrentTime}
+                            className="mt-3"
                         />
-                    )
-                )}
-                {/* below md the sidebar is hidden, so the list moves inline
+                    )}
+                    {/* below md the sidebar is hidden, so the list moves inline
                     above the comments; only one copy is ever rendered */}
-                {isSmallScreen && (
-                    <section className="mt-4 md:hidden">
-                        <h2 className="mb-2 font-semibold">
-                            {t("common:other_streams")}
-                        </h2>
-                        {otherStreamCards}
-                    </section>
-                )}
-                <CommentSection
-                    key={params.vodId}
-                    vodId={params.vodId}
-                    vodOwnerId={params.userId}
-                    className="mt-4 pb-8"
-                />
-            </div>
+                    {isSmallScreen && (
+                        <section className="mt-4 md:hidden">
+                            <h2 className="mb-2 font-semibold">
+                                {t("common:other_streams")}
+                            </h2>
+                            {otherStreamCards}
+                        </section>
+                    )}
+                    <CommentSection
+                        key={params.vodId}
+                        vodId={params.vodId}
+                        vodOwnerId={params.userId}
+                        className="mt-4 pb-8"
+                    />
+                </div>
+            </VODPlaybackProvider>
             {!isSmallScreen && (
                 <div className="hidden md:block md:w-80 lg:w-96">
                     <div className="border-border bg-background flex h-full w-full flex-col border-x font-sans">

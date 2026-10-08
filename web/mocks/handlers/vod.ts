@@ -11,11 +11,12 @@ import {
     vods,
     vodComments,
     likedCommentIds,
+    myVodReactions,
     ME_USER_ID,
     uid,
     now,
 } from "../db";
-import { VOD } from "@/types/vod";
+import { VOD, VODReaction, VODReactionState } from "@/types/vod";
 import { VODComment } from "@/types/vod-comment";
 import { meUser } from "../db";
 
@@ -103,6 +104,7 @@ export const vodHandlers = [
                 "public") as VOD["visibility"],
             thumbnailUrl: null,
             viewCount: 0,
+            likeCount: 0,
             duration: 0,
             playbackUrl:
                 "https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8",
@@ -229,6 +231,51 @@ export const vodHandlers = [
             );
         comment.isDeleted = true;
         return noContent();
+    }),
+
+    // GET /vods/:vodId/reaction
+    http.get(`${API_BASE}/vods/:vodId/reaction`, ({ params }) => {
+        const { vodId } = params as { vodId: string };
+        const vod = vods.find((v) => v.id === vodId);
+        if (!vod) return notFound("res_err_vod_not_found", "VOD not found");
+        return ok<VODReactionState>({
+            likeCount: vod.likeCount,
+            reaction: myVodReactions.get(vodId) ?? null,
+        });
+    }),
+
+    // PUT /vods/:vodId/reaction
+    http.put(
+        `${API_BASE}/vods/:vodId/reaction`,
+        async ({ params, request }) => {
+            const { vodId } = params as { vodId: string };
+            const vod = vods.find((v) => v.id === vodId);
+            if (!vod) return notFound("res_err_vod_not_found", "VOD not found");
+            const { reaction } = (await request.json()) as {
+                reaction: VODReaction;
+            };
+            const previous = myVodReactions.get(vodId);
+            if (previous === "like")
+                vod.likeCount = Math.max(0, vod.likeCount - 1);
+            if (reaction === "like") vod.likeCount += 1;
+            myVodReactions.set(vodId, reaction);
+            return ok<VODReactionState>({ likeCount: vod.likeCount, reaction });
+        },
+    ),
+
+    // DELETE /vods/:vodId/reaction
+    http.delete(`${API_BASE}/vods/:vodId/reaction`, ({ params }) => {
+        const { vodId } = params as { vodId: string };
+        const vod = vods.find((v) => v.id === vodId);
+        if (!vod) return notFound("res_err_vod_not_found", "VOD not found");
+        if (myVodReactions.get(vodId) === "like") {
+            vod.likeCount = Math.max(0, vod.likeCount - 1);
+        }
+        myVodReactions.delete(vodId);
+        return ok<VODReactionState>({
+            likeCount: vod.likeCount,
+            reaction: null,
+        });
     }),
 
     // POST /vod-comments/:commentId/like

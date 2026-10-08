@@ -1,6 +1,6 @@
-export type { VideoInfo } from "./video-player";
+export type { VideoInfo, VideoPlayerHandle } from "./video-player";
 
-import { VideoPlayer, VideoInfo } from "./video-player";
+import { VideoPlayer, VideoInfo, VideoPlayerHandle } from "./video-player";
 import { ClassValue } from "clsx";
 
 export function VODFrame({
@@ -9,12 +9,16 @@ export function VODFrame({
     onVideoStart,
     onProgressSeconds,
     enableSkipButtons,
+    controlRef,
+    startAt,
 }: {
     videoInfo: VideoInfo;
     className?: ClassValue;
     onVideoStart?: () => void;
     onProgressSeconds?: (seconds: number) => void;
     enableSkipButtons?: boolean;
+    controlRef?: React.Ref<VideoPlayerHandle>;
+    startAt?: number;
 }) {
     return (
         <VideoPlayer
@@ -24,6 +28,8 @@ export function VODFrame({
             onVideoStart={onVideoStart}
             onProgressSeconds={onProgressSeconds}
             enableSkipButtons={enableSkipButtons}
+            controlRef={controlRef}
+            startAt={startAt}
         />
     );
 }
