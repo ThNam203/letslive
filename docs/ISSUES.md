@@ -52,10 +52,9 @@ File: [.env](.env)
 **S9. ~~Weak JWT signing secret in Kong~~ — FIXED**
 The shared HS256 secret is gone. Access tokens are signed with an ES256 private key held only by auth (`ACCESS_TOKEN_PRIVATE_KEY`); the gateway and the other services only ever see the public key through the JWKS endpoint.
 
-**S20. Private VODs readable and view-countable by anyone via public routes**
-`GET /v1/vods/{vodId}` and `POST /v1/vods/{vodId}/view` sit on public gateway routes (no JWT requirement) and never check `visibility`. Anyone with a private VOD's id gets its metadata and `playbackUrl`, and can inflate its view count. Found while reviewing PR #370 (the reaction routes were fixed there; these two were deliberately postponed).
-Files: [backend/vod/services/vod/get_by_id.go](backend/vod/services/vod/get_by_id.go), [backend/vod/services/vod/increase_view_count.go](backend/vod/services/vod/increase_view_count.go), [configs/envoy/envoy.yaml](configs/envoy/envoy.yaml) (`/vods` routes)
-Unblocked by S1: the vod service now verifies the `ACCESS_TOKEN` cookie itself (`jwtauth.Verify`), so a viewer id read from it can be trusted without any gateway support. The fix is in the service: read the viewer optionally (a missing or invalid cookie means signed out), return `ErrVODNotFound` for a private VOD unless the viewer is the owner, and apply the same rule to `RegisterView`.
+**S20. ~~Private VODs readable and view-countable by anyone via public routes~~ — FIXED**
+`GET /v1/vods/{vodId}` and `POST /v1/vods/{vodId}/view` no longer serve or count a private VOD for anyone but its owner. The vod service reads the viewer from the `ACCESS_TOKEN` cookie, which it now verifies against the auth JWKS (S1); a missing, expired or forged cookie just means "signed out", and anything but the owner gets `res_err_vod_not_found`. Found while reviewing PR #370.
+Files: [backend/vod/services/vod/get_by_id.go](backend/vod/services/vod/get_by_id.go), [backend/vod/services/vod/increase_view_count.go](backend/vod/services/vod/increase_view_count.go)
 
 ---
 

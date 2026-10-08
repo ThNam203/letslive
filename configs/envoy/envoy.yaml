@@ -53,6 +53,22 @@ static_resources:
                 service_name: envoy-gateway
             random_sampling:
               value: 100
+          local_reply_config:
+            mappers:
+            - filter:
+                status_code_filter:
+                  comparison:
+                    op: EQ
+                    value:
+                      default_value: 401
+                      runtime_key: gateway.unauthorized_status
+              body_format_override:
+                json_format:
+                  success: false
+                  code: 20005
+                  key: res_err_unauthorized
+                  message: Unauthorized.
+                content_type: application/json
           http_filters:
           - name: envoy.filters.http.cors
             typed_config:

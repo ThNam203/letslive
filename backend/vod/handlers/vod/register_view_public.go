@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sen1or/letslive/shared/pkg/tracer"
 	"sen1or/letslive/vod/dto"
+	"sen1or/letslive/vod/handlers/utils"
 	response "sen1or/letslive/vod/response"
 
 	"github.com/go-playground/validator/v10"
@@ -40,8 +41,11 @@ func (h *VODHandler) RegisterViewPublicHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// signed out and invalid tokens are both just "no viewer" on this route
+	viewerId, _ := utils.GetUserIdFromCookie(r)
+
 	ctx, span := tracer.MyTracer.Start(ctx, "register_view_public_handler.vod_service.register_view")
-	serviceErr := h.vodService.RegisterView(ctx, vodUUID, body.WatchedSeconds)
+	serviceErr := h.vodService.RegisterView(ctx, vodUUID, viewerId, body.WatchedSeconds)
 	span.End()
 
 	if serviceErr != nil {

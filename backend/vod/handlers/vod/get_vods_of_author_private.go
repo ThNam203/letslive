@@ -12,9 +12,9 @@ func (h *VODHandler) GetVODsOfAuthorPrivateHandler(w http.ResponseWriter, r *htt
 	ctx, cancelCtx := context.WithCancel(r.Context())
 	defer cancelCtx()
 
-	userUUID, err := utils.GetUserIdFromCookie(r)
-	if err != nil {
-		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_INPUT, nil, nil, nil))
+	userUUID, cErr := utils.GetUserIdFromCookie(r)
+	if cErr != nil {
+		h.WriteResponse(w, ctx, cErr)
 		return
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"sen1or/letslive/shared/pkg/tracer"
+	"sen1or/letslive/vod/handlers/utils"
 	response "sen1or/letslive/vod/response"
 
 	"github.com/gofrs/uuid/v5"
@@ -25,8 +26,11 @@ func (h *VODHandler) GetVODByIdPublicHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// signed out and invalid tokens are both just "no viewer" on this route
+	viewerId, _ := utils.GetUserIdFromCookie(r)
+
 	ctx, span := tracer.MyTracer.Start(ctx, "get_vod_by_id_public_handler.vod_service.get_vod_by_id")
-	vod, serviceErr := h.vodService.GetVODById(ctx, vodUUID)
+	vod, serviceErr := h.vodService.GetVODById(ctx, vodUUID, viewerId)
 	span.End()
 
 	if serviceErr != nil {

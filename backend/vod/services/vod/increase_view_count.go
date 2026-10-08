@@ -12,11 +12,16 @@ const (
 	minWatchPercentage float64 = 0.10
 )
 
-func (s *VODService) RegisterView(ctx context.Context, vodId uuid.UUID, watchedSeconds int64) error {
+// RegisterView counts a view of a VOD the viewer is allowed to see; a private
+// VOD only counts its owner's views.
+func (s *VODService) RegisterView(ctx context.Context, vodId uuid.UUID, viewerId *uuid.UUID, watchedSeconds int64) error {
 	// Fetch VOD to get the stored duration
 	vod, errResp := s.vodRepo.GetById(ctx, vodId)
 	if errResp != nil {
 		return errResp
+	}
+	if !canView(vod, viewerId) {
+		return domains.ErrVODNotFound
 	}
 
 	// Validate watch time threshold: at least 15 seconds OR 10% of video duration (whichever is smaller)
