@@ -1,6 +1,6 @@
 # Issues — letslive
 
-_Last updated: 2026-09-08_
+_Last updated: 2026-10-08_
 
 ---
 
@@ -53,6 +53,12 @@ File: [.env](.env)
 **S9. Weak JWT signing secret in Kong**
 Kong's JWT consumer secret is the literal string `"access_token_secret"`. A comment confirms it: `## note to myself: keep it access_token_secret, I use it to replace with real secret`. Any attacker can forge valid access tokens.
 File: [configs/kong.yml:435](configs/kong.yml#L435)
+
+**S20. Private VODs readable and view-countable by anyone via public routes**
+`GET /v1/vods/{vodId}` and `POST /v1/vods/{vodId}/view` sit on the public Kong route (no jwt plugin) and never check `visibility`. Anyone with a private VOD's id gets its metadata and `playbackUrl`, and can inflate its view count. Found while reviewing PR #370 (the reaction routes were fixed there; these two were deliberately postponed).
+Files: [backend/vod/services/vod/get_by_id.go](backend/vod/services/vod/get_by_id.go), [backend/vod/services/vod/increase_view_count.go](backend/vod/services/vod/increase_view_count.go), [configs/kong.yml](configs/kong.yml) (`VOD_Public_Routes`)
+Why it isn't a handler-only fix: the owner must still see their own private VOD, but identity on these routes comes from `ParseUnverified` (see S1) with no gateway verification, so a forged cookie carrying the owner's id would pass an owner check.
+Proposed fix: add a dedicated Kong route `GET ~/vods/[^/]+$` with the `jwt` plugin in `anonymous` mode (plus an `anonymous` consumer, and `regex_priority` on `VOD_Author_Private_Route` so `/vods/author` keeps winning). Kong then lets signed-out callers through but sets `X-Anonymous-Consumer`; the service must trust the cookie only when that header is absent. Return `ErrVODNotFound` for a private VOD unless the verified viewer is the owner, and apply the same rule to `RegisterView`. Alternative: verify the signature in the service (resolves S1 too). A prototype of the Kong approach parsed cleanly with `kong config parse`, but was not tested end to end.
 
 ---
 

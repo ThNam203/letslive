@@ -80,11 +80,9 @@ export default function VODView({ startAt }: { startAt?: number }) {
 
     const playerInfo: VideoInfo = useMemo(
         () => ({
-            videoTitle: vod?.title ?? "",
-            streamer: { name: user?.username ?? "" },
             videoUrl: vod?.playbackUrl ?? null,
         }),
-        [vod?.title, vod?.playbackUrl, user?.username],
+        [vod?.playbackUrl],
     );
 
     const otherVods = useMemo(

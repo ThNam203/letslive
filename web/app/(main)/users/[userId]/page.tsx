@@ -49,16 +49,12 @@ export default function Livestreaming() {
         () =>
             livestream
                 ? {
-                      videoTitle: livestream.title,
-                      streamer: { name: user?.username ?? "" },
                       videoUrl: `${GLOBAL.API_URL}/transcode/${livestream.id}/index.m3u8`,
                   }
                 : {
-                      videoTitle: t("common:live_streaming"),
-                      streamer: { name: "" },
                       videoUrl: null,
                   },
-        [livestream, user?.username, t],
+        [livestream],
     );
 
     return (

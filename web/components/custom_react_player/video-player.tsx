@@ -84,8 +84,6 @@ function shouldIgnoreShortcut(e: KeyboardEvent) {
 
 export type VideoInfo = {
     videoUrl: string | null;
-    videoTitle: string;
-    streamer: { name: string };
 };
 
 export type PlayerMode = "live" | "vod";
@@ -349,7 +347,6 @@ function PlayerOverlay(props: OverlayProps) {
                 className,
             )}
         >
-            <PlayerHeader videoInfo={videoInfo} />
             <PlayerCenter
                 isPlaying={isPlaying}
                 isLoading={isLoading}
@@ -357,19 +354,6 @@ function PlayerOverlay(props: OverlayProps) {
                 onPause={onPause}
             />
             <PlayerControls {...props} />
-        </div>
-    );
-}
-
-function PlayerHeader({ videoInfo }: { videoInfo: VideoInfo }) {
-    return (
-        <div className="absolute top-3 right-3 left-3 flex items-center justify-between gap-2 font-sans font-bold text-white sm:top-4 sm:right-4 sm:left-4">
-            <span className="max-w-[55%] truncate rounded bg-black/70 px-2 py-1 text-xs sm:text-sm">
-                {videoInfo.videoTitle}
-            </span>
-            <span className="max-w-[40%] truncate rounded bg-black/70 px-2 py-1 text-xs sm:text-sm">
-                {videoInfo.streamer.name}
-            </span>
         </div>
     );
 }
