@@ -68,7 +68,7 @@ export default function NotificationBell() {
                 </button>
             </PopoverTrigger>
             <PopoverContent
-                className="border-border bg-muted mr-4 w-80 p-0"
+                className="border-border bg-muted mr-4 w-96 max-w-[calc(100vw-2rem)] p-0"
                 align="end"
             >
                 <NotificationPopupContent

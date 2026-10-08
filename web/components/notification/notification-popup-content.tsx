@@ -50,7 +50,10 @@ export function NotificationPopupContent({
                 )}
             </div>
 
-            <ScrollArea className="h-80">
+            {/* the cap goes on the viewport: Radix only scrolls when the
+                viewport's height is bounded. About half the screen, minus the
+                header and footer, but never under 12rem on short screens. */}
+            <ScrollArea className="[&>[data-radix-scroll-area-viewport]]:max-h-[max(12rem,calc(50dvh-5.5rem))]">
                 {isLoading ? (
                     <NotificationLoading message={tNotif("loading")} />
                 ) : notifications.length === 0 ? (
