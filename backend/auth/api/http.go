@@ -55,6 +55,8 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("DELETE /v1/auth/logout", a.authHandler.LogOutHandler)
 	wrap("POST /v1/auth/verify-email", a.authHandler.RequestEmailVerificationHandler)
 
+	wrap("GET /v1/.well-known/jwks.json", a.authHandler.JWKSHandler)
+
 	wrap("GET /v1/auth/google", a.authHandler.OAuthGoogleLoginHandler)
 	wrap("GET /v1/auth/google/callback", a.authHandler.OAuthGoogleCallBackHandler)
 	wrap("POST /v1/auth/google/mobile", a.authHandler.OAuthGoogleMobileHandler)

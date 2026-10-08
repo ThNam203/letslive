@@ -21,7 +21,7 @@ services:
       - GOOGLE_OAUTH_REDIRECT_URL=${GOOGLE_OAUTH_REDIRECT_URL}
       - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
       - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET}
-      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - ACCESS_TOKEN_PRIVATE_KEY=${ACCESS_TOKEN_PRIVATE_KEY}
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
       - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
       - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
@@ -43,6 +43,7 @@ services:
     expose:
       - "7778"
     environment:
+      - JWKS_URL=${JWKS_URL:-http://auth:7777/v1/.well-known/jwks.json}
       - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
       - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
@@ -97,6 +98,7 @@ services:
     expose:
       - "7781"
     environment:
+      - JWKS_URL=${JWKS_URL:-http://auth:7777/v1/.well-known/jwks.json}
       - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
       - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
@@ -117,6 +119,7 @@ services:
     expose:
       - "7782"
     environment:
+      - JWKS_URL=${JWKS_URL:-http://auth:7777/v1/.well-known/jwks.json}
       - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
       - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
@@ -139,6 +142,7 @@ services:
     expose:
       - "7783"
     environment:
+      - JWKS_URL=${JWKS_URL:-http://auth:7777/v1/.well-known/jwks.json}
       - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
       - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
@@ -164,7 +168,7 @@ services:
       - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
       - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
-      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - JWKS_URL=${JWKS_URL:-http://auth:7777/v1/.well-known/jwks.json}
     networks:
       general_network:
     depends_on:
@@ -202,6 +206,7 @@ services:
     expose:
       - "7780"
     environment:
+      - JWKS_URL=${JWKS_URL:-http://auth:7777/v1/.well-known/jwks.json}
       - CONFIG_SERVER_PROFILE=${CONFIG_SERVER_PROFILE}
       - CONFIG_SERVER_INTERVAL=${CONFIG_SERVER_INTERVAL}
       - REGISTRY_SERVICE_ADDRESS=${REGISTRY_SERVICE_ADDRESS}
@@ -406,42 +411,19 @@ services:
       timeout: 10s
       retries: 5
 
-  kong:
-    image: kong:latest
-    container_name: letslive-kong
+  envoy:
+    image: envoyproxy/envoy:v1.36-latest
+    container_name: letslive-envoy
     networks:
       general_network:
     restart: always
-    environment:
-      - KONG_DATABASE=off
-      - KONG_DNS_RESOLVER=172.29.0.10:8600,127.0.0.11 # use consul ip address
-      - KONG_PROXY_ACCESS_LOG=/dev/stdout
-      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
-      - KONG_PROXY_ERROR_LOG=/dev/stderr
-      - KONG_ADMIN_ERROR_LOG=/dev/stderr
-      - KONG_ADMIN_LISTEN=0.0.0.0:8001
-      - KONG_ADMIN_LISTEN_SSL=0.0.0.0:8444
-      - KONG_ADMIN_GUI_URL=http://localhost:8002
-      #- KONG_DNS_ORDER=CNAME, A, SRV
-      - KONG_DECLARATIVE_CONFIG=/kong/declarative/kong.yml
-      - KONG_WORKER_PROCESSES="4"
-      - KONG_MEM_CACHE_SIZE="128m"
-      - KONG_PROXY_BUFFER_SIZE="16k"
-      - KONG_PROXY_BUFFERS="4 16k"
-      - KONG_PROXY_BUSY_BUFFERS_SIZE="32k"
-      - KONG_LOG_LEVEL=notice
-      - KONG_TRACING_INSTRUMENTATIONS=request
-      - KONG_TRACING_SAMPLING_RATE=1.0
+    command: ["-c", "/etc/envoy/envoy.yaml", "--log-level", "info"]
     volumes:
-      - ./configs/kong.yml:/kong/declarative/kong.yml
+      - ./configs/envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
     ports:
       - "8000:8000"
-      - "8443:8443"
-      - "8001:8001"
-      - "8002:8002"
-      - "8444:8444"
     healthcheck:
-      test: ["CMD", "kong", "health"]
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8000'"]
       interval: 5s
       timeout: 2s
       retries: 15

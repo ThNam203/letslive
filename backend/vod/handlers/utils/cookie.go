@@ -2,12 +2,12 @@ package utils
 
 import (
 	"net/http"
+	"sen1or/letslive/shared/pkg/jwtauth"
 	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/vod/response"
 	"sen1or/letslive/vod/types"
 
 	"github.com/gofrs/uuid/v5"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 func GetUserIdFromCookie(r *http.Request) (*uuid.UUID, *response.Response[any]) {
@@ -24,8 +24,7 @@ func GetUserIdFromCookie(r *http.Request) (*uuid.UUID, *response.Response[any]) 
 
 	myClaims := types.MyClaims{}
 
-	// the signature should already been checked from the api gateway before going to this
-	_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
+	err = jwtauth.Verify(r.Context(), accessTokenCookie.Value, &myClaims)
 	if err != nil {
 		logger.Debugf(r.Context(), "invalid access token: %s", err)
 		return nil, response.NewResponseFromTemplate[any](

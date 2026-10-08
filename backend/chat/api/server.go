@@ -46,7 +46,7 @@ func (a *APIServer) getHandler() http.Handler {
 	sm.HandleFunc("GET /v1/messages", h.LiveChat.GetMessagesPublicHandler)
 	sm.HandleFunc("GET /v1/chat-commands", h.ChatCommand.ListForRoomPublicHandler)
 
-	// Private routes (JWT checked by Kong)
+	// Private routes (JWT checked by the gateway)
 	sm.HandleFunc("POST /v1/messages", h.LiveChat.SendMessagePrivateHandler)
 
 	sm.HandleFunc("GET /v1/chat-commands/mine", h.ChatCommand.ListMinePrivateHandler)

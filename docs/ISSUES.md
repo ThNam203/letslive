@@ -8,10 +8,6 @@ _Last updated: 2026-10-08_
 
 ### 🔴 CRITICAL
 
-**S1. JWT signature NOT verified in any service**
-All Go services call `jwt.ParseUnverified()`; the chat service calls `jwt.decode()`. Anyone who can reach a service directly — bypassing Kong — can forge any user's identity.
-Files: [user/handlers/utils/cookie.go:28](user/handlers/utils/cookie.go#L28), [livestream/handlers/utils/cookie.go:28](livestream/handlers/utils/cookie.go#L28), [vod/handlers/utils/cookie.go:28](vod/handlers/utils/cookie.go#L28), [backend/chat/src/middlewares/auth.ts:14](backend/chat/src/middlewares/auth.ts#L14)
-
 **S2. Refresh token NOT revoked on logout**
 `LogOutHandler` clears the cookie but never calls `RevokeTokenByValue()` or `RevokeAllTokensOfUser()`. A stolen refresh token stays valid after logout indefinitely.
 File: [backend/auth/handlers/auth.go:269-272](backend/auth/handlers/auth.go#L269-L272)
@@ -30,16 +26,16 @@ File: [backend/auth/services/jwt.go:51-85](backend/auth/services/jwt.go#L51-L85)
 File: [user/api/http.go:55](user/api/http.go#L55)
 
 **S5. CORS wildcard with credentials**
-Kong is configured with `origins: ["*"]` and `credentials: true`. Any website can issue authenticated requests and read responses.
-File: [configs/kong.yml:431](configs/kong.yml#L431)
+The gateway's CORS policy allows any origin (`.*`) with `allow_credentials: true`, so any website can issue authenticated requests and read responses.
+File: [configs/envoy/envoy.yaml](configs/envoy/envoy.yaml) (`envoy.filters.http.cors` policy on the virtual host)
 
 **S6. No TLS on backend services**
-The `useTLS` path hard-errors. JWT cookies and payloads travel in plaintext between Kong and all services (and to clients if Kong is not fronted by TLS).
+The `useTLS` path hard-errors. JWT cookies and payloads travel in plaintext between the gateway and all services (and to clients if the gateway is not fronted by TLS).
 File: [auth/api/http.go:58](auth/api/http.go#L58)
 
 **S7. Broken rate limiting — OTP endpoint**
 OTP rate limit is set to 123/min with a `#TODO: change to one` comment. No brute-force protection on login or signup.
-File: [configs/kong.yml:76-80](configs/kong.yml#L76-L80)
+File: [configs/envoy/envoy.yaml](configs/envoy/envoy.yaml) (the `/auth/verify-email` route, 123 tokens per 60s per client)
 
 **S8. Hardcoded secrets committed to version control**
 The `.env` file is tracked in the repo and contains live secrets:
@@ -50,22 +46,9 @@ The `.env` file is tracked in the repo and contains live secrets:
 - All service database credentials
 File: [.env](.env)
 
-**S9. Weak JWT signing secret in Kong**
-Kong's JWT consumer secret is the literal string `"access_token_secret"`. A comment confirms it: `## note to myself: keep it access_token_secret, I use it to replace with real secret`. Any attacker can forge valid access tokens.
-File: [configs/kong.yml:435](configs/kong.yml#L435)
-
-**S20. Private VODs readable and view-countable by anyone via public routes**
-`GET /v1/vods/{vodId}` and `POST /v1/vods/{vodId}/view` sit on the public Kong route (no jwt plugin) and never check `visibility`. Anyone with a private VOD's id gets its metadata and `playbackUrl`, and can inflate its view count. Found while reviewing PR #370 (the reaction routes were fixed there; these two were deliberately postponed).
-Files: [backend/vod/services/vod/get_by_id.go](backend/vod/services/vod/get_by_id.go), [backend/vod/services/vod/increase_view_count.go](backend/vod/services/vod/increase_view_count.go), [configs/kong.yml](configs/kong.yml) (`VOD_Public_Routes`)
-Why it isn't a handler-only fix: the owner must still see their own private VOD, but identity on these routes comes from `ParseUnverified` (see S1) with no gateway verification, so a forged cookie carrying the owner's id would pass an owner check.
-Proposed fix: add a dedicated Kong route `GET ~/vods/[^/]+$` with the `jwt` plugin in `anonymous` mode (plus an `anonymous` consumer, and `regex_priority` on `VOD_Author_Private_Route` so `/vods/author` keeps winning). Kong then lets signed-out callers through but sets `X-Anonymous-Consumer`; the service must trust the cookie only when that header is absent. Return `ErrVODNotFound` for a private VOD unless the verified viewer is the owner, and apply the same rule to `RegisterView`. Alternative: verify the signature in the service (resolves S1 too). A prototype of the Kong approach parsed cleanly with `kong config parse`, but was not tested end to end.
-
 ---
 
 ### 🟡 MEDIUM
-
-**S10. ~~Finance service routed but unimplemented~~ — SUPERSEDED**
-Finance service is now implemented (branch `feat/finance-service`). Per-user authz, atomic balance updates, and negative-amount rejection are in place (double-entry ledger with DB triggers). Remaining finance findings tracked in the **Finance Service Issues** section below (F1–F15).
 
 **S11. Chat conversation updates lack role checks**
 Any participant — not just the owner — can rename or modify a group conversation.
@@ -223,7 +206,7 @@ Deposit amounts in platform-currency minor units are passed raw as Stripe `UnitA
 File: [backend/finance/gateway/payment/stripe/stripe.go:51-55](backend/finance/gateway/payment/stripe/stripe.go#L51-L55)
 
 **F14. Unauthenticated internal endpoints mint gifts/inventory**
-`/v1/internal/gifts/create` and `/v1/internal/inventory/add` on the user service have no auth; they are safe only because Kong does not route them (extends S1's trust-the-network posture to money-adjacent writes). An internal API key header would harden this.
+`/v1/internal/gifts/create` and `/v1/internal/inventory/add` on the user service have no auth; they are safe only because the gateway does not route them. An internal API key header would harden this.
 Files: [backend/user/api/http.go:88](backend/user/api/http.go#L88), [backend/user/api/http.go:94](backend/user/api/http.go#L94)
 
 **F15. Minor cleanups**
@@ -265,40 +248,6 @@ Files: [web/hooks/queries/use-conversations.ts](web/hooks/queries/use-conversati
 ## Design Consistency Issues
 
 _Added 2026-09-08 from a full-repo review. Scope is **code vs. code design** — convention drift, duplicated or dead registries, half-finished migrations. Not behavioral bugs (see Logic/Consistency above) and not TODOs. Nothing here is a security issue._
-
-### ✅ Resolved — commit `fad2525` (`fix/response-registry-consistency`)
-
-**C1. 13 backend response keys had no translation**
-``t(`api-response:${res.key}`)`` renders the raw key string when a key is missing, so users saw e.g. `res_err_notification_not_found`. Missing: notification-not-found, username-taken, insufficient-inventory, vod-view-threshold, email-verified, and all 8 chat DM/conversation keys.
-Files: [web/lib/i18n/locales/en-US/api-response.json](web/lib/i18n/locales/en-US/api-response.json), [web/lib/i18n/locales/vi-VN/api-response.json](web/lib/i18n/locales/vi-VN/api-response.json)
-
-**C2. `err_video_too_large` broke the `res_err_` prefix convention**
-Renamed to `res_err_video_too_large` in the backend, both locales, and the web enum.
-File: [backend/vod/response/error.go](backend/vod/response/error.go)
-
-**C3. Orphan `res_err_query_scan_failed` key + dead `_CODE` constants**
-The key existed only in i18n — the backend never defined its `_KEY` and no template emitted it. Removed the i18n entries and the dead `RES_ERR_QUERY_SCAN_FAILED_CODE = 40004` constants in livestream and vod.
-
-**C4. Error code `30002` collided across services**
-Meant `NOTIFICATION_NOT_FOUND` in user but `IMAGE_TOO_LARGE` in livestream/vod/chat — and the latter sat inside user's `3xxxx` block. Only user ever emits `IMAGE_TOO_LARGE` (at 30001), so the other three were dead duplicates; deleting them resolved the collision with **no wire-visible change**. A registry scan now reports 64 codes with no name collisions.
-
-**C5. livestream carried vod-domain templates left over from the vod split**
-5 × `VOD_COMMENT_*`, plus `VOD_NOT_FOUND` and `VOD_UPDATE_FAILED` — none emitted there. `VOD_CREATE_FAILED` is still used by end-livestream and was kept.
-File: [backend/livestream/response/error.go](backend/livestream/response/error.go)
-
-**C6. `ApiCode` / `ApiKey` enums were a dead fourth key registry**
-Zero consumers anywhere in web, and already missing six entries. Deleted; `ApiResponse`/`Meta`/`ErrorDetail` (actually used) retained.
-File: [web/types/fetch-response.ts](web/types/fetch-response.ts)
-
-**C7. vi-VN `time.*` keys did not use en-US's plural-suffix scheme**
-Aligned on i18next JSON-v4 (`_other`, the only plural category for Vietnamese). Also dropped the unused `open` key, which had no en-US counterpart.
-File: [web/lib/i18n/locales/vi-VN/common.json](web/lib/i18n/locales/vi-VN/common.json)
-
-> **Two corrections to the original review, recorded so they aren't re-derived:**
-> 1. C7 was first written up as "vi-VN falls back to English for relative times". That was wrong — i18next falls back from a missing plural-suffixed key to the *base* key, so Vietnamese already rendered correctly. C7 is convention alignment only, with no user-visible change.
-> 2. C3 was first written up as an i18n-only orphan. Accurate, but the cause is that the backend never defined the `_KEY`, not that it was removed at some point.
-
----
 
 ### 🟠 HIGH — structural
 
@@ -406,14 +355,12 @@ The whole Go backend has 4 `_test.go` files (all under finance + shared/natsbus)
 ## Recommended Fix Order
 
 1. **S8** — Rotate all leaked secrets immediately; remove `.env` from git history
-2. **S1** — Verify JWT signatures in all services
-3. **S2 + S3** — Enforce token revocation on logout and in the refresh flow
-4. **S9** — Replace Kong JWT secret with a random value via env var
-5. **S4** — Add auth middleware and MIME validation to the upload endpoint
-6. **S5 + S16** — Fix CORS; add `SameSite=Strict` to cookies
-7. **S7** — Set OTP rate limit to 1/min
-8. **S6** — Enable TLS between Kong and services
-9. **F1 + F2** — Compensation on `context.WithoutCancel`; HTTP client timeout in finance→user gateway (before merging `feat/finance-service`)
-10. **F3 + F4** — Check Stripe `payment_status` before crediting; guarded payment status transitions
-11. **L1** — Send error events to WebSocket clients on validation failure
-12. **L2 + L3** — Align backend type definitions with actual runtime payloads
+2. **S2 + S3** — Enforce token revocation on logout and in the refresh flow
+3. **S4** — Add auth middleware and MIME validation to the upload endpoint
+4. **S5 + S16** — Fix CORS; add `SameSite=Strict` to cookies
+5. **S7** — Set OTP rate limit to 1/min
+6. **S6** — Enable TLS between the gateway and services
+7. **F1 + F2** — Compensation on `context.WithoutCancel`; HTTP client timeout in finance→user gateway (before merging `feat/finance-service`)
+8. **F3 + F4** — Check Stripe `payment_status` before crediting; guarded payment status transitions
+9. **L1** — Send error events to WebSocket clients on validation failure
+10. **L2 + L3** — Align backend type definitions with actual runtime payloads

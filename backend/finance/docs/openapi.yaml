@@ -1,12 +1,12 @@
 openapi: 3.0.0
 info:
   title: LetsLive Finance API
-  description: Wallet, transaction, deposit, and payment service for LetsLive. External clients hit `/wallet`, `/transactions`, `/payments`, `/deposits`, `/currencies` and `/deposits/webhook/{provider}` via Kong (no `/finance/` prefix). Kong forwards to `/v1/<resource>` on the finance backend. Private routes require a `ACCESS_TOKEN` cookie validated by Kong's JWT plugin; webhook routes are signature-verified by the provider.
+  description: Wallet, transaction, deposit, and payment service for LetsLive. External clients hit `/wallet`, `/transactions`, `/payments`, `/deposits`, `/currencies` and `/deposits/webhook/{provider}` via the gateway (no `/finance/` prefix). The gateway forwards to `/v1/<resource>` on the finance backend. Private routes require an `ACCESS_TOKEN` cookie, verified by the gateway's JWT filter and again by the service; webhook routes are signature-verified by the provider.
   version: 0.1.0
 
 servers:
   - url: http://localhost:8080
-    description: Local development server (via Kong)
+    description: Local development server (via the gateway)
 
 tags:
   - name: wallet

@@ -6,6 +6,7 @@ import (
 	"sen1or/letslive/auth/config"
 	"sen1or/letslive/auth/domains"
 	"sen1or/letslive/auth/types"
+	"sen1or/letslive/shared/pkg/jwtauth"
 	"sen1or/letslive/shared/pkg/logger"
 	"time"
 
@@ -16,13 +17,22 @@ import (
 type JWTService struct {
 	repo   domains.RefreshTokenRepository
 	config config.JWT
+	signer *jwtauth.Signer
 }
 
-func NewJWTService(repo domains.RefreshTokenRepository, cfg config.JWT) *JWTService {
+// NewJWTService signs access tokens with signer (ES256) and refresh tokens with
+// the REFRESH_TOKEN_SECRET (HS256), since only this service ever reads those.
+func NewJWTService(repo domains.RefreshTokenRepository, cfg config.JWT, signer *jwtauth.Signer) *JWTService {
 	return &JWTService{
 		repo:   repo,
 		config: cfg,
+		signer: signer,
 	}
+}
+
+// JWKS is the public key set other services use to verify access tokens.
+func (c *JWTService) JWKS() ([]byte, error) {
+	return c.signer.JWKS()
 }
 
 // generate the refresh token with access token (for login and signup)
@@ -122,9 +132,7 @@ func (c *JWTService) generateAccessToken(userId string) (string, error) {
 			Subject:   c.config.Subject,
 		},
 	}
-	unsignedAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, myClaims)
-
-	accessToken, err := unsignedAccessToken.SignedString([]byte(os.Getenv("ACCESS_TOKEN_SECRET")))
+	accessToken, err := c.signer.Sign(myClaims)
 	if err != nil {
 		return "", domains.ErrInternal
 	}

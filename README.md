@@ -18,7 +18,7 @@ The project aims to create a functioning livestreaming website from a to z like 
 
 - Golang, PostgresQL.
 - FFMpeg for transcoding from RTMP to HLS.
-- Consul for service discovery and Kong for API Gateway.
+- Consul for service discovery and Envoy for API Gateway.
 - Storage: MinIO (IPFS not supported anymore).
 - Docker and Docker Compose for up and running.
 - NextJS, ReactJS and TailwindCSS for UI.
@@ -42,7 +42,6 @@ The project aims to create a functioning livestreaming website from a to z like 
 - 8888: The port to get .ts files (This port uses nginx as a reverse proxy to get file from the IPFS network).
 - 5000: Web Client.
 - 4001: IPFS bootstrap node port (allows other nodes outside the network to connect in)
-- 8002: Kong API gateway management.
 - 12345: Grafana for logging and tracing.
 
 ## INSTALLATION (LOCAL)
@@ -56,10 +55,12 @@ The project aims to create a functioning livestreaming website from a to z like 
 
 ## DEPLOYMENT
 
-Before you deploy (including the GitHub Actions **deploy** workflow on a self-hosted runner), double-check [`configs/kong.yml`](./configs/kong.yml):
+Before you deploy (including the GitHub Actions **deploy** workflow on a self-hosted runner):
 
-1. **JWT consumer secret** — Under `consumers` → `jwt_secrets`, the `secret` must match the same signing key your auth stack uses for access tokens (`ACCESS_TOKEN_SECRET`). The deploy workflow replaces the placeholder `access_token_secret` string with the `ACCESS_TOKEN_SECRET` GitHub secret; if you deploy without that step, set the value in the file yourself and keep it in sync with the services.
-2. **CORS origins** — Under `plugins` → `cors` → `config`, set `origins` to the real browser origins that call the API (for example your production and staging site URLs). With `credentials: true`, do not rely on `["*"]` for production; browsers require explicit allowed origins.
+1. **Access token key** — Access tokens are signed with ES256. Generate a key once (`openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt | base64 | tr -d '\n'`) and store it as the `ACCESS_TOKEN_PRIVATE_KEY` GitHub secret / env var of the auth service. Nothing else needs the key: the gateway and the other services fetch the public half from auth's JWKS endpoint (`JWKS_URL`, default `http://auth:7777/v1/.well-known/jwks.json`). Logins signed with a previous key stop working, so users sign in again.
+2. **CORS origins** — In [`configs/envoy/envoy.yaml`](./configs/envoy/envoy.yaml), the `envoy.filters.http.cors` policy under the virtual host echoes any origin with credentials. For production, replace the `.*` regex in `allow_origin_string_match` with your real browser origins (for example your production and staging site URLs).
+
+The gateway config is validated with `docker run --rm -v "$PWD/configs/envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro" envoyproxy/envoy:v1.36-latest --mode validate -c /etc/envoy/envoy.yaml`. Envoy's admin interface listens on `127.0.0.1:9901` inside its container only; use `docker exec letslive-envoy` to reach it.
 
 ## Web client — mock API (optional)
 

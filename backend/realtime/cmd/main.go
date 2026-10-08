@@ -65,7 +65,7 @@ func main() {
 	publisher := realtime.NewNATSPublisher(natsConn)
 	server := api.NewServer(
 		config,
-		auth.NewVerifier(config.AccessTokenSecret),
+		auth.NewVerifier(config.JWKSURL),
 		hub.New(hub.NewNATSSource(natsConn), publisher),
 		presence.NewTracker(publisher, presenceGracePeriod),
 		natsConn.IsConnected,

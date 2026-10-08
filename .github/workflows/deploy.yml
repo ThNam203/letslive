@@ -22,15 +22,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Update Kong configuration
-        run: |
-          if [ -f "configs/kong.yml" ]; then
-            sed -i 's/secret: "access_token_secret"/secret: "${{ secrets.ACCESS_TOKEN_SECRET }}"/g' configs/kong.yml
-            echo "Updated Kong configuration with access token secret"
-          else
-            echo "Warning: configs/kong.yml not found"
-          fi
-
       - name: Create .env file
         run: |
           cat > .env << EOF
@@ -46,7 +37,7 @@ jobs:
           GOOGLE_OAUTH_CLIENT_SECRET=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
 
           # Authentication tokens
-          ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
+          ACCESS_TOKEN_PRIVATE_KEY=${{ secrets.ACCESS_TOKEN_PRIVATE_KEY }}
           REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
 
           # Email service
@@ -118,12 +109,12 @@ jobs:
           do
             echo "Deploy attempt $attempt/$max_retries"
 
-            # Kong runs DB-less and only reads configs/kong.yml at container
-            # start; Compose won't recreate it on its own since the bind-mounted
-            # file's content isn't part of the service diff. Force it every deploy.
+            # Envoy only reads configs/envoy/envoy.yaml at container start;
+            # Compose won't recreate it on its own since the bind-mounted file's
+            # content isn't part of the service diff. Force it every deploy.
             if docker compose pull &&
               docker compose up -d --remove-orphans &&
-              docker compose up -d --force-recreate kong &&
+              docker compose up -d --force-recreate envoy &&
               docker image prune -f
             then
               echo "Deploy succeeded"

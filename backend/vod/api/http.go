@@ -52,7 +52,7 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("POST /v1/vods/{vodId}/view", a.vodHandler.RegisterViewPublicHandler)
 	wrap("GET /v1/popular-vods", a.vodHandler.GetRecommendedVODsPublicHandler)
 
-	// Private VOD routes (require JWT via Kong)
+	// Private VOD routes (require JWT at the gateway)
 	wrap("GET /v1/vods/author", a.vodHandler.GetVODsOfAuthorPrivateHandler)
 	wrap("POST /v1/vods/upload", a.vodHandler.UploadVODPrivateHandler)
 	wrap("PATCH /v1/vods/{vodId}", a.vodHandler.UpdateVODMetadataPrivateHandler)

@@ -7,9 +7,9 @@ import (
 	"net/http"
 	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/types"
+	"sen1or/letslive/shared/pkg/jwtauth"
 
 	"github.com/gofrs/uuid/v5"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 func writeResponse(w http.ResponseWriter, ctx context.Context, res *serviceresponse.Response[any]) {
@@ -71,7 +71,9 @@ func (h *AuthHandler) getUserIDFromCookie(r *http.Request) (*uuid.UUID, error) {
 	}
 
 	myClaims := types.MyClaims{}
-	_, _, err = jwt.NewParser().ParseUnverified(accessTokenCookie.Value, &myClaims)
+	if err := jwtauth.Verify(r.Context(), accessTokenCookie.Value, &myClaims); err != nil {
+		return nil, errors.New("invalid credentials")
+	}
 
 	userUUID, err := uuid.FromString(myClaims.UserId)
 	if err != nil {

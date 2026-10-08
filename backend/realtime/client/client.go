@@ -182,7 +182,7 @@ func (c *Client) writeLoop(ctx context.Context, cancel context.CancelFunc, conn 
 				return
 			}
 		case <-ticker.C:
-			// Kong drops upstream connections that are idle for 60s
+			// the gateway drops upstream connections that are idle for too long
 			pingCtx, done := context.WithTimeout(ctx, WriteTimeout)
 			err := conn.Ping(pingCtx)
 			done()

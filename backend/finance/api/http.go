@@ -75,7 +75,7 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("GET /v1/shop/items", a.shopItemHandler.GetItemsPublicHandler)
 	wrap("GET /v1/shop/items/{id}", a.shopItemHandler.GetItemPublicHandler)
 
-	// Private routes (require JWT via Kong)
+	// Private routes (require JWT at the gateway)
 	wrap("POST /v1/shop/purchase", a.purchaseHandler.CreatePurchasePrivateHandler)
 	wrap("GET /v1/wallet", a.walletHandler.GetWalletPrivateHandler)
 	wrap("GET /v1/transactions", a.transactionHandler.GetTransactionsPrivateHandler)

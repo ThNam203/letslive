@@ -241,3 +241,18 @@ func (h *AuthHandler) UpdatePasswordHandler(w http.ResponseWriter, r *http.Reque
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// JWKSHandler publishes the access-token public key. It is read by the other
+// services and the gateway, never by browsers, and holds nothing secret.
+func (h *AuthHandler) JWKSHandler(w http.ResponseWriter, r *http.Request) {
+	body, err := h.jwtService.JWKS()
+	if err != nil {
+		logger.Errorf(r.Context(), "failed to render jwks: %v", err)
+		writeResponse(w, r.Context(), serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_INTERNAL_SERVER, nil, nil, nil))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=300")
+	w.Write(body)
+}
