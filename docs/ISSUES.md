@@ -8,9 +8,8 @@ _Last updated: 2026-10-08_
 
 ### 🔴 CRITICAL
 
-**S1. JWT signature NOT verified in any service**
-All Go services call `jwt.ParseUnverified()`; the chat service calls `jwt.decode()`. Anyone who can reach a service directly — bypassing Kong — can forge any user's identity.
-Files: [user/handlers/utils/cookie.go:28](user/handlers/utils/cookie.go#L28), [livestream/handlers/utils/cookie.go:28](livestream/handlers/utils/cookie.go#L28), [vod/handlers/utils/cookie.go:28](vod/handlers/utils/cookie.go#L28), [backend/chat/src/middlewares/auth.ts:14](backend/chat/src/middlewares/auth.ts#L14)
+**S1. ~~JWT signature NOT verified in any service~~ — FIXED**
+Access tokens are now signed with ES256 by the auth service and published as a JWKS (`GET /v1/.well-known/jwks.json`). The Go services (user, livestream, vod, finance, chat, realtime, auth) verify the signature and expiry through `shared/pkg/jwtauth` instead of `ParseUnverified`; only the public key is distributed. Refresh tokens stay HS256 because only auth reads them.
 
 **S2. Refresh token NOT revoked on logout**
 `LogOutHandler` clears the cookie but never calls `RevokeTokenByValue()` or `RevokeAllTokensOfUser()`. A stolen refresh token stays valid after logout indefinitely.

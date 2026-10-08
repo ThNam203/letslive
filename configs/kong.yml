@@ -550,8 +550,14 @@ consumers:
       - key: "authenticated users"
     jwt_secrets:
       - key: "authenticated users"
-        secret: "access_token_secret" ## note to myself: keep it access_token_secret, I use it to replace with real secret
-        algorithm: "HS256"
+        algorithm: "ES256"
+        # public half of ACCESS_TOKEN_PRIVATE_KEY; the deploy workflow replaces
+        # this block with the real key (the placeholder below is a throwaway)
+        rsa_public_key: |
+          -----BEGIN PUBLIC KEY-----
+          MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEDpmfzKkGWodqb8sXOSCUjqozNGLY
+          Ri07d2TVUuEexFikvnSmNEER81UGjckDnKTwQDMaXQMtQCLyZ5ysd+BxEg==
+          -----END PUBLIC KEY-----
 
 plugins:
   - name: cors

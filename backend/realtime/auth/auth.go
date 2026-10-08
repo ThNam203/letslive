@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 
+	"sen1or/letslive/shared/pkg/jwtauth"
 	"sen1or/letslive/shared/pkg/realtime"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -15,14 +16,15 @@ type accessClaims struct {
 	jwt.RegisteredClaims
 }
 
-// Verifier checks the signature itself because the /realtime Kong route has
-// no JWT plugin (anonymous viewers must be able to connect).
+// Verifier checks the signature itself because the /realtime gateway route has
+// no JWT requirement (anonymous viewers must be able to connect).
 type Verifier struct {
-	secret []byte
+	jwt *jwtauth.Verifier
 }
 
-func NewVerifier(secret string) *Verifier {
-	return &Verifier{secret: []byte(secret)}
+// NewVerifier verifies ES256 tokens against the auth service's JWKS at jwksURL.
+func NewVerifier(jwksURL string) *Verifier {
+	return &Verifier{jwt: jwtauth.NewVerifier(jwksURL)}
 }
 
 // UserID returns the user id of a valid ACCESS_TOKEN cookie; ok is false for
@@ -34,14 +36,7 @@ func (v *Verifier) UserID(r *http.Request) (string, bool) {
 	}
 
 	var claims accessClaims
-	_, err = jwt.ParseWithClaims(
-		cookie.Value,
-		&claims,
-		func(*jwt.Token) (any, error) { return v.secret, nil },
-		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
-		jwt.WithExpirationRequired(),
-	)
-	if err != nil {
+	if err := v.jwt.Verify(r.Context(), cookie.Value, &claims); err != nil {
 		return "", false
 	}
 

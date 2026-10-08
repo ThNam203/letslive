@@ -6,10 +6,10 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"time"
 
 	"sen1or/letslive/chat/response"
 	"sen1or/letslive/chat/services"
+	"sen1or/letslive/shared/pkg/jwtauth"
 	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -20,9 +20,8 @@ type accessClaims struct {
 	jwt.RegisteredClaims
 }
 
-// GetUserIDFromCookie reads the user id from the ACCESS_TOKEN cookie. Kong has
-// already verified the signature; like the Node service, an expired token or
-// one without a userId is still rejected.
+// GetUserIDFromCookie reads the user id from the ACCESS_TOKEN cookie after
+// verifying its ES256 signature and expiry against the auth service's JWKS.
 func GetUserIDFromCookie(r *http.Request) (string, *response.Response[any]) {
 	unauthorized := response.NewResponseFromTemplate[any](response.RES_ERR_UNAUTHORIZED, nil, nil, nil)
 
@@ -33,14 +32,11 @@ func GetUserIDFromCookie(r *http.Request) (string, *response.Response[any]) {
 	}
 
 	var claims accessClaims
-	if _, _, err := jwt.NewParser().ParseUnverified(cookie.Value, &claims); err != nil {
+	if err := jwtauth.Verify(r.Context(), cookie.Value, &claims); err != nil {
 		logger.Debugf(r.Context(), "invalid access token: %v", err)
 		return "", unauthorized
 	}
 	if claims.UserID == "" {
-		return "", unauthorized
-	}
-	if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
 		return "", unauthorized
 	}
 	return claims.UserID, nil

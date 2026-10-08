@@ -32,7 +32,7 @@ type Config struct {
 	WebSocket `yaml:"websocket"`
 	Tracer    `yaml:"tracer"`
 
-	AccessTokenSecret string `yaml:"-"`
+	JWKSURL string `yaml:"-"`
 }
 
 func (c Config) GetServiceName() string     { return c.Service.Name }
@@ -41,11 +41,11 @@ func (c Config) GetTracerBatchTimeout() int { return c.Tracer.BatchTimeout }
 func (c Config) IsSecure() bool             { return c.Tracer.Secure }
 
 func PostProcess(config *Config) error {
-	secret := os.Getenv("ACCESS_TOKEN_SECRET")
-	if secret == "" {
-		return errors.New("ACCESS_TOKEN_SECRET is not set")
+	jwksURL := os.Getenv("JWKS_URL")
+	if jwksURL == "" {
+		return errors.New("JWKS_URL is not set")
 	}
-	config.AccessTokenSecret = secret
+	config.JWKSURL = jwksURL
 
 	if config.NATS.URL == "" {
 		return errors.New("nats.url is not configured")

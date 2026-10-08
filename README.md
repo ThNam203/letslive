@@ -58,7 +58,7 @@ The project aims to create a functioning livestreaming website from a to z like 
 
 Before you deploy (including the GitHub Actions **deploy** workflow on a self-hosted runner), double-check [`configs/kong.yml`](./configs/kong.yml):
 
-1. **JWT consumer secret** — Under `consumers` → `jwt_secrets`, the `secret` must match the same signing key your auth stack uses for access tokens (`ACCESS_TOKEN_SECRET`). The deploy workflow replaces the placeholder `access_token_secret` string with the `ACCESS_TOKEN_SECRET` GitHub secret; if you deploy without that step, set the value in the file yourself and keep it in sync with the services.
+1. **Access token key** — Access tokens are signed with ES256. Generate a key once (`openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt | base64 | tr -d '\n'`) and store it as the `ACCESS_TOKEN_PRIVATE_KEY` GitHub secret / env var of the auth service. The other services fetch the public half from auth's JWKS endpoint (`JWKS_URL`, default `http://auth:7777/v1/.well-known/jwks.json`). Under `consumers` → `jwt_secrets`, `rsa_public_key` must hold that public key; the deploy workflow derives it from the secret and replaces the placeholder block.
 2. **CORS origins** — Under `plugins` → `cors` → `config`, set `origins` to the real browser origins that call the API (for example your production and staging site URLs). With `credentials: true`, do not rely on `["*"]` for production; browsers require explicit allowed origins.
 
 ## Web client — mock API (optional)

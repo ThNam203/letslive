@@ -33,6 +33,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect

@@ -23,13 +23,26 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Update Kong configuration
+        env:
+          ACCESS_TOKEN_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN_PRIVATE_KEY }}
         run: |
-          if [ -f "configs/kong.yml" ]; then
-            sed -i 's/secret: "access_token_secret"/secret: "${{ secrets.ACCESS_TOKEN_SECRET }}"/g' configs/kong.yml
-            echo "Updated Kong configuration with access token secret"
-          else
+          if [ ! -f "configs/kong.yml" ]; then
             echo "Warning: configs/kong.yml not found"
+            exit 0
           fi
+          # Kong verifies with the public half of the signing key
+          PUBLIC_KEY=$(printf '%s' "$ACCESS_TOKEN_PRIVATE_KEY" | base64 -d | openssl ec -pubout 2>/dev/null)
+          if [ -z "$PUBLIC_KEY" ]; then
+            echo "ACCESS_TOKEN_PRIVATE_KEY is missing or not a base64 EC key"
+            exit 1
+          fi
+          PUBLIC_KEY="$PUBLIC_KEY" awk '
+            /^        rsa_public_key: \|$/ { print; n = split(ENVIRON["PUBLIC_KEY"], lines, "\n"); for (i = 1; i <= n; i++) print "          " lines[i]; skip = 1; next }
+            skip && /^          / { next }
+            { skip = 0; print }
+          ' configs/kong.yml > configs/kong.yml.tmp
+          mv configs/kong.yml.tmp configs/kong.yml
+          echo "Updated Kong configuration with the access token public key"
 
       - name: Create .env file
         run: |
@@ -46,7 +59,7 @@ jobs:
           GOOGLE_OAUTH_CLIENT_SECRET=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
 
           # Authentication tokens
-          ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
+          ACCESS_TOKEN_PRIVATE_KEY=${{ secrets.ACCESS_TOKEN_PRIVATE_KEY }}
           REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
 
           # Email service
