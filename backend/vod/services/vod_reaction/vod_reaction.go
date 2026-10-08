@@ -26,8 +26,20 @@ func NewVODReactionService(reactionRepo domains.VODReactionRepository, vodRepo d
 	}
 }
 
-func (s *VODReactionService) GetMyReaction(ctx context.Context, vodId uuid.UUID, userId uuid.UUID) (*dto.VODReactionResponseDTO, error) {
+// getReactableVOD loads the VOD, hiding private ones from everyone but the owner.
+func (s *VODReactionService) getReactableVOD(ctx context.Context, vodId uuid.UUID, userId uuid.UUID) (*domains.VOD, error) {
 	vod, err := s.vodRepo.GetById(ctx, vodId)
+	if err != nil {
+		return nil, err
+	}
+	if vod.Visibility != domains.VODPublicVisibility && vod.UserId != userId {
+		return nil, domains.ErrVODNotFound
+	}
+	return vod, nil
+}
+
+func (s *VODReactionService) GetMyReaction(ctx context.Context, vodId uuid.UUID, userId uuid.UUID) (*dto.VODReactionResponseDTO, error) {
+	vod, err := s.getReactableVOD(ctx, vodId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +60,7 @@ func (s *VODReactionService) SetReaction(ctx context.Context, data dto.SetVODRea
 	}
 	reaction := domains.VODReactionType(data.Reaction)
 
-	if _, err := s.vodRepo.GetById(ctx, vodId); err != nil {
+	if _, err := s.getReactableVOD(ctx, vodId, userId); err != nil {
 		return nil, err
 	}
 
@@ -114,7 +126,7 @@ func (s *VODReactionService) SetReaction(ctx context.Context, data dto.SetVODRea
 
 // RemoveReaction clears the user's like or dislike. Removing nothing is a no-op.
 func (s *VODReactionService) RemoveReaction(ctx context.Context, vodId uuid.UUID, userId uuid.UUID) (*dto.VODReactionResponseDTO, error) {
-	if _, err := s.vodRepo.GetById(ctx, vodId); err != nil {
+	if _, err := s.getReactableVOD(ctx, vodId, userId); err != nil {
 		return nil, err
 	}
 

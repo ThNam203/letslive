@@ -23,7 +23,12 @@ export default function VODReactionButtons({ vod }: { vod: VOD }) {
     const { t, i18n } = useT("common");
     const queryClient = useQueryClient();
     const user = useUser((state) => state.user);
-    const { data: myReaction } = useMyVodReaction(vod.id, Boolean(user));
+    const reactionKey = myVodReactionQueryKey(vod.id, user?.id ?? "");
+    const { data: myReaction } = useMyVodReaction(
+        vod.id,
+        user?.id,
+        Boolean(user),
+    );
 
     const reaction = user ? (myReaction?.reaction ?? null) : null;
     const likeCount = myReaction?.likeCount ?? vod.likeCount;
@@ -37,23 +42,20 @@ export default function VODReactionButtons({ vod }: { vod: VOD }) {
             ),
         // flip the buttons right away; the server answer replaces this
         onMutate: async (next) => {
-            const key = myVodReactionQueryKey(vod.id);
-            await queryClient.cancelQueries({ queryKey: key });
-            const previous = queryClient.getQueryData<VODReactionState>(key);
-            queryClient.setQueryData<VODReactionState>(key, {
+            await queryClient.cancelQueries({ queryKey: reactionKey });
+            const previous =
+                queryClient.getQueryData<VODReactionState>(reactionKey);
+            queryClient.setQueryData<VODReactionState>(reactionKey, {
                 likeCount: Math.max(likeCount + likeDelta(reaction, next), 0),
                 reaction: next,
             });
             return { previous };
         },
         onError: (_err, _next, context) => {
-            queryClient.setQueryData(
-                myVodReactionQueryKey(vod.id),
-                context?.previous,
-            );
+            queryClient.setQueryData(reactionKey, context?.previous);
         },
         onSuccess: (data) => {
-            queryClient.setQueryData(myVodReactionQueryKey(vod.id), data);
+            queryClient.setQueryData(reactionKey, data);
             queryClient.setQueryData<VOD>(vodQueryKey(vod.id), (prev) =>
                 prev ? { ...prev, likeCount: data.likeCount } : prev,
             );

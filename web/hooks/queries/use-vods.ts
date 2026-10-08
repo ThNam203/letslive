@@ -17,8 +17,8 @@ export function vodQueryKey(vodId: string) {
     return ["vods", "detail", vodId] as const;
 }
 
-export function myVodReactionQueryKey(vodId: string) {
-    return ["vods", "my-reaction", vodId] as const;
+export function myVodReactionQueryKey(vodId: string, userId: string) {
+    return ["vods", "my-reaction", userId, vodId] as const;
 }
 
 export function usePublicVodsOfUser(userId: string | undefined) {
@@ -50,11 +50,15 @@ export function useVod(vodId: string | undefined) {
 }
 
 // The signed-in viewer's own like/dislike on a VOD.
-export function useMyVodReaction(vodId: string | undefined, enabled: boolean) {
+export function useMyVodReaction(
+    vodId: string | undefined,
+    userId: string | undefined,
+    enabled: boolean,
+) {
     return useQuery({
-        queryKey: myVodReactionQueryKey(vodId ?? ""),
+        queryKey: myVodReactionQueryKey(vodId ?? "", userId ?? ""),
         queryFn: async () =>
             unwrapResponse(await GetMyVODReaction(vodId as string)),
-        enabled: enabled && Boolean(vodId),
+        enabled: enabled && Boolean(vodId) && Boolean(userId),
     });
 }
