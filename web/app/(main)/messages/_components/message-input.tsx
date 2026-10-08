@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import IconSend from "@/components/icons/send";
+import IconLoader from "@/components/icons/loader";
 import IconPaperclip from "@/components/icons/paperclip";
 import IconClose from "@/components/icons/close";
 import EmotePicker from "@/components/emote-picker";
@@ -252,7 +253,7 @@ export default function MessageInput({
                     className="h-9 w-12 shrink-0 p-0"
                 >
                     {isUploading ? (
-                        <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        <IconLoader className="size-4" />
                     ) : (
                         <IconSend className="!h-5 !w-5" />
                     )}

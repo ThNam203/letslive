@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PublicUser } from "@/types/user";
 import useT from "@/hooks/use-translation";
 import UserAvatar from "@/components/ui/user-avatar";
+import FollowerCount from "@/components/user/follower-count";
 import ProfileActions from "@/components/user/profile-actions";
 
 /** The uploader's avatar, name and follower count with follow and gift actions. */
@@ -14,12 +15,8 @@ export default function VODChannelRow({
     user: PublicUser;
     updateUser: (newUserInfo: PublicUser) => void;
 }) {
-    const { t, i18n } = useT(["common", "accessibility"]);
+    const { t } = useT("accessibility");
     const profileHref = `/users/${user.id}`;
-
-    const compact = new Intl.NumberFormat(i18n.resolvedLanguage, {
-        notation: "compact",
-    });
 
     return (
         <div className="flex min-w-0 items-center gap-3">
@@ -37,12 +34,10 @@ export default function VODChannelRow({
                 >
                     {user.username}
                 </Link>
-                <span className="text-muted-foreground text-xs">
-                    {t("common:vod.followers", {
-                        count: user.followerCount,
-                        formatted: compact.format(user.followerCount),
-                    })}
-                </span>
+                <FollowerCount
+                    count={user.followerCount}
+                    className="text-muted-foreground text-xs"
+                />
             </div>
             <div className="ml-2 shrink-0">
                 <ProfileActions user={user} updateUser={updateUser} />

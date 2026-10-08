@@ -4,6 +4,7 @@ import { Conversation } from "@/types/dm";
 import ConversationListItem from "./conversation-list-item";
 import { Button } from "@/components/ui/button";
 import useT from "@/hooks/use-translation";
+import IconLoader from "@/components/icons/loader";
 import { ConversationListSkeleton } from "./messages-skeleton";
 
 export default function ConversationList({
@@ -56,7 +57,7 @@ export default function ConversationList({
                         disabled={isLoadingMore}
                     >
                         {isLoadingMore ? (
-                            <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            <IconLoader className="size-4" />
                         ) : (
                             t("load_more")
                         )}

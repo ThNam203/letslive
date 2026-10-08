@@ -2,9 +2,8 @@
 
 import { useParams } from "next/navigation";
 import { ItemGridSkeleton } from "@/components/skeletons/item-grid-skeleton";
-import Image from "next/image";
 import useT from "@/hooks/use-translation";
-import { Badge } from "@/components/ui/badge";
+import ShopItemCard from "@/components/shop/shop-item-card";
 import { useShopItems } from "@/hooks/queries/use-shop-items";
 import { useUserGiftsReceived } from "@/hooks/queries/use-user-gifts";
 
@@ -34,35 +33,21 @@ export default function GiftGrid() {
                         const name =
                             shopItem?.name ?? t("shop:shop.unknown_item");
                         return (
-                            <div
+                            <ShopItemCard
                                 key={gift.id}
-                                className="border-border bg-card flex flex-col items-center gap-2 rounded-xl border p-4"
+                                name={name}
+                                imageUrl={shopItem?.imageUrl}
+                                size="md"
+                                badge={t("shop:gifts_received.quantity_label", {
+                                    quantity: gift.quantity,
+                                })}
                             >
-                                {shopItem && (
-                                    <div className="relative h-16 w-16">
-                                        <Image
-                                            src={shopItem.imageUrl}
-                                            alt={name}
-                                            fill
-                                            className="object-contain"
-                                            unoptimized
-                                        />
-                                    </div>
-                                )}
-                                <p className="text-foreground text-center text-sm font-medium">
-                                    {name}
-                                </p>
-                                <Badge variant="secondary">
-                                    {t("shop:gifts_received.quantity_label", {
-                                        quantity: gift.quantity,
-                                    })}
-                                </Badge>
                                 {gift.message && (
                                     <p className="text-muted-foreground line-clamp-2 text-center text-xs italic">
                                         &quot;{gift.message}&quot;
                                     </p>
                                 )}
-                            </div>
+                            </ShopItemCard>
                         );
                     })}
                 </div>

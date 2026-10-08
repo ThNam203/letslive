@@ -2,6 +2,7 @@
 
 import { PublicUser } from "@/types/user";
 import ProfileHeader from "./profile-header";
+import FollowerCount from "@/components/user/follower-count";
 import ProfileActions from "@/components/user/profile-actions";
 import MediaCard from "@/components/livestream/media-card";
 import IconCalendar from "@/components/icons/calendar";
@@ -60,16 +61,7 @@ export default function ProfileView({
                     <div className="text-foreground flex max-w-72 flex-1 flex-col gap-2 text-xs">
                         <div className="flex items-center gap-2">
                             <IconUsers />
-                            <p>
-                                <span className="font-bold">
-                                    {user.followerCount}
-                                </span>{" "}
-                                {t(
-                                    user.followerCount === 1
-                                        ? "users:profile.followers_one"
-                                        : "users:profile.followers_other",
-                                )}
-                            </p>
+                            <FollowerCount count={user.followerCount} />
                         </div>
                         {Object.entries(user.socialMediaLinks ?? {}).map(
                             ([platform, url]) => {

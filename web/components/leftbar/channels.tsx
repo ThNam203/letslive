@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ListSkeleton } from "@/components/skeletons/list-skeleton";
+import FollowerCount from "@/components/user/follower-count";
 import useUser from "../../hooks/user";
 import { PublicUser } from "../../types/user";
 import UserAvatar from "@/components/ui/user-avatar";
@@ -63,11 +64,10 @@ function ChannelUserCard({
                             {t("common:bio")}:{" "}
                             {user.bio ?? t("common:no_description")}
                         </p>
-                        <p className="text-muted-foreground text-xs">
-                            {t("common:followers_with_count", {
-                                count: user.followerCount,
-                            })}
-                        </p>
+                        <FollowerCount
+                            count={user.followerCount}
+                            className="text-muted-foreground block text-xs"
+                        />
                         <p className="text-muted-foreground text-xs">
                             {t("common:joined")}:{" "}
                             {formatLocaleDate(

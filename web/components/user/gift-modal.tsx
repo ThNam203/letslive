@@ -10,7 +10,7 @@ import { unwrapResponse } from "@/lib/api/api-error";
 import { ShopItem } from "@/types/shop";
 import { useShopItems } from "@/hooks/queries/use-shop-items";
 import { WALLET_BALANCE_QUERY_KEY } from "@/hooks/queries/use-wallet";
-import { Badge } from "@/components/ui/badge";
+import ShopItemCard from "@/components/shop/shop-item-card";
 import {
     Dialog,
     DialogContent,
@@ -128,38 +128,23 @@ export default function GiftModal({
                                 sendGiftMutation.isPending &&
                                 sendGiftMutation.variables?.id === item.id;
                             return (
-                                <button
+                                <ShopItemCard
                                     key={item.id}
+                                    name={item.name}
+                                    imageUrl={item.imageUrl}
+                                    badge={t("shop:shop.price_label", {
+                                        price: item.price,
+                                    })}
+                                    size="sm"
                                     onClick={() => handleSend(item)}
                                     disabled={sendGiftMutation.isPending}
-                                    className="border-border bg-card hover:border-primary flex flex-col items-center gap-1 rounded-lg border p-3 transition-colors disabled:opacity-50"
                                 >
-                                    <div className="relative h-16 w-16">
-                                        <Image
-                                            src={item.imageUrl}
-                                            alt={item.name}
-                                            fill
-                                            className="object-contain"
-                                            unoptimized
-                                        />
-                                    </div>
-                                    <p className="text-foreground text-center text-xs font-medium">
-                                        {item.name}
-                                    </p>
-                                    <Badge
-                                        variant="secondary"
-                                        className="text-xs"
-                                    >
-                                        {t("shop:shop.price_label", {
-                                            price: item.price,
-                                        })}
-                                    </Badge>
                                     {isSending && (
                                         <span className="text-muted-foreground text-xs">
                                             {t("shop:shop.gift_sending")}
                                         </span>
                                     )}
-                                </button>
+                                </ShopItemCard>
                             );
                         })}
                     </div>

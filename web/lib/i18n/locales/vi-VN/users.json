@@ -2,8 +2,6 @@
     "offline": "Ngoại tuyến",
     "profile": {
         "about": "Giới thiệu",
-        "followers_one": "người theo dõi",
-        "followers_other": "người theo dõi",
         "joined_prefix": "Tham gia",
         "recent_streams": "Luồng gần đây"
     }

@@ -2,8 +2,6 @@
     "offline": "Offline",
     "profile": {
         "about": "About",
-        "followers_one": "follower",
-        "followers_other": "followers",
         "joined_prefix": "Joined",
         "recent_streams": "Recent Streams"
     }

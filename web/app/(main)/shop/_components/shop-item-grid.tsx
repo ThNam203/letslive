@@ -2,15 +2,14 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ItemGridSkeleton } from "@/components/skeletons/item-grid-skeleton";
-import Image from "next/image";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
 import useUser from "@/hooks/user";
 import { CreatePurchase } from "@/lib/api/shop";
 import { unwrapResponse } from "@/lib/api/api-error";
 import { ShopItem } from "@/types/shop";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import ShopItemCard from "@/components/shop/shop-item-card";
 import { useShopItems } from "@/hooks/queries/use-shop-items";
 import { WALLET_BALANCE_QUERY_KEY } from "@/hooks/queries/use-wallet";
 import { INVENTORY_QUERY_KEY } from "@/hooks/queries/use-inventory";
@@ -59,32 +58,15 @@ export default function ShopItemGrid() {
                             buyMutation.isPending &&
                             buyMutation.variables?.id === item.id;
                         return (
-                            <div
+                            <ShopItemCard
                                 key={item.id}
-                                className="border-border bg-card flex flex-col items-center gap-2 rounded-xl border p-4 transition-shadow hover:shadow-md"
+                                name={item.name}
+                                imageUrl={item.imageUrl}
+                                description={item.description}
+                                badge={t("shop:shop.price_label", {
+                                    price: item.price,
+                                })}
                             >
-                                <div className="relative h-24 w-24">
-                                    <Image
-                                        src={item.imageUrl}
-                                        alt={item.name}
-                                        fill
-                                        className="object-contain"
-                                        unoptimized
-                                    />
-                                </div>
-                                <p className="text-foreground text-center text-sm font-semibold">
-                                    {item.name}
-                                </p>
-                                {item.description && (
-                                    <p className="text-muted-foreground line-clamp-2 text-center text-xs">
-                                        {item.description}
-                                    </p>
-                                )}
-                                <Badge variant="secondary">
-                                    {t("shop:shop.price_label", {
-                                        price: item.price,
-                                    })}
-                                </Badge>
                                 <Button
                                     size="sm"
                                     className="w-full"
@@ -100,7 +82,7 @@ export default function ShopItemGrid() {
                                         ? t("shop:shop.gift_sending")
                                         : t("shop:shop.buy_button")}
                                 </Button>
-                            </div>
+                            </ShopItemCard>
                         );
                     })}
                 </div>

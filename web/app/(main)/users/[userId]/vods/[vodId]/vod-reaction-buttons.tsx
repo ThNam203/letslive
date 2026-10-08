@@ -10,6 +10,7 @@ import {
     vodQueryKey,
 } from "@/hooks/queries/use-vods";
 import useT from "@/hooks/use-translation";
+import useCompactNumber from "@/hooks/use-compact-number";
 import useUser from "@/hooks/user";
 import { toast } from "@/components/utils/toast";
 import IconThumbsUp from "@/components/icons/thumbs-up";
@@ -20,7 +21,8 @@ function likeDelta(from: VODReaction | null, to: VODReaction | null) {
 }
 
 export default function VODReactionButtons({ vod }: { vod: VOD }) {
-    const { t, i18n } = useT("common");
+    const { t } = useT("common");
+    const formatCompact = useCompactNumber();
     const queryClient = useQueryClient();
     const user = useUser((state) => state.user);
     const reactionKey = myVodReactionQueryKey(vod.id, user?.id ?? "");
@@ -74,10 +76,6 @@ export default function VODReactionButtons({ vod }: { vod: VOD }) {
         reactionMutation.mutate(reaction === clicked ? null : clicked);
     };
 
-    const compact = new Intl.NumberFormat(i18n.resolvedLanguage, {
-        notation: "compact",
-    });
-
     return (
         <div className="bg-muted text-foreground flex items-center overflow-hidden rounded-full text-sm font-medium">
             <button
@@ -96,7 +94,7 @@ export default function VODReactionButtons({ vod }: { vod: VOD }) {
                     width="1.1rem"
                     height="1.1rem"
                 />
-                <span>{compact.format(likeCount)}</span>
+                <span>{formatCompact(likeCount)}</span>
             </button>
             <span className="bg-border h-6 w-px" aria-hidden />
             <button
