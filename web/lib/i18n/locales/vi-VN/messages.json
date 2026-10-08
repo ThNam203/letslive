@@ -40,5 +40,8 @@
     "typing_two": "{{name1}} và {{name2}} đang nhập...",
     "typing_many": "{{name}} và {{count}} người khác đang nhập...",
     "image_alt": "Ảnh {{number}}",
-    "preview_alt": "Xem trước {{number}}"
+    "preview_alt": "Xem trước {{number}}",
+    "open_in_messages": "Mở trong Tin nhắn",
+    "minimize_chat": "Thu nhỏ cuộc trò chuyện",
+    "close_chat": "Đóng cuộc trò chuyện"
 }

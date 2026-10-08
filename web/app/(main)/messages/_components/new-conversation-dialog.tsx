@@ -5,12 +5,18 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import useUser from "@/hooks/user";
 import { CreateConversation } from "@/lib/api/dm";
 import { prependConversation } from "@/lib/query/dm-cache";
 import { SearchUsersByUsername } from "@/lib/api/user";
 import { PublicUser } from "@/types/user";
-import { ConversationType } from "@/types/dm";
+import { type Conversation, ConversationType } from "@/types/dm";
 import UserAvatar from "@/components/ui/user-avatar";
 import { toast } from "@/components/utils/toast";
 import useT from "@/hooks/use-translation";
@@ -18,8 +24,11 @@ import { GROUP_MAX_MEMBERS } from "@/constant/field-limits";
 
 export default function NewConversationDialog({
     onClose,
+    onCreated,
 }: {
     onClose: () => void;
+    /** Called instead of navigating to the new conversation's page when set. */
+    onCreated?: (conversation: Conversation) => void;
 }) {
     const router = useRouter();
     const user = useUser((state) => state.user);
@@ -93,7 +102,8 @@ export default function NewConversationDialog({
             if (res.data) {
                 prependConversation(queryClient, res.data);
                 onClose();
-                router.push(`/messages/${res.data._id}`);
+                if (onCreated) onCreated(res.data);
+                else router.push(`/messages/${res.data._id}`);
             } else if (!res.success && res.key) {
                 toast.error(t(res.key));
             }
@@ -105,115 +115,112 @@ export default function NewConversationDialog({
     };
 
     return (
-        <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
-            <div className="bg-background w-full max-w-md rounded-lg border p-6 shadow-lg">
-                <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-lg font-semibold">
-                        {tMessages("new_conversation")}
-                    </h2>
-                    <Button variant="ghost" size="sm" onClick={onClose}>
-                        &times;
-                    </Button>
-                </div>
+        <Dialog open onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="max-w-md" aria-describedby={undefined}>
+                <DialogHeader>
+                    <DialogTitle>{tMessages("new_conversation")}</DialogTitle>
+                </DialogHeader>
 
-                <div className="mb-4 flex items-center gap-2">
-                    <Button
-                        variant={!isGroup ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => {
-                            setIsGroup(false);
-                            setSelectedUsers(selectedUsers.slice(0, 1));
-                        }}
-                    >
-                        {tMessages("direct_message")}
-                    </Button>
-                    <Button
-                        variant={isGroup ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setIsGroup(true)}
-                    >
-                        {tMessages("group")}
-                    </Button>
-                </div>
+                <div>
+                    <div className="mb-4 flex items-center gap-2">
+                        <Button
+                            variant={!isGroup ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                                setIsGroup(false);
+                                setSelectedUsers(selectedUsers.slice(0, 1));
+                            }}
+                        >
+                            {tMessages("direct_message")}
+                        </Button>
+                        <Button
+                            variant={isGroup ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setIsGroup(true)}
+                        >
+                            {tMessages("group")}
+                        </Button>
+                    </div>
 
-                {isGroup && (
+                    {isGroup && (
+                        <Input
+                            placeholder={tMessages("group_name_placeholder")}
+                            value={groupName}
+                            onChange={(e) => setGroupName(e.target.value)}
+                            className="mb-3"
+                        />
+                    )}
+
+                    {/* Selected users */}
+                    {selectedUsers.length > 0 && (
+                        <div className="mb-3 flex flex-wrap gap-2">
+                            {selectedUsers.map((u) => (
+                                <span
+                                    key={u.id}
+                                    className="bg-muted flex items-center gap-1 rounded-full px-3 py-1 text-sm"
+                                >
+                                    {u.username}
+                                    <button
+                                        onClick={() => handleRemoveUser(u.id)}
+                                        className="text-muted-foreground ml-1 hover:text-red-500"
+                                    >
+                                        &times;
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Search */}
                     <Input
-                        placeholder={tMessages("group_name_placeholder")}
-                        value={groupName}
-                        onChange={(e) => setGroupName(e.target.value)}
+                        placeholder={tMessages("search_users_placeholder")}
+                        value={searchQuery}
+                        onChange={(e) => handleSearch(e.target.value)}
                         className="mb-3"
                     />
-                )}
 
-                {/* Selected users */}
-                {selectedUsers.length > 0 && (
-                    <div className="mb-3 flex flex-wrap gap-2">
-                        {selectedUsers.map((u) => (
-                            <span
-                                key={u.id}
-                                className="bg-muted flex items-center gap-1 rounded-full px-3 py-1 text-sm"
+                    {/* Search results */}
+                    <div className="max-h-48 overflow-y-auto">
+                        {isSearching && (
+                            <p className="text-muted-foreground py-2 text-center text-sm">
+                                {tMessages("searching")}
+                            </p>
+                        )}
+                        {searchResults.map((result) => (
+                            <button
+                                key={result.id}
+                                onClick={() => handleSelectUser(result)}
+                                className="hover:bg-accent flex w-full items-center gap-3 rounded px-3 py-2"
                             >
-                                {u.username}
-                                <button
-                                    onClick={() => handleRemoveUser(u.id)}
-                                    className="text-muted-foreground ml-1 hover:text-red-500"
-                                >
-                                    &times;
-                                </button>
-                            </span>
+                                <UserAvatar
+                                    size="sm"
+                                    src={result.profilePicture}
+                                    name={result.username}
+                                />
+                                <div className="text-left">
+                                    <p className="text-sm font-medium">
+                                        {result.username}
+                                    </p>
+                                </div>
+                            </button>
                         ))}
                     </div>
-                )}
 
-                {/* Search */}
-                <Input
-                    placeholder={tMessages("search_users_placeholder")}
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="mb-3"
-                />
-
-                {/* Search results */}
-                <div className="max-h-48 overflow-y-auto">
-                    {isSearching && (
-                        <p className="text-muted-foreground py-2 text-center text-sm">
-                            {tMessages("searching")}
-                        </p>
-                    )}
-                    {searchResults.map((result) => (
-                        <button
-                            key={result.id}
-                            onClick={() => handleSelectUser(result)}
-                            className="hover:bg-accent flex w-full items-center gap-3 rounded px-3 py-2"
+                    <div className="mt-4 flex justify-end gap-2">
+                        <Button variant="outline" onClick={onClose}>
+                            {tMessages("cancel")}
+                        </Button>
+                        <Button
+                            disabled={selectedUsers.length === 0 || isLoading}
+                            onClick={handleCreate}
                         >
-                            <UserAvatar
-                                size="sm"
-                                src={result.profilePicture}
-                                name={result.username}
-                            />
-                            <div className="text-left">
-                                <p className="text-sm font-medium">
-                                    {result.username}
-                                </p>
-                            </div>
-                        </button>
-                    ))}
+                            {isLoading
+                                ? tMessages("creating")
+                                : tMessages("create")}
+                        </Button>
+                    </div>
                 </div>
-
-                <div className="mt-4 flex justify-end gap-2">
-                    <Button variant="outline" onClick={onClose}>
-                        {tMessages("cancel")}
-                    </Button>
-                    <Button
-                        disabled={selectedUsers.length === 0 || isLoading}
-                        onClick={handleCreate}
-                    >
-                        {isLoading
-                            ? tMessages("creating")
-                            : tMessages("create")}
-                    </Button>
-                </div>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     );
 }

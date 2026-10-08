@@ -40,5 +40,8 @@
     "typing_two": "{{name1}} and {{name2}} are typing...",
     "typing_many": "{{name}} and {{count}} others are typing...",
     "image_alt": "Image {{number}}",
-    "preview_alt": "Preview {{number}}"
+    "preview_alt": "Preview {{number}}",
+    "open_in_messages": "Open in Messages",
+    "minimize_chat": "Minimize chat",
+    "close_chat": "Close chat"
 }

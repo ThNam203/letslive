@@ -1,12 +1,5 @@
 import { http } from "msw";
-import {
-    API_BASE,
-    ok,
-    notFound,
-    noContent,
-    created,
-    badRequest,
-} from "../utils";
+import { API_BASE, ok, notFound, noContent, created } from "../utils";
 import {
     conversations,
     dmMessages,
@@ -85,7 +78,8 @@ export const dmHandlers = [
         };
         const participantIds: string[] = body.participantIds ?? [];
 
-        // For DMs, check no duplicate
+        // Like the chat service, an existing DM between the same two users
+        // is returned (200) instead of creating a duplicate
         if (body.type === ConversationType.DM) {
             const otherId = participantIds.find((id) => id !== ME_USER_ID);
             const existing = conversations.find(
@@ -95,10 +89,7 @@ export const dmHandlers = [
                     c.participants.some((p) => p.userId === otherId),
             );
             if (existing) {
-                return badRequest(
-                    "res_err_dm_already_exists",
-                    "DM already exists",
-                );
+                return ok<Conversation>(existing);
             }
         }
 

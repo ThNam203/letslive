@@ -24,23 +24,16 @@ export default function MessageThread({
     const bottomRef = useRef<HTMLDivElement>(null);
     const prevMessageCountRef = useRef(0);
 
-    // Auto-scroll to bottom on new messages
+    // Jump to the bottom on initial load, and follow new messages after that.
+    // One effect, so the count it compares against is not already updated.
     useEffect(() => {
-        if (messages.length > prevMessageCountRef.current) {
-            const isNewMessage =
-                messages.length - prevMessageCountRef.current <= 1;
-            if (isNewMessage) {
-                bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-            }
+        const prevCount = prevMessageCountRef.current;
+        if (prevCount === 0 && messages.length > 0) {
+            bottomRef.current?.scrollIntoView();
+        } else if (messages.length - prevCount === 1) {
+            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
         }
         prevMessageCountRef.current = messages.length;
-    }, [messages.length]);
-
-    // Scroll to bottom on initial load
-    useEffect(() => {
-        if (messages.length > 0 && prevMessageCountRef.current === 0) {
-            bottomRef.current?.scrollIntoView();
-        }
     }, [messages.length]);
 
     // Infinite scroll for loading older messages

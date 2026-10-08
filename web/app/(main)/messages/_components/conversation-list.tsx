@@ -14,6 +14,7 @@ export default function ConversationList({
     hasMore,
     isLoadingMore,
     onLoadMore,
+    onSelect,
 }: {
     conversations: Conversation[];
     isLoading: boolean;
@@ -21,6 +22,7 @@ export default function ConversationList({
     hasMore?: boolean;
     isLoadingMore?: boolean;
     onLoadMore?: () => void;
+    onSelect?: (conversation: Conversation) => void;
 }) {
     const { t } = useT("messages");
 
@@ -44,6 +46,7 @@ export default function ConversationList({
                         key={conv._id}
                         conversation={conv}
                         isActive={conv._id === activeId}
+                        onSelect={onSelect}
                     />
                 ))}
             </div>

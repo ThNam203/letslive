@@ -19,3 +19,6 @@ export const MQ_MAX_MD = maxWidthBelow(BREAKPOINT_MD_PX);
 
 /** Same viewport as Tailwind `max-lg:` */
 export const MQ_MAX_LG = maxWidthBelow(BREAKPOINT_LG_PX);
+
+/** Same viewport as Tailwind `max-sm:` */
+export const MQ_MAX_SM = maxWidthBelow(BREAKPOINT_SM_PX);

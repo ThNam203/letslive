@@ -16,6 +16,14 @@ export function prependConversation(
         CONVERSATIONS_QUERY_KEY,
         (old) => {
             if (!old) return old;
+            // creating a DM that already exists returns the existing one
+            if (
+                old.pages.some((page) =>
+                    page.items.some((c) => c._id === conversation._id),
+                )
+            ) {
+                return old;
+            }
             const [first, ...rest] = old.pages;
             // bump total too, otherwise the extra local item makes the loaded
             // count reach total early and hides the remaining pages

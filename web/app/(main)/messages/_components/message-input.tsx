@@ -15,6 +15,7 @@ import { GENERAL_UPLOAD_MAX_FILE_MB } from "@/constant/image";
 import { IsValidFileSizeInMB } from "@/utils/file";
 import { useUploadFiles } from "@/hooks/queries/use-file-upload";
 import useT from "@/hooks/use-translation";
+import { cn } from "@/utils/cn";
 
 const ACCEPTED_FILE_TYPES = "image/png,image/jpeg,image/gif,image/webp";
 const MAX_FILES = 10;
@@ -28,10 +29,15 @@ export default function MessageInput({
     onSend,
     onTypingStart,
     onTypingStop,
+    compact = false,
+    autoFocus = false,
 }: {
     onSend: (text: string, imageUrls?: string[]) => void;
     onTypingStart: () => void;
     onTypingStop: () => void;
+    /** Tighter layout for the narrow chat dock dialogs. */
+    compact?: boolean;
+    autoFocus?: boolean;
 }) {
     const [text, setText] = useState("");
     const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
@@ -171,7 +177,7 @@ export default function MessageInput({
     };
 
     return (
-        <div className="border-t px-4 py-3">
+        <div className={cn("border-t", compact ? "px-2 py-2" : "px-4 py-3")}>
             {/* File previews */}
             {selectedFiles.length > 0 && (
                 <div className="mb-2 flex flex-wrap gap-2">
@@ -201,7 +207,10 @@ export default function MessageInput({
                 <p className="text-destructive mb-1 text-xs">{uploadError}</p>
             )}
 
-            <form onSubmit={handleSubmit} className="flex items-start gap-2">
+            <form
+                onSubmit={handleSubmit}
+                className={cn("flex items-start", compact ? "gap-1" : "gap-2")}
+            >
                 {/* File upload button */}
                 <input
                     ref={fileInputRef}
@@ -221,12 +230,16 @@ export default function MessageInput({
                 >
                     <IconPaperclip className="!h-5 !w-5" />
                 </Button>
-                <div className="relative flex-1">
+                <div className="relative min-w-0 flex-1">
                     <Input
                         type="text"
                         placeholder={t("placeholder_type_message")}
                         maxLength={DM_MESSAGE_MAX_LENGTH}
-                        showCount
+                        // the dock has no room for a permanent counter, so
+                        // it only shows once the limit is hit
+                        showCount={!compact}
+                        emitErrorSignalOnLimit={compact}
+                        autoFocus={autoFocus}
                         value={text}
                         onChange={(e) => {
                             setText(e.target.value);
@@ -250,7 +263,7 @@ export default function MessageInput({
                         (!text.trim() && selectedFiles.length === 0) ||
                         isUploading
                     }
-                    className="h-9 w-12 shrink-0 p-0"
+                    className={cn("h-9 shrink-0 p-0", compact ? "w-9" : "w-12")}
                 >
                     {isUploading ? (
                         <IconLoader className="size-4" />

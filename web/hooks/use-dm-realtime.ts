@@ -32,7 +32,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /**
  * Applies DM pushes from the realtime socket to the query cache and the DM
  * store. Mounted once in the header so unread counts and presence stay live
- * on every page, not only under /messages.
+ * on every page, not only under /messages or in the chat dock.
  */
 export default function useDmRealtime(enabled: boolean) {
     const { onEvent, onReconnect } = useRealtime();
@@ -66,7 +66,7 @@ export default function useDmRealtime(enabled: boolean) {
                     // your own message (echoed to your other tabs) is never
                     // unread; the server count excludes it too
                     if (
-                        event.conversationId !== store.activeConversationId &&
+                        !store.visibleConversationIds[event.conversationId] &&
                         event.message.senderId !== userId
                     ) {
                         incrementDmUnread(queryClient, event.conversationId);
@@ -184,10 +184,12 @@ export default function useDmRealtime(enabled: boolean) {
             queryClient.invalidateQueries({
                 queryKey: CONVERSATIONS_QUERY_KEY,
             });
-            const activeId = useDmStore.getState().activeConversationId;
-            if (activeId) {
+            const visibleIds = Object.keys(
+                useDmStore.getState().visibleConversationIds,
+            );
+            for (const id of visibleIds) {
                 queryClient.invalidateQueries({
-                    queryKey: dmMessagesQueryKey(activeId),
+                    queryKey: dmMessagesQueryKey(id),
                 });
             }
         });

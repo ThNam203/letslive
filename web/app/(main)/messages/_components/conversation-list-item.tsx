@@ -9,7 +9,7 @@ import useT from "@/hooks/use-translation";
 import { useDmUnreadCounts } from "@/hooks/queries/use-dm-unread-counts";
 import { formatLocaleDate } from "@/utils/timeFormats";
 
-function getConversationDisplay(
+export function getConversationDisplay(
     conversation: Conversation,
     currentUserId: string,
     t: (key: string) => string,
@@ -69,9 +69,12 @@ function formatTime(
 export default function ConversationListItem({
     conversation,
     isActive,
+    onSelect,
 }: {
     conversation: Conversation;
     isActive?: boolean;
+    /** Called instead of navigating to the conversation page when set. */
+    onSelect?: (conversation: Conversation) => void;
 }) {
     const user = useUser((state) => state.user);
     const { onlineUsers } = useDmStore();
@@ -95,13 +98,11 @@ export default function ConversationListItem({
         }
     }
 
-    return (
-        <Link
-            href={`/messages/${conversation._id}`}
-            className={`hover:bg-accent flex items-center gap-3 px-4 py-3 transition-colors ${
-                isActive ? "bg-accent" : ""
-            }`}
-        >
+    const className = `hover:bg-accent flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
+        isActive ? "bg-accent" : ""
+    }`;
+    const content = (
+        <>
             <div className="relative">
                 <UserAvatar
                     src={display.avatar}
@@ -153,6 +154,24 @@ export default function ConversationListItem({
                     )}
                 </div>
             </div>
+        </>
+    );
+
+    if (onSelect) {
+        return (
+            <button
+                type="button"
+                onClick={() => onSelect(conversation)}
+                className={className}
+            >
+                {content}
+            </button>
+        );
+    }
+
+    return (
+        <Link href={`/messages/${conversation._id}`} className={className}>
+            {content}
         </Link>
     );
 }

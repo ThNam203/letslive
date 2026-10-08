@@ -1,6 +1,7 @@
 import { Header } from "@/app/(main)/_components/header/header";
 import { MainBodyLayout } from "@/app/(main)/_components/main-body-layout";
 import { RealtimeProvider } from "@/contexts/realtime-context";
+import ChatDock from "@/app/(main)/_components/chat-dock/chat-dock";
 
 export default function RootLayout({
     children,
@@ -13,6 +14,7 @@ export default function RootLayout({
                 <Header />
                 <MainBodyLayout>{children}</MainBodyLayout>
             </div>
+            <ChatDock />
         </RealtimeProvider>
     );
 }
