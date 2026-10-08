@@ -227,6 +227,9 @@ Files: [backend/user/api/http.go:88](backend/user/api/http.go#L88), [backend/use
 - Self-gifting allowed (no `actor == recipient` check in purchase) — confirm intended: [backend/finance/services/purchase/purchase.go:107](backend/finance/services/purchase/purchase.go#L107)
 - No validation that `deposit.minAmount <= maxAmount` in config: [backend/finance/config/config.go:33-36](backend/finance/config/config.go#L33-L36)
 
+**F16. ~~Finance port in the config server (7780) differs from what the gateway, compose and docs use (7783)~~ — FIXED**
+`finance_service-{dev,prod}.yml` in the config repo set `apiPort: 7780`, copied from chat, while `configs/envoy/envoy.yaml` (and `kong.yml` before it), both compose files and the docs use 7783, the next free port in the sequence (auth 7777, user 7778, chat 7780, livestream 7781, vod 7782, admin 7784, realtime 7785). Consul only carries the address, so every finance route through the gateway answered 503. The config repo now sets 7783 in both files; with the port matched, all 30 finance routes behaved like the service called directly.
+
 ---
 
 ## Web — TanStack Query Migration (Pending Manual Verification)
