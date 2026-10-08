@@ -8,9 +8,6 @@ _Last updated: 2026-10-08_
 
 ### 🔴 CRITICAL
 
-**S1. ~~JWT signature NOT verified in any service~~ — FIXED**
-Access tokens are now signed with ES256 by the auth service and published as a JWKS (`GET /v1/.well-known/jwks.json`). The Go services (user, livestream, vod, finance, chat, realtime, auth) verify the signature and expiry through `shared/pkg/jwtauth` instead of `ParseUnverified`; only the public key is distributed. Refresh tokens stay HS256 because only auth reads them.
-
 **S2. Refresh token NOT revoked on logout**
 `LogOutHandler` clears the cookie but never calls `RevokeTokenByValue()` or `RevokeAllTokensOfUser()`. A stolen refresh token stays valid after logout indefinitely.
 File: [backend/auth/handlers/auth.go:269-272](backend/auth/handlers/auth.go#L269-L272)
@@ -49,19 +46,9 @@ The `.env` file is tracked in the repo and contains live secrets:
 - All service database credentials
 File: [.env](.env)
 
-**S9. ~~Weak JWT signing secret in Kong~~ — FIXED**
-The shared HS256 secret is gone. Access tokens are signed with an ES256 private key held only by auth (`ACCESS_TOKEN_PRIVATE_KEY`); the gateway and the other services only ever see the public key through the JWKS endpoint.
-
-**S20. ~~Private VODs readable and view-countable by anyone via public routes~~ — FIXED**
-`GET /v1/vods/{vodId}` and `POST /v1/vods/{vodId}/view` no longer serve or count a private VOD for anyone but its owner. The vod service reads the viewer from the `ACCESS_TOKEN` cookie, which it now verifies against the auth JWKS (S1); a missing, expired or forged cookie just means "signed out", and anything but the owner gets `res_err_vod_not_found`. Found while reviewing PR #370.
-Files: [backend/vod/services/vod/get_by_id.go](backend/vod/services/vod/get_by_id.go), [backend/vod/services/vod/increase_view_count.go](backend/vod/services/vod/increase_view_count.go)
-
 ---
 
 ### 🟡 MEDIUM
-
-**S10. ~~Finance service routed but unimplemented~~ — SUPERSEDED**
-Finance service is now implemented (branch `feat/finance-service`). Per-user authz, atomic balance updates, and negative-amount rejection are in place (double-entry ledger with DB triggers). Remaining finance findings tracked in the **Finance Service Issues** section below (F1–F15).
 
 **S11. Chat conversation updates lack role checks**
 Any participant — not just the owner — can rename or modify a group conversation.
@@ -219,16 +206,13 @@ Deposit amounts in platform-currency minor units are passed raw as Stripe `UnitA
 File: [backend/finance/gateway/payment/stripe/stripe.go:51-55](backend/finance/gateway/payment/stripe/stripe.go#L51-L55)
 
 **F14. Unauthenticated internal endpoints mint gifts/inventory**
-`/v1/internal/gifts/create` and `/v1/internal/inventory/add` on the user service have no auth; they are safe only because the gateway does not route them (extends S1's trust-the-network posture to money-adjacent writes). An internal API key header would harden this.
+`/v1/internal/gifts/create` and `/v1/internal/inventory/add` on the user service have no auth; they are safe only because the gateway does not route them. An internal API key header would harden this.
 Files: [backend/user/api/http.go:88](backend/user/api/http.go#L88), [backend/user/api/http.go:94](backend/user/api/http.go#L94)
 
 **F15. Minor cleanups**
 - Dead `pgx.ErrNoRows` check on `Query` error (never returned there): [backend/finance/repositories/shop_item/list.go:23](backend/finance/repositories/shop_item/list.go#L23)
 - Self-gifting allowed (no `actor == recipient` check in purchase) — confirm intended: [backend/finance/services/purchase/purchase.go:107](backend/finance/services/purchase/purchase.go#L107)
 - No validation that `deposit.minAmount <= maxAmount` in config: [backend/finance/config/config.go:33-36](backend/finance/config/config.go#L33-L36)
-
-**F16. ~~Finance port in the config server (7780) differs from what the gateway, compose and docs use (7783)~~ — FIXED**
-`finance_service-{dev,prod}.yml` in the config repo set `apiPort: 7780`, copied from chat, while `configs/envoy/envoy.yaml` (and `kong.yml` before it), both compose files and the docs use 7783, the next free port in the sequence (auth 7777, user 7778, chat 7780, livestream 7781, vod 7782, admin 7784, realtime 7785). Consul only carries the address, so every finance route through the gateway answered 503. The config repo now sets 7783 in both files; with the port matched, all 30 finance routes behaved like the service called directly.
 
 ---
 
@@ -264,40 +248,6 @@ Files: [web/hooks/queries/use-conversations.ts](web/hooks/queries/use-conversati
 ## Design Consistency Issues
 
 _Added 2026-09-08 from a full-repo review. Scope is **code vs. code design** — convention drift, duplicated or dead registries, half-finished migrations. Not behavioral bugs (see Logic/Consistency above) and not TODOs. Nothing here is a security issue._
-
-### ✅ Resolved — commit `fad2525` (`fix/response-registry-consistency`)
-
-**C1. 13 backend response keys had no translation**
-``t(`api-response:${res.key}`)`` renders the raw key string when a key is missing, so users saw e.g. `res_err_notification_not_found`. Missing: notification-not-found, username-taken, insufficient-inventory, vod-view-threshold, email-verified, and all 8 chat DM/conversation keys.
-Files: [web/lib/i18n/locales/en-US/api-response.json](web/lib/i18n/locales/en-US/api-response.json), [web/lib/i18n/locales/vi-VN/api-response.json](web/lib/i18n/locales/vi-VN/api-response.json)
-
-**C2. `err_video_too_large` broke the `res_err_` prefix convention**
-Renamed to `res_err_video_too_large` in the backend, both locales, and the web enum.
-File: [backend/vod/response/error.go](backend/vod/response/error.go)
-
-**C3. Orphan `res_err_query_scan_failed` key + dead `_CODE` constants**
-The key existed only in i18n — the backend never defined its `_KEY` and no template emitted it. Removed the i18n entries and the dead `RES_ERR_QUERY_SCAN_FAILED_CODE = 40004` constants in livestream and vod.
-
-**C4. Error code `30002` collided across services**
-Meant `NOTIFICATION_NOT_FOUND` in user but `IMAGE_TOO_LARGE` in livestream/vod/chat — and the latter sat inside user's `3xxxx` block. Only user ever emits `IMAGE_TOO_LARGE` (at 30001), so the other three were dead duplicates; deleting them resolved the collision with **no wire-visible change**. A registry scan now reports 64 codes with no name collisions.
-
-**C5. livestream carried vod-domain templates left over from the vod split**
-5 × `VOD_COMMENT_*`, plus `VOD_NOT_FOUND` and `VOD_UPDATE_FAILED` — none emitted there. `VOD_CREATE_FAILED` is still used by end-livestream and was kept.
-File: [backend/livestream/response/error.go](backend/livestream/response/error.go)
-
-**C6. `ApiCode` / `ApiKey` enums were a dead fourth key registry**
-Zero consumers anywhere in web, and already missing six entries. Deleted; `ApiResponse`/`Meta`/`ErrorDetail` (actually used) retained.
-File: [web/types/fetch-response.ts](web/types/fetch-response.ts)
-
-**C7. vi-VN `time.*` keys did not use en-US's plural-suffix scheme**
-Aligned on i18next JSON-v4 (`_other`, the only plural category for Vietnamese). Also dropped the unused `open` key, which had no en-US counterpart.
-File: [web/lib/i18n/locales/vi-VN/common.json](web/lib/i18n/locales/vi-VN/common.json)
-
-> **Two corrections to the original review, recorded so they aren't re-derived:**
-> 1. C7 was first written up as "vi-VN falls back to English for relative times". That was wrong — i18next falls back from a missing plural-suffixed key to the *base* key, so Vietnamese already rendered correctly. C7 is convention alignment only, with no user-visible change.
-> 2. C3 was first written up as an i18n-only orphan. Accurate, but the cause is that the backend never defined the `_KEY`, not that it was removed at some point.
-
----
 
 ### 🟠 HIGH — structural
 
@@ -405,14 +355,12 @@ The whole Go backend has 4 `_test.go` files (all under finance + shared/natsbus)
 ## Recommended Fix Order
 
 1. **S8** — Rotate all leaked secrets immediately; remove `.env` from git history
-2. ~~**S1** — Verify JWT signatures in all services~~ (done)
-3. **S2 + S3** — Enforce token revocation on logout and in the refresh flow
-4. ~~**S9** — Replace Kong JWT secret with a random value via env var~~ (done)
-5. **S4** — Add auth middleware and MIME validation to the upload endpoint
-6. **S5 + S16** — Fix CORS; add `SameSite=Strict` to cookies
-7. **S7** — Set OTP rate limit to 1/min
-8. **S6** — Enable TLS between the gateway and services
-9. **F1 + F2** — Compensation on `context.WithoutCancel`; HTTP client timeout in finance→user gateway (before merging `feat/finance-service`)
-10. **F3 + F4** — Check Stripe `payment_status` before crediting; guarded payment status transitions
-11. **L1** — Send error events to WebSocket clients on validation failure
-12. **L2 + L3** — Align backend type definitions with actual runtime payloads
+2. **S2 + S3** — Enforce token revocation on logout and in the refresh flow
+3. **S4** — Add auth middleware and MIME validation to the upload endpoint
+4. **S5 + S16** — Fix CORS; add `SameSite=Strict` to cookies
+5. **S7** — Set OTP rate limit to 1/min
+6. **S6** — Enable TLS between the gateway and services
+7. **F1 + F2** — Compensation on `context.WithoutCancel`; HTTP client timeout in finance→user gateway (before merging `feat/finance-service`)
+8. **F3 + F4** — Check Stripe `payment_status` before crediting; guarded payment status transitions
+9. **L1** — Send error events to WebSocket clients on validation failure
+10. **L2 + L3** — Align backend type definitions with actual runtime payloads
