@@ -234,7 +234,7 @@ func TestParsePrivateKey_rejectsOtherCurvesAndGarbage(t *testing.T) {
 
 func TestKeyID_isStableAndDistinct(t *testing.T) {
 	a, b := newKey(t), newKey(t)
-	if KeyID(&a.PublicKey) != KeyID(&a.PublicKey) {
+	if KeyID(&a.PublicKey) != NewSigner(a).kid {
 		t.Fatal("kid must be deterministic")
 	}
 	if KeyID(&a.PublicKey) == KeyID(&b.PublicKey) {

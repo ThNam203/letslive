@@ -33,6 +33,9 @@ type Verifier struct {
 	client          *http.Client
 	refreshInterval time.Duration
 
+	// fetchMu lets one JWKS fetch run at a time. mu only guards the fields
+	// below and is never held across the fetch, so cached keys never wait on it.
+	fetchMu     sync.Mutex
 	mu          sync.Mutex
 	keys        map[string]*ecdsa.PublicKey
 	fetchedAt   time.Time
@@ -77,36 +80,61 @@ func (v *Verifier) Verify(ctx context.Context, tokenString string, claims jwt.Cl
 }
 
 func (v *Verifier) keyFor(ctx context.Context, kid string) (*ecdsa.PublicKey, error) {
-	v.mu.Lock()
-	defer v.mu.Unlock()
-
-	key, known := v.keys[kid]
-	stale := time.Since(v.fetchedAt) > v.refreshInterval
-	if known && !stale {
+	key, known, stale := v.cached(kid)
+	if known {
+		// serve the cached key now and refresh off the request path; a failed
+		// refresh keeps the cache, so auth being briefly down is harmless
+		if stale && v.fetchMu.TryLock() {
+			if v.claimFetch() {
+				go func() {
+					defer v.fetchMu.Unlock()
+					_ = v.refresh(context.Background())
+				}()
+			} else {
+				v.fetchMu.Unlock()
+			}
+		}
 		return key, nil
 	}
-	if v.url == "" || time.Since(v.lastAttempt) < minRefetchInterval {
-		if known {
-			return key, nil
-		}
+
+	// an unknown kid has to wait for the fetch, and for one already in flight
+	v.fetchMu.Lock()
+	defer v.fetchMu.Unlock()
+	if key, known, _ := v.cached(kid); known {
+		return key, nil
+	}
+	if !v.claimFetch() {
 		return nil, fmt.Errorf("%w: unknown kid %q", ErrNoKey, kid)
 	}
-
-	v.lastAttempt = time.Now()
 	if err := v.refresh(ctx); err != nil {
-		// keep serving from the cache when auth is briefly unreachable
-		if known {
-			return key, nil
-		}
 		return nil, fmt.Errorf("%w: %w", ErrNoKey, err)
 	}
-	if key, ok := v.keys[kid]; ok {
+	if key, known, _ := v.cached(kid); known {
 		return key, nil
 	}
 	return nil, fmt.Errorf("%w: unknown kid %q", ErrNoKey, kid)
 }
 
-// refresh replaces the cached keys; the caller holds v.mu.
+func (v *Verifier) cached(kid string) (key *ecdsa.PublicKey, known, stale bool) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	key, known = v.keys[kid]
+	return key, known, time.Since(v.fetchedAt) > v.refreshInterval
+}
+
+// claimFetch reports whether a fetch may start now and records the attempt.
+func (v *Verifier) claimFetch() bool {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	if v.url == "" || time.Since(v.lastAttempt) < minRefetchInterval {
+		return false
+	}
+	v.lastAttempt = time.Now()
+	return true
+}
+
+// refresh fetches the JWKS and replaces the cached keys; the caller holds
+// v.fetchMu, and v.mu is only taken for the swap.
 func (v *Verifier) refresh(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, fetchTimeout)
 	defer cancel()
@@ -142,7 +170,9 @@ func (v *Verifier) refresh(ctx context.Context) error {
 		return errors.New("jwks has no usable keys")
 	}
 
+	v.mu.Lock()
 	v.keys = keys
 	v.fetchedAt = time.Now()
+	v.mu.Unlock()
 	return nil
 }
