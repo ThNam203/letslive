@@ -29,16 +29,16 @@ File: [backend/auth/services/jwt.go:51-85](backend/auth/services/jwt.go#L51-L85)
 File: [user/api/http.go:55](user/api/http.go#L55)
 
 **S5. CORS wildcard with credentials**
-Kong is configured with `origins: ["*"]` and `credentials: true`. Any website can issue authenticated requests and read responses.
-File: [configs/kong.yml:431](configs/kong.yml#L431)
+The gateway's CORS policy allows any origin (`.*`) with `allow_credentials: true`, so any website can issue authenticated requests and read responses.
+File: [configs/envoy/envoy.yaml](configs/envoy/envoy.yaml) (`envoy.filters.http.cors` policy on the virtual host)
 
 **S6. No TLS on backend services**
-The `useTLS` path hard-errors. JWT cookies and payloads travel in plaintext between Kong and all services (and to clients if Kong is not fronted by TLS).
+The `useTLS` path hard-errors. JWT cookies and payloads travel in plaintext between the gateway and all services (and to clients if the gateway is not fronted by TLS).
 File: [auth/api/http.go:58](auth/api/http.go#L58)
 
 **S7. Broken rate limiting — OTP endpoint**
 OTP rate limit is set to 123/min with a `#TODO: change to one` comment. No brute-force protection on login or signup.
-File: [configs/kong.yml:76-80](configs/kong.yml#L76-L80)
+File: [configs/envoy/envoy.yaml](configs/envoy/envoy.yaml) (the `/auth/verify-email` route, 123 tokens per 60s per client)
 
 **S8. Hardcoded secrets committed to version control**
 The `.env` file is tracked in the repo and contains live secrets:
@@ -49,15 +49,13 @@ The `.env` file is tracked in the repo and contains live secrets:
 - All service database credentials
 File: [.env](.env)
 
-**S9. Weak JWT signing secret in Kong**
-Kong's JWT consumer secret is the literal string `"access_token_secret"`. A comment confirms it: `## note to myself: keep it access_token_secret, I use it to replace with real secret`. Any attacker can forge valid access tokens.
-File: [configs/kong.yml:435](configs/kong.yml#L435)
+**S9. ~~Weak JWT signing secret in Kong~~ — FIXED**
+The shared HS256 secret is gone. Access tokens are signed with an ES256 private key held only by auth (`ACCESS_TOKEN_PRIVATE_KEY`); the gateway and the other services only ever see the public key through the JWKS endpoint.
 
 **S20. Private VODs readable and view-countable by anyone via public routes**
-`GET /v1/vods/{vodId}` and `POST /v1/vods/{vodId}/view` sit on the public Kong route (no jwt plugin) and never check `visibility`. Anyone with a private VOD's id gets its metadata and `playbackUrl`, and can inflate its view count. Found while reviewing PR #370 (the reaction routes were fixed there; these two were deliberately postponed).
-Files: [backend/vod/services/vod/get_by_id.go](backend/vod/services/vod/get_by_id.go), [backend/vod/services/vod/increase_view_count.go](backend/vod/services/vod/increase_view_count.go), [configs/kong.yml](configs/kong.yml) (`VOD_Public_Routes`)
-Why it isn't a handler-only fix: the owner must still see their own private VOD, but identity on these routes comes from `ParseUnverified` (see S1) with no gateway verification, so a forged cookie carrying the owner's id would pass an owner check.
-Proposed fix: add a dedicated Kong route `GET ~/vods/[^/]+$` with the `jwt` plugin in `anonymous` mode (plus an `anonymous` consumer, and `regex_priority` on `VOD_Author_Private_Route` so `/vods/author` keeps winning). Kong then lets signed-out callers through but sets `X-Anonymous-Consumer`; the service must trust the cookie only when that header is absent. Return `ErrVODNotFound` for a private VOD unless the verified viewer is the owner, and apply the same rule to `RegisterView`. Alternative: verify the signature in the service (resolves S1 too). A prototype of the Kong approach parsed cleanly with `kong config parse`, but was not tested end to end.
+`GET /v1/vods/{vodId}` and `POST /v1/vods/{vodId}/view` sit on public gateway routes (no JWT requirement) and never check `visibility`. Anyone with a private VOD's id gets its metadata and `playbackUrl`, and can inflate its view count. Found while reviewing PR #370 (the reaction routes were fixed there; these two were deliberately postponed).
+Files: [backend/vod/services/vod/get_by_id.go](backend/vod/services/vod/get_by_id.go), [backend/vod/services/vod/increase_view_count.go](backend/vod/services/vod/increase_view_count.go), [configs/envoy/envoy.yaml](configs/envoy/envoy.yaml) (`/vods` routes)
+Unblocked by S1: the vod service now verifies the `ACCESS_TOKEN` cookie itself (`jwtauth.Verify`), so a viewer id read from it can be trusted without any gateway support. The fix is in the service: read the viewer optionally (a missing or invalid cookie means signed out), return `ErrVODNotFound` for a private VOD unless the viewer is the owner, and apply the same rule to `RegisterView`.
 
 ---
 
@@ -222,7 +220,7 @@ Deposit amounts in platform-currency minor units are passed raw as Stripe `UnitA
 File: [backend/finance/gateway/payment/stripe/stripe.go:51-55](backend/finance/gateway/payment/stripe/stripe.go#L51-L55)
 
 **F14. Unauthenticated internal endpoints mint gifts/inventory**
-`/v1/internal/gifts/create` and `/v1/internal/inventory/add` on the user service have no auth; they are safe only because Kong does not route them (extends S1's trust-the-network posture to money-adjacent writes). An internal API key header would harden this.
+`/v1/internal/gifts/create` and `/v1/internal/inventory/add` on the user service have no auth; they are safe only because the gateway does not route them (extends S1's trust-the-network posture to money-adjacent writes). An internal API key header would harden this.
 Files: [backend/user/api/http.go:88](backend/user/api/http.go#L88), [backend/user/api/http.go:94](backend/user/api/http.go#L94)
 
 **F15. Minor cleanups**
@@ -405,13 +403,13 @@ The whole Go backend has 4 `_test.go` files (all under finance + shared/natsbus)
 ## Recommended Fix Order
 
 1. **S8** — Rotate all leaked secrets immediately; remove `.env` from git history
-2. **S1** — Verify JWT signatures in all services
+2. ~~**S1** — Verify JWT signatures in all services~~ (done)
 3. **S2 + S3** — Enforce token revocation on logout and in the refresh flow
-4. **S9** — Replace Kong JWT secret with a random value via env var
+4. ~~**S9** — Replace Kong JWT secret with a random value via env var~~ (done)
 5. **S4** — Add auth middleware and MIME validation to the upload endpoint
 6. **S5 + S16** — Fix CORS; add `SameSite=Strict` to cookies
 7. **S7** — Set OTP rate limit to 1/min
-8. **S6** — Enable TLS between Kong and services
+8. **S6** — Enable TLS between the gateway and services
 9. **F1 + F2** — Compensation on `context.WithoutCancel`; HTTP client timeout in finance→user gateway (before merging `feat/finance-service`)
 10. **F3 + F4** — Check Stripe `payment_status` before crediting; guarded payment status transitions
 11. **L1** — Send error events to WebSocket clients on validation failure

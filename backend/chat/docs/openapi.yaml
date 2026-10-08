@@ -11,7 +11,7 @@ info:
     `chat.message` on `room:<roomId>`, and `dm:*` events on `user:<id>`.
 
     Every response uses the envelope below. Private routes need the
-    `ACCESS_TOKEN` cookie, which Kong verifies.
+    `ACCESS_TOKEN` cookie, which the gateway and the service verify.
 
 servers:
   - url: /api/v1
@@ -151,7 +151,7 @@ components:
         50024 cannot_message_self, 50025 too_many_participants,
         50026 user_setup_incomplete
     Unauthorized:
-      description: 20005 unauthorized (from Kong or a missing userId claim)
+      description: 20005 unauthorized (from the gateway or a missing userId claim)
     Forbidden:
       description: 20008 forbidden, 50021 not_participant, 50022 insufficient_role
     NotFound:

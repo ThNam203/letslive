@@ -22,28 +22,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Update Kong configuration
-        env:
-          ACCESS_TOKEN_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN_PRIVATE_KEY }}
-        run: |
-          if [ ! -f "configs/kong.yml" ]; then
-            echo "Warning: configs/kong.yml not found"
-            exit 0
-          fi
-          # Kong verifies with the public half of the signing key
-          PUBLIC_KEY=$(printf '%s' "$ACCESS_TOKEN_PRIVATE_KEY" | base64 -d | openssl ec -pubout 2>/dev/null)
-          if [ -z "$PUBLIC_KEY" ]; then
-            echo "ACCESS_TOKEN_PRIVATE_KEY is missing or not a base64 EC key"
-            exit 1
-          fi
-          PUBLIC_KEY="$PUBLIC_KEY" awk '
-            /^        rsa_public_key: \|$/ { print; n = split(ENVIRON["PUBLIC_KEY"], lines, "\n"); for (i = 1; i <= n; i++) print "          " lines[i]; skip = 1; next }
-            skip && /^          / { next }
-            { skip = 0; print }
-          ' configs/kong.yml > configs/kong.yml.tmp
-          mv configs/kong.yml.tmp configs/kong.yml
-          echo "Updated Kong configuration with the access token public key"
-
       - name: Create .env file
         run: |
           cat > .env << EOF
@@ -131,12 +109,12 @@ jobs:
           do
             echo "Deploy attempt $attempt/$max_retries"
 
-            # Kong runs DB-less and only reads configs/kong.yml at container
-            # start; Compose won't recreate it on its own since the bind-mounted
-            # file's content isn't part of the service diff. Force it every deploy.
+            # Envoy only reads configs/envoy/envoy.yaml at container start;
+            # Compose won't recreate it on its own since the bind-mounted file's
+            # content isn't part of the service diff. Force it every deploy.
             if docker compose pull &&
               docker compose up -d --remove-orphans &&
-              docker compose up -d --force-recreate kong &&
+              docker compose up -d --force-recreate envoy &&
               docker image prune -f
             then
               echo "Deploy succeeded"

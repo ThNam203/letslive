@@ -59,7 +59,7 @@ info:
 
 servers:
   - url: /
-    description: Through Kong (the route has no JWT plugin)
+    description: Through the gateway (the route has no JWT requirement)
 
 paths:
   /realtime:
