@@ -2,6 +2,7 @@
 
 import { PublicUser } from "@/types/user";
 import ProfileHeader from "./profile-header";
+import ProfileActions from "@/components/user/profile-actions";
 import MediaCard from "@/components/livestream/media-card";
 import IconCalendar from "@/components/icons/calendar";
 import IconUsers from "@/components/icons/users";
@@ -46,15 +47,14 @@ export default function ProfileView({
 
     return (
         <div className={className}>
-            <ProfileHeader user={user} updateUser={updateUser} />
+            <ProfileHeader user={user} />
             {/* Profile Content */}
             <div className="mt-4 flex w-full flex-col gap-4 px-4 pb-8">
-                <div className="flex items-start gap-8">
-                    <div>
-                        <h1 className="text-foreground text-3xl font-bold">
-                            {user.username}
-                        </h1>
-                    </div>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <h1 className="text-foreground text-3xl font-bold">
+                        {user.username}
+                    </h1>
+                    <ProfileActions user={user} updateUser={updateUser} />
                 </div>
                 <div className="flex flex-row gap-2">
                     <div className="text-foreground flex max-w-72 flex-1 flex-col gap-2 text-xs">
