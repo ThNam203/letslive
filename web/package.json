@@ -40,7 +40,7 @@
         "react": "19.2.8",
         "react-dom": "19.2.8",
         "react-easy-crop": "^6.2.3",
-        "react-i18next": "^17.0.11",
+        "react-i18next": "^17.0.16",
         "react-player": "^3.4.0",
         "react-resizable-panels": "^4.12.2",
         "react-toastify": "^11.1.0",
