@@ -24,7 +24,7 @@ func (h *UserHandler) UpdateUserProfilePicturePrivateHandler(w http.ResponseWrit
 	}
 	defer r.Body.Close()
 
-	file, _, uploadErr := utils.ParseUploadedFile(w, r, "profile-picture", utils.AvatarMaxFileBytes)
+	file, uploadErr := utils.ParseUploadedFile(w, r, "profile-picture", utils.AvatarMaxFileBytes)
 	if uploadErr != nil {
 		h.WriteResponse(w, ctx, uploadErr)
 		return

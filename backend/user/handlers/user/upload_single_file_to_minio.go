@@ -14,7 +14,7 @@ func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *h
 
 	defer r.Body.Close()
 
-	file, fileHeader, uploadErr := utils.ParseUploadedFile(w, r, "file", utils.GeneralUploadMaxFileBytes)
+	file, uploadErr := utils.ParseUploadedFile(w, r, "file", utils.GeneralUploadMaxFileBytes)
 	if uploadErr != nil {
 		h.WriteResponse(w, ctx, uploadErr)
 		return
@@ -22,7 +22,7 @@ func (h *UserHandler) UploadSingleFileToMinIOHandler(w http.ResponseWriter, r *h
 	defer file.Close()
 
 	ctx, span := tracer.MyTracer.Start(ctx, "upload_single_file_to_min_io_handler.user_service.upload_file_to_min_io")
-	savedPath, err := h.userService.UploadFileToMinIO(ctx, file, fileHeader)
+	savedPath, err := h.userService.UploadFileToMinIO(ctx, file)
 	span.End()
 
 	if err != nil {

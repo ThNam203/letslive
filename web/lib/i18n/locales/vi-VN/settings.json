@@ -16,12 +16,7 @@
         "bio": "Tiểu sử",
         "update_success": "Cập nhật thông tin hồ sơ thành công!",
         "update_background": "Cập nhật ảnh nền",
-        "update_profile_picture": "Cập nhật ảnh đại diện",
-        "crop_title": "Cắt ảnh đại diện",
-        "crop_apply": "Áp dụng",
-        "crop_image_alt": "Ảnh cần cắt",
-        "image_load_failed": "Không đọc được ảnh này. Vui lòng chọn tệp khác.",
-        "photo_dimensions_out_of_range": "Ảnh phải có kích thước từ {{min}}x{{min}} đến {{max}}x{{max}} pixel."
+        "update_profile_picture": "Cập nhật ảnh đại diện"
     },
     "social_media_links": {
         "title": "Chỉnh sửa liên kết mạng xã hội",
@@ -50,6 +45,15 @@
         "updated_success": "Cập nhật thông tin livestream thành công"
     },
     "file_size_exceeds": "Kích thước tệp vượt quá {{size}} MB",
+    "image_load_failed": "Không đọc được ảnh này. Vui lòng chọn tệp khác.",
+    "image_dimensions_out_of_range": "Ảnh phải có kích thước tối thiểu {{minWidth}}x{{minHeight}} và tối đa {{max}}x{{max}} pixel.",
+    "image_too_large_dimensions": "Ảnh phải có kích thước tối đa {{max}}x{{max}} pixel.",
+    "crop": {
+        "avatar_title": "Cắt ảnh đại diện",
+        "thumbnail_title": "Cắt ảnh thu nhỏ",
+        "apply": "Áp dụng",
+        "image_alt": "Ảnh cần cắt"
+    },
     "save_changes": "Lưu thay đổi",
     "vods": {
         "title": "Quản lý VODs",

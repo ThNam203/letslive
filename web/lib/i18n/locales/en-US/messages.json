@@ -23,6 +23,8 @@
     "attach_images_limit": "You can attach up to {{max}} images",
     "group_member_limit": "A group can have up to {{max}} members, including you",
     "file_exceeds_limit": "{{name}} exceeds {{size}}MB limit",
+    "image_exceeds_dimensions": "{{name}} is larger than {{max}}x{{max}} pixels",
+    "image_unreadable": "{{name}} couldn't be read",
     "sent_an_image": "Sent an image",
     "sent_images_count": "Sent {{count}} images",
     "upload_failed": "Failed to upload files",

@@ -24,7 +24,7 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 	}
 	defer r.Body.Close()
 
-	file, fileHeader, uploadErr := utils.ParseUploadedFile(w, r, "background-picture", utils.BackgroundMaxFileBytes)
+	file, uploadErr := utils.ParseUploadedFile(w, r, "background-picture", utils.BackgroundMaxFileBytes)
 	if uploadErr != nil {
 		h.WriteResponse(w, ctx, uploadErr)
 		return
@@ -32,7 +32,7 @@ func (h *UserHandler) UpdateUserBackgroundPicturePrivateHandler(w http.ResponseW
 	defer file.Close()
 
 	ctx, span := tracer.MyTracer.Start(ctx, "update_user_background_picture_private_handler.user_service.update_user_background_picture")
-	savedPath, err := h.userService.UpdateUserBackgroundPicture(ctx, file, fileHeader, *userUUID)
+	savedPath, err := h.userService.UpdateUserBackgroundPicture(ctx, file, *userUUID)
 	span.End()
 
 	if err != nil {

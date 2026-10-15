@@ -26,23 +26,23 @@ func ParseUploadForm(w http.ResponseWriter, r *http.Request, maxFileBytes int64)
 }
 
 // UploadedFile returns a file part of a form parsed by ParseUploadForm.
-func UploadedFile(r *http.Request, field string, maxFileBytes int64) (multipart.File, *multipart.FileHeader, *response.Response[any]) {
+func UploadedFile(r *http.Request, field string, maxFileBytes int64) (multipart.File, *response.Response[any]) {
 	file, fileHeader, err := r.FormFile(field)
 	if err != nil {
-		return nil, nil, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil)
 	}
 
 	if fileHeader.Size > maxFileBytes {
 		file.Close()
-		return nil, nil, response.NewResponseFromTemplate[any](response.RES_ERR_IMAGE_TOO_LARGE, nil, nil, nil)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_IMAGE_TOO_LARGE, nil, nil, nil)
 	}
 
-	return file, fileHeader, nil
+	return file, nil
 }
 
-func ParseUploadedFile(w http.ResponseWriter, r *http.Request, field string, maxFileBytes int64) (multipart.File, *multipart.FileHeader, *response.Response[any]) {
+func ParseUploadedFile(w http.ResponseWriter, r *http.Request, field string, maxFileBytes int64) (multipart.File, *response.Response[any]) {
 	if errRes := ParseUploadForm(w, r, maxFileBytes); errRes != nil {
-		return nil, nil, errRes
+		return nil, errRes
 	}
 	return UploadedFile(r, field, maxFileBytes)
 }

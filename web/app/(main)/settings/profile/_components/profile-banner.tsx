@@ -4,40 +4,35 @@ import UserAvatar from "@/components/ui/user-avatar";
 import useUser from "@/hooks/user";
 import { cn } from "@/utils/cn";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import DefaultBackgound from "./default-background";
 import ImageHover from "../../_components/image-hover";
+import ImageCropDialog from "../../_components/image-crop-dialog";
+import useImageCrop, {
+    type PreparedImage,
+} from "../../_components/use-image-crop";
 import useT from "@/hooks/use-translation";
-import AvatarCropDialog from "./avatar-crop-dialog";
 import { toast } from "@/components/utils/toast";
 import {
-    AVATAR_ACCEPTED_TYPES,
-    AVATAR_SOURCE_MAX_DIMENSION,
+    AVATAR_IMAGE,
     AVATAR_MAX_FILE_MB,
-    AVATAR_MIN_DIMENSION,
-    AVATAR_UPLOAD_MAX_DIMENSION,
-    AVATAR_UPLOAD_QUALITY,
+    BACKGROUND_IMAGE,
     BACKGROUND_MAX_FILE_MB,
 } from "@/constant/image";
 import { readFileAsDataUrl } from "@/utils/file";
 import {
-    exportSquare,
-    isWithinDimensions,
-    loadImage,
+    fitsSourceLimit,
+    loadImageFile,
     naturalSize,
-    type CropSquare,
+    exportWholeImage,
 } from "@/utils/image-crop";
-
-export type PendingImage = { file: File; previewUrl: string };
-
-type CroppingImage = { pick: number; img: HTMLImageElement };
 
 interface Props {
     className?: string;
-    pendingAvatar: PendingImage | null;
-    pendingBackground: PendingImage | null;
-    onAvatarChange: (avatar: PendingImage | null) => void;
-    onBackgroundChange: (background: PendingImage | null) => void;
+    pendingAvatar: PreparedImage | null;
+    pendingBackground: PreparedImage | null;
+    onAvatarChange: (avatar: PreparedImage | null) => void;
+    onBackgroundChange: (background: PreparedImage | null) => void;
 }
 
 export default function ProfileBanner({
@@ -52,85 +47,38 @@ export default function ProfileBanner({
     const updateUser = useUser((state) => state.updateUser);
     const profileImageInputRef = useRef<HTMLInputElement>(null);
     const backgroundImageInputRef = useRef<HTMLInputElement>(null);
-    const [cropping, setCropping] = useState<CroppingImage | null>(null);
-    // a large image can still be reading when the next one is picked; only
+    const avatarCrop = useImageCrop(AVATAR_IMAGE, "avatar", onAvatarChange);
+    // a large image can still be exporting when the next one is picked; only
     // the latest pick may apply
-    const avatarPickRef = useRef(0);
     const backgroundPickRef = useRef(0);
 
     const handleBackgroundImageChange = async (file: File) => {
         const pick = ++backgroundPickRef.current;
 
         try {
-            const previewUrl = await readFileAsDataUrl(file);
+            const img = await loadImageFile(file);
             if (pick !== backgroundPickRef.current) return;
-            onBackgroundChange({ file, previewUrl });
-        } catch {
-            if (pick !== backgroundPickRef.current) return;
-            toast.error(t("settings:profile.image_load_failed"));
-        }
-    };
 
-    // a file input fires no change event when the same file is picked again
-    const resetProfileImageInput = () => {
-        if (profileImageInputRef.current)
-            profileImageInputRef.current.value = "";
-    };
-
-    const closeCropDialog = () => {
-        avatarPickRef.current += 1;
-        setCropping(null);
-        resetProfileImageInput();
-    };
-
-    const handleProfileImageChange = async (file: File) => {
-        const pick = ++avatarPickRef.current;
-
-        try {
-            const img = await loadImage(await readFileAsDataUrl(file));
-            if (pick !== avatarPickRef.current) return;
-
-            if (
-                !isWithinDimensions(
-                    naturalSize(img),
-                    AVATAR_MIN_DIMENSION,
-                    AVATAR_SOURCE_MAX_DIMENSION,
-                )
-            ) {
+            if (!fitsSourceLimit(naturalSize(img), BACKGROUND_IMAGE)) {
                 toast.error(
-                    t("settings:profile.photo_dimensions_out_of_range", {
-                        min: AVATAR_MIN_DIMENSION,
-                        max: AVATAR_SOURCE_MAX_DIMENSION,
+                    t("settings:image_too_large_dimensions", {
+                        max: BACKGROUND_IMAGE.sourceMaxDimension,
                     }),
                 );
-                resetProfileImageInput();
                 return;
             }
-            setCropping({ pick, img });
-        } catch {
-            if (pick !== avatarPickRef.current) return;
-            toast.error(t("settings:profile.image_load_failed"));
-            resetProfileImageInput();
-        }
-    };
 
-    const handleCropApply = async (square: CropSquare) => {
-        if (!cropping) return;
-        const { pick, img } = cropping;
-
-        try {
-            const file = await exportSquare(img, square, {
-                maxDimension: AVATAR_UPLOAD_MAX_DIMENSION,
-                quality: AVATAR_UPLOAD_QUALITY,
-                fileName: "avatar",
-            });
-            const previewUrl = await readFileAsDataUrl(file);
-            if (pick !== avatarPickRef.current) return;
-            onAvatarChange({ file, previewUrl });
-            closeCropDialog();
+            const exported = await exportWholeImage(
+                img,
+                BACKGROUND_IMAGE,
+                "background",
+            );
+            const previewUrl = await readFileAsDataUrl(exported);
+            if (pick !== backgroundPickRef.current) return;
+            onBackgroundChange({ file: exported, previewUrl });
         } catch {
-            if (pick !== avatarPickRef.current) return;
-            toast.error(t("settings:profile.image_load_failed"));
+            if (pick !== backgroundPickRef.current) return;
+            toast.error(t("settings:image_load_failed"));
         }
     };
 
@@ -141,7 +89,7 @@ export default function ProfileBanner({
     };
 
     const handleRemoveProfileImage = () => {
-        avatarPickRef.current += 1;
+        avatarCrop.cancel();
         updateUser({ ...user!, profilePicture: "" });
         onAvatarChange(null);
     };
@@ -188,20 +136,19 @@ export default function ProfileBanner({
                     <ImageHover
                         maxFileMB={AVATAR_MAX_FILE_MB}
                         inputRef={profileImageInputRef}
-                        onValueChange={handleProfileImageChange}
+                        onValueChange={avatarCrop.pick}
                         onClick={() => profileImageInputRef.current?.click()}
                         closeIconPosition="bottom"
                         onCloseIconClick={handleRemoveProfileImage}
                         showCloseIcon={Boolean(displayProfilePicture)}
-                        accept={AVATAR_ACCEPTED_TYPES}
                     />
                 </UserAvatar>
             </div>
-            <AvatarCropDialog
-                key={cropping?.pick ?? 0}
-                image={cropping?.img ?? null}
-                onCancel={closeCropDialog}
-                onApply={handleCropApply}
+            <ImageCropDialog
+                key={avatarCrop.dialogKey}
+                crop={avatarCrop}
+                title={t("settings:crop.avatar_title")}
+                cropShape="round"
             />
         </div>
     );

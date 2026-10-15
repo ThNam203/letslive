@@ -11,7 +11,8 @@ import {
     UpdateProfilePicture,
 } from "@/lib/api/user";
 import TextField from "../_components/text-field";
-import ProfileBanner, { type PendingImage } from "./_components/profile-banner";
+import ProfileBanner from "./_components/profile-banner";
+import { type PreparedImage } from "../_components/use-image-crop";
 import Section from "../_components/section";
 import TextAreaField from "../_components/textarea-field";
 import ThemeList from "@/app/(main)/settings/profile/_components/theme-list";
@@ -29,11 +30,11 @@ export default function ProfileSettings() {
 
     const [username, setUsername] = useState("");
     const [bio, setBio] = useState("");
-    const [pendingAvatar, setPendingAvatar] = useState<PendingImage | null>(
+    const [pendingAvatar, setPendingAvatar] = useState<PreparedImage | null>(
         null,
     );
     const [pendingBackground, setPendingBackground] =
-        useState<PendingImage | null>(null);
+        useState<PreparedImage | null>(null);
 
     const isUsernameChanged = user != null && user.username !== username;
     const isBioChanged = user != null && (user.bio ?? "") !== bio;
@@ -53,7 +54,7 @@ export default function ProfileSettings() {
                 );
                 if (res.success) {
                     setPendingBackground(null);
-                    updateUser({ ...user!, backgroundPicture: res.data });
+                    updateUser({ backgroundPicture: res.data });
                 } else {
                     toast.error(t(`api-response:${res.key}`), {
                         toastId: res.requestId,
@@ -66,7 +67,7 @@ export default function ProfileSettings() {
                 const res = await UpdateProfilePicture(pendingAvatar.file);
                 if (res.success) {
                     setPendingAvatar(null);
-                    updateUser({ ...user!, profilePicture: res.data });
+                    updateUser({ profilePicture: res.data });
                 } else {
                     toast.error(t(`api-response:${res.key}`), {
                         toastId: res.requestId,
@@ -81,7 +82,7 @@ export default function ProfileSettings() {
                     bio: isBioChanged ? bio : undefined,
                 });
                 if (res.success) {
-                    updateUser({ ...user!, ...res.data });
+                    updateUser({ ...res.data });
                 } else {
                     toast.error(t(`api-response:${res.key}`), {
                         toastId: res.requestId,

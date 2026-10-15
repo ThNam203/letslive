@@ -45,21 +45,16 @@ func (h *LivestreamInformationHandler) UpdatePrivateHandler(w http.ResponseWrite
 	thumbnailUrl := r.FormValue("thumbnailUrl")
 
 	if _, hasThumbnail := r.MultipartForm.File["thumbnail"]; hasThumbnail {
-		file, fileHeader, errRes := utils.UploadedFile(r, "thumbnail", utils.LivestreamThumbnailMaxFileBytes)
+		file, errRes := utils.UploadedFile(r, "thumbnail", utils.LivestreamThumbnailMaxFileBytes)
 		if errRes != nil {
 			h.WriteResponse(w, ctx, errRes)
 			return
 		}
 		defer file.Close()
 
-		savedPath, err := h.minioService.AddFile(ctx, file, fileHeader, "thumbnails")
+		savedPath, err := h.minioService.AddLivestreamThumbnail(ctx, file)
 		if err != nil {
-			h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](
-				response.RES_ERR_INTERNAL_SERVER,
-				nil,
-				nil,
-				nil,
-			))
+			h.WriteResponse(w, ctx, response.FromError(err))
 			return
 		}
 

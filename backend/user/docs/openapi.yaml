@@ -302,10 +302,9 @@ paths:
       summary: Update user profile picture
       description: |
         Expects the avatar already cropped by the client: JPEG or WebP up
-        to 10 MiB, both sides between 80 and 2048 pixels. The upload is kept
-        unchanged in the private profile-pictures-original bucket; the
-        returned URL points to an 80x80 WebP of its center square in the
-        public profile-pictures bucket.
+        to 10 MiB, both sides between 80 and 10000 pixels. It is re-encoded
+        as WebP (quality 80, same size) and stored in the public
+        profile-pictures bucket.
       operationId: updateProfilePicture
       security:
         - BearerAuth: []
@@ -328,7 +327,7 @@ paths:
                 type: string
                 example: "https://storage.example.com/profile-pictures/0b9e6c1e-2f7a-4d8e-9a51-3c0f6d2b7e41.webp"
         "400":
-          description: Invalid payload (res_err_invalid_payload), unsupported image (res_err_invalid_image) or dimensions outside 80-2048 px (res_err_image_dimensions_out_of_range)
+          description: Invalid payload (res_err_invalid_payload), unsupported image (res_err_invalid_image) or dimensions outside 80-10000 px (res_err_image_dimensions_out_of_range)
           content:
             application/json:
               schema:
@@ -355,6 +354,10 @@ paths:
   /users/me/background-picture:
     put:
       summary: Update user background picture
+      description: |
+        JPEG or WebP up to 10 MiB, longest side at most 10000 pixels. It is
+        re-encoded as WebP (quality 80, same size) and stored in the public
+        background-pictures bucket.
       operationId: updateBackgroundPicture
       security:
         - BearerAuth: []
@@ -377,7 +380,7 @@ paths:
                 type: string
                 example: "/path/to/background-picture.jpg"
         "400":
-          description: Invalid input
+          description: Invalid payload (res_err_invalid_payload), unsupported image (res_err_invalid_image) or longest side over 10000 px (res_err_image_dimensions_out_of_range)
           content:
             application/json:
               schema:
