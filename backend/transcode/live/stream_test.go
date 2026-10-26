@@ -18,6 +18,7 @@ import (
 	"github.com/bluenviron/mediacommon/v2/pkg/codecs/mpeg4audio"
 	"github.com/gofrs/uuid/v5"
 	"github.com/nareix/joy5/av"
+	"go.uber.org/zap/zapcore"
 
 	"sen1or/letslive/transcode/config"
 )
@@ -773,5 +774,39 @@ func TestStreamReady(t *testing.T) {
 	}
 	if s.Ready(2) || s.Ready(-1) {
 		t.Error("Ready out of range = true")
+	}
+}
+
+// gohlslib reports "part duration changed" every time the part target moves;
+// each rendition logs the first report and then at most one line per
+// interval, with the count, at Warn.
+func TestStreamEncodeErrorsRateLimited(t *testing.T) {
+	s := newTestStream(t, []string{"source", "360p"}, nil, testLiveConfig())
+	src, enc := s.renditions[0], s.renditions[1]
+	marker := "part duration changed " + s.ID()
+	t0 := time.Now()
+
+	for i := range 5 {
+		s.logEncodeError(src, errors.New(marker), t0.Add(time.Duration(i)*time.Second))
+	}
+	s.logEncodeError(enc, errors.New(marker), t0)
+	s.logEncodeError(src, errors.New(marker), t0.Add(hlsEncodeErrorLogInterval+time.Second))
+
+	lines := logsContaining(marker)
+	if len(lines) != 3 {
+		t.Fatalf("logged %d line(s), want 3 (first per rendition, then one after the interval): %+v", len(lines), lines)
+	}
+	want := []string{
+		"rendition source: hls muxer: " + marker + " (1 report(s)",
+		"rendition 360p: hls muxer: " + marker + " (1 report(s)",
+		"rendition source: hls muxer: " + marker + " (5 report(s)",
+	}
+	for i, l := range lines {
+		if l.Level != zapcore.WarnLevel {
+			t.Errorf("line %d logged at %v, want warn", i, l.Level)
+		}
+		if !strings.Contains(l.Message, want[i]) {
+			t.Errorf("line %d = %q, want it to contain %q", i, l.Message, want[i])
+		}
 	}
 }
