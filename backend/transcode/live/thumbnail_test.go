@@ -181,7 +181,7 @@ func TestThumbnailerSkipsBadInput(t *testing.T) {
 		}
 	})
 
-	t.Run("bad input does not use up the rate limit", func(t *testing.T) {
+	t.Run("empty access units do not use up the rate limit", func(t *testing.T) {
 		st := newRecordingStorage(t)
 		th := NewThumbnailer(context.Background(), "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
 		th.Offer(nil)
@@ -221,4 +221,44 @@ func TestThumbnailerSkipsBadInput(t *testing.T) {
 			t.Errorf("AddThumbnail calls = %d, want 0", n)
 		}
 	})
+}
+
+func TestThumbnailerIgnoresOfferAfterClose(t *testing.T) {
+	requireFFmpeg(t)
+	f := loadStreamFixture(t, "src_640x360.flv")
+	st := newRecordingStorage(t)
+
+	// Nothing was accepted before Close and every is tiny, so only the closed
+	// flag can reject this offer.
+	th := NewThumbnailer(context.Background(), "live1", "ffmpeg", fixtureSource(f), st, time.Nanosecond)
+	th.Close()
+	th.Offer(keyframeAUs(t, f, 1)[0])
+	th.Close()
+
+	time.Sleep(200 * time.Millisecond)
+	if n := len(st.Calls()); n != 0 {
+		t.Errorf("AddThumbnail calls = %d, want 0 (Offer after Close is ignored)", n)
+	}
+}
+
+func TestThumbnailerAcceptsAgainAfterEvery(t *testing.T) {
+	requireFFmpeg(t)
+	f := loadStreamFixture(t, "src_640x360.flv")
+	st := newRecordingStorage(t)
+	const every = 50 * time.Millisecond
+
+	th := NewThumbnailer(context.Background(), "live1", "ffmpeg", fixtureSource(f), st, every)
+	au := keyframeAUs(t, f, 1)[0]
+
+	th.Offer(au)
+	waitForCalls(t, st, 1)
+	// The job has uploaded; wait until it is no longer "running" and `every` is over.
+	time.Sleep(3 * every)
+	th.Offer(au)
+	waitForCalls(t, st, 2)
+	th.Close()
+
+	if n := len(st.Calls()); n != 2 {
+		t.Errorf("AddThumbnail calls = %d, want 2", n)
+	}
 }
