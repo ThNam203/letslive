@@ -46,7 +46,7 @@ func FeedTS(ctx context.Context, r io.Reader, s *Stream, rendition int, clk *Clo
 		// A closer's pending read fails once closed, so waiting for the
 		// goroutine is bounded and no callback runs after we return.
 		if c, ok := r.(io.Closer); ok {
-			closeLogged(ctx, "ts reader", c)
+			closeLogged(ctx, s.id, "ts reader", c)
 			<-done
 		}
 		return nil

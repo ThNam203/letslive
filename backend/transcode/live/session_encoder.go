@@ -81,7 +81,7 @@ func startSessionEncoder(ctx context.Context, id string, w encoderWiring) *sessi
 	encCtx := context.WithoutCancel(ctx)
 	ff := w.transcode.FFMpegSetting
 	args := EncoderArgs(w.src, encoded, ff.Preset, ff.CRF)
-	enc, err := StartEncoder(encCtx, ff.FFMpegPath, args, len(encoded))
+	enc, err := StartEncoder(encCtx, id, ff.FFMpegPath, args, len(encoded))
 	if err != nil {
 		disable(err)
 		return nil

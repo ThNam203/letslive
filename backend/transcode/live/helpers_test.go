@@ -14,9 +14,34 @@ import (
 
 	"github.com/nareix/joy5/av"
 	"github.com/nareix/joy5/format/flv"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
+
+	"sen1or/letslive/shared/pkg/logger"
 )
 
 const recordedURLPrefix = "http://minio.test/bucket"
+
+// testLogs records every line logged by the package's tests, at every level.
+// The shared logger is set up once here, before any test runs, so no test
+// races a later reassignment; lines at Error and above still reach stdout.
+var testLogs *observer.ObservedLogs
+
+func init() {
+	logger.Init(logger.Error)
+	core, logs := observer.New(zapcore.DebugLevel)
+	testLogs = logs
+	logger.Logger = logger.Logger.Desugar().WithOptions(zap.WrapCore(func(c zapcore.Core) zapcore.Core {
+		return zapcore.NewTee(c, core)
+	})).Sugar()
+}
+
+// logsContaining returns the recorded lines whose message contains substr.
+// Tests pass a substring unique to them, such as their livestream id.
+func logsContaining(substr string) []observer.LoggedEntry {
+	return testLogs.FilterMessageSnippet(substr).All()
+}
 
 func requireFFmpeg(t *testing.T) {
 	t.Helper()

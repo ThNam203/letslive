@@ -24,7 +24,7 @@ func startFixtureEncoder(t *testing.T, ctx context.Context) (*Encoder, <-chan er
 	t.Helper()
 
 	args := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "veryfast", 23)
-	enc, err := StartEncoder(ctx, ffmpegBinary(t), args, 1)
+	enc, err := StartEncoder(ctx, "test-stream", ffmpegBinary(t), args, 1)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}
@@ -252,7 +252,7 @@ func TestFeedTSReturnsPromptlyOnContextCancel(t *testing.T) {
 
 	// ffmpeg gets no input, so its output pipe stays open and silent.
 	args := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "veryfast", 23)
-	enc, err := StartEncoder(outer, ffmpegBinary(t), args, 1)
+	enc, err := StartEncoder(outer, "test-stream", ffmpegBinary(t), args, 1)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}

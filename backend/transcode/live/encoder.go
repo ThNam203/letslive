@@ -28,12 +28,14 @@ type Encoder struct {
 	waitErr error         // valid after done is closed
 
 	ctx       context.Context // only used to attach request fields to log lines
+	id        string          // livestream id, put on every log line
 	closeOnce sync.Once
 }
 
-// StartEncoder runs ffmpegPath with args, giving it stdin plus `outputs` extra
-// pipes on fd 3, 4, ... that match the pipe:N targets in args.
-func StartEncoder(ctx context.Context, ffmpegPath string, args []string, outputs int) (*Encoder, error) {
+// StartEncoder runs ffmpegPath with args for livestream id, giving it stdin
+// plus `outputs` extra pipes on fd 3, 4, ... that match the pipe:N targets in
+// args.
+func StartEncoder(ctx context.Context, id, ffmpegPath string, args []string, outputs int) (*Encoder, error) {
 	if outputs < 0 {
 		return nil, fmt.Errorf("invalid output count %d", outputs)
 	}
@@ -42,10 +44,10 @@ func StartEncoder(ctx context.Context, ffmpegPath string, args []string, outputs
 	writeEnds := make([]*os.File, 0, outputs)
 	closeAll := func() {
 		for _, f := range readEnds {
-			closeLogged(ctx, "ffmpeg output read end", f)
+			closeLogged(ctx, id, "ffmpeg output read end", f)
 		}
 		for _, f := range writeEnds {
-			closeLogged(ctx, "ffmpeg output write end", f)
+			closeLogged(ctx, id, "ffmpeg output write end", f)
 		}
 	}
 
@@ -71,24 +73,25 @@ func StartEncoder(ctx context.Context, ffmpegPath string, args []string, outputs
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		closeLogged(ctx, "ffmpeg stdin", stdin)
+		closeLogged(ctx, id, "ffmpeg stdin", stdin)
 		closeAll()
 		return nil, fmt.Errorf("open ffmpeg stderr: %w", err)
 	}
 
 	if err := cmd.Start(); err != nil {
-		closeLogged(ctx, "ffmpeg stdin", stdin)
+		closeLogged(ctx, id, "ffmpeg stdin", stdin)
 		closeAll()
 		return nil, fmt.Errorf("start ffmpeg: %w", err)
 	}
 
 	// The child owns its copies now; keeping ours would stop readers from seeing EOF.
 	for _, f := range writeEnds {
-		closeLogged(ctx, "ffmpeg output write end", f)
+		closeLogged(ctx, id, "ffmpeg output write end", f)
 	}
 
 	e := &Encoder{
 		ctx:     ctx,
+		id:      id,
 		cmd:     cmd,
 		stdin:   stdin,
 		outputs: make([]io.ReadCloser, len(readEnds)),
@@ -101,7 +104,7 @@ func StartEncoder(ctx context.Context, ffmpegPath string, args []string, outputs
 	stderrDone := make(chan struct{})
 	go func() {
 		defer close(stderrDone)
-		logStderr(ctx, stderr)
+		logStderr(ctx, id, stderr)
 	}()
 
 	go func() {
@@ -115,26 +118,26 @@ func StartEncoder(ctx context.Context, ffmpegPath string, args []string, outputs
 }
 
 // closeLogged closes c and logs any failure other than "already closed".
-func closeLogged(ctx context.Context, what string, c io.Closer) {
+func closeLogged(ctx context.Context, id, what string, c io.Closer) {
 	if err := c.Close(); err != nil && !errors.Is(err, os.ErrClosed) {
-		logger.Errorf(ctx, "close %s: %v", what, err)
+		logger.Errorf(ctx, "livestream %s: close %s: %v", id, what, err)
 	}
 }
 
 // killLogged force-kills the process and logs any failure other than "already exited".
-func killLogged(ctx context.Context, p *os.Process) {
+func killLogged(ctx context.Context, id string, p *os.Process) {
 	if err := p.Kill(); err != nil && !errors.Is(err, os.ErrProcessDone) {
-		logger.Errorf(ctx, "kill ffmpeg: %v", err)
+		logger.Errorf(ctx, "livestream %s: kill ffmpeg: %v", id, err)
 	}
 }
 
-func logStderr(ctx context.Context, r io.Reader) {
+func logStderr(ctx context.Context, id string, r io.Reader) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
-		logger.Errorf(ctx, "ffmpeg: %s", scanner.Text())
+		logger.Errorf(ctx, "livestream %s: ffmpeg: %s", id, scanner.Text())
 	}
 	if err := scanner.Err(); err != nil && !errors.Is(err, os.ErrClosed) {
-		logger.Errorf(ctx, "read ffmpeg stderr: %v", err)
+		logger.Errorf(ctx, "livestream %s: read ffmpeg stderr: %v", id, err)
 	}
 }
 
@@ -158,24 +161,24 @@ func (e *Encoder) Stop() {
 	case <-e.done:
 	default:
 		if err := e.cmd.Process.Signal(syscall.SIGTERM); err != nil && !errors.Is(err, os.ErrProcessDone) {
-			logger.Errorf(e.ctx, "send SIGTERM to ffmpeg: %v", err)
-			killLogged(e.ctx, e.cmd.Process)
+			logger.Errorf(e.ctx, "livestream %s: send SIGTERM to ffmpeg: %v", e.id, err)
+			killLogged(e.ctx, e.id, e.cmd.Process)
 		}
 
 		timer := time.NewTimer(stopGracePeriod)
 		select {
 		case <-e.done:
 		case <-timer.C:
-			killLogged(e.ctx, e.cmd.Process)
+			killLogged(e.ctx, e.id, e.cmd.Process)
 			<-e.done
 		}
 		timer.Stop()
 	}
 
 	e.closeOnce.Do(func() {
-		closeLogged(e.ctx, "ffmpeg stdin", e.stdin)
+		closeLogged(e.ctx, e.id, "ffmpeg stdin", e.stdin)
 		for i, o := range e.outputs {
-			closeLogged(e.ctx, fmt.Sprintf("ffmpeg output %d", i), o)
+			closeLogged(e.ctx, e.id, fmt.Sprintf("ffmpeg output %d", i), o)
 		}
 	})
 }
