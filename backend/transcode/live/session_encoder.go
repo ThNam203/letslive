@@ -39,6 +39,7 @@ type sessionEncoder struct {
 	ctx    context.Context
 	id     string
 	stream *Stream
+	rec    *Recorder
 	count  int // encoded renditions, ladder indexes 1..count
 	enc    *Encoder
 
@@ -68,6 +69,7 @@ func startSessionEncoder(ctx context.Context, id string, w encoderWiring) *sessi
 		logger.Errorf(ctx, "livestream %s: encoder unavailable, serving source only: %v", id, err)
 		for r := 1; r < len(w.ladder); r++ {
 			w.stream.DropRendition(r)
+			w.rec.DropRendition(r)
 		}
 	}
 
@@ -92,6 +94,7 @@ func startSessionEncoder(ctx context.Context, id string, w encoderWiring) *sessi
 		ctx:        ctx,
 		id:         id,
 		stream:     w.stream,
+		rec:        w.rec,
 		count:      len(encoded),
 		enc:        enc,
 		queue:      make(chan av.Packet, size),
@@ -275,8 +278,8 @@ func (e *sessionEncoder) waitLoop() {
 }
 
 // fail handles the first encoder failure while the session is live: it logs
-// it, stops feeding the queue, drops every encoded rendition and stops
-// ffmpeg. It may block for ffmpeg's stop grace period, so it is never called
+// it, stops feeding the queue, drops every encoded rendition from the stream
+// and the VOD and stops ffmpeg. It may block for ffmpeg's stop grace period, so it is never called
 // from HandlePacket. Failures during stop are expected and ignored.
 func (e *sessionEncoder) fail(err error) {
 	if e.closing.Load() {
@@ -287,6 +290,7 @@ func (e *sessionEncoder) fail(err error) {
 		e.haltEncoder()
 		for r := 1; r <= e.count; r++ {
 			e.stream.DropRendition(r)
+			e.rec.DropRendition(r)
 		}
 		e.feedCancel()
 		e.enc.Stop()

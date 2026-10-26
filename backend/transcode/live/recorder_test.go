@@ -281,6 +281,27 @@ func TestRecorderRemovesFailedUploadAtOnce(t *testing.T) {
 	}
 }
 
+// A dropped encoded rendition is left out of the VOD; the source cannot be
+// dropped.
+func TestRecorderDropRendition(t *testing.T) {
+	rig := newRecorderRig(t, "src_640x360.flv", []string{"source", "360p"})
+	rig.feed(t, 2, rig.f.before(3*time.Second))
+	rig.rec.DropRendition(1)
+	rig.rec.DropRendition(0)
+	rig.feed(t, 2, rig.f.from(3*time.Second))
+
+	if err := rig.finish(t); err != nil {
+		t.Fatalf("Finish: %v", err)
+	}
+	master := rig.read(t, "index.m3u8")
+	if !strings.Contains(master, "0/stream.m3u8") || strings.Contains(master, "1/stream.m3u8") {
+		t.Errorf("master should list only the source:\n%s", master)
+	}
+	if durs, _ := parseVariant(t, rig.read(t, "0/stream.m3u8")); len(durs) != 3 {
+		t.Errorf("source has %d segments, want all 3", len(durs))
+	}
+}
+
 func TestRecorderNoSegmentsWritesNothing(t *testing.T) {
 	rig := newRecorderRig(t, "src_640x360.flv", []string{"source"})
 	rig.st.before = func(storageCall) error { return errors.New("minio down") }
