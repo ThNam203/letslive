@@ -7,10 +7,9 @@ import (
 	cfg "sen1or/letslive/transcode/config"
 	livestreamgateway "sen1or/letslive/transcode/gateway/livestream/http"
 	usergateway "sen1or/letslive/transcode/gateway/user/http"
+	"sen1or/letslive/transcode/live"
 	"sen1or/letslive/transcode/rtmp"
 	miniostorage "sen1or/letslive/transcode/storage/minio"
-	"sen1or/letslive/transcode/watcher"
-	miniowatcher "sen1or/letslive/transcode/watcher/minio"
 	"sen1or/letslive/transcode/webserver"
 	"sen1or/letslive/transcode/worker"
 	"sync"
@@ -56,22 +55,14 @@ func main() {
 
 	setupHLSFolders(config.Transcode)
 
-	// TODO: fix this, we need a webserver built into the transcode server (not the pkg/webserver, use nginx instead)
-	allowedSuffixes := [2]string{".ts", ".m3u8"}
-	MyWebServer := webserver.NewWebServer(config.Webserver.Port, allowedSuffixes[:], config.Transcode.PublicHLSPath)
-	go MyWebServer.ListenAndServe()
-
-	var vodHandler watcher.VODHandler
-
 	if !config.MinIO.Enabled {
 		logger.Warnf(ctx, "minio is forced to be enable, we are ignoring minio.enabled")
 	}
-
-	vodHandler = miniowatcher.GetMinIOVODStrategy()
 	minioStorage := miniostorage.NewMinIOStorage(ctx, config.MinIO)
-	minioWatcherStrategy := miniowatcher.NewMinIOFileWatcherStrategy(vodHandler, minioStorage, *config)
-	watcher := watcher.NewFFMpegFileWatcher(config.Transcode.PrivateHLSPath, minioWatcherStrategy)
-	go watcher.Watch(ctx)
+
+	liveRegistry := live.NewRegistry()
+	MyWebServer := webserver.NewWebServer(config.Webserver.Port, config.Transcode.PublicHLSPath, liveRegistry.Handler())
+	go MyWebServer.ListenAndServe()
 
 	userGateway := usergateway.NewUserGateway(registry)
 	livestreamGateway := livestreamgateway.NewLivestreamGateway(registry)
@@ -114,10 +105,8 @@ func main() {
 		}
 	}
 
-	// TODO: find a way to remove the vodHandler from the rtmp, or change the design or config
-	//Use nats
 	rtmpServer := rtmp.NewRTMPServer(
-		rtmp.RTMPServerConfig{Context: ctx, Port: config.RTMP.Port, Registry: &registry, Config: *config, VODHandler: vodHandler},
+		rtmp.RTMPServerConfig{Context: ctx, Port: config.RTMP.Port, Registry: &registry, LiveRegistry: liveRegistry, Storage: minioStorage, Config: *config},
 		userGateway,
 		livestreamGateway,
 	)
@@ -141,12 +130,6 @@ func main() {
 	wg.Add(1)
 	go func() {
 		rtmpServer.Shutdown(shutdownCtx)
-		wg.Done()
-	}()
-
-	wg.Add(1)
-	go func() {
-		watcher.Shutdown()
 		wg.Done()
 	}()
 

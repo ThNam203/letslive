@@ -11,24 +11,32 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// writeTimeout is long enough for a blocking playlist request to be held
+// until the next part is ready.
+const writeTimeout = 30 * time.Second
+
 type WebServer struct {
-	httpServer      *http.Server
-	ListenPort      int
-	AllowedSuffixes []string
-	BaseDirectory   string
+	httpServer    *http.Server
+	ListenPort    int
+	BaseDirectory string
+	live          http.Handler
 }
 
-func NewWebServer(listenPort int, allowedSuffixes []string, baseDirectory string) *WebServer {
+// NewWebServer serves VODs from baseDirectory under /static/vods/ and
+// everything else under /static/ through live, with the /static prefix
+// removed.
+func NewWebServer(listenPort int, baseDirectory string, live http.Handler) *WebServer {
 	return &WebServer{
-		ListenPort:      listenPort,
-		AllowedSuffixes: allowedSuffixes,
-		BaseDirectory:   baseDirectory,
+		ListenPort:    listenPort,
+		BaseDirectory: baseDirectory,
+		live:          live,
 	}
 }
 
-func (ws *WebServer) ListenAndServe() {
+func (ws *WebServer) routes() http.Handler {
 	router := mux.NewRouter()
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(ws.BaseDirectory))))
+	router.PathPrefix("/static/vods/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(ws.BaseDirectory))))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static", ws.live))
 	router.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -37,12 +45,15 @@ func (ws *WebServer) ListenAndServe() {
 	router.Use(corsMiddleware.GetMiddleware)
 	router.Use(middlewares.RequestIDMiddleware)
 	router.Use(middlewares.LoggingMiddleware)
+	return router
+}
 
+func (ws *WebServer) ListenAndServe() {
 	ws.httpServer = &http.Server{
 		Addr:         ":" + strconv.Itoa(ws.ListenPort),
-		Handler:      router,
+		Handler:      ws.routes(),
 		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		WriteTimeout: writeTimeout,
 	}
 
 	if err := ws.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
