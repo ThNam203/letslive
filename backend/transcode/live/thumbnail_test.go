@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -310,7 +311,8 @@ func TestThumbnailerSetSource(t *testing.T) {
 // which carries the livestream id.
 func TestThumbnailerStderrCarriesLivestreamID(t *testing.T) {
 	const id = "thumb-stderr-7c21"
-	marker := "thumb-marker-" + t.Name()
+	// Unique per run: the recorded logs outlive a test under -count.
+	marker := fmt.Sprintf("thumb-marker-%d", time.Now().UnixNano())
 	script := filepath.Join(t.TempDir(), "fail.sh")
 	body := "#!/bin/sh\ncat > /dev/null\necho " + marker + " >&2\nexit 1\n"
 	if err := os.WriteFile(script, []byte(body), 0o755); err != nil {
