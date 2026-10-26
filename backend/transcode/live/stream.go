@@ -221,6 +221,17 @@ func (s *Stream) DropRendition(r int) {
 	s.masterMu.Unlock()
 }
 
+// Ready reports whether rendition r has closed its first segment, the point
+// from which it can be listed in the master playlist. It is false for a
+// dropped rendition and for an index out of range.
+func (s *Stream) Ready(r int) bool {
+	if r < 0 || r >= len(s.renditions) {
+		return false
+	}
+	m := s.renditions[r]
+	return m.ready.Load() && !m.dropped.Load()
+}
+
 // Close stops every muxer. Pending blocking playlist requests return 404.
 func (s *Stream) Close() {
 	if s.closed.Swap(true) {
