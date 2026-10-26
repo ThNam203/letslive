@@ -319,14 +319,21 @@ func (r *Recorder) upload(job recUpload) {
 	url, err := r.st.AddSegment(ctx, seg.path, r.id, job.rendition)
 	cancel()
 	if err != nil {
-		logger.Errorf(r.ctx, "livestream %s rendition %d: upload segment %d: %v", r.id, job.rendition, seg.index, err)
+		logger.Errorf(r.ctx, "livestream %s rendition %d: upload segment %d, leaving it out of the VOD: %v", r.id, job.rendition, seg.index, err)
 		r.settle(seg, false, "", 0)
+		r.removeSegmentFile(job.rendition, seg.path, "failed")
 		return
 	}
 
 	r.settle(seg, true, url, info.Size())
-	if err := os.Remove(seg.path); err != nil && !errors.Is(err, fs.ErrNotExist) {
-		logger.Errorf(r.ctx, "livestream %s rendition %d: remove uploaded segment %s: %v", r.id, job.rendition, seg.path, err)
+	r.removeSegmentFile(job.rendition, seg.path, "uploaded")
+}
+
+// removeSegmentFile deletes a segment's local file once its upload settled
+// either way, so local disk use stays bounded while storage is failing.
+func (r *Recorder) removeSegmentFile(rendition int, path, state string) {
+	if err := os.Remove(path); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		logger.Errorf(r.ctx, "livestream %s rendition %d: remove %s segment %s: %v", r.id, rendition, state, path, err)
 	}
 }
 
