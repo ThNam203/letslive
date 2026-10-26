@@ -41,7 +41,11 @@ func EncoderArgs(src SourceInfo, encoded []Rendition, preset string, crf int) []
 			"-sc_threshold", "0",
 			"-g", strconv.Itoa(maxGOPFrames),
 		)
-		if q.FPS > 0 && src.FPS > 0 && float64(q.FPS) < src.FPS {
+		// q.FPS is already capped at the rounded source rate. It is passed even
+		// when equal: the FLV from the session carries no frame rate, and
+		// ffmpeg's guess (60 for 30 fps) would end up in x264's VUI timing and
+		// in the advertised FRAME-RATE.
+		if q.FPS > 0 && src.FPS > 0 {
 			args = append(args, "-r", strconv.Itoa(q.FPS))
 		}
 		args = append(args,
