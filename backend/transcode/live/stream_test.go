@@ -3,6 +3,7 @@ package live
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -619,4 +620,131 @@ func TestRegistry(t *testing.T) {
 	if err := reg.Add(s); err != nil {
 		t.Errorf("Add after Remove: %v", err)
 	}
+}
+
+func requireMasterLists(t *testing.T, base string, want, absent []string) {
+	t.Helper()
+	master := mustGet(t, base+"/index.m3u8", http.StatusOK)
+	for _, name := range want {
+		if !strings.Contains(master.body, "\n"+name+"/video1_stream.m3u8\n") {
+			t.Errorf("master lacks rendition %s:\n%s", name, master.body)
+		}
+	}
+	for _, name := range absent {
+		if strings.Contains(master.body, name+"/") {
+			t.Errorf("master still lists rendition %s:\n%s", name, master.body)
+		}
+	}
+}
+
+// An encoded rendition whose ffmpeg dies before its first segment must not
+// keep the master 404 forever once it is dropped.
+func TestStreamDropRenditionUnblocksMaster(t *testing.T) {
+	f := loadStreamFixture(t, "src_640x360.flv")
+	s := newTestStream(t, []string{"source", "480p"}, f.audio, testLiveConfig())
+	_, base := serveStream(t, s)
+
+	f.feed(t, s, 1, f.before(3*time.Second)) // source only
+	requireNotReady(t, base)
+
+	s.DropRendition(1)
+	requireMasterLists(t, base, []string{"source"}, []string{"480p"})
+
+	// Audio still reaches the source; the dropped rendition is skipped.
+	f.feed(t, s, 1, f.from(3*time.Second))
+	mustGet(t, base+"/source/audio2_stream.m3u8", http.StatusOK)
+}
+
+func TestStreamDropRenditionInvalidatesCache(t *testing.T) {
+	f := loadStreamFixture(t, "src_640x360.flv")
+	s := newTestStream(t, []string{"source", "480p"}, f.audio, testLiveConfig())
+	_, base := serveStream(t, s)
+
+	f.feed(t, s, 2, f.pkts)
+	requireMasterLists(t, base, []string{"source", "480p"}, nil)
+
+	s.DropRendition(1)
+	s.DropRendition(1) // idempotent
+	requireMasterLists(t, base, []string{"source"}, []string{"480p"})
+	mustGet(t, base+"/480p/index.m3u8", http.StatusNotFound)
+	mustGet(t, base+"/480p/video1_stream.m3u8", http.StatusNotFound)
+	mustGet(t, base+"/source/video1_stream.m3u8", http.StatusOK)
+
+	pts, au, err := f.videoAU(f.pkts[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.WriteVideo(1, f.clock.NTP(pts), pts, au); !errors.Is(err, ErrRenditionDropped) {
+		t.Errorf("WriteVideo to dropped rendition = %v, want ErrRenditionDropped", err)
+	}
+}
+
+func TestStreamDropSourceIsNoop(t *testing.T) {
+	f := loadStreamFixture(t, "src_640x360.flv")
+	s := newTestStream(t, []string{"source", "480p"}, f.audio, testLiveConfig())
+	_, base := serveStream(t, s)
+
+	s.DropRendition(0)
+	s.DropRendition(-1)
+	s.DropRendition(2)
+
+	f.feed(t, s, 2, f.pkts)
+	requireMasterLists(t, base, []string{"source", "480p"}, nil)
+	mustGet(t, base+"/source/video1_stream.m3u8", http.StatusOK)
+}
+
+// Dropping while writers and viewers are active; run with -race.
+func TestStreamDropRenditionConcurrent(t *testing.T) {
+	f := loadStreamFixture(t, "src_640x360.flv")
+	s := newTestStream(t, []string{"source", "480p"}, f.audio, testLiveConfig())
+	_, base := serveStream(t, s)
+
+	var wg sync.WaitGroup
+	for r := range 2 {
+		wg.Go(func() {
+			for _, pkt := range f.pkts {
+				if pkt.Type != av.H264 {
+					continue
+				}
+				err := f.writeVideo(s, r, pkt)
+				if r == 1 && errors.Is(err, ErrRenditionDropped) {
+					return
+				}
+				if err != nil {
+					t.Error(err)
+					return
+				}
+			}
+		})
+	}
+	wg.Go(func() {
+		for _, pkt := range f.pkts {
+			if pkt.Type != av.AAC {
+				continue
+			}
+			if err := f.writeAudio(s, pkt); err != nil {
+				t.Error(err)
+				return
+			}
+		}
+	})
+	wg.Go(func() {
+		for range 20 {
+			ctx, cancel := context.WithTimeout(context.Background(), testHTTPTimeout)
+			resp, err := get(ctx, base+"/index.m3u8")
+			cancel()
+			if err != nil {
+				t.Errorf("poll master: %v", err)
+				return
+			}
+			if resp.status != http.StatusOK && resp.status != http.StatusNotFound {
+				t.Errorf("poll master status = %d", resp.status)
+				return
+			}
+		}
+	})
+	wg.Go(func() { s.DropRendition(1) })
+	wg.Wait()
+
+	requireMasterLists(t, base, []string{"source"}, []string{"480p"})
 }

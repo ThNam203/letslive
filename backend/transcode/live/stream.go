@@ -37,6 +37,10 @@ const (
 // ErrStreamClosed is returned by writes after Close.
 var ErrStreamClosed = errors.New("stream closed")
 
+// ErrRenditionDropped is returned by WriteVideo for a rendition removed with
+// DropRendition.
+var ErrRenditionDropped = errors.New("rendition dropped")
+
 // Stream is one livestream's LL-HLS output: a gohlslib Muxer per rendition
 // (gohlslib supports one video track per Muxer) and a master playlist that
 // merges the muxers' own multivariant playlists.
@@ -64,6 +68,8 @@ type renditionMuxer struct {
 	closed bool
 	gate   segmentGate
 	ready  atomic.Bool
+	// dropped is set under mu, read lock-free by routing and the master build.
+	dropped atomic.Bool
 }
 
 // NewStream starts one LL-HLS muxer per rendition. When audio is non-nil every
@@ -185,12 +191,34 @@ func (s *Stream) serve(w http.ResponseWriter, r *http.Request, parts []string) {
 		s.serveMaster(w, r)
 		return
 	case len(parts) == 2 && parts[1] != "":
-		if m, ok := s.byName[parts[0]]; ok {
+		if m, ok := s.byName[parts[0]]; ok && !m.dropped.Load() {
 			m.serve(w, r)
 			return
 		}
 	}
 	http.NotFound(w, r)
+}
+
+// DropRendition removes encoded rendition r (index >= 1), e.g. after its
+// encoder failed: its muxer is closed, it no longer gates or appears in the
+// master playlist, its URLs return 404, WriteVideo to it returns
+// ErrRenditionDropped and WriteAudio skips it. The source (r == 0) cannot be
+// dropped; that and out-of-range indexes are logged and ignored. Repeated
+// calls are no-ops.
+func (s *Stream) DropRendition(r int) {
+	if r < 1 || r >= len(s.renditions) {
+		logger.Errorf(context.Background(), "livestream %s: cannot drop rendition index %d (valid: 1..%d)",
+			s.id, r, len(s.renditions)-1)
+		return
+	}
+	if !s.renditions[r].drop() {
+		return
+	}
+
+	// Taken after the drop is visible, so a build that raced it is discarded.
+	s.masterMu.Lock()
+	s.master = nil
+	s.masterMu.Unlock()
 }
 
 // Close stops every muxer. Pending blocking playlist requests return 404.
@@ -234,18 +262,24 @@ func (s *Stream) masterPlaylist(ctx context.Context) (body []byte, ready bool, e
 		return s.master, true, nil
 	}
 	for _, m := range s.renditions {
-		if !m.ready.Load() {
+		if !m.ready.Load() && !m.dropped.Load() {
 			return nil, false, nil
 		}
 	}
 
-	parts := make([]NamedPlaylist, len(s.renditions))
-	for i, m := range s.renditions {
+	parts := make([]NamedPlaylist, 0, len(s.renditions))
+	for _, m := range s.renditions {
+		if m.dropped.Load() {
+			continue
+		}
 		pl, err := m.multivariantPlaylist(ctx)
 		if err != nil {
+			if m.dropped.Load() { // dropped mid-build: its muxer was closed
+				continue
+			}
 			return nil, false, err
 		}
-		parts[i] = NamedPlaylist{Name: m.name, Body: pl}
+		parts = append(parts, NamedPlaylist{Name: m.name, Body: pl})
 	}
 	merged, err := MergeMultivariant(parts)
 	if err != nil {
@@ -259,6 +293,9 @@ func (m *renditionMuxer) writeVideo(ntp time.Time, pts90k int64, au [][]byte) er
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	if m.dropped.Load() {
+		return fmt.Errorf("rendition %s: %w", m.name, ErrRenditionDropped)
+	}
 	if m.closed {
 		return ErrStreamClosed
 	}
@@ -276,6 +313,9 @@ func (m *renditionMuxer) writeAudio(ntp time.Time, pts int64, aus [][]byte) erro
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	if m.dropped.Load() {
+		return nil
+	}
 	if m.closed {
 		return ErrStreamClosed
 	}
@@ -283,6 +323,23 @@ func (m *renditionMuxer) writeAudio(ntp time.Time, pts int64, aus [][]byte) erro
 		return fmt.Errorf("rendition %s: write MPEG-4 audio: %w", m.name, err)
 	}
 	return nil
+}
+
+// drop marks the rendition dropped and closes its muxer, which also releases
+// requests parked on its playlists. It reports whether this call dropped it.
+func (m *renditionMuxer) drop() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.dropped.Load() {
+		return false
+	}
+	m.dropped.Store(true)
+	if !m.closed {
+		m.closed = true
+		m.muxer.Close()
+	}
+	return true
 }
 
 func (m *renditionMuxer) close() {
