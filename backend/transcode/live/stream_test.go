@@ -748,3 +748,30 @@ func TestStreamDropRenditionConcurrent(t *testing.T) {
 
 	requireMasterLists(t, base, []string{"source"}, []string{"480p"})
 }
+
+func TestStreamReady(t *testing.T) {
+	f := loadStreamFixture(t, "src_640x360.flv")
+	s := newTestStream(t, []string{"source", "480p"}, f.audio, testLiveConfig())
+
+	for _, r := range []int{-1, 0, 1, 2} {
+		if s.Ready(r) {
+			t.Errorf("Ready(%d) = true before any write", r)
+		}
+	}
+
+	f.feed(t, s, 1, f.pkts) // source only
+	if !s.Ready(0) {
+		t.Error("Ready(0) = false after the source closed its first segment")
+	}
+	if s.Ready(1) {
+		t.Error("Ready(1) = true for a rendition that got no video")
+	}
+
+	s.DropRendition(1)
+	if s.Ready(1) {
+		t.Error("Ready(1) = true for a dropped rendition")
+	}
+	if s.Ready(2) || s.Ready(-1) {
+		t.Error("Ready out of range = true")
+	}
+}
