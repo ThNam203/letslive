@@ -7,32 +7,39 @@ import (
 	"io"
 	"math"
 	"net"
-	"os"
-	"path/filepath"
 	"sen1or/letslive/transcode/config"
 	livestreamdto "sen1or/letslive/transcode/gateway/livestream/dto"
 	livestreamgateway "sen1or/letslive/transcode/gateway/livestream/http"
 	usergateway "sen1or/letslive/transcode/gateway/user/http"
 	"sen1or/letslive/shared/pkg/discovery"
 	"sen1or/letslive/shared/pkg/logger"
-	"sen1or/letslive/transcode/transcoder"
-	"sen1or/letslive/transcode/watcher"
+	"sen1or/letslive/transcode/live"
+	"sen1or/letslive/transcode/storage"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/nareix/joy5/format/flv"
 	"github.com/nareix/joy5/format/flv/flvio"
 	"github.com/nareix/joy5/format/rtmp"
 )
 
+// sessionCloseTimeout bounds Session.Close: the recorder's Finish may take up
+// to 60s, plus room to stop ffmpeg and the thumbnailer.
+const sessionCloseTimeout = 75 * time.Second
+
+// startupOffsetSeconds is subtracted from the wall-clock stream duration to
+// account for the time before the first keyframe starts the recording.
+const startupOffsetSeconds = 7
+
+// RTMPServerConfig.Registry is the service discovery registry; LiveRegistry
+// is where live streams are published for the web server.
 type RTMPServerConfig struct {
-	Context    context.Context
-	Port       int
-	Registry   *discovery.Registry
-	Config     config.Config
-	VODHandler watcher.VODHandler
+	Context      context.Context
+	Port         int
+	Registry     *discovery.Registry
+	LiveRegistry *live.Registry
+	Storage      storage.Storage
+	Config       config.Config
 }
 
 type RTMPServer struct {
@@ -42,7 +49,8 @@ type RTMPServer struct {
 	userGateway       *usergateway.UserGateway
 	livestreamGateway *livestreamgateway.LivestreamGateway
 	config            config.Config
-	vodHandler        watcher.VODHandler
+	liveRegistry      *live.Registry
+	storage           storage.Storage
 	listener          net.Listener
 }
 
@@ -54,7 +62,8 @@ func NewRTMPServer(config RTMPServerConfig, userGateway *usergateway.UserGateway
 		config:            config.Config,
 		userGateway:       userGateway,
 		livestreamGateway: livestreamgateway,
-		vodHandler:        config.VODHandler,
+		liveRegistry:      config.LiveRegistry,
+		storage:           config.Storage,
 	}
 }
 
@@ -126,39 +135,43 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 		return
 	}
 
-	pipeOut, pipeIn := io.Pipe()
+	startTime := time.Now()
+	session := live.NewSession(s.ctx, streamId, live.SessionDeps{
+		Registry:  s.liveRegistry,
+		Storage:   s.storage,
+		Transcode: s.config.Transcode,
+	})
 
-	var startTime time.Time
-	var startTimer = func() {
-		startTime = time.Now()
+	s.readPackets(c, session, streamId)
+
+	// Close first so the VOD master exists before the playback URL is published.
+	closeCtx, cancelClose := context.WithTimeout(context.WithoutCancel(s.ctx), sessionCloseTimeout)
+	if err := session.Close(closeCtx); err != nil {
+		logger.Errorf(s.ctx, "failed to close livestream %s session: %v", streamId, err)
 	}
+	cancelClose()
 
-	// TODO: check if ctx should be from the connection or from the server
-	transcoder := transcoder.NewTranscoder(pipeOut, s.config.Transcode, startTimer)
-	defer transcoder.Stop(s.ctx)
-	go func() {
-		transcoder.Start(s.ctx, streamId)
-	}()
+	duration := int64(math.Ceil(time.Since(startTime).Seconds())) - startupOffsetSeconds
+	s.onDisconnect(streamId, max(duration, 0))
+}
 
-	w := flv.NewMuxer(pipeIn)
-
+// readPackets feeds the connection's packets to session until the connection
+// ends or fails.
+func (s *RTMPServer) readPackets(c *rtmp.Conn, session *live.Session, streamId string) {
 	for {
 		pkt, err := c.ReadPacket()
-		if err == io.EOF {
-			duration := int64(math.Ceil(time.Since(startTime).Seconds()) - 7) // TODO: proper duration calculation
-			pipeOut.Close()
-			pipeIn.Close()
-			s.onDisconnect(streamId, duration)
+		if err != nil {
+			if err != io.EOF {
+				logger.Errorf(s.ctx, "failed to read rtmp packet of livestream %s: %v", streamId, err)
+			}
 			return
 		}
 
-		if err := w.WritePacket(pkt); err != nil {
-			logger.Errorf(s.ctx, "failed to write rtmp package: %s", err)
-			duration := int64(math.Ceil(time.Since(startTime).Seconds()) - 7)
-			pipeIn.Close()
-			pipeOut.Close()
-			s.onDisconnect(streamId, duration)
-			return
+		if err := session.HandlePacket(pkt); err != nil {
+			if errors.Is(err, live.ErrSessionClosed) {
+				return
+			}
+			logger.Errorf(s.ctx, "failed to handle rtmp packet of livestream %s: %v", streamId, err)
 		}
 	}
 }
@@ -199,14 +212,10 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 
 	livestreamId := createdLivestream.Id.String()
 
-	// setup the vod creation
-	s.vodHandler.OnStreamStart(livestreamId)
 	return livestreamId, userInfo.Data.Id.String(), nil
 }
 
 func (s *RTMPServer) onDisconnect(streamId string, duration int64) {
-	s.vodHandler.OnStreamEnd(streamId, s.config.Transcode.PublicHLSPath, s.config.Transcode.FFMpegSetting.MasterFileName)
-
 	playbackURL := fmt.Sprintf("%s/%s/index.m3u8", s.config.VODPlaybackUrlPrefix, streamId)
 	endDTO := &livestreamdto.EndLivestreamRequestDTO{
 		PlaybackURL: &playbackURL,
@@ -221,40 +230,6 @@ func (s *RTMPServer) onDisconnect(streamId string, duration int64) {
 	if createErrRes != nil {
 		logger.Errorf(s.ctx, "failed to end livestream: %s", createErrRes.Message)
 	}
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	cleanUpCtx, cancelCleanUp := context.WithTimeout(context.Background(), 10*time.Second)
-
-	go func() {
-		defer wg.Done()
-		defer cancelCleanUp()
-		<-cleanUpCtx.Done()
-		removeLiveGeneratedFiles(streamId, s.config.Transcode.PrivateHLSPath, s.config.Transcode.PublicHLSPath)
-	}()
-	wg.Wait()
-}
-
-// remove live-generated private files and public files after saving into vods
-func removeLiveGeneratedFiles(streamingKey, privatePath, publicPath string) error {
-	// remove all folders of public and remove all private content
-	paths := []string{
-		filepath.Join(privatePath, streamingKey),
-		filepath.Join(publicPath, streamingKey),
-	}
-
-	var errList []error
-
-	for _, path := range paths {
-		logger.Infof(context.TODO(), "path is removed", path)
-		err := os.RemoveAll(path)
-		if err != nil {
-			errList = append(errList, fmt.Errorf("failed to remove %s: %w", path, err))
-		}
-	}
-
-	return nil
 }
 
 func (s *RTMPServer) Shutdown(ctx context.Context) error {

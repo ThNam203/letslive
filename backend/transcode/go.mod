@@ -10,7 +10,6 @@ require (
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/minio/minio-go/v7 v7.0.99
 	github.com/nareix/joy5 v0.0.0-20210317075623-2c912ca30590
-	github.com/radovskyb/watcher v1.0.7
 	sen1or/letslive/shared v0.0.0
 )
 
