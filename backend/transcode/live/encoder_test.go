@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -18,18 +19,11 @@ import (
 	"github.com/bluenviron/mediacommon/v2/pkg/formats/mpegts/codecs"
 	"github.com/nareix/joy5/av"
 	"github.com/nareix/joy5/format/flv"
-
-	"sen1or/letslive/shared/pkg/logger"
 )
 
 // Bounds every test that waits on a child process, so a stuck ffmpeg fails
 // the test (ctx cancel sends SIGTERM, pipes hit EOF) instead of hanging.
 const testEncoderTimeout = 30 * time.Second
-
-// The shared logger is nil until initialised; the encoder logs ffmpeg's stderr through it.
-func init() {
-	logger.Init(logger.Error)
-}
 
 func encodedRendition(short int, fps int) Rendition {
 	return Rendition{
@@ -152,7 +146,7 @@ func TestEncoderEndToEnd(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
 	defer cancel()
 
-	enc, err := StartEncoder(ctx, ffmpegBinary(t), args, 1)
+	enc, err := StartEncoder(ctx, "test-stream", ffmpegBinary(t), args, 1)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}
@@ -255,7 +249,7 @@ func ffmpegBinary(t *testing.T) string {
 
 func TestStartEncoderBadPath(t *testing.T) {
 	missing := filepath.Join(t.TempDir(), "no-such-ffmpeg")
-	enc, err := StartEncoder(context.Background(), missing, []string{"-version"}, 2)
+	enc, err := StartEncoder(context.Background(), "test-stream", missing, []string{"-version"}, 2)
 	if err == nil {
 		enc.Stop()
 		t.Fatal("expected error for missing binary")
@@ -270,7 +264,7 @@ func TestEncoderStopKillsAndIsIdempotent(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
 	defer cancel()
 
-	enc, err := StartEncoder(ctx, "/bin/sh", []string{"-c", "sleep 30"}, 1)
+	enc, err := StartEncoder(ctx, "test-stream", "/bin/sh", []string{"-c", "sleep 30"}, 1)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}
@@ -301,7 +295,7 @@ func TestEncoderStopEscalatesToSIGKILL(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
 	defer cancel()
 
-	enc, err := StartEncoder(ctx, script, []string{ready}, 0)
+	enc, err := StartEncoder(ctx, "test-stream", script, []string{ready}, 0)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}
@@ -326,5 +320,31 @@ func TestEncoderStopEscalatesToSIGKILL(t *testing.T) {
 	}
 	if err := enc.Wait(); err == nil {
 		t.Error("Wait = nil, want kill error")
+	}
+}
+
+// Every ffmpeg stderr line is attributed to its livestream, so concurrent
+// streams can be told apart in the logs.
+func TestEncoderStderrCarriesLivestreamID(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
+	defer cancel()
+
+	const id = "stderr-id-0f3a"
+	marker := "stderr-marker-" + t.Name()
+	enc, err := StartEncoder(ctx, id, "/bin/sh", []string{"-c", "echo " + marker + "-1 >&2; echo " + marker + "-2 >&2"}, 0)
+	if err != nil {
+		t.Fatalf("StartEncoder: %v", err)
+	}
+	_ = enc.Wait()
+	enc.Stop()
+
+	lines := logsContaining(marker)
+	if len(lines) != 2 {
+		t.Fatalf("logged %d stderr line(s), want 2: %+v", len(lines), lines)
+	}
+	for _, l := range lines {
+		if !strings.Contains(l.Message, "livestream "+id+": ffmpeg: ") {
+			t.Errorf("stderr line %q lacks the livestream id", l.Message)
+		}
 	}
 }

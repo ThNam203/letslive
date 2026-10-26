@@ -10,6 +10,7 @@ require (
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/minio/minio-go/v7 v7.0.99
 	github.com/nareix/joy5 v0.0.0-20210317075623-2c912ca30590
+	go.uber.org/zap v1.27.1
 	sen1or/letslive/shared v0.0.0
 )
 
@@ -58,7 +59,6 @@ require (
 	go.opentelemetry.io/otel v1.42.0 // indirect
 	go.opentelemetry.io/otel/trace v1.42.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.27.1 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.49.0 // indirect
 	golang.org/x/exp v0.0.0-20250813145105-42675adae3e6 // indirect

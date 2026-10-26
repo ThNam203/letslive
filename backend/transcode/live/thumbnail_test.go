@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -302,5 +303,32 @@ func TestThumbnailerSetSource(t *testing.T) {
 	th2.Close()
 	if _, err := os.Stat(captured); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("thumbnail job ran without parameter sets: %v", err)
+	}
+}
+
+// The thumbnailer's ffmpeg stderr is logged only inside the failure line,
+// which carries the livestream id.
+func TestThumbnailerStderrCarriesLivestreamID(t *testing.T) {
+	const id = "thumb-stderr-7c21"
+	marker := "thumb-marker-" + t.Name()
+	script := filepath.Join(t.TempDir(), "fail.sh")
+	body := "#!/bin/sh\ncat > /dev/null\necho " + marker + " >&2\nexit 1\n"
+	if err := os.WriteFile(script, []byte(body), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	src := SourceInfo{Width: 640, Height: 360, SPS: []byte{0x67, 0x01}, PPS: []byte{0x68, 0x02}}
+	th := NewThumbnailer(context.Background(), id, script, src, newRecordingStorage(t), 0)
+	th.Offer([][]byte{{0x65, 0xaa}})
+	th.Close()
+
+	lines := logsContaining(marker)
+	if len(lines) == 0 {
+		t.Fatal("ffmpeg stderr was not logged")
+	}
+	for _, l := range lines {
+		if !strings.Contains(l.Message, "livestream "+id+": ") {
+			t.Errorf("stderr line %q lacks the livestream id", l.Message)
+		}
 	}
 }
