@@ -166,6 +166,9 @@ func TestSessionFullLadder(t *testing.T) {
 	}
 	master := waitMaster(t, base, []string{"source", "480p"}, []string{"720p", "1080p"})
 	t.Logf("master playlist:\n%s", master)
+	if !strings.Contains(master, "FRAME-RATE=30.000,") || strings.Contains(master, "FRAME-RATE=60") {
+		t.Errorf("master must advertise the 30 fps source rate for every rendition:\n%s", master)
+	}
 
 	if err := closeSession(t, s); err != nil {
 		t.Fatalf("Close: %v", err)

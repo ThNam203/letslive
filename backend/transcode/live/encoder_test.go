@@ -48,10 +48,10 @@ func TestEncoderArgsLandscape(t *testing.T) {
 		"-hide_banner", "-loglevel", "error", "-probesize", "32", "-analyzeduration", "0", "-f", "flv", "-i", "pipe:0", "-an", "-copyts",
 		"-filter_complex", "[0:v]split=2[s0][s1];[s0]scale=-2:720[v0];[s1]scale=-2:480[v1]",
 		"-map", "[v0]", "-c:v", "libx264", "-preset", "veryfast", "-tune", "zerolatency", "-pix_fmt", "yuv420p",
-		"-crf", "23", "-maxrate", "2500k", "-bufsize", "5000k", "-force_key_frames", "source", "-sc_threshold", "0", "-g", "300",
+		"-crf", "23", "-maxrate", "2500k", "-bufsize", "5000k", "-force_key_frames", "source", "-sc_threshold", "0", "-g", "300", "-r", "30",
 		"-muxdelay", "0", "-muxpreload", "0", "-flush_packets", "1", "-f", "mpegts", "pipe:3",
 		"-map", "[v1]", "-c:v", "libx264", "-preset", "veryfast", "-tune", "zerolatency", "-pix_fmt", "yuv420p",
-		"-crf", "23", "-maxrate", "1000k", "-bufsize", "2000k", "-force_key_frames", "source", "-sc_threshold", "0", "-g", "300",
+		"-crf", "23", "-maxrate", "1000k", "-bufsize", "2000k", "-force_key_frames", "source", "-sc_threshold", "0", "-g", "300", "-r", "30",
 		"-muxdelay", "0", "-muxpreload", "0", "-flush_packets", "1", "-f", "mpegts", "pipe:4",
 	}
 	if !reflect.DeepEqual(got, want) {
@@ -66,7 +66,7 @@ func TestEncoderArgsSingle(t *testing.T) {
 		"-hide_banner", "-loglevel", "error", "-probesize", "32", "-analyzeduration", "0", "-f", "flv", "-i", "pipe:0", "-an", "-copyts",
 		"-filter_complex", "[0:v]scale=-2:480[v0]",
 		"-map", "[v0]", "-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency", "-pix_fmt", "yuv420p",
-		"-crf", "28", "-maxrate", "1000k", "-bufsize", "2000k", "-force_key_frames", "source", "-sc_threshold", "0", "-g", "300",
+		"-crf", "28", "-maxrate", "1000k", "-bufsize", "2000k", "-force_key_frames", "source", "-sc_threshold", "0", "-g", "300", "-r", "30",
 		"-muxdelay", "0", "-muxpreload", "0", "-flush_packets", "1", "-f", "mpegts", "pipe:3",
 	}
 	if !reflect.DeepEqual(got, want) {
@@ -85,10 +85,13 @@ func TestEncoderArgsPortrait(t *testing.T) {
 	}
 }
 
-func TestEncoderArgsFPSOnlyWhenLower(t *testing.T) {
+// The output rate is always set when the source rate is known: without it
+// x264 takes its VUI timing from ffmpeg's guess on the metadata-less FLV
+// input (60 fps for a 30 fps source), and the master advertises that rate.
+func TestEncoderArgsFPS(t *testing.T) {
 	same := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "veryfast", 23)
-	if indexOf(same, "-r") >= 0 {
-		t.Errorf("unexpected -r for equal fps: %q", same)
+	if g := indexOf(same, "-g"); g < 0 || g+3 >= len(same) || same[g+2] != "-r" || same[g+3] != "30" {
+		t.Errorf("-r 30 must follow -g 300 for an equal fps: %q", same)
 	}
 
 	lower := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 24)}, "veryfast", 23)
