@@ -32,6 +32,9 @@ const (
 	masterBuildTimeout = 2 * time.Second
 	// gohlslib v2.4.7 adds this to every fMP4 DTS (muxer.go fmp4StartDTS).
 	gohlslibFMP4StartDTS = 10 * time.Second
+	// hlsEncodeErrorLogInterval is the minimum time between two logged gohlslib
+	// encode errors of one rendition.
+	hlsEncodeErrorLogInterval = time.Minute
 )
 
 // ErrStreamClosed is returned by writes after Close.
@@ -70,6 +73,8 @@ type renditionMuxer struct {
 	ready  atomic.Bool
 	// dropped is set under mu, read lock-free by routing and the master build.
 	dropped atomic.Bool
+
+	encodeErrors dropLimiter
 }
 
 // NewStream starts one LL-HLS muxer per rendition. When audio is non-nil every
@@ -112,6 +117,8 @@ func (s *Stream) addRendition(name string, audio *mpeg4audio.AudioSpecificConfig
 		name:  name,
 		video: &gohlslib.Track{Codec: &codecs.H264{}, ClockRate: videoClockRate},
 		gate:  segmentGate{minDuration: time.Duration(cfg.SegmentMinDurationMs) * time.Millisecond},
+
+		encodeErrors: dropLimiter{interval: hlsEncodeErrorLogInterval},
 	}
 	tracks := []*gohlslib.Track{m.video}
 	if audio != nil {
@@ -125,9 +132,7 @@ func (s *Stream) addRendition(name string, audio *mpeg4audio.AudioSpecificConfig
 		SegmentCount:       cfg.SegmentCount,
 		SegmentMinDuration: m.gate.minDuration,
 		PartMinDuration:    time.Duration(cfg.PartMinDurationMs) * time.Millisecond,
-		OnEncodeError: func(err error) {
-			logger.Errorf(context.Background(), "livestream %s rendition %s: hls muxer: %v", s.id, name, err)
-		},
+		OnEncodeError:      func(err error) { s.logEncodeError(m, err, time.Now()) },
 	}
 	if err := m.muxer.Start(); err != nil {
 		return fmt.Errorf("start %s muxer: %w", name, err)
@@ -136,6 +141,18 @@ func (s *Stream) addRendition(name string, audio *mpeg4audio.AudioSpecificConfig
 	s.renditions = append(s.renditions, m)
 	s.byName[name] = m
 	return nil
+}
+
+// logEncodeError logs a gohlslib encode error at Warn, at most once per
+// hlsEncodeErrorLogInterval per rendition. gohlslib repeats "part duration
+// changed" every time the part target moves, and it is a warning about iOS
+// clients rather than a failed write.
+func (s *Stream) logEncodeError(m *renditionMuxer, err error, now time.Time) {
+	n, ok := m.encodeErrors.record(now)
+	if !ok {
+		return
+	}
+	logger.Warnf(context.Background(), "livestream %s rendition %s: hls muxer: %v (%d report(s) since the last log)", s.id, m.name, err, n)
 }
 
 // ID is the livestream id the stream is served under.
