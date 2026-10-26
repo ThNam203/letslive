@@ -241,6 +241,46 @@ func TestRecorderUploadFailure(t *testing.T) {
 	}
 }
 
+// A segment whose upload failed is not in the VOD, so its local file is
+// removed at once instead of filling the disk until Finish while MinIO is down.
+func TestRecorderRemovesFailedUploadAtOnce(t *testing.T) {
+	rig := newRecorderRig(t, "src_640x360.flv", []string{"source"})
+	failed := make(chan struct{})
+	rig.st.before = func(call storageCall) error {
+		if call.Index == 1 {
+			close(failed)
+			return errors.New("minio down")
+		}
+		return nil
+	}
+	rig.feed(t, 1, rig.f.pkts)
+
+	select {
+	case <-failed:
+	case <-time.After(recorderTestTimeout):
+		t.Fatal("segment 1 was never uploaded")
+	}
+	seg1 := filepath.Join(rig.workDir, rig.id, "0", "1.ts")
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		_, err := os.Stat(seg1)
+		if errors.Is(err, os.ErrNotExist) {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("failed segment still on disk 5s after its upload failed (stat: %v)", err)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	if err := rig.finish(t); err != nil {
+		t.Fatalf("Finish: %v", err)
+	}
+	if _, uris := parseVariant(t, rig.read(t, "0/stream.m3u8")); len(uris) != 2 {
+		t.Errorf("playlist lists %d segments, want 2 (the failed one left out): %v", len(uris), uris)
+	}
+}
+
 func TestRecorderNoSegmentsWritesNothing(t *testing.T) {
 	rig := newRecorderRig(t, "src_640x360.flv", []string{"source"})
 	rig.st.before = func(storageCall) error { return errors.New("minio down") }
