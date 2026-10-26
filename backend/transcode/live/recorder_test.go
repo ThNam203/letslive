@@ -302,6 +302,39 @@ func TestRecorderDropRendition(t *testing.T) {
 	}
 }
 
+// Every PTS/DTS in a VOD segment is shifted by recorderTSOffset, so an AU
+// slightly before the clock zero is still written non-negative; one too early
+// even for the offset is dropped.
+func TestRecorderTimestampOffset(t *testing.T) {
+	requireFFmpeg(t)
+	rig := newRecorderRig(t, "src_640x360.flv", []string{"source"})
+	rig.rec.WriteVideo(0, recorderMinTimestamp-1, recorderMinTimestamp-1, [][]byte{{0x65, 0x88}})
+	rig.feed(t, 1, rig.f.pkts)
+	if err := rig.finish(t); err != nil {
+		t.Fatalf("Finish: %v", err)
+	}
+
+	var first string
+	for _, c := range rig.st.Calls() {
+		if c.Kind == "segment" && filepath.Base(c.SavedPath) == "0.ts" {
+			first = c.SavedPath
+		}
+	}
+	if first == "" {
+		t.Fatal("segment 0 was not uploaded")
+	}
+	video, audio := probeFirstDTS(t, first)
+	if want := float64(recorderTSOffset) / videoClockRate; math.Abs(video-want) > 1e-6 {
+		t.Errorf("first video DTS = %.6fs, want the %.1fs offset (first keyframe at the clock zero)", video, want)
+	}
+	if audio < 0 || audio > maxSaneFirstDTS {
+		t.Errorf("first audio DTS = %.6fs, want non-negative and unwrapped", audio)
+	}
+	if got := logsContaining("too early for the TS offset"); len(got) == 0 {
+		t.Error("the too-early AU was not reported")
+	}
+}
+
 func TestRecorderNoSegmentsWritesNothing(t *testing.T) {
 	rig := newRecorderRig(t, "src_640x360.flv", []string{"source"})
 	rig.st.before = func(storageCall) error { return errors.New("minio down") }

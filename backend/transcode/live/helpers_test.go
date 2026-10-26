@@ -167,11 +167,13 @@ func TestFixturesDemux(t *testing.T) {
 	cases := []struct {
 		name     string
 		hasAudio bool
+		bFrames  bool
 	}{
-		{"src_640x360.flv", true},
-		{"src_360x640.flv", true},
-		{"src_640x360_noaudio.flv", false},
-		{"src_1280x720.flv", true},
+		{"src_640x360.flv", true, true},
+		{"src_360x640.flv", true, true},
+		{"src_640x360_noaudio.flv", false, true},
+		{"src_1280x720.flv", true, true},
+		{"src_1280x720_nobf.flv", true, false},
 	}
 
 	for _, tc := range cases {
@@ -195,8 +197,8 @@ func TestFixturesDemux(t *testing.T) {
 			if keyframes != 3 {
 				t.Errorf("keyframes = %d, want 3 (one every 2s over 6s)", keyframes)
 			}
-			if !bFrames {
-				t.Error("no packet has a non-zero CTime; fixture has no B-frames")
+			if bFrames != tc.bFrames {
+				t.Errorf("fixture has B-frames = %v, want %v", bFrames, tc.bFrames)
 			}
 			if (audio > 0) != tc.hasAudio {
 				t.Errorf("audio packets = %d, hasAudio want %v", audio, tc.hasAudio)

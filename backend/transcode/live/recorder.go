@@ -39,6 +39,18 @@ const (
 	// recorderMaxHeldAudio bounds the audio waiting for video to catch up
 	// (about 6s of AAC); beyond it the oldest is written to the open segment.
 	recorderMaxHeldAudio = 256
+
+	// recorderTSOffset is added to every PTS and DTS written to a VOD segment,
+	// in every rendition. ffmpeg snaps its output to its frame grid, so an
+	// encoded rendition's first AU can land up to about half a frame before
+	// the clock zero; MPEG-TS has no negative timestamps (a negative one is
+	// written 33-bit wrapped, about 26.5h). One constant shift for all
+	// renditions and audio keeps them aligned and drops no frame.
+	recorderTSOffset = videoClockRate // 1s
+	// recorderMinTimestamp is the earliest timestamp still written: shifted,
+	// its PTS, DTS and PCR (which the mpegts writer puts 100 ms before the
+	// DTS) are all non-negative.
+	recorderMinTimestamp = -recorderTSOffset + videoClockRate/10
 )
 
 // Timeouts are variables only so tests can shorten them.
@@ -207,6 +219,10 @@ func (r *Recorder) WriteVideo(rendition int, pts90k, dts90k int64, au [][]byte) 
 	if len(au) == 0 {
 		return
 	}
+	if pts90k < recorderMinTimestamp || dts90k < recorderMinTimestamp {
+		r.logBadInput("recorder dropped video for rendition %d at pts %d dts %d, too early for the TS offset", rendition, pts90k, dts90k)
+		return
+	}
 	r.enqueue(rendition, recItem{pts: pts90k, dts: dts90k, au: au})
 }
 
@@ -219,6 +235,10 @@ func (r *Recorder) WriteAudio(pts90k int64, aus [][]byte) {
 	}
 	aus = r.withoutEmpty(aus)
 	if len(aus) == 0 {
+		return
+	}
+	if pts90k < recorderMinTimestamp {
+		r.logBadInput("recorder dropped audio at pts %d, too early for the TS offset", pts90k)
 		return
 	}
 	for i := range r.rends {
@@ -256,12 +276,7 @@ func (r *Recorder) withoutEmpty(units [][]byte) [][]byte {
 		return units
 	}
 
-	r.badInputMu.Lock()
-	n, ok := r.badInput.record(time.Now())
-	r.badInputMu.Unlock()
-	if ok {
-		logger.Errorf(r.ctx, "livestream %s: recorder ignored empty NAL/access units (%d report(s) since the last log)", r.id, n)
-	}
+	r.logBadInput("recorder ignored empty NAL/access units")
 
 	kept := make([][]byte, 0, len(units)-empty)
 	for _, u := range units {
@@ -270,6 +285,17 @@ func (r *Recorder) withoutEmpty(units [][]byte) [][]byte {
 		}
 	}
 	return kept
+}
+
+// logBadInput logs a discarded input, at most once per
+// recorderDropLogInterval for the whole recorder.
+func (r *Recorder) logBadInput(format string, args ...any) {
+	r.badInputMu.Lock()
+	n, ok := r.badInput.record(time.Now())
+	r.badInputMu.Unlock()
+	if ok {
+		logger.Errorf(r.ctx, "livestream %s: "+format+" (%d report(s) since the last log)", append(append([]any{r.id}, args...), n)...)
+	}
 }
 
 func (r *Recorder) enqueue(i int, it recItem) {
@@ -425,7 +451,7 @@ func (w *segmentWriter) writeVideo(it recItem) {
 		}
 	}
 
-	if err := w.ts.WriteH264(w.vid, it.pts, it.dts, it.au); err != nil {
+	if err := w.ts.WriteH264(w.vid, it.pts+recorderTSOffset, it.dts+recorderTSOffset, it.au); err != nil {
 		w.logf("write video to segment %d: %v", w.cur.index, err)
 		w.abandonSegment(it.dts)
 		return
@@ -484,7 +510,7 @@ func (w *segmentWriter) emitAudio(it recItem) {
 		w.rec.lateAudio.Add(1)
 		return
 	}
-	if err := w.ts.WriteMPEG4Audio(w.aud, it.pts, it.au); err != nil {
+	if err := w.ts.WriteMPEG4Audio(w.aud, it.pts+recorderTSOffset, it.au); err != nil {
 		w.logf("write audio to segment %d: %v", w.cur.index, err)
 		w.abandonSegment(w.lastDTS)
 		return
