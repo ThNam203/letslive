@@ -35,8 +35,8 @@ func NewWebServer(listenPort int, baseDirectory string, live http.Handler) *WebS
 
 func (ws *WebServer) routes() http.Handler {
 	router := mux.NewRouter()
-	router.PathPrefix("/static/vods/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(ws.BaseDirectory))))
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static", ws.live))
+	router.PathPrefix(vodPrefix).Handler(http.StripPrefix(livePrefix, http.FileServer(http.Dir(ws.BaseDirectory))))
+	router.PathPrefix(livePrefix).Handler(http.StripPrefix("/static", ws.live))
 	router.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -44,7 +44,7 @@ func (ws *WebServer) routes() http.Handler {
 	corsMiddleware := middlewares.NewCORSMiddleware()
 	router.Use(corsMiddleware.GetMiddleware)
 	router.Use(middlewares.RequestIDMiddleware)
-	router.Use(middlewares.LoggingMiddleware)
+	router.Use(requestLogging)
 	return router
 }
 
