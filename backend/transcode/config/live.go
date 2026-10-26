@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	defaultPartMinDurationMs       = 200
+	defaultPartMinDurationMs       = 190
 	defaultSegmentMinDurationMs    = 1000
 	defaultSegmentCount            = 7
 	defaultRecordSegmentDurationMs = 4000

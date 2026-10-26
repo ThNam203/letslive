@@ -22,6 +22,12 @@ import (
 // clean write so ffmpeg flushes and exits.
 func startFixtureEncoder(t *testing.T, ctx context.Context) (*Encoder, <-chan error) {
 	t.Helper()
+	return startFixtureEncoderFrom(t, ctx, "src_1280x720.flv")
+}
+
+// startFixtureEncoderFrom is startFixtureEncoder for any 1280x720 30 fps fixture.
+func startFixtureEncoderFrom(t *testing.T, ctx context.Context, fixture string) (*Encoder, <-chan error) {
+	t.Helper()
 
 	args := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "veryfast", 23)
 	enc, err := StartEncoder(ctx, "test-stream", ffmpegBinary(t), args, 1)
@@ -30,7 +36,7 @@ func startFixtureEncoder(t *testing.T, ctx context.Context) (*Encoder, <-chan er
 	}
 	t.Cleanup(enc.Stop)
 
-	pkts := readFLV(t, "src_1280x720.flv")
+	pkts := readFLV(t, fixture)
 	written := make(chan error, 1)
 	go func() {
 		mux := flv.NewMuxer(enc.Input())

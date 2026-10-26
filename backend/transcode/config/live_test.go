@@ -8,7 +8,7 @@ import (
 func TestLiveWithDefaults(t *testing.T) {
 	got := Live{}.WithDefaults()
 	want := Live{
-		PartMinDurationMs:       200,
+		PartMinDurationMs:       190,
 		SegmentMinDurationMs:    1000,
 		SegmentCount:            7,
 		RecordSegmentDurationMs: 4000,

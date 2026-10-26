@@ -70,7 +70,7 @@ Envoy already rewrites `/transcode` → `/static` with `timeout: 0s`, so no gate
 
 | Key | Default | Meaning |
 |---|---|---|
-| `partMinDurationMs` | 200 | LL-HLS part length |
+| `partMinDurationMs` | 190 | LL-HLS part minimum; 190 rather than 200 so 30 fps gives constant 6-frame (0.200 s) parts (ruling R12) |
 | `segmentMinDurationMs` | 1000 | segment cut at the first keyframe after this |
 | `segmentCount` | 7 | segments kept in memory (minimum 7 for LL-HLS) |
 | `recordSegmentDurationMs` | 4000 | VOD segment length |

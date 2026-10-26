@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -808,5 +809,111 @@ func TestStreamEncodeErrorsRateLimited(t *testing.T) {
 		if !strings.Contains(l.Message, want[i]) {
 			t.Errorf("line %d = %q, want it to contain %q", i, l.Message, want[i])
 		}
+	}
+}
+
+// mediaParts returns the advertised PART-TARGET of a media playlist and its
+// EXT-X-PART durations, in seconds, grouped by parent segment. Older
+// segments listed without parts are skipped; the last group is the segment
+// still being written.
+func mediaParts(t *testing.T, playlist string) (target float64, segments [][]float64) {
+	t.Helper()
+	var cur []float64
+	for _, line := range strings.Split(playlist, "\n") {
+		if v, ok := strings.CutPrefix(line, "#EXT-X-PART-INF:PART-TARGET="); ok {
+			f, err := strconv.ParseFloat(v, 64)
+			if err != nil {
+				t.Fatalf("bad PART-TARGET %q: %v", v, err)
+			}
+			target = f
+		}
+		if rest, ok := strings.CutPrefix(line, "#EXT-X-PART:DURATION="); ok {
+			v, _, _ := strings.Cut(rest, ",")
+			f, err := strconv.ParseFloat(v, 64)
+			if err != nil {
+				t.Fatalf("bad part DURATION %q: %v", v, err)
+			}
+			cur = append(cur, f)
+		}
+		if strings.HasPrefix(line, "#EXTINF:") && len(cur) > 0 {
+			segments, cur = append(segments, cur), nil
+		}
+	}
+	segments = append(segments, cur)
+	if target == 0 || len(segments[0]) == 0 {
+		t.Fatalf("no PART-TARGET or no parts in:\n%s", playlist)
+	}
+	return target, segments
+}
+
+// encodeErrorCount is how many encode errors rendition m reported so far.
+func encodeErrorCount(m *renditionMuxer) int64 {
+	m.encodeErrors.mu.Lock()
+	defer m.encodeErrors.mu.Unlock()
+	if m.encodeErrors.last.IsZero() {
+		return m.encodeErrors.pending
+	}
+	return 1 + m.encodeErrors.pending
+}
+
+// Ruling R12: with the default part minimum, a 30 fps source (FLV
+// millisecond frames of 33/34 ms) and its encoded rendition (exact 1/30 s
+// frames) get constant 6-frame parts. A 200 ms minimum straddled the 6-frame
+// boundary: parts alternated between 0.200 and 0.233 and PART-TARGET kept
+// moving. The final part of a parent segment may be shorter (RFC 8216bis
+// exempts it from the 85% rule); it is only checked not to exceed the target.
+func TestStreamPartDurationsStableAt30fps(t *testing.T) {
+	requireFFmpeg(t)
+	const frame = 1.0 / 30
+	// One millisecond, plus room for the playlists' 5-decimal rounding.
+	const tolerance = 0.001 + 1e-9
+
+	for _, fixture := range []string{"src_1280x720.flv", "src_1280x720_nobf.flv"} {
+		t.Run(fixture, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
+			defer cancel()
+
+			f := loadStreamFixture(t, fixture)
+			s := newTestStream(t, []string{"source", "480p"}, f.audio, testLiveConfig())
+			_, base := serveStream(t, s)
+
+			enc, written := startFixtureEncoderFrom(t, ctx, fixture)
+			fed := make(chan error, 1)
+			go func() { fed <- FeedTS(ctx, enc.Outputs()[0], s, 1, f.clock, nil) }()
+			f.feed(t, s, 1, f.pkts)
+			if err := <-written; err != nil {
+				t.Fatalf("write FLV to ffmpeg: %v", err)
+			}
+			select {
+			case err := <-fed:
+				if err != nil {
+					t.Fatalf("FeedTS: %v", err)
+				}
+			case <-ctx.Done():
+				t.Fatal("FeedTS did not return after ffmpeg finished")
+			}
+
+			for r, name := range []string{"source", "480p"} {
+				media := mustGet(t, base+"/"+name+"/video1_stream.m3u8", http.StatusOK).body
+				target, segments := mediaParts(t, media)
+				aligned := math.Round(target/frame) * frame
+				t.Logf("%s: PART-TARGET %.5f (frame-aligned %.5f), part target changes %d, parts per segment %v",
+					name, target, aligned, encodeErrorCount(s.renditions[r]), segments)
+				if math.Abs(target-aligned) > tolerance {
+					t.Errorf("%s: PART-TARGET %.5f is not within 1 ms of a frame multiple (%.5f)", name, target, aligned)
+				}
+				for si, parts := range segments {
+					for pi, d := range parts {
+						final := si < len(segments)-1 && pi == len(parts)-1
+						if final && d <= aligned+tolerance {
+							continue
+						}
+						if math.Abs(d-aligned) > tolerance {
+							t.Errorf("%s: segment %d part %d lasts %.5f, want %.5f ± 1 ms", name, si, pi, d, aligned)
+						}
+					}
+				}
+			}
+		})
 	}
 }
