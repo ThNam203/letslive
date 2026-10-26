@@ -118,6 +118,8 @@ type recRendition struct {
 	in    chan recItem
 	done  chan struct{}
 	drops dropLimiter
+	// truncated is set when the rendition's encoder stopped mid-stream.
+	truncated atomic.Bool
 
 	// Guarded by Recorder.resMu.
 	segments      []*recSegment
@@ -224,6 +226,20 @@ func (r *Recorder) WriteAudio(pts90k int64, aus [][]byte) {
 	}
 }
 
+// DropRendition marks encoded rendition r as truncated because its encoder
+// stopped while the stream was live. Later writes to it are ignored and Finish
+// leaves it out of the VOD: a variant that ends early would stop playback
+// for players that picked it. The source (r == 0) cannot be dropped.
+func (r *Recorder) DropRendition(rendition int) {
+	if rendition < 1 || rendition >= len(r.rends) {
+		logger.Errorf(r.ctx, "livestream %s: recorder cannot drop rendition %d, encoded renditions are [1, %d)", r.id, rendition, len(r.rends))
+		return
+	}
+	if !r.rends[rendition].truncated.Swap(true) {
+		logger.Warnf(r.ctx, "livestream %s rendition %s: encoder stopped mid-stream, the rendition will be left out of the VOD", r.id, r.rends[rendition].name)
+	}
+}
+
 // Dropped returns how many items were discarded because a queue was full.
 func (r *Recorder) Dropped() int64 { return r.dropped.Load() }
 
@@ -262,6 +278,9 @@ func (r *Recorder) enqueue(i int, it recItem) {
 		return
 	}
 	rr := r.rends[i]
+	if rr.truncated.Load() {
+		return
+	}
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -716,13 +735,18 @@ type variantPlan struct {
 	width, height int
 }
 
-// plans snapshots every rendition that has at least one uploaded segment.
+// plans snapshots every rendition that has at least one uploaded segment and
+// was not truncated.
 func (r *Recorder) plans() []variantPlan {
 	r.resMu.Lock()
 	defer r.resMu.Unlock()
 
 	plans := make([]variantPlan, 0, len(r.rends))
 	for _, rr := range r.rends {
+		if rr.truncated.Load() {
+			logger.Errorf(r.ctx, "livestream %s rendition %s: encoder stopped mid-stream, leaving it out of the VOD", r.id, rr.name)
+			continue
+		}
 		plan := r.planVariant(rr)
 		if len(plan.entries) == 0 {
 			logger.Errorf(r.ctx, "livestream %s rendition %s: no segment was recorded, leaving it out of the VOD", r.id, rr.name)

@@ -296,6 +296,73 @@ func TestSessionDropsEncodedNotReadyInTime(t *testing.T) {
 	}
 }
 
+// An encoder that dies mid-stream leaves its renditions truncated; the VOD
+// must not offer them, or players that start on them stop early.
+func TestSessionVODOmitsRenditionWhoseEncoderDied(t *testing.T) {
+	requireFFmpeg(t)
+	shortThumbnailTimeout(t)
+	rig := newSessionRig(t, ffmpegBinary(t))
+	rig.tc.Live.RecordSegmentDurationMs = 2000
+	s, _ := rig.newSession(t)
+	pkts := readFLV(t, "src_1280x720.flv")
+
+	cut := 0
+	for i, pkt := range pkts {
+		if pkt.Time >= 3*time.Second {
+			cut = i
+			break
+		}
+	}
+	feedSession(t, s, pkts[:cut])
+	if s.enc == nil {
+		t.Fatal("encoder was not started")
+	}
+
+	// Wait until the 480p recording has uploaded a segment, so the VOD would
+	// list it without the fix, then kill ffmpeg.
+	deadline := time.Now().Add(sessionTestTimeout)
+	for !hasUploadedSegment(rig.st, 1) {
+		if time.Now().After(deadline) {
+			t.Fatalf("no 480p segment uploaded within %v", sessionTestTimeout)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if err := s.enc.enc.cmd.Process.Kill(); err != nil {
+		t.Fatalf("kill ffmpeg: %v", err)
+	}
+	select {
+	case <-s.enc.halt:
+	case <-time.After(sessionTestTimeout):
+		t.Fatal("encoder failure not handled after ffmpeg was killed")
+	}
+	feedSession(t, s, pkts[cut:])
+
+	if err := closeSession(t, s); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	vod, err := os.ReadFile(filepath.Join(rig.tc.PublicHLSPath, "vods", s.id, sessionMasterFile))
+	if err != nil {
+		t.Fatalf("read VOD master: %v", err)
+	}
+	if !strings.Contains(string(vod), "0/stream.m3u8") {
+		t.Errorf("VOD master lacks the source:\n%s", vod)
+	}
+	if strings.Contains(string(vod), "1/stream.m3u8") {
+		t.Errorf("VOD master offers the 480p rendition whose encoder died:\n%s", vod)
+	}
+}
+
+// hasUploadedSegment reports whether storage holds an uploaded segment of
+// rendition q.
+func hasUploadedSegment(st *recordingStorage, q int) bool {
+	for _, c := range st.Calls() {
+		if c.Kind == "segment" && c.QualityIndex == q && c.URL != "" {
+			return true
+		}
+	}
+	return false
+}
+
 // Review Focus 5.
 func TestSessionCloseThenReconnect(t *testing.T) {
 	rig := newSessionRig(t, filepath.Join(t.TempDir(), "no-ffmpeg"))
