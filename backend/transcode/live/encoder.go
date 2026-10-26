@@ -27,6 +27,7 @@ type Encoder struct {
 	done    chan struct{} // closed once the process has been reaped
 	waitErr error         // valid after done is closed
 
+	ctx       context.Context // only used to attach request fields to log lines
 	closeOnce sync.Once
 }
 
@@ -41,10 +42,10 @@ func StartEncoder(ctx context.Context, ffmpegPath string, args []string, outputs
 	writeEnds := make([]*os.File, 0, outputs)
 	closeAll := func() {
 		for _, f := range readEnds {
-			f.Close()
+			closeLogged(ctx, "ffmpeg output read end", f)
 		}
 		for _, f := range writeEnds {
-			f.Close()
+			closeLogged(ctx, "ffmpeg output write end", f)
 		}
 	}
 
@@ -70,23 +71,24 @@ func StartEncoder(ctx context.Context, ffmpegPath string, args []string, outputs
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		stdin.Close()
+		closeLogged(ctx, "ffmpeg stdin", stdin)
 		closeAll()
 		return nil, fmt.Errorf("open ffmpeg stderr: %w", err)
 	}
 
 	if err := cmd.Start(); err != nil {
-		stdin.Close()
+		closeLogged(ctx, "ffmpeg stdin", stdin)
 		closeAll()
 		return nil, fmt.Errorf("start ffmpeg: %w", err)
 	}
 
 	// The child owns its copies now; keeping ours would stop readers from seeing EOF.
 	for _, f := range writeEnds {
-		f.Close()
+		closeLogged(ctx, "ffmpeg output write end", f)
 	}
 
 	e := &Encoder{
+		ctx:     ctx,
 		cmd:     cmd,
 		stdin:   stdin,
 		outputs: make([]io.ReadCloser, len(readEnds)),
@@ -110,6 +112,20 @@ func StartEncoder(ctx context.Context, ffmpegPath string, args []string, outputs
 	}()
 
 	return e, nil
+}
+
+// closeLogged closes c and logs any failure other than "already closed".
+func closeLogged(ctx context.Context, what string, c io.Closer) {
+	if err := c.Close(); err != nil && !errors.Is(err, os.ErrClosed) {
+		logger.Errorf(ctx, "close %s: %v", what, err)
+	}
+}
+
+// killLogged force-kills the process and logs any failure other than "already exited".
+func killLogged(ctx context.Context, p *os.Process) {
+	if err := p.Kill(); err != nil && !errors.Is(err, os.ErrProcessDone) {
+		logger.Errorf(ctx, "kill ffmpeg: %v", err)
+	}
 }
 
 func logStderr(ctx context.Context, r io.Reader) {
@@ -142,23 +158,24 @@ func (e *Encoder) Stop() {
 	case <-e.done:
 	default:
 		if err := e.cmd.Process.Signal(syscall.SIGTERM); err != nil && !errors.Is(err, os.ErrProcessDone) {
-			_ = e.cmd.Process.Kill()
+			logger.Errorf(e.ctx, "send SIGTERM to ffmpeg: %v", err)
+			killLogged(e.ctx, e.cmd.Process)
 		}
 
 		timer := time.NewTimer(stopGracePeriod)
 		select {
 		case <-e.done:
 		case <-timer.C:
-			_ = e.cmd.Process.Kill()
+			killLogged(e.ctx, e.cmd.Process)
 			<-e.done
 		}
 		timer.Stop()
 	}
 
 	e.closeOnce.Do(func() {
-		e.stdin.Close()
-		for _, o := range e.outputs {
-			o.Close()
+		closeLogged(e.ctx, "ffmpeg stdin", e.stdin)
+		for i, o := range e.outputs {
+			closeLogged(e.ctx, fmt.Sprintf("ffmpeg output %d", i), o)
 		}
 	})
 }

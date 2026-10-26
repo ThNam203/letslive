@@ -22,6 +22,10 @@ import (
 	"sen1or/letslive/shared/pkg/logger"
 )
 
+// Bounds every test that waits on a child process, so a stuck ffmpeg fails
+// the test (ctx cancel sends SIGTERM, pipes hit EOF) instead of hanging.
+const testEncoderTimeout = 30 * time.Second
+
 // The shared logger is nil until initialised; the encoder logs ffmpeg's stderr through it.
 func init() {
 	logger.Init(logger.Error)
@@ -145,7 +149,10 @@ func TestEncoderEndToEnd(t *testing.T) {
 	src := SourceInfo{Width: 1280, Height: 720, FPS: 30}
 	args := EncoderArgs(src, []Rendition{encodedRendition(480, 30)}, "veryfast", 23)
 
-	enc, err := StartEncoder(context.Background(), ffmpegBinary(t), args, 1)
+	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
+	defer cancel()
+
+	enc, err := StartEncoder(ctx, ffmpegBinary(t), args, 1)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}
@@ -260,7 +267,10 @@ func TestStartEncoderBadPath(t *testing.T) {
 
 func TestEncoderStopKillsAndIsIdempotent(t *testing.T) {
 	// A child that ignores nothing: sleep dies on SIGTERM.
-	enc, err := StartEncoder(context.Background(), "/bin/sh", []string{"-c", "sleep 30"}, 1)
+	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
+	defer cancel()
+
+	enc, err := StartEncoder(ctx, "/bin/sh", []string{"-c", "sleep 30"}, 1)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}
@@ -288,7 +298,10 @@ func TestEncoderStopEscalatesToSIGKILL(t *testing.T) {
 	if err := os.WriteFile(script, []byte(body), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	enc, err := StartEncoder(context.Background(), script, []string{ready}, 0)
+	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
+	defer cancel()
+
+	enc, err := StartEncoder(ctx, script, []string{ready}, 0)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}
