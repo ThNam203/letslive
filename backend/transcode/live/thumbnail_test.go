@@ -3,7 +3,9 @@ package live
 import (
 	"bytes"
 	"context"
+	"errors"
 	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -260,5 +262,45 @@ func TestThumbnailerAcceptsAgainAfterEvery(t *testing.T) {
 
 	if n := len(st.Calls()); n != 2 {
 		t.Errorf("AddThumbnail calls = %d, want 2", n)
+	}
+}
+
+// SetSource swaps the parameter sets put ahead of later offers (ruling R10).
+func TestThumbnailerSetSource(t *testing.T) {
+	dir := t.TempDir()
+	captured := filepath.Join(dir, "stdin.h264")
+	script := filepath.Join(dir, "capture.sh")
+	body := "#!/bin/sh\ncat > '" + captured + "'\nexit 1\n"
+	if err := os.WriteFile(script, []byte(body), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	oldSrc := SourceInfo{Width: 640, Height: 360, SPS: []byte{0x67, 0x01}, PPS: []byte{0x68, 0x02}}
+	newSrc := SourceInfo{Width: 640, Height: 360, SPS: []byte{0x67, 0x0a, 0x0b}, PPS: []byte{0x68, 0x0c}}
+	th := NewThumbnailer(context.Background(), "live1", script, oldSrc, newRecordingStorage(t), 0)
+	th.SetSource(newSrc)
+	th.Offer([][]byte{{0x65, 0xaa}})
+	th.Close()
+
+	got, err := os.ReadFile(captured)
+	if err != nil {
+		t.Fatalf("fake ffmpeg got no input: %v", err)
+	}
+	want := appendAnnexB(nil, [][]byte{newSrc.SPS, newSrc.PPS, {0x65, 0xaa}})
+	if !bytes.Equal(got, want) {
+		t.Errorf("ffmpeg input = % x, want % x", got, want)
+	}
+
+	// Parameter sets that cannot be used disable thumbnails instead of
+	// pairing new pictures with stale headers.
+	th2 := NewThumbnailer(context.Background(), "live1", script, oldSrc, newRecordingStorage(t), 0)
+	if err := os.Remove(captured); err != nil {
+		t.Fatal(err)
+	}
+	th2.SetSource(SourceInfo{Width: 640, Height: 360})
+	th2.Offer([][]byte{{0x65, 0xaa}})
+	th2.Close()
+	if _, err := os.Stat(captured); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("thumbnail job ran without parameter sets: %v", err)
 	}
 }

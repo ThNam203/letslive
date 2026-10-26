@@ -48,12 +48,18 @@ type Session struct {
 	mu          sync.Mutex
 	closed      bool
 	started     bool
-	videoConfig *av.Packet // last H264DecoderConfig before start
+	videoConfig *av.Packet // last H264DecoderConfig before start, then the current one
 	audioConfig *av.Packet // last AACDecoderConfig before start
 	waitLogged  bool       // "keyframe before AVC config" logged
 	badInput    dropLimiter
 
-	// Set once at start, read-only afterwards.
+	// params holds the SPS/PPS (and their size) put ahead of every source
+	// keyframe; set at start and replaced by a mid-stream AVC config with
+	// different bytes (ruling R10).
+	params SourceInfo
+
+	// Set once at start, read-only afterwards. src keeps the size the ladder
+	// was built for.
 	src        SourceInfo
 	audio      *mpeg4audio.AudioSpecificConfig
 	renditions []Rendition
@@ -122,24 +128,6 @@ func (s *Session) HandlePacket(pkt av.Packet) error {
 	return nil
 }
 
-// onVideoConfig buffers the AVC config before start. Later ones are ignored:
-// the ladder, clock and parameter sets stay those of the first keyframe.
-func (s *Session) onVideoConfig(pkt av.Packet) {
-	if !s.started {
-		s.videoConfig = &pkt
-		return
-	}
-	info, err := ProbeAVCConfig(pkt.Data)
-	if err != nil {
-		logger.Errorf(s.ctx, "livestream %s: ignoring unparsable AVC config mid-stream: %v", s.id, err)
-		return
-	}
-	if info.Width != s.src.Width || info.Height != s.src.Height {
-		logger.Errorf(s.ctx, "livestream %s: source resolution changed from %dx%d to %dx%d; keeping the original ladder",
-			s.id, s.src.Width, s.src.Height, info.Width, info.Height)
-	}
-}
-
 // start builds the ladder, stream, recorder, thumbnailer and encoder at the
 // first keyframe. ok is false when the keyframe cannot start the session;
 // err is nil when that is only because no AVC config has arrived yet.
@@ -177,6 +165,7 @@ func (s *Session) start(key av.Packet) (ok bool, err error) {
 	}
 
 	s.src, s.audio, s.renditions, s.clk, s.stream = src, audio, rs, clk, stream
+	s.params = src
 	s.rec = NewRecorder(s.ctx, s.id, rs, audio, s.d.Storage, tc.PrivateHLSPath,
 		time.Duration(tc.Live.RecordSegmentDurationMs)*time.Millisecond)
 	s.thumbs = NewThumbnailer(s.ctx, s.id, tc.FFMpegSetting.FFMpegPath, src, s.d.Storage,
@@ -222,17 +211,11 @@ func (s *Session) writeVideo(pkt av.Packet) {
 		s.enc.offer(pkt)
 	}
 
-	nalus, err := VideoAU(pkt)
+	pts, dts, au, nalus, err := s.sourceAU(pkt)
 	if err != nil {
 		s.logBadInput("skipping video packet at %v: %v", pkt.Time, err)
 		return
 	}
-	pts := s.clk.Video90k(pkt.Time + pkt.CTime)
-	au := nalus
-	if pkt.IsKeyFrame {
-		au = withParamSets(s.src, nalus)
-	}
-
 	if err := s.stream.WriteVideo(0, s.clk.NTP(pts), pts, au); err != nil {
 		s.logBadInput("write source video at %v: %v", pkt.Time, err)
 	}
@@ -245,6 +228,23 @@ func (s *Session) writeVideo(pkt av.Packet) {
 		s.srcReady = true
 		s.enc.armReadyDeadline(encodedReadyDeadline)
 	}
+}
+
+// sourceAU converts an RTMP video packet to the source rendition's access
+// unit: keyframes get the current parameter sets in front. nalus is the
+// packet's own NAL units, for the thumbnailer.
+func (s *Session) sourceAU(pkt av.Packet) (pts, dts int64, au, nalus [][]byte, err error) {
+	nalus, err = VideoAU(pkt)
+	if err != nil {
+		return 0, 0, nil, nil, err
+	}
+	pts = s.clk.Video90k(pkt.Time + pkt.CTime)
+	dts = s.clk.Video90k(pkt.Time)
+	au = nalus
+	if pkt.IsKeyFrame {
+		au = withParamSets(s.params.SPS, s.params.PPS, nalus)
+	}
+	return pts, dts, au, nalus, nil
 }
 
 func (s *Session) writeAudio(pkt av.Packet) {
@@ -275,18 +275,18 @@ func (s *Session) logBadInput(format string, args ...any) {
 		append(append([]any{s.id}, args...), n)...)
 }
 
-// withParamSets returns a new access unit with the source SPS and PPS ahead
-// of nalus, unless nalus already carries an SPS. RTMP keyframes usually lack
-// them, and gohlslib and the recorder both need them in-band. The parameter
-// sets are copied so no consumer shares them with SourceInfo.
-func withParamSets(src SourceInfo, nalus [][]byte) [][]byte {
+// withParamSets returns a new access unit with sps and pps ahead of nalus,
+// unless nalus already carries an SPS. RTMP keyframes usually lack them, and
+// gohlslib and the recorder both need them in-band. The parameter sets are
+// copied so no consumer shares them with the session.
+func withParamSets(sps, pps []byte, nalus [][]byte) [][]byte {
 	for _, nalu := range nalus {
 		if len(nalu) > 0 && h264.NALUType(nalu[0]&0x1f) == h264.NALUTypeSPS {
 			return nalus
 		}
 	}
 	au := make([][]byte, 0, len(nalus)+2)
-	au = append(au, bytes.Clone(src.SPS), bytes.Clone(src.PPS))
+	au = append(au, bytes.Clone(sps), bytes.Clone(pps))
 	return append(au, nalus...)
 }
 

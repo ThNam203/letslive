@@ -51,9 +51,13 @@ type sessionEncoder struct {
 	readyTimer *time.Timer
 	wg         sync.WaitGroup // writer, waiter, feeders and an armed ready timer
 
-	// Touched only by offer (under the Session's lock) and by stop (after it).
-	dropping bool
-	dropped  int
+	// Touched only by offer/offerConfig (under the Session's lock) and by
+	// stop (after it).
+	dropping     bool
+	dropped      int        // packets dropped in the current run
+	dropRuns     int        // drop runs started (each one logged)
+	totalDropped int        // packets dropped over the encoder's life
+	pending      *av.Packet // AVC config still to be queued ahead of the next keyframe
 }
 
 // startSessionEncoder starts ffmpeg for the encoded renditions of w.ladder. If
@@ -117,17 +121,21 @@ func startSessionEncoder(ctx context.Context, id string, w encoderWiring) *sessi
 
 // offer queues pkt for ffmpeg without blocking and reports whether it was
 // queued. A full queue starts a drop run that lasts until a video keyframe
-// fits again; each run is logged once, with its count, when it ends.
+// fits again; a run is logged when it starts and, with its count, when it
+// ends. A pending AVC config is queued first; while it cannot be, pkt is
+// dropped, so no keyframe reaches ffmpeg ahead of its parameter sets.
 func (e *sessionEncoder) offer(pkt av.Packet) bool {
-	select {
-	case <-e.halt:
+	if e.halted() {
 		return false
-	default:
+	}
+	if !e.flushPending() {
+		e.drop()
+		return false
 	}
 
 	isKey := pkt.Type == av.H264 && pkt.IsKeyFrame
 	if e.dropping && !isKey {
-		e.dropped++
+		e.drop()
 		return false
 	}
 	select {
@@ -137,14 +145,71 @@ func (e *sessionEncoder) offer(pkt av.Packet) bool {
 		}
 		return true
 	default:
-		e.dropping = true
-		e.dropped++
+		e.drop()
 		return false
 	}
 }
 
+// offerConfig queues a mid-stream AVC config for ffmpeg (ruling R10). It is
+// exempt from the drop-until-keyframe rule: when the queue is full it is kept,
+// replacing an older pending one, and queued ahead of the next packet that
+// fits. It reports whether it was queued at once.
+func (e *sessionEncoder) offerConfig(pkt av.Packet) bool {
+	if e.halted() {
+		return false
+	}
+	e.pending = &pkt
+	if e.flushPending() {
+		return true
+	}
+	e.startDropRun() // the packets behind it wait for it, then for a keyframe
+	return false
+}
+
+// flushPending queues the pending config, if any, and reports whether none
+// is left waiting.
+func (e *sessionEncoder) flushPending() bool {
+	if e.pending == nil {
+		return true
+	}
+	select {
+	case e.queue <- *e.pending:
+		e.pending = nil
+		return true
+	default:
+		return false
+	}
+}
+
+func (e *sessionEncoder) halted() bool {
+	select {
+	case <-e.halt:
+		return true
+	default:
+		return false
+	}
+}
+
+// drop counts one packet not given to ffmpeg, starting a run if needed.
+func (e *sessionEncoder) drop() {
+	e.startDropRun()
+	e.dropped++
+	e.totalDropped++
+}
+
+// startDropRun enters the drop-until-keyframe state and logs it once per run.
+func (e *sessionEncoder) startDropRun() {
+	if e.dropping {
+		return
+	}
+	e.dropping = true
+	e.dropRuns++
+	logger.Errorf(e.ctx, "livestream %s: encoder queue full (%d packets), dropping packets for ffmpeg until the next keyframe; encoded renditions stall meanwhile",
+		e.id, cap(e.queue))
+}
+
 func (e *sessionEncoder) endDropRun(how string) {
-	logger.Errorf(e.ctx, "livestream %s: encoder queue was full, dropped %d packet(s) for ffmpeg, %s",
+	logger.Errorf(e.ctx, "livestream %s: encoder queue drop run over, dropped %d packet(s) for ffmpeg, %s",
 		e.id, e.dropped, how)
 	e.dropping, e.dropped = false, 0
 }
