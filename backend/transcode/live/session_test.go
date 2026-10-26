@@ -1,8 +1,10 @@
 package live
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -11,8 +13,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bluenviron/mediacommon/v2/pkg/codecs/h264"
+	"github.com/bluenviron/mediacommon/v2/pkg/formats/mpegts"
+	"github.com/bluenviron/mediacommon/v2/pkg/formats/mpegts/codecs"
 	"github.com/gofrs/uuid/v5"
 	"github.com/nareix/joy5/av"
+	"github.com/nareix/joy5/format/flv"
 
 	"sen1or/letslive/transcode/config"
 )
@@ -189,23 +195,74 @@ func TestSessionEncoderMissing(t *testing.T) {
 }
 
 // Review Focus 3: ffmpeg alive but reading nothing must not slow the source.
+// A queue far smaller than the fixture forces the overflow path.
 func TestSessionEncoderStalls(t *testing.T) {
 	shortThumbnailTimeout(t)
 	rig := newSessionRig(t, stallScript(t))
+	rig.tc.Live.EncoderQueuePackets = 4
 	s, _ := rig.newSession(t)
 	pkts := readFLV(t, "src_1280x720.flv")
 
-	start := time.Now()
-	feedSession(t, s, pkts)
-	if elapsed := time.Since(start); elapsed >= time.Second {
+	elapsed, blocked := feedWithin(t, s, pkts, stallFeedBound)
+	if blocked {
+		t.Fatalf("HandlePacket blocked: feeding %d packets did not finish within %v", len(pkts), stallFeedBound)
+	}
+	if elapsed >= time.Second {
 		t.Errorf("feeding %d packets took %v, want < 1s", len(pkts), elapsed)
 	}
 	if s.enc == nil {
 		t.Fatal("encoder was not started")
 	}
+	if s.enc.totalDropped == 0 {
+		t.Error("no packet was dropped; the overflow path was not exercised")
+	}
+	if s.enc.dropRuns == 0 {
+		t.Error("no drop run was started (and logged)")
+	}
 	if !s.stream.Ready(0) {
 		t.Error("source not ready")
 	}
+}
+
+// stallFeedBound is how long feedWithin waits before declaring HandlePacket blocked.
+const stallFeedBound = 5 * time.Second
+
+// feedWithin feeds pkts on another goroutine. If that takes longer than bound,
+// it reports blocked and drains the encoder queue so the feed (and the
+// suite) can finish instead of hanging.
+func feedWithin(t *testing.T, s *Session, pkts []av.Packet, bound time.Duration) (elapsed time.Duration, blocked bool) {
+	t.Helper()
+	done := make(chan error, 1)
+	start := time.Now()
+	go func() {
+		for i, pkt := range pkts {
+			if err := s.HandlePacket(pkt); err != nil {
+				done <- fmt.Errorf("HandlePacket #%d (%v): %w", i, pkt, err)
+				return
+			}
+		}
+		done <- nil
+	}()
+
+	var err error
+	select {
+	case err = <-done:
+		elapsed = time.Since(start)
+	case <-time.After(bound):
+		blocked = true
+		elapsed = time.Since(start)
+		for drained := false; !drained; {
+			select {
+			case err = <-done:
+				drained = true
+			case <-s.enc.queue:
+			}
+		}
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	return elapsed, blocked
 }
 
 // Ruling R6 (c): an encoded rendition not ready in time is dropped and the
@@ -362,73 +419,386 @@ func TestSessionCloseRespectsContext(t *testing.T) {
 	}
 }
 
-func TestSessionEncoderQueueDropsUntilKeyframe(t *testing.T) {
-	e := &sessionEncoder{
+func newQueueTestEncoder(size int) *sessionEncoder {
+	return &sessionEncoder{
 		ctx:   context.Background(),
 		id:    "queue-test",
-		queue: make(chan av.Packet, 2),
+		queue: make(chan av.Packet, size),
 		halt:  make(chan struct{}),
 	}
-	key := av.Packet{Type: av.H264, IsKeyFrame: true}
-	inter := av.Packet{Type: av.H264}
-	audio := av.Packet{Type: av.AAC}
+}
+
+func drainQueue(e *sessionEncoder) []av.Packet {
+	var got []av.Packet
+	for len(e.queue) > 0 {
+		got = append(got, <-e.queue)
+	}
+	return got
+}
+
+var (
+	queueKey   = av.Packet{Type: av.H264, IsKeyFrame: true}
+	queueInter = av.Packet{Type: av.H264}
+	queueAudio = av.Packet{Type: av.AAC}
+	queueCfg   = av.Packet{Type: av.H264DecoderConfig, Data: []byte{1, 2, 3}}
+)
+
+func TestSessionEncoderQueueDropsUntilKeyframe(t *testing.T) {
+	e := newQueueTestEncoder(2)
 
 	steps := []struct {
-		name  string
-		pkt   av.Packet
-		drain bool
-		want  bool
+		name     string
+		pkt      av.Packet
+		drain    bool
+		want     bool
+		wantRuns int
 	}{
-		{"inter fits", inter, false, true},
-		{"audio fits", audio, false, true},
-		{"full queue drops inter", inter, false, false},
-		{"full queue drops keyframe", key, false, false},
-		{"audio after drain still dropped", audio, true, false},
-		{"inter still dropped", inter, false, false},
-		{"keyframe resumes", key, false, true},
-		{"inter after resume", inter, false, true},
+		{"inter fits", queueInter, false, true, 0},
+		{"audio fits", queueAudio, false, true, 0},
+		{"full queue drops inter and starts a run", queueInter, false, false, 1},
+		{"full queue drops keyframe", queueKey, false, false, 1},
+		{"audio after drain still dropped", queueAudio, true, false, 1},
+		{"inter still dropped", queueInter, false, false, 1},
+		{"keyframe resumes", queueKey, false, true, 1},
+		{"inter after resume", queueInter, false, true, 1},
+		{"full again starts a second run", queueInter, false, false, 2},
 	}
 	for _, st := range steps {
 		if st.drain {
-			for len(e.queue) > 0 {
-				<-e.queue
-			}
+			drainQueue(e)
 		}
 		if got := e.offer(st.pkt); got != st.want {
 			t.Fatalf("%s: offer = %v, want %v", st.name, got, st.want)
 		}
+		if e.dropRuns != st.wantRuns {
+			t.Fatalf("%s: dropRuns = %d, want %d", st.name, e.dropRuns, st.wantRuns)
+		}
 	}
-	if e.dropping || e.dropped != 0 {
-		t.Errorf("after resume: dropping=%v dropped=%d, want reset", e.dropping, e.dropped)
+	if e.totalDropped != 5 {
+		t.Errorf("totalDropped = %d, want 5", e.totalDropped)
 	}
 
 	e.haltEncoder()
-	if e.offer(key) {
+	if e.offer(queueKey) {
 		t.Error("offer accepted a packet after halt")
 	}
 }
 
-func TestSessionResolutionChangeIgnored(t *testing.T) {
-	rig := newSessionRig(t, filepath.Join(t.TempDir(), "no-ffmpeg"))
-	s, base := rig.newSession(t)
+// Ruling R10: a new AVC config is never dropped by the drop-until-keyframe
+// rule and always reaches ffmpeg before the next keyframe.
+func TestSessionEncoderQueueConfigBeforeKeyframe(t *testing.T) {
+	t.Run("room in the queue", func(t *testing.T) {
+		e := newQueueTestEncoder(2)
+		if !e.offerConfig(queueCfg) {
+			t.Fatal("config not queued although the queue had room")
+		}
+		if e.dropping || e.dropRuns != 0 {
+			t.Errorf("dropping=%v runs=%d, want no drop run", e.dropping, e.dropRuns)
+		}
+	})
 
-	small := readFLV(t, "src_640x360.flv")
-	var bigConfig av.Packet
-	for _, pkt := range readFLV(t, "src_1280x720.flv") {
+	t.Run("while dropping with room", func(t *testing.T) {
+		e := newQueueTestEncoder(2)
+		e.offer(queueInter)
+		e.offer(queueInter)
+		e.offer(queueInter) // starts a run
+		drainQueue(e)
+		if !e.offerConfig(queueCfg) {
+			t.Fatal("config dropped by the drop-until-keyframe rule")
+		}
+		if e.offer(queueInter) {
+			t.Error("inter accepted before the keyframe ended the run")
+		}
+	})
+
+	t.Run("full queue", func(t *testing.T) {
+		e := newQueueTestEncoder(2)
+		e.offer(queueInter)
+		e.offer(queueAudio)
+		if e.offerConfig(queueCfg) {
+			t.Fatal("config queued into a full queue")
+		}
+		if e.pending == nil {
+			t.Fatal("config not kept for later delivery")
+		}
+		if e.offer(queueKey) {
+			t.Fatal("keyframe accepted while its config was still pending")
+		}
+		<-e.queue // room for the config only
+		if e.offer(queueKey) {
+			t.Fatal("keyframe accepted with no room after the config")
+		}
+		got := drainQueue(e)
+		if len(got) != 2 || got[1].Type != av.H264DecoderConfig {
+			t.Fatalf("queue = %v, want [audio, config]", got)
+		}
+		if !e.offer(queueKey) {
+			t.Fatal("keyframe rejected with an empty queue")
+		}
+		if e.pending != nil || e.dropping {
+			t.Errorf("pending=%v dropping=%v after the keyframe, want both cleared", e.pending, e.dropping)
+		}
+	})
+}
+
+// avcConfigWithLevel returns a copy of record whose first SPS has a new
+// level_idc: same size, different parameter-set bytes.
+func avcConfigWithLevel(t *testing.T, record []byte, level byte) []byte {
+	t.Helper()
+	const spsLevelOffset = 6 + 2 + 3 // header, SPS length, then NAL header/profile/constraints
+	if len(record) <= spsLevelOffset || record[spsLevelOffset] == level {
+		t.Fatalf("cannot set level %d in AVC config % x", level, record)
+	}
+	out := append([]byte(nil), record...)
+	out[3], out[spsLevelOffset] = level, level
+	return out
+}
+
+func decoderConfig(t *testing.T, fixture string) av.Packet {
+	t.Helper()
+	for _, pkt := range readFLV(t, fixture) {
 		if pkt.Type == av.H264DecoderConfig {
-			bigConfig = pkt
-			break
+			return pkt
 		}
 	}
-	half := len(small) / 2
-	feedSession(t, s, small[:half])
-	if err := s.HandlePacket(bigConfig); err != nil {
-		t.Fatalf("HandlePacket(new config): %v", err)
-	}
-	feedSession(t, s, small[half:])
+	t.Fatalf("%s has no AVC config", fixture)
+	return av.Packet{}
+}
 
-	if s.src.Width != 640 || s.src.Height != 360 {
-		t.Errorf("source = %dx%d, want the original 640x360", s.src.Width, s.src.Height)
+// keyframeAfter returns the first keyframe at or after d.
+func keyframeAfter(t *testing.T, pkts []av.Packet, d time.Duration) av.Packet {
+	t.Helper()
+	for _, pkt := range pkts {
+		if pkt.Type == av.H264 && pkt.IsKeyFrame && pkt.Time >= d {
+			return pkt
+		}
 	}
+	t.Fatalf("no keyframe at or after %v", d)
+	return av.Packet{}
+}
+
+func (s *Session) changeConfig(pkt av.Packet) configChange {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.onVideoConfig(pkt)
+}
+
+func (s *Session) nextSourceAU(t *testing.T, pkt av.Packet) [][]byte {
+	t.Helper()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, _, au, _, err := s.sourceAU(pkt)
+	if err != nil {
+		t.Fatalf("sourceAU: %v", err)
+	}
+	return au
+}
+
+func requireParamSets(t *testing.T, au [][]byte, info SourceInfo) {
+	t.Helper()
+	if len(au) < 2 || !bytes.Equal(au[0], info.SPS) || !bytes.Equal(au[1], info.PPS) {
+		t.Fatalf("keyframe AU does not start with the expected SPS/PPS:\n got %x\nwant %x %x", au[:min(2, len(au))], info.SPS, info.PPS)
+	}
+}
+
+// firstTSKeyframeSPS returns the SPS of the first access unit carrying one in
+// the MPEG-TS file at path.
+func firstTSKeyframeSPS(t *testing.T, path string) []byte {
+	t.Helper()
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	r := &mpegts.Reader{R: f}
+	if err := r.Initialize(); err != nil {
+		t.Fatalf("mpegts init %s: %v", path, err)
+	}
+	var sps []byte
+	for _, tr := range r.Tracks() {
+		if _, ok := tr.Codec.(*codecs.H264); !ok {
+			continue
+		}
+		r.OnDataH264(tr, func(_, _ int64, au [][]byte) error {
+			for _, nalu := range au {
+				if sps == nil && h264.NALUType(nalu[0]&0x1f) == h264.NALUTypeSPS {
+					sps = append([]byte(nil), nalu...)
+				}
+			}
+			return nil
+		})
+	}
+	for sps == nil {
+		if err := r.Read(); err != nil {
+			t.Fatalf("no SPS in %s: %v", path, err)
+		}
+	}
+	return sps
+}
+
+// Ruling R10: same size, new parameter sets.
+func TestSessionAVCConfigParamsChange(t *testing.T) {
+	rig := newSessionRig(t, filepath.Join(t.TempDir(), "no-ffmpeg"))
+	s, base := rig.newSession(t)
+	pkts := readFLV(t, "src_640x360.flv")
+	old := decoderConfig(t, "src_640x360.flv")
+	changed := av.Packet{Type: av.H264DecoderConfig, Data: avcConfigWithLevel(t, old.Data, 0x20)}
+	want, err := ProbeAVCConfig(changed.Data)
+	if err != nil {
+		t.Fatalf("modified config does not parse: %v", err)
+	}
+
+	cut := len(pkts) / 2
+	feedSession(t, s, pkts[:cut])
+	if got := s.changeConfig(changed); got != configParamsChanged {
+		t.Fatalf("change = %v, want configParamsChanged", got)
+	}
+	requireParamSets(t, s.nextSourceAU(t, keyframeAfter(t, pkts[cut:], 0)), want)
+
+	feedSession(t, s, pkts[cut:])
 	waitMaster(t, base, []string{"source"}, nil)
+	if err := closeSession(t, s); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	// The recorder got the same AU: its last segment opens with the new SPS.
+	var last string
+	for _, c := range rig.st.Calls() {
+		if c.Kind == "segment" && c.QualityIndex == 0 {
+			last = c.SavedPath
+		}
+	}
+	if last == "" {
+		t.Fatal("no source segment uploaded")
+	}
+	if got := firstTSKeyframeSPS(t, last); !bytes.Equal(got, want.SPS) {
+		t.Errorf("recorded SPS after the change = %x, want %x", got, want.SPS)
+	}
+}
+
+// Ruling R10: a new size keeps the ladder but adopts the new parameter sets.
+func TestSessionAVCConfigResolutionChange(t *testing.T) {
+	rig := newSessionRig(t, filepath.Join(t.TempDir(), "no-ffmpeg"))
+	s, base := rig.newSession(t)
+	pkts := readFLV(t, "src_640x360.flv")
+	big := decoderConfig(t, "src_1280x720.flv")
+	want, err := ProbeAVCConfig(big.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cut := len(pkts) / 2
+	feedSession(t, s, pkts[:cut])
+	if got := s.changeConfig(big); got != configResized {
+		t.Fatalf("change = %v, want configResized", got)
+	}
+	if got := ladderNamesOf(s.renditions); len(got) != 1 || got[0] != "source" {
+		t.Errorf("ladder = %v, want it unchanged [source]", got)
+	}
+	if s.src.Width != 640 || s.src.Height != 360 {
+		t.Errorf("ladder source = %dx%d, want the original 640x360", s.src.Width, s.src.Height)
+	}
+	requireParamSets(t, s.nextSourceAU(t, keyframeAfter(t, pkts[cut:], 0)), want)
+	waitMaster(t, base, []string{"source"}, nil)
+}
+
+// Ruling R10: an identical repeat changes nothing.
+func TestSessionAVCConfigIdenticalRepeat(t *testing.T) {
+	rig := newSessionRig(t, filepath.Join(t.TempDir(), "no-ffmpeg"))
+	s, _ := rig.newSession(t)
+	pkts := readFLV(t, "src_640x360.flv")
+	cfg := decoderConfig(t, "src_640x360.flv")
+	orig, err := ProbeAVCConfig(cfg.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cut := len(pkts) / 2
+	feedSession(t, s, pkts[:cut])
+	repeat := av.Packet{Type: av.H264DecoderConfig, Data: append([]byte(nil), cfg.Data...)}
+	if got := s.changeConfig(repeat); got != configSame {
+		t.Fatalf("change = %v, want configSame", got)
+	}
+	if got := s.changeConfig(av.Packet{Type: av.H264DecoderConfig, Data: []byte{1}}); got != configInvalid {
+		t.Errorf("garbage config: change = %v, want configInvalid", got)
+	}
+	requireParamSets(t, s.nextSourceAU(t, keyframeAfter(t, pkts[cut:], 0)), orig)
+}
+
+// dumpScript is an "ffmpeg" that, when run as the encoder, copies its FLV
+// input to out; run as the thumbnailer it fails.
+func dumpScript(t *testing.T, out string) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "dump.sh")
+	body := "#!/bin/sh\ncase \"$*\" in\n*filter_complex*) exec cat > '" + out + "' ;;\n*) exit 1 ;;\nesac\n"
+	if err := os.WriteFile(path, []byte(body), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+// Ruling R10: ffmpeg receives the new sequence header ahead of the next
+// keyframe. (The full-queue case is pinned by
+// TestSessionEncoderQueueConfigBeforeKeyframe.)
+func TestSessionAVCConfigForwardedToEncoder(t *testing.T) {
+	dump := filepath.Join(t.TempDir(), "ffmpeg-input.flv")
+	rig := newSessionRig(t, dumpScript(t, dump))
+	s, _ := rig.newSession(t)
+	pkts := readFLV(t, "src_1280x720.flv")
+	changed := av.Packet{Type: av.H264DecoderConfig, Data: avcConfigWithLevel(t, decoderConfig(t, "src_1280x720.flv").Data, 0x20)}
+
+	cut := len(pkts) / 2
+	feedSession(t, s, pkts[:cut])
+	feedSession(t, s, []av.Packet{changed})
+	feedSession(t, s, pkts[cut:])
+	if s.enc == nil || s.enc.totalDropped != 0 {
+		t.Fatalf("encoder = %v, want running with nothing dropped", s.enc)
+	}
+	next := keyframeAfter(t, pkts[cut:], 0)
+
+	// Wait until ffmpeg has read past the next keyframe, then check the order.
+	deadline := time.Now().Add(sessionTestTimeout)
+	for {
+		got := ffmpegInput(t, dump)
+		cfgAt, keyAt := -1, -1
+		for i, pkt := range got {
+			switch {
+			case pkt.Type == av.H264DecoderConfig && bytes.Equal(pkt.Data, changed.Data):
+				cfgAt = i
+			case cfgAt < 0 && pkt.Type == av.H264 && pkt.IsKeyFrame && pkt.Time == next.Time:
+				t.Fatalf("keyframe at %v reached ffmpeg before the new AVC config", next.Time)
+			case pkt.Type == av.H264 && pkt.IsKeyFrame && pkt.Time == next.Time:
+				keyAt = i
+			}
+		}
+		if cfgAt >= 0 && keyAt > cfgAt {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("ffmpeg input has config at %d, next keyframe at %d after %v", cfgAt, keyAt, sessionTestTimeout)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+}
+
+// ffmpegInput demuxes what the fake ffmpeg has received so far; a tag cut
+// short at the end is ignored.
+func ffmpegInput(t *testing.T, path string) []av.Packet {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := flv.NewDemuxer(bytes.NewReader(data))
+	var pkts []av.Packet
+	for {
+		pkt, err := d.ReadPacket()
+		if err != nil {
+			return pkts
+		}
+		pkts = append(pkts, pkt)
+	}
 }

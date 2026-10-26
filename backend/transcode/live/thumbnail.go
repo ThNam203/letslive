@@ -47,9 +47,9 @@ type Thumbnailer struct {
 	ffmpegPath string
 	st         storage.Storage
 	every      time.Duration
-	header     []byte // Annex-B SPS and PPS; empty disables the thumbnailer
 
 	mu       sync.Mutex // guards the fields below; held only for O(1) work
+	header   []byte     // Annex-B SPS and PPS; empty disables the thumbnailer
 	closed   bool
 	running  bool
 	accepted bool
@@ -67,12 +67,28 @@ func NewThumbnailer(ctx context.Context, id, ffmpegPath string, src SourceInfo, 
 		st:         st,
 		every:      every,
 	}
-	if len(src.SPS) == 0 || len(src.PPS) == 0 {
-		logger.Errorf(ctx, "livestream %s: thumbnails disabled, source has no SPS/PPS", id)
-		return t
-	}
-	t.header = appendAnnexB(nil, [][]byte{src.SPS, src.PPS})
+	t.header = t.paramHeader(src)
 	return t
+}
+
+// SetSource replaces the SPS and PPS put ahead of later offers, after the
+// publisher sent a new AVC config. Without both, thumbnails are disabled
+// rather than decoded with stale parameter sets.
+func (t *Thumbnailer) SetSource(src SourceInfo) {
+	header := t.paramHeader(src)
+	t.mu.Lock()
+	t.header = header
+	t.mu.Unlock()
+}
+
+// paramHeader is src's SPS and PPS in Annex-B form, or nil (logged) when
+// either is missing.
+func (t *Thumbnailer) paramHeader(src SourceInfo) []byte {
+	if len(src.SPS) == 0 || len(src.PPS) == 0 {
+		logger.Errorf(t.ctx, "livestream %s: thumbnails disabled, source has no SPS/PPS", t.id)
+		return nil
+	}
+	return appendAnnexB(nil, [][]byte{src.SPS, src.PPS})
 }
 
 // Offer submits a keyframe access unit (NAL units without start codes). It
@@ -80,7 +96,10 @@ func NewThumbnailer(ctx context.Context, id, ffmpegPath string, src SourceInfo, 
 // when less than `every` has passed since the last accepted one, after Close,
 // or when it holds no data. The access unit is copied; the caller may reuse it.
 func (t *Thumbnailer) Offer(au [][]byte) {
-	if len(t.header) == 0 {
+	t.mu.Lock()
+	header := t.header
+	t.mu.Unlock()
+	if len(header) == 0 {
 		return
 	}
 	if !hasNALData(au) {
@@ -100,7 +119,7 @@ func (t *Thumbnailer) Offer(au [][]byte) {
 	t.jobs.Add(1)
 	t.mu.Unlock()
 
-	stream := appendAnnexB(append([]byte(nil), t.header...), au)
+	stream := appendAnnexB(append([]byte(nil), header...), au)
 	go func() {
 		defer t.jobs.Done()
 		t.run(stream)
