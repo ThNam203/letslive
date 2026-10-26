@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -114,85 +115,128 @@ func TestFeedTS(t *testing.T) {
 	}
 }
 
-func TestFeedTSReturnsNilWhenRenditionDropped(t *testing.T) {
-	requireFFmpeg(t)
+// feedAndStopAtFirstAU runs FeedTS over a full ffmpeg output and calls stop
+// from inside the first onAU, so the stream is dropped or closed after exactly
+// one access unit. It returns FeedTS's result and how many onAU calls it saw.
+// The encoder keeps producing (the whole fixture goes in), so a FeedTS that
+// ignored the terminal error would run on and count many more.
+func feedAndStopAtFirstAU(t *testing.T, stop func(s *Stream)) (err error, calls int) {
+	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
 	defer cancel()
 
 	f := loadStreamFixture(t, "src_1280x720.flv")
 	s := newTestStream(t, []string{"source", "480p"}, f.audio, testLiveConfig())
-
 	enc, written := startFixtureEncoder(t, ctx)
 
-	first := make(chan struct{})
 	fed := make(chan error, 1)
 	go func() {
-		var once bool
 		fed <- FeedTS(ctx, enc.Outputs()[0], s, 1, f.clock, func(int64, int64, [][]byte) {
-			if !once {
-				once = true
-				close(first)
+			calls++
+			if calls == 1 {
+				stop(s)
 			}
 		})
 	}()
 
 	select {
-	case <-first:
+	case err = <-fed:
 	case <-ctx.Done():
-		t.Fatal("no access unit reached the stream")
+		t.Fatal("FeedTS did not return")
 	}
-	s.DropRendition(1)
-
-	select {
-	case err := <-fed:
-		if err != nil {
-			t.Errorf("FeedTS after DropRendition = %v, want nil", err)
-		}
-	case <-ctx.Done():
-		t.Fatal("FeedTS kept running after its rendition was dropped")
-	}
-
 	enc.Stop() // unblocks the FLV writer if ffmpeg stopped reading
 	<-written
+	return err, calls
+}
+
+func TestFeedTSReturnsNilWhenRenditionDropped(t *testing.T) {
+	requireFFmpeg(t)
+
+	err, calls := feedAndStopAtFirstAU(t, func(s *Stream) { s.DropRendition(1) })
+	if err != nil {
+		t.Errorf("FeedTS after DropRendition = %v, want nil", err)
+	}
+	if calls != 1 {
+		t.Errorf("onAU called %d times, want 1: FeedTS must stop at the first write to a dropped rendition", calls)
+	}
 }
 
 func TestFeedTSStopsOnClosedStream(t *testing.T) {
 	requireFFmpeg(t)
 
-	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
+	err, calls := feedAndStopAtFirstAU(t, func(s *Stream) { s.Close() })
+	if err != nil {
+		t.Errorf("FeedTS after Close = %v, want nil", err)
+	}
+	if calls != 1 {
+		t.Errorf("onAU called %d times, want 1: FeedTS must stop at the first write to a closed stream", calls)
+	}
+}
+
+// countingReader tracks Read calls in flight so a test can tell that the
+// goroutine behind FeedTS has left the reader.
+type countingReader struct {
+	io.ReadCloser
+	active atomic.Int32
+}
+
+func (c *countingReader) Read(p []byte) (int, error) {
+	c.active.Add(1)
+	defer c.active.Add(-1)
+	return c.ReadCloser.Read(p)
+}
+
+// A cancel arriving while an access unit is being handled must not let that
+// handling outlive FeedTS: a caller finalising its recorder right after
+// FeedTS returns would otherwise see a late onAU.
+func TestFeedTSWaitsForReaderOnContextCancel(t *testing.T) {
+	requireFFmpeg(t)
+
+	outer, stop := context.WithTimeout(context.Background(), testEncoderTimeout)
+	defer stop()
+	ctx, cancel := context.WithCancel(outer)
 	defer cancel()
 
 	f := loadStreamFixture(t, "src_1280x720.flv")
 	s := newTestStream(t, []string{"source", "480p"}, f.audio, testLiveConfig())
-	enc, written := startFixtureEncoder(t, ctx)
+	enc, written := startFixtureEncoder(t, outer)
+	src := &countingReader{ReadCloser: enc.Outputs()[0]}
 
-	first := make(chan struct{})
+	const slowAU = 200 * time.Millisecond
+	var calls, finished atomic.Int32
 	fed := make(chan error, 1)
 	go func() {
-		var once bool
-		fed <- FeedTS(ctx, enc.Outputs()[0], s, 1, f.clock, func(int64, int64, [][]byte) {
-			if !once {
-				once = true
-				close(first)
+		fed <- FeedTS(ctx, src, s, 1, f.clock, func(int64, int64, [][]byte) {
+			if calls.Add(1) == 3 {
+				cancel()
+				time.Sleep(slowAU) // still inside the callback when ctx is done
+				finished.Store(1)
 			}
 		})
 	}()
-	select {
-	case <-first:
-	case <-ctx.Done():
-		t.Fatal("no access unit reached the stream")
-	}
-	s.Close()
 
 	select {
 	case err := <-fed:
 		if err != nil {
-			t.Errorf("FeedTS after Close = %v, want nil", err)
+			t.Errorf("FeedTS after cancel = %v, want nil", err)
 		}
-	case <-ctx.Done():
-		t.Fatal("FeedTS kept running after the stream was closed")
+	case <-outer.Done():
+		t.Fatal("FeedTS did not return")
 	}
+
+	if finished.Load() != 1 {
+		t.Error("FeedTS returned while onAU was still running")
+	}
+	if n := src.active.Load(); n != 0 {
+		t.Errorf("%d reads still in flight after FeedTS returned", n)
+	}
+	atReturn := calls.Load()
+	time.Sleep(300 * time.Millisecond)
+	if after := calls.Load(); after != atReturn {
+		t.Errorf("onAU called %d more times after FeedTS returned", after-atReturn)
+	}
+
 	enc.Stop()
 	<-written
 }

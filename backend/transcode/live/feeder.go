@@ -22,16 +22,15 @@ import (
 // is done. A TS without an H.264 track or a read error other than EOF is
 // returned. A write error for a single access unit is logged and skipped.
 //
-// On ctx cancellation FeedTS returns at once and closes r if it is an
-// io.Closer so the pending read ends; for a reader that cannot be closed the
-// read goroutine lives until that read returns, and calls no callback.
+// On ctx cancellation, if r is an io.Closer FeedTS closes it, waits for the
+// read goroutine to finish (any callback already running completes) and then
+// returns: no WriteVideo or onAU call happens after FeedTS returns. If r is
+// not an io.Closer FeedTS cannot interrupt the read: it returns at once, the
+// goroutine lives until that read returns, and the callback may still run
+// once more, but never calls WriteVideo or onAU after a ctx check fails.
 func FeedTS(ctx context.Context, r io.Reader, s *Stream, rendition int, clk *Clock, onAU func(pts90k, dts90k int64, au [][]byte)) error {
 	if rendition < 0 || rendition >= len(s.renditions) {
 		return fmt.Errorf("livestream %s: rendition index %d out of range [0, %d)", s.id, rendition, len(s.renditions))
-	}
-
-	if c, ok := r.(io.Closer); ok {
-		defer context.AfterFunc(ctx, func() { closeLogged(ctx, "ts reader", c) })()
 	}
 
 	done := make(chan error, 1)
@@ -44,6 +43,12 @@ func FeedTS(ctx context.Context, r io.Reader, s *Stream, rendition int, clk *Clo
 		}
 		return err
 	case <-ctx.Done():
+		// A closer's pending read fails once closed, so waiting for the
+		// goroutine is bounded and no callback runs after we return.
+		if c, ok := r.(io.Closer); ok {
+			closeLogged(ctx, "ts reader", c)
+			<-done
+		}
 		return nil
 	}
 }
@@ -58,6 +63,9 @@ func readTS(ctx context.Context, r io.Reader, s *Stream, rendition int, clk *Clo
 		}
 		return fmt.Errorf("livestream %s rendition %s: read ts: %w", s.id, name, err)
 	}
+	reader.OnDecodeError(func(err error) {
+		logger.Errorf(ctx, "livestream %s rendition %s: decode ts: %v", s.id, name, err)
+	})
 
 	var track *mpegts.Track
 	for _, t := range reader.Tracks() {
