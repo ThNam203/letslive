@@ -10,13 +10,18 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/bluenviron/mediacommon/v2/pkg/codecs/h264"
 	"github.com/nareix/joy5/av"
+
+	"sen1or/letslive/transcode/storage"
 )
 
 const (
@@ -30,11 +35,19 @@ type recorderRig struct {
 	f       streamFixture
 	st      *recordingStorage
 	rec     *Recorder
+	cancel  context.CancelFunc
 	workDir string
 	pubDir  string
 }
 
 func newRecorderRig(t *testing.T, fixture string, names []string) *recorderRig {
+	t.Helper()
+	return newRecorderRigWith(t, fixture, names, nil)
+}
+
+// newRecorderRigWith is newRecorderRig with the Recorder talking to
+// wrap(rig.st) instead of rig.st directly (nil: rig.st).
+func newRecorderRigWith(t *testing.T, fixture string, names []string, wrap func(*recordingStorage) storage.Storage) *recorderRig {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), recorderTestTimeout)
@@ -44,14 +57,19 @@ func newRecorderRig(t *testing.T, fixture string, names []string) *recorderRig {
 		id:      "stream-1",
 		f:       loadStreamFixture(t, fixture),
 		st:      newRecordingStorage(t),
+		cancel:  cancel,
 		workDir: t.TempDir(),
 		pubDir:  t.TempDir(),
+	}
+	var st storage.Storage = rig.st
+	if wrap != nil {
+		st = wrap(rig.st)
 	}
 	rs := make([]Rendition, len(names))
 	for i, name := range names {
 		rs[i] = Rendition{Name: name, Encoded: i > 0}
 	}
-	rig.rec = NewRecorder(ctx, rig.id, rs, rig.f.audio, rig.st, rig.workDir, recorderTestSegDur)
+	rig.rec = NewRecorder(ctx, rig.id, rs, rig.f.audio, st, rig.workDir, recorderTestSegDur)
 	return rig
 }
 
@@ -444,5 +462,334 @@ func TestRecorderConcurrentWritersRace(t *testing.T) {
 	}
 	if err := rig.finish(t); err != nil {
 		t.Fatalf("Finish: %v", err)
+	}
+}
+
+type ffprobePackets struct {
+	Packets []struct {
+		CodecType string `json:"codec_type"`
+		DTSTime   string `json:"dts_time"`
+	} `json:"packets"`
+}
+
+// probeFirstDTS returns the smallest DTS (seconds) of each stream's packets
+// and fails the test if either stream's DTS is not strictly increasing in
+// file order.
+func probeFirstDTS(t *testing.T, path string) (video, audio float64) {
+	t.Helper()
+	out, err := exec.Command("ffprobe", "-v", "error", "-show_entries", "packet=codec_type,dts_time", "-of", "json", path).Output()
+	if err != nil {
+		t.Fatalf("ffprobe %s: %v", path, err)
+	}
+	var p ffprobePackets
+	if err := json.Unmarshal(out, &p); err != nil {
+		t.Fatal(err)
+	}
+	video, audio = math.Inf(1), math.Inf(1)
+	last := map[string]float64{}
+	for _, pk := range p.Packets {
+		d, err := strconv.ParseFloat(pk.DTSTime, 64)
+		if err != nil {
+			t.Fatalf("dts_time %q: %v", pk.DTSTime, err)
+		}
+		if prev, seen := last[pk.CodecType]; seen && d <= prev {
+			t.Errorf("%s: %s DTS goes %.4f -> %.4f in file order", filepath.Base(path), pk.CodecType, prev, d)
+		}
+		last[pk.CodecType] = d
+		switch pk.CodecType {
+		case "video":
+			video = math.Min(video, d)
+		case "audio":
+			audio = math.Min(audio, d)
+		}
+	}
+	return video, audio
+}
+
+// requireCleanDecode fails when ffmpeg reports a timestamp problem for path.
+// It stream-copies instead of decoding: a decode re-times frames onto the
+// output frame rate, and for some audio/video phases the null muxer then
+// reports "non monotonically increasing dts" for a perfectly ordered input.
+func requireCleanDecode(t *testing.T, path string) {
+	t.Helper()
+	out, err := exec.Command("ffmpeg", "-v", "warning", "-i", path, "-c", "copy", "-f", "null", "-").CombinedOutput()
+	if err != nil {
+		t.Errorf("ffmpeg %s: %v\n%s", filepath.Base(path), err, out)
+		return
+	}
+	if strings.Contains(strings.ToLower(string(out)), "monoton") {
+		t.Errorf("%s has non-monotonic timestamps:\n%s", filepath.Base(path), out)
+	}
+}
+
+// feedSkewed hands pkts to the recorder in arrival order after delaying every
+// audio packet by skew (negative: early), the way RTMP interleaving jitter
+// does around a keyframe.
+func (r *recorderRig) feedSkewed(t *testing.T, skew time.Duration) {
+	t.Helper()
+	pkts := append([]av.Packet(nil), r.f.pkts...)
+	arrival := func(p av.Packet) time.Duration {
+		if p.Type == av.AAC {
+			return p.Time + skew
+		}
+		return p.Time
+	}
+	sort.SliceStable(pkts, func(i, j int) bool { return arrival(pkts[i]) < arrival(pkts[j]) })
+	r.feed(t, 1, pkts)
+}
+
+// requireSegmentsAligned checks each uploaded segment: no timestamp warnings
+// and the first audio DTS within one AAC frame (plus ms rounding) after the
+// first video DTS, i.e. audio was assigned to the segment by timestamp.
+func requireSegmentsAligned(t *testing.T, rig *recorderRig) {
+	t.Helper()
+	// An AAC frame is 1024 samples; RTMP timestamps are whole milliseconds,
+	// which adds up to 1ms of rounding on each side.
+	frame := 1024 / float64(rig.f.audio.SampleRate)
+	const rounding = 0.002
+
+	calls := rig.st.Calls()
+	if len(calls) != 3 {
+		t.Fatalf("segments = %d, want 3", len(calls))
+	}
+	for _, c := range calls {
+		requireCleanDecode(t, c.SavedPath)
+		video, audio := probeFirstDTS(t, c.SavedPath)
+		name := filepath.Base(c.SavedPath)
+		if math.IsInf(audio, 1) {
+			t.Errorf("%s has no audio", name)
+			continue
+		}
+		skew := audio - video
+		if skew < -rounding {
+			t.Errorf("%s: audio starts %.3fs before the first video DTS", name, -skew)
+		}
+		// The first segment starts where the fixture's audio does, which is
+		// up to 3 frames after the first keyframe; later ones start at a cut.
+		limit := frame + rounding
+		if c.SavedPath == calls[0].SavedPath {
+			limit = 3*frame + rounding
+		}
+		if skew > limit {
+			t.Errorf("%s: audio starts %.3fs after the first video DTS, want <= %.3fs", name, skew, limit)
+		}
+	}
+}
+
+func TestRecorderAudioAssignedByTimestamp(t *testing.T) {
+	if _, err := exec.LookPath("ffprobe"); err != nil {
+		t.Skip("ffprobe not found in PATH")
+	}
+	requireFFmpeg(t)
+
+	for _, tc := range []struct {
+		name string
+		skew time.Duration
+	}{
+		{"in order", 0},
+		{"audio late", 150 * time.Millisecond},
+		{"audio early", -150 * time.Millisecond},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rig := newRecorderRig(t, "src_640x360.flv", []string{"source"})
+			rig.feedSkewed(t, tc.skew)
+			if err := rig.finish(t); err != nil {
+				t.Fatalf("Finish: %v", err)
+			}
+			requireSegmentsAligned(t, rig)
+		})
+	}
+}
+
+func TestDropLimiter(t *testing.T) {
+	l := dropLimiter{interval: 5 * time.Second}
+	t0 := time.Unix(1000, 0)
+
+	if n, ok := l.record(t0); !ok || n != 1 {
+		t.Fatalf("first drop: (%d, %v), want (1, true)", n, ok)
+	}
+	for _, d := range []time.Duration{time.Second, 2 * time.Second, 4900 * time.Millisecond} {
+		if _, ok := l.record(t0.Add(d)); ok {
+			t.Errorf("drop at +%v reported inside the interval", d)
+		}
+	}
+	if n, ok := l.record(t0.Add(5 * time.Second)); !ok || n != 4 {
+		t.Errorf("drop at +5s: (%d, %v), want (4, true): count since the last report", n, ok)
+	}
+	if _, ok := l.record(t0.Add(6 * time.Second)); ok {
+		t.Error("drop at +6s reported 1s after the previous report")
+	}
+	if got := l.flush(); got != 1 {
+		t.Errorf("flush = %d, want 1 unreported drop", got)
+	}
+	if got := l.flush(); got != 0 {
+		t.Errorf("second flush = %d, want 0", got)
+	}
+}
+
+func TestSegmentWriterReadSPS(t *testing.T) {
+	f := loadStreamFixture(t, "src_640x360.flv")
+	newWriter := func() *segmentWriter {
+		return &segmentWriter{rec: &Recorder{ctx: context.Background(), id: "x"}, rend: &recRendition{name: "source"}}
+	}
+
+	w := newWriter()
+	w.readSPS([][]byte{{}, nil}) // empty NAL units must not panic
+	if w.rend.width != 0 {
+		t.Fatalf("width = %d after empty NAL units", w.rend.width)
+	}
+
+	w.readSPS([][]byte{{byte(h264.NALUTypeSPS), 0x00}}) // truncated SPS
+	w.readSPS([][]byte{{byte(h264.NALUTypeSPS), 0x00}})
+	if w.rend.width != 0 || !w.spsFailLogged {
+		t.Fatalf("after bad SPS: width %d, spsFailLogged %v", w.rend.width, w.spsFailLogged)
+	}
+
+	// A later valid SPS is still picked up after earlier failures.
+	w.readSPS([][]byte{f.sps})
+	if w.rend.width != 640 || w.rend.height != 360 {
+		t.Errorf("size = %dx%d, want 640x360", w.rend.width, w.rend.height)
+	}
+}
+
+func TestRecorderIgnoresEmptyNALUnits(t *testing.T) {
+	rig := newRecorderRig(t, "src_640x360.flv", []string{"source"})
+
+	for _, pkt := range rig.f.pkts {
+		switch pkt.Type {
+		case av.H264:
+			_, au, err := rig.f.videoAU(pkt)
+			if err != nil {
+				t.Fatal(err)
+			}
+			// An RTMP publisher can send zero-length NAL units anywhere in an AU.
+			au = append([][]byte{{}, nil}, au...)
+			au = append(au, []byte{})
+			rig.rec.WriteVideo(0, rig.f.clock.Video90k(pkt.Time+pkt.CTime), rig.f.clock.Video90k(pkt.Time), au)
+		case av.AAC:
+			rig.rec.WriteAudio(rig.f.clock.Video90k(pkt.Time), [][]byte{{}, pkt.Data})
+		}
+	}
+	rig.rec.WriteVideo(0, 0, 0, [][]byte{{}}) // an AU of nothing but empty NAL units
+
+	if err := rig.finish(t); err != nil {
+		t.Fatalf("Finish: %v", err)
+	}
+	if durs, _ := parseVariant(t, rig.read(t, "0/stream.m3u8")); len(durs) != 3 {
+		t.Errorf("segments = %d, want 3", len(durs))
+	}
+	if !strings.Contains(rig.read(t, "index.m3u8"), "RESOLUTION=640x360") {
+		t.Error("master lacks RESOLUTION=640x360")
+	}
+}
+
+// shortRecorderTimeouts shrinks the package timeouts for one test.
+func shortRecorderTimeouts(t *testing.T, finish, upload time.Duration) {
+	t.Helper()
+	oldFinish, oldUpload := recorderFinishTimeout, recorderUploadTimeout
+	recorderFinishTimeout, recorderUploadTimeout = finish, upload
+	t.Cleanup(func() { recorderFinishTimeout, recorderUploadTimeout = oldFinish, oldUpload })
+}
+
+func TestRecorderFinishBoundedWhenStorageHangs(t *testing.T) {
+	const bound = 400 * time.Millisecond
+	shortRecorderTimeouts(t, bound, 30*time.Second)
+
+	rig := newRecorderRig(t, "src_640x360.flv", []string{"source"})
+	hang := make(chan struct{})
+	rig.st.before = func(call storageCall) error {
+		if call.Index >= 1 {
+			<-hang // a storage call that never returns on its own
+		}
+		return nil
+	}
+	rig.feed(t, 1, rig.f.pkts)
+
+	start := time.Now()
+	result := make(chan error, 1)
+	go func() { result <- rig.finish(t) }()
+	select {
+	case err := <-result:
+		if err != nil {
+			t.Fatalf("Finish: %v", err)
+		}
+	case <-time.After(10 * time.Second):
+		close(hang)
+		t.Fatal("Finish did not return although storage hung")
+	}
+	if took := time.Since(start); took > bound+5*time.Second {
+		t.Errorf("Finish took %v, want about %v", took, bound)
+	}
+
+	// The segment that finished before the hang is still listed.
+	if durs, _ := parseVariant(t, rig.read(t, "0/stream.m3u8")); len(durs) != 1 {
+		t.Errorf("playlist entries = %d, want 1 (only the upload that finished)", len(durs))
+	}
+
+	close(hang)
+	select {
+	case <-rig.rec.upDone:
+	case <-time.After(10 * time.Second):
+		t.Error("uploader goroutine did not stop after the abandoned call returned")
+	}
+}
+
+// ctxStorage fails calls whose context is done and records their deadlines.
+type ctxStorage struct {
+	inner *recordingStorage
+	gate  chan struct{}
+
+	mu        sync.Mutex
+	deadlines []time.Time
+	hadNone   int
+}
+
+func (s *ctxStorage) AddSegment(ctx context.Context, filePath, streamId string, q int) (string, error) {
+	<-s.gate
+	s.mu.Lock()
+	if dl, ok := ctx.Deadline(); ok {
+		s.deadlines = append(s.deadlines, dl)
+	} else {
+		s.hadNone++
+	}
+	s.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	return s.inner.AddSegment(ctx, filePath, streamId, q)
+}
+
+func (s *ctxStorage) AddThumbnail(ctx context.Context, filePath, streamId, contentType string) (string, error) {
+	return s.inner.AddThumbnail(ctx, filePath, streamId, contentType)
+}
+
+func TestRecorderUploadsSurviveCancelledContext(t *testing.T) {
+	cs := &ctxStorage{gate: make(chan struct{})}
+	rig := newRecorderRigWith(t, "src_640x360.flv", []string{"source"}, func(rs *recordingStorage) storage.Storage {
+		cs.inner = rs
+		return cs
+	})
+	rig.feed(t, 1, rig.f.pkts)
+
+	// The caller's context ends with the stream, before the uploads run.
+	rig.cancel()
+	close(cs.gate)
+
+	if err := rig.finish(t); err != nil {
+		t.Fatalf("Finish: %v", err)
+	}
+	if durs, _ := parseVariant(t, rig.read(t, "0/stream.m3u8")); len(durs) != 3 {
+		t.Errorf("segments = %d after cancelling the parent context, want 3", len(durs))
+	}
+
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+	if cs.hadNone != 0 || len(cs.deadlines) != 3 {
+		t.Fatalf("AddSegment contexts: %d with a deadline, %d without; want 3 and 0", len(cs.deadlines), cs.hadNone)
+	}
+	for _, dl := range cs.deadlines {
+		if left := time.Until(dl); left > recorderUploadTimeout || left < recorderUploadTimeout-10*time.Second {
+			t.Errorf("upload deadline in %v, want about %v", left, recorderUploadTimeout)
+		}
 	}
 }
