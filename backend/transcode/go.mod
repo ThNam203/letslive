@@ -3,6 +3,7 @@ module sen1or/letslive/transcode
 go 1.26.0
 
 require (
+	github.com/bluenviron/gohlslib/v2 v2.4.7
 	github.com/bluenviron/mediacommon/v2 v2.9.7
 	github.com/gofrs/uuid/v5 v5.4.0
 	github.com/gorilla/mux v1.8.1
@@ -18,7 +19,6 @@ require (
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/asticode/go-astikit v0.30.0 // indirect
 	github.com/asticode/go-astits v1.16.0 // indirect
-	github.com/bluenviron/gohlslib/v2 v2.4.7 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
