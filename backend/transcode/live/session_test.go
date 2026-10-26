@@ -8,7 +8,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -364,6 +367,99 @@ func hasUploadedSegment(st *recordingStorage, q int) bool {
 		}
 	}
 	return false
+}
+
+// An OBS-like source (no B-frames, first keyframe off ffmpeg's frame grid)
+// makes ffmpeg's first output DTS fall slightly before the clock zero
+// (smoke test: -6.4ms). No
+// recorded segment of any rendition may carry a negative (33-bit wrapped)
+// timestamp, and the encoded VOD must decode every frame it holds.
+func TestSessionVODTimestampsNeverNegative(t *testing.T) {
+	requireFFmpeg(t)
+	rig := newSessionRig(t, ffmpegBinary(t))
+	s, base := rig.newSession(t)
+	// The fixture's first keyframe is at 23ms; publisher timestamps are
+	// arbitrary, and +20ms puts it at 43ms, 9.7ms after the nearest 30 fps
+	// grid point ffmpeg snaps its output to.
+	pkts := readFLV(t, "src_1280x720_nobf.flv")
+	for i := range pkts {
+		pkts[i].Time += 20 * time.Millisecond
+	}
+	feedSession(t, s, pkts)
+	waitMaster(t, base, []string{"source", "480p"}, nil)
+	// Give ffmpeg time to emit the frames it was fed before Close stops it.
+	time.Sleep(time.Second)
+	if err := closeSession(t, s); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	segs := map[int][]string{}
+	for _, c := range rig.st.Calls() {
+		if c.Kind == "segment" && c.SavedPath != "" {
+			segs[c.QualityIndex] = append(segs[c.QualityIndex], c.SavedPath)
+		}
+	}
+	if len(segs[0]) == 0 || len(segs[1]) == 0 {
+		t.Fatalf("segments uploaded per rendition: %v", segs)
+	}
+	for q, paths := range segs {
+		sort.Strings(paths)
+		for _, p := range paths {
+			video, _ := probeFirstDTS(t, p)
+			t.Logf("rendition %d %s: first video DTS %.6fs", q, filepath.Base(p), video)
+			if video < 0 || video > maxSaneFirstDTS {
+				t.Errorf("rendition %d %s: first video DTS %.6fs (negative or 33-bit wrapped)", q, filepath.Base(p), video)
+			}
+		}
+	}
+
+	packets, frames := countVideoFrames(t, segs[1])
+	t.Logf("480p VOD: %d packets, %d decoded frames", packets, frames)
+	if packets == 0 || frames != packets {
+		t.Errorf("480p VOD decoded %d of %d frames", frames, packets)
+	}
+}
+
+// maxSaneFirstDTS bounds a test segment's first DTS; a wrapped negative
+// value reads as about 95443s.
+const maxSaneFirstDTS = 3600.0
+
+// countVideoFrames concatenates the TS segments in order and returns how many
+// video packets they hold and how many frames ffmpeg decodes from them.
+func countVideoFrames(t *testing.T, segments []string) (packets, frames int) {
+	t.Helper()
+	sorted := append([]string(nil), segments...)
+	sort.Slice(sorted, func(i, j int) bool { return segIndex(t, sorted[i]) < segIndex(t, sorted[j]) })
+	var all []byte
+	for _, p := range sorted {
+		data, err := os.ReadFile(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		all = append(all, data...)
+	}
+	joined := filepath.Join(t.TempDir(), "joined.ts")
+	if err := os.WriteFile(joined, all, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, err := exec.Command("ffprobe", "-v", "error", "-count_frames", "-count_packets", "-select_streams", "v:0",
+		"-show_entries", "stream=nb_read_packets,nb_read_frames", "-of", "csv=p=0", joined).Output()
+	if err != nil {
+		t.Fatalf("ffprobe %s: %v", joined, err)
+	}
+	if _, err := fmt.Sscanf(strings.TrimSpace(string(out)), "%d,%d", &frames, &packets); err != nil {
+		t.Fatalf("parse ffprobe output %q: %v", out, err)
+	}
+	return packets, frames
+}
+
+func segIndex(t *testing.T, path string) int {
+	t.Helper()
+	n, err := strconv.Atoi(strings.TrimSuffix(filepath.Base(path), ".ts"))
+	if err != nil {
+		t.Fatalf("segment name %s: %v", path, err)
+	}
+	return n
 }
 
 // Review Focus 5.
