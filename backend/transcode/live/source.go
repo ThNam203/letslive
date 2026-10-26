@@ -3,6 +3,7 @@ package live
 import (
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/bluenviron/mediacommon/v2/pkg/codecs/h264"
 )
@@ -10,6 +11,8 @@ import (
 const (
 	avcConfigVersion = 1
 	avcConfigHeader  = 6 // version, profile, compat, level, lengthSize, numSPS
+
+	maxSourceDimension = 8192
 )
 
 // SourceInfo describes the incoming H.264 stream. FPS is 0 when the SPS carries no timing info.
@@ -72,13 +75,29 @@ func ProbeAVCConfig(record []byte) (SourceInfo, error) {
 		return SourceInfo{}, fmt.Errorf("parse SPS: %w", err)
 	}
 
-	return SourceInfo{
-		Width:  parsed.Width(),
-		Height: parsed.Height(),
-		FPS:    parsed.FPS(),
-		SPS:    sps,
-		PPS:    pps,
-	}, nil
+	width, height, fps, err := sourceFromSPS(parsed)
+	if err != nil {
+		return SourceInfo{}, err
+	}
+
+	return SourceInfo{Width: width, Height: height, FPS: fps, SPS: sps, PPS: pps}, nil
+}
+
+// sourceFromSPS derives size and frame rate from an SPS supplied by an untrusted
+// publisher. h264.SPS.Width/Height use unchecked uint32 arithmetic, so oversized
+// cropping yields zero or a wrapped huge value; h264.SPS.FPS divides by
+// NumUnitsInTick, which the parser does not reject when zero.
+func sourceFromSPS(sps h264.SPS) (width, height int, fps float64, err error) {
+	width, height = sps.Width(), sps.Height()
+	if width <= 0 || width > maxSourceDimension || height <= 0 || height > maxSourceDimension {
+		return 0, 0, 0, fmt.Errorf("invalid source size %dx%d", width, height)
+	}
+
+	fps = sps.FPS()
+	if math.IsNaN(fps) || math.IsInf(fps, 0) || fps <= 0 {
+		fps = 0
+	}
+	return width, height, fps, nil
 }
 
 // readParamSet reads one 16-bit length-prefixed NAL unit and returns it with the remaining bytes.

@@ -60,8 +60,12 @@ func BuildLadder(src SourceInfo, qs []config.Quality) ([]Rendition, error) {
 }
 
 func renditionFPS(configured int, srcFPS float64) int {
-	if srcFPS <= 0 {
+	if math.IsNaN(srcFPS) || math.IsInf(srcFPS, 0) {
 		return configured
 	}
-	return min(configured, int(math.Round(srcFPS)))
+	rounded := int(math.Round(srcFPS))
+	if rounded < 1 {
+		return configured
+	}
+	return min(configured, rounded)
 }

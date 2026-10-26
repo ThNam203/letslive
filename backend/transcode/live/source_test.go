@@ -4,6 +4,7 @@ import (
 	"math"
 	"testing"
 
+	"github.com/bluenviron/mediacommon/v2/pkg/codecs/h264"
 	"github.com/nareix/joy5/av"
 )
 
@@ -69,4 +70,76 @@ func TestProbeAVCConfig(t *testing.T) {
 			}
 		}
 	})
+}
+
+// baseSPS is a 4:2:0 progressive 640x360-ish SPS (40x23 macroblocks, 368 rows) before cropping.
+func baseSPS() h264.SPS {
+	return h264.SPS{
+		ChromaFormatIdc:           1,
+		FrameMbsOnlyFlag:          true,
+		PicWidthInMbsMinus1:       39,
+		PicHeightInMapUnitsMinus1: 22,
+	}
+}
+
+func withTiming(sps h264.SPS, numUnitsInTick, timeScale uint32) h264.SPS {
+	sps.VUI = &h264.SPS_VUI{TimingInfo: &h264.SPS_TimingInfo{NumUnitsInTick: numUnitsInTick, TimeScale: timeScale}}
+	return sps
+}
+
+func TestSourceFromSPSRejectsInvalidDimensions(t *testing.T) {
+	crop := func(left, right, top, bottom uint32) h264.SPS {
+		sps := baseSPS()
+		sps.FrameCropping = &h264.SPS_FrameCropping{LeftOffset: left, RightOffset: right, TopOffset: top, BottomOffset: bottom}
+		return sps
+	}
+	oversized := baseSPS()
+	oversized.PicWidthInMbsMinus1 = 1000
+	tall := baseSPS()
+	tall.PicHeightInMapUnitsMinus1 = 1000
+
+	cases := map[string]h264.SPS{
+		"crop equals width":   crop(160, 160, 0, 0),
+		"crop exceeds width":  crop(400, 400, 0, 0),
+		"crop equals height":  crop(0, 0, 92, 92),
+		"crop exceeds height": crop(0, 0, 500, 500),
+		"width above cap":     oversized,
+		"height above cap":    tall,
+	}
+	for name, sps := range cases {
+		if _, _, _, err := sourceFromSPS(sps); err == nil {
+			t.Errorf("%s: expected error, got none", name)
+		}
+	}
+
+	w, h, _, err := sourceFromSPS(baseSPS())
+	if err != nil {
+		t.Fatalf("valid SPS: %v", err)
+	}
+	if w != 640 || h != 368 {
+		t.Errorf("size = %dx%d, want 640x368", w, h)
+	}
+}
+
+func TestSourceFromSPSFPS(t *testing.T) {
+	cases := []struct {
+		name string
+		sps  h264.SPS
+		want float64
+	}{
+		{"no VUI", baseSPS(), 0},
+		{"valid 30fps", withTiming(baseSPS(), 1, 60), 30},
+		{"zero ticks gives +Inf", withTiming(baseSPS(), 0, 60), 0},
+		{"zero ticks and scale gives NaN", withTiming(baseSPS(), 0, 0), 0},
+		{"zero time scale", withTiming(baseSPS(), 1, 0), 0},
+	}
+	for _, tc := range cases {
+		_, _, fps, err := sourceFromSPS(tc.sps)
+		if err != nil {
+			t.Fatalf("%s: %v", tc.name, err)
+		}
+		if fps != tc.want {
+			t.Errorf("%s: fps = %v, want %v", tc.name, fps, tc.want)
+		}
+	}
 }

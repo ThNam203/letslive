@@ -1,6 +1,7 @@
 package live
 
 import (
+	"math"
 	"reflect"
 	"testing"
 
@@ -105,6 +106,9 @@ func TestBuildLadder(t *testing.T) {
 			{"source faster than config", 60, 30},
 			{"fractional source rounds", 29.97, 30},
 			{"unknown source fps", 0, 30},
+			{"sub-1fps source rounds to zero", 0.4, 30},
+			{"non-finite source fps", math.Inf(1), 30},
+			{"NaN source fps", math.NaN(), 30},
 		}
 		for _, tc := range cases {
 			got, err := BuildLadder(SourceInfo{Width: 1920, Height: 1080, FPS: tc.srcFPS}, qs)
