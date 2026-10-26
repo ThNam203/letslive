@@ -5,7 +5,9 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
+	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -120,32 +122,34 @@ func TestRequestLogging(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Unique per run: the recorded logs outlive a test under -count.
+	run := "run=" + strconv.FormatInt(time.Now().UnixNano(), 10)
 	serve := func(uri string) {
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, httptest.NewRequest(http.MethodGet, uri, nil))
 	}
 
-	part := "/static/" + testStreamID + "/source/part1.mp4"
+	part := "/static/" + testStreamID + "/source/part1.mp4?" + run
 	serve(part)
 	if got := loggedFor(part); len(got) != 0 {
 		t.Errorf("successful live request logged: %+v", got)
 	}
 
 	rec.status = http.StatusOK
-	playlist := "/static/" + testStreamID + "/source/stream.m3u8?_HLS_msn=3"
+	playlist := "/static/" + testStreamID + "/source/stream.m3u8?_HLS_msn=3&" + run
 	serve(playlist)
 	if got := loggedFor(playlist); len(got) != 0 {
 		t.Errorf("successful live playlist request logged: %+v", got)
 	}
 
 	rec.status = http.StatusNotFound
-	missing := "/static/" + testStreamID + "/index.m3u8"
+	missing := "/static/" + testStreamID + "/index.m3u8?" + run
 	serve(missing)
 	if got := loggedFor(missing); len(got) != 1 || got[0].Level != zapcore.ErrorLevel {
 		t.Errorf("failed live request: logged %+v, want one error line", got)
 	}
 
-	vod := "/static/vods/y/index.m3u8"
+	vod := "/static/vods/y/index.m3u8?" + run
 	serve(vod)
 	if got := loggedFor(vod); len(got) != 1 || got[0].Level != zapcore.InfoLevel {
 		t.Errorf("VOD request: logged %+v, want the shared middleware's info line", got)

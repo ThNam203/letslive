@@ -333,7 +333,8 @@ func TestEncoderStderrCarriesLivestreamID(t *testing.T) {
 	defer cancel()
 
 	const id = "stderr-id-0f3a"
-	marker := "stderr-marker-" + t.Name()
+	// Unique per run: the recorded logs outlive a test under -count.
+	marker := fmt.Sprintf("stderr-marker-%d", time.Now().UnixNano())
 	enc, err := StartEncoder(ctx, id, "/bin/sh", []string{"-c", "echo " + marker + "-1 >&2; echo " + marker + "-2 >&2"}, 0)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
