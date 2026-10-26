@@ -34,20 +34,17 @@ type Transcode struct {
 	VODPlaybackUrlPrefix string `yaml:"vodPlaybackUrlPrefix"`
 
 	FFMpegSetting struct {
-		FFMpegPath     string `yaml:"ffmpegPath"`
-		MasterFileName string `yaml:"masterFileName"`
-		HLSTime        int    `yaml:"hlsTime"`
-		CRF            int    `yaml:"crf"`
-		Preset         string `yaml:"preset"`
-		HlsListSize    int    `yaml:"hlsListSize"`
-		HlsMaxSize     int    `yaml:"hlsMaxSize"`
-		Qualities      []struct {
-			Resolution string `yaml:"resolution"`
-			MaxBitrate string `yaml:"maxBitrate"`
-			FPS        int    `yaml:"fps"`
-			BufSize    string `yaml:"bufSize"`
-		} `yaml:"qualities"`
+		FFMpegPath     string    `yaml:"ffmpegPath"`
+		MasterFileName string    `yaml:"masterFileName"`
+		HLSTime        int       `yaml:"hlsTime"`
+		CRF            int       `yaml:"crf"`
+		Preset         string    `yaml:"preset"`
+		HlsListSize    int       `yaml:"hlsListSize"`
+		HlsMaxSize     int       `yaml:"hlsMaxSize"`
+		Qualities      []Quality `yaml:"qualities"`
 	} `yaml:"ffmpegSetting"`
+
+	Live Live `yaml:"live"`
 }
 
 type Database struct {
@@ -88,5 +85,7 @@ func PostProcess(config *Config) error {
 		config.Database.ConnectionString = dbURL.String()
 	}
 
-	return nil
+	config.Transcode.Live = config.Transcode.Live.WithDefaults()
+
+	return Validate(config.Transcode)
 }
