@@ -10,58 +10,60 @@ on:
     branches: [main]
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      backend: ${{ steps.detect.outputs.backend }}
+      web: ${{ steps.detect.outputs.web }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Diff against the last fully successful build rather than the previous
+      # push, so services from a failed or cancelled run are rebuilt next time.
+      # Manual runs rebuild everything.
+      - name: Detect changed services
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          base=""
+          if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
+            base="$(gh run list \
+              --workflow build-and-publish-images.yml \
+              --branch main --status success --limit 1 \
+              --json headSha --jq '.[0].headSha // empty')"
+          fi
+          echo "Base: ${base:-<none, building everything>}"
+
+          services="$(.github/scripts/changed-services.sh "$base" "$GITHUB_SHA")"
+          echo "Services to build:"
+          echo "${services:-<none>}"
+
+          backend="$({ grep -vx web <<<"$services" || true; } | jq -Rnc '
+            [inputs | select(length > 0) | {
+              name: .,
+              context: (if . == "configserver" then "./backend/configserver" else "./backend" end)
+            }]')"
+          web=false
+          grep -qx web <<<"$services" && web=true
+
+          echo "backend=$backend" >> "$GITHUB_OUTPUT"
+          echo "web=$web" >> "$GITHUB_OUTPUT"
+
   build-and-publish-backend:
+    needs: changes
+    if: needs.changes.outputs.backend != '[]'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        dockerfile:
-          [
-            {
-              path: "./backend/auth",
-              name: "letslive-auth",
-              context: "./backend",
-            },
-            {
-              path: "./backend/user",
-              name: "letslive-user",
-              context: "./backend",
-            },
-            {
-              path: "./backend/finance",
-              name: "letslive-finance",
-              context: "./backend",
-            },
-            {
-              path: "./backend/transcode",
-              name: "letslive-transcode",
-              context: "./backend",
-            },
-            {
-              path: "./backend/livestream",
-              name: "letslive-livestream",
-              context: "./backend",
-            },
-            {
-              path: "./backend/configserver",
-              name: "letslive-configserver",
-              context: "./backend/configserver",
-            },
-            {
-              path: "./backend/chat",
-              name: "letslive-chat",
-              context: "./backend",
-            },
-            {
-              path: "./backend/vod",
-              name: "letslive-vod",
-              context: "./backend",
-            },
-            {
-              path: "./backend/realtime",
-              name: "letslive-realtime",
-              context: "./backend",
-            },
-          ]
+        service: ${{ fromJSON(needs.changes.outputs.backend) }}
 
     steps:
       - name: Checkout code
@@ -79,12 +81,18 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
-          context: ${{ matrix.dockerfile.context }}
-          file: ${{ matrix.dockerfile.path }}/Dockerfile
+          context: ${{ matrix.service.context }}
+          file: ./backend/${{ matrix.service.name }}/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.dockerfile.name }}:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/letslive-${{ matrix.service.name }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/letslive-${{ matrix.service.name }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.service.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service.name }}
 
   build-and-publish-frontend:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -105,7 +113,11 @@ jobs:
           context: ./web
           file: ./web/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/letslive-web:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/letslive-web:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/letslive-web:${{ github.sha }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
           secrets: |
             id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN
           build-args: |
