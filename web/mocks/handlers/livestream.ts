@@ -4,14 +4,15 @@ import { livestreams } from "../db";
 import { Livestream } from "@/types/livestream";
 
 export const livestreamHandlers = [
-    // GET /livestreams?userId=
+    // GET /livestreams?userId= — current livestream or null; the backend returns one object, not a list
     http.get(`${API_BASE}/livestreams`, ({ request }) => {
         const url = new URL(request.url);
         const userId = url.searchParams.get("userId");
-        const results = userId
-            ? livestreams.filter((ls) => ls.userId === userId)
-            : livestreams;
-        return ok<Livestream[]>(results);
+        const current =
+            livestreams.find(
+                (ls) => ls.userId === userId && ls.endedAt === null,
+            ) ?? null;
+        return ok<Livestream | null>(current);
     }),
 
     // GET /popular-livestreams?page=&limit=

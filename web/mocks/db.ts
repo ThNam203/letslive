@@ -137,6 +137,13 @@ export const otherUsers: PublicUser[] = [
         createdAt: daysAgo(30),
         bio: "Travel vlogger streaming from around the world",
         profilePicture: mockAvatar("mia"),
+        backgroundPicture:
+            "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
+        socialMediaLinks: {
+            instagram: "https://instagram.com/travel_mia",
+            youtube: "https://youtube.com/@travel_mia",
+            website: "https://travelmia.example.com",
+        },
         followerCount: 7890,
         livestreamInformation: {
             title: "Live from Somewhere New",
@@ -280,7 +287,146 @@ export const vods: VOD[] = [
         createdAt: daysAgo(15),
         updatedAt: daysAgo(15),
     },
+    ...extraVods(),
 ];
+
+function extraVods(): VOD[] {
+    const IMG = {
+        gaming: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=640&q=80",
+        setup: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=640&q=80",
+        code: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=640&q=80",
+        music: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=640&q=80",
+    };
+    const playbackUrl =
+        "https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8";
+    const seed: Array<[string, string, string | null, number, number, number]> =
+        [
+            // userId, title, thumbnail, viewCount, duration (s), age (days)
+            [
+                "user-002",
+                "Ranked grind until Diamond — part 3",
+                IMG.gaming,
+                3480,
+                7260,
+                2,
+            ],
+            [
+                "user-002",
+                "Building my dream streaming setup on a budget",
+                IMG.setup,
+                12950,
+                1145,
+                4,
+            ],
+            [
+                "user-002",
+                "Speedrun attempts: any% world record pace?",
+                IMG.gaming,
+                845,
+                5420,
+                7,
+            ],
+            [
+                "user-002",
+                "Q&A — how I got started streaming",
+                null,
+                420,
+                2710,
+                21,
+            ],
+            [
+                "user-002",
+                "Co-op night with coder_alex",
+                IMG.setup,
+                2210,
+                9840,
+                34,
+            ],
+            [
+                "user-002",
+                "First impressions: the new open-world RPG",
+                IMG.gaming,
+                61200,
+                4310,
+                60,
+            ],
+            [
+                "user-002",
+                "Retro Sunday — 90s platformers only",
+                IMG.gaming,
+                990,
+                6080,
+                95,
+            ],
+            [
+                "user-002",
+                "Late-night chill stream & chat",
+                null,
+                310,
+                8120,
+                140,
+            ],
+            [
+                "user-004",
+                "Making a lo-fi beat from scratch in 30 minutes",
+                IMG.music,
+                5120,
+                1890,
+                3,
+            ],
+            [
+                "user-004",
+                "Vinyl crate digging — sample hunting",
+                IMG.music,
+                760,
+                3305,
+                12,
+            ],
+            [
+                "user-004",
+                "Live DJ set — deep house",
+                IMG.music,
+                18400,
+                10800,
+                40,
+            ],
+            [
+                "user-003",
+                "Rust CLI from scratch — part 1",
+                IMG.code,
+                2400,
+                6600,
+                6,
+            ],
+            [
+                "user-003",
+                "Debugging a memory leak live",
+                IMG.code,
+                1370,
+                4020,
+                18,
+            ],
+        ];
+    return seed.map(
+        ([userId, title, thumbnailUrl, viewCount, duration, age], i) => ({
+            id: `vod-x${String(i + 1).padStart(2, "0")}`,
+            livestreamId: null,
+            userId,
+            title,
+            description: null,
+            thumbnailUrl,
+            visibility: "public",
+            viewCount,
+            likeCount: Math.round(viewCount / 20),
+            duration,
+            playbackUrl,
+            status: "ready",
+            originalFileUrl: null,
+            createdAt: daysAgo(age),
+            updatedAt: daysAgo(age),
+        }),
+    );
+}
 
 // ---------------------------------------------------------------------------
 // Seed: VOD Comments

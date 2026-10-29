@@ -34,7 +34,10 @@ export const vodHandlers = [
         const page = parseInt(url.searchParams.get("page") ?? "0");
         const limit = parseInt(url.searchParams.get("limit") ?? "10");
 
-        let results = vods.filter((v) => v.visibility === "public");
+        // newest first, like the backend's ORDER BY created_at DESC
+        let results = vods
+            .filter((v) => v.visibility === "public")
+            .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         if (userId) results = results.filter((v) => v.userId === userId);
 
         const slice = results.slice(page * limit, page * limit + limit);
