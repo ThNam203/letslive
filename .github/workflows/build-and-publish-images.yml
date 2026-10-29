@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: build-and-publish-images
+  cancel-in-progress: true
+
 jobs:
   changes:
     runs-on: ubuntu-latest
