@@ -395,7 +395,7 @@ export default function ChatPanel({
                     variant="ghost"
                     size="icon"
                     onClick={onClose}
-                    className="md:hidden"
+                    className="xl:hidden"
                 >
                     <IconClose className="h-4 w-4" />
                 </Button>

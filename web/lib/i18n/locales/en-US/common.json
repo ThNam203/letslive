@@ -66,6 +66,8 @@
     "vod": {
         "views_one": "{{count}} view",
         "views_other": "{{count}} views",
+        "views_compact_one": "{{formatted}} view",
+        "views_compact_other": "{{formatted}} views",
         "like": "Like",
         "dislike": "Dislike",
         "remove_like": "Remove like",

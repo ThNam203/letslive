@@ -1,8 +1,27 @@
 {
     "offline": "Ngoại tuyến",
+    "live": "Trực tiếp",
     "profile": {
         "about": "Giới thiệu",
-        "joined_prefix": "Tham gia",
-        "recent_streams": "Luồng gần đây"
+        "joined_prefix": "Tham gia"
+    },
+    "channel": {
+        "tabs": {
+            "home": "Trang chủ",
+            "videos": "Video",
+            "about": "Giới thiệu"
+        },
+        "latest_video": "Video mới nhất",
+        "more_videos": "Video khác",
+        "view_all": "Xem tất cả",
+        "watch": "Xem",
+        "no_videos": "Chưa có video nào",
+        "no_videos_description": "{{username}} chưa đăng video nào. Hãy theo dõi để nhận thông báo khi có video mới.",
+        "videos_error": "Không tải được video.",
+        "retry": "Thử lại",
+        "load_more": "Tải thêm",
+        "no_bio": "{{username}} chưa viết giới thiệu.",
+        "links": "Liên kết",
+        "stats": "Thông tin kênh"
     }
 }

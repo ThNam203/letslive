@@ -1,8 +1,27 @@
 {
     "offline": "Offline",
+    "live": "Live",
     "profile": {
         "about": "About",
-        "joined_prefix": "Joined",
-        "recent_streams": "Recent Streams"
+        "joined_prefix": "Joined"
+    },
+    "channel": {
+        "tabs": {
+            "home": "Home",
+            "videos": "Videos",
+            "about": "About"
+        },
+        "latest_video": "Latest video",
+        "more_videos": "More videos",
+        "view_all": "View all",
+        "watch": "Watch",
+        "no_videos": "No videos yet",
+        "no_videos_description": "{{username}} hasn't published any videos. Follow to get notified when they do.",
+        "videos_error": "Couldn't load videos.",
+        "retry": "Try again",
+        "load_more": "Load more",
+        "no_bio": "{{username}} hasn't written a bio yet.",
+        "links": "Links",
+        "stats": "Channel info"
     }
 }

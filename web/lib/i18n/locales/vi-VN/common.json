@@ -57,6 +57,7 @@
     "accept": "Đồng ý",
     "vod": {
         "views_other": "{{count}} lượt xem",
+        "views_compact_other": "{{formatted}} lượt xem",
         "like": "Thích",
         "dislike": "Không thích",
         "remove_like": "Bỏ thích",
