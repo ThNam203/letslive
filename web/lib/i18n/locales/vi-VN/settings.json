@@ -101,7 +101,6 @@
         "error_invalid_format": "Định dạng tệp không hợp lệ. Hỗ trợ: MP4, MOV, AVI, MKV, WebM.",
         "error_file_too_large": "Tệp quá lớn. Kích thước tối đa là 100 MB.",
         "error_max_concurrent": "Tối đa {{max}} lượt tải lên đồng thời. Video của bạn sẽ được đưa vào hàng chờ.",
-        "upload_queued": "Video đã được thêm vào hàng chờ tải lên",
         "manager_waiting": "Đang chờ...",
         "manager_processing": "Đang xử lý trên máy chủ...",
         "manager_complete": "Tải lên hoàn tất",
