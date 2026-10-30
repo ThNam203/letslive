@@ -54,7 +54,6 @@
     "recommended": "Gợi ý",
     "other_streams": "Các luồng khác",
     "close": "Đóng",
-    "accept": "Đồng ý",
     "vod": {
         "views_other": "{{count}} lượt xem",
         "views_compact_other": "{{formatted}} lượt xem",
