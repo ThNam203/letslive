@@ -122,7 +122,7 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 
 	var minio = miniostorage.NewMinIOStorage(ctx, cfg.MinIO)
 
-	var vodService = vodService.NewVODService(vodRepo, transcodeJobRepo, minio)
+	var vodService = vodService.NewVODService(vodRepo, transcodeJobRepo, minio, userGateway)
 	var vodCommentService = vodCommentService.NewVODCommentService(vodCommentRepo, vodCommentEditRepo, vodCommentLikeRepo, vodRepo, userGateway, dbConn)
 
 	var vodReactionService = vodReactionService.NewVODReactionService(vodReactionRepo, vodRepo, dbConn)

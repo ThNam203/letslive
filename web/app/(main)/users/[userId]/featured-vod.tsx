@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { VOD } from "@/types/vod";
-import GLOBAL from "@/global";
+import { mediaThumbnailUrl } from "@/utils/thumbnail";
 import LiveImage from "@/components/livestream/live-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,7 @@ export default function FeaturedVod({ vod }: { vod: VOD }) {
     const { t } = useT(["users", "common"]);
     const formatCompact = useCompactNumber();
     const href = `/users/${vod.userId}/vods/${vod.id}`;
-    const thumbnailUrl =
-        vod.thumbnailUrl ??
-        `${GLOBAL.API_URL}/files/livestreams/${vod.id}/thumbnail.jpeg`;
+    const thumbnailUrl = mediaThumbnailUrl(vod.id, vod.thumbnailUrl);
 
     return (
         <article className="group grid gap-4 @2xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] @2xl:gap-6">

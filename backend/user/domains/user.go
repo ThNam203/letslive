@@ -63,7 +63,7 @@ type UserRepository interface {
 	GetPublicInfoById(ctx context.Context, userId uuid.UUID, authenticatedUserId *uuid.UUID) (*dto.GetUserPublicResponseDTO, error)
 	GetPublicInfosByIds(ctx context.Context, ids []uuid.UUID, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, error)
 	GetRecommendedPublic(ctx context.Context, excludeUserId *uuid.UUID, page, limit int) ([]dto.GetUserPublicResponseDTO, error)
-	SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, error)
+	SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID, page int, limit int) ([]dto.GetUserPublicResponseDTO, error)
 
 	Create(ctx context.Context, username string, email string, authProvider AuthProvider) (*User, error)
 	Update(ctx context.Context, user dto.UpdateUserRequestDTO) (*User, error)

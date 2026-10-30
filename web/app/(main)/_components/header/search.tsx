@@ -1,76 +1,90 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import useT from "@/hooks/use-translation";
-import { Input } from "@/components/ui/input";
-import IconClose from "@/components/icons/close";
 import IconSearch from "@/components/icons/search";
-import UserAvatar from "@/components/ui/user-avatar";
+import SearchInput from "@/components/search/search-input";
+import { SEARCH_ROWS, SearchRow } from "@/components/search/search-result-rows";
 import { cn } from "@/utils/cn";
-import { MQ_MAX_MD } from "@/constant/breakpoints";
-import { SEARCH_QUERY_MAX_LENGTH } from "@/constant/field-limits";
-import useMediaQuery from "@/hooks/use-media-query";
+import useDebouncedValue from "@/hooks/use-debounced-value";
+import useSearchUrl from "@/hooks/use-search-url";
+import { useSearchPreview } from "@/hooks/queries/use-search";
 import {
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import { useUserSearch } from "@/hooks/queries/use-user-search";
+    RAW_INTERPOLATION,
+    SEARCH_PATH,
+    SEARCH_TYPES,
+    SEARCH_TYPING_DEBOUNCE_MS,
+    SearchType,
+    searchHref,
+} from "@/lib/search";
 
-export default function SearchBar({
-    onSearch,
-    className,
-}: {
-    onSearch?: (query: string) => void;
-    className?: string;
-}) {
+const PREVIEW_PANEL_ID = "header-search-results";
+
+export default function SearchBar({ className }: { className?: string }) {
+    const isOnSearchPage = usePathname() === SEARCH_PATH;
+    const { t } = useT("common");
+
+    return (
+        <>
+            {/* Phones search on the full /search page instead of a cramped popup. */}
+            <div className="flex flex-1 justify-end md:hidden">
+                {!isOnSearchPage && (
+                    <Link
+                        href={SEARCH_PATH}
+                        aria-label={t("common:search.open")}
+                        className="hover:bg-background-hover mr-2 rounded-full"
+                    >
+                        <IconSearch />
+                    </Link>
+                )}
+            </div>
+            <div
+                className={cn(
+                    className,
+                    "hidden w-full flex-row justify-center md:flex",
+                )}
+            >
+                {isOnSearchPage ? <SearchPageInput /> : <SearchWithPreview />}
+            </div>
+        </>
+    );
+}
+
+function SearchPageInput() {
+    const { draft, changeDraft, submit } = useSearchUrl();
+    return (
+        <SearchInput
+            value={draft}
+            onChange={changeDraft}
+            onSubmit={submit}
+            className="w-full max-w-[440px]"
+        />
+    );
+}
+
+function SearchWithPreview() {
+    const router = useRouter();
     const [query, setQuery] = useState("");
-    const [debouncedQuery, setDebouncedQuery] = useState("");
-    const [showResults, setShowResults] = useState(false);
-    const [mobileOpen, setMobileOpen] = useState(false);
-    const isSmallScreen = useMediaQuery(MQ_MAX_MD);
+    const [isOpen, setIsOpen] = useState(false);
+    const debouncedQuery = useDebouncedValue(
+        query.trim(),
+        SEARCH_TYPING_DEBOUNCE_MS,
+    );
     const containerRef = useRef<HTMLDivElement>(null);
-    const { t } = useT([
-        "common",
-        "api-response",
-        "fetch-error",
-        "accessibility",
-    ]);
+    const isPanelShown = isOpen && Boolean(debouncedQuery);
 
-    const {
-        data: results = [],
-        isFetching: isLoading,
-        isError,
-    } = useUserSearch(debouncedQuery);
-
-    // The input stays responsive while the query the server sees only moves
-    // once typing pauses.
     useEffect(() => {
-        const timer = setTimeout(() => {
-            const trimmed = query.trim();
-            setDebouncedQuery(trimmed);
-            setShowResults(Boolean(trimmed));
-            if (trimmed && onSearch) onSearch(query);
-        }, 1000);
-
-        return () => clearTimeout(timer);
-    }, [query, onSearch]);
-
-    // Close the results when the user clicks outside the search or hits Escape;
-    // focusing the input again reopens them.
-    useEffect(() => {
-        if (!showResults) return;
+        if (!isOpen) return;
 
         const handlePointerDown = (e: PointerEvent) => {
             if (!containerRef.current?.contains(e.target as Node)) {
-                setShowResults(false);
+                setIsOpen(false);
             }
         };
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") setShowResults(false);
+            if (e.key === "Escape") setIsOpen(false);
         };
 
         document.addEventListener("pointerdown", handlePointerDown);
@@ -79,133 +93,144 @@ export default function SearchBar({
             document.removeEventListener("pointerdown", handlePointerDown);
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [showResults]);
+    }, [isOpen]);
 
-    const handleClear = () => {
-        setQuery("");
-        setDebouncedQuery("");
-        setShowResults(false);
+    const handleChange = (value: string) => {
+        setQuery(value);
+        setIsOpen(Boolean(value.trim()));
     };
 
-    const handleResultClick = () => {
-        setShowResults(false);
-        setMobileOpen(false);
+    const goToResults = () => {
+        const trimmed = query.trim();
+        if (!trimmed) return;
+        setIsOpen(false);
+        router.push(searchHref(trimmed));
     };
 
-    const searchInput = (
-        <div ref={containerRef} className="relative w-[300px] lg:w-[400px]">
-            <div className="relative">
-                <Input
-                    type="text"
-                    placeholder={t("common:search_users")}
-                    maxLength={SEARCH_QUERY_MAX_LENGTH}
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="border-border pr-8"
-                    onFocus={() => query.trim() && setShowResults(true)}
-                    autoFocus={isSmallScreen}
-                />
-                {query && (
-                    <button
-                        onClick={handleClear}
-                        className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-                        aria-label={t("accessibility:clear_search")}
-                    >
-                        <IconClose className="h-4 w-4" />
-                    </button>
-                )}
-            </div>
-
-            {showResults && isLoading && query && (
-                <div className="bg-background absolute mt-1 w-full rounded-sm border p-4 shadow-md">
-                    <div className="flex items-center justify-center">
-                        <p className="text-muted-foreground text-sm">
-                            {t("common:searching")}
-                        </p>
-                    </div>
-                </div>
-            )}
-
-            {showResults && results.length > 0 && !isLoading && (
-                <div className="bg-background absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm border shadow-md">
-                    {results.map((user) => (
-                        <Link
-                            key={user.id}
-                            href={`/users/${user.id}`}
-                            onClick={handleResultClick}
-                            className="flex w-full cursor-pointer flex-row items-center gap-3 p-2 hover:bg-gray-400"
-                        >
-                            <UserAvatar
-                                size="sm"
-                                src={user.profilePicture}
-                                name={user.username}
-                                alt={t("accessibility:user_avatar")}
-                            />
-                            <p className="text-sm font-medium">
-                                {user.username}
-                            </p>
-                        </Link>
-                    ))}
-                </div>
-            )}
-
-            {/* a failed search is not an empty one: saying "no users found"
-                when the request never completed is a lie about the data */}
-            {showResults && isError && !isLoading && query && (
-                <div className="bg-background absolute mt-1 w-full rounded-sm border p-4 shadow-md">
-                    <p className="text-muted-foreground text-sm">
-                        {t("fetch-error:client_fetch_error")}
-                    </p>
-                </div>
-            )}
-
-            {showResults &&
-                !isError &&
-                results.length === 0 &&
-                !isLoading &&
-                query && (
-                    <div className="bg-background absolute mt-1 w-full rounded-sm border p-4 shadow-md">
-                        <p className="text-muted-foreground text-sm">
-                            {t("common:no_users_found")}
-                        </p>
-                    </div>
-                )}
-        </div>
-    );
-
-    if (isSmallScreen) {
-        return (
-            <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
-                <DialogTrigger asChild>
-                    <button
-                        type="button"
-                        aria-label={t("common:search_users")}
-                        className="hover:bg-background-hover mr-2 flex flex-1 justify-end rounded-full"
-                    >
-                        <IconSearch />
-                    </button>
-                </DialogTrigger>
-                <DialogContent
-                    showCloseButton={false}
-                    className="top-20 left-1/2 w-[92vw] max-w-md translate-y-0 p-4"
-                >
-                    <DialogTitle className="sr-only">
-                        {t("common:search_users")}
-                    </DialogTitle>
-                    {searchInput}
-                </DialogContent>
-            </Dialog>
-        );
-    }
+    const close = () => setIsOpen(false);
 
     return (
         <div
-            className={cn(
-                "relative flex w-full flex-row justify-center",
-                className,
-            )}
+            ref={containerRef}
+            className="relative w-full max-w-[440px]"
+            onBlur={(e) => {
+                // Only keyboard moves have a target; clicks are handled by
+                // the pointerdown listener (Safari doesn't focus clicked links).
+                const next = e.relatedTarget as Node | null;
+                if (next && !e.currentTarget.contains(next)) close();
+            }}
         >
-            {searchInput}
+            <SearchInput
+                value={query}
+                onChange={handleChange}
+                onSubmit={goToResults}
+                onFocus={() => query.trim() && setIsOpen(true)}
+                expandedPanelId={isPanelShown ? PREVIEW_PANEL_ID : undefined}
+            />
+            {isPanelShown && (
+                <SearchPreviewPanel query={debouncedQuery} onNavigate={close} />
+            )}
+        </div>
+    );
+}
+
+function SearchPreviewPanel({
+    query,
+    onNavigate,
+}: {
+    query: string;
+    onNavigate: () => void;
+}) {
+    const { t } = useT(["common", "fetch-error"]);
+    const users = useSearchPreview("users", query);
+    const lives = useSearchPreview("lives", query);
+    const vods = useSearchPreview("vods", query);
+    const results = [users, lives, vods];
+
+    const isAllLoading = results.every((r) => r.isLoading);
+    const isAllError = results.every((r) => r.isError);
+    const isNothingFound = results.every(
+        (r) => r.isSuccess && r.data.length === 0,
+    );
+
+    return (
+        <div
+            id={PREVIEW_PANEL_ID}
+            className="bg-background border-border absolute top-full left-0 z-50 mt-1 flex max-h-[70vh] w-[min(32rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-md border text-sm font-normal shadow-lg"
+        >
+            <div className="overflow-y-auto p-1">
+                <div role="status" className="text-muted-foreground">
+                    {isAllLoading && (
+                        <p className="p-3">{t("common:searching")}</p>
+                    )}
+                    {isAllError && (
+                        <p className="p-3">
+                            {t("fetch-error:client_fetch_error")}
+                        </p>
+                    )}
+                    {isNothingFound && (
+                        <p className="p-3">
+                            {t("common:search.no_results", {
+                                query,
+                                ...RAW_INTERPOLATION,
+                            })}
+                        </p>
+                    )}
+                </div>
+                {SEARCH_TYPES.map((type) => (
+                    <PreviewSection
+                        key={type}
+                        type={type}
+                        query={query}
+                        onNavigate={onNavigate}
+                    />
+                ))}
+            </div>
+            <Link
+                href={searchHref(query)}
+                onClick={onNavigate}
+                className="border-border hover:bg-muted focus-visible:ring-ring text-primary flex items-center gap-2 border-t px-3 py-2.5 font-medium focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+            >
+                <IconSearch aria-hidden="true" className="h-4 w-4" />
+                <span className="truncate">
+                    {t("common:search.see_all_results", {
+                        query,
+                        ...RAW_INTERPOLATION,
+                    })}
+                </span>
+            </Link>
+        </div>
+    );
+}
+
+function PreviewSection<T extends SearchType>({
+    type,
+    query,
+    onNavigate,
+}: {
+    type: T;
+    query: string;
+    onNavigate: () => void;
+}) {
+    const { t } = useT("common");
+    const { data } = useSearchPreview(type, query);
+    const Row: SearchRow<T> = SEARCH_ROWS[type];
+    if (!data?.length) return null;
+
+    return (
+        <div className="py-1">
+            <p className="text-muted-foreground px-2 pt-1 pb-0.5 text-xs font-semibold tracking-wide uppercase">
+                {t(`common:search.sections.${type}`)}
+            </p>
+            {data.map((item) => (
+                <Row
+                    key={item.id}
+                    item={item}
+                    query={query}
+                    size="compact"
+                    onNavigate={onNavigate}
+                />
+            ))}
         </div>
     );
 }

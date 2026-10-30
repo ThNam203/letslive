@@ -16,7 +16,6 @@
     "channels": "Channels",
     "videos": "Videos",
     "home": "Home",
-    "search_users": "Search users",
     "got_it": "Got it",
     "how_to_livestream": "How to livestream",
     "start_your_livestream": "Start your livestream",
@@ -35,7 +34,6 @@
     "no_videos": "No Videos Available",
     "no_videos_description": "There are currently no videos available. Check back later for new content",
     "searching": "Searching...",
-    "no_users_found": "No users found",
     "no_description": "No description",
     "add": "Add",
     "bio": "Bio",
@@ -82,5 +80,36 @@
         "copy_failed": "Couldn't copy the link",
         "start_at": "Start at {{time}}",
         "seek_to": "Jump to {{time}}"
+    },
+    "search": {
+        "placeholder": "Search channels, live streams, videos",
+        "open": "Open search",
+        "title": "Search",
+        "results_for": "Results for “{{query}}”",
+        "see_all_results": "See all results for “{{query}}”",
+        "see_all": "See all",
+        "tabs": {
+            "all": "All",
+            "users": "Channels",
+            "lives": "Live",
+            "vods": "Videos"
+        },
+        "sections": {
+            "users": "Channels",
+            "lives": "Live now",
+            "vods": "Videos"
+        },
+        "no_results": "No results for “{{query}}”",
+        "no_results_hint": "Check the spelling or try a shorter search.",
+        "no_results_type": {
+            "users": "No channels found",
+            "lives": "No one matching is live right now",
+            "vods": "No videos found"
+        },
+        "empty_prompt": "Search for channels, live streams and videos",
+        "error": "Search failed. Please try again.",
+        "retry": "Try again",
+        "viewers_one": "{{formatted}} watching",
+        "viewers_other": "{{formatted}} watching"
     }
 }

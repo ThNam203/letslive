@@ -19,6 +19,7 @@ import {
 import { VOD, VODReaction, VODReactionState } from "@/types/vod";
 import { VODComment } from "@/types/vod-comment";
 import { meUser } from "../db";
+import { mediaMatchScore, pageOf, searchPaging } from "../search";
 
 export const vodHandlers = [
     // GET /vods/author — my own VODs (all visibility)
@@ -63,6 +64,23 @@ export const vodHandlers = [
             page,
             page_size: limit,
             total: sorted.length,
+        });
+    }),
+
+    // GET /vods/search?q=&page=&limit= — must stay above /vods/:vodId
+    http.get(`${API_BASE}/vods/search`, ({ request }) => {
+        const url = new URL(request.url);
+        const query = url.searchParams.get("q")?.trim() ?? "";
+        const { page, limit } = searchPaging(url, 20);
+        const results = vods
+            .filter((v) => v.visibility === "public" && v.status === "ready")
+            .map((v) => ({ v, score: mediaMatchScore(v, query) }))
+            .filter(({ score }) => score > 0)
+            .sort((a, b) => b.score - a.score || b.v.viewCount - a.v.viewCount)
+            .map(({ v }) => v);
+        return ok<VOD[]>(pageOf(results, page, limit), {
+            page,
+            page_size: limit,
         });
     }),
 

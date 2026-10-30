@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { dateDiffFromNow, formatSeconds } from "@/utils/timeFormats";
-import GLOBAL from "../../global";
+import { mediaThumbnailUrl } from "@/utils/thumbnail";
 import { VOD } from "@/types/vod";
 import { Livestream } from "@/types/livestream";
 import { PublicUser } from "@/types/user";
@@ -75,9 +75,10 @@ export default function MediaCard(props: MediaCardProps) {
     const id = isLive ? props.livestream.id : props.vod.id;
     const title = isLive ? props.livestream.title : props.vod.title;
     const viewCount = isLive ? props.livestream.viewCount : props.vod.viewCount;
-    const thumbnailUrl =
-        (isLive ? props.livestream.thumbnailUrl : props.vod.thumbnailUrl) ??
-        `${GLOBAL.API_URL}/files/livestreams/${id}/thumbnail.jpeg`;
+    const thumbnailUrl = mediaThumbnailUrl(
+        id,
+        isLive ? props.livestream.thumbnailUrl : props.vod.thumbnailUrl,
+    );
 
     // A card either receives the user from its parent (lists that already
     // fetched them) or looks it up itself; only live cards and the

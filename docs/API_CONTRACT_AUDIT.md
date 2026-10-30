@@ -114,3 +114,29 @@ runtime read fields the types did not have. Handlers are now typed against the
 been created even while the request validator still accepted the value. The name
 is now gone from the domain const, the client enum, `docs/openapi.yaml` and the
 wallet locales.
+
+## Search
+
+New public endpoints for the search page, plus paging on the existing user
+search. None of them return a `total`; `meta` carries only `page` and
+`page_size` (both `omitempty`, so `page: 0` is omitted from the JSON).
+
+- `GET /v1/users/search?username=&page=&limit=` — `page` and `limit` are new and
+  optional. Defaults `page=0`, `limit=10`, so existing callers get the same
+  first page as before; `limit` is clamped to 1..20. Ordering gained `u.id` as a
+  final tie-breaker so pages are stable.
+- `GET /v1/vods/search?q=&page=&limit=` — `q` is trimmed and must be 1..100
+  characters, else `res_err_invalid_input`. Paging via `GetPageAndLimitQuery`
+  (default and max 20). Returns `VOD[]`, public + ready only.
+- `GET /v1/livestreams/search?q=&page=&limit=` — same validation and paging.
+  Returns `Livestream[]` (same shape as `/v1/popular-livestreams`), only streams
+  that are live now and public.
+
+A VOD or livestream matches when its title is similar to or contains `q`, its
+description contains or loosely contains `q`, or its streamer's username
+matches `q`. Title and description matching is accent-insensitive (`tro choi`
+finds `Trò chơi`) through the `unaccent` extension, wrapped in an IMMUTABLE
+`immutable_unaccent(text)` so it can be indexed (vod migration `0004`,
+livestream migration `0006`). Streamer ids come from the user service's
+`/v1/users/search` (first 10 matches); if that call fails, the search falls back
+to title/description matching instead of failing.

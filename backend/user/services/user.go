@@ -108,12 +108,12 @@ func (s *UserService) GetRecommendedUsers(ctx context.Context, authenticatedUser
 	return users, nil
 }
 
-func (s *UserService) SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, error) {
+func (s *UserService) SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID, page int, limit int) ([]dto.GetUserPublicResponseDTO, error) {
 	if len(username) == 0 {
 		return nil, domains.ErrInvalidInput
 	}
 
-	users, err := s.userRepo.SearchUsersByUsername(ctx, username, authenticatedUserId)
+	users, err := s.userRepo.SearchUsersByUsername(ctx, username, authenticatedUserId, page, limit)
 	if err != nil {
 		return nil, err
 	}

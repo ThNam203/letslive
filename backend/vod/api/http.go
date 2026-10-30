@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sen1or/letslive/shared/middlewares"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/vod/config"
 	"sen1or/letslive/vod/handlers/general"
 	"sen1or/letslive/vod/handlers/vod"
 	vodcomment "sen1or/letslive/vod/handlers/vod_comment"
-	"sen1or/letslive/shared/middlewares"
-	"sen1or/letslive/shared/pkg/logger"
 
 	"time"
 
@@ -48,6 +48,7 @@ func (a *APIServer) getHandler() http.Handler {
 
 	// Public VOD routes
 	wrap("GET /v1/vods", a.vodHandler.GetVODsOfUserPublicHandler)
+	wrap("GET /v1/vods/search", a.vodHandler.SearchVODsPublicHandler)
 	wrap("GET /v1/vods/{vodId}", a.vodHandler.GetVODByIdPublicHandler)
 	wrap("POST /v1/vods/{vodId}/view", a.vodHandler.RegisterViewPublicHandler)
 	wrap("GET /v1/popular-vods", a.vodHandler.GetRecommendedVODsPublicHandler)

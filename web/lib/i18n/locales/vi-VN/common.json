@@ -16,7 +16,6 @@
     "channels": "Kênh",
     "videos": "Videos",
     "home": "Trang chủ",
-    "search_users": "Tìm kiếm người dùng",
     "got_it": "Đã hiểu",
     "how_to_livestream": "Cách livestream",
     "start_your_livestream": "Bắt đầu livestream của bạn",
@@ -34,7 +33,6 @@
     "no_videos": "Không có videos",
     "no_videos_description": "Hiện không có videos nào có sẵn, vui lòng trở lại sau để xem các content mới nhất",
     "searching": "Đang tìm kiếm...",
-    "no_users_found": "Không tìm thấy người dùng",
     "no_description": "Không có mô tả",
     "add": "Thêm",
     "bio": "Tiểu sử",
@@ -72,5 +70,35 @@
         "copy_failed": "Không thể sao chép liên kết",
         "start_at": "Bắt đầu tại {{time}}",
         "seek_to": "Tua đến {{time}}"
+    },
+    "search": {
+        "placeholder": "Tìm kênh, luồng trực tiếp, video",
+        "open": "Mở tìm kiếm",
+        "title": "Tìm kiếm",
+        "results_for": "Kết quả cho “{{query}}”",
+        "see_all_results": "Xem tất cả kết quả cho “{{query}}”",
+        "see_all": "Xem tất cả",
+        "tabs": {
+            "all": "Tất cả",
+            "users": "Kênh",
+            "lives": "Trực tiếp",
+            "vods": "Video"
+        },
+        "sections": {
+            "users": "Kênh",
+            "lives": "Đang trực tiếp",
+            "vods": "Video"
+        },
+        "no_results": "Không có kết quả cho “{{query}}”",
+        "no_results_hint": "Hãy kiểm tra chính tả hoặc thử từ khóa ngắn hơn.",
+        "no_results_type": {
+            "users": "Không tìm thấy kênh nào",
+            "lives": "Không có ai phù hợp đang trực tiếp",
+            "vods": "Không tìm thấy video nào"
+        },
+        "empty_prompt": "Tìm kiếm kênh, luồng trực tiếp và video",
+        "error": "Tìm kiếm thất bại. Vui lòng thử lại.",
+        "retry": "Thử lại",
+        "viewers_other": "{{formatted}} người đang xem"
     }
 }

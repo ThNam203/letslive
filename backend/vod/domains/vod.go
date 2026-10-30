@@ -76,6 +76,7 @@ type VODRepository interface {
 	GetByUser(ctx context.Context, userId uuid.UUID, page int, limit int) ([]VOD, error)
 	GetPublicVODsByUser(ctx context.Context, userId uuid.UUID, page int, limit int) ([]VOD, error)
 	GetPopular(ctx context.Context, page int, limit int) ([]VOD, int, error)
+	SearchPublic(ctx context.Context, query string, streamerIds []uuid.UUID, page int, limit int) ([]VOD, error)
 	IncrementViewCount(ctx context.Context, id uuid.UUID) error
 	Create(ctx context.Context, vod VOD) (*VOD, error)
 	Update(ctx context.Context, vod VOD) (*VOD, error)

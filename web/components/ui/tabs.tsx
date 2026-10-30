@@ -52,4 +52,16 @@ const TabsContent = React.forwardRef<
 ));
 TabsContent.displayName = TabsPrimitive.Content.displayName;
 
-export { Tabs, TabsList, TabsTrigger, TabsContent };
+const UNDERLINE_TABS_LIST_CLASS =
+    "border-border h-auto w-full justify-start gap-6 rounded-none border-b bg-transparent p-0";
+const UNDERLINE_TABS_TRIGGER_CLASS =
+    "text-muted-foreground hover:text-foreground data-[state=active]:text-foreground data-[state=active]:border-primary -mb-px rounded-none border-b-2 border-transparent bg-transparent px-1 pt-1 pb-3 text-sm font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none";
+
+export {
+    Tabs,
+    TabsList,
+    TabsTrigger,
+    TabsContent,
+    UNDERLINE_TABS_LIST_CLASS,
+    UNDERLINE_TABS_TRIGGER_CLASS,
+};

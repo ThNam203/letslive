@@ -12,6 +12,7 @@ import { MeUser, PublicUser } from "@/types/user";
 import { Notification, UnreadCountResponse } from "@/types/notification";
 import { AVATAR_SERVED_DIMENSION } from "@/constant/image";
 import { readFileAsDataUrl } from "@/utils/file";
+import { matches, pageOf, searchPaging } from "../search";
 import {
     centerSquare,
     drawSquare,
@@ -119,14 +120,18 @@ export const userHandlers = [
         return noContent();
     }),
 
-    // GET /users/search?username=
+    // GET /users/search?username=&page=&limit=
     http.get(`${API_BASE}/users/search`, ({ request }) => {
         const url = new URL(request.url);
-        const query = url.searchParams.get("username")?.toLowerCase() ?? "";
+        const query = url.searchParams.get("username")?.trim() ?? "";
+        const { page, limit } = searchPaging(url, 10);
         const results = getAllUsers().filter((u) =>
-            u.username?.toLowerCase().includes(query),
+            matches(u.username, query),
         ) as PublicUser[];
-        return ok<PublicUser[]>(results);
+        return ok<PublicUser[]>(pageOf(results, page, limit), {
+            page,
+            page_size: limit,
+        });
     }),
 
     // GET /users/recommendations
