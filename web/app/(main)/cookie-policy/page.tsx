@@ -1,5 +1,6 @@
 import { myGetT } from "@/lib/i18n";
 import { formatLocaleDate } from "@/utils/timeFormats";
+import { LEFT_BAR_COOKIE_NAME } from "@/components/leftbar/left-bar-layout";
 
 const POLICY_LAST_UPDATED = "2026-08-19";
 
@@ -31,6 +32,11 @@ export default async function CookiePolicyPage() {
             name: "lng",
             purpose: t("legal:cookie_policy_row_lng_purpose"),
             duration: t("legal:cookie_policy_row_lng_duration"),
+        },
+        {
+            name: LEFT_BAR_COOKIE_NAME,
+            purpose: t("legal:cookie_policy_row_left_bar_purpose"),
+            duration: t("legal:cookie_policy_row_left_bar_duration"),
         },
     ];
 

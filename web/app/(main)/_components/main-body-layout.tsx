@@ -1,18 +1,23 @@
+import { cookies } from "next/headers";
 import {
-    ResizableHandle,
-    ResizablePanel,
-    ResizablePanelGroup,
-} from "@/components/ui/resizable";
-import LeftBar from "@/components/leftbar/left-bar";
+    LEFT_BAR_COOKIE_NAME,
+    parseLeftBarLayout,
+} from "@/components/leftbar/left-bar-layout";
+import { MainBodyPanels } from "./main-body-panels";
 
-export function MainBodyLayout({ children }: { children: React.ReactNode }) {
+export async function MainBodyLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    const cookieStore = await cookies();
+    const leftBarLayout = parseLeftBarLayout(
+        cookieStore.get(LEFT_BAR_COOKIE_NAME)?.value,
+    );
+
     return (
-        <ResizablePanelGroup orientation="horizontal">
-            <LeftBar />
-            <ResizableHandle />
-            <ResizablePanel id="2" className="bg-background min-h-0">
-                {children}
-            </ResizablePanel>
-        </ResizablePanelGroup>
+        <MainBodyPanels initialLeftBarLayout={leftBarLayout}>
+            {children}
+        </MainBodyPanels>
     );
 }

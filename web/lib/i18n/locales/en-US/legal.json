@@ -14,6 +14,8 @@
     "cookie_policy_row_refresh_duration": "Set by the server; cleared on logout.",
     "cookie_policy_row_lng_purpose": "Remembers your chosen display language.",
     "cookie_policy_row_lng_duration": "1 year.",
+    "cookie_policy_row_left_bar_purpose": "Remembers the width of the channels sidebar and whether it is collapsed.",
+    "cookie_policy_row_left_bar_duration": "1 year.",
     "cookie_policy_type_essential": "Essential",
     "cookie_policy_essential_note": "All cookies above are essential — the site cannot authenticate you or remember your language without them, so there is no optional/reject toggle for them.",
     "cookie_policy_control_title": "Managing cookies",

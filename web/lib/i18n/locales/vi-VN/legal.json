@@ -14,6 +14,8 @@
     "cookie_policy_row_refresh_duration": "Do máy chủ thiết lập; xóa khi đăng xuất.",
     "cookie_policy_row_lng_purpose": "Ghi nhớ ngôn ngữ hiển thị bạn đã chọn.",
     "cookie_policy_row_lng_duration": "1 năm.",
+    "cookie_policy_row_left_bar_purpose": "Ghi nhớ độ rộng của thanh kênh bên trái và việc thanh này có đang thu gọn hay không.",
+    "cookie_policy_row_left_bar_duration": "1 năm.",
     "cookie_policy_type_essential": "Cần thiết",
     "cookie_policy_essential_note": "Tất cả cookie ở trên đều là cookie cần thiết — trang web không thể xác thực bạn hoặc ghi nhớ ngôn ngữ nếu thiếu chúng, nên không có tùy chọn bật/tắt riêng cho các cookie này.",
     "cookie_policy_control_title": "Quản lý cookie",
