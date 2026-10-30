@@ -115,23 +115,6 @@ export default function MediaCard(props: MediaCardProps) {
             );
         }
         const vod = props.vod;
-        const image = (
-            <LiveImage
-                src={thumbnailUrl}
-                alt={title}
-                className={cn(
-                    "h-full w-full object-cover",
-                    !isEditable &&
-                        "transition-transform duration-300 group-hover:scale-105",
-                )}
-                width={500}
-                height={500}
-                sizes={THUMBNAIL_SIZES}
-                preload={props.preload ?? false}
-                fallbackSrc="/images/streaming.webp"
-                alwaysRefresh={false}
-            />
-        );
         return (
             <div className="bg-muted relative aspect-video overflow-hidden">
                 <div className="absolute right-2 bottom-2 z-10 flex items-center gap-2">
@@ -150,18 +133,24 @@ export default function MediaCard(props: MediaCardProps) {
                         {formatSeconds(vod.duration)}
                     </Badge>
                 </div>
-                {isEditable ? (
-                    image
-                ) : (
-                    <Link
-                        href={targetHref}
-                        tabIndex={-1}
-                        aria-hidden="true"
-                        className="block h-full w-full"
-                    >
-                        {image}
-                    </Link>
-                )}
+                <Link
+                    href={targetHref}
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    className="block h-full w-full"
+                >
+                    <LiveImage
+                        src={thumbnailUrl}
+                        alt={title}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        width={500}
+                        height={500}
+                        sizes={THUMBNAIL_SIZES}
+                        preload={props.preload ?? false}
+                        fallbackSrc="/images/streaming.webp"
+                        alwaysRefresh={false}
+                    />
+                </Link>
             </div>
         );
     };
@@ -287,16 +276,12 @@ export default function MediaCard(props: MediaCardProps) {
                         className="text-foreground line-clamp-2 flex-1 text-base leading-snug font-semibold"
                         title={title}
                     >
-                        {isEditable ? (
-                            title
-                        ) : (
-                            <Link
-                                href={targetHref}
-                                className="group-hover:text-primary focus-visible:underline focus-visible:outline-none"
-                            >
-                                {title}
-                            </Link>
-                        )}
+                        <Link
+                            href={targetHref}
+                            className="group-hover:text-primary focus-visible:underline focus-visible:outline-none"
+                        >
+                            {title}
+                        </Link>
                     </h3>
                     {renderEditMenu()}
                 </div>
