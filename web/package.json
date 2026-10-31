@@ -43,7 +43,7 @@
         "react-i18next": "^17.0.11",
         "react-player": "^3.4.0",
         "react-resizable-panels": "^4.12.2",
-        "react-toastify": "^11.1.0",
+        "react-toastify": "^11.2.0",
         "react-turnstile": "^1.1.4",
         "screenfull": "^6.0.2",
         "sharp": "^0.35.3",
