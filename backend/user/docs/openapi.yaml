@@ -578,3 +578,108 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+
+  /user/me/devices:
+    post:
+      summary: Register a push-notification device token
+      description: >
+        Upserts by token. A token already registered to another user is
+        reassigned to the caller, and its platform, locale and last-seen time
+        are refreshed.
+      operationId: registerDevice
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, platform]
+              properties:
+                token:
+                  type: string
+                  minLength: 1
+                  maxLength: 4096
+                platform:
+                  type: string
+                  enum: [ios, android]
+                locale:
+                  type: string
+                  maxLength: 35
+                  description: Optional BCP 47 language tag, for example vi or en-US
+      responses:
+        "200":
+          description: Token registered; data holds the stored device token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      userId:
+                        type: string
+                        format: uuid
+                      token:
+                        type: string
+                      platform:
+                        type: string
+                        enum: [ios, android]
+                      locale:
+                        type: string
+                        nullable: true
+                      createdAt:
+                        type: string
+                        format: date-time
+                      lastSeenAt:
+                        type: string
+                        format: date-time
+        "400":
+          description: Invalid payload (empty token, unknown platform, bad locale)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /user/me/devices/{token}:
+    delete:
+      summary: Unregister a push-notification device token
+      description: >
+        Deletes the token only when it belongs to the caller. A missing token or
+        one owned by another user is a no-op success, so existence never leaks.
+      operationId: unregisterDevice
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 4096
+      responses:
+        "200":
+          description: Token removed or nothing to remove
+        "400":
+          description: Token empty or longer than 4096 characters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

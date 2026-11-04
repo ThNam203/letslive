@@ -11,6 +11,7 @@ import (
 	"sen1or/letslive/user/api"
 	cfg "sen1or/letslive/user/config"
 	financehttp "sen1or/letslive/user/gateway/finance/http"
+	devicehandler "sen1or/letslive/user/handlers/device"
 	"sen1or/letslive/user/handlers/follow"
 	gifthandler "sen1or/letslive/user/handlers/gift"
 	inventoryhandler "sen1or/letslive/user/handlers/inventory"
@@ -138,6 +139,7 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var notificationRepo = repositories.NewNotificationRepository(dbConn)
 	var inventoryRepo = repositories.NewInventoryRepository(dbConn)
 	var giftRepo = repositories.NewGiftRepository(dbConn)
+	var deviceRepo = repositories.NewDeviceTokenRepository(dbConn)
 
 	minioService := services.NewMinIOService(ctx, cfg.MinIO)
 	var userService = services.NewUserService(userRepo, livestreamInfoRepo, notificationRepo, followRepo, *minioService)
@@ -145,6 +147,7 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var followService = services.NewFollowService(followRepo)
 	var notificationService = services.NewNotificationService(notificationRepo, publisher)
 	var inventoryService = services.NewInventoryService(inventoryRepo)
+	var deviceService = services.NewDeviceService(deviceRepo)
 	var financeGateway = financehttp.NewFinanceGateway(registry)
 	var giftService = services.NewGiftService(giftRepo, userRepo, financeGateway, notificationService)
 
@@ -154,5 +157,6 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var notifHandler = notificationhandler.NewNotificationHandler(*notificationService)
 	var invHandler = inventoryhandler.NewInventoryHandler(inventoryService)
 	var gHandler = gifthandler.NewGiftHandler(giftService)
-	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, notifHandler, invHandler, gHandler, cfg, dbConn)
+	var dHandler = devicehandler.NewDeviceHandler(deviceService)
+	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, notifHandler, invHandler, gHandler, dHandler, cfg, dbConn)
 }
