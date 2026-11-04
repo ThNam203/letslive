@@ -305,9 +305,11 @@ void main() {
       "account's data", (tester) async {
     final server = FakeHomeServer()
       ..following = [publicUserJson(id: 'u-a', username: 'only_for_a')]
+      ..recommended = [publicUserJson(id: 'u-ra', username: 'rec_for_a')]
       ..live = [livestreamJson(title: 'Stream of A')];
     final app = await pumpHome(tester, server);
     expect(find.text('only_for_a'), findsOneWidget);
+    expect(find.text('rec_for_a'), findsOneWidget);
 
     // Widget tests run in fake time: start the call, pump it through, await.
     final loggedOut = app.container.read(sessionProvider.notifier).logout();
@@ -317,6 +319,7 @@ void main() {
 
     server
       ..following = [publicUserJson(id: 'u-b', username: 'only_for_b')]
+      ..recommended = [publicUserJson(id: 'u-rb', username: 'rec_for_b')]
       ..live = [livestreamJson(title: 'Stream of B')];
     final loggedIn = app.container
         .read(sessionProvider.notifier)
@@ -325,10 +328,13 @@ void main() {
     await loggedIn;
 
     expect(find.text('only_for_b'), findsOneWidget);
+    expect(find.text('rec_for_b'), findsOneWidget);
     expect(find.text('Stream of B'), findsOneWidget);
     expect(find.text('only_for_a'), findsNothing);
+    expect(find.text('rec_for_a'), findsNothing);
     expect(find.text('Stream of A'), findsNothing);
     expect(app.requestsTo(ApiEndpoints.following), hasLength(2));
+    expect(app.requestsTo(ApiEndpoints.recommendedChannels), hasLength(2));
     expect(app.requestsTo(ApiEndpoints.popularLivestreams), hasLength(2));
   });
 }

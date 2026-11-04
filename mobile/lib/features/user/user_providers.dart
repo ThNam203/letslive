@@ -31,8 +31,9 @@ final followingChannelsProvider = FutureProvider.autoDispose<List<PublicUser>>(
 );
 
 /// Suggested channels.
-final recommendedChannelsProvider = FutureProvider<List<PublicUser>>(
-  (ref) async =>
-      unwrapList(await ref.watch(userRepositoryProvider).recommended()),
-  retry: noRetry,
-);
+final recommendedChannelsProvider =
+    FutureProvider.autoDispose<List<PublicUser>>(
+      (ref) async =>
+          unwrapList(await ref.watch(userRepositoryProvider).recommended()),
+      retry: noRetry,
+    );
