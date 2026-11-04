@@ -1,0 +1,7 @@
+/// Gateway paths used by the app. Paths exclude `/v1`; Envoy rewrites `^/` to
+/// `/v1/`. Only endpoints verified against `configs/envoy/envoy.yaml`, the
+/// backend handlers and the web clients are listed. Keep one
+/// `static const String name = '/path';` per line (parsed by parity_check).
+abstract final class ApiEndpoints {
+  static const String refreshToken = '/auth/refresh-token';
+}
