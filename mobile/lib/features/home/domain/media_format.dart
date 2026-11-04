@@ -28,11 +28,13 @@ String timeAgo(AppLocalizations l10n, DateTime past, DateTime now) {
   return l10n.common_time_years_ago(days ~/ 365);
 }
 
+/// "1.2K" in the active language (web `useCompactNumber`).
+String compactCount(AppLocalizations l10n, int count) =>
+    NumberFormat.compact(locale: l10n.localeName).format(count);
+
 /// "1.2K views" in the active language (web `common:vod.views_compact`).
-String viewsLabel(AppLocalizations l10n, int count) {
-  final formatted = NumberFormat.compact(locale: l10n.localeName).format(count);
-  return l10n.common_vod_views_compact(formatted, count);
-}
+String viewsLabel(AppLocalizations l10n, int count) =>
+    l10n.common_vod_views_compact(compactCount(l10n, count), count);
 
 /// Where the transcoder stores a frame of a stream or video that has no
 /// uploaded thumbnail (web `mediaThumbnailUrl`).

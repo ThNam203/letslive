@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
+import 'package:letslive_mobile/core/pagination/paged_feed.dart';
 import 'package:letslive_mobile/core/providers.dart';
 import 'package:letslive_mobile/features/home/data/livestream.dart';
 import 'package:letslive_mobile/features/home/data/vod.dart';
@@ -24,8 +25,8 @@ import 'package:letslive_mobile/features/user/presentation/user_avatar.dart';
 import 'package:letslive_mobile/features/user/user_providers.dart';
 
 /// How close to the end of the list (in logical pixels) the next page of
-/// videos starts loading: the list builds the footer, which triggers the load,
-/// this far ahead of the viewport.
+/// videos starts loading: the list builds the [PagedFooter], which triggers
+/// the load, this far ahead of the viewport.
 const double _loadMoreDistance = 300;
 
 /// Horizontal screen padding of the feed cards.
@@ -170,7 +171,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   List<Widget> _vodRows(
     AppLocalizations l10n,
     String apiBaseUrl,
-    AsyncValue<VodFeed> vods,
+    AsyncValue<PagedFeed<Vod>> vods,
     DateTime now,
   ) {
     final status = feedStatusBody(
@@ -189,7 +190,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           padding: _cardPadding,
           child: _vodCard(l10n, apiBaseUrl, vod, now),
         ),
-      const _VodsFooter(),
+      PagedFooter(
+        feed: vods.value,
+        onLoadMore: ref.read(popularVodsProvider.notifier).loadMore,
+      ),
     ];
   }
 
@@ -208,32 +212,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         '${viewsLabel(l10n, vod.viewCount)} · '
         '${timeAgo(l10n, vod.createdAt, now)}',
   );
-}
-
-/// End of the videos list. Because the list builds it only when it is within
-/// [_loadMoreDistance] of the viewport, building it is the "near the end"
-/// signal: it asks for the next page (a no-op while one is loading or after
-/// the last page). A failed page shows an inline retry instead of looping.
-class _VodsFooter extends ConsumerWidget {
-  const _VodsFooter();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final feed = ref.watch(popularVodsProvider).value;
-    if (feed == null) return const SizedBox.shrink();
-    final notifier = ref.read(popularVodsProvider.notifier);
-    final error = feed.loadMoreError;
-    if (error != null) {
-      return FeedError(error: error, onRetry: notifier.loadMore);
-    }
-    if (!feed.hasMore) return const SizedBox(height: 16);
-    // Not during build: loadMore changes provider state.
-    Future.microtask(notifier.loadMore);
-    return const Padding(
-      padding: EdgeInsets.all(16),
-      child: Center(child: CircularProgressIndicator()),
-    );
-  }
 }
 
 /// Horizontal avatar + name strip of channels.

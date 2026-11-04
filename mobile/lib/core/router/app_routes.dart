@@ -1,6 +1,7 @@
 /// Route paths. Auth routes mirror web `app/(auth)`.
 abstract final class AppRoutes {
   static const String home = '/';
+  static const String search = '/search';
   static const String login = '/login';
   static const String signup = '/signup';
   static const String accountSetup = '/account-setup';

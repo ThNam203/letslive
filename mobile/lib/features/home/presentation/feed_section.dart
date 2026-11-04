@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/network/api_load.dart';
+import 'package:letslive_mobile/core/pagination/paged_feed.dart';
 
 /// The body to show instead of content while [value] is loading or failed,
 /// or when its list is empty: a spinner, an error with a retry button,
@@ -84,18 +85,18 @@ class FeedSection<T> extends StatelessWidget {
   }
 }
 
-/// Title and description of an empty section (web's empty states).
+/// Title and optional description of an empty section (web's empty states).
 class EmptyNotice extends StatelessWidget {
   const EmptyNotice({
     required this.icon,
     required this.title,
-    required this.description,
+    this.description,
     super.key,
   });
 
   final IconData icon;
   final String title;
-  final String description;
+  final String? description;
 
   @override
   Widget build(BuildContext context) {
@@ -111,8 +112,10 @@ class EmptyNotice extends StatelessWidget {
             textAlign: TextAlign.center,
             style: theme.textTheme.titleMedium,
           ),
-          const SizedBox(height: 4),
-          Text(description, textAlign: TextAlign.center),
+          if (description != null) ...[
+            const SizedBox(height: 4),
+            Text(description!, textAlign: TextAlign.center),
+          ],
         ],
       ),
     );
@@ -147,6 +150,35 @@ class FeedError extends StatelessWidget {
           FilledButton(onPressed: onRetry, child: Text(l10n.auth_retry)),
         ],
       ),
+    );
+  }
+}
+
+/// End of a paged list. Because a lazy list builds it only when it is within
+/// reach of the viewport, building it is the "near the end" signal: it asks
+/// for the next page via [onLoadMore] (a no-op while one is loading or after
+/// the last page). A failed page shows an inline retry instead of looping.
+class PagedFooter<T> extends StatelessWidget {
+  const PagedFooter({required this.feed, required this.onLoadMore, super.key});
+
+  /// The list so far; null before the first page arrived (shows nothing).
+  final PagedFeed<T>? feed;
+
+  /// Loads the next page; also the retry after an error.
+  final VoidCallback onLoadMore;
+
+  @override
+  Widget build(BuildContext context) {
+    final current = feed;
+    if (current == null) return const SizedBox.shrink();
+    final error = current.loadMoreError;
+    if (error != null) return FeedError(error: error, onRetry: onLoadMore);
+    if (!current.hasMore) return const SizedBox(height: 16);
+    // Not during build: loading a page changes provider state.
+    Future.microtask(onLoadMore);
+    return const Padding(
+      padding: EdgeInsets.all(16),
+      child: Center(child: CircularProgressIndicator()),
     );
   }
 }

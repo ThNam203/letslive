@@ -34,7 +34,7 @@ Source of the feature list: section 4 of
 | `/signup` | `SignupScreen` + `OtpDialog` (`mobile/lib/features/auth/presentation/`) | `mobile/test/features/auth/signup_screen_test.dart`, `mobile/test/features/auth/auth_validators_test.dart`, `mobile/contract_test/auth_contract_test.dart` | done |
 | `/account-setup` | `AccountSetupScreen` (`mobile/lib/features/auth/presentation/account_setup_screen.dart`) | `mobile/test/features/auth/account_setup_screen_test.dart`, `mobile/test/core/router/app_router_test.dart`, `mobile/contract_test/auth_contract_test.dart` | done |
 | `/cookie-policy` | - | - | planned |
-| `/search` | - | - | planned |
+| `/search` | `SearchScreen` (`mobile/lib/features/search/presentation/search_screen.dart`): debounced box, tabs All / Channels / Live / Videos, accent-insensitive highlight | `mobile/test/features/search/search_screen_test.dart`, `mobile/test/features/search/search_repository_test.dart`, `mobile/test/features/search/highlight_test.dart`, `mobile/contract_test/search_contract_test.dart` | done |
 | `/messages` | - | - | planned |
 | `/messages/[conversationId]` | - | - | planned |
 | `/notifications` | - | - | planned |
@@ -60,7 +60,6 @@ constant for yet. Remove a bullet when its constant lands.
 
 - `/auth/password` - update password (settings/security)
 - `/user` - public profile, follow/unfollow, own profile, stream key, notifications, inventory, gifts
-- `/users` - user search and recommendations
 - `/upload-file` - profile/background picture upload
 - `/currencies` - wallet
 - `/wallet` - wallet overview

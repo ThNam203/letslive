@@ -14,6 +14,9 @@ abstract final class ApiEndpoints {
   static const String recommendedChannels = '/users/recommendations';
   static const String popularLivestreams = '/popular-livestreams';
   static const String popularVods = '/popular-vods';
+  static const String searchUsers = '/users/search';
+  static const String searchLivestreams = '/livestreams/search';
+  static const String searchVods = '/vods/search';
 
   /// Prefix of a public profile: `/user/<id>`.
   static const String user = '/user';

@@ -9,6 +9,7 @@ class PublicUser {
     required this.username,
     required this.followerCount,
     this.profilePicture,
+    this.bio,
   });
 
   factory PublicUser.fromJson(Map<String, Object?> json) {
@@ -18,6 +19,7 @@ class PublicUser {
       username: f.string('username'),
       followerCount: f.integer('followerCount'),
       profilePicture: f.optString('profilePicture'),
+      bio: f.optString('bio'),
     );
   }
 
@@ -37,4 +39,7 @@ class PublicUser {
 
   /// Absolute URL of the avatar; null when none was uploaded.
   final String? profilePicture;
+
+  /// Short self-description; null when the user wrote none.
+  final String? bio;
 }

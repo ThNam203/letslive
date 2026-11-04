@@ -39,47 +39,10 @@ class MediaCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final owner = ref.watch(publicUserProvider(userId)).value;
-    final duration = durationLabel;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AspectRatio(
-          aspectRatio: 16 / 9,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              CachedNetworkImage(
-                imageUrl: thumbnailUrl,
-                fit: BoxFit.cover,
-                placeholder: (_, _) => const _ThumbnailPlaceholder(),
-                errorWidget: (_, _, _) => const _ThumbnailPlaceholder(),
-              ),
-              if (duration != null)
-                Positioned(
-                  right: 8,
-                  bottom: 8,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.black87,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      child: Text(
-                        duration,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
+        MediaThumbnail(url: thumbnailUrl, durationLabel: durationLabel),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
@@ -128,8 +91,82 @@ class MediaCard extends ConsumerWidget {
   }
 }
 
-/// Shown while a thumbnail loads, and when it cannot (web falls back to a
-/// bundled image; a plain icon keeps the app free of extra assets).
+/// A 16:9 thumbnail with an optional length badge (bottom right) and an
+/// optional "live" badge (top left). Shows a plain icon while the image loads
+/// and when it cannot (web falls back to a bundled image; an icon keeps the
+/// app free of extra assets).
+class MediaThumbnail extends StatelessWidget {
+  const MediaThumbnail({
+    required this.url,
+    this.durationLabel,
+    this.liveLabel,
+    super.key,
+  });
+
+  /// Absolute URL of the image.
+  final String url;
+
+  /// Length badge (videos only).
+  final String? durationLabel;
+
+  /// Red badge for streams that are live now.
+  final String? liveLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final labelStyle = Theme.of(context).textTheme.labelSmall
+        ?.copyWith(color: Colors.white);
+    final duration = durationLabel;
+    final live = liveLabel;
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          CachedNetworkImage(
+            imageUrl: url,
+            fit: BoxFit.cover,
+            placeholder: (_, _) => const _ThumbnailPlaceholder(),
+            errorWidget: (_, _, _) => const _ThumbnailPlaceholder(),
+          ),
+          if (duration != null)
+            Positioned(
+              right: 8,
+              bottom: 8,
+              child: _Badge(duration, Colors.black87, labelStyle),
+            ),
+          if (live != null)
+            Positioned(
+              left: 8,
+              top: 8,
+              child: _Badge(live, Colors.red.shade600, labelStyle),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Badge extends StatelessWidget {
+  const _Badge(this.text, this.color, this.style);
+
+  final String text;
+  final Color color;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      child: Text(text, style: style),
+    ),
+  );
+}
+
 class _ThumbnailPlaceholder extends StatelessWidget {
   const _ThumbnailPlaceholder();
 
