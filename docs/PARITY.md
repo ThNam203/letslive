@@ -30,9 +30,9 @@ Source of the feature list: section 4 of
 | web route/feature | mobile screen | tests | status |
 |---|---|---|---|
 | `/` | - | - | planned |
-| `/login` | - | - | planned |
-| `/signup` | - | - | planned |
-| `/account-setup` | - | - | planned |
+| `/login` | `LoginScreen` (`mobile/lib/features/auth/presentation/login_screen.dart`) | `mobile/test/features/auth/login_screen_test.dart`, `mobile/contract_test/auth_contract_test.dart`, `mobile/integration_test/auth_flow_test.dart` | done |
+| `/signup` | `SignupScreen` + `OtpDialog` (`mobile/lib/features/auth/presentation/`) | `mobile/test/features/auth/signup_screen_test.dart`, `mobile/test/features/auth/auth_validators_test.dart`, `mobile/contract_test/auth_contract_test.dart` | done |
+| `/account-setup` | `AccountSetupScreen` (`mobile/lib/features/auth/presentation/account_setup_screen.dart`) | `mobile/test/features/auth/account_setup_screen_test.dart`, `mobile/test/core/router/app_router_test.dart`, `mobile/contract_test/auth_contract_test.dart` | done |
 | `/cookie-policy` | - | - | planned |
 | `/search` | - | - | planned |
 | `/messages` | - | - | planned |

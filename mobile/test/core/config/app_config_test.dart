@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/config/app_config.dart';
 
@@ -8,7 +9,28 @@ void main() {
     'BACKEND_HOST': 'localhost',
     'BACKEND_PORT': '8000',
     'FLAVOR': 'dev',
+    'TURNSTILE_DEV_TOKEN': 'dev-token',
   };
+
+  const firebaseEnv = <String, String>{
+    'FIREBASE_PROJECT_ID': 'letslive-test',
+    'FIREBASE_API_KEY': 'api-key',
+    'FIREBASE_MESSAGING_SENDER_ID': '1234',
+    'FIREBASE_ANDROID_APP_ID': '1:1234:android:abc',
+    'FIREBASE_IOS_APP_ID': '1:1234:ios:abc',
+  };
+
+  final releaseEnv = <String, String>{
+    ...webExampleEnv,
+    ...firebaseEnv,
+    'FLAVOR': 'prod',
+    'GOOGLE_SERVER_CLIENT_ID': 'web.apps.googleusercontent.com',
+    'GOOGLE_IOS_CLIENT_ID': 'ios.apps.googleusercontent.com',
+  };
+
+  Matcher configErrorNaming(String key) => throwsA(
+    isA<ConfigException>().having((e) => e.message, 'message', contains(key)),
+  );
 
   group('AppConfig.fromEnv', () {
     test('builds http and ws urls from env', () {
@@ -54,13 +76,98 @@ void main() {
 
     test('parses staging and prod flavors', () {
       expect(
-        AppConfig.fromEnv({...webExampleEnv, 'FLAVOR': 'staging'}).flavor,
+        AppConfig.fromEnv({...releaseEnv, 'FLAVOR': 'staging'}).flavor,
         Flavor.staging,
       );
+      expect(AppConfig.fromEnv(releaseEnv).flavor, Flavor.prod);
+    });
+  });
+
+  group('AppConfig.fromEnv auth settings', () {
+    test('dev without Firebase uses the Turnstile dev token', () {
+      final config = AppConfig.fromEnv(webExampleEnv);
+
+      expect(config.firebase, isNull);
+      expect(config.turnstileDevToken, 'dev-token');
+      expect(config.googleSignIn, isNull);
+    });
+
+    test('dev without Firebase requires TURNSTILE_DEV_TOKEN', () {
+      final env = {...webExampleEnv}..remove('TURNSTILE_DEV_TOKEN');
+
       expect(
-        AppConfig.fromEnv({...webExampleEnv, 'FLAVOR': 'prod'}).flavor,
-        Flavor.prod,
+        () => AppConfig.fromEnv(env),
+        configErrorNaming('TURNSTILE_DEV_TOKEN'),
       );
+    });
+
+    test('dev with Firebase needs no Turnstile token', () {
+      final env = {...webExampleEnv, ...firebaseEnv}
+        ..remove('TURNSTILE_DEV_TOKEN');
+
+      final config = AppConfig.fromEnv(env, platform: TargetPlatform.android);
+
+      expect(config.firebase?.projectId, 'letslive-test');
+      expect(config.firebase?.appId, '1:1234:android:abc');
+      expect(config.turnstileDevToken, isNull);
+    });
+
+    test('Firebase uses the app id of the running platform', () {
+      final config = AppConfig.fromEnv(
+        releaseEnv,
+        platform: TargetPlatform.iOS,
+      );
+
+      expect(config.firebase?.appId, '1:1234:ios:abc');
+    });
+
+    test('Firebase config names a missing companion key', () {
+      final env = {...releaseEnv}..remove('FIREBASE_API_KEY');
+
+      expect(
+        () => AppConfig.fromEnv(env),
+        configErrorNaming('FIREBASE_API_KEY'),
+      );
+    });
+
+    test('prod requires Firebase', () {
+      final env = {...releaseEnv}..remove('FIREBASE_PROJECT_ID');
+
+      expect(
+        () => AppConfig.fromEnv(env),
+        configErrorNaming('FIREBASE_PROJECT_ID'),
+      );
+    });
+
+    test('staging requires the Google server client id', () {
+      final env = {...releaseEnv, 'FLAVOR': 'staging'}
+        ..remove('GOOGLE_SERVER_CLIENT_ID');
+
+      expect(
+        () => AppConfig.fromEnv(env),
+        configErrorNaming('GOOGLE_SERVER_CLIENT_ID'),
+      );
+    });
+
+    test('Google sign-in on iOS requires the iOS client id', () {
+      final env = {...releaseEnv}..remove('GOOGLE_IOS_CLIENT_ID');
+
+      expect(
+        () => AppConfig.fromEnv(env, platform: TargetPlatform.iOS),
+        configErrorNaming('GOOGLE_IOS_CLIENT_ID'),
+      );
+      final android = AppConfig.fromEnv(env, platform: TargetPlatform.android);
+      expect(
+        android.googleSignIn?.serverClientId,
+        'web.apps.googleusercontent.com',
+      );
+      expect(android.googleSignIn?.iosClientId, isNull);
+    });
+
+    test('prod ignores the Turnstile dev token', () {
+      final config = AppConfig.fromEnv(releaseEnv);
+
+      expect(config.turnstileDevToken, isNull);
     });
   });
 }

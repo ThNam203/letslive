@@ -8,5 +8,6 @@ abstract final class ApiEndpoints {
   static const String logout = '/auth/logout';
   static const String refreshToken = '/auth/refresh-token';
   static const String verifyEmail = '/auth/verify-email';
+  static const String googleMobile = '/auth/google/mobile';
   static const String userMe = '/user/me';
 }

@@ -138,7 +138,7 @@ Future<ContractUser> _signUp(AppConfig config, String name) async {
       body: {'email': email, 'turnstileToken': _turnstileToken},
       parse: (data) => data,
     );
-    final otp = await _readOtp(email, verify.key);
+    final otp = await readSignupOtp(email, verifyKey: verify.key);
 
     final signup = await client.post<Object?>(
       ApiEndpoints.signup,
@@ -190,8 +190,10 @@ Future<void> _waitUntilUserExists(ApiClient client, String email) async {
 
 final RegExp _safeEmail = RegExp(r'^[a-z0-9]+@[a-z0-9.]+$');
 
-Future<String> _readOtp(String email, String verifyKey) async {
-  // The email is interpolated into SQL; it is generated above, never external.
+/// The latest signup code stored for [email] (see [startContractContext] for
+/// why it is read from the database). [verifyKey] only enriches the error.
+Future<String> readSignupOtp(String email, {String verifyKey = ''}) async {
+  // The email is interpolated into SQL; callers generate it, never external.
   if (!_safeEmail.hasMatch(email)) {
     throw ContractSetupException('refusing unsafe email "$email"');
   }

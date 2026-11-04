@@ -13,7 +13,9 @@ const Duration defaultRequestTimeout = Duration(seconds: 15);
 /// Supplies headers attached to every request the client sends, including the
 /// silent token refresh and the replay after it (e.g. `X-Firebase-AppCheck`).
 /// Called per request, so it can return a fresh token each time. Explicit
-/// per-call `headers` win over provider values with the same name.
+/// per-call `headers` win over provider values with the same name. It must not
+/// set `Cookie` or `Authorization` (the session lives in the cookie jar); a
+/// request whose provider does is failed without being sent.
 typedef RequestHeaderProvider = FutureOr<Map<String, String>> Function();
 
 /// HTTP client for the LetsLive gateway. Cookie based auth, envelope parsing,
@@ -233,6 +235,10 @@ class ApiClient {
   };
 }
 
+/// Headers a [RequestHeaderProvider] may not set: they would replace or
+/// forge the cookie-jar session.
+const Set<String> _forbiddenProviderHeaders = {'cookie', 'authorization'};
+
 /// Adds [RequestHeaderProvider] headers to every outgoing request. Placed
 /// first so the refresh call and the post-refresh replay carry them too.
 class _HeaderInterceptor extends Interceptor {
@@ -249,6 +255,17 @@ class _HeaderInterceptor extends Interceptor {
     if (provider != null) {
       final extra = await provider();
       for (final entry in extra.entries) {
+        final name = entry.key.toLowerCase();
+        if (_forbiddenProviderHeaders.contains(name)) {
+          // Fail the request loudly instead of silently dropping the header.
+          handler.reject(
+            DioException(
+              requestOptions: options,
+              message: 'headerProvider must not set the $name header',
+            ),
+          );
+          return;
+        }
         options.headers.putIfAbsent(entry.key, () => entry.value);
       }
     }

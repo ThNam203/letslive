@@ -100,4 +100,22 @@ void main() {
       expect(request.headers['X-Token'], 't', reason: request.path);
     }
   });
+
+  for (final name in ['Cookie', 'authorization']) {
+    test('headerProvider cannot set $name', () async {
+      final adapter = FakeAdapter((_) => okEnvelope(null));
+      final client = ApiClient(
+        baseUrl: _base,
+        cookieJar: _loggedInJar(),
+        adapter: adapter,
+        headerProvider: () => {name: 'forged'},
+      );
+
+      final res = await client.get<Object?>('/user/me', parse: _noData);
+
+      expect(res.success, isFalse);
+      expect(res.message, contains(name.toLowerCase()));
+      expect(adapter.requests, isEmpty, reason: 'request must not be sent');
+    });
+  }
 }

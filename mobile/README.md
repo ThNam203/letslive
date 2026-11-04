@@ -14,12 +14,36 @@ example in `.env.example` to `env/dev.json` (git-ignored, one file per flavor):
   "BACKEND_WS_PROTOCOL": "ws",
   "BACKEND_HOST": "localhost",
   "BACKEND_PORT": "8000",
-  "FLAVOR": "dev"
+  "FLAVOR": "dev",
+  "TURNSTILE_DEV_TOKEN": "dev-token"
 }
 ```
 
 The Android emulator reaches the host machine at `10.0.2.2`, not `localhost`.
-If a value is missing the app shows a configuration error screen.
+If a value is missing the app shows a configuration error screen naming it.
+
+### Auth: bot proof, Firebase and Google sign-in
+
+`POST /auth/login` and `POST /auth/verify-email` need a bot proof. With
+Firebase configured (`FIREBASE_*` keys) the app sends a fresh single-use
+Firebase App Check token per request (`X-Firebase-AppCheck`); dev without
+Firebase sends `TURNSTILE_DEV_TOKEN` instead. Staging and prod require
+Firebase and `GOOGLE_SERVER_CLIENT_ID`. All keys are listed in `.env.example`.
+
+Google sign-in uses `google_sign_in` 7 and posts the id token to
+`POST /auth/google/mobile`. Setup that needs the Google Cloud / Firebase
+credentials (not in the repo):
+
+- `GOOGLE_SERVER_CLIENT_ID` = the web OAuth client id (the backend's
+  `GOOGLE_OAUTH_CLIENT_ID`).
+- Android: register each flavor's package name (`vn.letslive.mobile`,
+  `.dev`, `.staging`) with its signing SHA-1 as an Android OAuth client.
+- iOS: create an iOS OAuth client per bundle id, set `GOOGLE_IOS_CLIENT_ID`,
+  and add its reversed client id (`com.googleusercontent.apps.<id>`) to
+  `CFBundleURLSchemes` in `ios/Runner/Info.plist`; without it the Google
+  sheet cannot return to the app.
+- App Check: register the Android app (Play Integrity) and iOS app (App
+  Attest) in Firebase; in dev, register the debug token the app logs.
 
 ## Run, analyze, test
 
@@ -28,7 +52,7 @@ flutter pub get
 flutter run --flavor dev --dart-define-from-file=env/dev.json
 flutter analyze
 flutter test
-dart format --set-exit-if-changed lib test tool contract_test
+dart format --set-exit-if-changed lib test tool contract_test integration_test
 ```
 
 ## Contract tests (real backend)
@@ -84,6 +108,20 @@ the auth service stores the OTP before it tries, so the harness reads it with
 token (`TURNSTILE_DEV_TOKEN`); the User-Agent no longer matters to the backend's
 captcha check. Extra request headers (such as the App Check token) go through
 `ApiClient(headerProvider: ...)` or the per-call `headers:` parameter.
+
+### 3. Integration test on a simulator
+
+`integration_test/auth_flow_test.dart` drives the real app (login with a
+wrong and the right password, then logout) against the same stack. It needs
+an existing user, because a device cannot read signup codes from the
+database: create one through the web app or with `POST /auth/verify-email`,
+the code from `sign_up_otps`, then `POST /auth/signup`.
+
+```sh
+flutter test integration_test/auth_flow_test.dart -d <simulator id> --flavor dev \
+  --dart-define-from-file=env/dev.json \
+  --dart-define=AUTH_FLOW_EMAIL=<email> --dart-define=AUTH_FLOW_PASSWORD=<password>
+```
 
 ## Builds
 

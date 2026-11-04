@@ -4,17 +4,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/config/app_config.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/l10n/locale_provider.dart';
+import 'package:letslive_mobile/core/router/app_router.dart';
 import 'package:letslive_mobile/core/theme/app_theme.dart';
 import 'package:letslive_mobile/core/theme/theme_mode_provider.dart';
 
+/// The app: theme, locale and the router (auth gate included).
 class LetsLiveApp extends ConsumerWidget {
-  const LetsLiveApp({required this.config, super.key});
-
-  final AppConfig config;
+  const LetsLiveApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: ref.watch(appRouterProvider),
       onGenerateTitle: (context) =>
           AppLocalizations.of(context).common_app_title,
       theme: lightTheme,
@@ -28,9 +29,6 @@ class LetsLiveApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: Scaffold(
-        body: Center(child: Text('LetsLive (${config.flavor.name})')),
-      ),
     );
   }
 }
