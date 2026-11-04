@@ -34,8 +34,8 @@ class BetterLivePlayerController implements LivePlayerController {
           fit: BoxFit.contain,
           handleLifecycle: false,
           // Only applies on the package's fullscreen route (which Android
-          // picture-in-picture uses). The inline player holds no wakelock,
-          // so the screen may sleep while watching (README, "Video player").
+          // picture-in-picture uses); inline, `LivePlayerView` holds the
+          // wakelock through `screenWakeProvider`.
           allowedScreenSleep: false,
           controlsConfiguration: BetterPlayerControlsConfiguration(
             showControls: false,

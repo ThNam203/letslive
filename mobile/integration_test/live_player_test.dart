@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:letslive_mobile/features/watch/data/better_live_player_controller.dart';
 import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
+import 'package:letslive_mobile/features/watch/watch_providers.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 /// HLS master playlist of a live stream to play, e.g. a local ffmpeg ladder
 /// (see mobile/README.md "Video player"). The app derives the URL from the
@@ -82,5 +85,18 @@ void main() {
     await player.selectQuality(VideoQuality.auto);
     expect(player.value.value.quality, VideoQuality.auto);
     expect(player.value.value.hasError, isFalse);
+  });
+
+  testWidgets('the app screen wake reaches the native wakelock', (
+    tester,
+  ) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final wake = container.read(screenWakeProvider);
+
+    await wake(true);
+    expect(await WakelockPlus.enabled, isTrue);
+    await wake(false);
+    expect(await WakelockPlus.enabled, isFalse);
   });
 }

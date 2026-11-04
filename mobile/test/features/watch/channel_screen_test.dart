@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
+import 'package:letslive_mobile/features/auth/auth_providers.dart';
+import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
 import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
 import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
 import 'package:letslive_mobile/features/watch/presentation/channel_screen.dart';
@@ -359,6 +361,89 @@ void main() {
     );
     expect(tester.takeException(), isNull);
     expect(find.text('Offline'), findsOneWidget);
+  });
+
+  group('screen wake', screenWakeTests);
+}
+
+void screenWakeTests() {
+  testWidgets('playing keeps the screen on, pause lets it sleep', (
+    tester,
+  ) async {
+    final wake = FakeScreenWake();
+    await pumpChannel(
+      tester,
+      liveServer(),
+      FakeLivePlayers(),
+      'u-1',
+      wake: wake,
+    );
+    expect(wake.isAwake, isTrue);
+
+    await tester.tap(find.byTooltip('Pause'));
+    await tester.pump();
+    expect(wake.isAwake, isFalse);
+
+    await tester.tap(find.byTooltip('Play'));
+    await tester.pump();
+    expect(wake.isAwake, isTrue);
+    expect(wake.calls, [true, false, true]);
+  });
+
+  testWidgets('a playback error or the end lets the screen sleep', (
+    tester,
+  ) async {
+    final wake = FakeScreenWake();
+    final players = FakeLivePlayers();
+    final server = liveServer();
+    await pumpChannel(tester, server, players, 'u-1', wake: wake);
+
+    players.last.emit(failed);
+    expect(wake.isAwake, isFalse);
+    // The silent restart plays again.
+    await tester.pumpAndSettle();
+    expect(wake.isAwake, isTrue);
+
+    server.liveByUser = {};
+    players.last.emit(ended);
+    expect(wake.isAwake, isFalse);
+    await tester.pumpAndSettle();
+    expect(find.text('This stream has ended.'), findsOneWidget);
+    expect(wake.isAwake, isFalse);
+  });
+
+  testWidgets('leaving the channel lets the screen sleep', (tester) async {
+    final wake = FakeScreenWake();
+    await pumpChannel(
+      tester,
+      liveServer(),
+      FakeLivePlayers(),
+      'u-1',
+      wake: wake,
+    );
+    expect(wake.isAwake, isTrue);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(wake.isAwake, isFalse);
+  });
+
+  testWidgets('logging out lets the screen sleep', (tester) async {
+    final wake = FakeScreenWake();
+    final app = await pumpChannel(
+      tester,
+      liveServer(),
+      FakeLivePlayers(),
+      'u-1',
+      wake: wake,
+    );
+    expect(wake.isAwake, isTrue);
+
+    final loggedOut = app.container.read(sessionProvider.notifier).logout();
+    await tester.pumpAndSettle();
+    await loggedOut;
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(wake.isAwake, isFalse);
   });
 }
 

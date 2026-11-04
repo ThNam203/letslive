@@ -107,10 +107,13 @@ Platform config for background audio and PiP:
   AGP 9 the package expects built-in Kotlin, which this project keeps off,
   so its Kotlin would otherwise target JDK 21 against Java 17 and fail.
 
+The package only holds a wakelock on its fullscreen route, so the app adds
+`wakelock_plus` directly (approved 2026-11-04): `LivePlayerView` keeps the
+screen on while the stream plays and releases it on pause, error, end and
+when the view goes away (leaving the screen, logout).
+
 Known gaps:
 
-- The screen may sleep while watching inline: the package only holds a
-  wakelock on its fullscreen route, and the app adds none.
 - Android picture-in-picture is button-only (the package does not hook
   `onUserLeaveHint`, so going home does not enter PiP). It goes through
   the package's fullscreen route: landscape, no controls.
@@ -118,8 +121,8 @@ Known gaps:
 Still needs a physical device: background audio with the screen locked;
 PiP enter/exit (Android: button only) and returning to the app, including
 orientation and controls after leaving PiP; lock screen / notification
-controls; quality switches on a real network; screen dimming/locking while
-watching inline; Android 13+ notification permission (without it the
+controls; quality switches on a real network; the screen stays on while
+watching (and sleeps again after pause); Android 13+ notification permission (without it the
 notification is hidden, but playback goes on).
 
 `integration_test/live_player_test.dart` drives the real player on a

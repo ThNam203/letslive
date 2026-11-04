@@ -80,6 +80,19 @@ class FakeLivePlayer implements LivePlayerController {
   }
 }
 
+/// A `ScreenWake` for tests: records every request instead of calling the
+/// wakelock plugin.
+class FakeScreenWake {
+  /// Every request in order: true = keep the screen on.
+  final List<bool> calls = [];
+
+  /// Whether the screen is currently kept on.
+  bool get isAwake => calls.lastOrNull ?? false;
+
+  /// A `ScreenWake`.
+  Future<void> call(bool awake) async => calls.add(awake);
+}
+
 /// The player factory for tests: builds [FakeLivePlayer]s with [qualities]
 /// and keeps them in [created].
 class FakeLivePlayers {

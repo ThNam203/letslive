@@ -65,6 +65,7 @@ Future<TestApp> pumpWatchHome(
   WidgetTester tester,
   FakeWatchServer server,
   FakeLivePlayers players, {
+  FakeScreenWake? wake,
   double width = 800,
   double height = 6000,
   double textScale = 1,
@@ -74,7 +75,11 @@ Future<TestApp> pumpWatchHome(
   width: width,
   height: height,
   textScale: textScale,
-  overrides: [livePlayerFactoryProvider.overrideWithValue(players.create)],
+  overrides: [
+    livePlayerFactoryProvider.overrideWithValue(players.create),
+    // Never the real plugin in widget tests.
+    screenWakeProvider.overrideWithValue((wake ?? FakeScreenWake()).call),
+  ],
 );
 
 /// Pumps the signed-in app and opens the channel of [userId] the way a
@@ -84,6 +89,7 @@ Future<TestApp> pumpChannel(
   FakeWatchServer server,
   FakeLivePlayers players,
   String userId, {
+  FakeScreenWake? wake,
   double width = 800,
   double height = 6000,
   double textScale = 1,
@@ -93,6 +99,7 @@ Future<TestApp> pumpChannel(
     tester,
     server,
     players,
+    wake: wake,
     width: width,
     height: height,
     textScale: textScale,

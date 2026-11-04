@@ -50,6 +50,7 @@ dependencies:
   google_sign_in: ^7.2.0
   cached_network_image: ^4.0.6
   better_player_plus: ^2.0.1
+  wakelock_plus: ^1.8.2
 
 dev_dependencies:
   flutter_test:

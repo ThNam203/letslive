@@ -59,10 +59,30 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
   /// The server said the stream is still live after a playback error.
   bool _showError = false;
 
+  /// Read once: `ref` is not usable in [dispose].
+  late final ScreenWake _screenWake;
+
+  /// Whether this view currently keeps the screen on.
+  bool _awake = false;
+
   @override
   void initState() {
     super.initState();
+    _screenWake = ref.read(screenWakeProvider);
     _player = _createPlayer();
+    _syncWake();
+  }
+
+  /// Keeps the screen on exactly while the stream plays.
+  void _syncWake() {
+    final value = _player.value.value;
+    _setAwake(value.isPlaying && !value.hasError && !value.hasEnded);
+  }
+
+  void _setAwake(bool awake) {
+    if (awake == _awake) return;
+    _awake = awake;
+    unawaited(_screenWake(awake));
   }
 
   LivePlayerController _createPlayer() {
@@ -75,12 +95,16 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
     return player;
   }
 
+  /// Also lets the screen sleep: on leaving (dispose, which logout and
+  /// navigating away both cause) and before a restart.
   void _releasePlayer() {
     _player.value.removeListener(_onPlayerChanged);
     _player.dispose();
+    _setAwake(false);
   }
 
   void _onPlayerChanged() {
+    _syncWake();
     final value = _player.value.value;
     if (value.isPlaying && !value.hasError && !value.hasEnded) {
       _autoRetried = false;
@@ -109,6 +133,7 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
     _reportedStop = false;
     _showError = false;
     _player = _createPlayer();
+    _syncWake();
   });
 
   @override

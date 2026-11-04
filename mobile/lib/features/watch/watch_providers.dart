@@ -20,6 +20,7 @@ import 'package:letslive_mobile/features/watch/data/watch_repository.dart';
 import 'package:letslive_mobile/features/watch/domain/channel_state.dart';
 import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
 import 'package:letslive_mobile/features/user/user_providers.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 /// How often an open channel asks whether the stream is still live (web's
 /// query stale time).
@@ -33,6 +34,16 @@ final watchRepositoryProvider = Provider<WatchRepository>(
 /// Builds the native player; widget tests override it with a fake.
 final livePlayerFactoryProvider = Provider<LivePlayerFactory>(
   (ref) => BetterLivePlayerController.new,
+);
+
+/// Keeps the screen on (`true`) or lets it sleep again (`false`).
+typedef ScreenWake = Future<void> Function(bool awake);
+
+/// The wakelock the live player holds while a stream plays; widget tests
+/// override it with a fake.
+final screenWakeProvider = Provider<ScreenWake>(
+  (ref) =>
+      (awake) => WakelockPlus.toggle(enable: awake),
 );
 
 /// The channel of one user. `autoDispose`: leaving the screen stops the
