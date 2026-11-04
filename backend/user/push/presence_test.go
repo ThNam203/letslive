@@ -31,8 +31,8 @@ func TestPresenceIgnoresMalformedEvents(t *testing.T) {
 	p := NewPresenceTracker(func() bool { return true })
 	p.handle([]byte(`not json`))
 	p.handle([]byte(`{"online":true}`))
-	if p.len() != 0 {
-		t.Fatalf("tracked %d users from malformed events", p.len())
+	if p.count() != 0 {
+		t.Fatalf("tracked %d users from malformed events", p.count())
 	}
 }
 

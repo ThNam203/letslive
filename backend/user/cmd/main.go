@@ -18,6 +18,7 @@ import (
 	inventoryhandler "sen1or/letslive/user/handlers/inventory"
 	"sen1or/letslive/user/handlers/livestream_information"
 	notificationhandler "sen1or/letslive/user/handlers/notification"
+	pushhandler "sen1or/letslive/user/handlers/push"
 	"sen1or/letslive/user/handlers/user"
 	"sen1or/letslive/user/push"
 	"sen1or/letslive/user/repositories"
@@ -144,7 +145,7 @@ func main() {
 	logger.Infof(shutdownCtx, "service shut down complete.")
 }
 
-func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config, publisher realtime.Publisher, deviceRepo domains.DeviceTokenRepository, pushSender push.PushSender) *api.APIServer {
+func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config, publisher realtime.Publisher, deviceRepo domains.DeviceTokenRepository, pushSender push.Sender) *api.APIServer {
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var livestreamInfoRepo = repositories.NewLivestreamInformationRepository(dbConn)
 	var followRepo = repositories.NewFollowRepository(dbConn)
@@ -169,5 +170,5 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var invHandler = inventoryhandler.NewInventoryHandler(inventoryService)
 	var gHandler = gifthandler.NewGiftHandler(giftService)
 	var dHandler = devicehandler.NewDeviceHandler(deviceService)
-	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, notifHandler, invHandler, gHandler, dHandler, cfg, dbConn)
+	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, notifHandler, invHandler, gHandler, dHandler, pushhandler.NewPushHandler(pushSender), cfg, dbConn)
 }

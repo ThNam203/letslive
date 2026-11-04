@@ -88,7 +88,7 @@ func main() {
 
 	usersGateway := userservice.NewGateway(registry)
 	conversationService := services.NewConversationService(conversationRepo, dmMessageRepo, usersGateway)
-	dmMessageService := services.NewDmMessageService(conversationRepo, dmMessageRepo, notifier)
+	dmMessageService := services.NewDmMessageService(conversationRepo, dmMessageRepo, notifier, usersGateway)
 	liveChatService := services.NewLiveChatService(repositories.NewLiveMessageRepository(db), usersGateway, notifier)
 	chatCommandService := services.NewChatCommandService(repositories.NewChatCommandRepository(db))
 
