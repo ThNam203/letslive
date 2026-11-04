@@ -1,6 +1,6 @@
 # Issues — letslive
 
-_Last updated: 2026-10-08_
+_Last updated: 2026-11-04_
 
 ---
 
@@ -120,6 +120,11 @@ WebSocket: [web/types/dm.ts:94](web/types/dm.ts#L94)
 **L5. `GetMessages` silently swallows errors**
 The function catches all errors and returns `{ messages: [] }` rather than propagating the error. Callers cannot distinguish a successful empty result from a network/server failure. All other API functions in the same file return `ApiResponse<T>`.
 File: [web/lib/api/chat.ts:5-16](web/lib/api/chat.ts#L5-L16)
+
+**L9. DM push notifications ignore conversation mute**
+`DmMessageService.Send` pushes every participant except the sender, including participants who muted the conversation (`isMuted` on the participant record). Muting today only affects the in-app UI, so a muted conversation still buzzes the phone.
+Fix: skip participants with `IsMuted == true` when building the push recipient list in `pushDm`, plus a unit test.
+Files: [backend/chat/services/dm_message.go:155](backend/chat/services/dm_message.go#L155), [backend/chat/domains/conversation.go:46](backend/chat/domains/conversation.go#L46)
 
 ---
 
