@@ -1,8 +1,18 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties: Properties? =
+    if (keystorePropertiesFile.exists()) {
+        Properties().apply { keystorePropertiesFile.inputStream().use { load(it) } }
+    } else {
+        null
+    }
 
 android {
     namespace = "vn.letslive.mobile"
@@ -16,9 +26,8 @@ android {
 
     defaultConfig {
         applicationId = "vn.letslive.mobile"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Android 8.0 (API 26) is the product minimum.
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
         // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
@@ -43,12 +52,39 @@ android {
         }
     }
 
+    signingConfigs {
+        if (keystoreProperties != null) {
+            create("upload") {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Staging and prod release builds are signed with the keystore from
+            // key.properties (enforced below); the dev flavor uses the debug key.
+            signingConfig = signingConfigs.findByName("upload")
+                ?: signingConfigs.getByName("debug")
         }
+    }
+}
+
+// Staging/prod release artifacts must never be signed with the debug key.
+gradle.taskGraph.whenReady {
+    val needsKey = allTasks.any {
+        Regex("(assemble|bundle|package)(Staging|Prod)Release").containsMatchIn(it.name)
+    }
+    if (needsKey && keystoreProperties == null) {
+        throw GradleException(
+            "Release signing is not configured: android/key.properties is missing. " +
+                "Create it with keyAlias, keyPassword, storeFile and storePassword " +
+                "(see mobile/README.md). Staging and prod release builds are never " +
+                "signed with the debug key.",
+        )
     }
 }
 

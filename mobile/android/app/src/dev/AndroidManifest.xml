@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- The dev stack is served over plain http. Only the dev flavor allows it;
+         staging and prod keep the cleartext-blocked default. -->
+    <application
+        android:usesCleartextTraffic="true"
+        tools:targetApi="m" />
+</manifest>
