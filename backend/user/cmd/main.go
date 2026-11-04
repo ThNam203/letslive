@@ -82,16 +82,8 @@ func main() {
 	}
 	realtimePublisher := realtime.NewNATSPublisher(natsConn)
 
-	// subscribes before any request can create a notification
-	presenceTracker := push.NewPresenceTracker(natsConn.IsConnected)
-	if _, err := presenceTracker.Subscribe(natsConn); err != nil {
-		logger.Errorf(ctx, "failed to subscribe to presence events, pushes will not be suppressed for online users: %v", err)
-	} else {
-		logger.Infof(ctx, "push presence subscribed to %s on %s", realtime.PresenceSubject, natsConn.ConnectedUrlRedacted())
-	}
-
 	deviceRepo := repositories.NewDeviceTokenRepository(dbConn)
-	pushSender, closePush, err := push.NewFromEnv(ctx, deviceRepo, presenceTracker)
+	pushSender, closePush, err := push.NewFromEnv(ctx, deviceRepo, natsConn)
 	if err != nil {
 		logger.Panicf(ctx, "invalid push configuration: %v", err)
 	}
@@ -121,6 +113,8 @@ func main() {
 				logger.Errorf(shutdownCtx, "server shutdown timed out.")
 			}
 		}
+		// in-flight requests have finished enqueueing pushes; let them deliver
+		closePush()
 		shutdownWg.Done()
 	})()
 
@@ -136,13 +130,8 @@ func main() {
 		shutdownWg.Done()
 	})()
 
-	shutdownWg.Add(1)
-	go (func() {
-		closePush() // queued pushes finish before nats is drained
-		shutdownWg.Done()
-	})()
-
 	shutdownWg.Wait()
+	// nats is drained last so queued pushes can still read presence
 	shutdownWg.Add(1)
 	go (func() {
 		if err := natsConn.Drain(); err != nil {

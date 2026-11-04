@@ -77,8 +77,8 @@ func (p *PresenceTracker) Reset() {
 	p.mu.Unlock()
 }
 
-// Len returns the number of users currently tracked as online.
-func (p *PresenceTracker) Len() int {
+// len returns the number of users currently tracked as online.
+func (p *PresenceTracker) len() int {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 	return len(p.online)

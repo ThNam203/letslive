@@ -12,10 +12,14 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
+// Defaults applied by NewAsync for zero-valued options.
 const (
-	DefaultWorkers   = 8
+	// DefaultWorkers is the number of concurrent deliveries.
+	DefaultWorkers = 8
+	// DefaultQueueSize is how many pushes may wait before new ones are dropped.
 	DefaultQueueSize = 256
-	DefaultTimeout   = 10 * time.Second
+	// DefaultTimeout bounds a single delivery.
+	DefaultTimeout = 10 * time.Second
 )
 
 var (
@@ -50,6 +54,8 @@ type Async struct {
 	wg     sync.WaitGroup
 }
 
+// NewAsync starts the worker pool around inner. Zero option values fall back
+// to the Default constants. Call Close to stop the workers.
 func NewAsync(inner MessageSender, opts AsyncOptions) *Async {
 	if opts.Workers <= 0 {
 		opts.Workers = DefaultWorkers

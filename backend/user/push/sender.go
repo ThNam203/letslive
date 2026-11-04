@@ -1,9 +1,3 @@
-// Package push delivers mobile push notifications through FCM.
-//
-// Reusable entry point: build a Message (FromNotification maps a stored
-// notification into one, other features build their own) and call
-// MessageSender.SendMessage. Delivery is skipped for users with a live realtime
-// connection and removes device tokens that FCM reports as dead.
 package push
 
 import (
@@ -84,6 +78,8 @@ const (
 	StatusFailed
 )
 
+// TokenResult is the outcome of sending to one device token. Err carries the
+// FCM error for non-sent statuses and must not be logged with the token.
 type TokenResult struct {
 	Token  string
 	Status TokenStatus
@@ -102,14 +98,20 @@ type Service struct {
 	gateway  Gateway
 }
 
+// NewService builds the synchronous sender from its three collaborators.
 func NewService(tokens TokenStore, presence PresenceChecker, gateway Gateway) *Service {
 	return &Service{tokens: tokens, presence: presence, gateway: gateway}
 }
 
+// Send pushes a stored notification. See SendMessage for the delivery rules.
 func (s *Service) Send(ctx context.Context, userID uuid.UUID, n domains.Notification) error {
 	return s.SendMessage(ctx, userID, FromNotification(n))
 }
 
+// SendMessage pushes msg to every device token of userID, unless the user has a
+// live realtime connection. If presence cannot be determined it sends anyway.
+// Tokens FCM rejects as dead are deleted. It returns an error if listing
+// tokens fails, the FCM call fails, or any device could not be reached.
 func (s *Service) SendMessage(ctx context.Context, userID uuid.UUID, msg Message) error {
 	online, err := s.presence.IsOnline(ctx, userID)
 	if err != nil {
@@ -171,13 +173,16 @@ func (s *Service) cleanup(ctx context.Context, userID uuid.UUID, results []Token
 // Disabled is the sender used when no FCM credentials are configured.
 type Disabled struct{}
 
+// NewDisabled returns the no-op sender used when push is not configured.
 func NewDisabled() Disabled { return Disabled{} }
 
+// Send logs at debug level and does nothing.
 func (Disabled) Send(ctx context.Context, userID uuid.UUID, _ domains.Notification) error {
 	logger.Debugf(ctx, "push disabled, not sending to user %s", userID)
 	return nil
 }
 
+// SendMessage logs at debug level and does nothing.
 func (Disabled) SendMessage(ctx context.Context, userID uuid.UUID, _ Message) error {
 	logger.Debugf(ctx, "push disabled, not sending to user %s", userID)
 	return nil

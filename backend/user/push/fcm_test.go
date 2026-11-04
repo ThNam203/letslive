@@ -100,7 +100,7 @@ func TestGatewayReturnsTransportError(t *testing.T) {
 func TestNewFromEnvDisabledWhenCredentialUnset(t *testing.T) {
 	t.Setenv(EnvServiceAccountJSON, "")
 
-	sender, closeFn, err := NewFromEnv(context.Background(), &fakeTokenStore{}, fakePresence{})
+	sender, closeFn, err := NewFromEnv(context.Background(), &fakeTokenStore{}, nil)
 	defer closeFn()
 
 	if err != nil {
@@ -120,7 +120,7 @@ func TestNewFromEnvFailsOnMalformedCredential(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Setenv(EnvServiceAccountJSON, raw)
 
-			_, _, err := NewFromEnv(context.Background(), &fakeTokenStore{}, fakePresence{})
+			_, _, err := NewFromEnv(context.Background(), &fakeTokenStore{}, nil)
 
 			if err == nil || !strings.Contains(err.Error(), EnvServiceAccountJSON) {
 				t.Fatalf("err = %v, want a clear error naming %s", err, EnvServiceAccountJSON)

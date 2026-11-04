@@ -94,6 +94,7 @@ func (s NotificationService) CreateNotification(ctx context.Context, req dto.Cre
 // sendPush is best effort: the row is stored, so neither an error nor a panic
 // from the sender may fail the request.
 func (s NotificationService) sendPush(ctx context.Context, n *domains.Notification) {
+	// PushSender is an interface: any implementation, not only push.Async, may panic
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Errorf(ctx, "push sender panicked for notification %s user %s: %v", n.Id, n.UserId, r)

@@ -4,10 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
-
-	"sen1or/letslive/shared/pkg/logger"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/messaging"
@@ -15,9 +12,6 @@ import (
 )
 
 const (
-	EnvServiceAccountJSON = "FIREBASE_SERVICE_ACCOUNT_JSON"
-	EnvProjectID          = "FIREBASE_PROJECT_ID"
-
 	// FCM accepts at most 500 tokens per multicast.
 	maxTokensPerBatch = 500
 	soundDefault      = "default"
@@ -88,6 +82,9 @@ func parseServiceAccount(raw string) (serviceAccount, error) {
 	return sa, nil
 }
 
+// SendToTokens sends msg to every token (in batches of at most 500) and
+// reports a status per token. A non-nil error means the whole call failed;
+// results may then be partial.
 func (g *FCMGateway) SendToTokens(ctx context.Context, tokens []string, msg Message) ([]TokenResult, error) {
 	results := make([]TokenResult, 0, len(tokens))
 	for start := 0; start < len(tokens); start += maxTokensPerBatch {
@@ -138,30 +135,4 @@ func buildMulticast(tokens []string, msg Message) *messaging.MulticastMessage {
 			}},
 		},
 	}
-}
-
-// Sender is what the rest of the service uses: it accepts both the
-// notification entry point and the payload-agnostic one.
-type Sender interface {
-	PushSender
-	MessageSender
-}
-
-// NewFromEnv builds the push pipeline. With FIREBASE_SERVICE_ACCOUNT_JSON unset
-// push is disabled (logged once) and sends are no-ops. A set but malformed
-// credential returns an error so the service fails at boot. The returned
-// function stops the worker pool and waits for queued pushes.
-func NewFromEnv(ctx context.Context, tokens TokenStore, presence PresenceChecker) (Sender, func(), error) {
-	raw := strings.TrimSpace(os.Getenv(EnvServiceAccountJSON))
-	if raw == "" {
-		logger.Infof(ctx, "push disabled: %s is not set", EnvServiceAccountJSON)
-		return NewDisabled(), func() {}, nil
-	}
-	gateway, err := NewFCMGateway(ctx, raw, strings.TrimSpace(os.Getenv(EnvProjectID)))
-	if err != nil {
-		return nil, nil, err
-	}
-	async := NewAsync(NewService(tokens, presence, gateway), AsyncOptions{})
-	logger.Infof(ctx, "push enabled (fcm)")
-	return async, async.Close, nil
 }
