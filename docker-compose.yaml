@@ -30,6 +30,7 @@ services:
       - AUTH_DB_USER=${AUTH_DB_USER}
       - AUTH_DB_PASSWORD=${AUTH_DB_PASSWORD}
       - CLOUDFLARE_TURNSTILE_SECRET_KEY=${CLOUDFLARE_TURNSTILE_SECRET_KEY}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-}
     depends_on:
       consul:
         condition: service_healthy

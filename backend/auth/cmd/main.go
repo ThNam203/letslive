@@ -13,6 +13,7 @@ import (
 	"sen1or/letslive/auth/handlers"
 	"sen1or/letslive/auth/repositories"
 	"sen1or/letslive/auth/services"
+	"sen1or/letslive/auth/utils"
 
 	usergateway "sen1or/letslive/auth/gateway/user/http"
 
@@ -73,7 +74,19 @@ func main() {
 	// this service verifies its own cookies against the key it signs with
 	jwtauth.SetDefault(jwtauth.NewStaticVerifier(signer.PublicKey()))
 
-	server := SetupServer(dbConn, registry, config, signer)
+	appCheck, err := utils.NewAppCheckVerifierFromEnv(ctx)
+	if err != nil {
+		// FIREBASE_PROJECT_ID is set but App Check cannot start: refuse to run
+		// rather than silently drop to a weaker mode.
+		logger.Panicf(ctx, "failed to set up firebase app check: %s", err)
+	}
+	if appCheck != nil {
+		logger.Infof(ctx, "bot check mode: Firebase App Check (project %s) or Cloudflare Turnstile", os.Getenv(utils.FirebaseProjectIDEnv))
+	} else {
+		logger.Infof(ctx, "bot check mode: Cloudflare Turnstile only (%s unset, X-Firebase-AppCheck header ignored)", utils.FirebaseProjectIDEnv)
+	}
+
+	server := SetupServer(dbConn, registry, config, signer, appCheck)
 	go func() {
 		logger.Infof(ctx, "starting server on %s:%d...", config.Service.Hostname, config.Service.APIPort)
 		// ListenAndServe should ideally block until an error occurs (e.g., server stopped)
@@ -125,7 +138,7 @@ func loadAccessTokenSigner() (*jwtauth.Signer, error) {
 	return jwtauth.NewSigner(key), nil
 }
 
-func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config, signer *jwtauth.Signer) *api.APIServer {
+func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config, signer *jwtauth.Signer, appCheck utils.AppCheckVerifier) *api.APIServer {
 	var userRepo = repositories.NewAuthRepository(dbConn)
 	var refreshTokenRepo = repositories.NewRefreshTokenRepository(dbConn)
 	var signUpOTPRepo = repositories.NewSignUpOTPRepo(dbConn)
@@ -135,6 +148,6 @@ func SetupServer(dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Con
 	var googleAuthService = services.NewGoogleAuthService(userRepo, userGateway)
 	var jwtService = services.NewJWTService(refreshTokenRepo, cfg.JWT, signer)
 	var verificationService = services.NewVerificationService(signUpOTPRepo)
-	var authHandler = handlers.NewAuthHandler(*jwtService, *authService, *verificationService, *googleAuthService, cfg.Verification.Gateway)
+	var authHandler = handlers.NewAuthHandler(*jwtService, *authService, *verificationService, *googleAuthService, cfg.Verification.Gateway, appCheck)
 	return api.NewAPIServer(authHandler, registry, cfg, dbConn)
 }

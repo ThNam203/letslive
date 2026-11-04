@@ -58,14 +58,23 @@ func (c *JWTService) GenerateTokenPair(ctx context.Context, userId string) (*typ
 // create a new access token for the refresh token
 // the process is called "refresh token"
 func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*types.AccessTokenInformation, error) {
+	secret := os.Getenv("REFRESH_TOKEN_SECRET")
+	if secret == "" {
+		logger.Errorf(ctx, "REFRESH_TOKEN_SECRET is not configured")
+		return nil, domains.ErrInternal
+	}
+
 	myClaims := types.MyClaims{}
-	parsedToken, err := jwt.NewParser().ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (any, error) {
-		return []byte(os.Getenv("REFRESH_TOKEN_SECRET")), nil
+	parser := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
+	parsedToken, err := parser.ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (any, error) {
+		return []byte(secret), nil
 	})
 
+	// A malformed, expired or wrongly signed refresh token is a client problem
+	// (401, so the app re-authenticates), not a server fault.
 	if err != nil {
-		logger.Errorf(ctx, "token parsing failed: %s", err)
-		return nil, domains.ErrInternal
+		logger.Errorf(ctx, "refresh token rejected: %s", err)
+		return nil, domains.ErrUnauthorized
 	} else if !parsedToken.Valid {
 		logger.Errorf(ctx, "token not valid")
 		return nil, domains.ErrUnauthorized

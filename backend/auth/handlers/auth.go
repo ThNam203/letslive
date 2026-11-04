@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"sen1or/letslive/auth/domains"
 	"sen1or/letslive/auth/dto"
 	serviceresponse "sen1or/letslive/auth/response"
 	"sen1or/letslive/auth/services"
 	"sen1or/letslive/auth/utils"
 	"sen1or/letslive/shared/pkg/logger"
-	"strings"
 )
 
 // TODO: put verificationGateway into config
@@ -19,6 +19,10 @@ type AuthHandler struct {
 	googleAuthService   services.GoogleAuthService
 	verificationService services.VerificationService
 	verificationGateway string
+
+	// appCheck is nil when App Check is off (FIREBASE_PROJECT_ID unset).
+	appCheck     utils.AppCheckVerifier
+	checkCaptcha func(token, userIPAddress string) error
 }
 
 func NewAuthHandler(
@@ -27,8 +31,11 @@ func NewAuthHandler(
 	verificationService services.VerificationService,
 	googleAuthService services.GoogleAuthService,
 	verficationGateway string,
+	appCheck utils.AppCheckVerifier,
 ) *AuthHandler {
 	return &AuthHandler{
+		appCheck:            appCheck,
+		checkCaptcha:        utils.CheckCAPTCHA,
 		authService:         authService,
 		googleAuthService:   googleAuthService,
 		verificationService: verificationService,
@@ -37,9 +44,27 @@ func NewAuthHandler(
 	}
 }
 
-func isMobileClient(r *http.Request) bool {
-	ua := strings.ToLower(r.Header.Get("User-Agent"))
-	return strings.Contains(ua, "dart") || strings.Contains(ua, "flutter") || strings.Contains(ua, "okhttp") || strings.Contains(ua, "letslive-mobile")
+// AppCheckHeader carries the Firebase App Check token sent by the mobile app.
+const AppCheckHeader = "X-Firebase-AppCheck"
+
+// verifyNotBot decides whether a request may proceed past the bot check.
+//
+//   - App Check configured and the header present: the token alone decides.
+//     Valid passes (Turnstile is not consulted); invalid is rejected even if a
+//     valid Turnstile token came along (fail closed, no fall-through).
+//   - Otherwise (App Check off, or no header): Turnstile is required.
+//
+// Nothing here looks at the User-Agent, which any client can set.
+func (h *AuthHandler) verifyNotBot(ctx context.Context, r *http.Request, turnstileToken string) error {
+	if appCheckToken := r.Header.Get(AppCheckHeader); h.appCheck != nil && appCheckToken != "" {
+		if err := h.appCheck.Verify(ctx, appCheckToken); err != nil {
+			logger.Errorf(ctx, "app check verification failed: %s", err)
+			return domains.ErrCaptchaFailed
+		}
+		return nil
+	}
+
+	return h.checkCaptcha(turnstileToken, r.Header.Get("CF-Connecting-IP"))
 }
 
 func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
@@ -52,12 +77,9 @@ func (h *AuthHandler) LogInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isMobileClient(r) {
-		ip := r.Header.Get("CF-Connecting-IP")
-		if err := utils.CheckCAPTCHA(userCredentials.TurnstileToken, ip); err != nil {
-			writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_CAPTCHA_FAILED, nil, nil, nil))
-			return
-		}
+	if err := h.verifyNotBot(ctx, r, userCredentials.TurnstileToken); err != nil {
+		writeResponse(w, ctx, serviceresponse.NewResponseFromTemplate[any](serviceresponse.RES_ERR_CAPTCHA_FAILED, nil, nil, nil))
+		return
 	}
 
 	auth, err := h.authService.GetUserFromCredentials(ctx, userCredentials)
@@ -94,12 +116,9 @@ func (h *AuthHandler) RequestEmailVerificationHandler(w http.ResponseWriter, r *
 		return
 	}
 
-	if !isMobileClient(r) {
-		ip := r.Header.Get("CF-Connecting-IP")
-		if err := utils.CheckCAPTCHA(requestDTO.TurnstileToken, ip); err != nil {
-			writeResponse(w, ctx, serviceresponse.FromError(err))
-			return
-		}
+	if err := h.verifyNotBot(ctx, r, requestDTO.TurnstileToken); err != nil {
+		writeResponse(w, ctx, serviceresponse.FromError(err))
+		return
 	}
 
 	// if an auth is already existed with the email, no point to continue
