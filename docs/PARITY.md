@@ -59,7 +59,6 @@ Gateway / web-client paths mobile will call but has no `ApiEndpoints`
 constant for yet. Remove a bullet when its constant lands.
 
 - `/auth/password` - update password (settings/security)
-- `/auth/verify-email` - email signup verification
 - `/user` - public profile, follow/unfollow, own profile, stream key, notifications, inventory, gifts
 - `/users` - user search and recommendations
 - `/upload-file` - profile/background picture upload

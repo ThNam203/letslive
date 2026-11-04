@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
@@ -8,6 +10,12 @@ import 'package:letslive_mobile/core/network/auth_interceptor.dart';
 /// Default per-request timeout (mirrors `DEFAULT_TIMEOUT_MS` in the web client).
 const Duration defaultRequestTimeout = Duration(seconds: 15);
 
+/// Supplies headers attached to every request the client sends, including the
+/// silent token refresh and the replay after it (e.g. `X-Firebase-AppCheck`).
+/// Called per request, so it can return a fresh token each time. Explicit
+/// per-call `headers` win over provider values with the same name.
+typedef RequestHeaderProvider = FutureOr<Map<String, String>> Function();
+
 /// HTTP client for the LetsLive gateway. Cookie based auth, envelope parsing,
 /// silent single-flight token refresh. Calls never throw for server errors or
 /// transport failures; inspect [ApiResponse.success] / [ApiResponse.failure].
@@ -17,6 +25,7 @@ class ApiClient {
     required CookieJar cookieJar,
     HttpClientAdapter? adapter,
     Duration timeout = defaultRequestTimeout,
+    RequestHeaderProvider? headerProvider,
   }) : _dio = Dio(
          BaseOptions(
            baseUrl: baseUrl,
@@ -38,6 +47,7 @@ class ApiClient {
       );
     });
     _dio.interceptors
+      ..add(_HeaderInterceptor(headerProvider))
       ..add(CookieManager(cookieJar))
       ..add(AuthInterceptor(_dio, _refresher));
   }
@@ -59,7 +69,15 @@ class ApiClient {
     Map<String, Object?>? query,
     required ParseData<T> parse,
     CancelToken? cancel,
-  }) => _send('GET', path, query: query, parse: parse, cancel: cancel);
+    Map<String, String>? headers,
+  }) => _send(
+    'GET',
+    path,
+    query: query,
+    parse: parse,
+    cancel: cancel,
+    headers: headers,
+  );
 
   Future<ApiResponse<T>> post<T>(
     String path, {
@@ -67,6 +85,7 @@ class ApiClient {
     Map<String, Object?>? query,
     required ParseData<T> parse,
     CancelToken? cancel,
+    Map<String, String>? headers,
   }) => _send(
     'POST',
     path,
@@ -74,6 +93,7 @@ class ApiClient {
     query: query,
     parse: parse,
     cancel: cancel,
+    headers: headers,
   );
 
   Future<ApiResponse<T>> put<T>(
@@ -82,6 +102,7 @@ class ApiClient {
     Map<String, Object?>? query,
     required ParseData<T> parse,
     CancelToken? cancel,
+    Map<String, String>? headers,
   }) => _send(
     'PUT',
     path,
@@ -89,6 +110,7 @@ class ApiClient {
     query: query,
     parse: parse,
     cancel: cancel,
+    headers: headers,
   );
 
   Future<ApiResponse<T>> patch<T>(
@@ -97,6 +119,7 @@ class ApiClient {
     Map<String, Object?>? query,
     required ParseData<T> parse,
     CancelToken? cancel,
+    Map<String, String>? headers,
   }) => _send(
     'PATCH',
     path,
@@ -104,6 +127,7 @@ class ApiClient {
     query: query,
     parse: parse,
     cancel: cancel,
+    headers: headers,
   );
 
   Future<ApiResponse<T>> delete<T>(
@@ -112,6 +136,7 @@ class ApiClient {
     Map<String, Object?>? query,
     required ParseData<T> parse,
     CancelToken? cancel,
+    Map<String, String>? headers,
   }) => _send(
     'DELETE',
     path,
@@ -119,6 +144,7 @@ class ApiClient {
     query: query,
     parse: parse,
     cancel: cancel,
+    headers: headers,
   );
 
   /// Multipart upload (POST by default). No send/receive timeout (web
@@ -131,6 +157,7 @@ class ApiClient {
     required ParseData<T> parse,
     void Function(int sent, int total)? onProgress,
     CancelToken? cancel,
+    Map<String, String>? headers,
   }) => _send(
     method,
     path,
@@ -138,6 +165,7 @@ class ApiClient {
     query: query,
     parse: parse,
     cancel: cancel,
+    headers: headers,
     onProgress: onProgress,
     noTimeout: true,
   );
@@ -154,6 +182,7 @@ class ApiClient {
     Map<String, Object?>? query,
     required ParseData<T> parse,
     CancelToken? cancel,
+    Map<String, String>? headers,
     void Function(int sent, int total)? onProgress,
     bool noTimeout = false,
   }) async {
@@ -166,6 +195,7 @@ class ApiClient {
         onSendProgress: onProgress,
         options: Options(
           method: method,
+          headers: headers,
           sendTimeout: noTimeout ? Duration.zero : null,
           receiveTimeout: noTimeout ? Duration.zero : null,
         ),
@@ -201,4 +231,27 @@ class ApiClient {
     DioExceptionType.cancel => 'Request cancelled',
     _ => 'Network error: ${e.message ?? e.type.name}',
   };
+}
+
+/// Adds [RequestHeaderProvider] headers to every outgoing request. Placed
+/// first so the refresh call and the post-refresh replay carry them too.
+class _HeaderInterceptor extends Interceptor {
+  _HeaderInterceptor(this._provider);
+
+  final RequestHeaderProvider? _provider;
+
+  @override
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    final provider = _provider;
+    if (provider != null) {
+      final extra = await provider();
+      for (final entry in extra.entries) {
+        options.headers.putIfAbsent(entry.key, () => entry.value);
+      }
+    }
+    handler.next(options);
+  }
 }
