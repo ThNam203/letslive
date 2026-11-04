@@ -60,6 +60,8 @@ services:
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
       - USER_DB_USER=${USER_DB_USER}
       - USER_DB_PASSWORD=${USER_DB_PASSWORD}
+      - FIREBASE_SERVICE_ACCOUNT_JSON=${FIREBASE_SERVICE_ACCOUNT_JSON:-}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-}
     networks:
       general_network:
     depends_on:
