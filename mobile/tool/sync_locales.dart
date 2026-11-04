@@ -96,6 +96,7 @@ Map<String, ArbMessage> convertLocale(Map<String, Object?> namespaces) {
   final result = <String, ArbMessage>{};
   final origins = <String, String>{};
   final collisions = <String>[];
+  final shadowed = <String>[];
 
   void add(String key, ArbMessage message, String origin) {
     final previous = origins[key];
@@ -129,8 +130,17 @@ Map<String, ArbMessage> convertLocale(Map<String, Object?> namespaces) {
     for (final entry in flat.entries) {
       if (pluralKeys.contains(entry.key)) continue;
       // i18next resolves `t('x', {count})` to the plural form, so a plain
-      // `x` next to an `x_other` family is only the unused fallback.
-      if (families.containsKey(entry.key)) continue;
+      // `x` next to an `x_other` family is redundant, but only safe to drop
+      // when it says the same thing as `x_other`.
+      if (families.containsKey(entry.key)) {
+        if (entry.value != flat['${entry.key}_other']) {
+          shadowed.add(
+            '$ns:${entry.key} differs from ${entry.key}_other '
+            '("${entry.value}" vs "${flat['${entry.key}_other']}")',
+          );
+        }
+        continue;
+      }
       final where = '$ns:${entry.key}';
       final (text, placeholders) = convertString(entry.value, where);
       add(
@@ -155,6 +165,12 @@ Map<String, ArbMessage> convertLocale(Map<String, Object?> namespaces) {
         where,
       );
     }
+  }
+  if (shadowed.isNotEmpty) {
+    throw SyncException(
+      'Plain key would be silently dropped by a plural family:\n'
+      '  ${shadowed.join('\n  ')}',
+    );
   }
   if (collisions.isNotEmpty) {
     throw SyncException(

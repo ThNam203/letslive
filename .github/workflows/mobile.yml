@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - "mobile/**"
+      - "web/lib/i18n/locales/**"
       - ".github/workflows/mobile.yml"
   pull_request:
     paths:
       - "mobile/**"
+      - "web/lib/i18n/locales/**"
       - ".github/workflows/mobile.yml"
   workflow_dispatch:
 

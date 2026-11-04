@@ -141,6 +141,27 @@ void main() {
     );
   });
 
+  test('fails when a plain key differs from its plural family', () {
+    writeLocale('en-US', {
+      'common': {
+        'replies': 'Replies',
+        'replies_one': 'View {{count}} reply',
+        'replies_other': 'View {{count}} replies',
+      },
+    });
+    writeLocale('vi-VN', {
+      'common': {'replies_other': 'Xem {{count}} trả lời'},
+    });
+    final err = StringBuffer();
+
+    final code = run(['--web-dir=$webDir', '--out-dir=$outDir'], err: err);
+
+    expect(code, 1);
+    expect(err.toString(), contains('common:replies'));
+    expect(File('$outDir/app_en.arb').existsSync(), isFalse);
+    expect(File('$outDir/app_vi.arb').existsSync(), isFalse);
+  });
+
   test('fails loudly when sanitized keys collide', () {
     writeBoth({
       'common': {'a-b': 'one', 'a.b': 'two'},
