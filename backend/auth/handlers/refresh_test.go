@@ -17,6 +17,23 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+func TestRefreshTokenHandler_missingSecretIs500(t *testing.T) {
+	t.Setenv("REFRESH_TOKEN_SECRET", "")
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	h := &AuthHandler{jwtService: *services.NewJWTService(nil, config.JWT{}, jwtauth.NewSigner(key))}
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/auth/refresh-token", nil)
+	req.AddCookie(&http.Cookie{Name: "REFRESH_TOKEN", Value: "anything"})
+	rec := httptest.NewRecorder()
+	h.RefreshTokenHandler(rec, req)
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want 500 (%s)", rec.Code, rec.Body.String())
+	}
+}
+
 func TestRefreshTokenHandler_badTokensAre401(t *testing.T) {
 	const secret = "handler-refresh-secret"
 	t.Setenv("REFRESH_TOKEN_SECRET", secret)

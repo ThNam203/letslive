@@ -12,7 +12,7 @@ import 'package:letslive_mobile/features/user/data/me_user.dart';
 
 /// Cloudflare Turnstile token sent on `/auth/verify-email`. The dev stack's
 /// test secret (`1x0000000000000000000000000000000AA`) accepts any non-empty
-/// token. Never rely on the backend's User-Agent captcha bypass.
+/// token. The User-Agent is irrelevant to the captcha check.
 const String _turnstileToken = String.fromEnvironment(
   'TURNSTILE_DEV_TOKEN',
   defaultValue: '',
@@ -32,8 +32,8 @@ const String _authDb = String.fromEnvironment(
   defaultValue: 'letslive_auth',
 );
 
-/// Not a mobile UA: the backend skips captcha for UAs containing "dart",
-/// "flutter", "okhttp" or "letslive-mobile", and dart:io's default is "Dart/..".
+/// Only identifies the harness in server logs. The backend no longer treats any
+/// User-Agent specially; the captcha is satisfied by the Turnstile token.
 const String _userAgent = 'letslive-contract-tests/1.0';
 
 const Duration _otpWait = Duration(seconds: 10);

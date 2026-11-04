@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -76,12 +77,13 @@ func main() {
 
 	appCheck, err := utils.NewAppCheckVerifierFromEnv(ctx)
 	if err != nil {
-		// FIREBASE_PROJECT_ID is set but App Check cannot start: refuse to run
-		// rather than silently drop to a weaker mode.
-		logger.Panicf(ctx, "failed to set up firebase app check: %s", err)
+		// FIREBASE_PROJECT_ID is malformed: refuse to run rather than silently
+		// drop to a weaker mode. (A JWKS outage is not an error here: the
+		// verifier initialises in the background and rejects until ready.)
+		logger.Panicf(ctx, "invalid firebase app check configuration: %s", err)
 	}
 	if appCheck != nil {
-		logger.Infof(ctx, "bot check mode: Firebase App Check (project %s) or Cloudflare Turnstile", os.Getenv(utils.FirebaseProjectIDEnv))
+		logger.Infof(ctx, "bot check mode: Firebase App Check (project %s, initialising in background) or Cloudflare Turnstile", strings.TrimSpace(os.Getenv(utils.FirebaseProjectIDEnv)))
 	} else {
 		logger.Infof(ctx, "bot check mode: Cloudflare Turnstile only (%s unset, X-Firebase-AppCheck header ignored)", utils.FirebaseProjectIDEnv)
 	}

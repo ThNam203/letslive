@@ -80,9 +80,9 @@ Optional defines: `CONTRACT_DB_CONTAINER` (default `ll-mobile-db`),
 unique emails through the real `POST /auth/verify-email` + `POST /auth/signup`
 path and returns authenticated `ApiClient`s. The dev stack cannot send mail, but
 the auth service stores the OTP before it tries, so the harness reads it with
-`docker exec <db> psql` from `sign_up_otps`. It sends a non-mobile User-Agent
-and the Turnstile token, never relying on the backend's User-Agent captcha
-bypass. Extra request headers (such as the App Check token) go through
+`docker exec <db> psql` from `sign_up_otps`. It sends the Turnstile dev
+token (`TURNSTILE_DEV_TOKEN`); the User-Agent no longer matters to the backend's
+captcha check. Extra request headers (such as the App Check token) go through
 `ApiClient(headerProvider: ...)` or the per-call `headers:` parameter.
 
 ## Builds
