@@ -49,6 +49,14 @@ void main() {
     expect(() => MeUser.parse(json), throwsFormatException);
   });
 
+  test('a null username (account setup pending) parses as empty', () {
+    expect(MeUser.parse({..._json(), 'username': null}).username, '');
+    expect(
+      () => MeUser.parse({..._json(), 'username': 7}),
+      throwsFormatException,
+    );
+  });
+
   test('throws FormatException when data is not an object', () {
     expect(() => MeUser.parse(<Object?>[]), throwsFormatException);
   });

@@ -18,11 +18,14 @@ class GoogleSignInService {
   final GoogleSignIn _signIn;
   Future<void>? _initialized;
 
-  // The plugin must be initialized exactly once before any other call.
-  Future<void> _ensureInitialized() => _initialized ??= _signIn.initialize(
-    clientId: _iosClientId,
-    serverClientId: _serverClientId,
-  );
+  // The plugin must be initialized once before any other call. A failed
+  // attempt is forgotten so the next sign-in tries again.
+  Future<void> _ensureInitialized() => _initialized ??= _signIn
+      .initialize(clientId: _iosClientId, serverClientId: _serverClientId)
+      .catchError((Object error, StackTrace stack) {
+        _initialized = null;
+        Error.throwWithStackTrace(error, stack);
+      });
 
   /// Shows the Google account sheet. Returns the id token, or null when the
   /// user cancels. Throws [GoogleSignInException] for any other failure.

@@ -21,6 +21,7 @@
 library;
 
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -73,14 +74,18 @@ final googleSignInServiceProvider = Provider<GoogleSignInService?>((ref) {
 
 /// Logout hooks and the end-of-session sequence. Features register their
 /// cleanup with [SessionLifecycle.addLogoutHook].
+///
+/// The registered hooks live on this one instance, so it must never be
+/// rebuilt: its inputs are read (not watched) and are fixed for the app's
+/// lifetime (config and overrides set at boot).
 final sessionLifecycleProvider = Provider<SessionLifecycle>((ref) {
   final lifecycle = SessionLifecycle(
-    auth: ref.watch(authRepositoryProvider),
-    cookieJar: ref.watch(cookieJarProvider),
+    auth: ref.read(authRepositoryProvider),
+    cookieJar: ref.read(cookieJarProvider),
     restartRealtime: () => ref.read(realtimeManagerProvider).restart(),
   );
   // Forget the Google account too, so the next Google sign-in asks again.
-  final google = ref.watch(googleSignInServiceProvider);
+  final google = ref.read(googleSignInServiceProvider);
   if (google != null) lifecycle.addLogoutHook(google.signOut);
   return lifecycle;
 });
@@ -170,10 +175,23 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     return res;
   }
 
+  // The app is signed out even when cleanup fails (e.g. the cookie wipe), so
+  // the user is never stuck in a half-ended session; the failure is logged.
+  // Not rethrown: the expiry path runs unawaited and has no caller to tell.
   Future<void> _endSession({required bool notifyServer}) async {
-    await ref
-        .read(sessionLifecycleProvider)
-        .endSession(notifyServer: notifyServer);
-    state = const AsyncData(null);
+    try {
+      await ref
+          .read(sessionLifecycleProvider)
+          .endSession(notifyServer: notifyServer);
+    } on Exception catch (e, stack) {
+      developer.log(
+        'Ending the session failed',
+        name: 'auth',
+        error: e,
+        stackTrace: stack,
+      );
+    } finally {
+      state = const AsyncData(null);
+    }
   }
 }

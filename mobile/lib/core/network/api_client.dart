@@ -15,12 +15,14 @@ const Duration defaultRequestTimeout = Duration(seconds: 15);
 /// Called per request, so it can return a fresh token each time. Explicit
 /// per-call `headers` win over provider values with the same name. It must not
 /// set `Cookie` or `Authorization` (the session lives in the cookie jar); a
-/// request whose provider does is failed without being sent.
+/// request whose provider does is not sent and the call throws a
+/// [StateError].
 typedef RequestHeaderProvider = FutureOr<Map<String, String>> Function();
 
 /// HTTP client for the LetsLive gateway. Cookie based auth, envelope parsing,
 /// silent single-flight token refresh. Calls never throw for server errors or
 /// transport failures; inspect [ApiResponse.success] / [ApiResponse.failure].
+/// Only caller bugs throw (see [RequestHeaderProvider]).
 class ApiClient {
   ApiClient({
     required String baseUrl,
@@ -209,6 +211,10 @@ class ApiClient {
         parse: parse,
       );
     } on DioException catch (e) {
+      // Caller misuse surfaces as the bug it is, never as a network failure.
+      if (e.error case final _ForbiddenHeaderError misuse) {
+        Error.throwWithStackTrace(misuse, e.stackTrace);
+      }
       return ApiResponse<T>.transportFailure(_kindOf(e), _messageOf(e));
     }
   }
@@ -239,6 +245,14 @@ class ApiClient {
 /// forge the cookie-jar session.
 const Set<String> _forbiddenProviderHeaders = {'cookie', 'authorization'};
 
+/// A [RequestHeaderProvider] tried to set a [_forbiddenProviderHeaders] entry.
+/// A programming error: [ApiClient] rethrows it instead of reporting a
+/// (retryable) network failure.
+class _ForbiddenHeaderError extends StateError {
+  _ForbiddenHeaderError(String name)
+    : super('headerProvider must not set the $name header');
+}
+
 /// Adds [RequestHeaderProvider] headers to every outgoing request. Placed
 /// first so the refresh call and the post-refresh replay carry them too.
 class _HeaderInterceptor extends Interceptor {
@@ -261,7 +275,7 @@ class _HeaderInterceptor extends Interceptor {
           handler.reject(
             DioException(
               requestOptions: options,
-              message: 'headerProvider must not set the $name header',
+              error: _ForbiddenHeaderError(name),
             ),
           );
           return;

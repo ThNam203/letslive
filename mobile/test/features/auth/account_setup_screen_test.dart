@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
@@ -57,6 +59,29 @@ void main() {
     );
   });
 
+  testWidgets('shows progress and locks the form while saving', (tester) async {
+    final app = await pumpSetup(tester);
+    app.server.holdUpdateMe = Completer<void>();
+
+    await enter(tester, 'username', 'chosen_name');
+    await tester.tap(find.byKey(const ValueKey('setup-submit')));
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(_enabled(tester, 'username'), isFalse);
+    expect(_onPressed(tester, 'setup-submit'), isNull);
+    expect(_onPressed(tester, 'setup-logout'), isNull);
+    await tester.tap(
+      find.byKey(const ValueKey('setup-submit')),
+      warnIfMissed: false,
+    );
+
+    app.server.holdUpdateMe?.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('LetsLive (dev)'), findsOneWidget);
+    expect(app.adapter.requests.where((r) => r.method == 'PUT'), hasLength(1));
+  });
+
   testWidgets('the user can log out instead', (tester) async {
     await pumpSetup(tester);
 
@@ -66,3 +91,18 @@ void main() {
     expect(find.byType(LoginScreen), findsOneWidget);
   });
 }
+
+bool? _enabled(WidgetTester tester, String key) =>
+    tester.widget<TextField>(find.byKey(ValueKey(key))).enabled;
+
+/// The tap handler of the button under [key] (null while disabled). The key
+/// may sit on a wrapper such as `SubmitButton`.
+VoidCallback? _onPressed(WidgetTester tester, String key) => tester
+    .widget<ButtonStyleButton>(
+      find.descendant(
+        of: find.byKey(ValueKey(key)),
+        matching: find.bySubtype<ButtonStyleButton>(),
+        matchRoot: true,
+      ),
+    )
+    .onPressed;

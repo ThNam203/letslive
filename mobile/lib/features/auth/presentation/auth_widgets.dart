@@ -1,6 +1,8 @@
 /// Building blocks shared by the login, signup and account-setup screens.
 library;
 
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -218,13 +220,25 @@ class _GoogleSignInSectionState extends ConsumerState<GoogleSignInSection> {
     widget.onError(null);
     try {
       final idToken = await google.obtainIdToken();
-      if (idToken == null) return; // The user closed the sheet.
+      // Null: the user closed the sheet. Unmounted: `ref` is no longer usable.
+      if (idToken == null || !mounted) return;
       final res = await ref
           .read(sessionProvider.notifier)
           .loginWithGoogle(idToken);
       if (!res.success) widget.onError(apiErrorMessage(l10n, res));
-    } on GoogleSignInException catch (e) {
-      widget.onError(e.description ?? l10n.api_response_default_error);
+    } on Exception catch (e, stack) {
+      // SDK descriptions are developer text (e.g. "SHA-1 not registered"),
+      // so they are logged and the user sees a generic, localized message.
+      final detail = e is GoogleSignInException
+          ? '${e.code.name}: ${e.description}'
+          : '$e';
+      developer.log(
+        'Google sign-in failed: $detail',
+        name: 'auth',
+        error: e,
+        stackTrace: stack,
+      );
+      widget.onError(l10n.api_response_default_error);
     } finally {
       if (mounted) setState(() => _busy = false);
     }

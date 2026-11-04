@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -81,29 +83,33 @@ void main() {
     });
   });
 
-  testWidgets(
-    'user with null username is redirected to account-setup from any route',
-    (tester) async {
-      // The backend sends an empty username until a Google signup picks one.
-      final app = await pumpTestApp(
-        tester,
-        server: FakeAuthServer(username: ''),
-        signedIn: true,
-      );
-      expect(find.byType(AccountSetupScreen), findsOneWidget);
-
-      final router = app.container.read(appRouterProvider);
-      for (final location in ['/', AppRoutes.login, AppRoutes.signup]) {
-        router.go(location);
-        await tester.pumpAndSettle();
-        expect(
-          find.byType(AccountSetupScreen),
-          findsOneWidget,
-          reason: location,
+  // The backend may send null or an empty string until a Google signup
+  // picks a username; both must force account setup everywhere.
+  for (final pending in <String?>[null, '']) {
+    testWidgets(
+      'user with null username is redirected to account-setup from any route '
+      '(username: ${pending == null ? 'null' : 'empty'})',
+      (tester) async {
+        final app = await pumpTestApp(
+          tester,
+          server: FakeAuthServer(username: pending),
+          signedIn: true,
         );
-      }
-    },
-  );
+        expect(find.byType(AccountSetupScreen), findsOneWidget);
+
+        final router = app.container.read(appRouterProvider);
+        for (final location in ['/', AppRoutes.login, AppRoutes.signup]) {
+          router.go(location);
+          await tester.pumpAndSettle();
+          expect(
+            find.byType(AccountSetupScreen),
+            findsOneWidget,
+            reason: location,
+          );
+        }
+      },
+    );
+  }
 
   testWidgets('shows the splash, not login, while the session loads', (
     tester,
@@ -135,6 +141,22 @@ void main() {
 
     expect(find.text('LetsLive (dev)'), findsOneWidget);
     expect(app.requestsTo(ApiEndpoints.userMe), hasLength(2));
+  });
+
+  testWidgets('the splash error offers logout, which returns to login', (
+    tester,
+  ) async {
+    // e.g. a server that keeps failing: the user is not stuck on the splash.
+    final server = FakeAuthServer()..meStatus = 503;
+    final app = await pumpTestApp(tester, server: server, signedIn: true);
+    expect(find.text('Try again'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('splash-logout')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(app.requestsTo(ApiEndpoints.logout), hasLength(1));
+    expect(await app.hasSessionCookie(), isFalse);
   });
 
   testWidgets('an expired session returns to login once', (tester) async {
@@ -170,4 +192,46 @@ void main() {
     expect(await app.hasSessionCookie(), isFalse);
     expect(app.container.read(sessionProvider).value, isNull);
   });
+
+  // A failing cookie wipe must still end the session in the app, on both the
+  // logout and the expiry path (the latter runs unawaited).
+  testWidgets('logout still signs out when clearing cookies fails', (
+    tester,
+  ) async {
+    final app = await pumpTestApp(
+      tester,
+      signedIn: true,
+      jar: _FailingDeleteJar(),
+    );
+
+    final loggedOut = app.container.read(sessionProvider.notifier).logout();
+    await tester.pumpAndSettle();
+    await loggedOut;
+
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(app.container.read(sessionProvider).value, isNull);
+  });
+
+  testWidgets('an expired session still signs out when clearing cookies '
+      'fails', (tester) async {
+    final app = await pumpTestApp(
+      tester,
+      signedIn: true,
+      jar: _FailingDeleteJar(),
+    );
+
+    final refreshed = app.container.read(apiClientProvider).refreshSession();
+    await tester.pumpAndSettle();
+    expect(await refreshed, isFalse);
+
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(app.container.read(sessionProvider).value, isNull);
+  });
+}
+
+/// A cookie jar whose wipe fails, like a secure-storage write error.
+class _FailingDeleteJar extends DefaultCookieJar {
+  @override
+  Future<void> deleteAll() async =>
+      throw const FileSystemException('secure storage unavailable');
 }

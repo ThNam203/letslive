@@ -46,8 +46,9 @@ ResponseBody _error(int status, String key, String message) => jsonBody({
 class FakeAuthServer {
   FakeAuthServer({this.username = 'abcdef'});
 
-  /// Username returned by `/user/me`; empty means account setup is pending.
-  String username;
+  /// Username returned by `/user/me`; empty or null means account setup is
+  /// pending.
+  String? username;
 
   /// Status `/user/me` answers with for a valid session (e.g. 503).
   int meStatus = 200;
@@ -57,6 +58,15 @@ class FakeAuthServer {
 
   /// When set, `GET /user/me` waits for it before answering.
   Completer<void>? holdMe;
+
+  /// When set, `PUT /user/me` (account setup) waits for it.
+  Completer<void>? holdUpdateMe;
+
+  /// When set, `/auth/verify-email` (send the signup code) waits for it.
+  Completer<void>? holdVerifyEmail;
+
+  /// When set, `/auth/signup` waits for it.
+  Completer<void>? holdSignup;
 
   ResponseBody _me() => okEnvelope({
     'id': 'u-1',
@@ -101,6 +111,7 @@ class FakeAuthServer {
         }
         return _me();
       case ('PUT', ApiEndpoints.userMe):
+        await holdUpdateMe?.future;
         final wanted = _body(o)['username'] as String? ?? '';
         if (wanted == 'taken_name') {
           return _error(409, 'res_err_username_taken', 'Username is taken');
@@ -120,8 +131,10 @@ class FakeAuthServer {
       case ('POST', ApiEndpoints.googleMobile):
         return _signedIn();
       case ('POST', ApiEndpoints.verifyEmail):
+        await holdVerifyEmail?.future;
         return okEnvelope(null);
       case ('POST', ApiEndpoints.signup):
+        await holdSignup?.future;
         if (_body(o)['otpCode'] != testOtp) {
           return _error(400, 'res_err_sign_up_otp_not_found', 'OTP not found.');
         }
@@ -167,7 +180,8 @@ class TestApp {
 /// Pumps the real [LetsLiveApp] (router, session, screens) against
 /// [FakeAuthServer]. [signedIn] starts with a session cookie in the jar.
 /// App Check tokens are numbered so tests can see a fresh one per request.
-/// Pass `settle: false` when the first screen keeps animating (the splash).
+/// Pass `settle: false` when the first screen keeps animating (the splash),
+/// and [jar] to swap the in-memory cookie jar (e.g. for a failing one).
 Future<TestApp> pumpTestApp(
   WidgetTester tester, {
   FakeAuthServer? server,
@@ -175,21 +189,22 @@ Future<TestApp> pumpTestApp(
   GoogleSignInService? google,
   bool settle = true,
   Map<String, Object> preferences = const {},
+  CookieJar? jar,
 }) async {
   SharedPreferences.setMockInitialValues(preferences);
   final prefs = await SharedPreferences.getInstance();
   final fakeServer = server ?? FakeAuthServer();
   final adapter = FakeAdapter(fakeServer.handle);
-  final jar = CookieJar();
+  final cookies = jar ?? CookieJar();
   if (signedIn) {
-    await jar.saveFromResponse(Uri.parse(testBaseUrl), [
+    await cookies.saveFromResponse(Uri.parse(testBaseUrl), [
       Cookie('ACCESS_TOKEN', 'access'),
       Cookie('REFRESH_TOKEN', 'refresh'),
     ]);
   }
   final client = ApiClient(
     baseUrl: testBaseUrl,
-    cookieJar: jar,
+    cookieJar: cookies,
     adapter: adapter,
   );
   addTearDown(client.dispose);
@@ -200,7 +215,7 @@ Future<TestApp> pumpTestApp(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
         appConfigProvider.overrideWithValue(testConfig),
-        cookieJarProvider.overrideWithValue(jar),
+        cookieJarProvider.overrideWithValue(cookies),
         apiClientProvider.overrideWithValue(client),
         botProofProvider.overrideWithValue(
           BotProof.appCheck(() async => 'app-check-${++appCheckTokens}'),
@@ -215,7 +230,7 @@ Future<TestApp> pumpTestApp(
   return TestApp(
     server: fakeServer,
     adapter: adapter,
-    jar: jar,
+    jar: cookies,
     container: ProviderScope.containerOf(
       tester.element(find.byType(LetsLiveApp)),
     ),

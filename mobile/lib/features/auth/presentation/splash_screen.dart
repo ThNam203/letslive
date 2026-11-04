@@ -6,7 +6,7 @@ import 'package:letslive_mobile/features/auth/auth_providers.dart';
 
 /// Shown while the session loads at startup, so the app never flashes the
 /// login screen for a signed-in user. If `GET /user/me` failed (server down,
-/// no network) it shows the error and a retry.
+/// no network) it shows the error, a retry and a logout.
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
 
@@ -47,8 +47,15 @@ class SplashScreen extends ConsumerWidget {
                   FilledButton(
                     key: const ValueKey('splash-retry'),
                     onPressed: () => ref.invalidate(sessionProvider),
-                    // Web has no generic "retry" key; this is its "Try again".
-                    child: Text(l10n.common_search_retry),
+                    child: Text(l10n.auth_retry),
+                  ),
+                  // A way out when retrying keeps failing: clears the local
+                  // session and shows login.
+                  TextButton(
+                    key: const ValueKey('splash-logout'),
+                    onPressed: () =>
+                        ref.read(sessionProvider.notifier).logout(),
+                    child: Text(l10n.auth_logout),
                   ),
                 ],
               ],

@@ -93,6 +93,23 @@ void main() {
     expect(events, ['realtime restart']);
   });
 
+  test('a failed cookie wipe still restarts realtime, then reports', () async {
+    final failing = SessionLifecycle(
+      auth: AuthRepository(
+        client: client,
+        botProof: const BotProof.turnstile('t'),
+      ),
+      cookieJar: _FailingDeleteJar(),
+      restartRealtime: () => events.add('realtime restart'),
+    );
+
+    await expectLater(
+      failing.endSession(notifyServer: false),
+      throwsA(isA<StateError>()),
+    );
+    expect(events, ['realtime restart']);
+  });
+
   test('session expiry skips the server call', () async {
     await lifecycle.endSession(notifyServer: false);
 
@@ -127,3 +144,9 @@ void main() {
 
 /// A 204 with no body, like the real `DELETE /auth/logout`.
 ResponseBody noContent() => ResponseBody.fromString('', 204);
+
+/// A cookie jar whose wipe fails, like a secure-storage write error.
+class _FailingDeleteJar extends DefaultCookieJar {
+  @override
+  Future<void> deleteAll() async => throw StateError('storage unavailable');
+}

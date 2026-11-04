@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
@@ -111,6 +113,42 @@ void main() {
     expect(find.text('Enter Verification Code'), findsOneWidget);
   });
 
+  testWidgets('shows progress and blocks double submit while sending the '
+      'code and while creating the account', (tester) async {
+    final app = await openSignup(tester);
+    app.server
+      ..holdVerifyEmail = Completer<void>()
+      ..holdSignup = Completer<void>();
+    await fillSignup(tester);
+
+    await tester.tap(find.byKey(const ValueKey('signup-submit')));
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(_onPressed(tester, 'signup-submit'), isNull);
+    await tester.tap(
+      find.byKey(const ValueKey('signup-submit')),
+      warnIfMissed: false,
+    );
+    app.server.holdVerifyEmail?.complete();
+    await tester.pumpAndSettle();
+    expect(app.requestsTo(ApiEndpoints.verifyEmail), hasLength(1));
+
+    await enter(tester, 'otp', testOtp);
+    await tester.tap(find.byKey(const ValueKey('otp-submit')));
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(_onPressed(tester, 'otp-submit'), isNull);
+    expect(
+      tester.widget<TextField>(find.byKey(const ValueKey('otp'))).enabled,
+      isFalse,
+    );
+
+    app.server.holdSignup?.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('LetsLive (dev)'), findsOneWidget);
+    expect(app.requestsTo(ApiEndpoints.signup), hasLength(1));
+  });
+
   testWidgets('login link goes back to login', (tester) async {
     await openSignup(tester);
 
@@ -120,3 +158,15 @@ void main() {
     expect(find.byType(LoginScreen), findsOneWidget);
   });
 }
+
+/// The tap handler of the button under [key] (null while disabled). The key
+/// may sit on a wrapper such as `SubmitButton`.
+VoidCallback? _onPressed(WidgetTester tester, String key) => tester
+    .widget<ButtonStyleButton>(
+      find.descendant(
+        of: find.byKey(ValueKey(key)),
+        matching: find.bySubtype<ButtonStyleButton>(),
+        matchRoot: true,
+      ),
+    )
+    .onPressed;

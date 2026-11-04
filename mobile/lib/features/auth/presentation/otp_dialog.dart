@@ -5,8 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/features/auth/presentation/auth_widgets.dart';
 
-/// Returns an error message to show, or null on success.
-typedef OtpAction = Future<String?> Function();
+// Both dialog actions share one contract: they resolve to the localized
+// error message to show, or null on success.
+
+/// Submits the entered [code] (creates the account).
+typedef OtpVerifyAction = Future<String?> Function(String code);
+
+/// Mails a new code.
+typedef OtpResendAction = Future<String?> Function();
 
 /// Asks for the 6-digit signup code (web `SignupForm.tsx` dialog). [onVerify]
 /// creates the account; [onResend] mails a new code, allowed every
@@ -26,8 +32,8 @@ class OtpDialog extends StatefulWidget {
   static const int codeLength = 6;
 
   final String email;
-  final Future<String?> Function(String code) onVerify;
-  final OtpAction onResend;
+  final OtpVerifyAction onVerify;
+  final OtpResendAction onResend;
 
   @override
   State<OtpDialog> createState() => _OtpDialogState();

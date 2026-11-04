@@ -23,7 +23,9 @@ class MeUser {
 
   factory MeUser.fromJson(Map<String, Object?> json) => MeUser(
     id: _string(json, 'id'),
-    username: _string(json, 'username'),
+    // Null and empty both mean "account setup pending"; one value is simpler
+    // for every caller. Any other non-string still throws.
+    username: _optString(json, 'username') ?? '',
     email: _string(json, 'email'),
     status: _string(json, 'status'),
     authProvider: _string(json, 'authProvider'),
@@ -47,7 +49,8 @@ class MeUser {
 
   final String id;
 
-  /// Empty until the user completes account setup (Google signup).
+  /// Empty until the user completes account setup (Google signup); a JSON
+  /// null is read as empty too.
   final String username;
   final String email;
 

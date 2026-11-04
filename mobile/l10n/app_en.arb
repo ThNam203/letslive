@@ -106,6 +106,7 @@
   },
   "auth_password": "Password",
   "auth_resend_otp": "Resend OTP",
+  "auth_retry": "Try again",
   "auth_sending_otp": "Sending OTP...",
   "auth_show_password": "Show password",
   "auth_signup": "Sign up",

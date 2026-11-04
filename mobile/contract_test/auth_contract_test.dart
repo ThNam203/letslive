@@ -36,50 +36,63 @@ void main() {
   final email = 'auth$runId@contract.test';
   final username = 'auth_$runId';
 
-  setUpAll(() {
+  // Holds the session signup created; only the first test uses it.
+  late _App signedUp;
+
+  // The user is created here, not in a test, so every test can run alone or
+  // in any order.
+  setUpAll(() async {
     config = AppConfig.fromEnv(compileTimeEnv);
     if (config.turnstileDevToken == null) {
       throw const ContractSetupException('TURNSTILE_DEV_TOKEN is not set.');
     }
-  });
-
-  test('signup -> /user/me -> logout -> login -> /user/me -> logout', () async {
-    final app = _App(config);
-    addTearDown(app.client.dispose);
-
+    signedUp = _App(config);
     // Delivery fails on the dev stack (no SMTP), but the code is stored.
-    final verify = await app.auth.requestEmailVerification(email);
+    final verify = await signedUp.auth.requestEmailVerification(email);
     final otp = await readSignupOtp(email, verifyKey: verify.key);
-    final signup = await app.auth.signup(
+    final signup = await signedUp.auth.signup(
       email: email,
       username: username,
       password: _password,
       otpCode: otp,
     );
-    expect(signup.success, isTrue, reason: '${signup.key} ${signup.message}');
-
-    // The user service creates the profile right after signup.
-    var me = await app.me.fetch();
-    for (var i = 0; i < 30 && !me.success; i++) {
-      await Future<void>.delayed(const Duration(milliseconds: 300));
-      me = await app.me.fetch();
+    if (!signup.success) {
+      throw ContractSetupException(
+        'signup failed: ${signup.key} ${signup.message}',
+      );
     }
-    expect(me.data?.email, email, reason: '${me.key} ${me.message}');
-    expect(me.data?.username, username);
-
-    final logout = await app.auth.logout();
-    expect(logout.success, isTrue, reason: '${logout.key} ${logout.message}');
-    final afterLogout = await app.me.fetch();
-    expect(afterLogout.statusCode, 401);
-
-    final login = await app.auth.login(email, _password);
-    expect(login.success, isTrue, reason: '${login.key} ${login.message}');
-    final again = await app.me.fetch();
-    expect(again.data?.username, username);
-
-    await app.auth.logout();
-    expect((await app.me.fetch()).statusCode, 401);
   });
+
+  tearDownAll(() => signedUp.client.dispose());
+
+  test(
+    'signup session -> /user/me -> logout -> login -> /user/me -> logout',
+    () async {
+      final app = signedUp;
+
+      // The user service creates the profile right after signup.
+      var me = await app.me.fetch();
+      for (var i = 0; i < 30 && !me.success; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        me = await app.me.fetch();
+      }
+      expect(me.data?.email, email, reason: '${me.key} ${me.message}');
+      expect(me.data?.username, username);
+
+      final logout = await app.auth.logout();
+      expect(logout.success, isTrue, reason: '${logout.key} ${logout.message}');
+      final afterLogout = await app.me.fetch();
+      expect(afterLogout.statusCode, 401);
+
+      final login = await app.auth.login(email, _password);
+      expect(login.success, isTrue, reason: '${login.key} ${login.message}');
+      final again = await app.me.fetch();
+      expect(again.data?.username, username);
+
+      await app.auth.logout();
+      expect((await app.me.fetch()).statusCode, 401);
+    },
+  );
 
   test('PUT /user/me username update parses as MeUser', () async {
     final ctx = await startContractContext();

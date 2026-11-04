@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
@@ -169,7 +170,8 @@ void main() {
       expect(find.byType(LoginScreen), findsOneWidget);
     });
 
-    testWidgets('a Google SDK error is shown', (tester) async {
+    testWidgets('a Google SDK error shows a generic message, not the '
+        'SDK description', (tester) async {
       when(() => signIn.authenticate()).thenThrow(
         const GoogleSignInException(
           code: GoogleSignInExceptionCode.clientConfigurationError,
@@ -181,7 +183,32 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('google-sign-in')));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('SHA-1 not registered'), findsOneWidget);
+      expect(find.textContaining('SHA-1 not registered'), findsNothing);
+      expect(
+        find.text('Something went wrong. Please try again.'),
+        findsOneWidget,
+      );
+      expect(find.byType(LoginScreen), findsOneWidget);
+    });
+
+    testWidgets('a non-Google error (e.g. a platform failure) shows a '
+        'generic message', (tester) async {
+      when(() => signIn.authenticate())
+          .thenThrow(PlatformException(code: 'channel-error'));
+      await pumpTestApp(tester, google: service());
+
+      await tester.tap(find.byKey(const ValueKey('google-sign-in')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Something went wrong. Please try again.'),
+        findsOneWidget,
+      );
+      // The button is usable again.
+      final button = tester.widget<ButtonStyleButton>(
+        find.byKey(const ValueKey('google-sign-in')),
+      );
+      expect(button.onPressed, isNotNull);
     });
   });
 }

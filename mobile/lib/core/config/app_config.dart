@@ -24,8 +24,16 @@ class FirebaseConfig {
     required this.appId,
   });
 
+  /// Firebase project id (FIREBASE_PROJECT_ID). Not secret; safe to show in
+  /// error messages.
   final String projectId;
+
+  /// Firebase Web/API key of the project (FIREBASE_API_KEY). It ships inside
+  /// the app, but is still never logged or shown.
   final String apiKey;
+
+  /// Firebase Cloud Messaging sender id (FIREBASE_MESSAGING_SENDER_ID), the
+  /// project number; required by `FirebaseOptions`.
   final String messagingSenderId;
 
   /// The app id of the platform the app runs on (Android or iOS).

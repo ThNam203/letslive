@@ -101,6 +101,7 @@
   "auth_otp_resend_count_down": "Gửi lại sau {countdown}s",
   "auth_password": "Mật khẩu",
   "auth_resend_otp": "Gửi lại OTP",
+  "auth_retry": "Thử lại",
   "auth_sending_otp": "Đang gửi OTP...",
   "auth_show_password": "Hiện mật khẩu",
   "auth_signup": "Đăng ký",

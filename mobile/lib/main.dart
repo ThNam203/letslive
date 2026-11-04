@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +25,14 @@ Future<void> main() async {
 
   final firebase = config.firebase;
   if (firebase != null) {
-    await _initFirebase(firebase, debug: config.flavor == Flavor.dev);
+    final error = await guardFirebaseSetup(
+      firebase,
+      () => _initFirebase(firebase, debug: config.flavor == Flavor.dev),
+    );
+    if (error != null) {
+      runApp(ConfigErrorApp(error: error));
+      return;
+    }
   }
   final prefs = await SharedPreferences.getInstance();
   final container = ProviderContainer(
@@ -36,6 +45,33 @@ Future<void> main() async {
   runApp(
     UncontrolledProviderScope(container: container, child: const LetsLiveApp()),
   );
+}
+
+/// Runs the Firebase [setUp]. A failure (bad FIREBASE_* values, App Check not
+/// set up) is logged and returned as a [ConfigException] for the config
+/// error screen instead of crashing the boot. The message names only the
+/// project id and the error type/code, never the key values.
+@visibleForTesting
+Future<ConfigException?> guardFirebaseSetup(
+  FirebaseConfig firebase,
+  Future<void> Function() setUp,
+) async {
+  try {
+    await setUp();
+    return null;
+  } on Exception catch (e, stack) {
+    developer.log(
+      'Firebase setup failed',
+      name: 'boot',
+      error: e,
+      stackTrace: stack,
+    );
+    final reason = e is FirebaseException ? e.code : '${e.runtimeType}';
+    return ConfigException(
+      'Firebase setup failed for project "${firebase.projectId}" ($reason). '
+      'Check the FIREBASE_* values and the App Check setup.',
+    );
+  }
 }
 
 /// Firebase from env values (no google-services files). Dev uses the App

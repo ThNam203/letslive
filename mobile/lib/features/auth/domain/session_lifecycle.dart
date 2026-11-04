@@ -67,7 +67,11 @@ class SessionLifecycle {
       // The result is ignored: the local logout happens even offline.
       await _auth.logout();
     }
-    await _cookieJar.deleteAll();
-    _restartRealtime();
+    try {
+      await _cookieJar.deleteAll();
+    } finally {
+      // Drop the signed-in realtime connection even if the wipe failed.
+      _restartRealtime();
+    }
   }
 }
