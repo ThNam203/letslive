@@ -48,12 +48,15 @@ class RealtimeManager {
     required String url,
     required CookieJar cookieJar,
     required this._refreshSession,
+    Stream<void>? sessionExpired,
     RealtimeChannelFactory connect = connectIoChannel,
     this._pingInterval = defaultPingInterval,
     this._pongTimeout = defaultPongTimeout,
   }) : _uri = Uri.parse(url),
        _jar = cookieJar,
-       _factory = connect;
+       _factory = connect {
+    _expiredSubscription = sessionExpired?.listen((_) => _onSessionExpired());
+  }
 
   /// Server pings every 30s (`client.PingInterval`,
   /// `backend/realtime/client/client.go:21`); the app-level ping stays below
@@ -98,6 +101,8 @@ class RealtimeManager {
   bool _open = false;
   bool _hasOpened = false;
   bool _refreshedSinceOpen = false;
+  bool _lastRefreshFailed = false;
+  StreamSubscription<void>? _expiredSubscription;
 
   Stream<RealtimeStatus> get status => _statusController.stream;
   RealtimeStatus get currentStatus => _status;
@@ -109,6 +114,7 @@ class RealtimeManager {
     if (_started && _status != RealtimeStatus.unauthorized) return;
     _started = true;
     _refreshedSinceOpen = false;
+    _lastRefreshFailed = false;
     _delay = initialReconnectDelay;
     unawaited(_connect());
   }
@@ -117,8 +123,13 @@ class RealtimeManager {
   /// logout, account switch). Topics stay subscribed.
   void restart() {
     if (_disposed || !_started) return;
+    if (_status == RealtimeStatus.unauthorized) {
+      start();
+      return;
+    }
     _abandonSocket();
     _refreshedSinceOpen = false;
+    _lastRefreshFailed = false;
     _delay = initialReconnectDelay;
     if (_status == RealtimeStatus.paused) return;
     unawaited(_connect());
@@ -142,10 +153,19 @@ class RealtimeManager {
     unawaited(_connect());
   }
 
+  /// The server rejected the refresh token: stop everything until
+  /// [start]/[restart] (after a fresh login).
+  void _onSessionExpired() {
+    if (_disposed || !_started) return;
+    _abandonSocket();
+    _setStatus(RealtimeStatus.unauthorized);
+  }
+
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
     _abandonSocket();
+    await _expiredSubscription?.cancel();
     await _statusController.close();
   }
 
@@ -197,23 +217,35 @@ class RealtimeManager {
       _hasOpened ? RealtimeStatus.reconnecting : RealtimeStatus.connecting,
     );
 
-    final Map<String, String> headers;
+    final Map<String, String>? headers;
     try {
       headers = await _buildHeaders();
     } on Exception catch (e) {
-      _log('cookie lookup failed: $e');
+      _log('preparing connection failed: $e');
       if (generation == _generation) _scheduleRetry();
       return;
     }
     if (generation != _generation) return;
+    if (headers == null) {
+      // Logged in but the session could not be refreshed (network blip, or a
+      // dead refresh token that `sessionExpired` will report). An anonymous
+      // socket would silently miss notifications/DMs, so retry with backoff.
+      _scheduleRetry();
+      return;
+    }
 
-    final channel = _factory(_uri, headers);
-    _channel = channel;
+    final RealtimeChannel channel;
     try {
+      channel = _factory(_uri, headers);
+      _channel = channel;
       await channel.ready;
     } on RealtimeHandshakeException catch (e) {
       if (generation != _generation) return;
       _onDisconnected(handshakeStatus: e.statusCode);
+      return;
+    } on Exception catch (e) {
+      _log('connect failed: $e');
+      if (generation == _generation) _onDisconnected();
       return;
     }
     if (generation != _generation) return;
@@ -230,6 +262,7 @@ class RealtimeManager {
     _open = true;
     _delay = initialReconnectDelay;
     _refreshedSinceOpen = false;
+    _lastRefreshFailed = false;
     _setStatus(RealtimeStatus.connected);
     // A new socket starts with no topics; restore every one still in use.
     for (final topic in _topicCounts.keys.toList()) {
@@ -264,18 +297,33 @@ class RealtimeManager {
 
   Future<void> _refreshThenReconnect() async {
     if (_refreshedSinceOpen) {
-      _setStatus(RealtimeStatus.unauthorized);
+      // At most one refresh between successful opens. If it succeeded and the
+      // server still rejects us, give up; if it failed (transient), back off
+      // without refreshing again.
+      if (_lastRefreshFailed) {
+        _scheduleRetry();
+      } else {
+        _setStatus(RealtimeStatus.unauthorized);
+      }
       return;
     }
     _refreshedSinceOpen = true;
     _setStatus(RealtimeStatus.reconnecting);
     final generation = _generation;
-    final refreshed = await _refreshSession();
+    var refreshed = false;
+    try {
+      refreshed = await _refreshSession();
+    } on Exception catch (e) {
+      _log('refresh threw: $e');
+    }
     if (generation != _generation) return;
+    _lastRefreshFailed = !refreshed;
     if (refreshed) {
       unawaited(_connect());
     } else {
-      _setStatus(RealtimeStatus.unauthorized);
+      // Transient or rejected? A rejection arrives via `sessionExpired`,
+      // which stops everything; otherwise keep retrying with backoff.
+      _scheduleRetry();
     }
   }
 
@@ -311,7 +359,7 @@ class RealtimeManager {
     }
   }
 
-  Future<Map<String, String>> _buildHeaders() async {
+  Future<Map<String, String>?> _buildHeaders() async {
     final httpUri = _uri.replace(
       scheme: _uri.scheme == 'wss' ? 'https' : 'http',
     );
@@ -325,9 +373,8 @@ class RealtimeManager {
     // The jar drops expired cookies. Without a fresh access cookie a logged-in
     // user's socket would silently be anonymous.
     if (!hasAccess && hasRefresh) {
-      if (await _refreshSession()) {
-        cookies = await _jar.loadForRequest(httpUri);
-      }
+      if (!await _refreshSession()) return null;
+      cookies = await _jar.loadForRequest(httpUri);
     }
     if (cookies.isEmpty) return const {};
     return {'Cookie': cookies.map((c) => '${c.name}=${c.value}').join('; ')};

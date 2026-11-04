@@ -32,8 +32,8 @@ class FakeChannel implements RealtimeChannel {
 
   @override
   Future<void> close() async {
+    // The stream stays open so tests can prove a stale socket is ignored.
     closedByClient = true;
-    if (!_incoming.isClosed) await _incoming.close();
   }
 
   List<String> opsFor(String op) => [

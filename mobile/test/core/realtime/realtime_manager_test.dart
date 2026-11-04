@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +16,8 @@ class _Harness {
       'REFRESH_TOKEN': 'r',
     },
     this.refreshResult = true,
+    this.refreshThrows = false,
+    this.factoryThrows = false,
   }) : jar = CookieJar() {
     jar.saveFromResponse(Uri.parse('http://localhost:8000'), [
       for (final e in cookies.entries) Cookie(e.key, e.value),
@@ -21,11 +25,14 @@ class _Harness {
     manager = RealtimeManager(
       url: _wsUrl,
       cookieJar: jar,
+      sessionExpired: expired.stream,
       refreshSession: () async {
         refreshCalls++;
+        if (refreshThrows) throw Exception('refresh blew up');
         return refreshResult;
       },
       connect: (uri, headers) {
+        if (factoryThrows) throw Exception('factory blew up');
         final channel = FakeChannel(uri, headers);
         channels.add(channel);
         return channel;
@@ -37,7 +44,10 @@ class _Harness {
   late final RealtimeManager manager;
   final List<FakeChannel> channels = [];
   final List<RealtimeStatus> statuses = [];
+  final StreamController<void> expired = StreamController<void>.broadcast();
   bool refreshResult;
+  bool refreshThrows;
+  bool factoryThrows;
   int refreshCalls = 0;
 
   FakeChannel get last => channels.last;
@@ -239,22 +249,197 @@ void main() {
       },
     );
 
-    test('failed refresh stops reconnecting with unauthorized status', () {
-      fakeAsync((async) {
-        final h = _Harness(refreshResult: false);
-        _startOpen(h, async);
-        h.last.serverCloses(1008);
-        async.flushMicrotasks();
-        async.elapse(const Duration(minutes: 5));
-        expect(h.refreshCalls, 1);
-        expect(h.channels, hasLength(1));
-        expect(h.statuses.last, RealtimeStatus.unauthorized);
+    test(
+      'failed refresh backs off without refreshing again before an open',
+      () {
+        fakeAsync((async) {
+          final h = _Harness(refreshResult: false);
+          _startOpen(h, async);
+          h.last.serverCloses(1008);
+          async.flushMicrotasks();
+          expect(h.refreshCalls, 1);
+          expect(h.statuses.last, RealtimeStatus.reconnecting);
+          // keep getting rejected: retries continue, refresh is not repeated
+          for (var i = 0; i < 4; i++) {
+            async.elapse(const Duration(seconds: 30));
+            async.flushMicrotasks();
+            h.last.failHandshake(401);
+            async.flushMicrotasks();
+          }
+          expect(h.channels.length, greaterThan(3));
+          expect(h.refreshCalls, 1);
+          expect(h.statuses.last, RealtimeStatus.reconnecting);
+        });
+      },
+    );
 
-        // start() after a fresh login resets the state
-        h.refreshResult = true;
+    test(
+      'refresh cookie only, refresh false: no anonymous connect, backoff',
+      () {
+        fakeAsync((async) {
+          final h = _Harness(
+            cookies: {'REFRESH_TOKEN': 'r'},
+            refreshResult: false,
+          );
+          h.manager.status.listen(h.statuses.add);
+          h.manager.start();
+          async.flushMicrotasks();
+          expect(h.channels, isEmpty);
+          expect(h.refreshCalls, 1);
+          expect(h.statuses.last, RealtimeStatus.reconnecting);
+          async.elapse(const Duration(seconds: 1));
+          async.flushMicrotasks();
+          expect(h.refreshCalls, 2);
+          async.elapse(const Duration(seconds: 2));
+          async.flushMicrotasks();
+          expect(h.refreshCalls, 3);
+          expect(h.channels, isEmpty, reason: 'never anonymous');
+        });
+      },
+    );
+
+    test('sessionExpired event: unauthorized and no channels after 5 min', () {
+      fakeAsync((async) {
+        final h = _Harness(
+          cookies: {'REFRESH_TOKEN': 'r'},
+          refreshResult: false,
+        );
+        h.manager.status.listen(h.statuses.add);
+        h.manager.start();
+        async.flushMicrotasks();
+        h.expired.add(null);
+        async.flushMicrotasks();
+        final calls = h.refreshCalls;
+        async.elapse(const Duration(minutes: 5));
+        async.flushMicrotasks();
+        expect(h.statuses.last, RealtimeStatus.unauthorized);
+        expect(h.channels, isEmpty);
+        expect(h.refreshCalls, calls);
+      });
+    });
+
+    test('sessionExpired closes a live socket; start() reconnects after', () {
+      fakeAsync((async) {
+        final h = _Harness();
+        _startOpen(h, async);
+        final first = h.last;
+        h.expired.add(null);
+        async.flushMicrotasks();
+        expect(first.closedByClient, isTrue);
+        expect(h.statuses.last, RealtimeStatus.unauthorized);
+        async.elapse(const Duration(minutes: 5));
+        expect(h.channels, hasLength(1));
+
         h.manager.start();
         async.flushMicrotasks();
         expect(h.channels, hasLength(2));
+        h.last.open();
+        async.flushMicrotasks();
+        expect(h.statuses.last, RealtimeStatus.connected);
+      });
+    });
+
+    test('restart() after sessionExpired reconnects', () {
+      fakeAsync((async) {
+        final h = _Harness();
+        _startOpen(h, async);
+        h.expired.add(null);
+        async.flushMicrotasks();
+        h.manager.restart();
+        async.flushMicrotasks();
+        expect(h.channels, hasLength(2));
+      });
+    });
+
+    test('refresh function throwing recovers via backoff', () {
+      fakeAsync((async) {
+        final h = _Harness();
+        _startOpen(h, async);
+        h.refreshThrows = true;
+        h.last.serverCloses(1008);
+        async.flushMicrotasks();
+        expect(h.statuses.last, RealtimeStatus.reconnecting);
+        async.elapse(const Duration(seconds: 1));
+        async.flushMicrotasks();
+        expect(h.channels, hasLength(2));
+        h.last.open();
+        async.flushMicrotasks();
+        expect(h.statuses.last, RealtimeStatus.connected);
+        expect(h.refreshCalls, 1);
+      });
+    });
+
+    test('pre-connect refresh throwing recovers via backoff', () {
+      fakeAsync((async) {
+        final h = _Harness(
+          cookies: {'REFRESH_TOKEN': 'r'},
+          refreshThrows: true,
+        );
+        h.manager.start();
+        async.flushMicrotasks();
+        expect(h.channels, isEmpty);
+        h.refreshThrows = false;
+        h.jar.saveFromResponse(Uri.parse('http://localhost:8000'), [
+          Cookie('ACCESS_TOKEN', 'a'),
+        ]);
+        async.elapse(const Duration(seconds: 1));
+        async.flushMicrotasks();
+        expect(h.channels, hasLength(1));
+      });
+    });
+
+    test('channel factory throwing recovers via backoff', () {
+      fakeAsync((async) {
+        final h = _Harness(factoryThrows: true);
+        h.manager.start();
+        async.flushMicrotasks();
+        expect(h.channels, isEmpty);
+        expect(h.manager.currentStatus, RealtimeStatus.reconnecting);
+        h.factoryThrows = false;
+        async.elapse(const Duration(seconds: 1));
+        async.flushMicrotasks();
+        expect(h.channels, hasLength(1));
+        h.last.open();
+        async.flushMicrotasks();
+        expect(h.manager.currentStatus, RealtimeStatus.connected);
+      });
+    });
+
+    test('topic unsubscribed while disconnected is not resubscribed', () {
+      fakeAsync((async) {
+        final h = _Harness();
+        _startOpen(h, async);
+        final off1 = h.manager.subscribe('room:1');
+        h.manager.subscribe('room:2');
+        h.last.serverCloses(1006);
+        async.flushMicrotasks();
+        off1();
+        async.elapse(const Duration(seconds: 1));
+        h.last.open();
+        async.flushMicrotasks();
+        expect(h.last.opsFor('subscribe'), ['room:2']);
+      });
+    });
+
+    test('event from the abandoned socket is not delivered', () {
+      fakeAsync((async) {
+        final h = _Harness();
+        _startOpen(h, async);
+        final got = <Object?>[];
+        h.manager.onEvent('chat.message', got.add);
+        final old = h.last;
+        h.manager.restart();
+        async.flushMicrotasks();
+        h.last.open();
+        async.flushMicrotasks();
+        old.serverSends({
+          'op': 'event',
+          'topic': 'room:1',
+          'type': 'chat.message',
+          'data': 'stale',
+        });
+        async.flushMicrotasks();
+        expect(got, isEmpty);
       });
     });
 
