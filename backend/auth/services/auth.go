@@ -12,7 +12,6 @@ import (
 	"sen1or/letslive/shared/pkg/logger"
 
 	"github.com/gofrs/uuid/v5"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
@@ -53,8 +52,12 @@ func (s AuthService) GetUserFromCredentials(ctx context.Context, credentials dto
 		return nil, err
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(auth.PasswordHash), []byte(credentials.Password)); err != nil {
+	match, needsRehash := utils.VerifyPassword(auth.PasswordHash, credentials.Password)
+	if !match {
 		return nil, domains.ErrEmailOrPasswordIncorrect
+	}
+	if needsRehash {
+		s.rehash(ctx, auth, credentials.Password)
 	}
 
 	return auth, nil
@@ -72,7 +75,7 @@ func (s AuthService) CreateNewAuth(ctx context.Context, userForm dto.SignUpReque
 		return nil, domains.ErrAuthAlreadyExists
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userForm.Password), bcrypt.DefaultCost)
+	hashedPassword, err := utils.HashPassword(userForm.Password)
 	if err != nil {
 		logger.Errorf(ctx, "failed to generate hash password: %s", err)
 		return nil, domains.ErrInternal
@@ -92,7 +95,7 @@ func (s AuthService) CreateNewAuth(ctx context.Context, userForm dto.SignUpReque
 	auth := &domains.Auth{
 		UserId:       &createdUser.Id,
 		Email:        userForm.Email,
-		PasswordHash: string(hashedPassword),
+		PasswordHash: hashedPassword,
 	}
 
 	createdAuthDTO, createErr := s.repo.Create(ctx, *auth)
@@ -133,19 +136,35 @@ func (s AuthService) UpdatePassword(ctx context.Context, dto dto.ChangePasswordR
 		return err
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(auth.PasswordHash), []byte(dto.OldPassword)); err != nil {
+	if match, _ := utils.VerifyPassword(auth.PasswordHash, dto.OldPassword); !match {
 		return domains.ErrPasswordNotMatch
 	}
 
-	updateHashedPassword, genErr := bcrypt.GenerateFromPassword([]byte(dto.NewPassword), bcrypt.DefaultCost)
+	updateHashedPassword, genErr := utils.HashPassword(dto.NewPassword)
 	if genErr != nil {
+		logger.Errorf(ctx, "failed to hash new password: %v", genErr)
 		return domains.ErrInternal
 	}
 
-	auth.PasswordHash = string(updateHashedPassword)
+	auth.PasswordHash = updateHashedPassword
 	if err := s.repo.UpdatePasswordHash(ctx, auth.Id.String(), auth.PasswordHash); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// rehash upgrades a verified password to the current Argon2id parameters. A
+// failure only delays the upgrade to the next login, so it never fails one.
+func (s AuthService) rehash(ctx context.Context, auth *domains.Auth, password string) {
+	hash, err := utils.HashPassword(password)
+	if err != nil {
+		logger.Errorf(ctx, "failed to rehash password for auth %s: %v", auth.Id, err)
+		return
+	}
+	if err := s.repo.UpdatePasswordHash(ctx, auth.Id.String(), hash); err != nil {
+		logger.Errorf(ctx, "failed to store rehashed password for auth %s: %v", auth.Id, err)
+		return
+	}
+	auth.PasswordHash = hash
 }

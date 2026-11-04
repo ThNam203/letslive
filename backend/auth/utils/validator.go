@@ -2,10 +2,12 @@ package utils
 
 import (
 	"unicode"
+	"unicode/utf16"
 
 	"github.com/go-playground/validator/v10"
 )
 
+// in UTF-16 units, as the web form counts
 const (
 	passwordMinLength = 8
 	passwordMaxLength = 72
@@ -25,13 +27,8 @@ func init() {
 func validatePassword(fl validator.FieldLevel) bool {
 	password := fl.Field().String()
 
-	// check minimum length
-	if len(password) < passwordMinLength {
-		return false
-	}
-
-	// check maximum length
-	if len(password) > passwordMaxLength {
+	length := len(utf16.Encode([]rune(password)))
+	if length < passwordMinLength || length > passwordMaxLength {
 		return false
 	}
 
