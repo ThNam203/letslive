@@ -3,5 +3,8 @@
 /// backend handlers and the web clients are listed. Keep one
 /// `static const String name = '/path';` per line (parsed by parity_check).
 abstract final class ApiEndpoints {
+  static const String login = '/auth/login';
+  static const String signup = '/auth/signup';
+  static const String logout = '/auth/logout';
   static const String refreshToken = '/auth/refresh-token';
 }

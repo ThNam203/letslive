@@ -1,6 +1,7 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:letslive_mobile/core/network/api_endpoints.dart';
 import 'package:letslive_mobile/core/network/api_response.dart';
 import 'package:letslive_mobile/core/network/auth_interceptor.dart';
 
@@ -29,7 +30,13 @@ class ApiClient {
          ),
        ) {
     if (adapter != null) _dio.httpClientAdapter = adapter;
-    _refresher = SessionRefresher(_dio);
+    final refreshUri = Uri.parse('$baseUrl${ApiEndpoints.refreshToken}');
+    _refresher = SessionRefresher(_dio, () async {
+      final cookies = await cookieJar.loadForRequest(refreshUri);
+      return cookies.any(
+        (c) => c.name == 'REFRESH_TOKEN' && c.value.isNotEmpty,
+      );
+    });
     _dio.interceptors
       ..add(CookieManager(cookieJar))
       ..add(AuthInterceptor(_dio, _refresher));

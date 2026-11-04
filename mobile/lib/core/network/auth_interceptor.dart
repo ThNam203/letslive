@@ -9,22 +9,29 @@ const String retriedAfterRefreshKey = 'retriedAfterRefresh';
 /// Paths that never trigger a refresh (mirrors `REFRESH_EXCLUDE_PATHS` in
 /// `web/utils/fetchClient.ts`).
 const List<String> _refreshExcludedPaths = [
-  '/auth/login',
-  '/auth/register',
+  ApiEndpoints.login,
+  ApiEndpoints.signup,
   ApiEndpoints.refreshToken,
-  '/auth/logout',
+  ApiEndpoints.logout,
 ];
 
 bool shouldSkipRefresh(String path) =>
     _refreshExcludedPaths.any(path.startsWith);
 
+/// Statuses meaning the server rejected the refresh token itself. Everything
+/// else (408, 429, 5xx, network) is transient and must not log the user out.
+const Set<int> _authRejectionStatuses = {400, 401, 403};
+
 /// Single-flight `POST /auth/refresh-token`: concurrent callers share one
-/// in-flight refresh. Emits on [sessionExpired] when the server rejects the
-/// refresh (4xx); a network error or 5xx is not a session expiry.
+/// in-flight refresh. Emits on [sessionExpired] only when the server rejects
+/// the refresh token (400/401/403). Mirrors web `hasRefreshToken()`: with no
+/// REFRESH_TOKEN cookie (guest) it makes no request, returns false and emits
+/// nothing.
 class SessionRefresher {
-  SessionRefresher(this._dio);
+  SessionRefresher(this._dio, this._hasRefreshToken);
 
   final Dio _dio;
+  final Future<bool> Function() _hasRefreshToken;
   final StreamController<void> _expired = StreamController<void>.broadcast();
   Future<bool>? _inFlight;
 
@@ -35,11 +42,12 @@ class SessionRefresher {
   });
 
   Future<bool> _doRefresh() async {
+    if (!await _hasRefreshToken()) return false;
     try {
       final response = await _dio.post<String>(ApiEndpoints.refreshToken);
       final status = response.statusCode ?? 0;
       if (status >= 200 && status < 300) return true;
-      if (status >= 400 && status < 500) _expired.add(null);
+      if (_authRejectionStatuses.contains(status)) _expired.add(null);
       return false;
     } on DioException {
       return false;

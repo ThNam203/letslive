@@ -14,8 +14,22 @@ const _base = 'http://localhost:8000';
 String _parseName(Object? data) =>
     (data! as Map<String, Object?>)['name']! as String;
 
-ApiClient _client(FakeAdapter adapter, {CookieJar? jar}) =>
-    ApiClient(baseUrl: _base, cookieJar: jar ?? CookieJar(), adapter: adapter);
+/// A jar holding a REFRESH_TOKEN for the API host (a logged-in user).
+CookieJar _loggedInJar() {
+  final jar = CookieJar();
+  jar.saveFromResponse(Uri.parse(_base), [
+    Cookie('REFRESH_TOKEN', 'r'),
+    Cookie('ACCESS_TOKEN', 'a'),
+  ]);
+  return jar;
+}
+
+/// Defaults to a logged-in jar; pass `CookieJar()` for a guest.
+ApiClient _client(FakeAdapter adapter, {CookieJar? jar}) => ApiClient(
+  baseUrl: _base,
+  cookieJar: jar ?? _loggedInJar(),
+  adapter: adapter,
+);
 
 void main() {
   test('parses success envelope with meta', () async {
@@ -294,7 +308,87 @@ void main() {
     expect(adapter.requests.single.connectTimeout, const Duration(seconds: 15));
   });
 
+  group('refresh classification', () {
+    test('refresh 401/403/400 emit sessionExpired', () async {
+      for (final status in [400, 401, 403]) {
+        final adapter = FakeAdapter(
+          (_) => jsonBody({'success': false}, status: status),
+        );
+        final client = _client(adapter);
+        var expired = 0;
+        final sub = client.sessionExpired.listen((_) => expired++);
+        expect(await client.refreshSession(), isFalse);
+        await Future<void>.delayed(Duration.zero);
+        expect(expired, 1, reason: 'status $status');
+        await sub.cancel();
+      }
+    });
+
+    test(
+      'refresh 429, 408 and 5xx do not emit and a later refresh can succeed',
+      () async {
+        var status = 429;
+        final adapter = FakeAdapter(
+          (_) => status == 200
+              ? okEnvelope(null)
+              : jsonBody({'success': false}, status: status),
+        );
+        final client = _client(adapter);
+        var expired = 0;
+        final sub = client.sessionExpired.listen((_) => expired++);
+
+        for (final transient in [429, 408, 500, 503]) {
+          status = transient;
+          expect(await client.refreshSession(), isFalse);
+        }
+        await Future<void>.delayed(Duration.zero);
+        expect(expired, 0);
+
+        status = 200;
+        expect(await client.refreshSession(), isTrue);
+        expect(adapter.count(ApiEndpoints.refreshToken), 5);
+        await sub.cancel();
+      },
+    );
+  });
+
+  group('guest (no REFRESH_TOKEN cookie)', () {
+    test(
+      '401 returns the original response without refresh or sessionExpired',
+      () async {
+        final adapter = FakeAdapter(
+          (_) => jsonBody({'success': false, 'code': 401}, status: 401),
+        );
+        final client = _client(adapter, jar: CookieJar());
+        var expired = 0;
+        final sub = client.sessionExpired.listen((_) => expired++);
+
+        final res = await client.get<String>('/user/me', parse: _parseName);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(res.statusCode, 401);
+        expect(adapter.count(ApiEndpoints.refreshToken), 0);
+        expect(adapter.count('/user/me'), 1);
+        expect(expired, 0);
+        await sub.cancel();
+      },
+    );
+
+    test('refreshSession returns false without a network call', () async {
+      final adapter = FakeAdapter((_) => okEnvelope(null));
+      final client = _client(adapter, jar: CookieJar());
+
+      expect(await client.refreshSession(), isFalse);
+      expect(adapter.requests, isEmpty);
+    });
+  });
+
   group('cookies', () {
+    test('secure storage uses first_unlock keychain accessibility', () {
+      final options = SecureCookieStorage.defaultSecureStorage.iOptions.toMap();
+      expect(options['accessibility'], 'first_unlock');
+    });
+
     const cookieHeader = 'set-cookie';
 
     test('cookie jar persists across client instances', () async {

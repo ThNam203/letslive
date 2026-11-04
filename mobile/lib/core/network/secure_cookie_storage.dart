@@ -5,7 +5,16 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// REFRESH_TOKEN cookies never touch plain files.
 class SecureCookieStorage implements Storage {
   SecureCookieStorage({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? defaultSecureStorage;
+
+  /// iOS `first_unlock`: tokens can be rewritten while the device is locked
+  /// (background audio/PiP), unlike the default `unlocked` which fails
+  /// silently and loses the rotated token. Android keeps the default
+  /// AES-GCM/RSA-OAEP Keystore-backed scheme, set explicitly.
+  static const FlutterSecureStorage defaultSecureStorage = FlutterSecureStorage(
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+    aOptions: AndroidOptions(),
+  );
 
   static const _prefix = 'letslive.cookies.';
 
