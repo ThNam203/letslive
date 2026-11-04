@@ -15,8 +15,14 @@ class AppTab {
 
   /// Route path of the tab's root screen, e.g. `/search`.
   final String path;
+
+  /// Icon of the navigation bar destination.
   final IconData icon;
+
+  /// Localized destination label.
   final String Function(AppLocalizations l10n) label;
+
+  /// Builds the tab's root screen.
   final Widget Function(BuildContext context) builder;
 }
 

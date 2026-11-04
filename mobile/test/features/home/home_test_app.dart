@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
 
@@ -19,6 +20,9 @@ class FakeHomeServer extends FakeAuthServer {
   Map<String, Map<String, Object?>> users = {
     'u-1': publicUserJson(id: 'u-1', username: 'streamer'),
   };
+
+  /// Page index (0-based) of `/popular-vods` that answers 503, or null.
+  int? failVodsPage;
 
   int liveStatus = 200;
   int vodsStatus = 200;
@@ -42,7 +46,10 @@ class FakeHomeServer extends FakeAuthServer {
         case ApiEndpoints.popularLivestreams:
           return _list(live, liveStatus);
         case ApiEndpoints.popularVods:
-          return _list(vods, vodsStatus);
+          final page = o.queryParameters['page'] as int;
+          final limit = o.queryParameters['limit'] as int;
+          final status = page == failVodsPage ? 503 : vodsStatus;
+          return _list(vods.skip(page * limit).take(limit).toList(), status);
         case ApiEndpoints.following:
           return _list(following, followingStatus);
         case ApiEndpoints.recommendedChannels:
@@ -59,10 +66,25 @@ class FakeHomeServer extends FakeAuthServer {
 }
 
 /// Pumps the real app signed in against [server] (home loaded). The screen is
-/// tall so every section is built (the feed is a lazy list).
-Future<TestApp> pumpHome(WidgetTester tester, FakeHomeServer server) {
-  tester.view.physicalSize = const Size(800, 6000);
+/// tall so every section is built (the feed is a lazy list) unless [height]
+/// says otherwise; [width] and [textScale] model a small phone.
+Future<TestApp> pumpHome(
+  WidgetTester tester,
+  FakeHomeServer server, {
+  double width = 800,
+  double height = 6000,
+  double textScale = 1,
+  List<Override> overrides = const [],
+}) {
+  tester.view.physicalSize = Size(width, height);
   tester.view.devicePixelRatio = 1;
+  tester.platformDispatcher.textScaleFactorTestValue = textScale;
   addTearDown(tester.view.reset);
-  return pumpTestApp(tester, server: server, signedIn: true);
+  addTearDown(tester.platformDispatcher.clearAllTestValues);
+  return pumpTestApp(
+    tester,
+    server: server,
+    signedIn: true,
+    overrides: overrides,
+  );
 }

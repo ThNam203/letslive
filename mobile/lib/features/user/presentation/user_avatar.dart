@@ -7,8 +7,13 @@ import 'package:flutter/material.dart';
 class UserAvatar extends StatelessWidget {
   const UserAvatar({this.pictureUrl, this.name, this.radius = 20, super.key});
 
+  /// Absolute URL of the avatar; null shows the initial.
   final String? pictureUrl;
+
+  /// Source of the initial; null while the user is loading.
   final String? name;
+
+  /// Circle radius in logical pixels.
   final double radius;
 
   @override

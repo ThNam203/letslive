@@ -1,4 +1,6 @@
-/// Riverpod providers for public user data.
+/// Riverpod providers for public user data. They are `autoDispose`, so
+/// leaving the signed-in shell (logout) drops them and the next account never
+/// sees the previous one's data.
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,14 +16,15 @@ final userRepositoryProvider = Provider<UserRepository>(
 
 /// One user by id. Cards of the same owner share one request (like web's
 /// per-id query cache); invalidate the family to reload.
-final publicUserProvider = FutureProvider.family<PublicUser, String>(
-  (ref, id) async =>
-      unwrapData(await ref.watch(userRepositoryProvider).byId(id)),
-  retry: noRetry,
-);
+final publicUserProvider = FutureProvider.autoDispose
+    .family<PublicUser, String>(
+      (ref, id) async =>
+          unwrapData(await ref.watch(userRepositoryProvider).byId(id)),
+      retry: noRetry,
+    );
 
 /// Channels the signed-in user follows.
-final followingChannelsProvider = FutureProvider<List<PublicUser>>(
+final followingChannelsProvider = FutureProvider.autoDispose<List<PublicUser>>(
   (ref) async =>
       unwrapList(await ref.watch(userRepositoryProvider).following()),
   retry: noRetry,

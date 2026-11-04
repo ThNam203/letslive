@@ -1,16 +1,20 @@
 /// The Home tab: web's home page plus its left-bar channel lists as sections.
 ///
-/// Sections, each loading and failing on its own ([FeedSection]): live
-/// streams, followed channels, recommended channels (those not already
-/// followed, like web) and popular videos. Pull-to-refresh reloads all of
-/// them, and so does coming back from the background. Cards are not tappable
-/// until the profile and player routes exist.
+/// Sections, each loading and failing on its own: live streams, followed
+/// channels, recommended channels (those not already followed, like web) and
+/// popular videos. The videos load page by page as the user nears the end of
+/// the list. Pull-to-refresh reloads everything, and so does coming back after
+/// a real stretch in the background. Cards are not tappable until the profile
+/// and player routes exist.
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/providers.dart';
+import 'package:letslive_mobile/features/home/data/livestream.dart';
+import 'package:letslive_mobile/features/home/data/vod.dart';
 import 'package:letslive_mobile/features/home/domain/media_format.dart';
 import 'package:letslive_mobile/features/home/home_providers.dart';
 import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
@@ -18,6 +22,14 @@ import 'package:letslive_mobile/features/home/presentation/media_card.dart';
 import 'package:letslive_mobile/features/user/data/public_user.dart';
 import 'package:letslive_mobile/features/user/presentation/user_avatar.dart';
 import 'package:letslive_mobile/features/user/user_providers.dart';
+
+/// How close to the end of the list (in logical pixels) the next page of
+/// videos starts loading: the list builds the footer, which triggers the load,
+/// this far ahead of the viewport.
+const double _loadMoreDistance = 300;
+
+/// Horizontal screen padding of the feed cards.
+const EdgeInsets _cardPadding = EdgeInsets.symmetric(horizontal: 16);
 
 /// Home feed screen.
 class HomeScreen extends ConsumerStatefulWidget {
@@ -30,11 +42,28 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   late final AppLifecycleListener _lifecycle;
 
+  /// When the app last left the foreground; null while it is in front.
+  DateTime? _hiddenAt;
+
   @override
   void initState() {
     super.initState();
-    // Anything may have changed while the app was in the background.
-    _lifecycle = AppLifecycleListener(onResume: () => refreshHome(ref));
+    // `hide` means really in the background; `inactive` blips (control
+    // center, permission dialogs) never reach it.
+    _lifecycle = AppLifecycleListener(
+      onHide: () => _hiddenAt = ref.read(homeClockProvider)(),
+      onResume: _refreshAfterBackground,
+    );
+  }
+
+  void _refreshAfterBackground() {
+    final hiddenAt = _hiddenAt;
+    _hiddenAt = null;
+    if (hiddenAt == null) return;
+    final away = ref.read(homeClockProvider)().difference(hiddenAt);
+    if (away >= homeRefreshAfterBackground) {
+      refreshHome(ref);
+    }
   }
 
   @override
@@ -53,7 +82,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final recommended = ref.watch(recommendedChannelsProvider);
     final now = DateTime.now();
 
-    // Web hides followed channels from the recommended list.
+    // Web hides followed channels from the recommended list. If the following
+    // request failed, recommended may include channels the user follows.
     final followedIds = {
       for (final user in following.value ?? const <PublicUser>[]) user.id,
     };
@@ -64,104 +94,146 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ],
     );
 
+    // The rows are plain widgets in a lazy list: only the visible cards (plus
+    // a little ahead) are built, however many pages of videos were loaded.
+    final rows = <Widget>[
+      FeedSection(
+        key: const ValueKey('section-live'),
+        title: l10n.common_livestreams,
+        value: live,
+        onRetry: () => ref.invalidate(popularLiveProvider),
+        empty: EmptyNotice(
+          icon: Icons.play_circle_outline,
+          title: l10n.common_no_livestreams,
+          description: l10n.common_no_livestreams_description,
+        ),
+        builder: (context, streams) => Padding(
+          padding: _cardPadding,
+          child: Column(
+            children: [
+              for (final stream in streams)
+                _liveCard(l10n, apiBaseUrl, stream, now),
+            ],
+          ),
+        ),
+      ),
+      FeedSection(
+        key: const ValueKey('section-following'),
+        title: l10n.common_following,
+        value: following,
+        onRetry: () => ref.invalidate(followingChannelsProvider),
+        builder: (context, users) => _ChannelRow(users: users),
+      ),
+      FeedSection(
+        key: const ValueKey('section-recommended'),
+        title: l10n.common_recommended,
+        value: recommendedNotFollowed,
+        onRetry: () => ref.invalidate(recommendedChannelsProvider),
+        builder: (context, users) => _ChannelRow(users: users),
+      ),
+      SectionHeader(l10n.common_videos),
+      ..._vodRows(l10n, apiBaseUrl, vods, now),
+    ];
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.common_app_title)),
       body: RefreshIndicator(
         onRefresh: () => refreshHome(ref),
-        child: ListView(
+        child: ListView.builder(
           // Lets pull-to-refresh work when the content is short.
           physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            FeedSection(
-              key: const ValueKey('section-live'),
-              title: l10n.common_livestreams,
-              value: live,
-              onRetry: () => ref.invalidate(popularLiveProvider),
-              empty: EmptyNotice(
-                icon: Icons.play_circle_outline,
-                title: l10n.common_no_livestreams,
-                description: l10n.common_no_livestreams_description,
-              ),
-              builder: (context, streams) => _CardList(
-                cards: [
-                  for (final stream in streams)
-                    MediaCard(
-                      key: ValueKey('live-${stream.id}'),
-                      thumbnailUrl: mediaThumbnailUrl(
-                        apiBaseUrl,
-                        stream.id,
-                        stream.thumbnailUrl,
-                      ),
-                      title: stream.title,
-                      userId: stream.userId,
-                      meta:
-                          '${viewsLabel(l10n, stream.viewCount)} · '
-                          '${l10n.common_started_at(timeAgo(l10n, stream.startedAt, now))}',
-                    ),
-                ],
-              ),
-            ),
-            FeedSection(
-              key: const ValueKey('section-following'),
-              title: l10n.common_following,
-              value: following,
-              onRetry: () => ref.invalidate(followingChannelsProvider),
-              builder: (context, users) => _ChannelRow(users: users),
-            ),
-            FeedSection(
-              key: const ValueKey('section-recommended'),
-              title: l10n.common_recommended,
-              value: recommendedNotFollowed,
-              onRetry: () => ref.invalidate(recommendedChannelsProvider),
-              builder: (context, users) => _ChannelRow(users: users),
-            ),
-            FeedSection(
-              key: const ValueKey('section-vods'),
-              title: l10n.common_videos,
-              value: vods,
-              onRetry: () => ref.invalidate(popularVodsProvider),
-              empty: EmptyNotice(
-                icon: Icons.movie_outlined,
-                title: l10n.common_no_videos,
-                description: l10n.common_no_videos_description,
-              ),
-              builder: (context, items) => _CardList(
-                cards: [
-                  for (final vod in items)
-                    MediaCard(
-                      key: ValueKey('vod-${vod.id}'),
-                      thumbnailUrl: mediaThumbnailUrl(
-                        apiBaseUrl,
-                        vod.id,
-                        vod.thumbnailUrl,
-                      ),
-                      title: vod.title,
-                      userId: vod.userId,
-                      durationLabel: formatDuration(vod.duration),
-                      meta:
-                          '${viewsLabel(l10n, vod.viewCount)} · '
-                          '${timeAgo(l10n, vod.createdAt, now)}',
-                    ),
-                ],
-              ),
-            ),
-          ],
+          scrollCacheExtent: const ScrollCacheExtent.pixels(_loadMoreDistance),
+          itemCount: rows.length,
+          itemBuilder: (context, index) => rows[index],
         ),
       ),
     );
   }
+
+  Widget _liveCard(
+    AppLocalizations l10n,
+    String apiBaseUrl,
+    Livestream stream,
+    DateTime now,
+  ) => MediaCard(
+    key: ValueKey('live-${stream.id}'),
+    thumbnailUrl: mediaThumbnailUrl(apiBaseUrl, stream.id, stream.thumbnailUrl),
+    title: stream.title,
+    userId: stream.userId,
+    meta:
+        '${viewsLabel(l10n, stream.viewCount)} · '
+        '${l10n.common_started_at(timeAgo(l10n, stream.startedAt, now))}',
+  );
+
+  /// The body of the videos section: status (loading, error, empty) or one
+  /// row per video followed by the paging footer.
+  List<Widget> _vodRows(
+    AppLocalizations l10n,
+    String apiBaseUrl,
+    AsyncValue<VodFeed> vods,
+    DateTime now,
+  ) {
+    final status = feedStatusBody(
+      value: vods.whenData((feed) => feed.items),
+      onRetry: () => ref.invalidate(popularVodsProvider),
+      empty: EmptyNotice(
+        icon: Icons.movie_outlined,
+        title: l10n.common_no_videos,
+        description: l10n.common_no_videos_description,
+      ),
+    );
+    if (status != null) return [status];
+    return [
+      for (final vod in vods.requireValue.items)
+        Padding(
+          padding: _cardPadding,
+          child: _vodCard(l10n, apiBaseUrl, vod, now),
+        ),
+      const _VodsFooter(),
+    ];
+  }
+
+  Widget _vodCard(
+    AppLocalizations l10n,
+    String apiBaseUrl,
+    Vod vod,
+    DateTime now,
+  ) => MediaCard(
+    key: ValueKey('vod-${vod.id}'),
+    thumbnailUrl: mediaThumbnailUrl(apiBaseUrl, vod.id, vod.thumbnailUrl),
+    title: vod.title,
+    userId: vod.userId,
+    durationLabel: formatDuration(vod.duration),
+    meta:
+        '${viewsLabel(l10n, vod.viewCount)} · '
+        '${timeAgo(l10n, vod.createdAt, now)}',
+  );
 }
 
-class _CardList extends StatelessWidget {
-  const _CardList({required this.cards});
-
-  final List<Widget> cards;
+/// End of the videos list. Because the list builds it only when it is within
+/// [_loadMoreDistance] of the viewport, building it is the "near the end"
+/// signal: it asks for the next page (a no-op while one is loading or after
+/// the last page). A failed page shows an inline retry instead of looping.
+class _VodsFooter extends ConsumerWidget {
+  const _VodsFooter();
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: Column(children: cards),
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final feed = ref.watch(popularVodsProvider).value;
+    if (feed == null) return const SizedBox.shrink();
+    final notifier = ref.read(popularVodsProvider.notifier);
+    final error = feed.loadMoreError;
+    if (error != null) {
+      return FeedError(error: error, onRetry: notifier.loadMore);
+    }
+    if (!feed.hasMore) return const SizedBox(height: 16);
+    // Not during build: loadMore changes provider state.
+    Future.microtask(notifier.loadMore);
+    return const Padding(
+      padding: EdgeInsets.all(16),
+      child: Center(child: CircularProgressIndicator()),
+    );
+  }
 }
 
 /// Horizontal avatar + name strip of channels.
@@ -171,35 +243,42 @@ class _ChannelRow extends StatelessWidget {
   final List<PublicUser> users;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 88,
-    child: ListView.separated(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: users.length,
-      separatorBuilder: (_, _) => const SizedBox(width: 16),
-      itemBuilder: (context, index) {
-        final user = users[index];
-        return SizedBox(
-          width: 64,
-          child: Column(
-            children: [
-              UserAvatar(
-                pictureUrl: user.profilePicture,
-                name: user.username,
-                radius: 28,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                user.username,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        );
-      },
-    ),
-  );
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    // Avatar (56) + gap (4) + one line of the name; grows with the text scale
+    // so large accessibility fonts do not overflow.
+    final nameHeight = MediaQuery.textScalerOf(context)
+        .scale((textTheme.bodySmall?.fontSize ?? 12) * 1.5);
+    return SizedBox(
+      height: 60 + nameHeight,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: _cardPadding,
+        itemCount: users.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 16),
+        itemBuilder: (context, index) {
+          final user = users[index];
+          return SizedBox(
+            width: 64,
+            child: Column(
+              children: [
+                UserAvatar(
+                  pictureUrl: user.profilePicture,
+                  name: user.username,
+                  radius: 28,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  user.username,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodySmall,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 }

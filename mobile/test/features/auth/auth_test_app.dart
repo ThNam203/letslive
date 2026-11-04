@@ -4,6 +4,7 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/app.dart';
 import 'package:letslive_mobile/core/config/app_config.dart';
@@ -181,7 +182,8 @@ class TestApp {
 /// [FakeAuthServer]. [signedIn] starts with a session cookie in the jar.
 /// App Check tokens are numbered so tests can see a fresh one per request.
 /// Pass `settle: false` when the first screen keeps animating (the splash),
-/// and [jar] to swap the in-memory cookie jar (e.g. for a failing one).
+/// [jar] to swap the in-memory cookie jar (e.g. for a failing one), and
+/// [overrides] for extra provider overrides.
 Future<TestApp> pumpTestApp(
   WidgetTester tester, {
   FakeAuthServer? server,
@@ -190,6 +192,7 @@ Future<TestApp> pumpTestApp(
   bool settle = true,
   Map<String, Object> preferences = const {},
   CookieJar? jar,
+  List<Override> overrides = const [],
 }) async {
   SharedPreferences.setMockInitialValues(preferences);
   final prefs = await SharedPreferences.getInstance();
@@ -221,6 +224,7 @@ Future<TestApp> pumpTestApp(
           BotProof.appCheck(() async => 'app-check-${++appCheckTokens}'),
         ),
         googleSignInServiceProvider.overrideWithValue(google),
+        ...overrides,
       ],
       child: const LetsLiveApp(),
     ),

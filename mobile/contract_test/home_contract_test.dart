@@ -13,8 +13,8 @@ import 'harness.dart';
 void main() {
   late ContractContext ctx;
   late String ownerId;
-  late String livestreamId;
-  late String vodId;
+  String? livestreamId;
+  String? vodId;
 
   setUpAll(() async {
     ctx = await startContractContext();
@@ -23,6 +23,7 @@ void main() {
       parse: MeUser.parse,
     );
     ownerId = me.data!.id;
+    // Live streams list newest first, so this one is on page 0.
     livestreamId = await _insertReturningId(
       'letslive_livestream',
       "INSERT INTO livestreams (user_id, title) VALUES ('$ownerId', "
@@ -30,8 +31,11 @@ void main() {
     );
     vodId = await _insertReturningId(
       'letslive_vod',
-      "INSERT INTO vods (user_id, title, visibility, duration) VALUES "
-          "('$ownerId', 'Contract vod', 'public', 3725) RETURNING id",
+      // A huge view_count puts it first in the popularity order, so it is
+      // always on page 0 whatever else the stack holds.
+      'INSERT INTO vods (user_id, title, visibility, duration, view_count) '
+          "VALUES ('$ownerId', 'Contract vod', 'public', 3725, 2000000000) "
+          'RETURNING id',
     );
     // userA follows userB so the following list is not empty.
     final follow = await ctx.userA.client.post<Object?>(
@@ -42,12 +46,24 @@ void main() {
   });
 
   tearDownAll(() async {
-    await runSql(
-      'letslive_livestream',
-      "DELETE FROM livestreams WHERE id = '$livestreamId'",
-    );
-    await runSql('letslive_vod', "DELETE FROM vods WHERE id = '$vodId'");
-    await ctx.dispose();
+    try {
+      final liveId = livestreamId;
+      if (liveId != null) {
+        await runSql(
+          'letslive_livestream',
+          "DELETE FROM livestreams WHERE id = '$liveId'",
+        );
+      }
+    } finally {
+      try {
+        final id = vodId;
+        if (id != null) {
+          await runSql('letslive_vod', "DELETE FROM vods WHERE id = '$id'");
+        }
+      } finally {
+        await ctx.dispose();
+      }
+    }
   });
 
   test('GET /popular-livestreams parses a live stream', () async {
@@ -69,6 +85,13 @@ void main() {
     expect(vod.userId, ownerId);
     expect(vod.duration, 3725);
     expect(vod.status, 'ready');
+  });
+
+  test('GET /popular-vods accepts a later page', () async {
+    final res = await HomeRepository(ctx.userA.client).popularVods(page: 1);
+
+    expect(res.success, isTrue, reason: '${res.key}: ${res.message}');
+    expect(res.data ?? const [], hasLength(lessThanOrEqualTo(20)));
   });
 
   test('GET /user/<id> parses the owner of a card', () async {

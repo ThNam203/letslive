@@ -24,10 +24,11 @@ class HomeRepository {
     parse: Livestream.parseList,
   );
 
-  /// `GET /popular-vods`: popular videos (first page).
-  Future<ApiResponse<List<Vod>>> popularVods() => _client.get(
+  /// `GET /popular-vods`: popular videos, [popularVodsPageSize] per [page]
+  /// (0-based).
+  Future<ApiResponse<List<Vod>>> popularVods({int page = 0}) => _client.get(
     ApiEndpoints.popularVods,
-    query: {'page': 0, 'limit': popularVodsPageSize},
+    query: {'page': page, 'limit': popularVodsPageSize},
     parse: Vod.parseList,
   );
 }

@@ -4,13 +4,52 @@ import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/network/api_load.dart';
 
-/// One titled block of the home feed that loads on its own: a spinner while
-/// loading, an error with a retry button when it failed, [empty] (or nothing
-/// when null) for an empty list, else [builder]'s content.
+/// The body to show instead of content while [value] is loading or failed,
+/// or when its list is empty: a spinner, an error with a retry button,
+/// [empty] (an empty box when null). Null when there are items to show.
 ///
 /// While reloading with data on screen the old content stays (no flicker on
 /// pull-to-refresh); after an error the spinner shows so a retry gives
 /// feedback.
+Widget? feedStatusBody<T>({
+  required AsyncValue<List<T>> value,
+  required VoidCallback onRetry,
+  Widget? empty,
+}) {
+  if (value.hasError && !value.isLoading) {
+    return FeedError(error: value.error!, onRetry: onRetry);
+  }
+  final items = value.value;
+  if (items == null) {
+    return const Padding(
+      padding: EdgeInsets.all(24),
+      child: Center(child: CircularProgressIndicator()),
+    );
+  }
+  if (items.isEmpty) return empty ?? const SizedBox.shrink();
+  return null;
+}
+
+/// Title of a feed section.
+class SectionHeader extends StatelessWidget {
+  const SectionHeader(this.title, {super.key});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+    child: Text(
+      title,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Theme.of(context).textTheme.titleLarge,
+    ),
+  );
+}
+
+/// One titled block of the home feed that loads on its own: [feedStatusBody]
+/// while loading, failed or empty, else [builder]'s content.
 class FeedSection<T> extends StatelessWidget {
   const FeedSection({
     required this.title,
@@ -32,40 +71,15 @@ class FeedSection<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Widget body;
     final items = value.value;
-    if (value.hasError && !value.isLoading) {
-      body = _SectionError(error: value.error!, onRetry: onRetry);
-    } else if (items == null) {
-      body = const Padding(
-        padding: EdgeInsets.all(24),
-        child: Center(child: CircularProgressIndicator()),
-      );
-    } else if (items.isEmpty) {
-      final emptyBody = empty;
-      if (emptyBody == null) return const SizedBox.shrink();
-      body = emptyBody;
-    } else {
-      body = builder(context, items);
+    final hasError = value.hasError && !value.isLoading;
+    if (!hasError && items != null && items.isEmpty && empty == null) {
+      return const SizedBox.shrink();
     }
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          ),
-          const SizedBox(height: 8),
-          body,
-        ],
-      ),
+    final status = feedStatusBody(value: value, onRetry: onRetry, empty: empty);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [SectionHeader(title), status ?? builder(context, items!)],
     );
   }
 }
@@ -105,9 +119,13 @@ class EmptyNotice extends StatelessWidget {
   }
 }
 
-class _SectionError extends StatelessWidget {
-  const _SectionError({required this.error, required this.onRetry});
+/// The localized reason a section (or page) failed to load, with a retry
+/// button.
+class FeedError extends StatelessWidget {
+  const FeedError({required this.error, required this.onRetry, super.key});
 
+  /// An [ApiLoadException] for a server or network error; anything else
+  /// shows the generic message.
   final Object error;
   final VoidCallback onRetry;
 

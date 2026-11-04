@@ -20,8 +20,13 @@ class MediaCard extends ConsumerWidget {
     super.key,
   });
 
+  /// Absolute URL of the 16:9 thumbnail.
   final String thumbnailUrl;
+
+  /// Shown on at most two lines.
   final String title;
+
+  /// Id of the owner to look up for the avatar and name.
   final String userId;
 
   /// Under the owner name, e.g. "1.2K views · 5 minutes ago".

@@ -63,8 +63,10 @@ void main() {
     expect(find.text('screen Two'), findsOneWidget);
   });
 
-  test('the app registers exactly the Home tab for now', () {
-    expect(appTabs.map((t) => t.path), ['/']);
+  test('the registry starts with Home and has unique tab paths', () {
+    final paths = appTabs.map((t) => t.path).toList();
+    expect(paths.first, '/');
+    expect(paths.toSet(), hasLength(paths.length));
   });
 
   testWidgets('realtime pauses in the background and resumes on return', (

@@ -5,6 +5,7 @@ import 'package:letslive_mobile/core/network/api_response.dart';
 class ApiLoadException implements Exception {
   const ApiLoadException(this.response);
 
+  /// The failed response (server error envelope or transport failure).
   final ApiResponse<Object?> response;
 
   @override

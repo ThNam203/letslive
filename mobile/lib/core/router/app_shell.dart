@@ -7,8 +7,9 @@ import 'package:letslive_mobile/core/router/app_tabs.dart';
 
 /// The signed-in app frame: the current tab above a bottom navigation bar.
 ///
-/// - The bar lists [tabs] (see `appTabs` for how a task adds one) and is hidden while there are fewer than two
-///   (Flutter requires at least two destinations).
+/// - The bar lists [tabs] (see `appTabs` for how a task adds one) and is
+///   hidden while there are fewer than two (Flutter requires at least two
+///   destinations).
 /// - Each tab keeps its own navigation stack and state while another tab is
 ///   shown ([StatefulShellRoute.indexedStack]).
 /// - The realtime socket pauses while the app is in the background and
@@ -21,6 +22,8 @@ class AppShell extends ConsumerStatefulWidget {
     super.key,
   });
 
+  /// go_router's handle on the tab branches: the current tab's screen and
+  /// the tab switching.
   final StatefulNavigationShell navigationShell;
 
   /// The tabs to show, normally the registry [appTabs].
