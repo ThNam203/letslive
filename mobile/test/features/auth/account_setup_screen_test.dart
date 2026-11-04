@@ -6,6 +6,7 @@ import 'package:letslive_mobile/core/network/api_endpoints.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/presentation/account_setup_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
+import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
 
 import 'auth_test_app.dart';
 
@@ -52,7 +53,7 @@ void main() {
     final put = app.adapter.requests.singleWhere((r) => r.method == 'PUT');
     expect(put.path, ApiEndpoints.userMe);
     expect(put.data, {'username': 'chosen_name'});
-    expect(find.text('LetsLive (dev)'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
     expect(
       app.container.read(sessionProvider).value?.user.username,
       'chosen_name',
@@ -78,7 +79,7 @@ void main() {
 
     app.server.holdUpdateMe?.complete();
     await tester.pumpAndSettle();
-    expect(find.text('LetsLive (dev)'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
     expect(app.adapter.requests.where((r) => r.method == 'PUT'), hasLength(1));
   });
 

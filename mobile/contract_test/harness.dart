@@ -202,29 +202,7 @@ Future<String> readSignupOtp(String email, {String verifyKey = ''}) async {
       'ORDER BY created_at DESC LIMIT 1';
   final deadline = DateTime.now().add(_otpWait);
   while (true) {
-    final ProcessResult result;
-    try {
-      result = await Process.run('docker', [
-        'exec',
-        _dbContainer,
-        'psql',
-        '-U',
-        _dbUser,
-        '-d',
-        _authDb,
-        '-tA',
-        '-c',
-        sql,
-      ], stdoutEncoding: utf8);
-    } on ProcessException catch (e) {
-      throw ContractSetupException('cannot run docker: ${e.message}');
-    }
-    if (result.exitCode != 0) {
-      throw ContractSetupException(
-        'psql in container "$_dbContainer" failed: ${result.stderr}',
-      );
-    }
-    final code = (result.stdout as String).trim();
+    final code = await runSql(_authDb, sql);
     if (code.isNotEmpty) return code;
     if (DateTime.now().isAfter(deadline)) {
       throw ContractSetupException(
@@ -234,4 +212,34 @@ Future<String> readSignupOtp(String email, {String verifyKey = ''}) async {
     }
     await Future<void>.delayed(_pollInterval);
   }
+}
+
+/// Runs [sql] in database [database] of the dev Postgres container
+/// (`docker exec ... psql`) and returns the trimmed output. Contract tests use
+/// it for fixtures the public API cannot create (e.g. a live stream needs a
+/// real RTMP publisher).
+Future<String> runSql(String database, String sql) async {
+  final ProcessResult result;
+  try {
+    result = await Process.run('docker', [
+      'exec',
+      _dbContainer,
+      'psql',
+      '-U',
+      _dbUser,
+      '-d',
+      database,
+      '-tA',
+      '-c',
+      sql,
+    ], stdoutEncoding: utf8);
+  } on ProcessException catch (e) {
+    throw ContractSetupException('cannot run docker: ${e.message}');
+  }
+  if (result.exitCode != 0) {
+    throw ContractSetupException(
+      'psql in container "$_dbContainer" failed: ${result.stderr}',
+    );
+  }
+  return (result.stdout as String).trim();
 }

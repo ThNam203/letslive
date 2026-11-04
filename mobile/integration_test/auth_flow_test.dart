@@ -5,6 +5,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:letslive_mobile/app.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
+import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
 import 'package:letslive_mobile/main.dart' as app;
 
 /// Credentials of an existing dev-stack user (the app cannot read signup
@@ -12,7 +13,6 @@ import 'package:letslive_mobile/main.dart' as app;
 const _email = String.fromEnvironment('AUTH_FLOW_EMAIL');
 const _password = String.fromEnvironment('AUTH_FLOW_PASSWORD');
 
-const _home = 'LetsLive (dev)';
 const _timeout = Duration(seconds: 20);
 
 /// Pumps until [finder] matches; the splash spinner never lets
@@ -48,12 +48,10 @@ void main() {
     await app.main();
     await waitFor(
       tester,
-      find.byWidgetPredicate(
-        (w) => w is LoginScreen || (w is Text && w.data == _home),
-      ),
+      find.byWidgetPredicate((w) => w is LoginScreen || w is HomeScreen),
     );
     // A previous run may have left a session in the keychain.
-    if (find.text(_home).evaluate().isNotEmpty) {
+    if (find.byType(HomeScreen).evaluate().isNotEmpty) {
       await containerOf(tester).read(sessionProvider.notifier).logout();
       await waitFor(tester, find.byType(LoginScreen));
     }
@@ -62,7 +60,7 @@ void main() {
     await waitFor(tester, find.text('Username or password incorrect.'));
 
     await logIn(tester, _password);
-    await waitFor(tester, find.text(_home));
+    await waitFor(tester, find.byType(HomeScreen));
     final session = containerOf(tester).read(sessionProvider).value;
     expect(session?.user.email, _email);
 

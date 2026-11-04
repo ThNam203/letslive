@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/signup_screen.dart';
+import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
 
 import 'auth_test_app.dart';
 
@@ -75,7 +76,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('otp-submit')));
     await tester.pumpAndSettle();
 
-    expect(find.text('LetsLive (dev)'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
     expect(await app.hasSessionCookie(), isTrue);
     final signup = app.requestsTo(ApiEndpoints.signup).last;
     expect(signup.data, {
@@ -145,7 +146,7 @@ void main() {
 
     app.server.holdSignup?.complete();
     await tester.pumpAndSettle();
-    expect(find.text('LetsLive (dev)'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
     expect(app.requestsTo(ApiEndpoints.signup), hasLength(1));
   });
 

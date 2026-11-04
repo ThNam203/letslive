@@ -55,6 +55,19 @@ flutter test
 dart format --set-exit-if-changed lib test tool contract_test integration_test
 ```
 
+## App shell and tabs
+
+Signed-in screens live in `AppShell` (`lib/core/router/app_shell.dart`): the
+current tab above a bottom `NavigationBar`. The tabs come from one registry,
+`appTabs` in `lib/core/router/app_tabs.dart`, in display order (Home, Search,
+Notifications, Messages, Profile). **To add a tab**, insert one `AppTab`
+(`path`, `icon`, `label` from l10n, `builder`) at its place in that list;
+the router branches and the bar are built from it, nothing else to wire. There
+are no placeholder tabs: a tab appears when its screen exists, and the bar is
+hidden while fewer than two tabs are registered. Each tab keeps its own
+navigation stack. The shell also pauses the realtime socket in the background
+and resumes it on return.
+
 ## Contract tests (real backend)
 
 Contract tests parse real backend responses with the app's models, so API

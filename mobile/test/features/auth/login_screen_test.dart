@@ -8,6 +8,7 @@ import 'package:letslive_mobile/core/network/api_endpoints.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/data/google_sign_in_service.dart';
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
+import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'auth_test_app.dart';
@@ -15,8 +16,6 @@ import 'auth_test_app.dart';
 class MockGoogleSignIn extends Mock implements GoogleSignIn {}
 
 class MockGoogleAccount extends Mock implements GoogleSignInAccount {}
-
-const _home = 'LetsLive (dev)';
 
 Future<void> fillLogin(WidgetTester tester, String password) async {
   await enter(tester, 'email', 'user@example.com');
@@ -38,7 +37,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('login-submit')));
     await tester.pumpAndSettle();
 
-    expect(find.text(_home), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
     expect(await app.hasSessionCookie(), isTrue);
     final session = app.container.read(sessionProvider).value;
     expect(session?.user.username, 'abcdef');
@@ -65,7 +64,7 @@ void main() {
 
     server.holdLogin?.complete();
     await tester.pumpAndSettle();
-    expect(find.text(_home), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
     expect(app.requestsTo(ApiEndpoints.login), hasLength(1));
   });
 
@@ -86,7 +85,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('login-submit')));
     await tester.pumpAndSettle();
 
-    expect(find.text(_home), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
     final attempts = app.requestsTo(ApiEndpoints.login);
     expect(attempts, hasLength(2));
     expect(
@@ -149,7 +148,7 @@ void main() {
 
       final request = app.requestsTo(ApiEndpoints.googleMobile).single;
       expect(request.data, {'idToken': 'native-id-token'});
-      expect(find.text(_home), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
       verify(
         () => signIn.initialize(
           serverClientId: 'web-client.apps.googleusercontent.com',

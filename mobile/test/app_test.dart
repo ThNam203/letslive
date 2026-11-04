@@ -5,6 +5,7 @@ import 'package:letslive_mobile/core/config/app_config.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/l10n/locale_provider.dart';
 import 'package:letslive_mobile/core/theme/theme_mode_provider.dart';
+import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
 
 import 'features/auth/auth_test_app.dart';
 
@@ -24,7 +25,7 @@ void main() {
     await pumpTestApp(tester, signedIn: true);
 
     expect(find.byType(MaterialApp), findsOneWidget);
-    expect(find.text('LetsLive (dev)'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 
   testWidgets('LetsLiveApp applies the persisted locale and theme', (
@@ -39,7 +40,7 @@ void main() {
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     expect(app.locale, const Locale('vi'));
     expect(app.themeMode, ThemeMode.dark);
-    final context = tester.element(find.text('LetsLive (dev)'));
+    final context = tester.element(find.byType(HomeScreen));
     expect(AppLocalizations.of(context).localeName, 'vi');
     expect(Theme.of(context).brightness, Brightness.dark);
   });

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:letslive_mobile/core/providers.dart';
+import 'package:letslive_mobile/core/router/app_routes.dart';
+import 'package:letslive_mobile/core/router/app_shell.dart';
+import 'package:letslive_mobile/core/router/app_tabs.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/domain/session.dart';
 import 'package:letslive_mobile/features/auth/presentation/account_setup_screen.dart';
@@ -9,16 +11,7 @@ import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/signup_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/splash_screen.dart';
 
-/// Route paths. Auth routes mirror web `app/(auth)`.
-abstract final class AppRoutes {
-  static const String home = '/';
-  static const String login = '/login';
-  static const String signup = '/signup';
-  static const String accountSetup = '/account-setup';
-
-  /// Shown while the session loads, or with a retry if loading failed.
-  static const String splash = '/splash';
-}
+export 'package:letslive_mobile/core/router/app_routes.dart';
 
 const Set<String> _loggedOutRoutes = {AppRoutes.login, AppRoutes.signup};
 
@@ -49,7 +42,8 @@ String? authRedirect(AsyncValue<Session?> session, String location) {
 }
 
 /// The app router. Re-runs [authRedirect] whenever [sessionProvider]
-/// changes. Task 11 adds the shell and feature routes.
+/// changes. The signed-in app is the [AppShell] over the registered
+/// [appTabs]; auth screens sit outside it.
 final appRouterProvider = Provider<GoRouter>((ref) {
   final session = ValueNotifier<AsyncValue<Session?>>(
     ref.read(sessionProvider),
@@ -62,11 +56,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) =>
         authRedirect(session.value, state.matchedLocation),
     routes: [
-      GoRoute(
-        path: AppRoutes.home,
-        // The scaffold's root body until Task 11 replaces it with the shell.
-        builder: (context, state) => const _RootBody(),
-      ),
+      AppShell.route(appTabs),
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),
@@ -91,14 +81,3 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   });
   return router;
 });
-
-class _RootBody extends ConsumerWidget {
-  const _RootBody();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) => Scaffold(
-    body: Center(
-      child: Text('LetsLive (${ref.watch(appConfigProvider).flavor.name})'),
-    ),
-  );
-}

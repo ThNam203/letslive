@@ -13,6 +13,7 @@ import 'package:letslive_mobile/features/auth/domain/session.dart';
 import 'package:letslive_mobile/features/auth/presentation/account_setup_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/splash_screen.dart';
+import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
 import 'package:letslive_mobile/features/user/data/me_user.dart';
 
 import '../../features/auth/auth_test_app.dart';
@@ -123,7 +124,7 @@ void main() {
 
     server.holdMe?.complete();
     await tester.pumpAndSettle();
-    expect(find.text('LetsLive (dev)'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 
   testWidgets('a failed session load shows an error with retry', (
@@ -139,7 +140,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('splash-retry')));
     await tester.pumpAndSettle();
 
-    expect(find.text('LetsLive (dev)'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
     expect(app.requestsTo(ApiEndpoints.userMe), hasLength(2));
   });
 
@@ -161,7 +162,7 @@ void main() {
 
   testWidgets('an expired session returns to login once', (tester) async {
     final app = await pumpTestApp(tester, signedIn: true);
-    expect(find.text('LetsLive (dev)'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
 
     // The server rejects the refresh token: ApiClient reports sessionExpired.
     // Widget tests run in fake time: start the call, then pump it through.

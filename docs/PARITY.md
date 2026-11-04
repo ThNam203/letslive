@@ -29,7 +29,7 @@ Source of the feature list: section 4 of
 
 | web route/feature | mobile screen | tests | status |
 |---|---|---|---|
-| `/` | - | - | planned |
+| `/` | `HomeScreen` + `AppShell` (`mobile/lib/features/home/presentation/home_screen.dart`, `mobile/lib/core/router/app_shell.dart`): live, followed/recommended channels and popular videos | `mobile/test/features/home/home_screen_test.dart`, `mobile/test/features/home/home_repository_test.dart`, `mobile/test/core/router/app_shell_test.dart`, `mobile/contract_test/home_contract_test.dart` | done |
 | `/login` | `LoginScreen` (`mobile/lib/features/auth/presentation/login_screen.dart`) | `mobile/test/features/auth/login_screen_test.dart`, `mobile/contract_test/auth_contract_test.dart`, `mobile/integration_test/auth_flow_test.dart` | done |
 | `/signup` | `SignupScreen` + `OtpDialog` (`mobile/lib/features/auth/presentation/`) | `mobile/test/features/auth/signup_screen_test.dart`, `mobile/test/features/auth/auth_validators_test.dart`, `mobile/contract_test/auth_contract_test.dart` | done |
 | `/account-setup` | `AccountSetupScreen` (`mobile/lib/features/auth/presentation/account_setup_screen.dart`) | `mobile/test/features/auth/account_setup_screen_test.dart`, `mobile/test/core/router/app_router_test.dart`, `mobile/contract_test/auth_contract_test.dart` | done |
@@ -67,9 +67,7 @@ constant for yet. Remove a bullet when its constant lands.
 - `/transactions` - wallet transactions
 - `/shop` - shop items and purchase
 - `/livestreams` - live stream lookup and search
-- `/popular-livestreams` - home feed
 - `/vods` - VOD feed, detail, reactions, comments, upload
-- `/popular-vods` - home feed
 - `/vod-comments` - comment edit, delete, like, replies
 - `/messages` - live chat history and send
 - `/chat-commands` - chat command settings
