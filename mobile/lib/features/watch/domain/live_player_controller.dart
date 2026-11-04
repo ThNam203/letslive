@@ -21,6 +21,7 @@ class VideoQuality {
   /// Vertical resolution in pixels; 0 for [auto].
   final int height;
 
+  /// Whether this is [auto] (adaptive) rather than a fixed variant.
   bool get isAuto => height == 0;
 
   @override
@@ -47,6 +48,7 @@ class LivePlayerValue {
     this.quality = VideoQuality.auto,
   });
 
+  /// Playing (or about to, once buffered) rather than paused by the viewer.
   final bool isPlaying;
 
   /// Waiting for data (start-up or a stall).
@@ -75,8 +77,10 @@ abstract interface class LivePlayerController {
   /// The video surface (16:9, letterboxed).
   Widget buildVideo(BuildContext context);
 
+  /// Resumes playback after [pause].
   Future<void> play();
 
+  /// Pauses playback; the stream keeps going on the server.
   Future<void> pause();
 
   /// Switches to [quality]; [VideoQuality.auto] goes back to adaptive.

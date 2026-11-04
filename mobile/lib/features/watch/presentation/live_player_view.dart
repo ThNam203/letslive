@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
@@ -9,10 +11,17 @@ import 'package:letslive_mobile/features/watch/watch_providers.dart';
 /// menu (Auto + the stream's variants) and picture-in-picture.
 ///
 /// Owns its [LivePlayerController] (from [livePlayerFactoryProvider]) and
-/// disposes it with the widget. When playback ends or fails it calls
-/// [onStopped] once, so the screen can ask the server whether the stream is
-/// still live; if it is, the overlay offers a retry that starts a fresh
-/// player.
+/// disposes it with the widget.
+///
+/// When playback stops it shows a spinner, never an error first:
+/// - The first error silently starts a fresh player, which joins at the live
+///   edge (this also recovers a player that fell behind the live window).
+///   Once that player plays, the next error gets the same second chance.
+/// - A further error, or the end of the playlist, calls [onStopped] so the
+///   screen can ask the server whether the stream is still live. If it
+///   ended, the screen replaces this view. If it is still live, an error
+///   shows a retry; an ended playlist keeps the spinner until the next
+///   check notices the end.
 class LivePlayerView extends ConsumerStatefulWidget {
   const LivePlayerView({
     required this.url,
@@ -31,8 +40,8 @@ class LivePlayerView extends ConsumerStatefulWidget {
   /// Streamer name, for the background-playback notification.
   final String author;
 
-  /// Playback ended or failed.
-  final VoidCallback onStopped;
+  /// Playback ended or failed for good; completes once the server was asked.
+  final Future<void> Function() onStopped;
 
   @override
   ConsumerState<LivePlayerView> createState() => _LivePlayerViewState();
@@ -43,6 +52,12 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
 
   /// Whether [LivePlayerView.onStopped] was called for the current player.
   bool _reportedStop = false;
+
+  /// Whether the silent restart was used and no player has played since.
+  bool _autoRetried = false;
+
+  /// The server said the stream is still live after a playback error.
+  bool _showError = false;
 
   @override
   void initState() {
@@ -67,14 +82,32 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
 
   void _onPlayerChanged() {
     final value = _player.value.value;
+    if (value.isPlaying && !value.hasError && !value.hasEnded) {
+      _autoRetried = false;
+    }
     if (_reportedStop || !(value.hasEnded || value.hasError)) return;
+    if (value.hasError && !_autoRetried) {
+      _autoRetried = true;
+      // Not while the player is still notifying its listeners.
+      scheduleMicrotask(() {
+        if (mounted) _retry();
+      });
+      return;
+    }
     _reportedStop = true;
-    widget.onStopped();
+    unawaited(_checkStream(isError: value.hasError));
+  }
+
+  Future<void> _checkStream({required bool isError}) async {
+    await widget.onStopped();
+    // Still here, so the server says the stream is still live.
+    if (mounted && isError) setState(() => _showError = true);
   }
 
   void _retry() => setState(() {
     _releasePlayer();
     _reportedStop = false;
+    _showError = false;
     _player = _createPlayer();
   });
 
@@ -95,9 +128,11 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
           _player.buildVideo(context),
           ValueListenableBuilder<LivePlayerValue>(
             valueListenable: _player.value,
-            builder: (context, value, _) => value.hasError || value.hasEnded
-                ? _PlaybackError(onRetry: _retry)
-                : _Controls(player: _player, value: value),
+            builder: (context, value, _) {
+              if (_showError) return _PlaybackError(onRetry: _retry);
+              if (value.hasError || value.hasEnded) return const _Spinner();
+              return _Controls(player: _player, value: value);
+            },
           ),
         ],
       ),
@@ -117,8 +152,7 @@ class _Controls extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Stack(
       children: [
-        if (value.isBuffering)
-          const Center(child: CircularProgressIndicator(color: Colors.white)),
+        if (value.isBuffering) const _Spinner(),
         Positioned(
           left: 0,
           right: 0,
@@ -157,6 +191,16 @@ class _Controls extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Buffering, restarting, or waiting for the server to say whether the
+/// stream is still live.
+class _Spinner extends StatelessWidget {
+  const _Spinner();
+
+  @override
+  Widget build(BuildContext context) =>
+      const Center(child: CircularProgressIndicator(color: Colors.white));
 }
 
 /// "Auto" plus one entry per variant, the one in use checked.
@@ -212,8 +256,7 @@ class _LiveBadge extends StatelessWidget {
   );
 }
 
-/// Playback failed (or the playlist ended) while the server still says the
-/// stream is live.
+/// Playback failed twice while the server still says the stream is live.
 class _PlaybackError extends StatelessWidget {
   const _PlaybackError({required this.onRetry});
 

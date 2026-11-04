@@ -86,7 +86,7 @@ no physical device available):
 | HLS quality selection | yes since 2.14 (`selectVideoTrack`) | yes (parses the master playlist, `setTrack`) |
 | Maintenance | Flutter team; last release 2026-10-02 | last release 2026-10-29, 5 releases in 3 months, 160/160 pub points, ~48 open issues |
 | License | BSD-3-Clause | Apache-2.0 |
-| Extra packages to add | a PiP package | none (transitive only: `wakelock_plus`, `path_provider`, `flutter_widget_from_html_core`) |
+| Extra packages to add | a PiP package | none directly; new transitive ones: `wakelock_plus`, `package_info_plus`, `flutter_widget_from_html_core`, `html`, `csslib`, `dbus`, `petitparser`, `xml`, and SwiftPM `hyperoslo/Cache` |
 
 **Pick: `better_player_plus`.** It is the only candidate that covers PiP
 without adding another package. `media_kit` was not shortlisted: its last
@@ -107,10 +107,20 @@ Platform config for background audio and PiP:
   AGP 9 the package expects built-in Kotlin, which this project keeps off,
   so its Kotlin would otherwise target JDK 21 against Java 17 and fail.
 
+Known gaps:
+
+- The screen may sleep while watching inline: the package only holds a
+  wakelock on its fullscreen route, and the app adds none.
+- Android picture-in-picture is button-only (the package does not hook
+  `onUserLeaveHint`, so going home does not enter PiP). It goes through
+  the package's fullscreen route: landscape, no controls.
+
 Still needs a physical device: background audio with the screen locked;
-PiP enter/exit and returning to the app; lock screen / notification
-controls; quality switches on a real network; Android 13+ notification
-permission (without it the notification is hidden, but playback goes on).
+PiP enter/exit (Android: button only) and returning to the app, including
+orientation and controls after leaving PiP; lock screen / notification
+controls; quality switches on a real network; screen dimming/locking while
+watching inline; Android 13+ notification permission (without it the
+notification is hidden, but playback goes on).
 
 `integration_test/live_player_test.dart` drives the real player on a
 simulator or emulator against any live HLS ladder, for example a local

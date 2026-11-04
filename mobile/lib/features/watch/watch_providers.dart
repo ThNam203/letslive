@@ -64,6 +64,8 @@ class ChannelNotifier extends AsyncNotifier<ChannelState> {
     final profile = unwrapData(user);
     if (!live.success) throw ApiLoadException(live);
 
+    // Keeps polling in the background too: background audio may be playing,
+    // and a live playlist that stops growing may never report its end.
     final timer = Timer.periodic(liveRecheckInterval, (_) => recheck());
     ref.onDispose(timer.cancel);
 

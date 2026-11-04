@@ -17,6 +17,12 @@ FakeWatchServer liveServer({String title = 'Live title'}) =>
     FakeWatchServer()
       ..liveByUser = {'u-1': livestreamJson(id: 'ls-1', title: title)};
 
+/// The native player reached the end of the playlist.
+const ended = LivePlayerValue(isBuffering: false, hasEnded: true);
+
+/// The native player failed.
+const failed = LivePlayerValue(isBuffering: false, hasError: true);
+
 /// The quality menu entry labelled [label].
 Finder menuItem(String label) =>
     find.widgetWithText(CheckedPopupMenuItem<VideoQuality>, label);
@@ -97,30 +103,112 @@ void main() {
     await pumpChannel(tester, server, players, 'u-1');
 
     server.liveByUser = {};
-    players.last.emit(
-      const LivePlayerValue(isBuffering: false, hasEnded: true),
-    );
+    players.last.emit(ended);
     await tester.pumpAndSettle();
 
     expect(find.text('This stream has ended.'), findsOneWidget);
   });
 
-  testWidgets('playback error on a live stream offers a retry', (tester) async {
+  testWidgets('ended playback shows a spinner, not an error, until checked', (
+    tester,
+  ) async {
+    final server = liveServer();
     final players = FakeLivePlayers();
-    await pumpChannel(tester, liveServer(), players, 'u-1');
+    await pumpChannel(tester, server, players, 'u-1');
 
-    players.last.emit(
-      const LivePlayerValue(isBuffering: false, hasError: true),
-    );
+    server.holdLiveOf = Completer<void>();
+    server.liveByUser = {};
+    players.last.emit(ended);
+    await tester.pump();
+
+    expect(find.text("Couldn't play the stream."), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    server.holdLiveOf!.complete();
     await tester.pumpAndSettle();
+    expect(find.text('This stream has ended.'), findsOneWidget);
+  });
 
-    // Still live on the server, so it is a playback problem, not the end.
-    expect(find.text("Couldn't play the stream."), findsOneWidget);
-    await tester.tap(find.text('Try again'));
+  testWidgets(
+    'ended playback on a still-live stream waits for the next check',
+    (tester) async {
+      final server = liveServer();
+      final players = FakeLivePlayers();
+      await pumpChannel(tester, server, players, 'u-1');
+
+      // The playlist ended but the server still lists the stream.
+      players.last.emit(ended);
+      await tester.pump();
+      await tester.pump();
+      expect(find.text("Couldn't play the stream."), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      server.liveByUser = {};
+      await tester.pump(liveRecheckInterval);
+      await tester.pumpAndSettle();
+      expect(find.text('This stream has ended.'), findsOneWidget);
+    },
+  );
+
+  testWidgets('first playback error restarts the player without a message', (
+    tester,
+  ) async {
+    final players = FakeLivePlayers();
+    final app = await pumpChannel(tester, liveServer(), players, 'u-1');
+
+    players.last.emit(failed);
     await tester.pumpAndSettle();
 
     expect(players.created, hasLength(2));
     expect(players.first.disposed, isTrue);
+    expect(find.text("Couldn't play the stream."), findsNothing);
+    expect(find.byKey(const ValueKey('fake-video')), findsOneWidget);
+    // A silent restart does not ask the server.
+    expect(app.requestsTo(ApiEndpoints.livestreams), hasLength(1));
+  });
+
+  testWidgets('second playback error re-checks, then offers a retry', (
+    tester,
+  ) async {
+    final server = liveServer();
+    final players = FakeLivePlayers();
+    final app = await pumpChannel(tester, server, players, 'u-1');
+    players.last.emit(failed);
+    await tester.pumpAndSettle();
+
+    // The restarted player fails before it ever plays.
+    server.holdLiveOf = Completer<void>();
+    players.last.emit(failed);
+    await tester.pump();
+    expect(find.text("Couldn't play the stream."), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    // Still live on the server, so it is a playback problem, not the end.
+    server.holdLiveOf!.complete();
+    await tester.pumpAndSettle();
+    expect(find.text("Couldn't play the stream."), findsOneWidget);
+    expect(app.requestsTo(ApiEndpoints.livestreams), hasLength(2));
+
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(players.created, hasLength(3));
+    expect(players.created[1].disposed, isTrue);
+    expect(find.text("Couldn't play the stream."), findsNothing);
+  });
+
+  testWidgets('playing again re-arms the automatic restart', (tester) async {
+    final players = FakeLivePlayers();
+    await pumpChannel(tester, liveServer(), players, 'u-1');
+    players.last.emit(failed);
+    await tester.pumpAndSettle();
+
+    players.last.emit(
+      const LivePlayerValue(isPlaying: true, isBuffering: false),
+    );
+    players.last.emit(failed);
+    await tester.pumpAndSettle();
+
+    expect(players.created, hasLength(3));
     expect(find.text("Couldn't play the stream."), findsNothing);
   });
 

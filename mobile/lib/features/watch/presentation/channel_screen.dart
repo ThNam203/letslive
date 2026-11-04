@@ -96,7 +96,7 @@ class _LiveBody extends ConsumerWidget {
 
   final PublicUser user;
   final Livestream stream;
-  final VoidCallback onStopped;
+  final Future<void> Function() onStopped;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

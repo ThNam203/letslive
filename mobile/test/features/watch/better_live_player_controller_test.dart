@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/features/watch/data/better_live_player_controller.dart';
@@ -27,5 +29,34 @@ void main() {
       qualitiesOf([BetterPlayerAsmsTrack.defaultTrack(), track(null)]),
       isEmpty,
     );
+  });
+
+  group('playerErrorZone', () {
+    test(
+      "ignores the package timer's RangeError, also in timers it starts",
+      () async {
+        final errors = <Object>[];
+        final zone = playerErrorZone((error, _) => errors.add(error));
+
+        zone.run(() {
+          Timer(Duration.zero, () => throw RangeError('absolutePosition'));
+        });
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+
+        expect(errors, isEmpty);
+      },
+    );
+
+    test('reports any other uncaught error', () async {
+      final errors = <Object>[];
+      final zone = playerErrorZone((error, _) => errors.add(error));
+
+      zone.run(() {
+        Timer(Duration.zero, () => throw StateError('decoder'));
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(errors, [isA<StateError>()]);
+    });
   });
 }
