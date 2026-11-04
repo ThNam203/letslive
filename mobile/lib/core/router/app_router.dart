@@ -10,6 +10,7 @@ import 'package:letslive_mobile/features/auth/presentation/account_setup_screen.
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/signup_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/splash_screen.dart';
+import 'package:letslive_mobile/features/watch/presentation/channel_screen.dart';
 
 export 'package:letslive_mobile/core/router/app_routes.dart';
 
@@ -43,7 +44,7 @@ String? authRedirect(AsyncValue<Session?> session, String location) {
 
 /// The app router. Re-runs [authRedirect] whenever [sessionProvider]
 /// changes. The signed-in app is the [AppShell] over the registered
-/// [appTabs]; auth screens sit outside it.
+/// [appTabs]; pushed screens (the channel) and auth screens sit outside it.
 final appRouterProvider = Provider<GoRouter>((ref) {
   final session = ValueNotifier<AsyncValue<Session?>>(
     ref.read(sessionProvider),
@@ -57,6 +58,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         authRedirect(session.value, state.matchedLocation),
     routes: [
       AppShell.route(appTabs),
+      // Above the shell: the player gets the whole screen, no tab bar.
+      GoRoute(
+        path: AppRoutes.channelPattern,
+        builder: (context, state) =>
+            ChannelScreen(userId: state.pathParameters['userId']!),
+      ),
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),

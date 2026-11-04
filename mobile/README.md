@@ -68,6 +68,70 @@ hidden while fewer than two tabs are registered. Each tab keeps its own
 navigation stack. The shell also pauses the realtime socket in the background
 and resumes it on return.
 
+## Video player
+
+Live (and later VOD) playback goes through one small interface,
+`LivePlayerController` (`lib/features/watch/domain/live_player_controller.dart`);
+`BetterLivePlayerController` wraps the package and widget tests use a fake.
+The stream URL is built like web: `<api>/transcode/<livestreamId>/index.m3u8`.
+
+Spike (2026-11-04; metadata from pub.dev / GitHub, packages read at source;
+no physical device available):
+
+| Criterion | `video_player` 2.14.1 alone | `better_player_plus` 2.0.1 |
+|---|---|---|
+| Background audio iOS | yes (`allowBackgroundPlayback` + `UIBackgroundModes`) | yes (sets `AVAudioSession` `.playback`; needs `UIBackgroundModes`) |
+| Background audio Android | keeps playing, but no foreground service or media notification, so the OS may kill it | yes: `mediaPlayback` foreground service + notification |
+| Picture-in-picture | **no API** (needs a second package) | yes, iOS (AVPictureInPictureController) and Android 8+ |
+| HLS quality selection | yes since 2.14 (`selectVideoTrack`) | yes (parses the master playlist, `setTrack`) |
+| Maintenance | Flutter team; last release 2026-10-02 | last release 2026-10-29, 5 releases in 3 months, 160/160 pub points, ~48 open issues |
+| License | BSD-3-Clause | Apache-2.0 |
+| Extra packages to add | a PiP package | none (transitive only: `wakelock_plus`, `path_provider`, `flutter_widget_from_html_core`) |
+
+**Pick: `better_player_plus`.** It is the only candidate that covers PiP
+without adding another package. `media_kit` was not shortlisted: its last
+release was 2025-12 (older than 6 months), and it needs `media_kit_video`
+plus `media_kit_libs_*`.
+
+Platform config for background audio and PiP:
+
+- iOS `Info.plist` and `Info-Dev.plist`: `UIBackgroundModes` = `audio`. Both
+  background audio and PiP need it. The package sets the `AVAudioSession`
+  category itself.
+- Android `MainActivity`: `android:supportsPictureInPicture="true"`. The
+  package's own manifest adds the foreground service and its permissions.
+- Android `activity-alias` `${applicationId}.PlaybackActivity`: the
+  notification tap opens `<applicationId>.<activityName>`, which with the
+  `.dev`/`.staging` suffixes would name a class that does not exist.
+- Android `build.gradle.kts`: pins the package's Kotlin JVM target to 17. On
+  AGP 9 the package expects built-in Kotlin, which this project keeps off,
+  so its Kotlin would otherwise target JDK 21 against Java 17 and fail.
+
+Still needs a physical device: background audio with the screen locked;
+PiP enter/exit and returning to the app; lock screen / notification
+controls; quality switches on a real network; Android 13+ notification
+permission (without it the notification is hidden, but playback goes on).
+
+`integration_test/live_player_test.dart` drives the real player on a
+simulator or emulator against any live HLS ladder, for example a local
+ffmpeg one (1080/720/360, served with `python3 -m http.server 8899`):
+
+```sh
+ffmpeg -re -f lavfi -i testsrc2=size=1920x1080:rate=10 -f lavfi -i sine \
+  -filter_complex "[0:v]split=3[a][b][c];[a]scale=1920:1080[v1];[b]scale=1280:720[v2];[c]scale=640:360[v3]" \
+  -map "[v1]" -map "[v2]" -map "[v3]" -map 1:a -map 1:a -map 1:a \
+  -c:v libx264 -preset ultrafast -g 20 -c:a aac -f hls -hls_time 2 -hls_list_size 10 \
+  -hls_flags delete_segments -master_pl_name index.m3u8 \
+  -var_stream_map "v:0,a:0 v:1,a:1 v:2,a:2" "%v/stream.m3u8"
+flutter test integration_test/live_player_test.dart -d <device> --flavor dev \
+  --dart-define-from-file=env/dev.json \
+  --dart-define=LIVE_PLAYER_TEST_URL=http://<127.0.0.1 or 10.0.2.2>:8899/index.m3u8
+```
+
+Keep the encoder at real time (light preset, low frame rate): a ladder that
+lags behind the wall clock makes ExoPlayer fail with
+`BehindLiveWindowException`.
+
 ## Contract tests (real backend)
 
 Contract tests parse real backend responses with the app's models, so API

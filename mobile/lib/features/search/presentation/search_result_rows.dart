@@ -1,12 +1,15 @@
 /// The rows of the search results (web `search-result-rows.tsx`): a channel,
-/// a live stream and a video, each with the matched text highlighted. Rows
-/// are not tappable yet: the profile and player routes come later.
+/// a live stream and a video, each with the matched text highlighted.
+/// Channels and live streams open the channel (`/users/:userId`); videos are
+/// not tappable until the VOD screen exists.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/providers.dart';
+import 'package:letslive_mobile/core/router/app_routes.dart';
 import 'package:letslive_mobile/features/home/data/livestream.dart';
 import 'package:letslive_mobile/features/home/data/vod.dart';
 import 'package:letslive_mobile/features/home/domain/media_format.dart';
@@ -20,7 +23,7 @@ import 'package:letslive_mobile/features/user/user_providers.dart';
 /// Width of the thumbnail in a video or live row.
 const double _thumbnailWidth = 120;
 
-/// A channel: avatar, username, follower count and bio.
+/// A channel: avatar, username, follower count and bio. Opens the channel.
 class UserResultRow extends StatelessWidget {
   const UserResultRow({required this.user, required this.query, super.key});
 
@@ -38,51 +41,54 @@ class UserResultRow extends StatelessWidget {
     final muted = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          UserAvatar(
-            pictureUrl: user.profilePicture,
-            name: user.username,
-            radius: 28,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                HighlightedText(
-                  text: user.username,
-                  query: query,
-                  style: theme.textTheme.titleMedium,
-                ),
-                Text(
-                  l10n.common_followers_count(
-                    compactCount(l10n, user.followerCount),
-                    user.followerCount,
+    return InkWell(
+      onTap: () => context.push(AppRoutes.channel(user.id)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            UserAvatar(
+              pictureUrl: user.profilePicture,
+              name: user.username,
+              radius: 28,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  HighlightedText(
+                    text: user.username,
+                    query: query,
+                    style: theme.textTheme.titleMedium,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: muted,
-                ),
-                if (bio != null && bio.isNotEmpty)
                   Text(
-                    bio,
+                    l10n.common_followers_count(
+                      compactCount(l10n, user.followerCount),
+                      user.followerCount,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: muted,
                   ),
-              ],
+                  if (bio != null && bio.isNotEmpty)
+                    Text(
+                      bio,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: muted,
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-/// A live stream that matched the search.
+/// A live stream that matched the search. Opens the streamer's channel.
 class LiveResultRow extends StatelessWidget {
   const LiveResultRow({required this.stream, required this.query, super.key});
 
@@ -103,6 +109,7 @@ class LiveResultRow extends StatelessWidget {
       description: stream.description,
       userId: stream.userId,
       query: query,
+      onTap: () => context.push(AppRoutes.channel(stream.userId)),
       meta:
           '${l10n.common_search_viewers(compactCount(l10n, stream.viewCount), stream.viewCount)}'
           ' · ${l10n.common_started_at(timeAgo(l10n, stream.startedAt, DateTime.now()))}',
@@ -152,6 +159,7 @@ class _MediaResultRow extends ConsumerWidget {
     required this.meta,
     this.durationLabel,
     this.liveLabel,
+    this.onTap,
   });
 
   final String thumbnailId;
@@ -164,6 +172,9 @@ class _MediaResultRow extends ConsumerWidget {
   final String? durationLabel;
   final String? liveLabel;
 
+  /// Called when the row is tapped; null leaves it inert.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -174,7 +185,7 @@ class _MediaResultRow extends ConsumerWidget {
     final muted = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,5 +234,6 @@ class _MediaResultRow extends ConsumerWidget {
         ],
       ),
     );
+    return onTap == null ? row : InkWell(onTap: onTap, child: row);
   }
 }

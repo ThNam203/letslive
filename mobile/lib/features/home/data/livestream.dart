@@ -37,6 +37,10 @@ class Livestream {
     );
   }
 
+  /// `ParseData<Livestream>` for `ApiClient`.
+  static Livestream parse(Object? data) =>
+      parseJsonObject(data, 'Livestream', Livestream.fromJson);
+
   /// `ParseData<List<Livestream>>` for `ApiClient`.
   static List<Livestream> parseList(Object? data) =>
       parseJsonList(data, 'Livestream', Livestream.fromJson);

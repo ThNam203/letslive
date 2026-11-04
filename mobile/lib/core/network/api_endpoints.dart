@@ -18,6 +18,14 @@ abstract final class ApiEndpoints {
   static const String searchLivestreams = '/livestreams/search';
   static const String searchVods = '/vods/search';
 
+  /// `GET ?userId=<id>`: the user's live stream, or no data when offline.
+  static const String livestreams = '/livestreams';
+
+  /// HLS host: `/transcode/<livestreamId>/index.m3u8` (Envoy rewrites it to
+  /// the transcoder's `/static`, without `/v1`). Not called through the
+  /// client; the player loads it.
+  static const String transcode = '/transcode';
+
   /// Prefix of a public profile: `/user/<id>`.
   static const String user = '/user';
 }

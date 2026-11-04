@@ -5,7 +5,8 @@ import 'package:letslive_mobile/features/user/presentation/user_avatar.dart';
 import 'package:letslive_mobile/features/user/user_providers.dart';
 
 /// A live stream or video in the feed: 16:9 thumbnail, title, owner and a
-/// meta line. Not tappable yet: the player and profile routes come later.
+/// meta line. Tappable when [onTap] is set (live streams open the channel;
+/// videos wait for the VOD screen).
 ///
 /// The owner is looked up by [userId] ([publicUserProvider], one request per
 /// id); until it arrives, or if it fails, the card shows a neutral avatar and
@@ -17,6 +18,7 @@ class MediaCard extends ConsumerWidget {
     required this.userId,
     required this.meta,
     this.durationLabel,
+    this.onTap,
     super.key,
   });
 
@@ -35,11 +37,14 @@ class MediaCard extends ConsumerWidget {
   /// Length badge on the thumbnail (videos only).
   final String? durationLabel;
 
+  /// Called when the card is tapped; null leaves it inert.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final owner = ref.watch(publicUserProvider(userId)).value;
-    return Column(
+    final card = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         MediaThumbnail(url: thumbnailUrl, durationLabel: durationLabel),
@@ -88,6 +93,7 @@ class MediaCard extends ConsumerWidget {
         ),
       ],
     );
+    return onTap == null ? card : InkWell(onTap: onTap, child: card);
   }
 }
 

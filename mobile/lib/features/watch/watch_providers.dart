@@ -1,0 +1,95 @@
+/// Riverpod providers for watching a channel live (`/users/:userId`).
+///
+/// How a stream ending is noticed: the backend publishes no realtime event
+/// for it (the realtime service only relays chat, member and notification
+/// events), and web simply refetches the live stream when the tab regains
+/// focus after its 30s stale time. Mobile re-checks `GET
+/// /livestreams?userId=` every [liveRecheckInterval] while the screen is
+/// open, and at once when the player reports the end or an error. A check
+/// that finds no stream turns a live channel into [ChannelEnded]; one that
+/// finds a stream turns an offline channel live.
+library;
+
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:letslive_mobile/core/network/api_load.dart';
+import 'package:letslive_mobile/core/providers.dart';
+import 'package:letslive_mobile/features/watch/data/better_live_player_controller.dart';
+import 'package:letslive_mobile/features/watch/data/watch_repository.dart';
+import 'package:letslive_mobile/features/watch/domain/channel_state.dart';
+import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
+import 'package:letslive_mobile/features/user/user_providers.dart';
+
+/// How often an open channel asks whether the stream is still live (web's
+/// query stale time).
+const Duration liveRecheckInterval = Duration(seconds: 30);
+
+/// Live stream lookups.
+final watchRepositoryProvider = Provider<WatchRepository>(
+  (ref) => WatchRepository(ref.watch(apiClientProvider)),
+);
+
+/// Builds the native player; widget tests override it with a fake.
+final livePlayerFactoryProvider = Provider<LivePlayerFactory>(
+  (ref) => BetterLivePlayerController.new,
+);
+
+/// The channel of one user. `autoDispose`: leaving the screen stops the
+/// re-checks, and logout drops it.
+final channelProvider = AsyncNotifierProvider.autoDispose
+    .family<ChannelNotifier, ChannelState, String>(
+      ChannelNotifier.new,
+      retry: noRetry,
+    );
+
+/// Loads a user's profile and live stream, then keeps the live state fresh
+/// (see the library doc).
+class ChannelNotifier extends AsyncNotifier<ChannelState> {
+  ChannelNotifier(this.userId);
+
+  /// The channel owner.
+  final String userId;
+
+  @override
+  Future<ChannelState> build() async {
+    final (user, live) = await (
+      ref.watch(userRepositoryProvider).byId(userId),
+      ref.watch(watchRepositoryProvider).liveOf(userId),
+    ).wait;
+    // 404 for an unknown id, 400 for one that is not a UUID.
+    if (user.statusCode == 404 || user.statusCode == 400) {
+      return const ChannelNotFound();
+    }
+    final profile = unwrapData(user);
+    if (!live.success) throw ApiLoadException(live);
+
+    final timer = Timer.periodic(liveRecheckInterval, (_) => recheck());
+    ref.onDispose(timer.cancel);
+
+    final stream = live.data;
+    return stream == null
+        ? ChannelOffline(profile)
+        : ChannelLive(profile, stream);
+  }
+
+  /// Asks the server whether [userId] is live now and updates a live or
+  /// offline channel. A failed check changes nothing (the next one retries).
+  Future<void> recheck() async {
+    final before = state.value;
+    if (before is! ChannelLive && before is! ChannelOffline) return;
+    final live = await ref.read(watchRepositoryProvider).liveOf(userId);
+    if (!ref.mounted || !live.success) return;
+    final stream = live.data;
+    switch (state.value) {
+      case ChannelLive(:final user):
+        state = AsyncData(
+          stream == null ? ChannelEnded(user) : ChannelLive(user, stream),
+        );
+      case ChannelOffline(:final user):
+        if (stream != null) state = AsyncData(ChannelLive(user, stream));
+      case ChannelEnded() || ChannelNotFound() || null:
+        break;
+    }
+  }
+}

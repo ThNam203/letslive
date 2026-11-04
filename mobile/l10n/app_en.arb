@@ -845,6 +845,7 @@
   "theme_dark": "Dark",
   "theme_light": "Light",
   "theme_system": "System",
+  "users_channel_back": "Back",
   "users_channel_latest_video": "Latest video",
   "users_channel_links": "Links",
   "users_channel_load_more": "Load more",
@@ -862,8 +863,16 @@
       "username": {}
     }
   },
+  "users_channel_offline_notice": "{username} isn''t live right now.",
+  "@users_channel_offline_notice": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "users_channel_playback_error": "Couldn''t play the stream.",
   "users_channel_retry": "Try again",
   "users_channel_stats": "Channel info",
+  "users_channel_stream_ended": "This stream has ended.",
   "users_channel_tabs_about": "About",
   "users_channel_tabs_home": "Home",
   "users_channel_tabs_videos": "Videos",
@@ -872,6 +881,11 @@
   "users_channel_watch": "Watch",
   "users_live": "Live",
   "users_offline": "Offline",
+  "users_player_pause": "Pause",
+  "users_player_picture_in_picture": "Picture in picture",
+  "users_player_play": "Play",
+  "users_player_quality": "Quality",
+  "users_player_quality_auto": "Auto",
   "users_profile_about": "About",
   "users_profile_joined_prefix": "Joined",
   "wallet_currency_flare": "Flare",

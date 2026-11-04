@@ -4,16 +4,19 @@
 /// channels, recommended channels (those not already followed, like web) and
 /// popular videos. The videos load page by page as the user nears the end of
 /// the list. Pull-to-refresh reloads everything, and so does coming back after
-/// a real stretch in the background. Cards are not tappable until the profile
-/// and player routes exist.
+/// a real stretch in the background. Live cards and channels open the channel
+/// (`/users/:userId`); video cards are not tappable until the VOD screen
+/// exists.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/pagination/paged_feed.dart';
 import 'package:letslive_mobile/core/providers.dart';
+import 'package:letslive_mobile/core/router/app_routes.dart';
 import 'package:letslive_mobile/features/home/data/livestream.dart';
 import 'package:letslive_mobile/features/home/data/vod.dart';
 import 'package:letslive_mobile/features/home/domain/media_format.dart';
@@ -164,6 +167,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     meta:
         '${viewsLabel(l10n, stream.viewCount)} · '
         '${l10n.common_started_at(timeAgo(l10n, stream.startedAt, now))}',
+    onTap: () => context.push(AppRoutes.channel(stream.userId)),
   );
 
   /// The body of the videos section: status (loading, error, empty) or one
@@ -214,7 +218,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   );
 }
 
-/// Horizontal avatar + name strip of channels.
+/// Horizontal avatar + name strip of channels; a tap opens the channel.
 class _ChannelRow extends StatelessWidget {
   const _ChannelRow({required this.users});
 
@@ -236,23 +240,26 @@ class _ChannelRow extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
           final user = users[index];
-          return SizedBox(
-            width: 64,
-            child: Column(
-              children: [
-                UserAvatar(
-                  pictureUrl: user.profilePicture,
-                  name: user.username,
-                  radius: 28,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  user.username,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.bodySmall,
-                ),
-              ],
+          return InkWell(
+            onTap: () => context.push(AppRoutes.channel(user.id)),
+            child: SizedBox(
+              width: 64,
+              child: Column(
+                children: [
+                  UserAvatar(
+                    pictureUrl: user.profilePicture,
+                    name: user.username,
+                    radius: 28,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    user.username,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall,
+                  ),
+                ],
+              ),
             ),
           );
         },

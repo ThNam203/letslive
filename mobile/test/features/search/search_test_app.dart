@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
 
@@ -57,6 +58,7 @@ Future<TestApp> pumpSearch(
   double width = 800,
   double height = 6000,
   double textScale = 1,
+  List<Override> overrides = const [],
 }) async {
   final app = await pumpHome(
     tester,
@@ -64,6 +66,7 @@ Future<TestApp> pumpSearch(
     width: width,
     height: height,
     textScale: textScale,
+    overrides: overrides,
   );
   await tester.tap(
     find.descendant(
