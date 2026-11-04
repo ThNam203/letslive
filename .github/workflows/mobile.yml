@@ -32,8 +32,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Check locales are in sync with web
+        run: dart run tool/sync_locales.dart --check
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
       - name: Check formatting
-        run: dart format --set-exit-if-changed lib test
+        run: dart format --set-exit-if-changed lib test tool
 
       - name: Analyze
         run: flutter analyze
