@@ -14,7 +14,10 @@ import 'package:letslive_mobile/features/search/search_providers.dart';
 class SearchAllTab extends ConsumerWidget {
   const SearchAllTab({required this.query, required this.onSeeAll, super.key});
 
+  /// The trimmed text being searched.
   final String query;
+
+  /// Called with the group whose "See all" was tapped.
   final void Function(SearchType type) onSeeAll;
 
   @override

@@ -60,6 +60,20 @@ void main() {
       expect(excerptAroundMatch('hello world', 'zzz'), isNull);
     });
 
+    test('never cuts an emoji in half', () {
+      // No spaces near the cut, so the cut lands inside the emoji run.
+      final text = '${'🎉' * 40}needle${'🎉' * 40}';
+      final excerpt = excerptAroundMatch(text, 'needle', radius: 5)!;
+      final units = excerpt.codeUnits;
+      for (var i = 0; i < units.length; i++) {
+        final isHigh = units[i] >= 0xD800 && units[i] <= 0xDBFF;
+        final isLow = units[i] >= 0xDC00 && units[i] <= 0xDFFF;
+        if (isHigh) expect(units[i + 1] >= 0xDC00, isTrue, reason: 'lone high');
+        if (isLow) expect(units[i - 1] <= 0xDBFF, isTrue, reason: 'lone low');
+      }
+      expect(excerpt, contains('needle'));
+    });
+
     test('keeps a short text whole', () {
       expect(excerptAroundMatch('hello world', 'world'), 'hello world');
     });

@@ -13,15 +13,22 @@ class HighlightedText extends StatelessWidget {
     super.key,
   });
 
+  /// The full text to show.
   final String text;
+
+  /// What the user searched for; matching parts of [text] are marked.
   final String query;
+
+  /// Base style of the text; null inherits.
   final TextStyle? style;
+
+  /// Lines before the text is cut with an ellipsis.
   final int maxLines;
 
   @override
   Widget build(BuildContext context) {
     final mark = TextStyle(
-      backgroundColor: Colors.yellow.withValues(alpha: 0.4),
+      backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
     );
     return Text.rich(
       TextSpan(

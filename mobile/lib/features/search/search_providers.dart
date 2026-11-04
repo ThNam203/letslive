@@ -56,74 +56,61 @@ final vodsPreviewProvider = FutureProvider.autoDispose
       retry: noRetry,
     );
 
-/// Channels for [query], page by page (Channels tab).
-class UsersSearchNotifier extends PagedFeedNotifier<PublicUser> {
-  UsersSearchNotifier(this.query);
+/// One result type of a query, page by page. [_fetch] says which endpoint
+/// and [_idOf] identifies an item; the rest is `PagedFeedNotifier`.
+class SearchNotifier<T> extends PagedFeedNotifier<T> {
+  SearchNotifier(this.query, this._fetch, this._idOf);
 
+  /// The trimmed text being searched.
   final String query;
+  final Future<ApiResponse<List<T>>> Function(
+    SearchRepository repository,
+    String q,
+    int page,
+  )
+  _fetch;
+  final String Function(T item) _idOf;
 
   @override
   int get pageSize => searchPageSize;
 
   @override
-  String idOf(PublicUser item) => item.id;
+  String idOf(T item) => _idOf(item);
 
   @override
-  Future<ApiResponse<List<PublicUser>>> fetchPage(int page) =>
-      ref.read(searchRepositoryProvider).users(q: query, page: page);
+  Future<ApiResponse<List<T>>> fetchPage(int page) =>
+      _fetch(ref.read(searchRepositoryProvider), query, page);
 }
 
-/// Live streams for [query], page by page (Live tab).
-class LivesSearchNotifier extends PagedFeedNotifier<Livestream> {
-  LivesSearchNotifier(this.query);
-
-  final String query;
-
-  @override
-  int get pageSize => searchPageSize;
-
-  @override
-  String idOf(Livestream item) => item.id;
-
-  @override
-  Future<ApiResponse<List<Livestream>>> fetchPage(int page) =>
-      ref.read(searchRepositoryProvider).lives(q: query, page: page);
-}
-
-/// Videos for [query], page by page (Videos tab).
-class VodsSearchNotifier extends PagedFeedNotifier<Vod> {
-  VodsSearchNotifier(this.query);
-
-  final String query;
-
-  @override
-  int get pageSize => searchPageSize;
-
-  @override
-  String idOf(Vod item) => item.id;
-
-  @override
-  Future<ApiResponse<List<Vod>>> fetchPage(int page) =>
-      ref.read(searchRepositoryProvider).vods(q: query, page: page);
-}
-
-/// Paged channel results by query.
+/// Paged channel results by query (Channels tab).
 final usersSearchProvider = AsyncNotifierProvider.autoDispose
-    .family<UsersSearchNotifier, PagedFeed<PublicUser>, String>(
-      UsersSearchNotifier.new,
+    .family<SearchNotifier<PublicUser>, PagedFeed<PublicUser>, String>(
+      (q) => SearchNotifier(
+        q,
+        (r, q, page) => r.users(q: q, page: page),
+        (u) => u.id,
+      ),
       retry: noRetry,
     );
 
-/// Paged live results by query.
+/// Paged live results by query (Live tab).
 final livesSearchProvider = AsyncNotifierProvider.autoDispose
-    .family<LivesSearchNotifier, PagedFeed<Livestream>, String>(
-      LivesSearchNotifier.new,
+    .family<SearchNotifier<Livestream>, PagedFeed<Livestream>, String>(
+      (q) => SearchNotifier(
+        q,
+        (r, q, page) => r.lives(q: q, page: page),
+        (s) => s.id,
+      ),
       retry: noRetry,
     );
 
-/// Paged video results by query.
+/// Paged video results by query (Videos tab).
 final vodsSearchProvider = AsyncNotifierProvider.autoDispose
-    .family<VodsSearchNotifier, PagedFeed<Vod>, String>(
-      VodsSearchNotifier.new,
+    .family<SearchNotifier<Vod>, PagedFeed<Vod>, String>(
+      (q) => SearchNotifier(
+        q,
+        (r, q, page) => r.vods(q: q, page: page),
+        (v) => v.id,
+      ),
       retry: noRetry,
     );

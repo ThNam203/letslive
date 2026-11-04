@@ -200,7 +200,8 @@ void main() {
         'tro choi',
       );
       expect(highlightedTexts(tester), contains('Trò chơi'));
-      expect(find.byType(Text), findsWidgets);
+      expect(find.byType(VodResultRow), findsOne);
+      expect(find.textContaining('vui', findRichText: true), findsOne);
     },
   );
 
@@ -275,12 +276,19 @@ void main() {
 
     await search(tester, longQuery);
 
-    expect(find.textContaining('Tiếng Việt rất dài'), findsWidgets);
+    expect(find.byType(VodResultRow), findsOne);
+    expect(find.byType(LiveResultRow), findsOne);
+    expect(find.byType(UserResultRow), findsOne);
     expect(tester.takeException(), isNull);
 
     for (final tab in ['Channels', 'Live', 'Videos']) {
       await openTab(tester, tab);
-      expect(find.byType(ListView), findsWidgets, reason: tab);
+      final row = switch (tab) {
+        'Channels' => find.byType(UserResultRow),
+        'Live' => find.byType(LiveResultRow),
+        _ => find.byType(VodResultRow),
+      };
+      expect(row, findsOne, reason: tab);
       expect(tester.takeException(), isNull, reason: tab);
     }
   });

@@ -24,7 +24,10 @@ const double _thumbnailWidth = 120;
 class UserResultRow extends StatelessWidget {
   const UserResultRow({required this.user, required this.query, super.key});
 
+  /// The channel to show.
   final PublicUser user;
+
+  /// The searched text, highlighted in the username.
   final String query;
 
   @override
@@ -83,7 +86,10 @@ class UserResultRow extends StatelessWidget {
 class LiveResultRow extends StatelessWidget {
   const LiveResultRow({required this.stream, required this.query, super.key});
 
+  /// The live stream to show.
   final Livestream stream;
+
+  /// The searched text, highlighted in the texts.
   final String query;
 
   @override
@@ -108,7 +114,10 @@ class LiveResultRow extends StatelessWidget {
 class VodResultRow extends StatelessWidget {
   const VodResultRow({required this.vod, required this.query, super.key});
 
+  /// The video to show.
   final Vod vod;
+
+  /// The searched text, highlighted in the texts.
   final String query;
 
   @override

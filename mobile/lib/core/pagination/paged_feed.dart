@@ -16,6 +16,7 @@ class PagedFeed<T> {
     this.loadMoreError,
   });
 
+  /// The items loaded so far, in order, without duplicates.
   final List<T> items;
 
   /// False once a page came back shorter than a full page.
@@ -55,6 +56,10 @@ abstract class PagedFeedNotifier<T> extends AsyncNotifier<PagedFeed<T>> {
   String idOf(T item);
 
   /// Requests page [page] (0-based).
+  ///
+  /// Implementations use `ref.read`: the repository provider never changes,
+  /// and this also runs outside `build` (from [loadMore]), where `watch` is
+  /// not allowed.
   Future<ApiResponse<List<T>>> fetchPage(int page);
 
   @override

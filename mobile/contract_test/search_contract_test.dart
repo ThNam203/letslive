@@ -14,16 +14,16 @@ import 'harness.dart';
 void main() {
   /// Unique per run so rows of earlier runs or other tests never match.
   final marker = 'Zq${DateTime.now().microsecondsSinceEpoch}';
-  late ContractContext ctx;
+  ContractContext? ctx;
   late String ownerId;
   late SearchRepository search;
   String? livestreamId;
   String? vodId;
 
   setUpAll(() async {
-    ctx = await startContractContext();
-    search = SearchRepository(ctx.userB.client);
-    final me = await ctx.userA.client.get<MeUser>(
+    final context = ctx = await startContractContext();
+    search = SearchRepository(context.userB.client);
+    final me = await context.userA.client.get<MeUser>(
       ApiEndpoints.userMe,
       parse: MeUser.parse,
     );
@@ -57,7 +57,7 @@ void main() {
           await runSql('letslive_vod', "DELETE FROM vods WHERE id = '$id'");
         }
       } finally {
-        await ctx.dispose();
+        await ctx?.dispose();
       }
     }
   });
@@ -91,7 +91,7 @@ void main() {
   test(
     'GET /users/search finds a channel by username with page and limit',
     () async {
-      final res = await search.users(q: ctx.userA.username, limit: 5);
+      final res = await search.users(q: ctx!.userA.username, limit: 5);
 
       expect(res.success, isTrue, reason: '${res.key}: ${res.message}');
       expect(res.data!.map((u) => u.id), contains(ownerId));
@@ -106,9 +106,16 @@ void main() {
     expect(res.data ?? const [], isEmpty);
   });
 
-  test('a later page is accepted', () async {
-    final res = await search.vods(q: 'tro choi', page: 1);
+  test('a later page is a list that does not repeat page 0', () async {
+    final first = await search.vods(q: 'tro choi', limit: 1);
+    final second = await search.vods(q: 'tro choi', page: 1, limit: 1);
 
-    expect(res.success, isTrue, reason: '${res.key}: ${res.message}');
+    expect(second.success, isTrue, reason: '${second.key}: ${second.message}');
+    final firstIds = (first.data ?? const []).map((v) => v.id).toSet();
+    expect(second.data ?? const [], hasLength(lessThanOrEqualTo(1)));
+    expect(
+      (second.data ?? const []).any((v) => firstIds.contains(v.id)),
+      isFalse,
+    );
   });
 }

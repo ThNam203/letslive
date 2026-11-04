@@ -17,7 +17,9 @@ import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
 import 'package:letslive_mobile/features/search/domain/search_type.dart';
 import 'package:letslive_mobile/features/search/presentation/search_all_tab.dart';
+import 'package:letslive_mobile/features/search/presentation/search_result_rows.dart';
 import 'package:letslive_mobile/features/search/presentation/search_type_tab.dart';
+import 'package:letslive_mobile/features/search/search_providers.dart';
 
 /// The Search tab's screen.
 class SearchScreen extends StatefulWidget {
@@ -137,9 +139,27 @@ class _SearchScreenState extends State<SearchScreen>
     }
     return switch (_tab) {
       SearchType.all => SearchAllTab(query: _query, onSeeAll: _seeAll),
-      SearchType.users => UsersTab(query: _query),
-      SearchType.lives => LivesTab(query: _query),
-      SearchType.vods => VodsTab(query: _query),
+      SearchType.users => SearchTypeTab(
+        provider: usersSearchProvider(_query),
+        emptyTitle: l10n.common_search_no_results_type_users,
+        rowBuilder: (user) =>
+            UserResultRow(key: ValueKey(user.id), user: user, query: _query),
+      ),
+      SearchType.lives => SearchTypeTab(
+        provider: livesSearchProvider(_query),
+        emptyTitle: l10n.common_search_no_results_type_lives,
+        rowBuilder: (stream) => LiveResultRow(
+          key: ValueKey(stream.id),
+          stream: stream,
+          query: _query,
+        ),
+      ),
+      SearchType.vods => SearchTypeTab(
+        provider: vodsSearchProvider(_query),
+        emptyTitle: l10n.common_search_no_results_type_vods,
+        rowBuilder: (vod) =>
+            VodResultRow(key: ValueKey(vod.id), vod: vod, query: _query),
+      ),
     };
   }
 

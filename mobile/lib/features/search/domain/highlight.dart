@@ -183,6 +183,8 @@ List<TextRange> _tokenRanges(
   ];
 }
 
+bool _isLowSurrogate(int unit) => unit >= 0xDC00 && unit <= 0xDFFF;
+
 /// Length in UTF-16 units of the character starting at [index] (2 for an
 /// emoji and other characters outside the basic plane).
 int _charLengthAt(String text, int index) {
@@ -225,6 +227,9 @@ String? excerptAroundMatch(String text, String query, {int radius = 60}) {
     final space = text.lastIndexOf(' ', end);
     end = space <= first.end ? end : space;
   }
+  // Never cut an emoji (surrogate pair) in half.
+  if (start > 0 && _isLowSurrogate(text.codeUnitAt(start))) start--;
+  if (end < text.length && _isLowSurrogate(text.codeUnitAt(end))) end++;
   final body = text
       .substring(start, end)
       .replaceAll(RegExp(r'\s+'), ' ')
