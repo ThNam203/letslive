@@ -47,9 +47,12 @@ class ChannelVodsNotifier extends PagedFeedNotifier<Vod> {
 /// tests override it with a fake.
 typedef UrlOpener = Future<bool> Function(Uri url);
 
-/// Opens links in the browser (the About tab's social links).
+/// Opens links in the browser (the About tab's social links, DM pictures).
+/// The links come from other users, so only http(s) may leave the app;
+/// `tel:`, `intent:` or another app's scheme returns false unopened.
 final urlOpenerProvider = Provider<UrlOpener>(
   (ref) => (url) async {
+    if (!const {'http', 'https'}.contains(url.scheme)) return false;
     try {
       return await launchUrl(url, mode: LaunchMode.externalApplication);
     } on PlatformException {

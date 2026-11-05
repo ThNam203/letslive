@@ -1,5 +1,5 @@
-/// Infinite-scroll state and notifier shared by every paged list (popular
-/// videos on Home, the type tabs of Search).
+/// Infinite-scroll state and notifier shared by every paged list (Home,
+/// Search, comments, notifications, conversations, shop, wallet and more).
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,6 +30,9 @@ class PagedFeed<T> {
 
   /// Page index the next [PagedFeedNotifier.loadMore] requests.
   final int nextPage;
+
+  /// A [PagedFeedNotifier.loadMore] request is in flight; the footer shows a
+  /// spinner and further calls do nothing.
   final bool isLoadingMore;
 
   /// The last page request failed; the footer offers a retry.
@@ -70,8 +73,13 @@ abstract class PagedFeedNotifier<T> extends AsyncNotifier<PagedFeed<T>> {
   /// not allowed.
   Future<ApiResponse<List<T>>> fetchPage(int page);
 
+  // Bumped on every (re)build, so a page requested for the old list is
+  // dropped instead of being appended to the new one.
+  int _epoch = 0;
+
   @override
   Future<PagedFeed<T>> build() async {
+    _epoch++;
     final response = await fetchPage(0);
     final first = unwrapList(response);
     return PagedFeed(
@@ -109,18 +117,22 @@ abstract class PagedFeedNotifier<T> extends AsyncNotifier<PagedFeed<T>> {
   /// Appends the next page. Does nothing while a page is loading, after the
   /// last page, or before the first page arrived. Also the retry after an
   /// error.
+  ///
+  /// Events and user actions may change the list while the page loads; the
+  /// page is merged into the list as it is then (deduplicated by id).
   Future<void> loadMore() async {
     if (!ref.mounted) return;
     final feed = state.value;
     if (feed == null || !feed.hasMore || feed.isLoadingMore) return;
-    final loading = feed.copyWith(isLoadingMore: true, clearError: true);
-    state = AsyncData(loading);
+    final epoch = _epoch;
+    state = AsyncData(feed.copyWith(isLoadingMore: true, clearError: true));
     final response = await fetchPage(feed.nextPage);
-    // Refreshed or disposed meanwhile: this page belongs to an old feed.
-    if (!ref.mounted || !identical(state.value, loading)) return;
+    final current = state.value;
+    // Rebuilt or disposed meanwhile: this page belongs to an old list.
+    if (!ref.mounted || epoch != _epoch || current == null) return;
     if (!response.success) {
       state = AsyncData(
-        loading.copyWith(
+        current.copyWith(
           isLoadingMore: false,
           loadMoreError: ApiLoadException(response),
         ),
@@ -128,11 +140,11 @@ abstract class PagedFeedNotifier<T> extends AsyncNotifier<PagedFeed<T>> {
       return;
     }
     final page = response.data ?? <T>[];
-    final known = {for (final item in feed.items) idOf(item)};
+    final known = {for (final item in current.items) idOf(item)};
     state = AsyncData(
-      loading.copyWith(
+      current.copyWith(
         items: [
-          ...feed.items,
+          ...current.items,
           for (final item in page)
             if (!known.contains(idOf(item))) item,
         ],

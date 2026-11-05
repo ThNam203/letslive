@@ -8,6 +8,8 @@
 /// conversation read while it is open.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
@@ -321,7 +323,11 @@ class _MessageListState extends ConsumerState<_MessageList> {
           isOwn: message.senderId == myId,
           showSender: previous == null || previous.senderId != message.senderId,
           onLongPress: hasActions ? () => _showActions(message) : null,
-          onOpenImage: (url) => ref.read(urlOpenerProvider)(Uri.parse(url)),
+          onOpenImage: (url) {
+            // Another participant's string: a malformed one does nothing.
+            final uri = Uri.tryParse(url);
+            if (uri != null) unawaited(ref.read(urlOpenerProvider)(uri));
+          },
         );
       },
     );

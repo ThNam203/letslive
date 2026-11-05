@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/validation/field_limits.dart';
+import 'package:letslive_mobile/features/messages/presentation/message_bubble.dart';
+import 'package:letslive_mobile/features/profile/profile_providers.dart';
 import 'package:letslive_mobile/features/settings/settings_providers.dart';
 import 'package:letslive_mobile/features/user/data/picked_image.dart';
 
@@ -48,6 +50,36 @@ Future<void> _attach(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('a malformed picture link from another user does nothing', (
+    tester,
+  ) async {
+    final server = FakeMessagesServer()
+      ..conversations.add(conversationJson('c-1'))
+      ..threads['c-1'] = [
+        messageJson('m1', 'look', type: 'image', imageUrls: ['http://[bad']),
+      ];
+    final opened = <Uri>[];
+    final app = await pumpMessages(
+      tester,
+      server,
+      overrides: [
+        urlOpenerProvider.overrideWithValue((url) async {
+          opened.add(url);
+          return true;
+        }),
+      ],
+    );
+    await openConversation(tester, app, 'c-1');
+
+    // What a tap on the picture calls.
+    final bubble = tester.widget<MessageBubble>(find.byType(MessageBubble));
+    bubble.onOpenImage!('http://[bad');
+    bubble.onOpenImage!('https://cdn.example/pic.jpg');
+    await tester.pump();
+
+    expect(opened, [Uri.parse('https://cdn.example/pic.jpg')]);
+  });
+
   testWidgets('a picture is uploaded, then sent as one picture message', (
     tester,
   ) async {
