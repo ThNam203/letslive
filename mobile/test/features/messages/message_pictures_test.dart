@@ -25,6 +25,7 @@ Future<void> _open(
   List<PickedImage> picks, {
   double width = 800,
   double textScale = 1,
+  List<String> oversized = const [],
 }) async {
   final app = await pumpMessages(
     tester,
@@ -33,7 +34,8 @@ Future<void> _open(
     textScale: textScale,
     overrides: [
       imagesPickProvider.overrideWithValue(
-        (limit) async => picks.take(limit).toList(),
+        (limit) async =>
+            (images: picks.take(limit).toList(), oversized: oversized),
       ),
     ],
   );
@@ -162,9 +164,7 @@ void main() {
 
   testWidgets('a picture over 10 MB is refused and not shown', (tester) async {
     final server = _server();
-    await _open(tester, server, [
-      pickedImage(name: 'huge.jpg', bytes: 11 * 1024 * 1024),
-    ]);
+    await _open(tester, server, const [], oversized: ['huge.jpg']);
 
     await _attach(tester);
 

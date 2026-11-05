@@ -170,6 +170,25 @@ void main() {
     expect(wake.calls, [true, false]);
   });
 
+  test('an upload keeps the screen awake after a player lets go', () async {
+    final sending = Completer<ApiResponse<Vod>>();
+    myVods.onUpload = (_, _) => sending.future;
+    final container = makeContainer();
+    final holder = container.read(screenWakeHolderProvider);
+    final player = Object();
+
+    holder.acquire(player);
+    container
+        .read(uploadManagerProvider.notifier)
+        .enqueue(_video, title: 'T', description: '', isPublic: true);
+    holder.release(player);
+    expect(wake.calls, [true], reason: 'the upload still holds the screen');
+
+    sending.complete(okResponse(vodWithStatus('processing')));
+    await until(() => wake.calls.length == 2);
+    expect(wake.calls, [true, false]);
+  });
+
   test('cancel aborts the request and removes the entry', () async {
     final aborted = Completer<void>();
     myVods.onUpload = (_, cancel) async {
@@ -427,11 +446,21 @@ void main() {
     });
 
     test('a failed refresh leaves the upload failed, without a loop', () async {
+      final expired = CookieJar();
+      await expired.saveFromResponse(Uri.parse(_base), [
+        Cookie('ACCESS_TOKEN', 'old'),
+        Cookie('REFRESH_TOKEN', 'also-expired'),
+      ]);
+      var rejectedRefreshes = 0;
       final noRefresh = ApiClient(
         baseUrl: _base,
-        cookieJar: CookieJar(),
+        cookieJar: expired,
         adapter: _StreamingAdapter((options, bytes) async {
-          uploadCalls++;
+          if (options.path == ApiEndpoints.refreshToken) {
+            rejectedRefreshes++;
+          } else {
+            uploadCalls++;
+          }
           return jsonBody({
             'requestId': 'r',
             'success': false,
@@ -453,7 +482,8 @@ void main() {
 
       expect(response.success, isFalse);
       expect(response.statusCode, 401);
-      expect(uploadCalls, 1);
+      expect(rejectedRefreshes, 1, reason: 'refreshed once, not in a loop');
+      expect(uploadCalls, 1, reason: 'the upload is not replayed');
     });
   });
 }

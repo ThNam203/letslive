@@ -27,6 +27,11 @@ services:
     container_name: ll-mobile-auth
   user:
     container_name: ll-mobile-user
+  # Turns uploaded videos into HLS so they reach `ready` (creator contract
+  # test). The base file names it `letslive-transcode`, which is another
+  # stack's container: never reuse that name.
+  transcode:
+    container_name: ll-mobile-transcode
   livestream:
     container_name: ll-mobile-livestream
   vod:

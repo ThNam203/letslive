@@ -105,7 +105,7 @@ class _VodBodyState extends ConsumerState<_VodBody> {
   PlayerController? _player;
 
   /// Read once: `ref` is not usable in [dispose].
-  late final ScreenWake _screenWake;
+  late final ScreenWakeHolder _screenWake;
 
   bool _awake = false;
 
@@ -115,7 +115,7 @@ class _VodBodyState extends ConsumerState<_VodBody> {
   @override
   void initState() {
     super.initState();
-    _screenWake = ref.read(screenWakeProvider);
+    _screenWake = ref.read(screenWakeHolderProvider);
     _player = _createPlayer();
   }
 
@@ -136,8 +136,8 @@ class _VodBodyState extends ConsumerState<_VodBody> {
     final player = _player;
     if (player == null) return;
     player.value.removeListener(_onPlayerChanged);
-    player.dispose();
     _setAwake(false);
+    player.dispose();
   }
 
   void _onPlayerChanged() {
@@ -150,7 +150,7 @@ class _VodBodyState extends ConsumerState<_VodBody> {
   void _setAwake(bool awake) {
     if (awake == _awake) return;
     _awake = awake;
-    unawaited(_screenWake(awake));
+    awake ? _screenWake.acquire(this) : _screenWake.release(this);
   }
 
   void _countView(Duration position) {

@@ -267,8 +267,14 @@ is unset.
 ```sh
 # from the repository root
 docker compose -f docker-compose-dev.yaml -f mobile/tool/contract-stack.override.yaml \
-  up -d configserver consul envoy auth user main_db nats minio livestream vod finance chat realtime chat_db
+  up -d configserver consul envoy auth user main_db nats minio livestream vod finance chat realtime chat_db transcode
 ```
+
+`transcode` (renamed `ll-mobile-transcode`; the base name `letslive-transcode`
+belongs to another stack) turns uploaded videos into HLS so the creator
+contract test sees them reach `ready`. It reads the vod database, so
+`TRANSCODE_DB_USER` and `TRANSCODE_DB_PASSWORD` must be set in `.env` (the
+same values as `VOD_DB_USER` / `VOD_DB_PASSWORD`).
 
 `mobile/tool/contract-stack.override.yaml` renames the containers to
 `ll-mobile-*` (no clash with other checkouts), serves the config checkout and

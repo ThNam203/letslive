@@ -63,12 +63,23 @@ class MyVodsScreen extends ConsumerWidget {
   }
 }
 
-class _VodCard extends ConsumerWidget {
+class _VodCard extends ConsumerStatefulWidget {
   const _VodCard({required this.vod});
 
   final Vod vod;
 
-  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<_VodCard> createState() => _VodCardState();
+}
+
+class _VodCardState extends ConsumerState<_VodCard> {
+  /// A delete request is running; the button is off so a double tap cannot
+  /// send it twice.
+  bool _deleting = false;
+
+  Vod get vod => widget.vod;
+
+  Future<void> _delete() async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final confirmed = await showDialog<bool>(
@@ -89,8 +100,11 @@ class _VodCard extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
+    setState(() => _deleting = true);
     final response = await ref.read(myVodsRepositoryProvider).delete(vod.id);
+    if (!mounted) return;
+    setState(() => _deleting = false);
     if (response.success) {
       ref.invalidate(myVodsProvider);
     } else {
@@ -108,7 +122,7 @@ class _VodCard extends ConsumerWidget {
   };
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final apiBaseUrl = ref.watch(appConfigProvider).apiBaseUrl;
@@ -169,7 +183,7 @@ class _VodCard extends ConsumerWidget {
                   key: ValueKey('delete-vod-${vod.id}'),
                   tooltip: l10n.settings_vods_actions_delete,
                   icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _delete(context, ref),
+                  onPressed: _deleting ? null : _delete,
                 ),
               ],
             ),

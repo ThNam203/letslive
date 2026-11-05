@@ -11,10 +11,15 @@ import 'package:letslive_mobile/core/validation/field_limits.dart';
 import 'package:letslive_mobile/features/messages/domain/dm_rules.dart';
 import 'package:letslive_mobile/features/messages/messages_providers.dart';
 import 'package:letslive_mobile/features/messages/presentation/picture_previews.dart';
-import 'package:letslive_mobile/features/settings/domain/image_checks.dart';
 import 'package:letslive_mobile/features/settings/settings_providers.dart';
 import 'package:letslive_mobile/features/user/user_providers.dart';
 import 'package:letslive_mobile/features/watch/chat/presentation/emote_picker.dart';
+
+/// Captions of a picture message sent without text. English on purpose: the
+/// chat service matches exactly `^Sent (an image|\d+ images)$` to push a
+/// picture notice (`backend/chat/services/dm_push.go`, web does the same).
+const String _singlePictureCaption = 'Sent an image';
+String _pluralPicturesCaption(int count) => 'Sent $count images';
 
 /// The box under the messages (web `MessageInput`): attach button, emote
 /// button, text field and send button.
@@ -102,17 +107,14 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
     final room = FieldLimits.dmImagesMax - _attachments.length;
     if (room <= 0) return;
     final picked = await ref.read(imagesPickProvider)(room);
-    if (!mounted || picked.isEmpty) return;
-    const maxMb = FieldLimits.generalUploadMaxFileMb;
-    String? problem;
-    final accepted = <PendingPicture>[];
-    for (final image in picked) {
-      if (checkFileSize(image, maxMb) != null) {
-        problem = l10n.messages_file_exceeds_limit(image.name, maxMb);
-      } else {
-        accepted.add(PendingPicture(image));
-      }
-    }
+    if (!mounted || (picked.images.isEmpty && picked.oversized.isEmpty)) return;
+    final problem = picked.oversized.isEmpty
+        ? null
+        : l10n.messages_file_exceeds_limit(
+            picked.oversized.last,
+            FieldLimits.generalUploadMaxFileMb,
+          );
+    final accepted = [for (final image in picked.images) PendingPicture(image)];
     setState(() {
       _attachments = [..._attachments, ...accepted];
       _pictureProblem = problem;
@@ -176,8 +178,8 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
     final caption = text.isNotEmpty
         ? text
         : paths.length == 1
-        ? 'Sent an image'
-        : 'Sent ${paths.length} images';
+        ? _singlePictureCaption
+        : _pluralPicturesCaption(paths.length);
     final response = await _thread.send(caption, imageUrls: paths);
     if (!mounted) return;
     setState(() {

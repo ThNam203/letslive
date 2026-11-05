@@ -60,7 +60,7 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
   bool _showError = false;
 
   /// Read once: `ref` is not usable in [dispose].
-  late final ScreenWake _screenWake;
+  late final ScreenWakeHolder _screenWake;
 
   /// Whether this view currently keeps the screen on.
   bool _awake = false;
@@ -68,7 +68,7 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
   @override
   void initState() {
     super.initState();
-    _screenWake = ref.read(screenWakeProvider);
+    _screenWake = ref.read(screenWakeHolderProvider);
     _player = _createPlayer();
     _syncWake();
   }
@@ -82,7 +82,7 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
   void _setAwake(bool awake) {
     if (awake == _awake) return;
     _awake = awake;
-    unawaited(_screenWake(awake));
+    awake ? _screenWake.acquire(this) : _screenWake.release(this);
   }
 
   PlayerController _createPlayer() {
@@ -99,8 +99,8 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
   /// navigating away both cause) and before a restart.
   void _releasePlayer() {
     _player.value.removeListener(_onPlayerChanged);
-    _player.dispose();
     _setAwake(false);
+    _player.dispose();
   }
 
   void _onPlayerChanged() {

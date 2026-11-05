@@ -37,14 +37,43 @@ final playerFactoryProvider = Provider<PlayerFactory>(
   (ref) => BetterPlayerControllerWrapper.new,
 );
 
-/// Keeps the screen on (`true`) or lets it sleep again (`false`).
+/// Keeps the screen on (`true`) or lets it sleep again (`false`): the raw
+/// wakelock toggle. Widget tests override it with a fake; features use
+/// [screenWakeHolderProvider], never this directly.
 typedef ScreenWake = Future<void> Function(bool awake);
 
-/// The wakelock the live player holds while a stream plays; widget tests
-/// override it with a fake.
 final screenWakeProvider = Provider<ScreenWake>(
   (ref) =>
       (awake) => WakelockPlus.toggle(enable: awake),
+);
+
+/// The wakelock is one global switch, but the live player, the video player
+/// and a running upload each need the screen on. This holder keeps the set of
+/// owners that want it and flips the switch only when the first owner
+/// arrives and the last one leaves, so one feature letting go never puts the
+/// screen to sleep under another.
+class ScreenWakeHolder {
+  ScreenWakeHolder(this._toggle);
+
+  final ScreenWake _toggle;
+  final Set<Object> _owners = {};
+
+  /// [owner] wants the screen on. Asking twice is the same as once.
+  void acquire(Object owner) {
+    final wasEmpty = _owners.isEmpty;
+    if (_owners.add(owner) && wasEmpty) unawaited(_toggle(true));
+  }
+
+  /// [owner] no longer needs the screen on; the screen may sleep once every
+  /// owner has released. Releasing without holding does nothing.
+  void release(Object owner) {
+    if (_owners.remove(owner) && _owners.isEmpty) unawaited(_toggle(false));
+  }
+}
+
+/// The shared [ScreenWakeHolder].
+final screenWakeHolderProvider = Provider<ScreenWakeHolder>(
+  (ref) => ScreenWakeHolder(ref.watch(screenWakeProvider)),
 );
 
 /// The channel of one user. `autoDispose`: leaving the screen stops the

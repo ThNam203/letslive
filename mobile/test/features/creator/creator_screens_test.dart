@@ -8,6 +8,7 @@ import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
 import 'package:letslive_mobile/features/creator/creator_providers.dart';
 import 'package:letslive_mobile/features/creator/domain/picked_video.dart';
+import 'package:letslive_mobile/features/creator/presentation/upload_screen.dart';
 import 'package:letslive_mobile/features/creator/upload_manager.dart';
 import 'package:letslive_mobile/features/vod/vod_providers.dart';
 
@@ -598,6 +599,54 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
+  });
+
+  testWidgets('the upload list with long rows fits 320px at text scale 2.0', (
+    tester,
+  ) async {
+    var calls = 0;
+    final neverEnds = Completer<void>();
+    final myVods = FakeMyVods((onProgress, _) async {
+      // The first upload fails at once; the second stays in progress.
+      if (++calls == 1) return failResponse(503);
+      onProgress?.call(512, 1000);
+      await neverEnds.future;
+      return failResponse(503);
+    });
+    final app = await pumpCreator(
+      tester,
+      FakeCreatorServer(),
+      AppRoutes.settingsUpload,
+      width: 320,
+      height: 800,
+      textScale: 2,
+      extra: [myVodsRepositoryProvider.overrideWithValue(myVods)],
+    );
+    final manager = app.container.read(uploadManagerProvider.notifier);
+    final longTitle = 'Extraordinarily${'long' * 30} 😀 upload title';
+    for (var i = 0; i < 2; i++) {
+      manager.enqueue(
+        PickedVideo(path: '/tmp/$i.mp4', name: 'clip$i.mp4', size: 1000),
+        title: longTitle,
+        description: '',
+        isPublic: true,
+      );
+      await tester.pump();
+    }
+    await tester.pump(const Duration(milliseconds: 50));
+    // The rows sit under the long form: scroll them into the lazy list.
+    await tester.drag(
+      find.descendant(
+        of: find.byType(UploadScreen),
+        matching: find.byType(ListView),
+      ),
+      const Offset(0, -3000),
+    );
+    await tester.pump();
+
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('the next account never sees the previous account\'s tools', (

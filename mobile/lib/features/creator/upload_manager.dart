@@ -244,7 +244,8 @@ class UploadManager extends Notifier<List<UploadItem>> {
     final uploading = items.any((i) => i.status == UploadStatus.uploading);
     if (uploading != _awake) {
       _awake = uploading;
-      unawaited(ref.read(screenWakeProvider)(uploading));
+      final wake = ref.read(screenWakeHolderProvider);
+      uploading ? wake.acquire(this) : wake.release(this);
     }
   }
 
@@ -278,8 +279,14 @@ class UploadManager extends Notifier<List<UploadItem>> {
             isPublic: item.isPublic,
             cancel: cancel,
             onProgress: (sent, _) {
-              if (_find(id)?.status == UploadStatus.uploading) {
-                _update(id, (i) => i.copyWith(sent: sent));
+              final current = _find(id);
+              if (current == null || current.status != UploadStatus.uploading) {
+                return;
+              }
+              // Chunks arrive far more often than the percent changes.
+              final next = current.copyWith(sent: sent);
+              if (next.percent != current.percent) {
+                _update(id, (_) => next);
               }
             },
           );

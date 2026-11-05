@@ -15,12 +15,12 @@ import 'package:letslive_mobile/features/vod/data/vod_repository.dart';
 import 'harness.dart';
 import 'png.dart';
 
-/// How long the video is polled for `ready`. The mobile contract stack has no
-/// transcode worker, so there it stays `processing`; with the worker running
-/// raise it (seconds) with `--dart-define=CONTRACT_VOD_READY_WAIT=120`.
+/// How long the video is polled for `ready` (seconds). Needs the
+/// `ll-mobile-transcode` container of the contract stack; the worker polls its
+/// queue every 5 s and a 2 s clip transcodes in a few more.
 const int _readyWaitSeconds = int.fromEnvironment(
   'CONTRACT_VOD_READY_WAIT',
-  defaultValue: 10,
+  defaultValue: 90,
 );
 
 /// The creator tools against the real dev stack: stream key and stream
@@ -195,82 +195,92 @@ void main() {
     expect(history.data!.single.imageUrls, [uploaded.data]);
   });
 
-  test('a video uploads, is listed, edited and deleted', () async {
-    final mp4 = File('${scratch.path}/clip.mp4');
-    final made = await Process.run('ffmpeg', [
-      '-loglevel',
-      'error',
-      '-f',
-      'lavfi',
-      '-i',
-      'testsrc=duration=2:size=160x90:rate=10',
-      '-f',
-      'lavfi',
-      '-i',
-      'sine=frequency=440:duration=2',
-      '-c:v',
-      'libx264',
-      '-pix_fmt',
-      'yuv420p',
-      '-c:a',
-      'aac',
-      '-shortest',
-      mp4.path,
-    ]);
-    expect(made.exitCode, 0, reason: "${made.stderr}");
+  test(
+    'a video uploads, becomes ready, is listed, edited and deleted',
+    () async {
+      final mp4 = File('${scratch.path}/clip.mp4');
+      final made = await Process.run('ffmpeg', [
+        '-loglevel',
+        'error',
+        '-f',
+        'lavfi',
+        '-i',
+        'testsrc=duration=2:size=160x90:rate=10',
+        '-f',
+        'lavfi',
+        '-i',
+        'sine=frequency=440:duration=2',
+        '-c:v',
+        'libx264',
+        '-pix_fmt',
+        'yuv420p',
+        '-c:a',
+        'aac',
+        '-shortest',
+        mp4.path,
+      ]);
+      expect(made.exitCode, 0, reason: "${made.stderr}");
 
-    var lastProgress = 0;
-    final uploaded = await myVods.upload(
-      path: mp4.path,
-      fileName: 'clip.mp4',
-      title: 'Contract upload Việt 🎉',
-      description: 'From the contract test',
-      isPublic: false,
-      onProgress: (sent, total) => lastProgress = sent,
-    );
-    expect(uploaded.success, isTrue, reason: uploaded.key);
-    final vod = uploaded.data!;
-    expect(vod.status, 'processing');
-    expect(vod.visibility, 'private');
-    expect(lastProgress, greaterThan(0));
+      var lastProgress = 0;
+      final uploaded = await myVods.upload(
+        path: mp4.path,
+        fileName: 'clip.mp4',
+        title: 'Contract upload Việt 🎉',
+        description: 'From the contract test',
+        isPublic: false,
+        onProgress: (sent, total) => lastProgress = sent,
+      );
+      expect(uploaded.success, isTrue, reason: uploaded.key);
+      final vod = uploaded.data!;
+      expect(vod.status, 'processing');
+      expect(vod.visibility, 'private');
+      expect(lastProgress, greaterThan(0));
 
-    final listed = await myVods.list(0);
-    expect(listed.success, isTrue, reason: listed.key);
-    expect(listed.data!.map((v) => v.id), contains(vod.id));
+      final listed = await myVods.list(0);
+      expect(listed.success, isTrue, reason: listed.key);
+      expect(listed.data!.map((v) => v.id), contains(vod.id));
 
-    // The owner polls the status like the upload manager does.
-    final viewer = VodRepository(ctx!.userA.client);
-    final deadline = DateTime.now().add(
-      const Duration(seconds: _readyWaitSeconds),
-    );
-    var status = vod.status;
-    while (status == 'processing' && DateTime.now().isBefore(deadline)) {
-      await Future<void>.delayed(const Duration(seconds: 2));
-      final polled = await viewer.byId(vod.id);
-      expect(polled.success, isTrue, reason: polled.key);
-      status = polled.data!.status;
-    }
-    // ignore: avoid_print
-    print('uploaded video status after ${_readyWaitSeconds}s: $status');
-    expect(['processing', 'ready'], contains(status));
+      // The owner polls the status like the upload manager does.
+      final viewer = VodRepository(ctx!.userA.client);
+      final deadline = DateTime.now().add(
+        const Duration(seconds: _readyWaitSeconds),
+      );
+      var status = vod.status;
+      while (status == 'processing' && DateTime.now().isBefore(deadline)) {
+        await Future<void>.delayed(const Duration(seconds: 2));
+        final polled = await viewer.byId(vod.id);
+        expect(polled.success, isTrue, reason: polled.key);
+        status = polled.data!.status;
+      }
+      expect(
+        status,
+        'ready',
+        reason:
+            'still $status after ${_readyWaitSeconds}s '
+            '(is ll-mobile-transcode running?)',
+      );
+      final ready = await viewer.byId(vod.id);
+      expect(ready.data!.playbackUrl, isNotEmpty);
+      expect(ready.data!.duration, greaterThan(0));
 
-    final edited = await myVods.update(
-      vod.id,
-      title: 'Renamed upload',
-      description: '',
-      isPublic: true,
-    );
-    expect(edited.success, isTrue, reason: edited.key);
-    final after = await viewer.byId(vod.id);
-    expect(after.data!.title, 'Renamed upload');
-    expect(after.data!.visibility, 'public');
+      final edited = await myVods.update(
+        vod.id,
+        title: 'Renamed upload',
+        description: '',
+        isPublic: true,
+      );
+      expect(edited.success, isTrue, reason: edited.key);
+      final after = await viewer.byId(vod.id);
+      expect(after.data!.title, 'Renamed upload');
+      expect(after.data!.visibility, 'public');
 
-    final removed = await myVods.delete(vod.id);
-    expect(removed.success, isTrue, reason: removed.key);
-    final gone = await viewer.byId(vod.id);
-    expect(gone.success, isFalse);
-    expect(gone.statusCode, 404);
-  });
+      final removed = await myVods.delete(vod.id);
+      expect(removed.success, isTrue, reason: removed.key);
+      final gone = await viewer.byId(vod.id);
+      expect(gone.success, isFalse);
+      expect(gone.statusCode, 404);
+    },
+  );
 
   test(
     'a file with an unsupported extension is refused by the server',

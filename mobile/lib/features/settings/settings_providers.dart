@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:letslive_mobile/core/validation/field_limits.dart';
 import 'package:letslive_mobile/features/settings/domain/image_checks.dart';
 import 'package:letslive_mobile/features/user/data/picked_image.dart';
 
@@ -34,11 +35,17 @@ final imagePickProvider = Provider<ImagePick>(
   },
 );
 
-/// Lets the user choose several images at once; empty when they cancel or
-/// the picker fails. [limit] is the most the caller can still use.
-typedef ImagesPick = Future<List<PickedImage>> Function(int limit);
+/// What the multi-image picker returned: the images to use, and the names of
+/// those refused for being over the size limit (never read into memory).
+typedef PickedImages = ({List<PickedImage> images, List<String> oversized});
+
+/// Lets the user choose several images at once; both lists are empty when they
+/// cancel or the picker fails. [limit] is the most the caller can still use.
+typedef ImagesPick = Future<PickedImages> Function(int limit);
 
 /// The photo library picker for several images (direct-message pictures).
+/// Files over `FieldLimits.generalUploadMaxFileMb` are only measured, not
+/// read.
 final imagesPickProvider = Provider<ImagesPick>(
   (ref) => (limit) async {
     try {
@@ -46,16 +53,25 @@ final imagesPickProvider = Provider<ImagesPick>(
       final files = await ImagePicker().pickMultiImage(
         limit: limit < 2 ? 2 : limit,
       );
-      return [
-        for (final file in files.take(limit))
+      const maxBytes = FieldLimits.generalUploadMaxFileMb * 1024 * 1024;
+      final images = <PickedImage>[];
+      final oversized = <String>[];
+      for (final file in files.take(limit)) {
+        if (await file.length() > maxBytes) {
+          oversized.add(file.name);
+          continue;
+        }
+        images.add(
           PickedImage(
             name: file.name,
             bytes: await file.readAsBytes(),
             mimeType: file.mimeType ?? mimeTypeOfName(file.name),
           ),
-      ];
+        );
+      }
+      return (images: images, oversized: oversized);
     } on PlatformException {
-      return const [];
+      return (images: const <PickedImage>[], oversized: const <String>[]);
     }
   },
 );
