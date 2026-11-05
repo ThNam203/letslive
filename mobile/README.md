@@ -28,7 +28,10 @@ If a value is missing the app shows a configuration error screen naming it.
 Firebase configured (`FIREBASE_*` keys) the app sends a fresh single-use
 Firebase App Check token per request (`X-Firebase-AppCheck`); dev without
 Firebase sends `TURNSTILE_DEV_TOKEN` instead. Staging and prod require
-Firebase and `GOOGLE_SERVER_CLIENT_ID`. All keys are listed in `.env.example`.
+Firebase, `GOOGLE_SERVER_CLIENT_ID` and `WEB_BASE_URL` (the web origin used
+for share links). All keys are listed in `.env.example`; every key there must
+also be read in `lib/core/config/env.dart` (`env_test.dart` checks it), since
+a define that no code names never reaches the app.
 
 Google sign-in uses `google_sign_in` 7 and posts the id token to
 `POST /auth/google/mobile`. Setup that needs the Google Cloud / Firebase
@@ -44,6 +47,13 @@ credentials (not in the repo):
   sheet cannot return to the app.
 - App Check: register the Android app (Play Integrity) and iOS app (App
   Attest) in Firebase; in dev, register the debug token the app logs.
+
+### Models
+
+API models are hand-written `fromJson`-style parsers next to their
+repositories (`features/*/data/`), by design: no `freezed` or
+`json_serializable` and no code generation step. Keep it that way unless the
+models grow past what reads comfortably by hand.
 
 ## Run, analyze, test
 
@@ -156,7 +166,7 @@ no physical device available):
 | HLS quality selection | yes since 2.14 (`selectVideoTrack`) | yes (parses the master playlist, `setTrack`) |
 | Maintenance | Flutter team; last release 2026-10-02 | last release 2026-10-29, 5 releases in 3 months, 160/160 pub points, ~48 open issues |
 | License | BSD-3-Clause | Apache-2.0 |
-| Extra packages to add | a PiP package | none directly; new transitive ones: `wakelock_plus`, `package_info_plus`, `flutter_widget_from_html_core`, `html`, `csslib`, `dbus`, `petitparser`, `xml`, and SwiftPM `hyperoslo/Cache` |
+| Extra packages to add | a PiP package | none at the spike; new transitive ones: `wakelock_plus` (since added as a direct dependency, see below), `package_info_plus`, `flutter_widget_from_html_core`, `html`, `csslib`, `dbus`, `petitparser`, `xml`, and SwiftPM `hyperoslo/Cache` |
 
 **Pick: `better_player_plus`.** It is the only candidate that covers PiP
 without adding another package. `media_kit` was not shortlisted: its last
@@ -275,7 +285,8 @@ docker compose -f docker-compose-dev.yaml -f mobile/tool/contract-stack.override
 belongs to another stack) turns uploaded videos into HLS so the creator
 contract test sees them reach `ready`. It reads the vod database, so
 `TRANSCODE_DB_USER` and `TRANSCODE_DB_PASSWORD` must be set in `.env` (the
-same values as `VOD_DB_USER` / `VOD_DB_PASSWORD`).
+same values as `VOD_DB_USER` / `VOD_DB_PASSWORD`; `example.env` lists them,
+but a `.env` copied before they were added lacks them).
 
 `mobile/tool/contract-stack.override.yaml` renames the containers to
 `ll-mobile-*` (no clash with other checkouts), serves the config checkout and
@@ -306,6 +317,14 @@ captcha check. Extra request headers go through `ApiClient(defaultHeaders: ...)`
 `headers:` parameter (the App Check token).
 
 ### 3. Integration test on a simulator
+
+The spec lists device integration tests for login, watch live, live chat,
+DM, follow, VOD upload and push tap-through. On device there are two:
+`integration_test/auth_flow_test.dart` (login) and
+`integration_test/live_player_test.dart` (the real live player). The other
+flows are covered by widget tests over the real providers plus the contract
+tests above against the real backend; what only a device shows (push
+delivery, background audio, PiP) is in the manual device pass below.
 
 `integration_test/auth_flow_test.dart` drives the real app (login with a
 wrong and the right password, then logout) against the same stack. It needs
@@ -347,7 +366,9 @@ storeFile=<path to the .jks, relative to android/>
 storePassword=<keystore password>
 ```
 
-The dev flavor release build uses the debug key.
+The dev flavor release build uses the same upload key when
+`android/key.properties` exists, and the debug key otherwise. A
+`key.properties` missing one of the four keys fails the build naming it.
 
 ## Release checklist
 
@@ -367,7 +388,9 @@ references them by name and deletes every file it writes from them.
 
 Protect production: in Settings, Environments, `prod`, add required reviewers
 and restrict deployment branches/tags (for example to `mobile-v*` tags), so
-only an approved run can read the prod secrets.
+only an approved run can read the prod secrets. A prod run then asks for
+approval twice, once for the `android` job and once for `ios` (each job runs
+in the `prod` environment); approve both.
 
 | Secret | How to produce it |
 |---|---|
@@ -392,6 +415,17 @@ only an approved run can read the prod secrets.
   has to be done in the console.
 - Google sign-in: register each flavor's package name with the SHA-1 of the
   Play App Signing key and of the upload key (see "Auth" above).
+- iOS Google sign-in URL scheme: `ios/Runner/Info.plist` has no
+  `CFBundleURLTypes` yet. Before the first iOS release add one entry whose
+  `CFBundleURLSchemes` holds the reversed iOS client id
+  (`com.googleusercontent.apps.<id>`) of that flavor's bundle id; without it
+  the Google button fails in a CI-built app.
+- App Attest (App Check on iOS): enable the App Attest capability on each
+  bundle id and regenerate the provisioning profiles so they include it.
+  `ios/Runner/RunnerRelease.entitlements` already declares
+  `com.apple.developer.devicecheck.appattest-environment` = `production`;
+  without the capability, email login and signup on iOS fail with "App
+  Check token unavailable".
 
 ### Run the workflow
 
@@ -422,8 +456,10 @@ request:
   switch apps; audio continues, lock-screen controls work.
 - [ ] Picture-in-picture: leave the app while watching; the PiP window plays
   and returns to the app on tap.
-- [ ] Rotation: watch screens, chat and the player in portrait and landscape;
-  no overflow, the player goes fullscreen and back.
+- [ ] Rotation: on a live channel and a video, turn the phone sideways; only
+  the player shows, filling the screen (that is the fullscreen mode), and
+  playback goes on. Turn it back; the page returns with the same playback.
+  Offline channels, chat and other screens show no overflow either way.
 - [ ] Kill and relaunch: force-quit while signed in and relaunch; the session
   is restored without a login.
 - [ ] Airplane mode: in a live chat and a direct message, turn on airplane
@@ -431,9 +467,12 @@ request:
   duplicated.
 - [ ] Push: foreground, background and tap behaviour, steps 1 to 7 of "Manual
   verification" above, with the production APNs environment on iOS.
-- [ ] Language: change the app language, then send a push to the device; the
-  title is in the new language (the device row's `locale` is updated).
+- [ ] Language and theme: in Settings, switch the language to Tiếng Việt and
+  back, and the theme to dark, light and system; the app UI switches at once
+  and keeps the choice after a relaunch. (Pushes stay in the language the
+  server stored them in: docs/ISSUES.md L15.)
 - [ ] Uploads: start a video upload, background the app mid-upload and return;
   the upload finishes or reports a retryable error.
 - [ ] Pickers: choose a photo for the avatar and background, and a video for
-  upload, from the library; cancelling the picker changes nothing.
+  upload, from the library; cancelling the picker changes nothing. With photo
+  access denied (iOS Settings), a tap says "Could not open your photos".
