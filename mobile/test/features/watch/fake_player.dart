@@ -1,22 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
+import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
 
-/// A [LivePlayerController] without a native player: starts out playing,
+/// A [PlayerController] without a native player: starts out playing,
 /// records what the screen asked for, and lets a test [emit] any state.
-class FakeLivePlayer implements LivePlayerController {
-  FakeLivePlayer({
+class FakePlayer implements PlayerController {
+  FakePlayer({
     required this.url,
     required this.title,
     required this.author,
     this.isLive = true,
     List<VideoQuality> qualities = const [],
   }) : _value = ValueNotifier(
-         LivePlayerValue(
-           isPlaying: true,
-           isBuffering: false,
-           qualities: qualities,
-         ),
+         PlayerValue(isPlaying: true, isBuffering: false, qualities: qualities),
        );
 
   final String url;
@@ -25,7 +21,7 @@ class FakeLivePlayer implements LivePlayerController {
 
   /// Whether the screen asked for a live stream (false = recorded video).
   final bool isLive;
-  final ValueNotifier<LivePlayerValue> _value;
+  final ValueNotifier<PlayerValue> _value;
 
   /// Every position the screen sought to, in order.
   final List<Duration> seeks = [];
@@ -36,10 +32,10 @@ class FakeLivePlayer implements LivePlayerController {
   bool disposed = false;
 
   /// Replaces the playback state, as the native player would.
-  void emit(LivePlayerValue value) => _value.value = value;
+  void emit(PlayerValue value) => _value.value = value;
 
   @override
-  ValueListenable<LivePlayerValue> get value => _value;
+  ValueListenable<PlayerValue> get value => _value;
 
   @override
   Widget buildVideo(BuildContext context) =>
@@ -47,7 +43,7 @@ class FakeLivePlayer implements LivePlayerController {
 
   @override
   Future<void> play() async => emit(
-    LivePlayerValue(
+    PlayerValue(
       isPlaying: true,
       isBuffering: false,
       qualities: _value.value.qualities,
@@ -57,7 +53,7 @@ class FakeLivePlayer implements LivePlayerController {
 
   @override
   Future<void> pause() async => emit(
-    LivePlayerValue(
+    PlayerValue(
       isBuffering: false,
       qualities: _value.value.qualities,
       quality: _value.value.quality,
@@ -68,7 +64,7 @@ class FakeLivePlayer implements LivePlayerController {
   Future<void> selectQuality(VideoQuality quality) async {
     selected.add(quality);
     emit(
-      LivePlayerValue(
+      PlayerValue(
         isPlaying: true,
         isBuffering: false,
         qualities: _value.value.qualities,
@@ -82,7 +78,7 @@ class FakeLivePlayer implements LivePlayerController {
     seeks.add(position);
     final old = _value.value;
     emit(
-      LivePlayerValue(
+      PlayerValue(
         isPlaying: old.isPlaying,
         isBuffering: false,
         qualities: old.qualities,
@@ -116,25 +112,25 @@ class FakeScreenWake {
   Future<void> call(bool awake) async => calls.add(awake);
 }
 
-/// The player factory for tests: builds [FakeLivePlayer]s with [qualities]
+/// The player factory for tests: builds [FakePlayer]s with [qualities]
 /// and keeps them in [created].
-class FakeLivePlayers {
-  FakeLivePlayers({this.qualities = const []});
+class FakePlayers {
+  FakePlayers({this.qualities = const []});
 
   final List<VideoQuality> qualities;
-  final List<FakeLivePlayer> created = [];
+  final List<FakePlayer> created = [];
 
   /// The most recently created player.
-  FakeLivePlayer get last => created.last;
+  FakePlayer get last => created.last;
 
-  /// A `LivePlayerFactory`.
-  LivePlayerController create({
+  /// A `PlayerFactory`.
+  PlayerController create({
     required String url,
     required String title,
     required String author,
     bool isLive = true,
   }) {
-    final player = FakeLivePlayer(
+    final player = FakePlayer(
       url: url,
       title: title,
       author: author,

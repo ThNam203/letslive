@@ -193,6 +193,7 @@ Future<TestApp> pumpTestApp(
   Map<String, Object> preferences = const {},
   CookieJar? jar,
   List<Override> overrides = const [],
+  AppConfig? config,
 }) async {
   SharedPreferences.setMockInitialValues(preferences);
   final prefs = await SharedPreferences.getInstance();
@@ -217,7 +218,7 @@ Future<TestApp> pumpTestApp(
     ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
-        appConfigProvider.overrideWithValue(testConfig),
+        appConfigProvider.overrideWithValue(config ?? testConfig),
         cookieJarProvider.overrideWithValue(cookies),
         apiClientProvider.overrideWithValue(client),
         botProofProvider.overrideWithValue(

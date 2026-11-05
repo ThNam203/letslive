@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:letslive_mobile/features/watch/data/better_live_player_controller.dart';
-import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
+import 'package:letslive_mobile/features/watch/data/better_player_controller_wrapper.dart';
+import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
 import 'package:letslive_mobile/features/watch/watch_providers.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -18,8 +18,8 @@ const _timeout = Duration(seconds: 30);
 /// Pumps until [done] holds for the player's value.
 Future<void> waitForValue(
   WidgetTester tester,
-  LivePlayerController player,
-  bool Function(LivePlayerValue value) done,
+  PlayerController player,
+  bool Function(PlayerValue value) done,
   String what,
 ) async {
   final deadline = DateTime.now().add(_timeout);
@@ -38,7 +38,7 @@ void main() {
     tester,
   ) async {
     expect(_url, isNotEmpty, reason: 'pass --dart-define=LIVE_PLAYER_TEST_URL');
-    final player = BetterLivePlayerController(
+    final player = BetterPlayerControllerWrapper(
       url: _url,
       title: 'Integration stream',
       author: 'integration',

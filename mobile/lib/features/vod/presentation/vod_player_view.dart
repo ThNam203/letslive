@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/features/home/domain/media_format.dart';
-import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
+import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
 import 'package:letslive_mobile/features/watch/presentation/live_player_view.dart';
 
 /// How far the skip buttons jump (web `SKIP_SECONDS`).
@@ -17,7 +17,7 @@ class VodPlayerView extends StatelessWidget {
   const VodPlayerView({required this.player, required this.onRetry, super.key});
 
   /// The player to show and control.
-  final LivePlayerController player;
+  final PlayerController player;
 
   /// Starts a fresh player after a playback error.
   final VoidCallback onRetry;
@@ -31,7 +31,7 @@ class VodPlayerView extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           player.buildVideo(context),
-          ValueListenableBuilder<LivePlayerValue>(
+          ValueListenableBuilder<PlayerValue>(
             valueListenable: player.value,
             builder: (context, value, _) => value.hasError
                 ? _PlaybackError(onRetry: onRetry)
@@ -46,8 +46,8 @@ class VodPlayerView extends StatelessWidget {
 class _Controls extends StatefulWidget {
   const _Controls({required this.player, required this.value});
 
-  final LivePlayerController player;
-  final LivePlayerValue value;
+  final PlayerController player;
+  final PlayerValue value;
 
   @override
   State<_Controls> createState() => _ControlsState();

@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
+import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
 
-/// The [LivePlayerController] the app uses: `better_player_plus` (ExoPlayer /
+/// The [PlayerController] the app uses: `better_player_plus` (ExoPlayer /
 /// AVPlayer). See `mobile/README.md` ("Video player") for why this package.
 ///
 /// - Autoplays the stream with the package's own controls hidden; the
@@ -15,10 +15,10 @@ import 'package:letslive_mobile/features/watch/domain/live_player_controller.dar
 ///   on (that also keeps an Android foreground service alive).
 /// - Qualities are the master playlist variants the package parsed.
 /// - Every call into the package runs in [playerErrorZone], so errors from
-///   the package's own timers turn into [LivePlayerValue.hasError] instead
+///   the package's own timers turn into [PlayerValue.hasError] instead
 ///   of escaping as uncaught errors.
-class BetterLivePlayerController implements LivePlayerController {
-  BetterLivePlayerController({
+class BetterPlayerControllerWrapper implements PlayerController {
+  BetterPlayerControllerWrapper({
     required String url,
     required String title,
     required String author,
@@ -68,9 +68,7 @@ class BetterLivePlayerController implements LivePlayerController {
   late final Zone _zone;
   late final BetterPlayerController _player;
   final GlobalKey _videoKey = GlobalKey();
-  final ValueNotifier<LivePlayerValue> _value = ValueNotifier(
-    const LivePlayerValue(),
-  );
+  final ValueNotifier<PlayerValue> _value = ValueNotifier(const PlayerValue());
   bool _hasEnded = false;
   bool _hasError = false;
   bool _disposed = false;
@@ -80,7 +78,7 @@ class BetterLivePlayerController implements LivePlayerController {
   Duration? _pendingSeek;
 
   @override
-  ValueListenable<LivePlayerValue> get value => _value;
+  ValueListenable<PlayerValue> get value => _value;
 
   void _onEvent(BetterPlayerEvent event) {
     switch (event.betterPlayerEventType) {
@@ -114,7 +112,7 @@ class BetterLivePlayerController implements LivePlayerController {
     if (_disposed) return;
     final native = _player.videoPlayerController?.value;
     final ready = native != null && native.initialized;
-    _value.value = LivePlayerValue(
+    _value.value = PlayerValue(
       isPlaying: native?.isPlaying ?? false,
       isBuffering: !ready || native.isBuffering,
       hasEnded: _hasEnded,

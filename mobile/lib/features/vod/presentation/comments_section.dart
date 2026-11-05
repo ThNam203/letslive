@@ -9,7 +9,8 @@ import 'package:letslive_mobile/features/vod/presentation/comment_item.dart';
 
 /// The comments under a video (web `CommentSection`): the title with the
 /// total, a box to write a comment, the comments with their replies, and a
-/// "Show more" button for the next page (web pages the same way).
+/// "Show more" button for the next page (web pages the same way). Which
+/// comments the viewer liked is fetched by the notifier as comments load.
 class CommentsSection extends ConsumerWidget {
   const CommentsSection({
     required this.vodId,
@@ -17,6 +18,7 @@ class CommentsSection extends ConsumerWidget {
     super.key,
   });
 
+  /// The commented video.
   final String vodId;
 
   /// The video's owner, for the "Owner" badge.
@@ -29,15 +31,6 @@ class CommentsSection extends ConsumerWidget {
     final comments = ref.watch(vodCommentsProvider(vodId));
     final notifier = ref.read(vodCommentsProvider(vodId).notifier);
     final feed = comments.value;
-    // Whenever comments appear (first load, next page, a new comment), ask
-    // which of them the viewer already liked. Comments already asked about
-    // are skipped, so running this on every build costs nothing. Not during
-    // build: it changes provider state.
-    if (feed != null) {
-      final likes = ref.read(commentLikesProvider(vodId).notifier);
-      Future.microtask(() => likes.loadLiked(feed.items));
-    }
-
     final total = feed?.total ?? 0;
     final status = feedStatusBody(
       value: comments.whenData((feed) => feed.items),

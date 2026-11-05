@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:letslive_mobile/core/config/app_config.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
 
 import '../../core/network/fake_adapter.dart';
@@ -75,6 +76,7 @@ Future<TestApp> pumpHome(
   double height = 6000,
   double textScale = 1,
   List<Override> overrides = const [],
+  AppConfig? config,
 }) {
   tester.view.physicalSize = Size(width, height);
   tester.view.devicePixelRatio = 1;
@@ -86,5 +88,6 @@ Future<TestApp> pumpHome(
     server: server,
     signedIn: true,
     overrides: overrides,
+    config: config,
   );
 }

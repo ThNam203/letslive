@@ -71,8 +71,8 @@ and resumes it on return.
 ## Video player
 
 Live (and later VOD) playback goes through one small interface,
-`LivePlayerController` (`lib/features/watch/domain/live_player_controller.dart`);
-`BetterLivePlayerController` wraps the package and widget tests use a fake.
+`PlayerController` (`lib/features/watch/domain/player_controller.dart`);
+`BetterPlayerControllerWrapper` wraps the package and widget tests use a fake.
 The stream URL is built like web: `<api>/transcode/<livestreamId>/index.m3u8`.
 
 Spike (2026-11-04; metadata from pub.dev / GitHub, packages read at source;

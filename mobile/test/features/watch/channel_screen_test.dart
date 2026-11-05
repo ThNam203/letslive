@@ -6,12 +6,12 @@ import 'package:letslive_mobile/core/network/api_endpoints.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
 import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
-import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
+import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
 import 'package:letslive_mobile/features/watch/presentation/channel_screen.dart';
 import 'package:letslive_mobile/features/watch/watch_providers.dart';
 
 import '../home/home_fixtures.dart';
-import 'fake_live_player.dart';
+import 'fake_player.dart';
 import 'watch_test_app.dart';
 
 /// A server where `u-1` ("streamer") is live with `ls-1`.
@@ -20,10 +20,10 @@ FakeWatchServer liveServer({String title = 'Live title'}) =>
       ..liveByUser = {'u-1': livestreamJson(id: 'ls-1', title: title)};
 
 /// The native player reached the end of the playlist.
-const ended = LivePlayerValue(isBuffering: false, hasEnded: true);
+const ended = PlayerValue(isBuffering: false, hasEnded: true);
 
 /// The native player failed.
-const failed = LivePlayerValue(isBuffering: false, hasError: true);
+const failed = PlayerValue(isBuffering: false, hasError: true);
 
 /// The quality menu entry labelled [label].
 Finder menuItem(String label) =>
@@ -31,7 +31,7 @@ Finder menuItem(String label) =>
 
 void main() {
   testWidgets('live user shows player with title', (tester) async {
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpChannel(tester, liveServer(), players, 'u-1');
 
     expect(find.byType(ChannelScreen), findsOneWidget);
@@ -48,7 +48,7 @@ void main() {
 
   testWidgets('shows a spinner while the channel loads', (tester) async {
     final server = liveServer()..holdLiveOf = Completer<void>();
-    await pumpChannel(tester, server, FakeLivePlayers(), 'u-1', settle: false);
+    await pumpChannel(tester, server, FakePlayers(), 'u-1', settle: false);
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
@@ -60,7 +60,7 @@ void main() {
   testWidgets('offline user shows offline state with back action', (
     tester,
   ) async {
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpChannel(tester, FakeWatchServer(), players, 'u-1');
 
     expect(find.text('Offline'), findsOneWidget);
@@ -77,7 +77,7 @@ void main() {
     'stream ended while watching shows ended state with back action',
     (tester) async {
       final server = liveServer();
-      final players = FakeLivePlayers();
+      final players = FakePlayers();
       final app = await pumpChannel(tester, server, players, 'u-1');
       expect(find.byKey(const ValueKey('fake-video')), findsOneWidget);
 
@@ -101,7 +101,7 @@ void main() {
     tester,
   ) async {
     final server = liveServer();
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpChannel(tester, server, players, 'u-1');
 
     server.liveByUser = {};
@@ -115,7 +115,7 @@ void main() {
     tester,
   ) async {
     final server = liveServer();
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpChannel(tester, server, players, 'u-1');
 
     server.holdLiveOf = Completer<void>();
@@ -135,7 +135,7 @@ void main() {
     'ended playback on a still-live stream waits for the next check',
     (tester) async {
       final server = liveServer();
-      final players = FakeLivePlayers();
+      final players = FakePlayers();
       await pumpChannel(tester, server, players, 'u-1');
 
       // The playlist ended but the server still lists the stream.
@@ -155,7 +155,7 @@ void main() {
   testWidgets('first playback error restarts the player without a message', (
     tester,
   ) async {
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     final app = await pumpChannel(tester, liveServer(), players, 'u-1');
 
     players.last.emit(failed);
@@ -173,7 +173,7 @@ void main() {
     tester,
   ) async {
     final server = liveServer();
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     final app = await pumpChannel(tester, server, players, 'u-1');
     players.last.emit(failed);
     await tester.pumpAndSettle();
@@ -199,14 +199,12 @@ void main() {
   });
 
   testWidgets('playing again re-arms the automatic restart', (tester) async {
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpChannel(tester, liveServer(), players, 'u-1');
     players.last.emit(failed);
     await tester.pumpAndSettle();
 
-    players.last.emit(
-      const LivePlayerValue(isPlaying: true, isBuffering: false),
-    );
+    players.last.emit(const PlayerValue(isPlaying: true, isBuffering: false));
     players.last.emit(failed);
     await tester.pumpAndSettle();
 
@@ -218,7 +216,7 @@ void main() {
     tester,
   ) async {
     final server = FakeWatchServer();
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpChannel(tester, server, players, 'u-1');
     expect(find.text('Offline'), findsOneWidget);
 
@@ -231,7 +229,7 @@ void main() {
   });
 
   testWidgets('leaving the channel stops checking the stream', (tester) async {
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     final app = await pumpChannel(tester, liveServer(), players, 'u-1');
 
     await tester.pageBack();
@@ -244,7 +242,7 @@ void main() {
   });
 
   testWidgets('unknown user shows not-found with back action', (tester) async {
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpChannel(tester, FakeWatchServer(), players, 'missing');
 
     expect(find.text('User not found.'), findsOneWidget);
@@ -257,7 +255,7 @@ void main() {
 
   testWidgets('load error shows retry that refetches', (tester) async {
     final server = liveServer()..liveOfStatus = 503;
-    final app = await pumpChannel(tester, server, FakeLivePlayers(), 'u-1');
+    final app = await pumpChannel(tester, server, FakePlayers(), 'u-1');
 
     expect(find.text('Try again'), findsOneWidget);
     expect(find.text('Live title'), findsNothing);
@@ -271,7 +269,7 @@ void main() {
   });
 
   testWidgets('quality menu lists the stream variants', (tester) async {
-    final players = FakeLivePlayers(
+    final players = FakePlayers(
       qualities: const [
         VideoQuality(1080),
         VideoQuality(720),
@@ -301,7 +299,7 @@ void main() {
   testWidgets('play/pause and picture-in-picture reach the player', (
     tester,
   ) async {
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpChannel(tester, liveServer(), players, 'u-1');
 
     await tester.tap(find.byTooltip('Pause'));
@@ -330,7 +328,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(qualities: const [VideoQuality(1080), VideoQuality(720)]),
+      FakePlayers(qualities: const [VideoQuality(1080), VideoQuality(720)]),
       'u-1',
       width: 320,
       height: 700,
@@ -353,7 +351,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       width: 320,
       height: 700,
@@ -371,13 +369,7 @@ void screenWakeTests() {
     tester,
   ) async {
     final wake = FakeScreenWake();
-    await pumpChannel(
-      tester,
-      liveServer(),
-      FakeLivePlayers(),
-      'u-1',
-      wake: wake,
-    );
+    await pumpChannel(tester, liveServer(), FakePlayers(), 'u-1', wake: wake);
     expect(wake.isAwake, isTrue);
 
     await tester.tap(find.byTooltip('Pause'));
@@ -394,7 +386,7 @@ void screenWakeTests() {
     tester,
   ) async {
     final wake = FakeScreenWake();
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     final server = liveServer();
     await pumpChannel(tester, server, players, 'u-1', wake: wake);
 
@@ -414,13 +406,7 @@ void screenWakeTests() {
 
   testWidgets('leaving the channel lets the screen sleep', (tester) async {
     final wake = FakeScreenWake();
-    await pumpChannel(
-      tester,
-      liveServer(),
-      FakeLivePlayers(),
-      'u-1',
-      wake: wake,
-    );
+    await pumpChannel(tester, liveServer(), FakePlayers(), 'u-1', wake: wake);
     expect(wake.isAwake, isTrue);
 
     await tester.pageBack();
@@ -433,7 +419,7 @@ void screenWakeTests() {
     final app = await pumpChannel(
       tester,
       liveServer(),
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       wake: wake,
     );
@@ -447,6 +433,6 @@ void screenWakeTests() {
   });
 }
 
-extension on FakeLivePlayers {
-  FakeLivePlayer get first => created.first;
+extension on FakePlayers {
+  FakePlayer get first => created.first;
 }

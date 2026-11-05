@@ -7,7 +7,7 @@ import 'package:letslive_mobile/features/watch/watch_providers.dart';
 
 import '../home/home_fixtures.dart';
 import '../search/search_test_app.dart';
-import 'fake_live_player.dart';
+import 'fake_player.dart';
 import '../vod/vod_test_app.dart';
 import 'watch_test_app.dart';
 
@@ -19,7 +19,7 @@ void main() {
       ..liveByUser = {
         'u-1': livestreamJson(id: 'ls-1', title: 'Morning stream'),
       };
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpWatchHome(tester, server, players);
 
     await tester.tap(find.text('Morning stream'));
@@ -41,7 +41,7 @@ void main() {
         'u-2': publicUserJson(id: 'u-2', username: 'followed_one'),
       }
       ..following = [publicUserJson(id: 'u-2', username: 'followed_one')];
-    await pumpWatchHome(tester, server, FakeLivePlayers());
+    await pumpWatchHome(tester, server, FakePlayers());
 
     await tester.tap(find.text('followed_one'));
     await tester.pumpAndSettle();
@@ -56,7 +56,7 @@ void main() {
     final server = FakeVodServer()
       ..vods = [vodJson(title: 'Best of week')]
       ..vodById = {'vod-1': vodDetailJson(title: 'Best of week')};
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpWatchHome(tester, server, players);
 
     await tester.tap(find.text('Best of week'));
@@ -80,7 +80,7 @@ void main() {
       tester,
       server,
       overrides: [
-        livePlayerFactoryProvider.overrideWithValue(FakeLivePlayers().create),
+        playerFactoryProvider.overrideWithValue(FakePlayers().create),
       ],
     );
     await search(tester, 'tro choi');
@@ -97,11 +97,11 @@ void main() {
     final server = FakeWatchServer()
       ..searchLives = [livestreamJson(id: 'ls-9', title: 'Trò chơi live')]
       ..liveByUser = {'u-1': livestreamJson(id: 'ls-9', title: 'Trò chơi')};
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpSearch(
       tester,
       server,
-      overrides: [livePlayerFactoryProvider.overrideWithValue(players.create)],
+      overrides: [playerFactoryProvider.overrideWithValue(players.create)],
     );
     await search(tester, 'tro choi');
 
@@ -120,7 +120,7 @@ void main() {
       tester,
       server,
       overrides: [
-        livePlayerFactoryProvider.overrideWithValue(FakeLivePlayers().create),
+        playerFactoryProvider.overrideWithValue(FakePlayers().create),
       ],
     );
     await search(tester, 'found');

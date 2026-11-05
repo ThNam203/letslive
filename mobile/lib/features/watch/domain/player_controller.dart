@@ -1,7 +1,7 @@
 /// The boundary between the watch screens and the video player package.
 ///
-/// Screens only talk to a [LivePlayerController]; the app builds the
-/// `better_player_plus` one (`BetterLivePlayerController`) and widget tests a
+/// Screens only talk to a [PlayerController]; the app builds the
+/// `better_player_plus` one (`BetterPlayerControllerWrapper`) and widget tests a
 /// fake. Kept small on purpose: what the live screen and the VOD screen
 /// show and do. It plays live streams and recorded videos alike.
 library;
@@ -38,8 +38,8 @@ class VideoQuality {
 
 /// What the player overlay shows about playback.
 @immutable
-class LivePlayerValue {
-  const LivePlayerValue({
+class PlayerValue {
+  const PlayerValue({
     this.isPlaying = false,
     this.isBuffering = true,
     this.hasEnded = false,
@@ -76,11 +76,11 @@ class LivePlayerValue {
   final Duration duration;
 }
 
-/// Plays one HLS stream. Created per stream by [LivePlayerFactory] and
+/// Plays one HLS stream. Created per stream by [PlayerFactory] and
 /// disposed by the widget that created it.
-abstract interface class LivePlayerController {
+abstract interface class PlayerController {
   /// Current playback state; listeners are told about every change.
-  ValueListenable<LivePlayerValue> get value;
+  ValueListenable<PlayerValue> get value;
 
   /// The video surface (16:9, letterboxed).
   Widget buildVideo(BuildContext context);
@@ -110,9 +110,8 @@ abstract interface class LivePlayerController {
 /// background-playback notification / lock screen controls.
 ///
 /// [isLive] is true for a stream (the default) and false for a recorded
-/// video (VOD), which can seek and reports position and duration. The name
-/// `LivePlayerController` is kept for both: one wrapper, one fake.
-typedef LivePlayerFactory = LivePlayerController Function({
+/// video (VOD), which can seek and reports position and duration.
+typedef PlayerFactory = PlayerController Function({
   required String url,
   required String title,
   required String author,

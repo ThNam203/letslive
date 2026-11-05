@@ -14,6 +14,7 @@ import 'package:letslive_mobile/features/vod/vod_providers.dart';
 class VodReactionButtons extends ConsumerWidget {
   const VodReactionButtons({required this.vod, super.key});
 
+  /// The video reacted to.
   final Vod vod;
 
   @override

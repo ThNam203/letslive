@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:letslive_mobile/features/watch/data/better_live_player_controller.dart';
-import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
+import 'package:letslive_mobile/features/watch/data/better_player_controller_wrapper.dart';
+import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
 
 BetterPlayerAsmsTrack track(int? height, {int bitrate = 1}) =>
     BetterPlayerAsmsTrack('', null, height, bitrate, 0, '', '');

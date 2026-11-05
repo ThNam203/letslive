@@ -32,7 +32,7 @@ import 'package:letslive_mobile/features/vod/presentation/timestamped_text.dart'
 import 'package:letslive_mobile/features/vod/presentation/vod_details.dart';
 import 'package:letslive_mobile/features/vod/presentation/vod_player_view.dart';
 import 'package:letslive_mobile/features/vod/vod_providers.dart';
-import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
+import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
 import 'package:letslive_mobile/features/watch/watch_providers.dart';
 
 /// The screen of video [vodId] uploaded by [userId].
@@ -49,10 +49,10 @@ class VodScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final vod = ref.watch(vodProvider(vodId));
-    // Asked together with the video: the uploader's name labels the
-    // background-playback notification, so the player waits for it (a
-    // failed lookup only leaves the name out).
-    final isOwnerLoading = ref.watch(publicUserProvider(userId)).isLoading;
+    // Asked together with the video so the uploader's name is likely there
+    // when the player starts. The player never waits for it: without it the
+    // background-playback notification just has no author line.
+    ref.watch(publicUserProvider(userId));
     final Widget body;
     if (vod.hasError && !vod.isLoading) {
       body = Center(
@@ -61,7 +61,7 @@ class VodScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(vodProvider(vodId)),
         ),
       );
-    } else if (!vod.hasValue || isOwnerLoading) {
+    } else if (!vod.hasValue) {
       body = const Center(child: CircularProgressIndicator());
     } else {
       final found = vod.requireValue;
@@ -90,7 +90,10 @@ class VodScreen extends ConsumerWidget {
 class _VodBody extends ConsumerStatefulWidget {
   const _VodBody({required this.vod, required this.userId});
 
+  /// The loaded video.
   final Vod vod;
+
+  /// The uploader, from the route.
   final String userId;
 
   @override
@@ -99,7 +102,7 @@ class _VodBody extends ConsumerStatefulWidget {
 
 class _VodBodyState extends ConsumerState<_VodBody> {
   /// Null when the video has no playback URL yet (still processing).
-  LivePlayerController? _player;
+  PlayerController? _player;
 
   /// Read once: `ref` is not usable in [dispose].
   late final ScreenWake _screenWake;
@@ -116,10 +119,10 @@ class _VodBodyState extends ConsumerState<_VodBody> {
     _player = _createPlayer();
   }
 
-  LivePlayerController? _createPlayer() {
+  PlayerController? _createPlayer() {
     final url = widget.vod.playbackUrl;
     if (url == null) return null;
-    final player = ref.read(livePlayerFactoryProvider)(
+    final player = ref.read(playerFactoryProvider)(
       url: url,
       title: widget.vod.title,
       author: ref.read(publicUserProvider(widget.userId)).value?.username ?? '',
@@ -167,9 +170,15 @@ class _VodBodyState extends ConsumerState<_VodBody> {
     );
   }
 
+  /// Starts a fresh player after an error, back where the viewer was (the
+  /// player holds the seek until the video can play).
   void _retry() => setState(() {
+    final resumeAt = _player?.value.value.position ?? Duration.zero;
     _releasePlayer();
-    _player = _createPlayer();
+    final player = _player = _createPlayer();
+    if (player != null && resumeAt > Duration.zero) {
+      unawaited(player.seekTo(resumeAt));
+    }
   });
 
   /// Jumps to a tapped timestamp and plays, like web's `seekTo`.

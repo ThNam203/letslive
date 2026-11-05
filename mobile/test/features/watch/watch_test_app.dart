@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:letslive_mobile/core/config/app_config.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
 import 'package:letslive_mobile/core/router/app_router.dart';
 import 'package:letslive_mobile/features/watch/watch_providers.dart';
@@ -11,7 +12,7 @@ import '../../core/network/fake_adapter.dart';
 import '../auth/auth_test_app.dart';
 import '../home/home_test_app.dart';
 import '../search/search_test_app.dart';
-import 'fake_live_player.dart';
+import 'fake_player.dart';
 
 /// [FakeSearchServer] plus `GET /livestreams?userId=`: [liveByUser] holds
 /// the live stream of each user (absent = not live, answered as a success
@@ -124,20 +125,22 @@ class FakeWatchServer extends FakeSearchServer {
 Future<TestApp> pumpWatchHome(
   WidgetTester tester,
   FakeWatchServer server,
-  FakeLivePlayers players, {
+  FakePlayers players, {
   FakeScreenWake? wake,
   double width = 800,
   double height = 6000,
   double textScale = 1,
   List<Override> overrides = const [],
+  AppConfig? config,
 }) => pumpHome(
   tester,
   server,
+  config: config,
   width: width,
   height: height,
   textScale: textScale,
   overrides: [
-    livePlayerFactoryProvider.overrideWithValue(players.create),
+    playerFactoryProvider.overrideWithValue(players.create),
     // Never the real plugin in widget tests.
     screenWakeProvider.overrideWithValue((wake ?? FakeScreenWake()).call),
     ...overrides,
@@ -149,7 +152,7 @@ Future<TestApp> pumpWatchHome(
 Future<TestApp> pumpChannel(
   WidgetTester tester,
   FakeWatchServer server,
-  FakeLivePlayers players,
+  FakePlayers players,
   String userId, {
   FakeScreenWake? wake,
   double width = 800,

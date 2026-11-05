@@ -15,10 +15,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/network/api_load.dart';
 import 'package:letslive_mobile/core/providers.dart';
-import 'package:letslive_mobile/features/watch/data/better_live_player_controller.dart';
+import 'package:letslive_mobile/features/watch/data/better_player_controller_wrapper.dart';
 import 'package:letslive_mobile/features/watch/data/watch_repository.dart';
 import 'package:letslive_mobile/features/watch/domain/channel_state.dart';
-import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
+import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
 import 'package:letslive_mobile/features/user/user_providers.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -32,8 +32,8 @@ final watchRepositoryProvider = Provider<WatchRepository>(
 );
 
 /// Builds the native player; widget tests override it with a fake.
-final livePlayerFactoryProvider = Provider<LivePlayerFactory>(
-  (ref) => BetterLivePlayerController.new,
+final playerFactoryProvider = Provider<PlayerFactory>(
+  (ref) => BetterPlayerControllerWrapper.new,
 );
 
 /// Keeps the screen on (`true`) or lets it sleep again (`false`).

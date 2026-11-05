@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
+import 'package:letslive_mobile/features/vod/comment_providers.dart';
 
-import '../watch/fake_live_player.dart';
+import '../watch/fake_player.dart';
 import 'vod_test_app.dart';
 
 /// Finds the "Comment actions" menu buttons: one per own comment.
@@ -19,7 +20,7 @@ Finder _heart(String id, IconData icon) =>
 void main() {
   group('states', () {
     testWidgets('empty list shows the invitation to comment', (tester) async {
-      await pumpVod(tester, FakeVodServer(), FakeLivePlayers());
+      await pumpVod(tester, FakeVodServer(), FakePlayers());
 
       expect(
         find.text('No comments yet. Be the first to comment!'),
@@ -29,7 +30,7 @@ void main() {
 
     testWidgets('a failed load shows the error with a retry', (tester) async {
       final server = FakeVodServer()..commentsStatus = 503;
-      await pumpVod(tester, server, FakeLivePlayers());
+      await pumpVod(tester, server, FakePlayers());
 
       expect(find.text('Try again'), findsOneWidget);
 
@@ -55,7 +56,7 @@ void main() {
             isEdited: true,
           ),
         ];
-      await pumpVod(tester, server, FakeLivePlayers());
+      await pumpVod(tester, server, FakePlayers());
 
       expect(find.text('Comments (2)'), findsOneWidget);
       expect(find.text('First'), findsOneWidget);
@@ -72,7 +73,7 @@ void main() {
           for (var i = 0; i < 12; i++)
             commentJson(id: 'c-$i', content: 'Comment number $i'),
         ];
-      final app = await pumpVod(tester, server, FakeLivePlayers());
+      final app = await pumpVod(tester, server, FakePlayers());
 
       expect(find.text('Comment number 9'), findsOneWidget);
       expect(find.text('Comment number 10'), findsNothing);
@@ -93,7 +94,7 @@ void main() {
     ) async {
       final server = FakeVodServer()
         ..comments = [commentJson(content: '', isDeleted: true)];
-      await pumpVod(tester, server, FakeLivePlayers());
+      await pumpVod(tester, server, FakePlayers());
 
       expect(find.text('This comment has been deleted.'), findsOneWidget);
       expect(_like('c-1'), findsNothing);
@@ -104,7 +105,7 @@ void main() {
     testWidgets('tapping 01:23 seeks to 83s', (tester) async {
       final server = FakeVodServer()
         ..comments = [commentJson(content: 'Best part at 01:23, wow')];
-      final players = FakeLivePlayers();
+      final players = FakePlayers();
       await pumpVod(tester, server, players);
 
       await tester.tapOnText(find.textRange.ofSubstring('01:23'));
@@ -119,7 +120,7 @@ void main() {
     ) async {
       final server = FakeVodServer()
         ..comments = [commentJson(content: 'At 1:02:03 or 9:59:59 maybe')];
-      final players = FakeLivePlayers();
+      final players = FakePlayers();
       await pumpVod(tester, server, players);
 
       await tester.tapOnText(find.textRange.ofSubstring('1:02:03'));
@@ -150,7 +151,7 @@ void main() {
       await pumpVod(
         tester,
         server,
-        FakeLivePlayers(),
+        FakePlayers(),
         width: 320,
         height: 568,
         textScale: 2,
@@ -175,7 +176,7 @@ void main() {
           commentJson(id: 'c-2'),
         ]
         ..likedIds = {'c-1'};
-      final app = await pumpVod(tester, server, FakeLivePlayers());
+      final app = await pumpVod(tester, server, FakePlayers());
 
       expect(_heart('c-1', Icons.favorite), findsOneWidget);
       expect(_heart('c-2', Icons.favorite_border), findsOneWidget);
@@ -193,7 +194,7 @@ void main() {
         ..comments = [commentJson(likeCount: 4)]
         ..holdLike = Completer<void>()
         ..writeStatus = 503;
-      await pumpVod(tester, server, FakeLivePlayers());
+      await pumpVod(tester, server, FakePlayers());
       expect(
         find.descendant(of: _like('c-1'), matching: find.text('4')),
         findsOne,
@@ -219,9 +220,63 @@ void main() {
       expect(find.text('Something went wrong.'), findsOneWidget);
     });
 
+    testWidgets('tapping twice while a like is in flight sends one request', (
+      tester,
+    ) async {
+      final server = FakeVodServer()
+        ..comments = [commentJson(likeCount: 4)]
+        ..holdLike = Completer<void>();
+      final app = await pumpVod(tester, server, FakePlayers());
+
+      await tester.tap(_like('c-1'));
+      await tester.pumpAndSettle();
+      await tester.tap(_like('c-1'));
+      await tester.pumpAndSettle();
+
+      expect(
+        app.requestsTo('${ApiEndpoints.vodComments}/c-1/like'),
+        hasLength(1),
+      );
+      // Still shown liked once, not toggled back by the second tap.
+      expect(_heart('c-1', Icons.favorite), findsOneWidget);
+      server.holdLike!.complete();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a late liked-ids answer does not undo a like in flight', (
+      tester,
+    ) async {
+      final server = FakeVodServer()
+        ..comments = [commentJson(likeCount: 4)]
+        ..likedIds = {'c-1'}
+        ..holdLikedIds = Completer<void>()
+        ..holdLike = Completer<void>()
+        ..writeStatus = 503;
+      await pumpVod(tester, server, FakePlayers());
+
+      await tester.tap(_like('c-1'));
+      await tester.pumpAndSettle();
+      expect(_heart('c-1', Icons.favorite), findsOneWidget);
+
+      // The stale answer arrives while the tap is still in flight.
+      server.holdLikedIds!.complete();
+      await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
+      expect(_heart('c-1', Icons.favorite), findsOneWidget);
+
+      // The refused like restores the flag from before the tap.
+      server.holdLike!.complete();
+      await tester.pumpAndSettle();
+      expect(_heart('c-1', Icons.favorite_border), findsOneWidget);
+      expect(
+        find.descendant(of: _like('c-1'), matching: find.text('4')),
+        findsOne,
+      );
+    });
+
     testWidgets('a successful like stays and unlike goes back', (tester) async {
       final server = FakeVodServer()..comments = [commentJson(likeCount: 4)];
-      final app = await pumpVod(tester, server, FakeLivePlayers());
+      final app = await pumpVod(tester, server, FakePlayers());
 
       await tester.tap(_like('c-1'));
       await tester.pumpAndSettle();
@@ -253,7 +308,7 @@ void main() {
             content: 'Mine',
           ),
         ];
-      await pumpVod(tester, server, FakeLivePlayers());
+      await pumpVod(tester, server, FakePlayers());
 
       expect(_menus, findsOneWidget);
       await tester.tap(_menus);
@@ -265,7 +320,7 @@ void main() {
     testWidgets('edit saves the new text and marks it edited', (tester) async {
       final server = FakeVodServer()
         ..comments = [commentJson(userId: 'u-1', content: 'Old text')];
-      await pumpVod(tester, server, FakeLivePlayers());
+      await pumpVod(tester, server, FakePlayers());
 
       await tester.tap(_menus);
       await tester.pumpAndSettle();
@@ -290,7 +345,7 @@ void main() {
       final server = FakeVodServer()
         ..comments = [commentJson(userId: 'u-1', content: 'Old text')]
         ..writeStatus = 503;
-      await pumpVod(tester, server, FakeLivePlayers());
+      await pumpVod(tester, server, FakePlayers());
 
       await tester.tap(_menus);
       await tester.pumpAndSettle();
@@ -310,7 +365,7 @@ void main() {
     ) async {
       final server = FakeVodServer()
         ..comments = [commentJson(userId: 'u-1', content: 'Bye')];
-      await pumpVod(tester, server, FakeLivePlayers());
+      await pumpVod(tester, server, FakePlayers());
       expect(find.text('Comments (1)'), findsOneWidget);
 
       await tester.tap(_menus);
@@ -351,7 +406,7 @@ void main() {
     ) async {
       final server = FakeVodServer()
         ..comments = [commentJson(content: 'Older one')];
-      await pumpVod(tester, server, FakeLivePlayers());
+      await pumpVod(tester, server, FakePlayers());
 
       await tester.enterText(find.byType(TextField).first, '  Hay quá 🎉  ');
       await tester.pump();
@@ -371,7 +426,7 @@ void main() {
     testWidgets('post is disabled for blank text and shows chars left', (
       tester,
     ) async {
-      await pumpVod(tester, FakeVodServer(), FakeLivePlayers());
+      await pumpVod(tester, FakeVodServer(), FakePlayers());
       final post = find.widgetWithText(FilledButton, 'Post');
       expect(tester.widget<FilledButton>(post).onPressed, isNull);
 
@@ -386,7 +441,7 @@ void main() {
     });
 
     testWidgets('text is cut at 2000 characters', (tester) async {
-      await pumpVod(tester, FakeVodServer(), FakeLivePlayers());
+      await pumpVod(tester, FakeVodServer(), FakePlayers());
 
       await tester.enterText(find.byType(TextField).first, 'a' * 2500);
       await tester.pump();
@@ -396,7 +451,7 @@ void main() {
 
     testWidgets('a failed post keeps the typed text', (tester) async {
       final server = FakeVodServer()..writeStatus = 503;
-      await pumpVod(tester, server, FakeLivePlayers());
+      await pumpVod(tester, server, FakePlayers());
 
       await tester.enterText(find.byType(TextField).first, 'Keep me');
       await tester.pump();
@@ -427,7 +482,7 @@ void main() {
     testWidgets('replies load on demand, not with the comments', (
       tester,
     ) async {
-      final app = await pumpVod(tester, withReplies(), FakeLivePlayers());
+      final app = await pumpVod(tester, withReplies(), FakePlayers());
 
       expect(find.text('First reply'), findsNothing);
       expect(
@@ -448,16 +503,20 @@ void main() {
     });
 
     testWidgets('only my own reply has edit and delete', (tester) async {
-      await pumpVod(tester, withReplies(), FakeLivePlayers());
+      await pumpVod(tester, withReplies(), FakePlayers());
       await tester.tap(find.text('View 2 replies'));
       await tester.pumpAndSettle();
 
       expect(_menus, findsOneWidget);
     });
 
-    testWidgets('replying adds the reply and grows the count', (tester) async {
+    testWidgets('replying adds the reply and grows the reply count', (
+      tester,
+    ) async {
       final server = withReplies();
-      await pumpVod(tester, server, FakeLivePlayers());
+      final app = await pumpVod(tester, server, FakePlayers());
+      const key = (vodId: 'vod-1', commentId: 'c-1');
+      expect(app.container.read(commentRepliesProvider(key)).countDelta, 0);
 
       await tester.tap(find.text('Reply').first);
       await tester.pumpAndSettle();
@@ -470,11 +529,15 @@ void main() {
         {'content': 'Thanks!', 'parentId': 'c-1'},
       ]);
       expect(find.text('Thanks!'), findsOneWidget);
+      expect(app.container.read(commentRepliesProvider(key)).countDelta, 1);
     });
 
-    testWidgets('deleting a reply keeps a notice', (tester) async {
+    testWidgets('deleting a reply keeps a notice and shrinks the count', (
+      tester,
+    ) async {
       final server = withReplies();
-      await pumpVod(tester, server, FakeLivePlayers());
+      final app = await pumpVod(tester, server, FakePlayers());
+      const key = (vodId: 'vod-1', commentId: 'c-1');
       await tester.tap(find.text('View 2 replies'));
       await tester.pumpAndSettle();
 
@@ -492,13 +555,14 @@ void main() {
 
       expect(server.deletedIds, ['r-2']);
       expect(find.text('This comment has been deleted.'), findsOneWidget);
+      expect(app.container.read(commentRepliesProvider(key)).countDelta, -1);
     });
 
     testWidgets('a failed replies load shows the reason and can retry', (
       tester,
     ) async {
       final server = withReplies()..repliesStatus = 503;
-      await pumpVod(tester, server, FakeLivePlayers());
+      await pumpVod(tester, server, FakePlayers());
 
       await tester.tap(find.text('View 2 replies'));
       await tester.pumpAndSettle();

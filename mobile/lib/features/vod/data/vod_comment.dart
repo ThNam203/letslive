@@ -17,6 +17,7 @@ class CommentUser {
     );
   }
 
+  /// The author's user id.
   final String id;
   final String username;
 
@@ -72,8 +73,13 @@ class VodComment {
   static List<VodComment> parseList(Object? data) =>
       parseJsonList(data, 'VodComment', VodComment.fromJson);
 
+  /// The comment's own id.
   final String id;
+
+  /// The video the comment is on.
   final String vodId;
+
+  /// The author's user id.
   final String userId;
 
   /// The comment this one replies to; null for a top-level comment.

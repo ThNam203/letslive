@@ -12,7 +12,7 @@ import 'package:letslive_mobile/features/watch/chat/presentation/chat_panel.dart
 
 import '../../../core/realtime/fake_channel.dart';
 import '../channel_screen_test.dart' show liveServer;
-import '../fake_live_player.dart';
+import '../fake_player.dart';
 import '../watch_test_app.dart';
 import 'chat_fakes.dart';
 
@@ -91,7 +91,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       settle: false,
       overrides: _Realtime().overrides,
@@ -109,7 +109,7 @@ void main() {
     await pumpChannel(
       tester,
       liveServer(),
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -124,7 +124,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -153,7 +153,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -175,7 +175,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -195,7 +195,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: realtime.overrides,
     );
@@ -221,7 +221,7 @@ void main() {
     final app = await pumpChannel(
       tester,
       liveServer(),
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: realtime.overrides,
     );
@@ -252,7 +252,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       width: 320,
       height: 568,
@@ -280,7 +280,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -299,7 +299,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -343,7 +343,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -378,7 +378,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -397,7 +397,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -426,7 +426,7 @@ void main() {
     await pumpChannel(
       tester,
       liveServer(),
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -452,7 +452,7 @@ void main() {
     await pumpChannel(
       tester,
       liveServer(),
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -490,7 +490,7 @@ void main() {
       await pumpChannel(
         tester,
         server,
-        FakeLivePlayers(),
+        FakePlayers(),
         'u-1',
         width: 320,
         height: 568,
@@ -524,7 +524,7 @@ void main() {
       await pumpChannel(
         tester,
         server,
-        FakeLivePlayers(),
+        FakePlayers(),
         'u-1',
         width: 320,
         height: 568,
@@ -549,7 +549,7 @@ void main() {
     await pumpChannel(
       tester,
       liveServer(),
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -568,7 +568,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -599,7 +599,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -622,7 +622,7 @@ void main() {
     await pumpChannel(
       tester,
       liveServer(),
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );
@@ -645,7 +645,7 @@ void main() {
     await pumpChannel(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       'u-1',
       overrides: _Realtime().overrides,
     );

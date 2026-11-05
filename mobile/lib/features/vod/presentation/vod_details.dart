@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:letslive_mobile/core/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
@@ -13,22 +15,43 @@ import 'package:letslive_mobile/features/vod/presentation/vod_reaction_buttons.d
 /// Lines of the description shown before "...more" (web `line-clamp-3`).
 const int _collapsedDescriptionLines = 3;
 
-/// Title, uploader, like/dislike and the description box under the player
-/// (web `VODDetails`). The uploader is [ownerId] from the route, as on web.
-/// Sharing and following are not here yet (Task 15 adds follow).
+/// Title, uploader, like/dislike, a copy-link button and the description box
+/// under the player (web `VODDetails`). The uploader is [ownerId] from the
+/// route, as on web. Following is not here yet (Task 15 adds it). The link
+/// is the web page of the video (`WEB_BASE_URL`); without that setting (dev
+/// only) the button is hidden. Web's "start at the current time" switch is
+/// not ported.
 class VodDetails extends ConsumerWidget {
   const VodDetails({required this.vod, required this.ownerId, super.key});
 
+  /// The video to describe.
   final Vod vod;
 
   /// The user of the route `/users/:userId/vods/:vodId`.
   final String ownerId;
+
+  /// Copies the video's web link and says whether that worked.
+  Future<void> _copyLink(BuildContext context, String webBaseUrl) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    String message;
+    try {
+      await Clipboard.setData(
+        ClipboardData(text: '$webBaseUrl${AppRoutes.vod(vod.userId, vod.id)}'),
+      );
+      message = l10n.common_vod_link_copied;
+    } on PlatformException {
+      message = l10n.common_vod_copy_failed;
+    }
+    messenger.showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final owner = ref.watch(publicUserProvider(ownerId)).value;
+    final webBaseUrl = ref.watch(appConfigProvider).webBaseUrl;
     final description = vod.description?.trim() ?? '';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -84,7 +107,19 @@ class VodDetails extends ConsumerWidget {
                   ],
                 ),
               ),
-              VodReactionButtons(vod: vod),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  VodReactionButtons(vod: vod),
+                  if (webBaseUrl != null)
+                    IconButton(
+                      key: const ValueKey('vod-copy-link'),
+                      tooltip: l10n.common_vod_share,
+                      icon: const Icon(Icons.share_outlined),
+                      onPressed: () => _copyLink(context, webBaseUrl),
+                    ),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 12),

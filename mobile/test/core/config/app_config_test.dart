@@ -26,6 +26,7 @@ void main() {
     'FLAVOR': 'prod',
     'GOOGLE_SERVER_CLIENT_ID': 'web.apps.googleusercontent.com',
     'GOOGLE_IOS_CLIENT_ID': 'ios.apps.googleusercontent.com',
+    'WEB_BASE_URL': 'https://letslive.example',
   };
 
   Matcher configErrorNaming(String key) => throwsA(
@@ -147,6 +148,23 @@ void main() {
         () => AppConfig.fromEnv(env),
         configErrorNaming('GOOGLE_SERVER_CLIENT_ID'),
       );
+    });
+
+    test('staging and prod require the web base url', () {
+      for (final flavor in ['staging', 'prod']) {
+        final env = {...releaseEnv, 'FLAVOR': flavor}..remove('WEB_BASE_URL');
+
+        expect(() => AppConfig.fromEnv(env), configErrorNaming('WEB_BASE_URL'));
+      }
+    });
+
+    test('the web base url loses a trailing slash; dev may leave it out', () {
+      final withSlash = AppConfig.fromEnv({
+        ...releaseEnv,
+        'WEB_BASE_URL': 'https://letslive.example//',
+      });
+      expect(withSlash.webBaseUrl, 'https://letslive.example');
+      expect(AppConfig.fromEnv(webExampleEnv).webBaseUrl, isNull);
     });
 
     test('Google sign-in on iOS requires the iOS client id', () {

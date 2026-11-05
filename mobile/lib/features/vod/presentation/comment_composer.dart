@@ -55,6 +55,9 @@ class CommentComposer extends StatefulWidget {
   /// Shows a cancel button when set. Submitting an edit without changes
   /// cancels too, like web.
   final VoidCallback? onCancel;
+
+  /// Whether the box takes the keyboard focus when it appears (edit and
+  /// reply boxes do).
   final bool autofocus;
 
   @override

@@ -47,7 +47,7 @@ Source of the feature list: section 4 of
 | `/shop` | - | - | planned |
 | `/users/[userId]` | `ChannelScreen` (`mobile/lib/features/watch/presentation/channel_screen.dart`): live player, offline / ended / not-found states (Task 13a); live chat with emotes and slash commands (Task 13b, `mobile/lib/features/watch/chat/`, `mobile/lib/core/chat_parser/`); Tab/arrow suggestion navigation is desktop-only, not ported; profile header, tabs, follow and videos come in Task 15 | `mobile/test/features/watch/channel_screen_test.dart`, `mobile/test/features/watch/channel_navigation_test.dart`, `mobile/contract_test/watch_contract_test.dart`, `mobile/test/features/watch/chat/chat_panel_test.dart`, `mobile/test/features/watch/chat/chat_controller_test.dart`, `mobile/test/core/chat_parser/command_test.dart`, `mobile/contract_test/chat_contract_test.dart` | planned |
 | `/users/[userId]/gifts` | - | - | planned |
-| `/users/[userId]/vods/[vodId]` | `VodScreen` (`mobile/lib/features/vod/presentation/vod_screen.dart`): player with seek bar, details, like/dislike, other streams, comments with replies, likes, edit and delete, tappable timestamps; the share dialog and the follow button on the uploader row are not ported yet (follow comes with Task 15) | `mobile/test/features/vod/vod_screen_test.dart`, `mobile/test/features/vod/vod_comments_test.dart`, `mobile/test/features/vod/vod_reaction_test.dart`, `mobile/test/features/vod/timestamps_test.dart`, `mobile/test/features/vod/view_threshold_test.dart`, `mobile/test/features/watch/channel_navigation_test.dart`, `mobile/contract_test/vod_contract_test.dart` | done |
+| `/users/[userId]/vods/[vodId]` | `VodScreen` (`mobile/lib/features/vod/presentation/vod_screen.dart`): player with seek bar, details, like/dislike, other streams, comments with replies, likes, edit and delete, tappable timestamps; a copy-link button (clipboard, needs `WEB_BASE_URL`; web's share dialog and its "start at current time" switch are not ported); the follow button on the uploader row is not ported yet (follow comes with Task 15) | `mobile/test/features/vod/vod_screen_test.dart`, `mobile/test/features/vod/vod_comments_test.dart`, `mobile/test/features/vod/vod_reaction_test.dart`, `mobile/test/features/vod/timestamps_test.dart`, `mobile/test/features/vod/view_threshold_test.dart`, `mobile/test/features/watch/channel_navigation_test.dart`, `mobile/contract_test/vod_contract_test.dart` | done |
 | `/wallet/deposit` | - | - | differs: out of scope (Stripe deposits/payments excluded) |
 | `/wallet/inventory` | - | - | planned |
 | `/wallet/overview` | - | - | planned |
@@ -67,6 +67,7 @@ constant for yet. Remove a bullet when its constant lands.
 - `/shop` - shop items and purchase
 - `/vods/upload` - VOD upload (settings/upload)
 - `/vods/author` - the signed-in user's own VODs (settings/vods)
+- `/vods/{vodId}` - PATCH/DELETE of an own VOD (settings/vods, Task 19); GET is built (video screen). Doc only: `ApiEndpoints.vods` already satisfies the checker
 - `/conversations` - direct messages
 - `/files` - media host path (thumbnails, VOD segments) used by web image/player URLs
 

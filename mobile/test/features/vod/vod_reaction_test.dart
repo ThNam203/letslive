@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
 import 'package:letslive_mobile/features/vod/data/vod_reaction.dart';
 
-import '../watch/fake_live_player.dart';
+import '../watch/fake_player.dart';
 import 'vod_test_app.dart';
 
 final _like = find.byKey(const ValueKey('vod-like'));
@@ -39,7 +39,7 @@ void main() {
     tester,
   ) async {
     final server = FakeVodServer()..reaction = 'like';
-    await pumpVod(tester, server, FakeLivePlayers());
+    await pumpVod(tester, server, FakePlayers());
 
     // 3 likes from the video + the viewer's own, as the server counts them.
     expect(find.byIcon(Icons.thumb_up), findsOneWidget);
@@ -50,7 +50,7 @@ void main() {
     tester,
   ) async {
     final server = FakeVodServer()..holdReaction = Completer<void>();
-    final app = await pumpVod(tester, server, FakeLivePlayers());
+    final app = await pumpVod(tester, server, FakePlayers());
     expect(_count('3'), findsOneWidget);
 
     await tester.tap(_like);
@@ -69,11 +69,31 @@ void main() {
     expect(_count('4'), findsOneWidget);
   });
 
+  testWidgets('tapping twice while a reaction is in flight sends one request', (
+    tester,
+  ) async {
+    final server = FakeVodServer()..holdReaction = Completer<void>();
+    final app = await pumpVod(tester, server, FakePlayers());
+
+    await tester.tap(_like);
+    await tester.pumpAndSettle();
+    await tester.tap(_like);
+    await tester.pumpAndSettle();
+    server.holdReaction!.complete();
+    await tester.pumpAndSettle();
+
+    final writes = app
+        .requestsTo('${ApiEndpoints.vods}/vod-1/reaction')
+        .where((r) => r.method != 'GET');
+    expect(writes.map((r) => r.method), ['PUT']);
+    expect(find.byIcon(Icons.thumb_up), findsOneWidget);
+  });
+
   testWidgets('a refused reaction is undone with a message', (tester) async {
     final server = FakeVodServer()
       ..holdReaction = Completer<void>()
       ..writeStatus = 503;
-    await pumpVod(tester, server, FakeLivePlayers());
+    await pumpVod(tester, server, FakePlayers());
 
     await tester.tap(_like);
     await tester.pump();
@@ -89,7 +109,7 @@ void main() {
 
   testWidgets('tapping the same reaction again removes it', (tester) async {
     final server = FakeVodServer();
-    final app = await pumpVod(tester, server, FakeLivePlayers());
+    final app = await pumpVod(tester, server, FakePlayers());
 
     await tester.tap(_dislike);
     await tester.pumpAndSettle();
@@ -108,7 +128,7 @@ void main() {
     tester,
   ) async {
     final server = FakeVodServer()..reactionStatus = 503;
-    await pumpVod(tester, server, FakeLivePlayers());
+    await pumpVod(tester, server, FakePlayers());
 
     expect(_count('3'), findsOneWidget);
     expect(find.byIcon(Icons.thumb_up_outlined), findsOneWidget);
@@ -118,7 +138,7 @@ void main() {
     tester,
   ) async {
     final server = FakeVodServer()..reaction = 'like';
-    final app = await pumpVod(tester, server, FakeLivePlayers());
+    final app = await pumpVod(tester, server, FakePlayers());
     expect(app.requestsTo('${ApiEndpoints.vods}/vod-1/reaction'), hasLength(1));
 
     await tester.pageBack();

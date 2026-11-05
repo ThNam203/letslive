@@ -11,6 +11,8 @@
 /// can show the localized reason. All providers are `autoDispose`.
 library;
 
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/network/api_load.dart';
 import 'package:letslive_mobile/core/network/api_response.dart';
@@ -24,6 +26,9 @@ import 'package:letslive_mobile/features/vod/data/vod_comment_repository.dart';
 final vodCommentRepositoryProvider = Provider<VodCommentRepository>(
   (ref) => VodCommentRepository(ref.watch(apiClientProvider)),
 );
+
+/// Upper bound when clamping counts at zero (`num.clamp` needs both ends).
+const int _maxCount = 1 << 30;
 
 /// A failed action's response, or null when it worked.
 typedef ActionResult = Future<ApiResponse<Object?>?>;
@@ -71,6 +76,28 @@ class VodCommentsNotifier extends PagedFeedNotifier<VodComment> {
   Future<ApiResponse<List<VodComment>>> fetchPage(int page) =>
       ref.read(vodCommentRepositoryProvider).list(vodId, page: page);
 
+  /// Loads the first page, then asks which of its comments the viewer liked.
+  /// The likes provider is kept alive meanwhile (without rebuilding this
+  /// notifier when likes change).
+  @override
+  Future<PagedFeed<VodComment>> build() async {
+    ref.listen(commentLikesProvider(vodId), (_, _) {});
+    final feed = await super.build();
+    unawaited(
+      ref.read(commentLikesProvider(vodId).notifier).loadLiked(feed.items),
+    );
+    return feed;
+  }
+
+  /// Appends the next page, then asks which of its comments were liked.
+  @override
+  Future<void> loadMore() async {
+    await super.loadMore();
+    final items = state.value?.items;
+    if (!ref.mounted || items == null) return;
+    await ref.read(commentLikesProvider(vodId).notifier).loadLiked(items);
+  }
+
   /// Posts a comment; on success it goes to the top and the total grows.
   ActionResult post(String content) async {
     final response = await ref
@@ -110,7 +137,7 @@ class VodCommentsNotifier extends PagedFeedNotifier<VodComment> {
     state = AsyncData(
       feed.copyWith(
         items: [for (final c in feed.items) c.id == id ? c.deleted() : c],
-        total: ((feed.total ?? feed.items.length) - 1).clamp(0, 1 << 30),
+        total: ((feed.total ?? feed.items.length) - 1).clamp(0, _maxCount),
       ),
     );
     return null;
@@ -324,14 +351,23 @@ class CommentLikesNotifier extends Notifier<CommentLikes> {
       _requested.removeAll(ids);
       return;
     }
+    // A comment the viewer is liking or unliking right now keeps what the
+    // tap set: this answer may predate the tap.
     state = CommentLikes(
-      liked: {...state.liked, ...liked},
+      liked: {
+        ...state.liked,
+        for (final id in liked)
+          if (!_pending.contains(id)) id,
+      },
       counts: state.counts,
     );
   }
 
   /// Likes or unlikes [comment] at once and undoes it if the server refuses.
   /// Ignored while the same comment's request is in flight (like web).
+  ///
+  /// Optimistic on purpose: the plan mandates it, and it intentionally
+  /// differs from web, which updates only after the server said yes.
   ActionResult toggle(VodComment comment) async {
     final id = comment.id;
     if (!_pending.add(id)) return null;
@@ -342,7 +378,7 @@ class CommentLikesNotifier extends Notifier<CommentLikes> {
       liked: wasLiked ? ({...before.liked}..remove(id)) : {...before.liked, id},
       counts: {
         ...before.counts,
-        id: (count + (wasLiked ? -1 : 1)).clamp(0, 1 << 30),
+        id: (count + (wasLiked ? -1 : 1)).clamp(0, _maxCount),
       },
     );
     final repo = ref.read(vodCommentRepositoryProvider);

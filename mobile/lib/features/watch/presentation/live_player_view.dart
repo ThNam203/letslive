@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
-import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
+import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
 import 'package:letslive_mobile/features/watch/watch_providers.dart';
 
 /// A 16:9 live player: the video plus a small overlay (web's live player
 /// controls that make sense on a phone): live badge, play/pause, quality
 /// menu (Auto + the stream's variants) and picture-in-picture.
 ///
-/// Owns its [LivePlayerController] (from [livePlayerFactoryProvider]) and
+/// Owns its [PlayerController] (from [playerFactoryProvider]) and
 /// disposes it with the widget.
 ///
 /// When playback stops it shows a spinner, never an error first:
@@ -48,7 +48,7 @@ class LivePlayerView extends ConsumerStatefulWidget {
 }
 
 class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
-  late LivePlayerController _player;
+  late PlayerController _player;
 
   /// Whether [LivePlayerView.onStopped] was called for the current player.
   bool _reportedStop = false;
@@ -85,8 +85,8 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
     unawaited(_screenWake(awake));
   }
 
-  LivePlayerController _createPlayer() {
-    final player = ref.read(livePlayerFactoryProvider)(
+  PlayerController _createPlayer() {
+    final player = ref.read(playerFactoryProvider)(
       url: widget.url,
       title: widget.title,
       author: widget.author,
@@ -151,7 +151,7 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
         fit: StackFit.expand,
         children: [
           _player.buildVideo(context),
-          ValueListenableBuilder<LivePlayerValue>(
+          ValueListenableBuilder<PlayerValue>(
             valueListenable: _player.value,
             builder: (context, value, _) {
               if (_showError) return _PlaybackError(onRetry: _retry);
@@ -171,8 +171,8 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
 class _Controls extends StatelessWidget {
   const _Controls({required this.player, required this.value});
 
-  final LivePlayerController player;
-  final LivePlayerValue value;
+  final PlayerController player;
+  final PlayerValue value;
 
   @override
   Widget build(BuildContext context) {
@@ -238,8 +238,8 @@ class PlayerQualityMenu extends StatelessWidget {
     super.key,
   });
 
-  final LivePlayerController player;
-  final LivePlayerValue value;
+  final PlayerController player;
+  final PlayerValue value;
 
   @override
   Widget build(BuildContext context) {

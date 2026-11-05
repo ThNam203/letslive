@@ -58,7 +58,7 @@ class GoogleSignInConfig {
 ///
 /// Always required: BACKEND_PROTOCOL, BACKEND_WS_PROTOCOL, BACKEND_HOST,
 /// BACKEND_PORT, FLAVOR. Staging and prod also require Firebase (bot proof
-/// via App Check) and GOOGLE_SERVER_CLIENT_ID. Dev without Firebase requires
+/// via App Check), GOOGLE_SERVER_CLIENT_ID and WEB_BASE_URL. Dev without Firebase requires
 /// TURNSTILE_DEV_TOKEN instead.
 class AppConfig {
   const AppConfig._({
@@ -68,6 +68,7 @@ class AppConfig {
     this.firebase,
     this.googleSignIn,
     this.turnstileDevToken,
+    this.webBaseUrl,
   });
 
   /// Throws [ConfigException] naming the first missing or invalid key.
@@ -99,6 +100,10 @@ class AppConfig {
     final isIos = (platform ?? defaultTargetPlatform) == TargetPlatform.iOS;
     final firebase = _firebase(env, isIos: isIos);
     final googleSignIn = _googleSignIn(env, isIos: isIos);
+    final webBaseUrl = _optional(
+      env,
+      'WEB_BASE_URL',
+    )?.replaceFirst(RegExp(r'/+$'), '');
     String? turnstileDevToken;
     if (flavor == Flavor.dev) {
       // Without App Check the dev stack's Turnstile test secret is the only
@@ -111,6 +116,7 @@ class AppConfig {
       if (googleSignIn == null) {
         _missingForRelease('GOOGLE_SERVER_CLIENT_ID', flavor);
       }
+      if (webBaseUrl == null) _missingForRelease('WEB_BASE_URL', flavor);
     }
 
     return AppConfig._(
@@ -120,6 +126,7 @@ class AppConfig {
       firebase: firebase,
       googleSignIn: googleSignIn,
       turnstileDevToken: turnstileDevToken,
+      webBaseUrl: webBaseUrl,
     );
   }
 
@@ -137,6 +144,11 @@ class AppConfig {
 
   /// Cloudflare Turnstile test token; set only in dev without Firebase.
   final String? turnstileDevToken;
+
+  /// Origin of the web app (WEB_BASE_URL, no trailing slash), used to build
+  /// links people can share, e.g. a video's page. Null when unset (dev only);
+  /// the copy-link button is hidden then.
+  final String? webBaseUrl;
 
   static FirebaseConfig? _firebase(
     Map<String, String> env, {

@@ -36,7 +36,9 @@ abstract final class ApiEndpoints {
 
   /// Prefix of the video service: `/vods/<id>` (detail), `/vods/<id>/view`,
   /// `/vods/<id>/reaction`, `/vods/<id>/comments`, and `?userId=` for the
-  /// videos of one user.
+  /// videos of one user. As a prefix it also covers `/vods/upload`,
+  /// `/vods/author` and PATCH/DELETE `/vods/<id>`, which the app does not
+  /// call yet (Task 19); PARITY.md lists them as planned.
   static const String vods = '/vods';
 
   /// Prefix of comment actions: `/vod-comments/<id>` (edit, delete),

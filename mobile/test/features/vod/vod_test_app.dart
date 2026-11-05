@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
+import 'package:letslive_mobile/core/config/app_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
 import 'package:letslive_mobile/core/router/app_router.dart';
@@ -9,7 +10,7 @@ import 'package:letslive_mobile/core/router/app_router.dart';
 import '../../core/network/fake_adapter.dart';
 import '../auth/auth_test_app.dart';
 import '../home/home_fixtures.dart';
-import '../watch/fake_live_player.dart';
+import '../watch/fake_player.dart';
 import '../watch/watch_test_app.dart';
 
 const playbackUrl = 'http://localhost:8000/files/vods/vod-1/index.m3u8';
@@ -113,6 +114,9 @@ class FakeVodServer extends FakeWatchServer {
   /// When set, like/unlike wait for it before answering.
   Completer<void>? holdLike;
 
+  /// When set, `POST /vod-comments/liked-ids` waits for it before answering.
+  Completer<void>? holdLikedIds;
+
   /// When set, PUT/DELETE reaction wait for it before answering.
   Completer<void>? holdReaction;
 
@@ -212,6 +216,7 @@ class FakeVodServer extends FakeWatchServer {
     if (!o.path.startsWith('${ApiEndpoints.vodComments}/')) return null;
     final parts = o.path.split('/');
     if (o.path == '${ApiEndpoints.vodComments}/liked-ids') {
+      await holdLikedIds?.future;
       final asked =
           (o.data as Map<String, Object?>)['commentIds']! as List<Object?>;
       return okEnvelope([
@@ -275,19 +280,23 @@ Future<void> pumpVodAgain(WidgetTester tester, TestApp app) async {
 Future<TestApp> pumpVod(
   WidgetTester tester,
   FakeVodServer server,
-  FakeLivePlayers players, {
+  FakePlayers players, {
   String userId = 'u-1',
   String vodId = 'vod-1',
   double width = 800,
   double height = 6000,
   double textScale = 1,
   bool settle = true,
+  FakeScreenWake? wake,
+  AppConfig? config,
   List<Override> overrides = const [],
 }) async {
   final app = await pumpWatchHome(
     tester,
     server,
     players,
+    wake: wake,
+    config: config,
     width: width,
     height: height,
     textScale: textScale,

@@ -35,7 +35,10 @@ class CommentItem extends ConsumerStatefulWidget {
     super.key,
   });
 
+  /// The comment (or reply) to show.
   final VodComment comment;
+
+  /// The video it belongs to.
   final String vodId;
 
   /// The video's owner, whose comments get an "Owner" badge.

@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:letslive_mobile/core/router/app_router.dart';
 import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
 import 'package:letslive_mobile/features/vod/presentation/vod_screen.dart';
-import 'package:letslive_mobile/features/watch/domain/live_player_controller.dart';
+import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
 
 import '../home/home_fixtures.dart';
-import '../watch/fake_live_player.dart';
+import '../watch/fake_player.dart';
+import '../watch/watch_test_app.dart';
 import 'vod_test_app.dart';
 
 /// The video screen: loading, error, not-found, the player, the details and
@@ -20,7 +22,7 @@ void main() {
       ..vodById = {
         'vod-1': vodDetailJson(title: 'Best of week', description: 'About it'),
       };
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpVod(tester, server, players);
 
     expect(find.byType(VodScreen), findsOneWidget);
@@ -32,12 +34,11 @@ void main() {
     expect(players.last.url, playbackUrl);
     expect(players.last.isLive, isFalse);
     expect(players.last.title, 'Best of week');
-    expect(players.last.author, 'streamer');
   });
 
   testWidgets('shows a spinner while the video loads', (tester) async {
     final server = FakeVodServer()..holdVod = Completer<void>();
-    await pumpVod(tester, server, FakeLivePlayers(), settle: false);
+    await pumpVod(tester, server, FakePlayers(), settle: false);
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
@@ -50,7 +51,7 @@ void main() {
     tester,
   ) async {
     final server = FakeVodServer()..vodStatus = 503;
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpVod(tester, server, players);
 
     expect(find.text('Try again'), findsOneWidget);
@@ -67,11 +68,28 @@ void main() {
 
   testWidgets('deleted vod shows not-found with back', (tester) async {
     final server = FakeVodServer()..vodById = {};
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpVod(tester, server, players, vodId: 'gone');
 
     expect(find.text('VOD not found.'), findsOneWidget);
     expect(players.created, isEmpty);
+
+    await tester.tap(find.text('Back'));
+    await tester.pumpAndSettle();
+    expect(find.byType(VodScreen), findsNothing);
+    expect(find.byType(HomeScreen), findsOneWidget);
+  });
+
+  testWidgets('a deep link to a missing vod goes home from Back', (
+    tester,
+  ) async {
+    final server = FakeVodServer()..vodById = {};
+    final app = await pumpWatchHome(tester, server, FakePlayers());
+
+    // `go` replaces the stack, like opening the app from a link: no pop.
+    app.container.read(appRouterProvider).go(AppRoutes.vod('u-1', 'gone'));
+    await tester.pumpAndSettle();
+    expect(find.text('VOD not found.'), findsOneWidget);
 
     await tester.tap(find.text('Back'));
     await tester.pumpAndSettle();
@@ -87,7 +105,7 @@ void main() {
         'u-1': publicUserJson(),
         'u-9': publicUserJson(id: 'u-9', username: 'route_user'),
       };
-    await pumpVod(tester, server, FakeLivePlayers(), userId: 'u-9');
+    await pumpVod(tester, server, FakePlayers(), userId: 'u-9');
 
     // Web shows the video and the route's user as the uploader.
     expect(find.text('Vod title'), findsWidgets);
@@ -99,7 +117,7 @@ void main() {
   ) async {
     final server = FakeVodServer()
       ..vodById = {'vod-1': vodDetailJson(url: null)};
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpVod(tester, server, players);
 
     expect(players.created, isEmpty);
@@ -112,7 +130,7 @@ void main() {
     final long = List.filled(40, 'Một đoạn mô tả rất dài 🎉').join(' ');
     final server = FakeVodServer()
       ..vodById = {'vod-1': vodDetailJson(description: long)};
-    await pumpVod(tester, server, FakeLivePlayers());
+    await pumpVod(tester, server, FakePlayers());
 
     expect(find.text('...more'), findsOneWidget);
     await tester.tap(find.text('...more'));
@@ -128,7 +146,7 @@ void main() {
   ) async {
     final server = FakeVodServer()
       ..vodById = {'vod-1': vodDetailJson(description: 'Intro at 01:23 ok')};
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpVod(tester, server, players);
 
     await tester.tapOnText(find.textRange.ofSubstring('01:23'));
@@ -138,7 +156,7 @@ void main() {
   });
 
   group('view count', () {
-    LivePlayerValue at(int seconds) => LivePlayerValue(
+    PlayerValue at(int seconds) => PlayerValue(
       isPlaying: true,
       isBuffering: false,
       position: Duration(seconds: seconds),
@@ -149,7 +167,7 @@ void main() {
       tester,
     ) async {
       final server = FakeVodServer();
-      final players = FakeLivePlayers();
+      final players = FakePlayers();
       await pumpVod(tester, server, players);
 
       players.last.emit(at(14));
@@ -171,7 +189,7 @@ void main() {
     testWidgets('needs only 10 percent of a short video', (tester) async {
       final server = FakeVodServer()
         ..vodById = {'vod-1': vodDetailJson(duration: 60)};
-      final players = FakeLivePlayers();
+      final players = FakePlayers();
       await pumpVod(tester, server, players);
 
       players.last.emit(at(5));
@@ -187,7 +205,7 @@ void main() {
 
     testWidgets('a refused view is not retried on every tick', (tester) async {
       final server = FakeVodServer()..viewStatus = 400;
-      final players = FakeLivePlayers();
+      final players = FakePlayers();
       await pumpVod(tester, server, players);
 
       for (var s = 20; s < 25; s++) {
@@ -199,7 +217,7 @@ void main() {
   });
 
   testWidgets('leaving the screen disposes the player', (tester) async {
-    final players = FakeLivePlayers();
+    final players = FakePlayers();
     await pumpVod(tester, FakeVodServer(), players);
     expect(players.last.disposed, isFalse);
 
@@ -216,7 +234,7 @@ void main() {
         vodDetailJson(),
         vodDetailJson(id: 'vod-2', title: 'Another one'),
       ];
-    await pumpVod(tester, server, FakeLivePlayers());
+    await pumpVod(tester, server, FakePlayers());
 
     expect(find.text('Other streams'), findsOneWidget);
     expect(find.text('Another one'), findsOneWidget);
@@ -237,7 +255,7 @@ void main() {
     await pumpVod(
       tester,
       server,
-      FakeLivePlayers(),
+      FakePlayers(),
       width: 320,
       height: 568,
       textScale: 2,
