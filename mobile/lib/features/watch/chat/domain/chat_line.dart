@@ -43,35 +43,38 @@ class ChatNoticeLine extends ChatLine {
 /// dropped, whether it came from history, a push, a push repeated after a
 /// reconnect, or the send response racing its own push.
 ///
-/// Lines normally arrive in order and are appended. Messages fetched after a
-/// reconnect can be older than lines already shown, so then the whole list is
-/// put back in time order (equal times keep their order). The result keeps
+/// Lines are appended in the order they arrive, so a join note or a notice
+/// stamped with the device clock never ends up below a newer message. Only
+/// with [insertByTime] (messages fetched after a reconnect, which can be older
+/// than what is shown) is each new message placed before the first shown
+/// message that is newer than it; other lines never move. The result keeps
 /// the last [chatLineLimit] lines.
 List<ChatLine> mergeChatLines(
   List<ChatLine> current,
-  Iterable<ChatLine> incoming,
-) {
+  Iterable<ChatLine> incoming, {
+  bool insertByTime = false,
+}) {
   final seen = {
     for (final line in current)
       if (line is ChatMessageLine) line.message.id,
   };
-  final added = <ChatLine>[];
+  final merged = [...current];
+  var changed = false;
   for (final line in incoming) {
     if (line is ChatMessageLine && !seen.add(line.message.id)) continue;
-    added.add(line);
+    changed = true;
+    final at = insertByTime && line is ChatMessageLine
+        ? merged.indexWhere(
+            (l) => l is ChatMessageLine && l.at.isAfter(line.at),
+          )
+        : -1;
+    if (at == -1) {
+      merged.add(line);
+    } else {
+      merged.insert(at, line);
+    }
   }
-  if (added.isEmpty) return current;
-
-  var merged = [...current, ...added];
-  final last = current.isEmpty ? null : current.last.at;
-  if (last != null && added.any((line) => line.at.isBefore(last))) {
-    final order = {for (var i = 0; i < merged.length; i++) merged[i]: i};
-    merged = [...merged]
-      ..sort((a, b) {
-        final byTime = a.at.compareTo(b.at);
-        return byTime != 0 ? byTime : order[a]!.compareTo(order[b]!);
-      });
-  }
+  if (!changed) return current;
   return merged.length > chatLineLimit
       ? merged.sublist(merged.length - chatLineLimit)
       : merged;

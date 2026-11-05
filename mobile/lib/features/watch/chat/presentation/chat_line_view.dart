@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:letslive_mobile/core/chat_parser/emote.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/features/user/presentation/user_avatar.dart';
@@ -36,10 +37,12 @@ class ChatLineView extends StatelessWidget {
         username: message.username,
         picture: message.profilePicture,
         text: message.text,
+        at: message.sentAt,
       ),
       ChatMemberLine(:final userId, :final joined) => _MemberRow(
         userId: userId,
         joined: joined,
+        at: line.at,
       ),
       ChatNoticeLine(:final text) => Text(
         text,
@@ -60,6 +63,7 @@ class _MessageRow extends StatelessWidget {
     required this.username,
     required this.picture,
     required this.text,
+    required this.at,
   });
 
   final String userId;
@@ -67,31 +71,41 @@ class _MessageRow extends StatelessWidget {
   final String? picture;
   final String text;
 
+  /// When it was said; a long press shows it (web's hover tooltip).
+  final DateTime at;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        UserAvatar(pictureUrl: picture, name: username, radius: 12),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: '$username: ',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: senderColor(userId) ?? theme.colorScheme.primary,
+    final when = DateFormat.yMMMd(Localizations.localeOf(context).toString())
+        .add_jm()
+        .format(at.toLocal());
+    return Tooltip(
+      message: when,
+      triggerMode: TooltipTriggerMode.longPress,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          UserAvatar(pictureUrl: picture, name: username, radius: 12),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$username: ',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: senderColor(userId) ?? theme.colorScheme.primary,
+                    ),
                   ),
-                ),
-                TextSpan(text: expandEmotes(text)),
-              ],
+                  TextSpan(text: expandEmotes(text)),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -99,10 +113,15 @@ class _MessageRow extends StatelessWidget {
 /// "NAME joined the chat". The event carries only the id, so the name
 /// comes from the cached public profile; nothing shows until it loads.
 class _MemberRow extends ConsumerWidget {
-  const _MemberRow({required this.userId, required this.joined});
+  const _MemberRow({
+    required this.userId,
+    required this.joined,
+    required this.at,
+  });
 
   final String userId;
   final bool joined;
+  final DateTime at;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -114,6 +133,7 @@ class _MemberRow extends ConsumerWidget {
       username: profile.username,
       picture: profile.profilePicture,
       text: joined ? l10n.chat_joined : l10n.chat_left,
+      at: at,
     );
   }
 }

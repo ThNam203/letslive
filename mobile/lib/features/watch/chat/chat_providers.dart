@@ -60,6 +60,8 @@ class ChatController extends AsyncNotifier<List<ChatLine>> {
 
   @override
   Future<List<ChatLine>> build() async {
+    // A retry after a failed load rebuilds this same instance; whatever the
+    // failed attempt buffered would otherwise be merged into the new one.
     _early.clear();
     final realtime = ref.read(realtimeManagerProvider);
     final topic = realtimeRoomTopic(roomId);
@@ -91,7 +93,7 @@ class ChatController extends AsyncNotifier<List<ChatLine>> {
     final lines = mergeChatLines(const [], [
       for (final m in history) ChatMessageLine(m),
     ]);
-    final merged = mergeChatLines(lines, _early);
+    final merged = mergeChatLines(lines, _early, insertByTime: true);
     _early.clear();
     return merged;
   }
@@ -134,17 +136,19 @@ class ChatController extends AsyncNotifier<List<ChatLine>> {
     final response = await ref.read(chatRepositoryProvider).history(roomId);
     final history = response.data;
     if (!ref.mounted || !response.success || history == null) return;
-    _addAll([for (final m in history) ChatMessageLine(m)]);
+    _addAll([for (final m in history) ChatMessageLine(m)], insertByTime: true);
   }
 
   void _add(ChatLine line) => _addAll([line]);
 
-  void _addAll(List<ChatLine> lines) {
+  void _addAll(List<ChatLine> lines, {bool insertByTime = false}) {
     final current = state.value;
     if (current == null) {
       _early.addAll(lines);
     } else {
-      state = AsyncData(mergeChatLines(current, lines));
+      state = AsyncData(
+        mergeChatLines(current, lines, insertByTime: insertByTime),
+      );
     }
   }
 }

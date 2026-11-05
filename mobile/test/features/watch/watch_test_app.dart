@@ -38,6 +38,9 @@ class FakeWatchServer extends FakeSearchServer {
   /// When set, `GET /messages` waits for it before answering.
   Completer<void>? holdChatHistory;
 
+  /// When set, `POST /messages` waits for it before answering.
+  Completer<void>? holdSend;
+
   /// Status `POST /messages` answers with (e.g. 503).
   int sendStatus = 200;
 
@@ -66,6 +69,7 @@ class FakeWatchServer extends FakeSearchServer {
     if (o.method != 'POST') return null;
     final body = o.data as Map<String, Object?>;
     sentMessages.add(body);
+    await holdSend?.future;
     if (sendStatus != 200) return _chatError(sendStatus);
     return okEnvelope({
       '_id': 'sent-${sentMessages.length}',

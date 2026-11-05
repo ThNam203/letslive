@@ -5,7 +5,8 @@
 ///
 /// While the history loads a spinner shows; if it fails an error with a retry
 /// replaces the list (the message box stays usable). New lines arrive in
-/// real time through `chat_providers.dart`.
+/// real time through `chat_providers.dart`. Suggestions from the message box
+/// are drawn over the bottom of the list, limited to the list's height.
 library;
 
 import 'package:flutter/material.dart';
@@ -17,15 +18,32 @@ import 'package:letslive_mobile/features/watch/chat/presentation/chat_input.dart
 import 'package:letslive_mobile/features/watch/chat/presentation/chat_line_view.dart';
 
 /// The chat of the room [roomId] (the streamer's user id). Fills the height
-/// it is given.
-class ChatPanel extends ConsumerWidget {
-  const ChatPanel({required this.roomId, super.key});
+/// it is given. With [compact] (the keyboard is open) the title row is left
+/// out to leave room for the lines.
+class ChatPanel extends ConsumerStatefulWidget {
+  const ChatPanel({required this.roomId, this.compact = false, super.key});
 
   final String roomId;
+  final bool compact;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChatPanel> createState() => _ChatPanelState();
+}
+
+class _ChatPanelState extends ConsumerState<ChatPanel> {
+  // Suggestions published by the message box.
+  final _hints = ValueNotifier<Widget?>(null);
+
+  @override
+  void dispose() {
+    _hints.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final roomId = widget.roomId;
     final chat = ref.watch(chatControllerProvider(roomId));
     final lines = chat.value;
     final Widget body;
@@ -50,20 +68,45 @@ class ChatPanel extends ConsumerWidget {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              l10n.chat_title,
-              style: Theme.of(context).textTheme.titleSmall,
+        if (!widget.compact) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l10n.chat_title,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+        ],
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, box) => Stack(
+              fit: StackFit.expand,
+              children: [
+                body,
+                ValueListenableBuilder<Widget?>(
+                  valueListenable: _hints,
+                  builder: (context, hints, _) => hints == null
+                      ? const SizedBox.shrink()
+                      : Align(
+                          alignment: Alignment.bottomCenter,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight: box.maxHeight.clamp(0, 220),
+                            ),
+                            child: hints,
+                          ),
+                        ),
+                ),
+              ],
             ),
           ),
         ),
         const Divider(height: 1),
-        Expanded(child: body),
-        const Divider(height: 1),
-        ChatInput(roomId: roomId),
+        ChatInput(roomId: roomId, hints: _hints),
       ],
     );
   }

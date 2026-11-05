@@ -297,11 +297,90 @@ void main() {
       final merged = mergeChatLines(
         [line('a', '2026-11-04T10:00:00Z'), line('c', '2026-11-04T10:00:10Z')],
         [line('b', '2026-11-04T10:00:05Z')],
+        insertByTime: true,
       );
       expect(
         [for (final l in merged) (l as ChatMessageLine).message.id],
         ['a', 'b', 'c'],
       );
     });
+
+    test('live lines are appended, never re-sorted by clock', () {
+      final member = ChatMemberLine(
+        userId: 'u',
+        joined: true,
+        at: DateTime.utc(2026, 11, 4, 10, 5),
+      );
+      // A push stamped earlier than the join note (clock skew) still lands
+      // last, so the note does not jump below newer messages.
+      final merged = mergeChatLines(
+        [line('a', '2026-11-04T10:00:00Z'), member],
+        [line('b', '2026-11-04T10:01:00Z')],
+      );
+      expect(merged[1], member);
+      expect((merged[2] as ChatMessageLine).message.id, 'b');
+    });
+
+    test('a catch-up message goes before the next newer message only', () {
+      final member = ChatMemberLine(
+        userId: 'u',
+        joined: true,
+        at: DateTime.utc(2026, 11, 4, 11),
+      );
+      final merged = mergeChatLines(
+        [
+          line('a', '2026-11-04T10:00:00Z'),
+          member,
+          line('c', '2026-11-04T10:00:10Z'),
+        ],
+        [line('b', '2026-11-04T10:00:05Z')],
+        insertByTime: true,
+      );
+      expect(merged[1], member);
+      expect(
+        [for (final l in merged.whereType<ChatMessageLine>()) l.message.id],
+        ['a', 'b', 'c'],
+      );
+    });
   });
+
+  test('two pushes with the same text and different ids both show', () async {
+    final rig = await _rig(FakeChatRepository());
+    await rig.open();
+
+    rig.push(pushJson('a', 'same'));
+    rig.push(pushJson('b', 'same'));
+    await pumpEventQueue();
+
+    expect(rig.texts, ['same', 'same']);
+  });
+
+  test(
+    'a reconnect during the history load neither drops nor duplicates',
+    () async {
+      final hold = Completer<void>();
+      final repo = FakeChatRepository(
+        histories: [
+          okResponse([message('a', 'one')]),
+          okResponse([
+            message('a', 'one'),
+            message('m', 'missed', at: '2026-11-04T10:00:05Z'),
+          ]),
+        ],
+      )..holdHistory = hold;
+      final rig = await _rig(repo);
+      await rig.open();
+      expect(rig.lines, isEmpty);
+
+      // Socket drops and returns while the first history request is pending.
+      await rig.reconnect();
+      rig.push(pushJson('p', 'pushed', at: 1793786420000));
+      await pumpEventQueue();
+      hold.complete();
+      await pumpEventQueue();
+
+      expect(repo.historyCalls, 2);
+      expect(rig.texts, ['one', 'missed', 'pushed']);
+    },
+  );
 }

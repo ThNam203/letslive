@@ -32,6 +32,8 @@ sealed class ParsedInput {
 class ParsedSend extends ParsedInput {
   const ParsedSend(this.text);
 
+  /// The exact text to post: trimmed, or the command expanded and cut to
+  /// [chatMessageMaxLength].
   final String text;
 }
 
@@ -130,9 +132,17 @@ class ChatCommandSuggestion {
 
   /// `builtin:<name>` for built-ins, else the custom command's id.
   final String id;
+
+  /// The command name without the slash (what the prefix filter matches).
   final String name;
+
+  /// One line of help; a custom command without one shows its response.
   final String description;
+
+  /// What the row shows, e.g. `/roll [max]`.
   final String usage;
+
+  /// Built-in, or the scope of the custom command.
   final ChatCommandSource source;
 }
 
@@ -220,9 +230,10 @@ String _englishRoll(int value, int max) => '🎲 rolled $value (1-$max)';
 
 final RegExp _leadingInt = RegExp(r'^[+-]?\d+');
 
-/// Cuts [text] to [chatMessageMaxLength] UTF-16 units without splitting a
-/// surrogate pair.
-String _truncate(String text) {
+/// Cuts [text] to [chatMessageMaxLength] UTF-16 units (what the server
+/// counts) without splitting a surrogate pair. Intentionally differs from
+/// web's plain `slice`, which can leave half an emoji.
+String truncateChatMessage(String text) {
   if (text.length <= chatMessageMaxLength) return text;
   var end = chatMessageMaxLength;
   final last = text.codeUnitAt(end - 1);
@@ -295,5 +306,7 @@ ParsedInput parseChatInput(
       : matches.isNotEmpty
       ? ParsedSend(matches.first.response)
       : ParsedError(ChatInputError.unknownCommand, name: name);
-  return result is ParsedSend ? ParsedSend(_truncate(result.text)) : result;
+  return result is ParsedSend
+      ? ParsedSend(truncateChatMessage(result.text))
+      : result;
 }

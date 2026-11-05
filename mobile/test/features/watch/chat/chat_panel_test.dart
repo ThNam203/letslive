@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/providers.dart';
@@ -254,7 +255,7 @@ void main() {
       FakeLivePlayers(),
       'u-1',
       width: 320,
-      height: 800,
+      height: 568,
       textScale: 2,
       overrides: realtime.overrides,
     );
@@ -308,7 +309,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.widget<TextField>(_input).controller!.text, 'do not lose me');
-    expect(find.text('Message not sent. Your text is kept.'), findsOneWidget);
+    expect(
+      find.text('Message not sent. Your text is kept. Something went wrong.'),
+      findsOneWidget,
+    );
     expect(
       find.textContaining('do not lose me', findRichText: true),
       findsOneWidget,
@@ -463,5 +467,195 @@ void main() {
     await tester.enterText(find.widgetWithText(TextField, 'rocket'), 'zzzz');
     await tester.pump();
     expect(find.text('No emotes found'), findsOneWidget);
+  });
+
+  group('keyboard open on a 320x568 phone at text scale 2', () {
+    final longHistory = [
+      historyJson('a', 'Chào các bạn 🎉', username: 'Nguyễn Văn Á'),
+      historyJson('b', 'x' * 300),
+    ];
+
+    Future<void> openKeyboard(WidgetTester tester) async {
+      tester.view.viewInsets = const FakeViewPadding(bottom: 260);
+      addTearDown(tester.view.resetViewInsets);
+      await tester.pump();
+    }
+
+    testWidgets('live layout fits with command suggestions open', (
+      tester,
+    ) async {
+      final server = liveServer()
+        ..chatHistory = longHistory
+        ..chatCommands = [_command('c1', 'discord', 'Join us')];
+      await pumpChannel(
+        tester,
+        server,
+        FakeLivePlayers(),
+        'u-1',
+        width: 320,
+        height: 568,
+        textScale: 2,
+        overrides: _Realtime().overrides,
+      );
+      expect(tester.takeException(), isNull, reason: 'keyboard closed');
+
+      await openKeyboard(tester);
+      await tester.enterText(_input, 'half typed');
+      await tester.enterText(_input, '/');
+      await tester.pump();
+
+      expect(tester.takeException(), isNull, reason: 'keyboard open');
+      // Stream info and the chat heading make room for the lines.
+      expect(find.text('Live title'), findsNothing);
+      expect(find.text('Chat'), findsNothing);
+      expect(find.text('/shrug [text]'), findsOneWidget);
+      // The typed text survived the layout change.
+      await tester.enterText(_input, 'still here');
+      expect(tester.widget<TextField>(_input).controller!.text, 'still here');
+    });
+
+    testWidgets('offline layout fits with command suggestions open', (
+      tester,
+    ) async {
+      final server = liveServer()
+        ..liveByUser = {}
+        ..chatHistory = longHistory
+        ..chatCommands = [_command('c1', 'discord', 'Join us')];
+      await pumpChannel(
+        tester,
+        server,
+        FakeLivePlayers(),
+        'u-1',
+        width: 320,
+        height: 568,
+        textScale: 2,
+        overrides: _Realtime().overrides,
+      );
+      expect(tester.takeException(), isNull, reason: 'keyboard closed');
+
+      await tester.enterText(_input, 'kept while the keyboard opens');
+      await openKeyboard(tester);
+      await tester.enterText(_input, '/');
+      await tester.pump();
+
+      expect(tester.takeException(), isNull, reason: 'keyboard open');
+      expect(find.text('/shrug [text]'), findsOneWidget);
+    });
+  });
+
+  testWidgets('a pasted run of 300 emoji is cut to the server limit', (
+    tester,
+  ) async {
+    await pumpChannel(
+      tester,
+      liveServer(),
+      FakeLivePlayers(),
+      'u-1',
+      overrides: _Realtime().overrides,
+    );
+
+    await tester.enterText(_input, '🎉' * 300);
+    await tester.pump();
+
+    final text = tester.widget<TextField>(_input).controller!.text;
+    // 500 UTF-16 units, as the server counts, not 500 characters.
+    expect(text.length, 500);
+    expect(text.runes.length, 250);
+  });
+
+  testWidgets('text typed during a send is kept, not wiped', (tester) async {
+    final server = liveServer()..holdSend = Completer<void>();
+    await pumpChannel(
+      tester,
+      server,
+      FakeLivePlayers(),
+      'u-1',
+      overrides: _Realtime().overrides,
+    );
+
+    await tester.enterText(_input, 'one');
+    await tester.tap(find.byTooltip('Send message'));
+    await tester.pump();
+    await tester.enterText(_input, 'two');
+    // The keyboard action during a send does nothing; the text stays.
+    await tester.testTextInput.receiveAction(TextInputAction.send);
+    await tester.pump();
+    expect(server.sentMessages.map((m) => m['text']), ['one']);
+
+    server.holdSend!.complete();
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(_input).controller!.text, 'two');
+
+    await tester.tap(find.byTooltip('Send message'));
+    await tester.pumpAndSettle();
+    expect(server.sentMessages.map((m) => m['text']), ['one', 'two']);
+    expect(tester.widget<TextField>(_input).controller!.text, isEmpty);
+  });
+
+  testWidgets('retry resends the exact failed text, not a new roll', (
+    tester,
+  ) async {
+    final server = liveServer()..sendStatus = 503;
+    await pumpChannel(
+      tester,
+      server,
+      FakeLivePlayers(),
+      'u-1',
+      overrides: _Realtime().overrides,
+    );
+
+    await tester.enterText(_input, '/roll 1000000');
+    await tester.tap(find.byTooltip('Send message'));
+    await tester.pumpAndSettle();
+    server.sendStatus = 200;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    final texts = server.sentMessages.map((m) => m['text']).toList();
+    expect(texts, hasLength(2));
+    expect(texts[1], texts[0]);
+  });
+
+  testWidgets('typing a shortcode suggests emotes; tapping inserts one', (
+    tester,
+  ) async {
+    await pumpChannel(
+      tester,
+      liveServer(),
+      FakeLivePlayers(),
+      'u-1',
+      overrides: _Realtime().overrides,
+    );
+
+    await tester.enterText(_input, 'hi :fi');
+    await tester.pump();
+    expect(find.text('🔥'), findsOneWidget);
+    expect(find.text('😊'), findsNothing);
+
+    await tester.tap(find.text('🔥'));
+    await tester.pump();
+
+    expect(tester.widget<TextField>(_input).controller!.text, 'hi :fire: ');
+    expect(find.text('🔥'), findsNothing);
+  });
+
+  testWidgets('long press on a message shows when it was sent', (tester) async {
+    final server = liveServer()
+      ..chatHistory = [historyJson('a', 'timed', at: '2026-11-04T10:30:00Z')];
+    await pumpChannel(
+      tester,
+      server,
+      FakeLivePlayers(),
+      'u-1',
+      overrides: _Realtime().overrides,
+    );
+    final expected = DateFormat.yMMMd('en')
+        .add_jm()
+        .format(DateTime.utc(2026, 11, 4, 10, 30).toLocal());
+
+    await tester.longPress(find.textContaining('timed', findRichText: true));
+    await tester.pumpAndSettle();
+
+    expect(find.text(expected), findsOneWidget);
   });
 }

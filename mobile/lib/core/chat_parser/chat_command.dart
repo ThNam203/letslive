@@ -41,8 +41,13 @@ class ChatCommand {
   static List<ChatCommand> parseList(Object? data) =>
       parseJsonList(data, 'ChatCommand', ChatCommand.fromJson);
 
+  /// Server-assigned id; picks between commands that share a name.
   final String id;
+
+  /// Whose command it is: a user's own or a channel's.
   final ChatCommandScope scope;
+
+  /// The user who created it (for a channel command, the streamer).
   final String ownerId;
 
   /// Lowercase `[a-z0-9_-]{1,32}`, typed after the slash.

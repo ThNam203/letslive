@@ -416,6 +416,12 @@ final RegExp _activeEmotePattern = RegExp(
   caseSensitive: false,
 );
 
+/// The search text of the unfinished shortcode at the end of [beforeCursor]
+/// (`hi :fi` gives `fi`, a lone `:` gives an empty string), or null when
+/// the cursor is not in one. Opens the inline emote suggestions.
+String? activeEmoteQuery(String beforeCursor) =>
+    _activeEmotePattern.firstMatch(beforeCursor)?.group(2);
+
 /// Inserts [emote] into [text] at [cursor] and returns the new text and the
 /// cursor after it. An unfinished shortcode right before the cursor is
 /// completed instead of left behind; a space follows the emote then, as on
