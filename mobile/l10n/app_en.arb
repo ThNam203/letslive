@@ -507,7 +507,12 @@
   "messages_close_section": "Close message section",
   "messages_create": "Create",
   "messages_creating": "Creating...",
+  "messages_delete": "Delete",
+  "messages_delete_message": "Delete message",
+  "messages_delete_message_confirm": "Delete this message? This cannot be undone.",
   "messages_direct_message": "Direct Message",
+  "messages_edit_message": "Edit message",
+  "messages_edited": "(edited)",
   "messages_emote_category_gestures": "Gestures",
   "messages_emote_category_hype": "Hype",
   "messages_emote_category_misc": "Misc",
@@ -557,6 +562,7 @@
       "number": {}
     }
   },
+  "messages_save": "Save",
   "messages_search_users_placeholder": "Search users...",
   "messages_searching": "Searching...",
   "messages_select_conversation": "Select a conversation",

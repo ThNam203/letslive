@@ -39,6 +39,17 @@ String apiErrorMessage(AppLocalizations l10n, ApiResponse<Object?> response) {
     'res_err_invalid_image' => l10n.api_response_res_err_invalid_image,
     'res_err_password_not_match' =>
       l10n.api_response_res_err_password_not_match,
+    'res_err_cannot_message_self' =>
+      l10n.api_response_res_err_cannot_message_self,
+    'res_err_conversation_not_found' =>
+      l10n.api_response_res_err_conversation_not_found,
+    'res_err_dm_already_exists' => l10n.api_response_res_err_dm_already_exists,
+    'res_err_dm_message_not_found' =>
+      l10n.api_response_res_err_dm_message_not_found,
+    'res_err_forbidden' => l10n.api_response_res_err_forbidden,
+    'res_err_not_participant' => l10n.api_response_res_err_not_participant,
+    'res_err_too_many_participants' =>
+      l10n.api_response_res_err_too_many_participants,
     'res_err_internal_server' => l10n.api_response_res_err_internal_server,
     'res_err_invalid_input' => l10n.api_response_res_err_invalid_input,
     'res_err_invalid_payload' => l10n.api_response_res_err_invalid_payload,

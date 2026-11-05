@@ -35,8 +35,8 @@ Source of the feature list: section 4 of
 | `/account-setup` | `AccountSetupScreen` (`mobile/lib/features/auth/presentation/account_setup_screen.dart`) | `mobile/test/features/auth/account_setup_screen_test.dart`, `mobile/test/core/router/app_router_test.dart`, `mobile/contract_test/auth_contract_test.dart` | done |
 | `/cookie-policy` | - | - | differs: native app sets no browser cookies; policy linked from the store listing |
 | `/search` | `SearchScreen` (`mobile/lib/features/search/presentation/search_screen.dart`): debounced box, tabs All / Channels / Live / Videos, accent-insensitive highlight | `mobile/test/features/search/search_screen_test.dart`, `mobile/test/features/search/search_repository_test.dart`, `mobile/test/features/search/highlight_test.dart`, `mobile/contract_test/search_contract_test.dart` | done |
-| `/messages` | - | - | planned |
-| `/messages/[conversationId]` | - | - | planned |
+| `/messages` | `ConversationsScreen` (`mobile/lib/features/messages/presentation/conversations_screen.dart`) as the Messages tab, with the unread badge on the tab icon; new direct message or group via `NewConversationScreen` (user search, group name, member limit). Rows bubble to the top on a new message (web updates in place). Web's chat dock and header popover are desktop-only, not ported; there is no mute, add/remove member, leave or rename UI because web has none (the repository covers those endpoints) | `mobile/test/features/messages/messages_screens_test.dart`, `mobile/test/features/messages/dm_state_test.dart`, `mobile/test/features/messages/dm_units_test.dart`, `mobile/contract_test/messages_contract_test.dart` | done |
+| `/messages/[conversationId]` | `ConversationScreen` (`mobile/lib/features/messages/presentation/conversation_screen.dart`): header with online state, messages paged by cursor, typing indicator, emote picker and composer, read marking, reconnect catch-up, not-found state; long-press on an own message edits or deletes it (web's API has this but no UI). Sending pictures is not ported yet: it needs the general file upload (`/upload-file`, Task 19); received pictures are shown | `mobile/test/features/messages/messages_screens_test.dart`, `mobile/test/features/messages/dm_state_test.dart`, `mobile/contract_test/messages_contract_test.dart` | done |
 | `/notifications` | - | - | planned |
 | `/settings/chat-commands` | - | - | planned |
 | `/settings/profile` | `ProfileSettingsScreen` (`mobile/lib/features/settings/presentation/profile_settings_screen.dart`): banner and profile picture from the photo library with upload progress, username, bio and social links; reached from the Profile tab via `SettingsScreen`. Web's crop dialog, theme, language and disable-account sections are not ported (the server needs JPEG or WebP, so PNG and GIF are refused before upload) | `mobile/test/features/profile/profile_settings_test.dart`, `mobile/test/features/profile/profile_units_test.dart`, `mobile/contract_test/profile_contract_test.dart` | done |
@@ -67,7 +67,6 @@ constant for yet. Remove a bullet when its constant lands.
 - `/vods/upload` - VOD upload (settings/upload)
 - `/vods/author` - the signed-in user's own VODs (settings/vods)
 - `/vods/{vodId}` - PATCH/DELETE of an own VOD (settings/vods, Task 19); GET is built (video screen). Doc only: `ApiEndpoints.vods` already satisfies the checker
-- `/conversations` - direct messages
 - `/files` - media host path (thumbnails, VOD segments) used by web image/player URLs
 
 ## Intentionally differs

@@ -48,6 +48,11 @@ abstract final class ApiEndpoints {
   /// `/<id>/replies`, `/<id>/like` and `/liked-ids`.
   static const String vodComments = '/vod-comments';
 
+  /// Direct messages: `/conversations` (list, create), `/<id>` (details,
+  /// rename, leave), `/<id>/participants`, `/<id>/messages`, `/<id>/read`,
+  /// `/<id>/typing` and `/unread-counts`.
+  static const String conversations = '/conversations';
+
   /// Prefix of a public profile: `/user/<id>`.
   static const String user = '/user';
 }

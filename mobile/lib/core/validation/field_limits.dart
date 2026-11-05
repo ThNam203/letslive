@@ -34,6 +34,18 @@ abstract final class FieldLimits {
   /// units (what the server counts).
   static const int chatMessageMax = 500;
 
+  /// `DM_MESSAGE_MAX_LENGTH` in `web/constant/field-limits.ts` (backend
+  /// `MaxDmMessageLength`), in UTF-16 units.
+  static const int dmMessageMax = 2000;
+
+  /// `GROUP_NAME_MAX_LENGTH` in `web/constant/field-limits.ts` (backend
+  /// `MaxConversationNameLen`), in UTF-16 units.
+  static const int groupNameMax = 100;
+
+  /// `GROUP_MAX_MEMBERS` in `web/constant/field-limits.ts`, the creator
+  /// included.
+  static const int groupMaxMembers = 100;
+
   /// `VOD_COMMENT_MAX_LENGTH` in `web/constant/field-limits.ts`, in UTF-16
   /// units.
   static const int vodCommentMax = 2000;

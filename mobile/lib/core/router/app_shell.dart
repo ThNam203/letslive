@@ -74,6 +74,10 @@ class _AppShellState extends ConsumerState<AppShell> {
     final tabs = widget.tabs;
     final l10n = AppLocalizations.of(context);
     final shell = widget.navigationShell;
+    // Watched here (not in the destination) so the providers stay alive.
+    final badges = [
+      for (final tab in tabs) tab.badge == null ? 0 : ref.watch(tab.badge!),
+    ];
     return Scaffold(
       body: shell,
       bottomNavigationBar: tabs.length < 2
@@ -86,10 +90,14 @@ class _AppShellState extends ConsumerState<AppShell> {
                 initialLocation: index == shell.currentIndex,
               ),
               destinations: [
-                for (final tab in tabs)
+                for (var i = 0; i < tabs.length; i++)
                   NavigationDestination(
-                    icon: Icon(tab.icon),
-                    label: tab.label(l10n),
+                    icon: Badge.count(
+                      count: badges[i],
+                      isLabelVisible: badges[i] > 0,
+                      child: Icon(tabs[i].icon),
+                    ),
+                    label: tabs[i].label(l10n),
                   ),
               ],
             ),

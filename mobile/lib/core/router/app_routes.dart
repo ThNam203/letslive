@@ -3,6 +3,21 @@ abstract final class AppRoutes {
   static const String home = '/';
   static const String search = '/search';
 
+  /// The Messages tab: the conversation list (web `/messages`).
+  static const String messages = '/messages';
+
+  /// Start a conversation. Registered before [conversationPattern], which
+  /// would otherwise read "new" as a conversation id.
+  static const String newConversation = '/messages/new';
+
+  /// Route pattern of a conversation (web `/messages/[conversationId]`);
+  /// push taps (type `dm`, `actionUrl` `/messages/<id>`) land here.
+  static const String conversationPattern = '/messages/:conversationId';
+
+  /// The conversation [id].
+  static String conversation(String id) =>
+      '/messages/${Uri.encodeComponent(id)}';
+
   /// The own profile tab.
   static const String profile = '/profile';
 

@@ -10,6 +10,8 @@ import 'package:letslive_mobile/features/auth/presentation/account_setup_screen.
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/signup_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/splash_screen.dart';
+import 'package:letslive_mobile/features/messages/presentation/conversation_screen.dart';
+import 'package:letslive_mobile/features/messages/presentation/new_conversation_screen.dart';
 import 'package:letslive_mobile/features/settings/presentation/profile_settings_screen.dart';
 import 'package:letslive_mobile/features/settings/presentation/security_screen.dart';
 import 'package:letslive_mobile/features/settings/presentation/settings_screen.dart';
@@ -73,6 +75,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => VodScreen(
           userId: state.pathParameters['userId']!,
           vodId: state.pathParameters['vodId']!,
+        ),
+      ),
+      // Conversations also sit above the shell: the composer needs the
+      // whole screen. `new` must come before the id pattern.
+      GoRoute(
+        path: AppRoutes.newConversation,
+        builder: (context, state) => const NewConversationScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.conversationPattern,
+        builder: (context, state) => ConversationScreen(
+          conversationId: state.pathParameters['conversationId']!,
         ),
       ),
       GoRoute(
