@@ -229,12 +229,13 @@ class SessionNotifier extends AsyncNotifier<Session?> {
   // The app is signed out even when cleanup fails (e.g. the cookie wipe), so
   // the user is never stuck in a half-ended session; the failure is logged.
   // Not rethrown: the expiry path runs unawaited and has no caller to tell.
+  // Object, like the SessionLifecycle hook loop: any failure is logged.
   Future<void> _endSession({required bool notifyServer}) async {
     try {
       await ref
           .read(sessionLifecycleProvider)
           .endSession(notifyServer: notifyServer);
-    } on Exception catch (e, stack) {
+    } on Object catch (e, stack) {
       developer.log(
         'Ending the session failed',
         name: 'auth',

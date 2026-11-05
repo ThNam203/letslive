@@ -1,7 +1,8 @@
 /// The channel screen, `/users/:userId` (web `app/(main)/users/[userId]`):
 /// the live player and title while the user streams, otherwise an offline
 /// notice. A stream that ends while watched turns into an "ended" notice;
-/// an unknown user shows "not found". Every notice has a way back.
+/// an unknown user shows "not found". Every notice has a way back. Held
+/// sideways, a live channel shows only the player (the fullscreen mode).
 ///
 /// Under the player (or the offline / ended notice) sits the profile
 /// (`features/profile`): header with the follow button and the tabs Chat /
@@ -93,12 +94,20 @@ class ChannelScreen extends ConsumerWidget {
       };
     }
 
+    // Sideways, a live channel shows only its player (see _LiveBody).
+    final playerOnly = isLandscape(context) && body is _LiveBody;
     return Scaffold(
-      appBar: AppBar(
-        title: user == null
-            ? null
-            : Text(user.username, maxLines: 1, overflow: TextOverflow.ellipsis),
-      ),
+      appBar: playerOnly
+          ? null
+          : AppBar(
+              title: user == null
+                  ? null
+                  : Text(
+                      user.username,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+            ),
       body: body,
     );
   }
@@ -125,8 +134,10 @@ const int _titleMaxLines = 2;
 /// With the keyboard open ([keyboardOpen]) the title block, the profile
 /// header and the tab bar go and only the chat remains. If the tabs would
 /// still get less than their minimum height the page scrolls (player on
-/// top, tabs at the minimum) rather than overflow. Player and chat hold [GlobalKey]s so switching between the two
-/// layouts keeps playback and the typed text.
+/// top, tabs at the minimum) rather than overflow. Held sideways only the
+/// player shows: rotating is the fullscreen mode. Player and chat hold
+/// [GlobalKey]s so switching between these layouts keeps playback and the
+/// typed text.
 class _LiveBody extends ConsumerStatefulWidget {
   const _LiveBody({
     required this.user,
@@ -177,6 +188,8 @@ class _LiveBodyState extends ConsumerState<_LiveBody> {
       author: user.username,
       onStopped: widget.onStopped,
     );
+    // Rotating is the fullscreen mode: sideways only the player shows.
+    if (isLandscape(context)) return LandscapePlayer(player: player);
     final info = Padding(
       padding: const EdgeInsets.all(16),
       child: Text(

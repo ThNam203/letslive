@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/router/app_router.dart';
 import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
+import 'package:letslive_mobile/features/vod/presentation/comments_section.dart';
+import 'package:letslive_mobile/features/vod/presentation/vod_player_view.dart';
 import 'package:letslive_mobile/features/vod/presentation/vod_screen.dart';
 import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
 
@@ -263,5 +265,30 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byType(VodScreen), findsOneWidget);
+  });
+
+  testWidgets('landscape shows only the player, fitted; rotating back keeps '
+      'it', (tester) async {
+    final server = FakeVodServer()..vodById = {'vod-1': vodDetailJson()};
+    final players = FakePlayers();
+    await pumpVod(tester, server, players, width: 844, height: 390);
+
+    expect(tester.takeException(), isNull);
+    final player = tester.getRect(find.byType(VodPlayerView));
+    expect(player.top, greaterThanOrEqualTo(0));
+    expect(player.bottom, lessThanOrEqualTo(390));
+    expect(player.height, closeTo(390, 1));
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.byType(CommentsSection), findsNothing);
+
+    tester.view.physicalSize = const Size(390, 844);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(AppBar), findsOneWidget);
+    expect(find.byType(CommentsSection), findsOneWidget);
+    // The same player: playback goes on across the rotation.
+    expect(players.created, hasLength(1));
+    expect(players.last.disposed, isFalse);
   });
 }

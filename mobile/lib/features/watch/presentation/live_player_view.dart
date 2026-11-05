@@ -154,7 +154,7 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
           ValueListenableBuilder<PlayerValue>(
             valueListenable: _player.value,
             builder: (context, value, _) {
-              if (_showError) return _PlaybackError(onRetry: _retry);
+              if (_showError) return PlayerError(onRetry: _retry);
               if (value.hasError || value.hasEnded) {
                 return const PlayerSpinner();
               }
@@ -287,10 +287,13 @@ class _LiveBadge extends StatelessWidget {
   );
 }
 
-/// Playback failed twice while the server still says the stream is live.
-class _PlaybackError extends StatelessWidget {
-  const _PlaybackError({required this.onRetry});
+/// Playback failed: the reason and a retry button. Shared by the live and
+/// the VOD player (live: failed twice while the server still says the
+/// stream is live).
+class PlayerError extends StatelessWidget {
+  const PlayerError({required this.onRetry, super.key});
 
+  /// Starts a fresh player.
   final VoidCallback onRetry;
 
   @override
@@ -317,4 +320,24 @@ class _PlaybackError extends StatelessWidget {
       ),
     );
   }
+}
+
+/// True when the phone is held sideways. The watch screens then show only
+/// the player ([LandscapePlayer]): rotating is the fullscreen mode.
+bool isLandscape(BuildContext context) =>
+    MediaQuery.orientationOf(context) == Orientation.landscape;
+
+/// The landscape layout of a watch screen: [player] (a 16:9 player view)
+/// as large as fits, centered on black, clear of notches.
+class LandscapePlayer extends StatelessWidget {
+  const LandscapePlayer({required this.player, super.key});
+
+  /// The screen's player view; keep its key, so rotating keeps playback.
+  final Widget player;
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: Colors.black,
+    child: SafeArea(child: Center(child: player)),
+  );
 }

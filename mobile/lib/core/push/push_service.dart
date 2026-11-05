@@ -87,7 +87,9 @@ class PushService {
       // Logged out while the prompt was open: do not register.
       if (token == null || !_active) return;
       await _register(token);
-    } on Exception catch (e, stack) {
+    } on Object catch (e, stack) {
+      // Object, like unregister: a failed registration must never break the
+      // sign-in that triggered it.
       _log('registration failed', e, stack);
     }
   }
@@ -107,12 +109,16 @@ class PushService {
 
   /// Removes this device from the signed-in user, then drops the local FCM
   /// token even when the server call failed.
+  ///
+  /// Uses [PushMessaging.currentToken], never the APNs wait of
+  /// [PushMessaging.token]: the logout hook is cut off after a few seconds,
+  /// and a DELETE sent after that would carry the next user's cookies.
   Future<void> unregister() async {
     final messaging = _messaging;
     if (messaging == null) return;
     _active = false;
     try {
-      final token = _registeredToken ?? await messaging.token();
+      final token = _registeredToken ?? await messaging.currentToken();
       if (token != null) await _devices.unregister(token);
     } on Object catch (e, stack) {
       // Object, not Exception: nothing may stop the local token deletion.

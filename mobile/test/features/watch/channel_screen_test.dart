@@ -7,7 +7,9 @@ import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
 import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
 import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
+import 'package:letslive_mobile/features/watch/chat/presentation/chat_panel.dart';
 import 'package:letslive_mobile/features/watch/presentation/channel_screen.dart';
+import 'package:letslive_mobile/features/watch/presentation/live_player_view.dart';
 import 'package:letslive_mobile/features/watch/watch_providers.dart';
 
 import '../home/home_fixtures.dart';
@@ -359,6 +361,36 @@ void main() {
     );
     expect(tester.takeException(), isNull);
     expect(find.text('Offline'), findsOneWidget);
+  });
+
+  testWidgets('landscape shows only the live player, fitted; rotating back '
+      'keeps it', (tester) async {
+    final players = FakePlayers();
+    await pumpChannel(
+      tester,
+      liveServer(),
+      players,
+      'u-1',
+      width: 844,
+      height: 390,
+    );
+
+    expect(tester.takeException(), isNull);
+    final player = tester.getRect(find.byType(LivePlayerView));
+    expect(player.top, greaterThanOrEqualTo(0));
+    expect(player.bottom, lessThanOrEqualTo(390));
+    expect(player.height, closeTo(390, 1));
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.byType(ChatPanel), findsNothing);
+
+    tester.view.physicalSize = const Size(390, 844);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(AppBar), findsOneWidget);
+    expect(find.byType(ChatPanel), findsOneWidget);
+    expect(players.created, hasLength(1));
+    expect(players.last.disposed, isFalse);
   });
 
   group('screen wake', screenWakeTests);

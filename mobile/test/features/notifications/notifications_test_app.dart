@@ -133,7 +133,11 @@ class FakePushMessaging implements PushMessaging {
   bool permission = true;
 
   /// The FCM token; null means FCM has none.
-  String? currentToken = 'id:APA91b-token-1';
+  String? fcmToken = 'id:APA91b-token-1';
+
+  /// While set and not completed, [token] waits, like iOS waiting for the
+  /// APNs token; [currentToken] never waits.
+  Completer<void>? apnsWait;
 
   /// Data of the push that launched the app; set before the app is pumped.
   Map<String, Object?>? launchData;
@@ -147,7 +151,7 @@ class FakePushMessaging implements PushMessaging {
 
   /// FCM rotates the token.
   void rotateTo(String token) {
-    currentToken = token;
+    fcmToken = token;
     _refreshes.add(token);
   }
 
@@ -164,7 +168,13 @@ class FakePushMessaging implements PushMessaging {
   }
 
   @override
-  Future<String?> token() async => currentToken;
+  Future<String?> token() async {
+    await apnsWait?.future;
+    return fcmToken;
+  }
+
+  @override
+  Future<String?> currentToken() async => fcmToken;
 
   @override
   Stream<String> get tokenRefreshes => _refreshes.stream;
@@ -172,7 +182,7 @@ class FakePushMessaging implements PushMessaging {
   @override
   Future<void> deleteToken() async {
     tokensDeleted++;
-    currentToken = null;
+    fcmToken = null;
   }
 
   @override

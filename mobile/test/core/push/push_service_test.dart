@@ -13,6 +13,7 @@ import '../../features/notifications/notifications_test_app.dart';
 class _FakeDevices implements DeviceRepository {
   final List<String> calls = [];
   bool failRegister = false;
+  bool registerThrows = false;
   bool failUnregister = false;
   bool unregisterThrows = false;
 
@@ -23,6 +24,7 @@ class _FakeDevices implements DeviceRepository {
     required String locale,
   }) async {
     calls.add('register $token $platform $locale');
+    if (registerThrows) throw StateError('network gone');
     return failRegister ? failed() : ok<Object?>(null);
   }
 
@@ -134,12 +136,43 @@ void main() {
 
     // A fresh token (FCM hands one out after deleteToken) and a call that
     // throws instead of answering.
-    fcm.currentToken = 'id:APA91b-token-2';
+    fcm.fcmToken = 'id:APA91b-token-2';
     await push.registerForUser();
     devices.unregisterThrows = true;
     await push.unregister();
     expect(devices.calls.last, 'unregister id:APA91b-token-2');
     expect(fcm.tokensDeleted, 2);
+  });
+
+  // The logout hook is cut off after 5 s; a call left running after that
+  // would send the DELETE with the next user's cookies.
+  test('logout does not wait for the iOS APNs token', () async {
+    await push.init();
+    devices.failRegister = true; // nothing registered: no token to reuse
+    await push.registerForUser();
+    fcm.apnsWait = Completer<void>(); // never completes
+
+    await push.unregister().timeout(const Duration(seconds: 1));
+
+    expect(devices.calls.last, 'unregister id:APA91b-token-1');
+    expect(fcm.tokensDeleted, 1);
+  });
+
+  test('logout with no token at all sends no DELETE', () async {
+    fcm.fcmToken = null;
+    await push.init();
+
+    await push.unregister();
+
+    expect(devices.calls, isEmpty);
+    expect(fcm.tokensDeleted, 1);
+  });
+
+  test('a registration that throws an Error is logged, not thrown', () async {
+    devices.registerThrows = true;
+    await push.init();
+
+    await expectLater(push.registerForUser(), completes);
   });
 
   test('a refused registration is retried by the next rotation', () async {

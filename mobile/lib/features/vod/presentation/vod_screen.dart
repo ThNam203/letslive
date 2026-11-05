@@ -10,6 +10,8 @@
 /// - The player pins to the top while the page scrolls, so a tapped
 ///   timestamp in the description or a comment is seen to work. With the
 ///   keyboard open it is hidden (but keeps playing) to leave room to type.
+/// - Held sideways, only the player shows (no app bar): rotating is the
+///   fullscreen mode, and the same player keeps playing.
 /// - One view is counted per opening, once the viewer has watched long
 ///   enough (`domain/view_threshold.dart`). A refused request is not
 ///   retried: web retries on every progress tick, which on a phone would
@@ -33,6 +35,7 @@ import 'package:letslive_mobile/features/vod/presentation/vod_details.dart';
 import 'package:letslive_mobile/features/vod/presentation/vod_player_view.dart';
 import 'package:letslive_mobile/features/vod/vod_providers.dart';
 import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
+import 'package:letslive_mobile/features/watch/presentation/live_player_view.dart';
 import 'package:letslive_mobile/features/watch/watch_providers.dart';
 
 /// The screen of video [vodId] uploaded by [userId].
@@ -72,14 +75,18 @@ class VodScreen extends ConsumerWidget {
             )
           : _VodBody(vod: found, userId: userId);
     }
+    // Sideways, a loaded video shows only its player (see _VodBody).
+    final playerOnly = isLandscape(context) && body is _VodBody;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          vod.value?.title ?? '',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
+      appBar: playerOnly
+          ? null
+          : AppBar(
+              title: Text(
+                vod.value?.title ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
       body: body,
     );
   }
@@ -111,6 +118,9 @@ class _VodBodyState extends ConsumerState<_VodBody> {
 
   /// A view was (or is being) registered for this opening.
   bool _viewRegistered = false;
+
+  /// Keeps the player view's state when rotating moves it in the tree.
+  final _playerViewKey = GlobalKey();
 
   @override
   void initState() {
@@ -200,14 +210,17 @@ class _VodBodyState extends ConsumerState<_VodBody> {
     final vod = widget.vod;
     final player = _player;
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final playerView = player == null
+        ? _NotPlayable(key: _playerViewKey)
+        : VodPlayerView(key: _playerViewKey, player: player, onRetry: _retry);
+    // Rotating is the fullscreen mode: sideways only the player shows.
+    if (isLandscape(context)) return LandscapePlayer(player: playerView);
     return Column(
       children: [
         Visibility(
           visible: !keyboardOpen,
           maintainState: true,
-          child: player == null
-              ? const _NotPlayable()
-              : VodPlayerView(player: player, onRetry: _retry),
+          child: playerView,
         ),
         Expanded(
           child: VodPlayback(
@@ -231,7 +244,7 @@ class _VodBodyState extends ConsumerState<_VodBody> {
 
 /// The player's place for a video that cannot be played (no playback URL).
 class _NotPlayable extends StatelessWidget {
-  const _NotPlayable();
+  const _NotPlayable({super.key});
 
   @override
   Widget build(BuildContext context) => AspectRatio(

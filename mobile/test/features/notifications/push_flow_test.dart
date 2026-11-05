@@ -135,7 +135,7 @@ void main() {
     await tester.pumpAndSettle();
     await loggedOut;
     // FCM hands out a new token after deleteToken.
-    push.currentToken = 'id:APA91b-token-2';
+    push.fcmToken = 'id:APA91b-token-2';
 
     final loggedIn = app.container
         .read(sessionProvider.notifier)

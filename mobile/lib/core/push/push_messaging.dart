@@ -21,8 +21,13 @@ abstract interface class PushMessaging {
   /// True when allowed.
   Future<bool> requestPermission();
 
-  /// This install's FCM token; null when FCM has none (yet).
+  /// This install's FCM token; null when FCM has none (yet). On iOS it may
+  /// wait several seconds for the APNs token.
   Future<String?> token();
+
+  /// This install's FCM token without waiting for APNs; null when there is
+  /// none right now. For logout, which must finish quickly.
+  Future<String?> currentToken();
 
   /// New tokens after FCM rotated the old one.
   Stream<String> get tokenRefreshes;
@@ -72,6 +77,17 @@ class FirebasePushMessaging implements PushMessaging {
         if (await _fcm.getAPNSToken() != null) break;
         await Future<void>.delayed(_apnsRetryDelay);
       }
+    }
+    return _fcm.getToken();
+  }
+
+  /// On iOS `getToken` itself fails or waits without an APNs token, so no
+  /// APNs token means no FCM token here.
+  @override
+  Future<String?> currentToken() async {
+    if (defaultTargetPlatform == TargetPlatform.iOS &&
+        await _fcm.getAPNSToken() == null) {
+      return null;
     }
     return _fcm.getToken();
   }

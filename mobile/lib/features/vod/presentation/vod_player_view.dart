@@ -34,7 +34,7 @@ class VodPlayerView extends StatelessWidget {
           ValueListenableBuilder<PlayerValue>(
             valueListenable: player.value,
             builder: (context, value, _) => value.hasError
-                ? _PlaybackError(onRetry: onRetry)
+                ? PlayerError(onRetry: onRetry)
                 : _Controls(player: player, value: value),
           ),
         ],
@@ -146,38 +146,6 @@ class _ControlsState extends State<_Controls> {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Playback failed: the reason and a retry button.
-class _PlaybackError extends StatelessWidget {
-  const _PlaybackError({required this.onRetry});
-
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              l10n.users_channel_playback_error,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 8),
-            FilledButton(
-              onPressed: onRetry,
-              child: Text(l10n.users_channel_retry),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
