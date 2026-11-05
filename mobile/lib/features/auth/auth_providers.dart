@@ -159,13 +159,17 @@ class SessionNotifier extends AsyncNotifier<Session?> {
   Future<ApiResponse<void>> completeAccountSetup(String username) =>
       updateProfile(username: username);
 
-  /// Saves the given profile fields (`PUT /user/me`) and, on success,
-  /// replaces the session user with the server's answer, so every screen
-  /// showing the own profile updates at once. Account setup uses it too.
+  /// Saves the given profile fields (`PUT /user/me`, see
+  /// `MeRepository.update`) and, on success, replaces the session user with
+  /// the server's answer, so every screen showing the own profile updates
+  /// at once. Account setup uses it too.
   Future<ApiResponse<void>> updateProfile({
     String? username,
     String? bio,
     Map<String, String>? socialMediaLinks,
+    String? status,
+    String? phoneNumber,
+    String? locale,
   }) async {
     final res = await ref
         .read(meRepositoryProvider)
@@ -173,6 +177,9 @@ class SessionNotifier extends AsyncNotifier<Session?> {
           username: username,
           bio: bio,
           socialMediaLinks: socialMediaLinks,
+          status: status,
+          phoneNumber: phoneNumber,
+          locale: locale,
         );
     final user = res.data;
     if (res.success && user != null) state = AsyncData(Session(user));

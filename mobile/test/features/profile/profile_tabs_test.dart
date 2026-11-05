@@ -10,7 +10,11 @@ import '../vod/vod_test_app.dart';
 import 'profile_test_app.dart';
 
 Future<void> _openTab(WidgetTester tester, String label) async {
-  await tester.tap(find.widgetWithText(Tab, label));
+  // The tab bar scrolls; on a narrow screen a tab may start off screen.
+  final tab = find.widgetWithText(Tab, label);
+  await tester.ensureVisible(tab);
+  await tester.pumpAndSettle();
+  await tester.tap(tab);
   await tester.pumpAndSettle();
 }
 

@@ -140,9 +140,12 @@ void main() {
       textScale: 2,
     );
     await _fill(tester, current: 'short');
+    await tester.ensureVisible(_submit);
+    await tester.pumpAndSettle();
     await tester.tap(_submit);
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
+    expect(find.text('Password must be at least 8 characters'), findsWidgets);
   });
 }

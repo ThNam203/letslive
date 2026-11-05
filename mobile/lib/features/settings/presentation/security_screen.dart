@@ -1,9 +1,10 @@
-/// Account security (web `/settings/security`): the account email and the
-/// change-password form. The form validates like web's `changePassword.ts`
-/// and calls `PATCH /auth/password`; a server refusal (e.g. the current
-/// password is wrong) shows under the confirm field, as on web. Accounts
-/// that signed in with Google have no password to change and see a note
-/// instead. Phone number and the stream key are not part of this screen yet.
+/// Account security (web `/settings/security`): the account email, the
+/// phone number ([PhoneNumberTile]) and the change-password form. The form
+/// validates like web's `changePassword.ts` and calls `PATCH /auth/password`;
+/// a server refusal (e.g. the current password is wrong) shows under the
+/// confirm field, as on web. Accounts that signed in with Google have no
+/// password to change and see a note instead. The stream key is on the
+/// Stream settings screen instead.
 library;
 
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
 import 'package:letslive_mobile/features/auth/presentation/auth_widgets.dart';
+import 'package:letslive_mobile/features/settings/presentation/phone_number_tile.dart';
 
 /// `MeUser.authProvider` of accounts with a password.
 const String _localProvider = 'local';
@@ -41,6 +43,7 @@ class SecurityScreen extends ConsumerWidget {
                   title: Text(l10n.settings_security_contact_email),
                   subtitle: Text(user.email),
                 ),
+                PhoneNumberTile(phoneNumber: user.phoneNumber),
                 const Divider(),
                 Text(
                   l10n.settings_security_security_password_title,

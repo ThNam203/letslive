@@ -24,6 +24,10 @@ abstract final class FieldLimits {
   /// `BIO_MAX_LENGTH` in `web/constant/field-limits.ts`.
   static const int bioMax = 300;
 
+  /// `PHONE_NUMBER_MAX_LENGTH` in `web/constant/field-limits.ts` (backend
+  /// `phoneNumber` `lte=20`).
+  static const int phoneNumberMax = 20;
+
   /// `SOCIAL_URL_MAX_LENGTH` in `web/constant/field-limits.ts`.
   static const int socialUrlMax = 2048;
 

@@ -7,7 +7,8 @@
 /// Images are checked first with web's size, type and dimension rules.
 /// Social links can be added or replaced, not removed: the server refuses an
 /// empty link, and web's editor cannot remove one either.
-/// Theme, language and account disabling are not part of this screen yet.
+/// The last section disables the account ([DisableAccountSection]). Theme
+/// and language, on this page on web, are on the settings hub.
 library;
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -21,6 +22,7 @@ import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
 import 'package:letslive_mobile/features/auth/presentation/auth_widgets.dart';
 import 'package:letslive_mobile/features/settings/domain/image_checks.dart';
+import 'package:letslive_mobile/features/settings/presentation/disable_account_section.dart';
 import 'package:letslive_mobile/features/settings/settings_providers.dart';
 import 'package:letslive_mobile/features/user/data/me_user.dart';
 import 'package:letslive_mobile/features/user/data/picked_image.dart';
@@ -346,6 +348,10 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
             busy: _busy,
             onPressed: _hasChanges ? _save : null,
           ),
+          const SizedBox(height: 24),
+          const Divider(),
+          const SizedBox(height: 8),
+          const DisableAccountSection(),
         ],
       ),
     );

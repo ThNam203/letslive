@@ -57,6 +57,9 @@ class FakeProfileServer extends FakeVodServer {
   /// Bodies of `PUT /user/me`, in order.
   final List<Map<String, Object?>> profileUpdates = [];
 
+  /// Status `PUT /user/me` answers with when not 200 (a server failure).
+  int profileUpdateStatus = 200;
+
   /// Status of follow/unfollow (e.g. 503).
   int followStatus = 200;
 
@@ -106,6 +109,9 @@ class FakeProfileServer extends FakeVodServer {
     if (path == ApiEndpoints.userMe && o.method == 'PUT') {
       final body = Map<String, Object?>.of(o.data as Map<String, Object?>);
       profileUpdates.add(body);
+      if (profileUpdateStatus != 200) {
+        return _fail(profileUpdateStatus, 'res_err_internal_server');
+      }
       if (body['username'] == 'taken_name') {
         return _fail(409, 'res_err_username_taken', 'Username is taken');
       }
@@ -113,6 +119,9 @@ class FakeProfileServer extends FakeVodServer {
       meExtra = {
         ...meExtra,
         if (body['bio'] case final String bio) 'bio': bio,
+        if (body['phoneNumber'] case final String phone) 'phoneNumber': phone,
+        if (body['status'] case final String status) 'status': status,
+        if (body['locale'] case final String locale) 'locale': locale,
         if (body['socialMediaLinks'] case final Map<String, Object?> links)
           'socialMediaLinks': {
             ...?(meExtra['socialMediaLinks'] as Map<String, Object?>?),

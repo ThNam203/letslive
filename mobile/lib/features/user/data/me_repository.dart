@@ -17,17 +17,25 @@ class MeRepository {
       _client.get(ApiEndpoints.userMe, parse: MeUser.parse);
 
   /// `PUT /user/me` with only the given fields (the server leaves omitted
-  /// ones alone). Returns the updated user.
+  /// ones alone). Returns the updated user. [status] `disabled` disables
+  /// the account; [phoneNumber] `''` removes the number; [locale] is a
+  /// BCP-47 tag such as `vi-VN` (backend `UpdateUserRequestDTO`).
   Future<ApiResponse<MeUser>> update({
     String? username,
     String? bio,
     Map<String, String>? socialMediaLinks,
+    String? status,
+    String? phoneNumber,
+    String? locale,
   }) => _client.put(
     ApiEndpoints.userMe,
     body: {
       'username': ?username,
       'bio': ?bio,
       'socialMediaLinks': ?socialMediaLinks,
+      'status': ?status,
+      'phoneNumber': ?phoneNumber,
+      'locale': ?locale,
     },
     parse: MeUser.parse,
   );

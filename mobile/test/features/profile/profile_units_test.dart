@@ -5,6 +5,7 @@ import 'package:letslive_mobile/core/validation/field_limits.dart';
 import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
 import 'package:letslive_mobile/features/profile/domain/profile_format.dart';
 import 'package:letslive_mobile/features/settings/domain/image_checks.dart';
+import 'package:letslive_mobile/features/settings/domain/phone_number.dart';
 import 'package:letslive_mobile/features/user/data/me_user.dart';
 import 'package:letslive_mobile/features/user/data/public_user.dart';
 import 'package:letslive_mobile/features/user/data/social_links.dart';
@@ -33,6 +34,10 @@ void main() {
       _web('field-limits.ts', 'USERNAME_MAX_LENGTH'),
     );
     expect(FieldLimits.bioMax, _web('field-limits.ts', 'BIO_MAX_LENGTH'));
+    expect(
+      FieldLimits.phoneNumberMax,
+      _web('field-limits.ts', 'PHONE_NUMBER_MAX_LENGTH'),
+    );
     expect(
       FieldLimits.socialUrlMax,
       _web('field-limits.ts', 'SOCIAL_URL_MAX_LENGTH'),
@@ -219,5 +224,29 @@ void main() {
       expect(changed.backgroundPicture, isNull);
       expect(changed.socialMediaLinks, me.socialMediaLinks);
     });
+  });
+
+  test('phone numbers: empty or international (E.164) like web', () {
+    for (final ok in [
+      '',
+      '  ',
+      '+84912345678',
+      '+84 912 345 678',
+      '+1 (234) 567-8901',
+      '+44.20.7946.0958',
+    ]) {
+      expect(isValidPhoneNumber(ok), isTrue, reason: ok);
+    }
+    for (final bad in [
+      '12ab',
+      '0912345678',
+      '+0912345678',
+      '+12345',
+      '+1234567890123456',
+      '++84912345678',
+      '+84 912 345 678 ext 9',
+    ]) {
+      expect(isValidPhoneNumber(bad), isFalse, reason: bad);
+    }
   });
 }
