@@ -2,29 +2,35 @@
 /// the image decoder. Widget tests override them with fakes.
 library;
 
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:letslive_mobile/features/settings/domain/image_checks.dart';
 import 'package:letslive_mobile/features/user/data/picked_image.dart';
 
 /// Lets the user choose one image from the photo library; null when they
-/// cancel.
+/// cancel or the picker fails.
 typedef ImagePick = Future<PickedImage?> Function();
 
 /// The photo library picker. On Android it uses the system picker (no
 /// permission needed); iOS asks through `NSPhotoLibraryUsageDescription`.
 final imagePickProvider = Provider<ImagePick>(
   (ref) => () async {
-    final file = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (file == null) return null;
-    return PickedImage(
-      name: file.name,
-      bytes: await file.readAsBytes(),
-      mimeType: file.mimeType ?? mimeTypeOfName(file.name),
-    );
+    try {
+      final file = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (file == null) return null;
+      return PickedImage(
+        name: file.name,
+        bytes: await file.readAsBytes(),
+        mimeType: file.mimeType ?? mimeTypeOfName(file.name),
+      );
+    } on PlatformException {
+      // The picker or the file could not be opened (e.g. permission denied):
+      // treated as cancelled.
+      return null;
+    }
   },
 );
 

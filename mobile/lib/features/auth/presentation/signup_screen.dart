@@ -4,11 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/router/app_router.dart';
+import 'package:letslive_mobile/core/validation/field_limits.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
 import 'package:letslive_mobile/features/auth/presentation/auth_widgets.dart';
 import 'package:letslive_mobile/features/auth/presentation/otp_dialog.dart';
-import 'package:letslive_mobile/core/validation/field_limits.dart';
 
 /// Signup with email verification (web `app/(auth)/signup/page.tsx` and
 /// `components/forms/SignupForm.tsx`): validate the form, mail a code

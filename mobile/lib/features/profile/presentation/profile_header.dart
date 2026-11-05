@@ -17,7 +17,14 @@ const double _avatarRadius = 28;
 /// scale, for layouts that must decide whether everything fits.
 double profileHeaderHeight(BuildContext context) {
   final scaler = MediaQuery.textScalerOf(context);
-  return 24 + scaler.scale(22) * 1.4 + scaler.scale(12) * 1.5 * 2;
+  // Padding, name, two small lines, then the follow button (label plus its
+  // own padding) under them.
+  return 24 +
+      scaler.scale(22) * 1.4 +
+      scaler.scale(12) * 1.5 * 2 +
+      8 +
+      scaler.scale(14) * 1.5 +
+      24;
 }
 
 /// The top of a profile (web `ProfileHeader`): the banner when
@@ -102,11 +109,15 @@ class ProfileHeader extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: muted,
                     ),
+                    // Under the text, not beside it: a long label (Vietnamese
+                    // "Bỏ theo dõi" at large text) would squeeze the name away.
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: FollowButton(userId: user.id),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              FollowButton(userId: user.id),
             ],
           ),
         ),

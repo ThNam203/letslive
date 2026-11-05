@@ -3,6 +3,7 @@
 /// links. Data providers are `autoDispose`, so logout drops them.
 library;
 
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/network/api_load.dart';
 import 'package:letslive_mobile/core/network/api_response.dart';
@@ -48,6 +49,11 @@ typedef UrlOpener = Future<bool> Function(Uri url);
 
 /// Opens links in the browser (the About tab's social links).
 final urlOpenerProvider = Provider<UrlOpener>(
-  (ref) =>
-      (url) => launchUrl(url, mode: LaunchMode.externalApplication),
+  (ref) => (url) async {
+    try {
+      return await launchUrl(url, mode: LaunchMode.externalApplication);
+    } on PlatformException {
+      return false;
+    }
+  },
 );

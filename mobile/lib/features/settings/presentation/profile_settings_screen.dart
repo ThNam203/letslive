@@ -5,7 +5,8 @@
 /// then the chosen picture (with a progress bar), then sends the changed text
 /// fields; each step reports its own failure and the later steps still run.
 /// Images are checked first with web's size, type and dimension rules.
-/// Social links can be added or replaced, not removed (web cannot either).
+/// Social links can be added or replaced, not removed: the server refuses an
+/// empty link, and web's editor cannot remove one either.
 /// Theme, language and account disabling are not part of this screen yet.
 library;
 
@@ -90,21 +91,20 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     super.dispose();
   }
 
-  /// The social links that differ from what is saved and are not empty.
-  Map<String, String> get _changedLinks {
-    final saved = _me.socialMediaLinks;
+  /// The social links that differ from what [me] has saved (an emptied field
+  /// counts as changed so that [_validate] can refuse it).
+  Map<String, String> _changedLinks(MeUser me) {
+    final saved = me.socialMediaLinks;
     return {
       for (final MapEntry(:key, :value) in _links.entries)
-        if (value.text.trim().isNotEmpty &&
-            value.text.trim() != (saved[key] ?? ''))
-          key: value.text.trim(),
+        if (value.text.trim() != (saved[key] ?? '')) key: value.text.trim(),
     };
   }
 
   bool get _hasChanges =>
       _username.text != _me.username ||
       _bio.text != (_me.bio ?? '') ||
-      _changedLinks.isNotEmpty ||
+      _changedLinks(_me).isNotEmpty ||
       _avatar != null ||
       _background != null;
 
@@ -152,8 +152,13 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
         ? null
         : validateUsername(_username.text);
     final linkErrors = <String, String>{
-      for (final MapEntry(:key, :value) in _changedLinks.entries)
-        if (!_isUrl(value)) key: l10n.settings_social_media_links_invalid_url,
+      for (final MapEntry(:key, :value) in _changedLinks(_me).entries)
+        // An emptied field is refused like web does: the server rejects `""`
+        // for a link, so a link cannot be removed (it would silently stay).
+        if (value.isEmpty)
+          key: l10n.settings_social_media_links_err_empty_url
+        else if (!_isUrl(value))
+          key: l10n.settings_social_media_links_invalid_url,
     };
     setState(() {
       _usernameError = authFieldErrorText(l10n, usernameError);
@@ -214,9 +219,15 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     );
     if (!mounted) return;
 
-    final usernameChanged = _username.text != _me.username;
-    final bioChanged = _bio.text != (_me.bio ?? '');
-    final links = _changedLinks;
+    // The session may have ended during the uploads.
+    final me = ref.read(sessionProvider).value?.user;
+    if (me == null) {
+      setState(() => _busy = false);
+      return;
+    }
+    final usernameChanged = _username.text != me.username;
+    final bioChanged = _bio.text != (me.bio ?? '');
+    final links = _changedLinks(me);
     if (usernameChanged || bioChanged || links.isNotEmpty) {
       final res = await session.updateProfile(
         username: usernameChanged ? _username.text : null,
@@ -226,7 +237,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
       if (!res.success) failures.add(res);
     }
     if (!mounted) return;
-    ref.invalidate(publicUserProvider(_me.id));
+    ref.invalidate(publicUserProvider(me.id));
     setState(() => _busy = false);
     _say(
       failures.isEmpty
@@ -333,7 +344,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
             key: const ValueKey('profile-save'),
             label: l10n.common_save_changes,
             busy: _busy,
-            onPressed: _hasChanges ? _save : () {},
+            onPressed: _hasChanges ? _save : null,
           ),
         ],
       ),

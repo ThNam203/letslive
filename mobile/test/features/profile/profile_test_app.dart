@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:letslive_mobile/core/l10n/locale_provider.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
 import 'package:letslive_mobile/core/router/app_router.dart';
 import 'package:letslive_mobile/features/profile/profile_providers.dart';
@@ -79,12 +80,15 @@ class FakeProfileServer extends FakeVodServer {
   /// Bodies of `PATCH /auth/password`, in order.
   final List<Map<String, Object?>> passwordBodies = [];
 
+  /// Id of the signed-in user answered by `/user/me`.
+  String meId = 'u-1';
+
   ResponseBody _me(RequestOptions o) {
     if (!'${o.headers['cookie'] ?? ''}'.contains('ACCESS_TOKEN=access')) {
       return _fail(401, 'res_err_unauthorized');
     }
     return okEnvelope({
-      'id': 'u-1',
+      'id': meId,
       'username': username,
       'email': 'user@example.com',
       'status': 'normal',
@@ -113,7 +117,7 @@ class FakeProfileServer extends FakeVodServer {
           'socialMediaLinks': {
             ...?(meExtra['socialMediaLinks'] as Map<String, Object?>?),
             ...links,
-          },
+          }..removeWhere((_, url) => url == ''),
       };
       return _me(o);
     }
@@ -185,6 +189,9 @@ class FakeProfileServer extends FakeVodServer {
 /// A device stand-in: the photo library returns [next] (null = cancelled),
 /// and every image decodes to [size].
 class FakeDevice {
+  /// The device language (`vi` for the Vietnamese cases).
+  Locale locale = const Locale('en');
+
   PickedImage? next;
   ({int width, int height})? size = (width: 400, height: 400);
 
@@ -193,6 +200,7 @@ class FakeDevice {
   bool canOpen = true;
 
   List<Override> get overrides => [
+    deviceLocaleProvider.overrideWithValue(locale),
     imagePickProvider.overrideWithValue(() async => next),
     imageSizeReaderProvider.overrideWithValue((_) async => size),
     urlOpenerProvider.overrideWithValue((url) async {

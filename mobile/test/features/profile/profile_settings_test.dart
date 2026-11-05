@@ -11,6 +11,10 @@ import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
 import 'profile_test_app.dart';
 
 final _save = find.byKey(const ValueKey('profile-save'));
+final _saveButton = find.descendant(
+  of: _save,
+  matching: find.byType(FilledButton),
+);
 
 /// The own profile: its tab, the settings hub and the edit-profile screen.
 void main() {
@@ -171,6 +175,33 @@ void main() {
         app.container.read(sessionProvider).value!.user.username,
         'abcdef',
       );
+    });
+
+    testWidgets('emptying a saved social link is refused, not ignored', (
+      tester,
+    ) async {
+      final server = FakeProfileServer()
+        ..meExtra = {
+          'socialMediaLinks': {'github': 'https://github.com/octocat'},
+        };
+      await pumpRoute(tester, server, AppRoutes.settingsProfile);
+
+      await tester.enterText(field('social-github'), '');
+      await tester.pump();
+      await tester.tap(_save);
+      await tester.pumpAndSettle();
+
+      expect(find.text("Link can't be empty"), findsOneWidget);
+      expect(server.profileUpdates, isEmpty);
+    });
+
+    testWidgets('save is disabled until something changed', (tester) async {
+      await pumpRoute(tester, FakeProfileServer(), AppRoutes.settingsProfile);
+      expect(tester.widget<FilledButton>(_saveButton).onPressed, isNull);
+
+      await tester.enterText(field('bio'), 'x');
+      await tester.pump();
+      expect(tester.widget<FilledButton>(_saveButton).onPressed, isNotNull);
     });
 
     testWidgets('an invalid social link is rejected locally', (tester) async {

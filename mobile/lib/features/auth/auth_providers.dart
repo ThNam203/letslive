@@ -188,10 +188,11 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     final res = await ref
         .read(meRepositoryProvider)
         .uploadProfilePicture(image, onProgress: onProgress);
-    _applyPictures(
-      res,
-      (url) => (profilePicture: url, backgroundPicture: null),
-    );
+    final url = res.data;
+    final current = state.value?.user;
+    if (res.success && url != null && current != null) {
+      state = AsyncData(Session(current.withPictures(profilePicture: url)));
+    }
     return res;
   }
 
@@ -204,30 +205,12 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     final res = await ref
         .read(meRepositoryProvider)
         .uploadBackgroundPicture(image, onProgress: onProgress);
-    _applyPictures(
-      res,
-      (url) => (profilePicture: null, backgroundPicture: url),
-    );
-    return res;
-  }
-
-  void _applyPictures(
-    ApiResponse<String> res,
-    ({String? profilePicture, String? backgroundPicture}) Function(String url)
-    pictures,
-  ) {
     final url = res.data;
     final current = state.value?.user;
-    if (!res.success || url == null || current == null) return;
-    final changed = pictures(url);
-    state = AsyncData(
-      Session(
-        current.withPictures(
-          profilePicture: changed.profilePicture,
-          backgroundPicture: changed.backgroundPicture,
-        ),
-      ),
-    );
+    if (res.success && url != null && current != null) {
+      state = AsyncData(Session(current.withPictures(backgroundPicture: url)));
+    }
+    return res;
   }
 
   /// User-initiated logout.

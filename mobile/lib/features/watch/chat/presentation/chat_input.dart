@@ -9,10 +9,10 @@ import 'package:letslive_mobile/core/chat_parser/emote.dart';
 import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/network/api_response.dart';
+import 'package:letslive_mobile/core/validation/field_limits.dart';
 import 'package:letslive_mobile/features/watch/chat/chat_providers.dart';
 import 'package:letslive_mobile/features/watch/chat/data/chat_message.dart';
 import 'package:letslive_mobile/features/watch/chat/presentation/emote_picker.dart';
-import 'package:letslive_mobile/core/validation/field_limits.dart';
 
 /// The message box under the chat list (web `ChatPanel` form): text field,
 /// emote button, send button. The `/command` and `:emote` suggestions are

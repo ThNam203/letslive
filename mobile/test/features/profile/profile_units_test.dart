@@ -62,11 +62,6 @@ void main() {
       FieldLimits.avatarSourceMaxDimension,
       _web('image.ts', 'AVATAR_SOURCE_MAX_DIMENSION'),
     );
-    final accepted = File('../web/constant/image.ts')
-        .readAsStringSync()
-        .contains('"image/jpeg,image/png,image/gif,image/webp"');
-    expect(accepted, isTrue);
-    expect(FieldLimits.avatarAcceptedTypes.join(','), contains('image/gif'));
   });
 
   group('validateChangePassword (web changePassword.ts)', () {

@@ -8,9 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
+import 'package:letslive_mobile/core/validation/field_limits.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
-import 'package:letslive_mobile/core/validation/field_limits.dart';
 
 /// The localized message for a validation [error], or null.
 String? authFieldErrorText(AppLocalizations l10n, AuthFieldError? error) =>
@@ -160,7 +160,9 @@ class SubmitButton extends StatelessWidget {
 
   final String label;
   final bool busy;
-  final VoidCallback onPressed;
+
+  /// Null disables the button (nothing to submit yet).
+  final VoidCallback? onPressed;
   final bool expanded;
 
   @override

@@ -14,13 +14,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
+import 'package:letslive_mobile/core/validation/field_limits.dart';
 import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
 import 'package:letslive_mobile/features/search/domain/search_type.dart';
 import 'package:letslive_mobile/features/search/presentation/search_all_tab.dart';
 import 'package:letslive_mobile/features/search/presentation/search_result_rows.dart';
 import 'package:letslive_mobile/features/search/presentation/search_type_tab.dart';
 import 'package:letslive_mobile/features/search/search_providers.dart';
-import 'package:letslive_mobile/core/validation/field_limits.dart';
 
 /// The Search tab's screen.
 class SearchScreen extends StatefulWidget {

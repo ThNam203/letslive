@@ -75,16 +75,18 @@ class _ProfileTabsState extends ConsumerState<ProfileTabs>
     final chat = widget.chat;
     if (widget.compact && chat != null) return chat;
     final tab = _controller.index - (_hasChat ? 1 : 0);
-    final content = chat != null && tab < 0
-        ? chat
-        : switch (tab) {
-            0 => ProfileHomeTab(
-              user: user,
-              onViewAll: () => _controller.animateTo(_videosIndex),
-            ),
-            1 => ProfileVideosTab(user: user),
-            _ => ProfileAboutTab(user: user),
-          };
+    // Only the selected tab is built, except the chat: it stays mounted
+    // (hidden) so its room subscription, scroll position and typed draft
+    // survive a visit to another tab.
+    final other = switch (tab) {
+      < 0 => null,
+      0 => ProfileHomeTab(
+        user: user,
+        onViewAll: () => _controller.animateTo(_videosIndex),
+      ),
+      1 => ProfileVideosTab(user: user),
+      _ => ProfileAboutTab(user: user),
+    };
     return Column(
       children: [
         ProfileHeader(user: user, showBanner: widget.showBanner),
@@ -99,7 +101,15 @@ class _ProfileTabsState extends ConsumerState<ProfileTabs>
             Tab(text: l10n.users_channel_tabs_about),
           ],
         ),
-        Expanded(child: content),
+        Expanded(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (chat != null) Offstage(offstage: other != null, child: chat),
+              ?other,
+            ],
+          ),
+        ),
       ],
     );
   }

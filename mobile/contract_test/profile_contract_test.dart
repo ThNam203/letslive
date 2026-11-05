@@ -103,6 +103,16 @@ void main() {
     expect(public.socialMediaLinks['github'], 'https://github.com/octocat');
   });
 
+  test(
+    'the server refuses an empty social link (so the app does too)',
+    () async {
+      final res = await meA.update(socialMediaLinks: {'github': ''});
+
+      expect(res.success, isFalse);
+      expect(res.key, 'res_err_invalid_input');
+    },
+  );
+
   test('PUT /user/me with a too short username is refused', () async {
     final res = await meA.update(username: 'abc');
 
@@ -225,6 +235,11 @@ void main() {
       reason: '${changed.key} ${changed.message}',
     );
     expect(changed.statusCode, 204);
+
+    // The change does not revoke the session: the refresh token still works
+    // (backend/auth `UpdatePassword` only rewrites the password hash).
+    expect(await user.client.refreshSession(), isTrue);
+    expect((await MeRepository(user.client).fetch()).success, isTrue);
 
     final fresh = ApiClient(
       baseUrl: ctx!.config.apiBaseUrl,

@@ -27,7 +27,7 @@ class PublicUser {
       profilePicture: f.optString('profilePicture'),
       backgroundPicture: f.optString('backgroundPicture'),
       bio: f.optString('bio'),
-      isFollowing: json['isFollowing'] as bool?,
+      isFollowing: f.optBool('isFollowing'),
       socialMediaLinks: parseSocialLinks(
         json['socialMediaLinks'],
         'PublicUser',

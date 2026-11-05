@@ -249,4 +249,49 @@ void main() {
       expect(tester.takeException(), isNull, reason: tab);
     }
   });
+
+  testWidgets('the unfollow button fits 320px at text scale 2 in Vietnamese', (
+    tester,
+  ) async {
+    final server = FakeProfileServer();
+    server.users['u-2'] = publicUserJson(
+      id: 'u-2',
+      username: 'tên_rất_dài_${'x' * 60}',
+      followerCount: 1234567,
+      isFollowing: true,
+    );
+    final device = FakeDevice()..locale = const Locale('vi');
+    await pumpRoute(
+      tester,
+      server,
+      AppRoutes.channel('u-2'),
+      device: device,
+      width: 320,
+      height: 700,
+      textScale: 2,
+    );
+
+    expect(find.text('Bỏ theo dõi'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('leaving the Chat tab keeps its draft and history', (
+    tester,
+  ) async {
+    final server = FakeProfileServer();
+    final app = await pumpRoute(tester, server, AppRoutes.channel('u-2'));
+    final input = find.byType(TextField, skipOffstage: false);
+    await tester.enterText(input, 'half written');
+
+    await _openTab(tester, 'Home');
+    await _openTab(tester, 'About');
+    await tester.tap(find.widgetWithText(Tab, 'Chat'));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<TextField>(input).controller!.text, 'half written');
+    final history = app
+        .requestsTo(ApiEndpoints.messages)
+        .where((r) => r.method == 'GET');
+    expect(history, hasLength(1));
+  });
 }

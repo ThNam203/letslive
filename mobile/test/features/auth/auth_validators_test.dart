@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
 import 'package:letslive_mobile/core/validation/field_limits.dart';
+import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
 
 /// A password that passes every signup rule, padded to [length].
 String validPassword(int length) => 'Aa!'.padRight(length, 'x');

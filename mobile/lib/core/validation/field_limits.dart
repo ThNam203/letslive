@@ -52,18 +52,11 @@ abstract final class FieldLimits {
   /// of a picked profile picture, in pixels.
   static const int avatarSourceMaxDimension = 10000;
 
-  /// `AVATAR_ACCEPTED_TYPES` in `web/constant/image.ts`: what web's picker
-  /// offers. Web re-encodes the cropped square to JPEG before uploading,
-  /// which mobile does not do, so mobile checks [avatarUploadTypes].
-  static const List<String> avatarAcceptedTypes = [
-    'image/jpeg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-  ];
-
   /// The formats the server decodes for a profile picture (`avatarFormats`
   /// in `backend/user/services/avatar_image.go`); anything else answers
-  /// `res_err_invalid_image` ("use JPEG or WebP").
+  /// `res_err_invalid_image` ("use JPEG or WebP"). Web's picker offers more
+  /// (`AVATAR_ACCEPTED_TYPES` in `web/constant/image.ts`: also PNG and GIF)
+  /// because it re-encodes the cropped square to JPEG first; mobile uploads
+  /// the file as is, so it checks this narrower list.
   static const List<String> avatarUploadTypes = ['image/jpeg', 'image/webp'];
 }

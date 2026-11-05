@@ -23,6 +23,13 @@ class JsonFields {
     throw _error(key, 'string or null', value);
   }
 
+  /// A boolean the backend omits or sends as null when it does not apply.
+  bool? optBool(String key) {
+    final value = json[key];
+    if (value == null || value is bool) return value as bool?;
+    throw _error(key, 'bool or null', value);
+  }
+
   /// A required whole number.
   int integer(String key) {
     final value = json[key];

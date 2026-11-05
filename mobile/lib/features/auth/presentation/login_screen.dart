@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/router/app_router.dart';
+import 'package:letslive_mobile/core/validation/field_limits.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
 import 'package:letslive_mobile/features/auth/presentation/auth_widgets.dart';
-import 'package:letslive_mobile/core/validation/field_limits.dart';
 
 /// Email/password and Google login (web `app/(auth)/login/page.tsx` and
 /// `components/forms/LoginForm.tsx`). On success the router leaves this
