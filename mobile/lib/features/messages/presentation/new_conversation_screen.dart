@@ -12,13 +12,13 @@ import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
 import 'package:letslive_mobile/core/validation/field_limits.dart';
-import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
+import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/messages/data/dm_models.dart';
 import 'package:letslive_mobile/features/messages/messages_providers.dart';
 import 'package:letslive_mobile/features/search/domain/search_type.dart';
 import 'package:letslive_mobile/features/user/data/public_user.dart';
 import 'package:letslive_mobile/features/user/presentation/user_avatar.dart';
-import 'package:letslive_mobile/features/vod/presentation/action_feedback.dart';
 
 /// Shortest query web searches for.
 const int _minQueryLength = 2;

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
-import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
+import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/vod/comment_providers.dart';
-import 'package:letslive_mobile/features/vod/presentation/action_feedback.dart';
 import 'package:letslive_mobile/features/vod/presentation/comment_composer.dart';
 import 'package:letslive_mobile/features/vod/presentation/comment_item.dart';
 

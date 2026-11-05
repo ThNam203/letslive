@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/pagination/paged_feed.dart';
-import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
+import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/search/search_providers.dart';
 
 /// How close to the end of the list (in logical pixels) the next page starts

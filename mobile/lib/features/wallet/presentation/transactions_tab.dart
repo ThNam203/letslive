@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
-import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
+import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/wallet/presentation/transaction_row.dart';
 import 'package:letslive_mobile/features/wallet/wallet_providers.dart';
 

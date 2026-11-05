@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/user/user_providers.dart';
-import 'package:letslive_mobile/features/vod/presentation/action_feedback.dart';
 
 /// Follow / Unfollow button for [userId] (web `ProfileActions`). Hidden until
 /// the user has loaded and for the signed-in user's own profile. The change

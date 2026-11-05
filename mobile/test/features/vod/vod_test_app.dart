@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
-import 'package:letslive_mobile/core/config/app_config.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:letslive_mobile/core/config/app_config.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
 import 'package:letslive_mobile/core/router/app_router.dart';
 

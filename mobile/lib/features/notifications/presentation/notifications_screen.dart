@@ -11,11 +11,11 @@ import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/network/api_response.dart';
 import 'package:letslive_mobile/core/push/push_tap.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
-import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
+import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/notifications/data/app_notification.dart';
 import 'package:letslive_mobile/features/notifications/domain/time_ago.dart';
 import 'package:letslive_mobile/features/notifications/notifications_providers.dart';
-import 'package:letslive_mobile/features/vod/presentation/action_feedback.dart';
 
 /// The Notifications tab screen.
 class NotificationsScreen extends ConsumerWidget {

@@ -8,11 +8,11 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
-import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
+import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/shop/data/shop_models.dart';
 import 'package:letslive_mobile/features/shop/presentation/shop_item_tile.dart';
 import 'package:letslive_mobile/features/shop/shop_providers.dart';
-import 'package:letslive_mobile/features/vod/presentation/action_feedback.dart';
 
 /// The shop screen.
 class ShopScreen extends ConsumerWidget {

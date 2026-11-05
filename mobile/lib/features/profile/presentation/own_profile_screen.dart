@@ -10,8 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
+import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
-import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
 import 'package:letslive_mobile/features/profile/presentation/profile_tabs.dart';
 import 'package:letslive_mobile/features/user/user_providers.dart';
 

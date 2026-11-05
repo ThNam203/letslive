@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:letslive_mobile/core/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
+import 'package:letslive_mobile/core/providers.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
 import 'package:letslive_mobile/features/home/data/vod.dart';
 import 'package:letslive_mobile/features/home/domain/media_format.dart';

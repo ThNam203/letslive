@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/pagination/paged_feed.dart';
-import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
+import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/shop/data/shop_models.dart';
 import 'package:letslive_mobile/features/shop/presentation/shop_item_tile.dart';
 import 'package:letslive_mobile/features/shop/shop_providers.dart';

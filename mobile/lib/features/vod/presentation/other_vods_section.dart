@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/providers.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
+import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/home/domain/media_format.dart';
-import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
 import 'package:letslive_mobile/features/home/presentation/media_card.dart';
 import 'package:letslive_mobile/features/vod/vod_providers.dart';
 

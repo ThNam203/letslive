@@ -11,11 +11,11 @@ import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/providers.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
+import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/creator/creator_providers.dart';
 import 'package:letslive_mobile/features/creator/presentation/vod_edit_dialog.dart';
 import 'package:letslive_mobile/features/home/data/vod.dart';
 import 'package:letslive_mobile/features/home/domain/media_format.dart';
-import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
 import 'package:letslive_mobile/features/home/presentation/media_card.dart';
 
 /// How close to the end of the list (logical pixels) the next page starts

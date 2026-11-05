@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/providers.dart';
-import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
+import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/profile/presentation/profile_home_tab.dart';
 import 'package:letslive_mobile/features/profile/profile_providers.dart';
 import 'package:letslive_mobile/features/user/data/public_user.dart';

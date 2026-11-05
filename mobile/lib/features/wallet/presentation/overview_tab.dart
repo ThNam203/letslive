@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/pagination/paged_feed.dart';
-import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
+import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/wallet/data/wallet_models.dart';
 import 'package:letslive_mobile/features/wallet/domain/decimal_amount.dart';
 import 'package:letslive_mobile/features/wallet/presentation/transaction_row.dart';

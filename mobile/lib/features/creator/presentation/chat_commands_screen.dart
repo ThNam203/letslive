@@ -13,10 +13,10 @@ import 'package:letslive_mobile/core/chat_parser/command.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/network/api_response.dart';
 import 'package:letslive_mobile/core/validation/field_limits.dart';
+import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/auth/presentation/auth_widgets.dart';
 import 'package:letslive_mobile/features/creator/creator_providers.dart';
 import 'package:letslive_mobile/features/creator/data/chat_command_admin_repository.dart';
-import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
 
 /// `NAME_PATTERN` in web's page.
 final RegExp _namePattern = RegExp(r'^[a-z0-9_-]{1,32}$');
