@@ -11,7 +11,9 @@ import 'package:letslive_mobile/features/shop/shop_providers.dart';
 import 'package:letslive_mobile/features/wallet/wallet_providers.dart';
 
 import '../auth/auth_test_app.dart';
+import '../home/home_fixtures.dart';
 import '../profile/profile_test_app.dart';
+import '../vod/vod_test_app.dart';
 import '../wallet/wallet_test_app.dart';
 
 final _buyRose = find.byKey(const ValueKey('buy-i-1'));
@@ -169,6 +171,64 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
+  });
+
+  group('video page', () {
+    FakeWalletServer server() => FakeWalletServer()
+      ..vodById = {
+        'vod-2': vodDetailJson(id: 'vod-2', userId: 'u-2'),
+        'vod-own': vodDetailJson(id: 'vod-own', userId: 'u-1'),
+      };
+
+    testWidgets('the uploader row opens the gift sheet', (tester) async {
+      await pumpRoute(tester, server(), AppRoutes.vod('u-2', 'vod-2'));
+      await tester.tap(_giftButton);
+      await tester.pumpAndSettle();
+      expect(find.byType(GiftSheet), findsOneWidget);
+    });
+
+    testWidgets('your own video has no gift button', (tester) async {
+      await pumpRoute(tester, server(), AppRoutes.vod('u-1', 'vod-own'));
+      expect(_giftButton, findsNothing);
+    });
+
+    testWidgets('the row does not overflow at 320px with text scale 2', (
+      tester,
+    ) async {
+      await pumpRoute(
+        tester,
+        server(),
+        AppRoutes.vod('u-2', 'vod-2'),
+        device: FakeDevice()..locale = const Locale('vi'),
+        width: 320,
+        height: 700,
+        textScale: 2,
+      );
+      expect(_giftButton, findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets('the channel header with Bỏ theo dõi and the gift button fits '
+      'at 320px, text scale 2, Vietnamese', (tester) async {
+    final server = FakeWalletServer();
+    server.users['u-2'] = publicUserJson(
+      id: 'u-2',
+      username: 'tên_rất_dài_${'x' * 60}',
+      isFollowing: true,
+    );
+    await pumpRoute(
+      tester,
+      server,
+      AppRoutes.channel('u-2'),
+      device: FakeDevice()..locale = const Locale('vi'),
+      width: 320,
+      height: 700,
+      textScale: 2,
+    );
+    expect(find.text('Bỏ theo dõi'), findsOneWidget);
+    expect(_giftButton, findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   group('gift sheet', () {

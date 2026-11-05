@@ -19,7 +19,7 @@ final RegExp _trailingZeros = RegExp(r'0+$');
 
 /// A signed decimal number: [units] x 10^-[scale]. Never uses floating point.
 @immutable
-class DecimalAmount implements Comparable<DecimalAmount> {
+class DecimalAmount {
   const DecimalAmount._(this.units, this.scale);
 
   /// Reads the server's plain decimal notation: optional `-`, digits, an
@@ -57,19 +57,6 @@ class DecimalAmount implements Comparable<DecimalAmount> {
   }
 
   BigInt _rescale(int to) => units * BigInt.from(10).pow(to - scale);
-
-  @override
-  int compareTo(DecimalAmount other) {
-    final common = scale > other.scale ? scale : other.scale;
-    return _rescale(common).compareTo(other._rescale(common));
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      other is DecimalAmount && compareTo(other) == 0;
-
-  @override
-  int get hashCode => _rescale(_maxFractionDigits + scale).hashCode;
 
   /// The amount as web shows it: grouped for [locale], at most two fraction
   /// digits (rounded half away from zero), no trailing zeros. A leading `-`

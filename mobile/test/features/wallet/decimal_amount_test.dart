@@ -26,12 +26,12 @@ void main() {
   group('arithmetic', () {
     test('adds exactly where doubles drift', () {
       // 0.1 + 0.2 is 0.30000000000000004 as a double.
-      expect(_d('0.10') + _d('0.20'), _d('0.30'));
+      expect((_d('0.10') + _d('0.20')).format('en'), '0.3');
       expect((_d('0.1') + _d('0.2')).format('en'), '0.3');
     });
 
     test('adds amounts of different scales', () {
-      expect(_d('1') + _d('0.25'), _d('1.25'));
+      expect((_d('1') + _d('0.25')).format('en'), '1.25');
     });
 
     test('is exact beyond double precision', () {

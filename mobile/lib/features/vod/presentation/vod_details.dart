@@ -7,6 +7,7 @@ import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
 import 'package:letslive_mobile/features/home/data/vod.dart';
 import 'package:letslive_mobile/features/home/domain/media_format.dart';
+import 'package:letslive_mobile/features/shop/presentation/gift_button.dart';
 import 'package:letslive_mobile/features/user/presentation/follow_button.dart';
 import 'package:letslive_mobile/features/user/presentation/user_avatar.dart';
 import 'package:letslive_mobile/features/user/user_providers.dart';
@@ -108,7 +109,16 @@ class VodDetails extends ConsumerWidget {
                   ],
                 ),
               ),
-              FollowButton(userId: ownerId),
+              // A Wrap: at large text the gift button drops under the follow
+              // button instead of overflowing.
+              Wrap(
+                spacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  FollowButton(userId: ownerId),
+                  GiftButton(userId: ownerId),
+                ],
+              ),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

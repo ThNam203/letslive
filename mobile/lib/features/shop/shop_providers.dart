@@ -119,6 +119,8 @@ class PurchaseNotifier extends Notifier<String?> {
     if (state != null) return null;
     state = itemId;
     final response = await request();
+    // Disposed (sheet closed mid-request): the wallet providers are
+    // autoDispose too, so the next screen loads fresh data anyway.
     if (!ref.mounted) return response;
     state = null;
     ref.invalidate(walletOverviewProvider);

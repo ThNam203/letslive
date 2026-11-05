@@ -30,7 +30,8 @@ double profileHeaderHeight(BuildContext context) {
 
 /// The top of a profile (web `ProfileHeader`): the banner when
 /// [showBanner], then the avatar, username, follower count, join date and
-/// the follow and gift buttons. The banner is a gradient until the user uploaded
+/// the follow and gift buttons. The banner is a gradient until the user
+/// uploaded
 /// one. Long names are cut with an ellipsis.
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({required this.user, this.showBanner = true, super.key});

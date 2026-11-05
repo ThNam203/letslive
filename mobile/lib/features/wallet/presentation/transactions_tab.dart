@@ -74,6 +74,28 @@ class _WalletTransactionsTabState extends ConsumerState<WalletTransactionsTab> {
       for (final t in loaded.items)
         if (_filter == null || t.type == _filter) t,
     ];
+    void loadMore() => ref.read(transactionsProvider.notifier).loadMore();
+    if (shown.isEmpty) {
+      // The filter hides every loaded row: say so, and let the user ask for
+      // more instead of paging through the whole history by itself.
+      return ListView(
+        children: [
+          chips,
+          EmptyNotice(
+            icon: Icons.receipt_long_outlined,
+            title: l10n.wallet_transactions_no_transactions,
+          ),
+          if (loaded.hasMore)
+            Center(
+              child: TextButton(
+                key: const ValueKey('load-more'),
+                onPressed: loaded.isLoadingMore ? null : loadMore,
+                child: Text(l10n.wallet_transactions_load_more),
+              ),
+            ),
+        ],
+      );
+    }
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(transactionsProvider),
       child: ListView.builder(
@@ -81,11 +103,7 @@ class _WalletTransactionsTabState extends ConsumerState<WalletTransactionsTab> {
         itemBuilder: (context, index) {
           if (index == 0) return chips;
           if (index == shown.length + 1) {
-            return PagedFooter(
-              feed: loaded,
-              onLoadMore: () =>
-                  ref.read(transactionsProvider.notifier).loadMore(),
-            );
+            return PagedFooter(feed: loaded, onLoadMore: loadMore);
           }
           return TransactionRow(transaction: shown[index - 1]);
         },

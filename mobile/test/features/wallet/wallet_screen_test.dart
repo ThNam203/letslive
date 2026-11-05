@@ -129,6 +129,26 @@ void main() {
     expect(find.text('+5'), findsOneWidget);
   });
 
+  testWidgets('a filter that hides every loaded row says so and does not '
+      'page by itself', (tester) async {
+    final server = FakeWalletServer()
+      ..transactions = [
+        for (var i = 0; i < 25; i++) transactionJson('t-$i', type: 'donate'),
+      ];
+    final app = await pumpRoute(tester, server, AppRoutes.wallet, height: 800);
+    await _openTab(tester, 'Transactions');
+
+    await tester.tap(find.byKey(const ValueKey('filter-reward')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No transactions found'), findsOneWidget);
+    final pages = app.requestsTo(ApiEndpoints.transactions);
+    expect(pages, hasLength(1));
+    await tester.tap(find.byKey(const ValueKey('load-more')));
+    await tester.pumpAndSettle();
+    expect(app.requestsTo(ApiEndpoints.transactions), hasLength(2));
+  });
+
   testWidgets('inventory lists owned items and tolerates unknown ones', (
     tester,
   ) async {

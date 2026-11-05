@@ -19,6 +19,7 @@ void main() {
   late ShopRepository shop;
   late GiftRepository gifts;
   late GiftRepository giftsOfB;
+  late String userAId;
   late String userBId;
 
   Future<String> userId(ContractUser user) async {
@@ -40,7 +41,7 @@ void main() {
     // Opening the wallet creates the account; then it gets 1000.00 SPARK.
     final overview = await wallet.overview();
     expect(overview.success, isTrue, reason: overview.key);
-    final userAId = await userId(context.userA);
+    userAId = await userId(context.userA);
     await runSql(
       _financeDb,
       'INSERT INTO account_balances (account_id, currency_code, balance) '
@@ -111,7 +112,13 @@ void main() {
   test('buying more than the balance fails with the web error key', () async {
     final items = (await shop.items()).data!;
     final priciest = items.reduce((a, b) => a.price >= b.price ? a : b);
-    // 1000 - Rose - Crown leaves less than the priciest item (Rocket, 1000).
+    // Leave one SPARK less than the price (balance is in minor units).
+    await runSql(
+      _financeDb,
+      'UPDATE account_balances SET balance = ${(priciest.price - 1) * 100} '
+      "WHERE currency_code = 'SPARK' AND account_id = "
+      "(SELECT id FROM accounts WHERE owner_id = '$userAId')",
+    );
     final response = await shop.purchase(priciest.id);
 
     expect(response.success, isFalse);
