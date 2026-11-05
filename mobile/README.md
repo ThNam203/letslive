@@ -104,9 +104,9 @@ What you need:
 - iOS: an APNs authentication key (`.p8`) uploaded in Firebase console
   (Project settings, Cloud Messaging), a provisioning profile with the Push
   Notifications capability for the bundle id (the entitlement is in
-  `ios/Runner/Runner.entitlements`, `development`; the `Release-*` build
-  configurations use `RunnerRelease.entitlements`, `production`), and a physical iPhone (the simulator has
-  no APNs token).
+  `ios/Runner/Runner.entitlements`, `development`; the `Release-staging` and
+  `Release-prod` build configurations use `RunnerRelease.entitlements`,
+  `production`), and a physical iPhone (the simulator has no APNs token).
 - Android: a device or emulator with Google Play services, Android 13+ to
   see the permission prompt.
 - The backend running with `FIREBASE_SERVICE_ACCOUNT_JSON` set (otherwise it
@@ -357,8 +357,16 @@ Apple and Google accounts and physical devices.
 
 ### Repository secrets
 
-Add them in GitHub, Settings, Secrets and variables, Actions. The workflow
-only references them by name and deletes every file it writes from them.
+Add them in GitHub, Settings, Secrets and variables, Actions, either as
+repository secrets or, better, as secrets of the GitHub environments `staging`
+and `prod` (the `android` and `ios` jobs run in the environment named like the
+flavor). The names carry the flavor suffix either way, and a missing secret
+fails the build; it never falls back to the other flavor. The workflow only
+references them by name and deletes every file it writes from them.
+
+Protect production: in Settings, Environments, `prod`, add required reviewers
+and restrict deployment branches/tags (for example to `mobile-v*` tags), so
+only an approved run can read the prod secrets.
 
 | Secret | How to produce it |
 |---|---|
@@ -398,9 +406,10 @@ only references them by name and deletes every file it writes from them.
    up in TestFlight after Apple's processing, a few minutes later. The build
    number is the workflow run number; the version comes from `pubspec.yaml`.
 
-The iOS job rewrites the signing settings of its throwaway checkout to
-manual distribution signing (see the step in the workflow); the repository
-keeps automatic signing for development.
+The iOS job writes the untracked `ios/Flutter/Signing.xcconfig` (included by
+`ios/Flutter/Release.xcconfig`, Runner Release configurations only) to switch
+to manual distribution signing with the imported profile; local development
+keeps automatic signing.
 
 ### Manual device pass
 

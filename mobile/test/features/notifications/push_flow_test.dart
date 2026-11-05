@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:letslive_mobile/core/l10n/locale_provider.dart';
 import 'package:letslive_mobile/core/push/push_providers.dart';
 import 'package:letslive_mobile/core/router/app_router.dart';
 import 'package:letslive_mobile/core/widgets/back_notice.dart';
@@ -40,6 +43,30 @@ void main() {
       'register $_token android en',
     ]);
     expect(push.permissionRequests, 1);
+  });
+
+  notifTest('changing the app language re-sends it for the registered token', (
+    tester,
+    socket,
+    push,
+  ) async {
+    final server = _server();
+    final app = await pumpNotifications(
+      tester,
+      server,
+      socket: socket,
+      push: push,
+    );
+
+    await app.container
+        .read(localeProvider.notifier)
+        .setLocale(const Locale('vi'));
+    await tester.pumpAndSettle();
+
+    expect(server.log.where((l) => l.startsWith('register')), [
+      'register $_token android en',
+      'register $_token android vi',
+    ]);
   });
 
   notifTest('logout unregisters token before clearing session', (

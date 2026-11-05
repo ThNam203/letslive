@@ -83,6 +83,10 @@ abstract final class ApiEndpoints {
   /// Prefix of a public profile: `/user/<id>`.
   static const String user = '/user';
 
+  /// Media host (MinIO) behind the gateway: `<base>/files/livestreams/<id>/thumbnail.jpeg`
+  /// is the thumbnail the transcoder captured. Used for image URLs only.
+  static const String files = '/files';
+
   /// `GET`: the signed-in user's balances (web `GetMyWallet`).
   static const String wallet = '/wallet';
 

@@ -43,6 +43,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       # Official git checkout instead of a third-party action.
       - name: Install Flutter
@@ -75,12 +77,18 @@ jobs:
   android:
     needs: verify
     runs-on: ubuntu-latest
+    # GitHub environment named like the flavor: protect `prod` with required
+    # reviewers (mobile/README.md). `env` is not available here, so the
+    # flavor expression is repeated.
+    environment: ${{ inputs.flavor || (contains(github.ref_name, '-staging') && 'staging' || 'prod') }}
     defaults:
       run:
         working-directory: mobile
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Install Flutter
         working-directory: ${{ github.workspace }}
@@ -90,12 +98,16 @@ jobs:
 
       - name: Write app config and signing files
         env:
-          APP_ENV_JSON: ${{ env.FLAVOR == 'prod' && secrets.MOBILE_ENV_JSON_PROD || secrets.MOBILE_ENV_JSON_STAGING }}
+          APP_ENV_JSON: ${{ secrets[format('MOBILE_ENV_JSON_{0}', env.FLAVOR)] }}
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
         run: |
+          # No fallback across flavors: a missing secret stops the build.
+          for name in APP_ENV_JSON KEYSTORE_BASE64 KEY_ALIAS KEY_PASSWORD STORE_PASSWORD; do
+            [ -n "${!name}" ] || { echo "::error::secret for $name ($FLAVOR) is missing"; exit 1; }
+          done
           mkdir -p env
           printf '%s' "$APP_ENV_JSON" > "env/$FLAVOR.json"
           printf '%s' "$KEYSTORE_BASE64" | base64 --decode > android/upload-keystore.jks
@@ -135,14 +147,15 @@ jobs:
   ios:
     needs: verify
     runs-on: macos-latest
+    environment: ${{ inputs.flavor || (contains(github.ref_name, '-staging') && 'staging' || 'prod') }}
     defaults:
       run:
         working-directory: mobile
-    env:
-      KEYCHAIN_PATH: ${{ github.workspace }}/../ci-signing.keychain-db
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Install Flutter
         working-directory: ${{ github.workspace }}
@@ -152,8 +165,12 @@ jobs:
 
       - name: Write app config
         env:
-          APP_ENV_JSON: ${{ env.FLAVOR == 'prod' && secrets.MOBILE_ENV_JSON_PROD || secrets.MOBILE_ENV_JSON_STAGING }}
+          APP_ENV_JSON: ${{ secrets[format('MOBILE_ENV_JSON_{0}', env.FLAVOR)] }}
         run: |
+          # No fallback across flavors: a missing secret stops the build.
+          for name in APP_ENV_JSON; do
+            [ -n "${!name}" ] || { echo "::error::secret for $name ($FLAVOR) is missing"; exit 1; }
+          done
           mkdir -p env
           printf '%s' "$APP_ENV_JSON" > "env/$FLAVOR.json"
 
@@ -164,8 +181,14 @@ jobs:
         env:
           CERT_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
           CERT_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          PROFILE_BASE64: ${{ env.FLAVOR == 'prod' && secrets.IOS_PROFILE_BASE64_PROD || secrets.IOS_PROFILE_BASE64_STAGING }}
+          PROFILE_BASE64: ${{ secrets[format('IOS_PROFILE_BASE64_{0}', env.FLAVOR)] }}
         run: |
+          # No fallback across flavors: a missing secret stops the build.
+          for name in CERT_BASE64 CERT_PASSWORD PROFILE_BASE64; do
+            [ -n "${!name}" ] || { echo "::error::secret for $name ($FLAVOR) is missing"; exit 1; }
+          done
+          KEYCHAIN_PATH="$RUNNER_TEMP/ci-signing.keychain-db"
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
           KEYCHAIN_PASSWORD="$(uuidgen)"
           printf '%s' "$CERT_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
@@ -188,15 +211,18 @@ jobs:
             echo "BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$RUNNER_TEMP/profile.plist" | cut -d. -f2-)"
           } >> "$GITHUB_ENV"
 
-      # The project signs automatically for development. The checkout is
-      # throwaway, so switch it to manual distribution signing with the
-      # imported profile instead of keeping a second signing setup in git.
-      - name: Switch the project to manual distribution signing
+      # ios/Flutter/Release.xcconfig includes this optional, untracked file for
+      # the Release configurations of the Runner target only. It turns on
+      # manual distribution signing with the imported profile; local
+      # development keeps automatic signing.
+      - name: Configure manual distribution signing
         run: |
-          sed -i '' \
-            -e "s/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual; DEVELOPMENT_TEAM = $TEAM_ID; PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";/" \
-            -e 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer";/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";/' \
-            ios/Runner.xcodeproj/project.pbxproj
+          cat > ios/Flutter/Signing.xcconfig <<EOF
+          CODE_SIGN_STYLE = Manual
+          DEVELOPMENT_TEAM = $TEAM_ID
+          PROVISIONING_PROFILE_SPECIFIER = $PROFILE_NAME
+          CODE_SIGN_IDENTITY[sdk=iphoneos*] = Apple Distribution
+          EOF
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -205,7 +231,7 @@ jobs:
             <key>method</key><string>app-store-connect</string>
             <key>teamID</key><string>$TEAM_ID</string>
             <key>signingStyle</key><string>manual</string>
-            <key>signingCertificate</key><string>iPhone Distribution</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
             <key>provisioningProfiles</key>
             <dict><key>$BUNDLE_ID</key><string>$PROFILE_NAME</string></dict>
           </dict>
@@ -252,4 +278,5 @@ jobs:
           security delete-keychain "$KEYCHAIN_PATH" || true
           rm -f "$RUNNER_TEMP/certificate.p12" "$RUNNER_TEMP/app.mobileprovision" \
             "$RUNNER_TEMP/profile.plist" "$HOME"/.appstoreconnect/private_keys/AuthKey_*.p8 \
-            "$HOME"/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision "env/$FLAVOR.json"
+            "$HOME"/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision \
+            ios/Flutter/Signing.xcconfig "env/$FLAVOR.json"

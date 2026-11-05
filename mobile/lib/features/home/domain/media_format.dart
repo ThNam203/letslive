@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
+import 'package:letslive_mobile/core/network/api_endpoints.dart';
 
 /// `3725` -> `1:02:05`, `65` -> `1:05` (web `formatSeconds`).
 String formatDuration(int totalSeconds) {
@@ -39,4 +40,5 @@ String viewsLabel(AppLocalizations l10n, int count) =>
 /// Where the transcoder stores a frame of a stream or video that has no
 /// uploaded thumbnail (web `mediaThumbnailUrl`).
 String mediaThumbnailUrl(String apiBaseUrl, String id, String? thumbnailUrl) =>
-    thumbnailUrl ?? '$apiBaseUrl/files/livestreams/$id/thumbnail.jpeg';
+    thumbnailUrl ??
+    '$apiBaseUrl${ApiEndpoints.files}/livestreams/$id/thumbnail.jpeg';

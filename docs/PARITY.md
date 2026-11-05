@@ -65,7 +65,6 @@ None: every gateway path mobile calls now has an `ApiEndpoints` constant.
 Gateway prefixes mobile never calls through `ApiEndpoints`.
 
 - `/realtime` - WebSocket, not REST: mobile uses `AppConfig.wsBaseUrl` (`<ws origin>/realtime`)
-- `/files` - media host path, not an API call: the only `/files` URL mobile builds is the transcoder-thumbnail fallback (`mediaThumbnailUrl` in `lib/features/home/domain/media_format.dart`, same as web); other media uses the absolute URLs the API returns
 - `/deposits` - Stripe deposits are out of scope for mobile
 - `/payments` - Stripe payment history is out of scope for mobile
 - `/gifts` - gateway route with no backend handler (user service only has `/user/{id}/gifts/received`, `/user/me/gifts/sent`) and no web caller

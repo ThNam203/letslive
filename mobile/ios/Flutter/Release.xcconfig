@@ -1,1 +1,4 @@
 #include "Generated.xcconfig"
+// Written only by the release workflow (manual distribution signing); absent
+// locally, so development keeps automatic signing. Git-ignored.
+#include? "Signing.xcconfig"
