@@ -118,39 +118,15 @@ class ConversationsNotifier extends PagedFeedNotifier<Conversation> {
     );
   }
 
-  /// Fetches page 0 again and merges it into what is loaded: the fresh
-  /// items come first, in server order, and the conversations of the
-  /// later pages already loaded stay. The loaded pages and the scroll
-  /// position survive, unlike a rebuild. A failed fetch changes nothing.
-  Future<void> _refreshFirstPage() async {
-    final response = await fetchPage(0);
-    final fresh = response.data;
-    final feed = state.value;
-    if (!ref.mounted || !response.success || fresh == null || feed == null) {
-      return;
-    }
-    final freshIds = {for (final c in fresh) c.id};
-    state = AsyncData(
-      feed.copyWith(
-        items: [
-          ...fresh,
-          for (final c in feed.items)
-            if (!freshIds.contains(c.id)) c,
-        ],
-        total: response.meta?.total,
-      ),
-    );
-  }
-
   void _onEvent(DmEvent event) {
     final feed = state.value;
     switch (event) {
       case DmReconnected():
-        unawaited(_refreshFirstPage());
+        unawaited(refreshFirstPage());
       case DmNewMessage(:final conversationId, :final message):
         if (feed == null) return;
         final index = feed.items.indexWhere((c) => c.id == conversationId);
-        if (index < 0) return unawaited(_refreshFirstPage());
+        if (index < 0) return unawaited(refreshFirstPage());
         final updated = feed.items[index].withLastMessage(
           LastMessage(
             id: message.id,

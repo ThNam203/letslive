@@ -68,6 +68,73 @@ hidden while fewer than two tabs are registered. Each tab keeps its own
 navigation stack. The shell also pauses the realtime socket in the background
 and resumes it on return.
 
+## Notifications and push
+
+The Notifications tab (`lib/features/notifications/`) lists the user's
+notifications and counts unread ones on its tab icon; new ones arrive live
+over the realtime socket (`notification.created`). Push notifications
+(`lib/core/push/`) reach the user while the app is closed or in the
+background:
+
+- **Registration.** After sign-in `PushService.registerForUser` asks for the
+  notification permission and posts the FCM token to `POST /user/me/devices`
+  (`{token, platform, locale}`); a rotated token is posted again. On logout
+  and on session expiry the token is removed (`DELETE /user/me/devices/<token>`)
+  and deleted locally, so a logged-out device gets no more pushes.
+- **Taps.** A tap opens the screen the push names (`resolveDeepLink` in
+  `lib/core/push/push_tap.dart`): a DM opens its conversation, a comment its
+  video, anything else the notifications tab. Only the app's own routes are
+  ever opened.
+- **Foreground.** The server skips the push for a user with a live realtime
+  connection, and the app shows nothing for a push that arrives while open
+  (`setForegroundNotificationPresentationOptions` with everything off), so
+  nothing shows twice: the in-app badge and list update instead.
+- **Without Firebase** (dev with no `FIREBASE_*` keys) `PushService` does
+  nothing and the rest of the app works as usual.
+
+### Manual verification (needs a physical device)
+
+Not done by the automated tests: it needs credentials the repository does not
+have. Do this once per platform before a release.
+
+What you need:
+
+- A Firebase project with the Android and iOS apps registered, and its
+  `FIREBASE_*` keys in `env/<flavor>.json` (see `.env.example`).
+- iOS: an APNs authentication key (`.p8`) uploaded in Firebase console
+  (Project settings, Cloud Messaging), a provisioning profile with the Push
+  Notifications capability for the bundle id (the entitlement is in
+  `ios/Runner/Runner.entitlements`), and a physical iPhone (the simulator has
+  no APNs token).
+- Android: a device or emulator with Google Play services, Android 13+ to
+  see the permission prompt.
+- The backend running with `FIREBASE_SERVICE_ACCOUNT_JSON` set (otherwise it
+  logs pushes and sends none), reachable from the device.
+
+Steps:
+
+1. Run the app (`flutter run --flavor dev --dart-define-from-file=env/dev.json`
+   on the device), sign in as user A and allow notifications.
+2. Check the server has the device:
+   `SELECT platform, locale FROM device_tokens WHERE user_id = '<A id>'` in
+   the user database shows one row.
+3. Background the app (home button) or swipe it away. With the web app or
+   another account B, follow user A, or send A a direct message, or comment on
+   A's video. Expected: a system notification with the title and text of the
+   in-app notification arrives within a few seconds (Android channel
+   "Notifications" / "Thông báo").
+4. Tap it. Expected: the app opens on the matching screen (DM: the
+   conversation; comment: the video; follow or other: the Notifications tab),
+   with back returning to the tabs. Repeat once with the app fully closed.
+5. Keep the app open on screen and repeat step 3. Expected: no system
+   notification; the Notifications (or Messages) tab badge goes up instead.
+6. Delete the target (e.g. the video) before tapping a push for it. Expected:
+   a "not found" notice with a back button.
+7. Log out, then repeat step 3 for user A. Expected: no push. The
+   `device_tokens` row of step 2 is gone.
+
+Record the results in the pull request.
+
 ## Video player
 
 Live (and later VOD) playback goes through one small interface,

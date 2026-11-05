@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/config/app_config.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/l10n/locale_provider.dart';
+import 'package:letslive_mobile/core/push/push_providers.dart';
 import 'package:letslive_mobile/core/router/app_router.dart';
 import 'package:letslive_mobile/core/theme/app_theme.dart';
 import 'package:letslive_mobile/core/theme/theme_mode_provider.dart';
@@ -14,6 +15,8 @@ class LetsLiveApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Device registration and push taps live as long as the app.
+    ref.watch(pushBridgeProvider);
     return MaterialApp.router(
       routerConfig: ref.watch(appRouterProvider),
       onGenerateTitle: (context) =>

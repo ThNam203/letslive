@@ -53,6 +53,15 @@ abstract final class ApiEndpoints {
   /// `/<id>/typing` and `/unread-counts`.
   static const String conversations = '/conversations';
 
+  /// Push registration of this device: `POST {token, platform, locale}`,
+  /// `DELETE /<token>` (URL-encoded: FCM tokens contain a colon).
+  static const String userDevices = '/user/me/devices';
+
+  /// The user's notifications (20 per `?page=`, 0-based): `GET`,
+  /// `GET /unread-count`, `PATCH /<id>/read`, `PATCH /read-all` and
+  /// `DELETE /<id>`.
+  static const String notifications = '/user/me/notifications';
+
   /// Prefix of a public profile: `/user/<id>`.
   static const String user = '/user';
 }

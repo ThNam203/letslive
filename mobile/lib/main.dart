@@ -8,6 +8,7 @@ import 'package:letslive_mobile/app.dart';
 import 'package:letslive_mobile/core/config/app_config.dart';
 import 'package:letslive_mobile/core/config/env.dart';
 import 'package:letslive_mobile/core/providers.dart';
+import 'package:letslive_mobile/core/push/push_providers.dart';
 import 'package:letslive_mobile/core/storage/preferences.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -42,6 +43,9 @@ Future<void> main() async {
     ],
   );
   container.read(realtimeManagerProvider).start();
+  // Creating the service also registers its logout hook; init listens for
+  // token rotation and for the tap that launched the app.
+  await container.read(pushServiceProvider).init();
   runApp(
     UncontrolledProviderScope(container: container, child: const LetsLiveApp()),
   );

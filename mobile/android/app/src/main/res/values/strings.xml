@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">LetsLive</string>
+    <!-- Id of the default push notification channel. Shared by the manifest
+         meta-data (what FCM uses, since the backend sends no channel) and
+         MainActivity (which creates the channel). -->
+    <string name="default_notification_channel_id" translatable="false">letslive_default</string>
+    <!-- Name the user sees in the system notification settings. -->
+    <string name="default_notification_channel_name">Notifications</string>
 </resources>

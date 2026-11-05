@@ -81,6 +81,31 @@ abstract class PagedFeedNotifier<T> extends AsyncNotifier<PagedFeed<T>> {
     );
   }
 
+  /// Fetches page 0 again and merges it into what is loaded: the fresh
+  /// items come first, in server order, and the items of the later pages
+  /// already loaded stay. The loaded pages and the scroll position survive,
+  /// unlike a rebuild. A failed fetch changes nothing. For lists kept current
+  /// from realtime events (catch-up after a reconnect).
+  Future<void> refreshFirstPage() async {
+    final response = await fetchPage(0);
+    final fresh = response.data;
+    final feed = state.value;
+    if (!ref.mounted || !response.success || fresh == null || feed == null) {
+      return;
+    }
+    final freshIds = {for (final item in fresh) idOf(item)};
+    state = AsyncData(
+      feed.copyWith(
+        items: [
+          ...fresh,
+          for (final item in feed.items)
+            if (!freshIds.contains(idOf(item))) item,
+        ],
+        total: response.meta?.total,
+      ),
+    );
+  }
+
   /// Appends the next page. Does nothing while a page is loading, after the
   /// last page, or before the first page arrived. Also the retry after an
   /// error.

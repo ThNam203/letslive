@@ -5,6 +5,8 @@ import 'package:letslive_mobile/core/router/app_routes.dart';
 import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
 import 'package:letslive_mobile/features/messages/messages_providers.dart';
 import 'package:letslive_mobile/features/messages/presentation/conversations_screen.dart';
+import 'package:letslive_mobile/features/notifications/notifications_providers.dart';
+import 'package:letslive_mobile/features/notifications/presentation/notifications_screen.dart';
 import 'package:letslive_mobile/features/profile/presentation/own_profile_screen.dart';
 import 'package:letslive_mobile/features/search/presentation/search_screen.dart';
 
@@ -57,6 +59,13 @@ final List<AppTab> appTabs = [
     icon: Icons.search,
     label: (l10n) => l10n.common_search_title,
     builder: (context) => const SearchScreen(),
+  ),
+  AppTab(
+    path: AppRoutes.notifications,
+    icon: Icons.notifications_none,
+    label: (l10n) => l10n.notification_title,
+    builder: (context) => const NotificationsScreen(),
+    badge: notificationBadgeProvider,
   ),
   AppTab(
     path: AppRoutes.messages,
