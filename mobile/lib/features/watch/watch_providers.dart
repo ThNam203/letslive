@@ -15,12 +15,12 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/network/api_load.dart';
 import 'package:letslive_mobile/core/providers.dart';
+import 'package:letslive_mobile/features/user/data/public_user.dart';
+import 'package:letslive_mobile/features/user/user_providers.dart';
 import 'package:letslive_mobile/features/watch/data/better_player_controller_wrapper.dart';
 import 'package:letslive_mobile/features/watch/data/watch_repository.dart';
 import 'package:letslive_mobile/features/watch/domain/channel_state.dart';
 import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
-import 'package:letslive_mobile/features/user/data/public_user.dart';
-import 'package:letslive_mobile/features/user/user_providers.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 /// How often an open channel asks whether the stream is still live (web's

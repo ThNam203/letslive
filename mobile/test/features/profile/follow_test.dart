@@ -5,8 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
 import 'package:letslive_mobile/core/router/app_router.dart';
 
-import '../vod/vod_test_app.dart';
 import '../home/home_fixtures.dart';
+import '../vod/vod_test_app.dart';
 import 'profile_test_app.dart';
 
 final _follow = find.byKey(const ValueKey('follow-button'));

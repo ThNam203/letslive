@@ -55,6 +55,22 @@ void main() {
     expect(server.profileUpdates.last, {'locale': 'vi-VN'});
   });
 
+  testWidgets('a failed profile save says so; the UI language still '
+      'switches', (tester) async {
+    final server = FakeProfileServer()..profileUpdateStatus = 500;
+    await pumpRoute(tester, server, AppRoutes.settings);
+
+    await tester.tap(_key('settings-language'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tiếng Việt'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cài đặt'), findsOneWidget);
+    // web's toast of the server error key, in the new language.
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.text('Đã xảy ra lỗi hệ thống.'), findsOneWidget);
+  });
+
   testWidgets('the pickers fit 320px at text scale 2', (tester) async {
     await pumpRoute(
       tester,

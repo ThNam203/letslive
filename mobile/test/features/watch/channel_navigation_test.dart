@@ -7,8 +7,8 @@ import 'package:letslive_mobile/features/watch/watch_providers.dart';
 
 import '../home/home_fixtures.dart';
 import '../search/search_test_app.dart';
-import 'fake_player.dart';
 import '../vod/vod_test_app.dart';
+import 'fake_player.dart';
 import 'watch_test_app.dart';
 
 /// Taps on Home and Search cards that lead to `/users/:userId`.

@@ -23,8 +23,8 @@ import 'package:letslive_mobile/features/watch/watch_providers.dart';
 
 import '../../core/network/fake_adapter.dart';
 import '../home/home_fixtures.dart';
-import 'creator_fakes.dart';
 import '../watch/fake_player.dart';
+import 'creator_fakes.dart';
 
 const _base = 'http://localhost:8000';
 

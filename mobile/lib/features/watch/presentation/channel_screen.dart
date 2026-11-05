@@ -134,10 +134,11 @@ const int _titleMaxLines = 2;
 /// With the keyboard open ([keyboardOpen]) the title block, the profile
 /// header and the tab bar go and only the chat remains. If the tabs would
 /// still get less than their minimum height the page scrolls (player on
-/// top, tabs at the minimum) rather than overflow. Held sideways only the
-/// player shows: rotating is the fullscreen mode. Player and chat hold
-/// [GlobalKey]s so switching between these layouts keeps playback and the
-/// typed text.
+/// top, tabs at the minimum) rather than overflow. Player and chat hold
+/// [GlobalKey]s so switching between these portrait layouts keeps playback
+/// and the typed text. Held sideways only the player shows (rotating is the
+/// fullscreen mode): playback goes on, but the chat leaves the tree, so a
+/// draft typed before rotating is lost.
 class _LiveBody extends ConsumerStatefulWidget {
   const _LiveBody({
     required this.user,

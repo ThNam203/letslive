@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/l10n/locale_provider.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
@@ -164,22 +164,26 @@ class _ThemeTile extends ConsumerWidget {
 }
 
 /// The app language. Like web it is stored on the device
-/// ([LocaleNotifier]) and saved on the profile (`PUT /user/me {locale}`);
-/// a failed profile save is only logged, the app language changed anyway.
+/// ([LocaleNotifier]) and saved on the profile (`PUT /user/me {locale}`).
+/// A failed profile save shows the server's error in a snack bar, in the
+/// chosen language (web's toast); the app language has changed anyway.
 class _LanguageTile extends ConsumerWidget {
   const _LanguageTile();
 
-  Future<void> _change(WidgetRef ref, Locale locale, String tag) async {
+  Future<void> _change(
+    ScaffoldMessengerState messenger,
+    WidgetRef ref,
+    Locale locale,
+    String tag,
+  ) async {
     // Read up front: the whole app rebuilds in the new language meanwhile.
     final session = ref.read(sessionProvider.notifier);
     await ref.read(localeProvider.notifier).setLocale(locale);
     final res = await session.updateProfile(locale: tag);
-    if (!res.success) {
-      developer.log(
-        'saving the profile locale failed: ${res.statusCode} ${res.key}',
-        name: 'settings',
-      );
-    }
+    if (res.success) return;
+    // In the chosen language, whether or not the app has rebuilt in it yet.
+    final message = apiErrorMessage(lookupAppLocalizations(locale), res);
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -196,6 +200,7 @@ class _LanguageTile extends ConsumerWidget {
       title: Text(l10n.settings_language_title),
       subtitle: Text(language.name),
       onTap: () async {
+        final messenger = ScaffoldMessenger.of(context);
         final picked = await _pick(
           context,
           title: l10n.settings_language_title,
@@ -203,7 +208,7 @@ class _LanguageTile extends ConsumerWidget {
           options: [for (final l in _languages) (l, l.name)],
         );
         if (picked != null && picked != language) {
-          unawaited(_change(ref, picked.locale, picked.tag));
+          unawaited(_change(messenger, ref, picked.locale, picked.tag));
         }
       },
     );

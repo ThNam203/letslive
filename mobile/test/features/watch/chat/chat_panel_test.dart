@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:letslive_mobile/core/providers.dart';
-import 'package:letslive_mobile/core/router/app_router.dart';
 import 'package:letslive_mobile/core/realtime/realtime_manager.dart';
+import 'package:letslive_mobile/core/router/app_router.dart';
 import 'package:letslive_mobile/features/watch/chat/presentation/chat_panel.dart';
 
 import '../../../core/realtime/fake_channel.dart';
