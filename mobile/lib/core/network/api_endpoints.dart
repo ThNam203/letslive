@@ -64,4 +64,27 @@ abstract final class ApiEndpoints {
 
   /// Prefix of a public profile: `/user/<id>`.
   static const String user = '/user';
+
+  /// `GET`: the signed-in user's balances (web `GetMyWallet`).
+  static const String wallet = '/wallet';
+
+  /// `GET`: the platform's currencies (web `GetCurrencies`).
+  static const String currencies = '/currencies';
+
+  /// `GET ?page=&limit=` (max 20, 0-based page): the user's transactions.
+  static const String transactions = '/transactions';
+
+  /// `GET`: the shop catalogue (public).
+  static const String shopItems = '/shop/items';
+
+  /// `POST {shopItemId, quantity, recipientUserId?}`: buys an item, or sends
+  /// it as a gift when a recipient is given. Not idempotent.
+  static const String shopPurchase = '/shop/purchase';
+
+  /// `GET ?page=&limit=`: the items the signed-in user owns.
+  static const String inventory = '/user/me/inventory';
+
+  /// `GET ?page=&limit=`: gifts the signed-in user sent. Received gifts of a
+  /// user are `/user/<id>/gifts/received`.
+  static const String giftsSent = '/user/me/gifts/sent';
 }

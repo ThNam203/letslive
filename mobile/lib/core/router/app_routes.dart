@@ -49,6 +49,20 @@ abstract final class AppRoutes {
   static String vod(String userId, String vodId) =>
       '/users/${Uri.encodeComponent(userId)}'
       '/vods/${Uri.encodeComponent(vodId)}';
+
+  /// The wallet: overview, transactions and inventory (web `/wallet/*`).
+  static const String wallet = '/wallet';
+
+  /// The shop (web `/shop`).
+  static const String shop = '/shop';
+
+  /// Route pattern of the gifts a user received (web
+  /// `/users/[userId]/gifts`); see [gifts].
+  static const String giftsPattern = '/users/:userId/gifts';
+
+  /// The gifts [userId] received.
+  static String gifts(String userId) =>
+      '/users/${Uri.encodeComponent(userId)}/gifts';
   static const String login = '/login';
   static const String signup = '/signup';
   static const String accountSetup = '/account-setup';

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/features/home/domain/media_format.dart';
 import 'package:letslive_mobile/features/profile/domain/profile_format.dart';
+import 'package:letslive_mobile/features/shop/presentation/gift_button.dart';
 import 'package:letslive_mobile/features/user/data/public_user.dart';
 import 'package:letslive_mobile/features/user/presentation/follow_button.dart';
 import 'package:letslive_mobile/features/user/presentation/user_avatar.dart';
@@ -29,7 +30,7 @@ double profileHeaderHeight(BuildContext context) {
 
 /// The top of a profile (web `ProfileHeader`): the banner when
 /// [showBanner], then the avatar, username, follower count, join date and
-/// the follow button. The banner is a gradient until the user uploaded
+/// the follow and gift buttons. The banner is a gradient until the user uploaded
 /// one. Long names are cut with an ellipsis.
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({required this.user, this.showBanner = true, super.key});
@@ -113,7 +114,14 @@ class ProfileHeader extends StatelessWidget {
                     // "Bỏ theo dõi" at large text) would squeeze the name away.
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: FollowButton(userId: user.id),
+                      child: Wrap(
+                        spacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          FollowButton(userId: user.id),
+                          GiftButton(userId: user.id),
+                        ],
+                      ),
                     ),
                   ],
                 ),

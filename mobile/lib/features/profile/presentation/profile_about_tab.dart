@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
+import 'package:letslive_mobile/core/router/app_routes.dart';
 import 'package:letslive_mobile/features/home/domain/media_format.dart';
 import 'package:letslive_mobile/features/profile/domain/profile_format.dart';
 import 'package:letslive_mobile/features/profile/profile_providers.dart';
 import 'package:letslive_mobile/features/user/data/public_user.dart';
 
 /// The About tab of a profile (web `ProfileAboutTab`): the bio, channel
-/// stats and the social links. Only http(s) links are shown (they are user
+/// stats, a link to the gifts received and the social links. Only http(s) links are shown (they are user
 /// supplied); a tap opens the browser.
 class ProfileAboutTab extends ConsumerWidget {
   const ProfileAboutTab({required this.user, super.key});
@@ -69,6 +71,14 @@ class ProfileAboutTab extends ConsumerWidget {
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.calendar_today_outlined),
           title: Text(joinedLabel(l10n, user.createdAt)),
+        ),
+        ListTile(
+          key: const ValueKey('open-gifts'),
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.card_giftcard),
+          title: Text(l10n.shop_gifts_received_page_title),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push(AppRoutes.gifts(user.id)),
         ),
         if (links.isNotEmpty) ...[
           const SizedBox(height: 16),

@@ -15,7 +15,10 @@ import 'package:letslive_mobile/features/messages/presentation/new_conversation_
 import 'package:letslive_mobile/features/settings/presentation/profile_settings_screen.dart';
 import 'package:letslive_mobile/features/settings/presentation/security_screen.dart';
 import 'package:letslive_mobile/features/settings/presentation/settings_screen.dart';
+import 'package:letslive_mobile/features/shop/presentation/gifts_screen.dart';
+import 'package:letslive_mobile/features/shop/presentation/shop_screen.dart';
 import 'package:letslive_mobile/features/vod/presentation/vod_screen.dart';
+import 'package:letslive_mobile/features/wallet/presentation/wallet_screen.dart';
 import 'package:letslive_mobile/features/watch/presentation/channel_screen.dart';
 
 export 'package:letslive_mobile/core/router/app_routes.dart';
@@ -69,6 +72,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.channelPattern,
         builder: (context, state) =>
             ChannelScreen(userId: state.pathParameters['userId']!),
+      ),
+      GoRoute(
+        path: AppRoutes.giftsPattern,
+        builder: (context, state) =>
+            GiftsScreen(userId: state.pathParameters['userId']!),
+      ),
+      GoRoute(
+        path: AppRoutes.wallet,
+        builder: (context, state) => const WalletScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.shop,
+        builder: (context, state) => const ShopScreen(),
       ),
       GoRoute(
         path: AppRoutes.vodPattern,

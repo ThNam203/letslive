@@ -77,6 +77,19 @@ String apiErrorMessage(AppLocalizations l10n, ApiResponse<Object?> response) {
       l10n.api_response_res_err_vod_comment_already_liked,
     'res_err_vod_comment_not_liked' =>
       l10n.api_response_res_err_vod_comment_not_liked,
+    'res_err_insufficient_balance' =>
+      l10n.api_response_res_err_insufficient_balance,
+    'res_err_invalid_amount' => l10n.api_response_res_err_invalid_amount,
+    'res_err_shop_item_not_found' =>
+      l10n.api_response_res_err_shop_item_not_found,
+    'res_err_transaction_failed' =>
+      l10n.api_response_res_err_transaction_failed,
+    'res_err_transaction_not_found' =>
+      l10n.api_response_res_err_transaction_not_found,
+    'res_err_unsupported_currency' =>
+      l10n.api_response_res_err_unsupported_currency,
+    'res_err_user_service_error' =>
+      l10n.api_response_res_err_user_service_error,
     _ => null,
   };
   if (known != null) return known;

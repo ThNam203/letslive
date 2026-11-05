@@ -1,6 +1,6 @@
 /// The Profile tab: the signed-in user's own profile as others see it
-/// (header, then Home / Videos / About), with a settings button in the app
-/// bar. The public copy of the user is loaded by id (the session user lacks
+/// (header, then Home / Videos / About), with wallet, shop and settings
+/// buttons in the app bar. The public copy of the user is loaded by id (the session user lacks
 /// a few public fields); saving the profile invalidates it.
 library;
 
@@ -42,6 +42,18 @@ class OwnProfileScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.settings_navigation_profile),
         actions: [
+          IconButton(
+            key: const ValueKey('open-wallet'),
+            tooltip: l10n.wallet_page_title,
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            onPressed: () => context.push(AppRoutes.wallet),
+          ),
+          IconButton(
+            key: const ValueKey('open-shop'),
+            tooltip: l10n.shop_shop_page_title,
+            icon: const Icon(Icons.storefront_outlined),
+            onPressed: () => context.push(AppRoutes.shop),
+          ),
           IconButton(
             key: const ValueKey('open-settings'),
             tooltip: l10n.settings_page_title,
