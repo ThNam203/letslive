@@ -154,6 +154,9 @@ class FakeMessageRepository implements MessageRepository {
   int messageCalls = 0;
   int unreadCalls = 0;
 
+  /// When set, `unreadCounts` waits for it (its answer then lands late).
+  Completer<void>? holdUnread;
+
   /// When set, `messages` waits for it.
   Completer<void>? holdMessages;
 
@@ -244,7 +247,9 @@ class FakeMessageRepository implements MessageRepository {
   @override
   Future<ApiResponse<Map<String, int>>> unreadCounts() async {
     unreadCalls++;
-    return ok(Map.of(unread));
+    final snapshot = Map.of(unread);
+    await holdUnread?.future;
+    return ok(snapshot);
   }
 
   @override

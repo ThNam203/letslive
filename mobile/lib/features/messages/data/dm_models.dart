@@ -52,7 +52,10 @@ class Participant {
     );
   }
 
+  /// The member's user id.
   final String userId;
+
+  /// The name shown for them in the conversation.
   final String username;
 
   /// Absolute URL of the avatar; null when none.
@@ -80,10 +83,19 @@ class LastMessage {
     );
   }
 
+  /// Id of the message.
   final String id;
+
+  /// User id of the sender.
   final String senderId;
+
+  /// The sender's name.
   final String senderUsername;
+
+  /// The text, cut to the preview length by the server.
   final String text;
+
+  /// When it was sent.
   final DateTime createdAt;
 }
 

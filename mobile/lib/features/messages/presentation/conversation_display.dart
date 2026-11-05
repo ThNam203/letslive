@@ -2,10 +2,12 @@
 /// `getConversationDisplay` and `formatTime` in `conversation-list-item.tsx`).
 library;
 
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/features/messages/data/dm_models.dart';
 import 'package:letslive_mobile/features/messages/domain/dm_rules.dart';
+import 'package:letslive_mobile/features/user/presentation/user_avatar.dart';
 
 /// Name and picture of a conversation as the signed-in user sees it.
 class ConversationDisplay {
@@ -66,4 +68,45 @@ String formatConversationTime(
     return DateFormat.E(locale).format(date);
   }
   return DateFormat.MMMd(locale).format(date);
+}
+
+/// A round avatar with a green dot while the person is online.
+class AvatarWithDot extends StatelessWidget {
+  const AvatarWithDot({
+    required this.name,
+    required this.isOnline,
+    this.pictureUrl,
+    this.radius = 20,
+    super.key,
+  });
+
+  final String name;
+  final String? pictureUrl;
+  final bool isOnline;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    children: [
+      UserAvatar(pictureUrl: pictureUrl, name: name, radius: radius),
+      if (isOnline)
+        Positioned(
+          right: 0,
+          bottom: 0,
+          child: Container(
+            key: const ValueKey('online-dot'),
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: Colors.green,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Theme.of(context).colorScheme.surface,
+                width: 2,
+              ),
+            ),
+          ),
+        ),
+    ],
+  );
 }

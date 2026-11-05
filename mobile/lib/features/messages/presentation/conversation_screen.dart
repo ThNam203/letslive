@@ -12,14 +12,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/network/api_response.dart';
-import 'package:letslive_mobile/core/validation/field_limits.dart';
 import 'package:letslive_mobile/core/widgets/back_notice.dart';
 import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
 import 'package:letslive_mobile/features/messages/data/dm_models.dart';
 import 'package:letslive_mobile/features/messages/domain/dm_rules.dart';
 import 'package:letslive_mobile/features/messages/messages_providers.dart';
 import 'package:letslive_mobile/features/messages/presentation/conversation_display.dart';
-import 'package:letslive_mobile/features/messages/presentation/conversations_screen.dart';
 import 'package:letslive_mobile/features/messages/presentation/message_bubble.dart';
 import 'package:letslive_mobile/features/messages/presentation/message_composer.dart';
 import 'package:letslive_mobile/features/profile/profile_providers.dart';
@@ -302,9 +300,14 @@ class _MessageListState extends ConsumerState<_MessageList> {
         if (i == messages.length) {
           return _OlderLoader(
             thread: widget.thread,
-            onLoad: () => ref
-                .read(dmThreadProvider(widget.conversationId).notifier)
-                .loadOlder(),
+            // The loader asks from a microtask, which can run after the
+            // screen is gone.
+            onLoad: () {
+              if (!mounted) return;
+              ref
+                  .read(dmThreadProvider(widget.conversationId).notifier)
+                  .loadOlder();
+            },
           );
         }
         final index = messages.length - 1 - i;
@@ -389,7 +392,7 @@ class _EditDialogState extends State<_EditDialog> {
         key: const ValueKey('edit-message-input'),
         controller: _text,
         autofocus: true,
-        maxLength: FieldLimits.dmMessageMax,
+        inputFormatters: [dmMessageLimitFormatter],
         maxLines: 5,
         minLines: 1,
         onChanged: (_) => setState(() {}),

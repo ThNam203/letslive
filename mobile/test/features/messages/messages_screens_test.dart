@@ -353,6 +353,34 @@ void main() {
     expect(find.byKey(const ValueKey('message-input')), findsOneWidget);
   });
 
+  testWidgets('the new-conversation screen fits at 320px with large text and '
+      'long names', (tester) async {
+    const longName =
+        'Nguyễn Văn Một Cái Tên Rất Là Dài Dòng 🎉 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    final server = FakeMessagesServer()
+      ..searchUsers = [
+        publicUserJson(id: 'u-7', username: longName),
+        publicUserJson(id: 'u-8', username: '$longName 2'),
+      ];
+    await pumpMessages(tester, server, width: 320, height: 568, textScale: 2);
+    await tester.tap(find.byKey(const ValueKey('new-conversation')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('mode-group')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('group-name')), longName);
+    for (final id in ['u-7', 'u-8']) {
+      await tester.enterText(find.byKey(const ValueKey('user-search')), 'ng');
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.byKey(ValueKey('result-$id')));
+      await tester.pumpAndSettle();
+    }
+
+    expect(find.byKey(const ValueKey('selected-u-7')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the next account never sees the previous account\'s '
       'conversations', (tester) async {
     final server = _server()..unread['c-1'] = 4;

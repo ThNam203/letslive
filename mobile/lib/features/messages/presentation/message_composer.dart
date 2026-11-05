@@ -139,7 +139,7 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
                   child: TextField(
                     key: const ValueKey('message-input'),
                     controller: _text,
-                    inputFormatters: [_serverLengthLimit],
+                    inputFormatters: [dmMessageLimitFormatter],
                     minLines: 1,
                     maxLines: 4,
                     textInputAction: TextInputAction.newline,
@@ -176,14 +176,14 @@ String _cap(String text) {
   return text.substring(0, end);
 }
 
-final TextInputFormatter _serverLengthLimit = TextInputFormatter.withFunction((
-  old,
-  value,
-) {
-  final cut = _cap(value.text);
-  if (cut == value.text) return value;
-  return TextEditingValue(
-    text: cut,
-    selection: TextSelection.collapsed(offset: cut.length),
-  );
-});
+/// Caps a field at the server's DM limit (see `_cap`); shared with the edit
+/// dialog so both count UTF-16 units like the server.
+final TextInputFormatter dmMessageLimitFormatter =
+    TextInputFormatter.withFunction((old, value) {
+      final cut = _cap(value.text);
+      if (cut == value.text) return value;
+      return TextEditingValue(
+        text: cut,
+        selection: TextSelection.collapsed(offset: cut.length),
+      );
+    });

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/features/messages/data/dm_models.dart';
@@ -113,6 +115,58 @@ void main() {
 
     expect(repo.markedRead, ['c-1']);
     expect(rig.container.read(unreadDmCountProvider), 1);
+  });
+
+  test('an unread-counts answer that lands late never re-marks the open '
+      'conversation unread', () async {
+    final repo = FakeMessageRepository()
+      ..threads['c-1'] = [numbered(1)]
+      ..unread.addAll({'c-1': 2, 'c-2': 1});
+    final rig = newRig(repo)..keepAlive(unreadDmCountProvider);
+    await rig.connect();
+    await rig.container.read(dmUnreadProvider.future);
+    rig.keepAlive(dmThreadProvider('c-1'));
+    await rig.container.read(dmThreadProvider('c-1').future);
+    await pumpEventQueue();
+    expect(rig.container.read(unreadDmCountProvider), 1);
+
+    // The socket reconnects; the counts are read (c-1 still 2 at that
+    // moment) but answered only after the thread marked it read.
+    repo
+      ..holdUnread = Completer<void>()
+      ..unread['c-1'] = 2;
+    await rig.reconnect();
+    repo.holdUnread!.complete();
+    await pumpEventQueue();
+
+    expect(rig.container.read(dmUnreadProvider).requireValue, {'c-2': 1});
+    expect(rig.container.read(unreadDmCountProvider), 1);
+  });
+
+  test('a reconnect merges the first page into the loaded list instead of '
+      'rebuilding it', () async {
+    final repo = FakeMessageRepository()
+      ..conversations.addAll([
+        for (var i = 0; i < 30; i++)
+          conversation('c-${i.toString().padLeft(2, '0')}'),
+      ]);
+    final rig = newRig(repo)..keepAlive(conversationsProvider);
+    await rig.connect();
+    await rig.container.read(conversationsProvider.future);
+    await rig.container.read(conversationsProvider.notifier).loadMore();
+    final before = rig.container.read(conversationsProvider).requireValue;
+    expect(before.items, hasLength(30));
+    expect(before.nextPage, 2);
+
+    // A new conversation appeared while the socket was down.
+    repo.conversations.insert(0, conversation('c-new'));
+    await rig.reconnect();
+
+    final after = rig.container.read(conversationsProvider).requireValue;
+    expect(after.items.first.id, 'c-new');
+    expect(after.items, hasLength(31));
+    expect({for (final c in after.items) c.id}, hasLength(31));
+    expect(after.nextPage, 2);
   });
 
   test('a push counts as unread only in a conversation that is not open, '

@@ -118,15 +118,39 @@ class ConversationsNotifier extends PagedFeedNotifier<Conversation> {
     );
   }
 
+  /// Fetches page 0 again and merges it into what is loaded: the fresh
+  /// items come first, in server order, and the conversations of the
+  /// later pages already loaded stay. The loaded pages and the scroll
+  /// position survive, unlike a rebuild. A failed fetch changes nothing.
+  Future<void> _refreshFirstPage() async {
+    final response = await fetchPage(0);
+    final fresh = response.data;
+    final feed = state.value;
+    if (!ref.mounted || !response.success || fresh == null || feed == null) {
+      return;
+    }
+    final freshIds = {for (final c in fresh) c.id};
+    state = AsyncData(
+      feed.copyWith(
+        items: [
+          ...fresh,
+          for (final c in feed.items)
+            if (!freshIds.contains(c.id)) c,
+        ],
+        total: response.meta?.total,
+      ),
+    );
+  }
+
   void _onEvent(DmEvent event) {
     final feed = state.value;
     switch (event) {
       case DmReconnected():
-        ref.invalidateSelf();
+        unawaited(_refreshFirstPage());
       case DmNewMessage(:final conversationId, :final message):
         if (feed == null) return;
         final index = feed.items.indexWhere((c) => c.id == conversationId);
-        if (index < 0) return ref.invalidateSelf();
+        if (index < 0) return unawaited(_refreshFirstPage());
         final updated = feed.items[index].withLastMessage(
           LastMessage(
             id: message.id,
@@ -197,8 +221,13 @@ class DmUnreadNotifier extends AsyncNotifier<Map<String, int>> {
     _listenToEvents(ref, _onEvent);
     final response = await ref.read(messageRepositoryProvider).unreadCounts();
     if (!response.success) throw ApiLoadException(response);
-    // Go sends null for an empty map.
-    return response.data ?? const {};
+    // Go sends null for an empty map. A conversation that is open is being
+    // read: a count fetched now (cold start, reconnect) may predate its
+    // mark-read, so it must not bring the count back.
+    return {
+      for (final e in (response.data ?? const <String, int>{}).entries)
+        if (!ref.exists(dmThreadProvider(e.key))) e.key: e.value,
+    };
   }
 
   /// The user read [conversationId]: its count goes away.
@@ -235,10 +264,9 @@ class DmUnreadNotifier extends AsyncNotifier<Map<String, int>> {
 }
 
 /// Total unread messages: the Messages tab badge. The shell watches it for
-/// the whole session.
+/// the whole session, which also keeps the typing and online state alive
+/// (it is listened to below), as web mounts all of it once in its header.
 final unreadDmCountProvider = Provider.autoDispose<int>((ref) {
-  // Listening here keeps the typing and online state live for the session
-  // too (web mounts all of it once in the header).
   ref.listen(dmPresenceProvider, (_, _) {});
   final counts = ref.watch(dmUnreadProvider).value;
   return counts == null ? 0 : counts.values.fold(0, (sum, n) => sum + n);

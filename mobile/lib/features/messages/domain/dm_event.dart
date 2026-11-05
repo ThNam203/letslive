@@ -44,6 +44,7 @@ class DmNewMessage extends DmEvent {
   final DmMessage message;
 }
 
+/// A message's text changed (`dm:message_edited`).
 class DmMessageEdited extends DmEvent {
   const DmMessageEdited({
     required this.conversationId,
@@ -58,6 +59,7 @@ class DmMessageEdited extends DmEvent {
   final DateTime updatedAt;
 }
 
+/// A message was deleted (`dm:message_deleted`).
 class DmMessageDeleted extends DmEvent {
   const DmMessageDeleted(this.conversationId, this.messageId);
 
@@ -78,6 +80,7 @@ class DmTyping extends DmEvent {
   final bool isTyping;
 }
 
+/// A user came online or went offline (`dm:user_online` / `dm:user_offline`).
 class DmPresence extends DmEvent {
   const DmPresence({required this.userId, required this.isOnline});
 
@@ -85,6 +88,7 @@ class DmPresence extends DmEvent {
   final bool isOnline;
 }
 
+/// A conversation's fields changed (`dm:conversation_updated`), e.g. a rename.
 class DmConversationUpdated extends DmEvent {
   const DmConversationUpdated(this.conversationId, this.update);
 

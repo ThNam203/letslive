@@ -12,7 +12,6 @@ import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
 import 'package:letslive_mobile/features/messages/data/dm_models.dart';
 import 'package:letslive_mobile/features/messages/messages_providers.dart';
 import 'package:letslive_mobile/features/messages/presentation/conversation_display.dart';
-import 'package:letslive_mobile/features/user/presentation/user_avatar.dart';
 
 /// Unread counts above this show as "99+" (web).
 const int _maxShownUnread = 99;
@@ -21,6 +20,13 @@ const int _maxShownUnread = 99;
 class ConversationsScreen extends ConsumerWidget {
   const ConversationsScreen({super.key});
 
+  /// The retry of a failed load: the list and the unread counts.
+  static void _reload(WidgetRef ref) {
+    ref
+      ..invalidate(dmUnreadProvider)
+      ..invalidate(conversationsProvider);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -28,7 +34,7 @@ class ConversationsScreen extends ConsumerWidget {
     final feed = conversations.value;
     final status = feedStatusBody(
       value: conversations.whenData((feed) => feed.items),
-      onRetry: () => ref.invalidate(conversationsProvider),
+      onRetry: () => _reload(ref),
       empty: EmptyNotice(
         icon: Icons.chat_bubble_outline,
         title: l10n.messages_no_conversations_yet,
@@ -47,7 +53,12 @@ class ConversationsScreen extends ConsumerWidget {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.refresh(conversationsProvider.future),
+        onRefresh: () {
+          // The unread counts too: a failed load of them would otherwise
+          // stay failed for the whole session.
+          ref.invalidate(dmUnreadProvider);
+          return ref.refresh(conversationsProvider.future);
+        },
         child: status != null
             ? ListView(children: [status])
             : ListView.builder(
@@ -165,47 +176,6 @@ class ConversationTile extends ConsumerWidget {
       ),
     );
   }
-}
-
-/// A round avatar with a green dot while the person is online.
-class AvatarWithDot extends StatelessWidget {
-  const AvatarWithDot({
-    required this.name,
-    required this.isOnline,
-    this.pictureUrl,
-    this.radius = 20,
-    super.key,
-  });
-
-  final String name;
-  final String? pictureUrl;
-  final bool isOnline;
-  final double radius;
-
-  @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      UserAvatar(pictureUrl: pictureUrl, name: name, radius: radius),
-      if (isOnline)
-        Positioned(
-          right: 0,
-          bottom: 0,
-          child: Container(
-            key: const ValueKey('online-dot'),
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              color: Colors.green,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Theme.of(context).colorScheme.surface,
-                width: 2,
-              ),
-            ),
-          ),
-        ),
-    ],
-  );
 }
 
 class _UnreadPill extends StatelessWidget {
