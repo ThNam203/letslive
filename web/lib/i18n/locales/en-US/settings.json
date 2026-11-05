@@ -47,7 +47,16 @@
         "thumbnail_description": "If empty, the thumbnail will be generated automatically.",
         "thumbnail_hover": "Change thumbnail",
         "confirm_edit_button": "Confirm edit",
-        "updated_success": "Livestream information updated successfully"
+        "updated_success": "Livestream information updated successfully",
+        "key_title": "Stream key",
+        "key_description": "Paste this key into your streaming software. Anyone who has it can stream to your channel.",
+        "key_show": "Show key",
+        "key_hide": "Hide key",
+        "key_copy": "Copy key",
+        "key_reset_confirm_title": "Generate a new key?",
+        "key_reset_confirm_description": "Your current key stops working immediately. Update your streaming software with the new key.",
+        "key_reset_confirm_action": "Generate",
+        "thumbnail_remove": "Remove thumbnail"
     },
     "save_changes": "Save Changes",
     "file_size_exceeds": "File size exceeds {{size}} MB",
@@ -79,7 +88,10 @@
         "metadata": {
             "view": "view",
             "views": "views"
-        }
+        },
+        "empty": "You have no videos yet.",
+        "status_processing": "Processing",
+        "status_failed": "Processing failed"
     },
     "upload": {
         "title": "Upload VOD",
@@ -116,7 +128,9 @@
         "manager_header_failed_one": "1 upload failed",
         "manager_header_failed_other": "{{count}} uploads failed",
         "manager_header_complete_one": "1 upload complete",
-        "manager_header_complete_other": "{{count}} uploads complete"
+        "manager_header_complete_other": "{{count}} uploads complete",
+        "keep_open_note": "Keep the app open while the video uploads. If it is interrupted, Retry sends the file again.",
+        "processing_failed": "The server could not process this video."
     },
     "disable": {
         "title": "Disabling your Let's Live account",

@@ -49,5 +49,7 @@
     "delete_message": "Xóa tin nhắn",
     "delete_message_confirm": "Xóa tin nhắn này? Hành động này không thể hoàn tác.",
     "save": "Lưu",
-    "delete": "Xóa"
+    "delete": "Xóa",
+    "attach_images": "Đính kèm ảnh",
+    "remove_image": "Xóa ảnh"
 }

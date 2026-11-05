@@ -62,14 +62,7 @@ class MeRepository {
     PickedImage image,
     void Function(int sent, int total)? onProgress,
   ) {
-    final mime = image.mimeType;
-    final form = FormData.fromMap({
-      field: MultipartFile.fromBytes(
-        image.bytes,
-        filename: image.name,
-        contentType: mime == null ? null : DioMediaType.parse(mime),
-      ),
-    });
+    final form = FormData.fromMap({field: image.toMultipart()});
     return _client.upload(
       path,
       formData: form,

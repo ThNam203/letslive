@@ -25,7 +25,8 @@ abstract final class AppRoutes {
   /// The own profile tab.
   static const String profile = '/profile';
 
-  /// Settings hub: edit profile, security, log out (web `/settings`).
+  /// Settings hub: profile, security, creator tools, log out (web
+  /// `/settings`).
   static const String settings = '/settings';
 
   /// Edit the own profile (web `/settings/profile`).
@@ -33,6 +34,18 @@ abstract final class AppRoutes {
 
   /// Account security: email and password (web `/settings/security`).
   static const String settingsSecurity = '/settings/security';
+
+  /// Stream key and next-livestream information (web `/settings/stream`).
+  static const String settingsStream = '/settings/stream';
+
+  /// The creator's custom chat commands (web `/settings/chat-commands`).
+  static const String settingsChatCommands = '/settings/chat-commands';
+
+  /// The creator's own videos: edit and delete (web `/settings/vods`).
+  static const String settingsVods = '/settings/vods';
+
+  /// Upload a video and follow its progress (web `/settings/upload`).
+  static const String settingsUpload = '/settings/upload';
 
   /// Route pattern of a channel (web `/users/[userId]`); see [channel].
   static const String channelPattern = '/users/:userId';

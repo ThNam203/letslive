@@ -34,6 +34,32 @@ final imagePickProvider = Provider<ImagePick>(
   },
 );
 
+/// Lets the user choose several images at once; empty when they cancel or
+/// the picker fails. [limit] is the most the caller can still use.
+typedef ImagesPick = Future<List<PickedImage>> Function(int limit);
+
+/// The photo library picker for several images (direct-message pictures).
+final imagesPickProvider = Provider<ImagesPick>(
+  (ref) => (limit) async {
+    try {
+      // The plugin needs a limit of at least 2.
+      final files = await ImagePicker().pickMultiImage(
+        limit: limit < 2 ? 2 : limit,
+      );
+      return [
+        for (final file in files.take(limit))
+          PickedImage(
+            name: file.name,
+            bytes: await file.readAsBytes(),
+            mimeType: file.mimeType ?? mimeTypeOfName(file.name),
+          ),
+      ];
+    } on PlatformException {
+      return const [];
+    }
+  },
+);
+
 /// Width and height of an encoded image, or null if it cannot be decoded.
 typedef ImageSizeReader = Future<({int width, int height})?> Function(
   Uint8List bytes,

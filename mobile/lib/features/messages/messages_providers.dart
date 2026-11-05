@@ -457,10 +457,18 @@ class DmThreadNotifier extends AsyncNotifier<DmThread> {
     );
   }
 
-  /// Sends [text]. On success the message is added at once (merged by id
-  /// with its own push); a failure is returned for the caller to show.
-  Future<ApiResponse<DmMessage>> send(String text) async {
-    final response = await _repo.send(conversationId, text);
+  /// Sends [text], with [imageUrls] for a picture message. On success the
+  /// message is added at once (merged by id with its own push); a failure is
+  /// returned for the caller to show.
+  Future<ApiResponse<DmMessage>> send(
+    String text, {
+    List<String> imageUrls = const [],
+  }) async {
+    final response = await _repo.send(
+      conversationId,
+      text,
+      imageUrls: imageUrls,
+    );
     final sent = response.data;
     if (response.success && sent != null && ref.mounted) _merge([sent]);
     return response;

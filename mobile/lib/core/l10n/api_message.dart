@@ -62,6 +62,7 @@ String apiErrorMessage(AppLocalizations l10n, ApiResponse<Object?> response) {
     'res_err_unauthorized' => l10n.api_response_res_err_unauthorized,
     'res_err_user_not_found' => l10n.api_response_res_err_user_not_found,
     'res_err_username_taken' => l10n.api_response_res_err_username_taken,
+    'res_err_video_too_large' => l10n.api_response_res_err_video_too_large,
     'res_err_vod_not_found' => l10n.api_response_res_err_vod_not_found,
     'res_err_vod_view_threshold' =>
       l10n.api_response_res_err_vod_view_threshold,

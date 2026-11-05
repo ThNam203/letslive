@@ -10,6 +10,10 @@ import 'package:letslive_mobile/features/auth/presentation/account_setup_screen.
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/signup_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/splash_screen.dart';
+import 'package:letslive_mobile/features/creator/presentation/chat_commands_screen.dart';
+import 'package:letslive_mobile/features/creator/presentation/my_vods_screen.dart';
+import 'package:letslive_mobile/features/creator/presentation/stream_settings_screen.dart';
+import 'package:letslive_mobile/features/creator/presentation/upload_screen.dart';
 import 'package:letslive_mobile/features/messages/presentation/conversation_screen.dart';
 import 'package:letslive_mobile/features/messages/presentation/new_conversation_screen.dart';
 import 'package:letslive_mobile/features/settings/presentation/profile_settings_screen.dart';
@@ -116,6 +120,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.settingsSecurity,
         builder: (context, state) => const SecurityScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settingsStream,
+        builder: (context, state) => const StreamSettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settingsChatCommands,
+        builder: (context, state) => const ChatCommandsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settingsVods,
+        builder: (context, state) => const MyVodsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settingsUpload,
+        builder: (context, state) => const UploadScreen(),
       ),
       GoRoute(
         path: AppRoutes.login,

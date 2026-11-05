@@ -150,6 +150,9 @@ class FakeMessageRepository implements MessageRepository {
   final List<String?> cursors = [];
   final List<String> markedRead = [];
   final List<String> sent = [];
+
+  /// The picture paths sent with each message in [sent] (empty for text).
+  final List<List<String>> sentImageUrls = [];
   final List<(String, bool)> typingSent = [];
   int messageCalls = 0;
   int unreadCalls = 0;
@@ -187,9 +190,11 @@ class FakeMessageRepository implements MessageRepository {
   @override
   Future<ApiResponse<DmMessage>> send(
     String conversationId,
-    String text,
-  ) async {
+    String text, {
+    List<String> imageUrls = const [],
+  }) async {
     sent.add(text);
+    sentImageUrls.add(imageUrls);
     final created = message(
       's-${sent.length}',
       text,

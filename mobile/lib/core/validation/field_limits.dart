@@ -50,6 +50,57 @@ abstract final class FieldLimits {
   /// units.
   static const int vodCommentMax = 2000;
 
+  /// `STREAM_TITLE_MAX_LENGTH` in `web/constant/field-limits.ts`.
+  static const int streamTitleMax = 50;
+
+  /// `STREAM_DESCRIPTION_MAX_LENGTH` in `web/constant/field-limits.ts`.
+  static const int streamDescriptionMax = 500;
+
+  /// `VOD_TITLE_MAX_LENGTH` in `web/constant/field-limits.ts`.
+  static const int vodTitleMax = 255;
+
+  /// `VOD_DESCRIPTION_MAX_LENGTH` in `web/constant/field-limits.ts`.
+  static const int vodDescriptionMax = 1000;
+
+  /// `MAX_FILE_SIZE` (100 MB) in `web/app/(main)/settings/upload/page.tsx`
+  /// and `maxUploadSize` in `backend/vod/handlers/vod/upload_vod_private.go`.
+  static const int vodUploadMaxMb = 100;
+
+  /// `ALLOWED_EXTENSIONS` in `web/app/(main)/settings/upload/page.tsx`
+  /// (also checked by the video service), lowercase with the dot.
+  static const List<String> vodUploadExtensions = [
+    '.mp4',
+    '.mov',
+    '.avi',
+    '.mkv',
+    '.webm',
+  ];
+
+  /// `MAX_CONCURRENT` in `web/hooks/use-upload-store.ts`: video uploads
+  /// running at once; the rest wait.
+  static const int vodUploadConcurrency = 3;
+
+  /// `NAME_PATTERN` (1-32 characters) in
+  /// `web/app/(main)/settings/chat-commands/page.tsx`.
+  static const int chatCommandNameMax = 32;
+
+  /// `MAX_RESPONSE` in `web/app/(main)/settings/chat-commands/page.tsx`.
+  static const int chatCommandResponseMax = 500;
+
+  /// `MAX_DESCRIPTION` in `web/app/(main)/settings/chat-commands/page.tsx`.
+  static const int chatCommandDescriptionMax = 120;
+
+  /// `LIVESTREAM_THUMBNAIL_MAX_FILE_MB` in `web/constant/image.ts`.
+  static const int livestreamThumbnailMaxFileMb = 10;
+
+  /// `GENERAL_UPLOAD_MAX_FILE_MB` in `web/constant/image.ts`: the limit of
+  /// `POST /upload-file` (DM pictures, VOD thumbnails).
+  static const int generalUploadMaxFileMb = 10;
+
+  /// `MAX_FILES` in `web/app/(main)/messages/_components/message-input.tsx`:
+  /// pictures per direct message.
+  static const int dmImagesMax = 10;
+
   /// `AVATAR_MAX_FILE_MB` in `web/constant/image.ts`.
   static const int avatarMaxFileMb = 10;
 

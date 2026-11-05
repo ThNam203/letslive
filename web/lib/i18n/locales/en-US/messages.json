@@ -49,5 +49,7 @@
     "delete_message": "Delete message",
     "delete_message_confirm": "Delete this message? This cannot be undone.",
     "save": "Save",
-    "delete": "Delete"
+    "delete": "Delete",
+    "attach_images": "Attach images",
+    "remove_image": "Remove image"
 }

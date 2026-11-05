@@ -33,16 +33,34 @@ abstract final class ApiEndpoints {
   /// Not direct messages (those are `/conversations`).
   static const String messages = '/messages';
 
-  /// Custom chat commands: `GET ?roomId=<streamerId>` for a room; the
-  /// settings screen also uses `/chat-commands/mine` and `/<id>`.
+  /// Custom chat commands: `GET ?roomId=<streamerId>` for a room, `POST` to
+  /// create; the settings screens also use `/chat-commands/mine` and `/<id>`
+  /// (PATCH, DELETE).
   static const String chatCommands = '/chat-commands';
 
-  /// Prefix of the video service: `/vods/<id>` (detail), `/vods/<id>/view`,
-  /// `/vods/<id>/reaction`, `/vods/<id>/comments`, and `?userId=` for the
-  /// videos of one user. As a prefix it also covers `/vods/upload`,
-  /// `/vods/author` and PATCH/DELETE `/vods/<id>`, which the app does not
-  /// call yet (Task 19); PARITY.md lists them as planned.
+  /// Prefix of the video service: `/vods/<id>` (detail, and PATCH/DELETE for
+  /// the owner), `/vods/<id>/view`, `/vods/<id>/reaction`,
+  /// `/vods/<id>/comments`, and `?userId=` for the videos of one user.
   static const String vods = '/vods';
+
+  /// `GET ?page=&limit=` (max 20): the signed-in user's own videos, any
+  /// status and visibility.
+  static const String myVods = '/vods/author';
+
+  /// `POST` multipart `file`, `title`, `description`, `visibility`: uploads a
+  /// video; answers the new VOD with status `processing`.
+  static const String uploadVod = '/vods/upload';
+
+  /// `POST` multipart `file`: stores one file and answers its path (web
+  /// `UploadFile`).
+  static const String uploadFile = '/upload-file';
+
+  /// `PATCH` multipart `title`, `description`, `thumbnail`, `thumbnailUrl`:
+  /// the signed-in user's next-livestream information.
+  static const String livestreamInformation = '/user/me/livestream-information';
+
+  /// `PATCH`: generates a new stream key and answers it.
+  static const String streamKey = '/user/me/api-key';
 
   /// Prefix of comment actions: `/vod-comments/<id>` (edit, delete),
   /// `/<id>/replies`, `/<id>/like` and `/liked-ids`.

@@ -8,11 +8,17 @@ import 'package:letslive_mobile/core/network/api_load.dart';
 import 'package:letslive_mobile/core/network/api_response.dart';
 import 'package:letslive_mobile/core/providers.dart';
 import 'package:letslive_mobile/features/user/data/public_user.dart';
+import 'package:letslive_mobile/features/user/data/upload_file_repository.dart';
 import 'package:letslive_mobile/features/user/data/user_repository.dart';
 
 /// Public user lookups.
 final userRepositoryProvider = Provider<UserRepository>(
   (ref) => UserRepository(ref.watch(apiClientProvider)),
+);
+
+/// The general file upload (`/upload-file`): DM pictures, VOD thumbnails.
+final uploadFileRepositoryProvider = Provider<UploadFileRepository>(
+  (ref) => UploadFileRepository(ref.watch(apiClientProvider)),
 );
 
 /// One user by id. Cards of the same owner share one request (like web's

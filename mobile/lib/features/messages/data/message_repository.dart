@@ -93,11 +93,21 @@ class MessageRepository {
     parse: DmMessage.parseList,
   );
 
-  /// `POST /conversations/<id>/messages`: sends a text message. The server
-  /// also pushes it to every member, the sender included.
-  Future<ApiResponse<DmMessage>> send(String id, String text) => _client.post(
+  /// `POST /conversations/<id>/messages`: sends a text message, or a picture
+  /// message when [imageUrls] (paths from `/upload-file`) are given, like
+  /// web. The server also pushes it to every member, the sender included.
+  Future<ApiResponse<DmMessage>> send(
+    String id,
+    String text, {
+    List<String> imageUrls = const [],
+  }) => _client.post(
     '$_base/$id/messages',
-    body: {'text': text, 'type': DmMessageType.text.name},
+    body: {
+      'text': text,
+      'type':
+          (imageUrls.isEmpty ? DmMessageType.text : DmMessageType.image).name,
+      if (imageUrls.isNotEmpty) 'imageUrls': imageUrls,
+    },
     parse: DmMessage.parse,
   );
 

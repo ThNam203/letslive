@@ -494,6 +494,7 @@
       "date": {}
     }
   },
+  "messages_attach_images": "Attach images",
   "messages_attach_images_limit": "You can attach up to {max} images",
   "@messages_attach_images_limit": {
     "placeholders": {
@@ -562,6 +563,7 @@
       "number": {}
     }
   },
+  "messages_remove_image": "Remove image",
   "messages_save": "Save",
   "messages_search_users_placeholder": "Search users...",
   "messages_searching": "Searching...",
@@ -716,9 +718,18 @@
   "settings_stream_confirm_edit_button": "Confirm edit",
   "settings_stream_description": "Your next livestream information will be based on the information. It won''t change even after livestream ends.",
   "settings_stream_description_label": "Description",
+  "settings_stream_key_copy": "Copy key",
+  "settings_stream_key_description": "Paste this key into your streaming software. Anyone who has it can stream to your channel.",
+  "settings_stream_key_hide": "Hide key",
+  "settings_stream_key_reset_confirm_action": "Generate",
+  "settings_stream_key_reset_confirm_description": "Your current key stops working immediately. Update your streaming software with the new key.",
+  "settings_stream_key_reset_confirm_title": "Generate a new key?",
+  "settings_stream_key_show": "Show key",
+  "settings_stream_key_title": "Stream key",
   "settings_stream_thumbnail_description": "If empty, the thumbnail will be generated automatically.",
   "settings_stream_thumbnail_hover": "Change thumbnail",
   "settings_stream_thumbnail_label": "Thumbnail",
+  "settings_stream_thumbnail_remove": "Remove thumbnail",
   "settings_stream_title": "Livestream",
   "settings_stream_title_description": "If empty, the title will be generated automatically.",
   "settings_stream_title_label": "Title",
@@ -739,6 +750,7 @@
   },
   "settings_upload_error_no_file": "Please select a video file.",
   "settings_upload_error_no_title": "Please enter a title.",
+  "settings_upload_keep_open_note": "Keep the app open while the video uploads. If it is interrupted, Retry sends the file again.",
   "settings_upload_manager_cancel": "Cancel",
   "settings_upload_manager_cancelled": "Cancelled",
   "settings_upload_manager_clear": "Clear",
@@ -774,6 +786,7 @@
   "settings_upload_manager_retry": "Retry",
   "settings_upload_manager_waiting": "Waiting...",
   "settings_upload_note_max_time": "Max upload time is 3 hours.",
+  "settings_upload_processing_failed": "The server could not process this video.",
   "settings_upload_select_video": "Select Video",
   "settings_upload_select_video_description": "Supported formats: MP4, MOV, AVI, MKV, WebM. Max size: 100 MB.",
   "settings_upload_selected_file": "Selected: {filename} ({size})",
@@ -807,8 +820,11 @@
   "settings_vods_edit_dialog_title": "Edit Information",
   "settings_vods_edit_dialog_title_label": "Title",
   "settings_vods_edit_dialog_update_success": "VOD updated successfully",
+  "settings_vods_empty": "You have no videos yet.",
   "settings_vods_metadata_view": "view",
   "settings_vods_metadata_views": "views",
+  "settings_vods_status_failed": "Processing failed",
+  "settings_vods_status_processing": "Processing",
   "settings_vods_title": "VODs Manager",
   "shop_gifts_received_empty": "No gifts received yet.",
   "shop_gifts_received_from": "From {name}",

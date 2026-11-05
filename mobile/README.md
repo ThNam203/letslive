@@ -214,6 +214,35 @@ Keep the encoder at real time (light preset, low frame rate): a ladder that
 lags behind the wall clock makes ExoPlayer fail with
 `BehindLiveWindowException`.
 
+## Creator tools and video upload
+
+`lib/features/creator/` holds web's creator settings, reached from
+Profile tab > settings: stream key and stream information, chat commands,
+the creator's own videos (edit, delete) and video upload.
+
+- **Stream key** is a secret: masked until revealed, never logged, never part of
+  an error message. Generating a new key asks for confirmation first because
+  the old key stops working at once.
+- **Uploads are foreground only.** `UploadManager` (`upload_manager.dart`) is an
+  app-wide queue (not `autoDispose`, like web's upload store): leaving the
+  upload screen does not cancel anything, logout cancels everything. It keeps
+  the screen awake while a file is being sent (`wakelock_plus`) and streams the
+  file from disk, so a 100 MB video is never held in memory.
+- **Interrupted uploads are not resumed.** The server has no resumable upload.
+  If the app is backgrounded or killed and the request fails, the item shows
+  an error with **Retry**, which sends the whole file again. A token that
+  expires before or during the request is refreshed once and the request
+  replayed by the auth interceptor (the file is re-read from disk).
+- After sending, the manager polls `GET /vods/<id>` every 5 s (the transcode
+  worker's own poll interval) until the video is `ready` or `failed`, and
+  stops when the item is dismissed. Web does not poll.
+- Format (`.mp4 .mov .avi .mkv .webm`) and size (100 MB) are checked before
+  sending; the limits are in `FieldLimits`. The picker is the system video
+  picker (`image_picker`); files only reachable from the Files app are not
+  offered (no `file_picker`).
+- Direct-message pictures use the same general upload (`UploadFileRepository`,
+  `POST /upload-file`) as VOD thumbnails.
+
 ## Contract tests (real backend)
 
 Contract tests parse real backend responses with the app's models, so API

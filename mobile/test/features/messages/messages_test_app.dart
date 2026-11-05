@@ -34,6 +34,14 @@ class FakeMessagesServer extends FakeSearchServer {
   /// Bodies of `POST .../messages`, in order.
   final List<String> sentTexts = [];
 
+  /// Bodies of `POST .../messages` that carried pictures, in order.
+  final List<Map<String, Object?>> pictureBodies = [];
+
+  /// Number of `POST /upload-file` calls, and the 0-based call numbers that
+  /// answer 503 instead of a stored path.
+  int uploadCalls = 0;
+  final Set<int> failingUploads = {};
+
   /// Conversation ids `POST .../read` was called for.
   final List<String> readCalls = [];
 
@@ -60,6 +68,12 @@ class FakeMessagesServer extends FakeSearchServer {
 
   @override
   Future<ResponseBody> handle(RequestOptions o) async {
+    if (o.path == ApiEndpoints.uploadFile && o.method == 'POST') {
+      final call = uploadCalls++;
+      return failingUploads.contains(call)
+          ? _fail(503, 'res_err_internal_server')
+          : okEnvelope('/files/uploads/pic-$call.jpg');
+    }
     if (!o.path.startsWith(ApiEndpoints.conversations)) {
       return super.handle(o);
     }
@@ -110,9 +124,13 @@ class FakeMessagesServer extends FakeSearchServer {
         final text = body['text'] as String;
         sentTexts.add(text);
         if (sendStatus != 200) return _fail(sendStatus, 'res_err_internal');
+        final pictures = (body['imageUrls'] as List?)?.cast<String>() ?? [];
+        if (pictures.isNotEmpty) pictureBodies.add(body);
         final sent = messageJson(
           's-${sentTexts.length}',
           text,
+          type: body['type'] as String,
+          imageUrls: pictures,
           conversationId: id,
           senderId: me,
           senderUsername: 'abcdef',
@@ -201,6 +219,7 @@ Future<TestApp> pumpMessages(
   double width = 800,
   double height = 1200,
   double textScale = 1,
+  List<Override> overrides = const [],
 }) async {
   final app = await pumpHome(
     tester,
@@ -208,7 +227,7 @@ Future<TestApp> pumpMessages(
     width: width,
     height: height,
     textScale: textScale,
-    overrides: socket?.overrides ?? const [],
+    overrides: [...?socket?.overrides, ...overrides],
   );
   await tester.tap(
     find.descendant(
