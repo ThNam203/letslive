@@ -18,6 +18,7 @@ import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/network/api_response.dart';
 import 'package:letslive_mobile/core/validation/field_limits.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
 import 'package:letslive_mobile/features/auth/presentation/auth_widgets.dart';
@@ -120,7 +121,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   /// web's checks; otherwise says why not.
   Future<void> _pick({required bool avatar}) async {
     final l10n = AppLocalizations.of(context);
-    final image = await ref.read(imagePickProvider)();
+    final image = await pickWithFeedback(context, ref.read(imagePickProvider));
     if (image == null || !mounted) return;
     final maxMb = avatar
         ? FieldLimits.avatarMaxFileMb

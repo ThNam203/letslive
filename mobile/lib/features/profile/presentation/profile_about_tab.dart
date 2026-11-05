@@ -10,8 +10,7 @@ import 'package:letslive_mobile/features/user/data/public_user.dart';
 
 /// The About tab of a profile (web `ProfileAboutTab`): the bio, channel
 /// stats, a link to the gifts received and the social links. Only http(s)
-/// links are shown (they are user
-/// supplied); a tap opens the browser.
+/// links are shown (they are user supplied); a tap opens the browser.
 class ProfileAboutTab extends ConsumerWidget {
   const ProfileAboutTab({required this.user, super.key});
 

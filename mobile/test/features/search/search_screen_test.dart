@@ -276,6 +276,11 @@ void main() {
 
     await search(tester, longQuery);
 
+    // The long texts themselves are on screen, not just the rows.
+    expect(
+      find.textContaining('Tiếng Việt rất dài', findRichText: true),
+      findsWidgets,
+    );
     expect(find.byType(VodResultRow), findsOne);
     expect(find.byType(LiveResultRow), findsOne);
     expect(find.byType(UserResultRow), findsOne);

@@ -45,7 +45,8 @@ class GiftRepository {
       );
 
   /// `GET /user/me/gifts/sent`: gifts the signed-in user sent, newest
-  /// first. Web has no screen for it; the endpoint exists on the backend.
+  /// first. No web UI and no caller; kept for contract coverage and a
+  /// future UI.
   Future<ApiResponse<List<Gift>>> sent(int page) => _client.get(
     ApiEndpoints.giftsSent,
     query: {'page': page, 'limit': shopPageSize},

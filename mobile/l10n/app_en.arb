@@ -267,6 +267,7 @@
   "common_or": "or",
   "common_other_streams": "Other streams",
   "common_page_not_found": "We couldn''t find the page you were looking for",
+  "common_photo_library_error": "Could not open your photos",
   "common_recommended": "Recommended",
   "common_save": "Save",
   "common_save_changes": "Save changes",

@@ -10,8 +10,8 @@ import 'package:letslive_mobile/features/shop/shop_providers.dart';
 /// received gifts). Shows a spinner, an error with retry, [emptyTitle], or
 /// one [ShopItemTile] per entry from [tileOf], which receives the entry and
 /// its catalogue item (found by [shopItemIdOf]; null when it left the
-/// catalogue or the catalogue
-/// failed to load: web then shows "Unknown item" too).
+/// catalogue or the catalogue failed to load: web then shows "Unknown item"
+/// too).
 class ShopEntriesList<T> extends ConsumerWidget {
   const ShopEntriesList({
     required this.feed,

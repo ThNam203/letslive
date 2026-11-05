@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
 import 'package:letslive_mobile/core/router/app_router.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
@@ -384,6 +385,24 @@ void main() {
       name: 'holiday.mp4',
       size: 2048,
     );
+
+    testWidgets('a video library that will not open says so', (tester) async {
+      await pumpCreator(
+        tester,
+        FakeCreatorServer(),
+        AppRoutes.settingsUpload,
+        extra: [
+          videoPickProvider.overrideWithValue(
+            () async => throw const PickerException('denied'),
+          ),
+        ],
+      );
+
+      await tester.tap(_key('pick-video'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Could not open your photos'), findsOneWidget);
+    });
 
     testWidgets('refuses a wrong format and a too large file', (tester) async {
       PickedVideo? next = const PickedVideo(

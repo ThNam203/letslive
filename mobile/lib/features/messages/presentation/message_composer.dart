@@ -8,6 +8,7 @@ import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/network/api_response.dart';
 import 'package:letslive_mobile/core/validation/field_limits.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
 import 'package:letslive_mobile/features/messages/domain/dm_rules.dart';
 import 'package:letslive_mobile/features/messages/messages_providers.dart';
 import 'package:letslive_mobile/features/messages/presentation/picture_previews.dart';
@@ -106,8 +107,15 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
     final l10n = AppLocalizations.of(context);
     final room = FieldLimits.dmImagesMax - _attachments.length;
     if (room <= 0) return;
-    final picked = await ref.read(imagesPickProvider)(room);
-    if (!mounted || (picked.images.isEmpty && picked.oversized.isEmpty)) return;
+    final picked = await pickWithFeedback(
+      context,
+      () => ref.read(imagesPickProvider)(room),
+    );
+    if (!mounted ||
+        picked == null ||
+        (picked.images.isEmpty && picked.oversized.isEmpty)) {
+      return;
+    }
     final problem = picked.oversized.isEmpty
         ? null
         : l10n.messages_file_exceeds_limit(

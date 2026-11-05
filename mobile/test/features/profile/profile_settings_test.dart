@@ -335,6 +335,21 @@ void main() {
       expect(app.requestsTo(ApiEndpoints.profilePicture), isEmpty);
     });
 
+    testWidgets('a photo library that will not open says so', (tester) async {
+      final device = FakeDevice()..pickFails = true;
+      await pumpRoute(
+        tester,
+        FakeProfileServer(),
+        AppRoutes.settingsProfile,
+        device: device,
+      );
+
+      await tester.tap(field('pick-avatar'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Could not open your photos'), findsOneWidget);
+    });
+
     testWidgets('a profile picture of an unsupported type is refused', (
       tester,
     ) async {

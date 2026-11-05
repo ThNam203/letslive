@@ -1,8 +1,8 @@
 /// The Profile tab: the signed-in user's own profile as others see it
 /// (header, then Home / Videos / About), with wallet, shop and settings
 /// buttons in the app bar. The public copy of the user is loaded by id (the
-/// session user lacks
-/// a few public fields); saving the profile invalidates it.
+/// session user lacks a few public fields); saving the profile invalidates
+/// it.
 library;
 
 import 'package:flutter/material.dart';

@@ -6,9 +6,10 @@ import 'package:letslive_mobile/features/user/data/me_user.dart';
 import 'harness.dart';
 
 /// Search endpoints against the real dev stack. A live stream needs an RTMP
-/// publisher and a VOD a transcoded upload, so one public row of each with an
-/// accented Vietnamese title is inserted straight into the service databases
-/// (removed afterwards). Searching for it without accents proves the server
+/// publisher and a VOD a transcoded upload, so one public live row and two
+/// public VOD rows with accented Vietnamese titles are inserted straight
+/// into the service databases (removed afterwards; two VODs so a second
+/// page has something to show). Searching for it without accents proves the server
 /// side of "accent-insensitive" and that the real JSON parses with the app's
 /// models.
 void main() {
@@ -19,6 +20,7 @@ void main() {
   late SearchRepository search;
   String? livestreamId;
   String? vodId;
+  String? secondVodId;
 
   setUpAll(() async {
     final context = ctx = await startContractContext();
@@ -33,12 +35,13 @@ void main() {
       "INSERT INTO livestreams (user_id, title) VALUES ('$ownerId', "
           "'Trò chơi live $marker') RETURNING id",
     )).split('\n').first;
-    vodId = (await runSql(
+    Future<String> insertVod(String title) async => (await runSql(
       'letslive_vod',
       'INSERT INTO vods (user_id, title, visibility, duration) '
-          "VALUES ('$ownerId', 'Trò chơi vod $marker', 'public', 60) "
-          'RETURNING id',
+          "VALUES ('$ownerId', '$title', 'public', 60) RETURNING id",
     )).split('\n').first;
+    vodId = await insertVod('Trò chơi vod $marker');
+    secondVodId = await insertVod('Trò chơi vod hai $marker');
   });
 
   tearDownAll(() async {
@@ -52,8 +55,7 @@ void main() {
       }
     } finally {
       try {
-        final id = vodId;
-        if (id != null) {
+        for (final id in [vodId, secondVodId].nonNulls) {
           await runSql('letslive_vod', "DELETE FROM vods WHERE id = '$id'");
         }
       } finally {
@@ -106,16 +108,19 @@ void main() {
     expect(res.data ?? const [], isEmpty);
   });
 
-  test('a later page is a list that does not repeat page 0', () async {
-    final first = await search.vods(q: 'tro choi', limit: 1);
-    final second = await search.vods(q: 'tro choi', page: 1, limit: 1);
+  test('a later page holds the next match, not a repeat of page 0', () async {
+    // Exactly the two marker videos match: one per page.
+    final query = 'tro choi vod ${marker.toLowerCase()}';
+    final first = await search.vods(q: query, limit: 1);
+    final second = await search.vods(q: query, page: 1, limit: 1);
 
+    expect(first.success, isTrue, reason: '${first.key}: ${first.message}');
     expect(second.success, isTrue, reason: '${second.key}: ${second.message}');
-    final firstIds = (first.data ?? const []).map((v) => v.id).toSet();
-    expect(second.data ?? const [], hasLength(lessThanOrEqualTo(1)));
+    expect(first.data, hasLength(1));
+    expect(second.data, hasLength(1));
     expect(
-      (second.data ?? const []).any((v) => firstIds.contains(v.id)),
-      isFalse,
+      {first.data!.single.id, second.data!.single.id},
+      {vodId, secondVodId},
     );
   });
 }

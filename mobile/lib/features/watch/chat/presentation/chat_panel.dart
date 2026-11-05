@@ -23,7 +23,10 @@ import 'package:letslive_mobile/features/watch/chat/presentation/chat_line_view.
 class ChatPanel extends ConsumerStatefulWidget {
   const ChatPanel({required this.roomId, this.compact = false, super.key});
 
+  /// The chat room: the streamer's user id.
   final String roomId;
+
+  /// Leaves out the title row (the keyboard is open).
   final bool compact;
 
   @override

@@ -134,7 +134,7 @@ Future<ContractUser> _signUp(AppConfig config, String name) async {
   final client = ApiClient(
     baseUrl: config.apiBaseUrl,
     cookieJar: jar,
-    headerProvider: () => {'User-Agent': _userAgent},
+    defaultHeaders: const {'User-Agent': _userAgent},
   );
   try {
     // Delivery fails on the dev stack (no SMTP credentials), so the response

@@ -8,11 +8,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:letslive_mobile/core/validation/field_limits.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
 import 'package:letslive_mobile/features/settings/domain/image_checks.dart';
 import 'package:letslive_mobile/features/user/data/picked_image.dart';
 
 /// Lets the user choose one image from the photo library; null when they
-/// cancel or the picker fails.
+/// cancel. Throws [PickerException] when the picker fails.
 typedef ImagePick = Future<PickedImage?> Function();
 
 /// The photo library picker. On Android it uses the system picker (no
@@ -27,10 +28,9 @@ final imagePickProvider = Provider<ImagePick>(
         bytes: await file.readAsBytes(),
         mimeType: file.mimeType ?? mimeTypeOfName(file.name),
       );
-    } on PlatformException {
-      // The picker or the file could not be opened (e.g. permission denied):
-      // treated as cancelled.
-      return null;
+    } on PlatformException catch (e) {
+      // The picker or the file could not be opened (e.g. permission denied).
+      throw PickerException(e);
     }
   },
 );
@@ -40,7 +40,8 @@ final imagePickProvider = Provider<ImagePick>(
 typedef PickedImages = ({List<PickedImage> images, List<String> oversized});
 
 /// Lets the user choose several images at once; both lists are empty when they
-/// cancel or the picker fails. [limit] is the most the caller can still use.
+/// cancel. Throws [PickerException] when the picker fails. [limit] is the
+/// most the caller can still use.
 typedef ImagesPick = Future<PickedImages> Function(int limit);
 
 /// The photo library picker for several images (direct-message pictures).
@@ -70,8 +71,8 @@ final imagesPickProvider = Provider<ImagesPick>(
         );
       }
       return (images: images, oversized: oversized);
-    } on PlatformException {
-      return (images: const <PickedImage>[], oversized: const <String>[]);
+    } on PlatformException catch (e) {
+      throw PickerException(e);
     }
   },
 );

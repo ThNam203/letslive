@@ -38,45 +38,42 @@ void main() {
     expect(adapter.requests[1].headers.containsKey('X-Extra'), isFalse);
   });
 
-  test('headerProvider headers are sent on every request', () async {
-    var calls = 0;
+  test('default headers are sent on every request', () async {
     final adapter = FakeAdapter((_) => okEnvelope(null));
     final client = ApiClient(
       baseUrl: _base,
       cookieJar: CookieJar(),
       adapter: adapter,
-      headerProvider: () async => {'X-Token': 'token-${++calls}'},
+      defaultHeaders: const {'User-Agent': 'contract-tests'},
     );
 
     await client.get<Object?>('/a', parse: _noData);
     await client.get<Object?>('/b', parse: _noData);
 
-    expect(adapter.requests[0].headers['X-Token'], 'token-1');
-    expect(adapter.requests[1].headers['X-Token'], 'token-2');
+    for (final request in adapter.requests) {
+      expect(request.headers['User-Agent'], 'contract-tests');
+    }
   });
 
-  test(
-    'per-call header wins over the provider header of the same name',
-    () async {
-      final adapter = FakeAdapter((_) => okEnvelope(null));
-      final client = ApiClient(
-        baseUrl: _base,
-        cookieJar: CookieJar(),
-        adapter: adapter,
-        headerProvider: () => {'X-Token': 'from-provider'},
-      );
+  test('a per-call header wins over the default of the same name', () async {
+    final adapter = FakeAdapter((_) => okEnvelope(null));
+    final client = ApiClient(
+      baseUrl: _base,
+      cookieJar: CookieJar(),
+      adapter: adapter,
+      defaultHeaders: const {'X-Token': 'default'},
+    );
 
-      await client.get<Object?>(
-        '/a',
-        parse: _noData,
-        headers: {'x-token': 'from-call'},
-      );
+    await client.get<Object?>(
+      '/a',
+      parse: _noData,
+      headers: {'X-Token': 'from-call'},
+    );
 
-      expect(adapter.requests.single.headers['X-Token'], 'from-call');
-    },
-  );
+    expect(adapter.requests.single.headers['X-Token'], 'from-call');
+  });
 
-  test('provider headers also reach the refresh call and the replay', () async {
+  test('default headers also reach the refresh call and the replay', () async {
     var refreshed = false;
     final adapter = FakeAdapter((o) {
       if (o.path == ApiEndpoints.refreshToken) {
@@ -89,7 +86,7 @@ void main() {
       baseUrl: _base,
       cookieJar: _loggedInJar(),
       adapter: adapter,
-      headerProvider: () => {'X-Token': 't'},
+      defaultHeaders: const {'X-Token': 't'},
     );
 
     final res = await client.get<Object?>('/user/me', parse: _noData);
@@ -100,29 +97,4 @@ void main() {
       expect(request.headers['X-Token'], 't', reason: request.path);
     }
   });
-
-  for (final name in ['Cookie', 'authorization']) {
-    // A programming error, not a (retryable) network failure.
-    test('headerProvider setting $name throws a StateError', () async {
-      final adapter = FakeAdapter((_) => okEnvelope(null));
-      final client = ApiClient(
-        baseUrl: _base,
-        cookieJar: _loggedInJar(),
-        adapter: adapter,
-        headerProvider: () => {name: 'forged'},
-      );
-
-      await expectLater(
-        client.get<Object?>('/user/me', parse: _noData),
-        throwsA(
-          isA<StateError>().having(
-            (e) => e.message,
-            'message',
-            contains(name.toLowerCase()),
-          ),
-        ),
-      );
-      expect(adapter.requests, isEmpty, reason: 'request must not be sent');
-    });
-  }
 }

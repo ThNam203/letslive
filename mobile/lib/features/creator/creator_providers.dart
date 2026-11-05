@@ -14,6 +14,7 @@ import 'package:letslive_mobile/core/network/api_load.dart';
 import 'package:letslive_mobile/core/network/api_response.dart';
 import 'package:letslive_mobile/core/pagination/paged_feed.dart';
 import 'package:letslive_mobile/core/providers.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
 import 'package:letslive_mobile/features/creator/data/chat_command_admin_repository.dart';
 import 'package:letslive_mobile/features/creator/data/my_vods_repository.dart';
 import 'package:letslive_mobile/features/creator/data/stream_settings_repository.dart';
@@ -108,8 +109,9 @@ class MyVodsNotifier extends PagedFeedNotifier<Vod> {
       ref.read(myVodsRepositoryProvider).list(page);
 }
 
-/// Lets the user choose a video from the device; null when they cancel or
-/// the picker fails. Widget tests override it with a fake.
+/// Lets the user choose a video from the device; null when they cancel.
+/// Throws [PickerException] when the picker fails. Widget tests override it
+/// with a fake.
 typedef VideoPick = Future<PickedVideo?> Function();
 
 /// The system video picker (the photo library). On Android it needs no
@@ -124,9 +126,9 @@ final videoPickProvider = Provider<VideoPick>(
         name: file.name,
         size: await file.length(),
       );
-    } on PlatformException {
-      // The picker or the file could not be opened: treated as cancelled.
-      return null;
+    } on PlatformException catch (e) {
+      // The picker or the file could not be opened.
+      throw PickerException(e);
     }
   },
 );

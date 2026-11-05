@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/validation/field_limits.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
 import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/auth/presentation/auth_widgets.dart';
 import 'package:letslive_mobile/features/creator/creator_providers.dart';
@@ -217,7 +218,7 @@ class _StreamInfoFormState extends ConsumerState<StreamInfoForm> {
 
   Future<void> _pick() async {
     final l10n = AppLocalizations.of(context);
-    final image = await ref.read(imagePickProvider)();
+    final image = await pickWithFeedback(context, ref.read(imagePickProvider));
     if (image == null || !mounted) return;
     const maxMb = FieldLimits.livestreamThumbnailMaxFileMb;
     if (checkFileSize(image, maxMb) != null) {

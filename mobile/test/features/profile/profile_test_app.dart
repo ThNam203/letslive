@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/l10n/locale_provider.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
 import 'package:letslive_mobile/core/router/app_router.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
 import 'package:letslive_mobile/features/profile/profile_providers.dart';
 import 'package:letslive_mobile/features/settings/settings_providers.dart';
 import 'package:letslive_mobile/features/user/data/picked_image.dart';
@@ -202,6 +203,9 @@ class FakeDevice {
   Locale locale = const Locale('en');
 
   PickedImage? next;
+
+  /// The photo library fails to open (e.g. access denied).
+  bool pickFails = false;
   ({int width, int height})? size = (width: 400, height: 400);
 
   /// The URLs the app asked to open, and whether opening works.
@@ -210,7 +214,9 @@ class FakeDevice {
 
   List<Override> get overrides => [
     deviceLocaleProvider.overrideWithValue(locale),
-    imagePickProvider.overrideWithValue(() async => next),
+    imagePickProvider.overrideWithValue(
+      () async => pickFails ? throw const PickerException('denied') : next,
+    ),
     imageSizeReaderProvider.overrideWithValue((_) async => size),
     urlOpenerProvider.overrideWithValue((url) async {
       opened.add(url);

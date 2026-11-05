@@ -42,6 +42,7 @@ class MessageRepository {
   );
 
   /// `PUT /conversations/<id>`: renames a group or changes its picture.
+  /// No web UI and no caller; kept for contract coverage and a future UI.
   Future<ApiResponse<Conversation>> update(
     String id, {
     String? name,
@@ -53,10 +54,12 @@ class MessageRepository {
   );
 
   /// `DELETE /conversations/<id>`: the user leaves it.
+  /// No web UI and no caller; kept for contract coverage and a future UI.
   Future<ApiResponse<Object?>> leave(String id) =>
       _client.delete('$_base/$id', parse: (data) => data);
 
   /// `POST /conversations/<id>/participants`.
+  /// No web UI and no caller; kept for contract coverage and a future UI.
   Future<ApiResponse<Conversation>> addParticipant(
     String id, {
     required String userId,
@@ -73,6 +76,7 @@ class MessageRepository {
   );
 
   /// `DELETE /conversations/<id>/participants/<userId>`.
+  /// No web UI and no caller; kept for contract coverage and a future UI.
   Future<ApiResponse<Conversation>> removeParticipant(
     String id,
     String userId,

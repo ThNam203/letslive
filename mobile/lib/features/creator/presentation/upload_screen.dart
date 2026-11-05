@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/validation/field_limits.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
 import 'package:letslive_mobile/features/auth/presentation/auth_widgets.dart';
 import 'package:letslive_mobile/features/creator/creator_providers.dart';
 import 'package:letslive_mobile/features/creator/domain/format_bytes.dart';
@@ -48,7 +49,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
 
   Future<void> _pick() async {
     final l10n = AppLocalizations.of(context);
-    final video = await ref.read(videoPickProvider)();
+    final video = await pickWithFeedback(context, ref.read(videoPickProvider));
     if (video == null || !mounted) return;
     setState(() {
       switch (checkVideo(video)) {

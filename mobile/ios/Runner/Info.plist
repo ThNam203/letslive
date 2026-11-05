@@ -48,7 +48,7 @@
 		</dict>
 	</dict>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Lets you choose a profile picture or banner from your photo library. Only the photo you pick is uploaded.</string>
+	<string>Lets you choose photos and videos from your library: a profile picture or banner, pictures to send in messages, stream and video thumbnails, and videos to upload. Only what you pick is uploaded.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>

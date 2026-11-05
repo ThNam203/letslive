@@ -74,6 +74,7 @@ enum UploadFailureKind {
 class UploadFailure {
   const UploadFailure(this.kind, [this.response]);
 
+  /// What went wrong.
   final UploadFailureKind kind;
 
   /// The failed response when [kind] is [UploadFailureKind.request].
@@ -93,15 +94,24 @@ class UploadItem {
     this.failure,
   });
 
+  /// Local id of the queue entry (not the server's video id).
   final String id;
+
+  /// The file being sent.
   final PickedVideo video;
+
+  /// Title, description and visibility sent with the file.
   final String title;
   final String description;
   final bool isPublic;
+
+  /// Where the upload is in its life cycle.
   final UploadStatus status;
 
   /// Bytes sent so far.
   final int sent;
+
+  /// Why it failed; null unless [status] is failed.
   final UploadFailure? failure;
 
   /// Bytes to send (what `onSendProgress` totals can differ slightly by the
@@ -140,7 +150,6 @@ final uploadManagerProvider = NotifierProvider<UploadManager, List<UploadItem>>(
 class UploadManager extends Notifier<List<UploadItem>> {
   final Map<String, CancelToken> _cancelTokens = {};
   int _nextId = 0;
-  bool _awake = false;
 
   @override
   List<UploadItem> build() {
@@ -242,11 +251,9 @@ class UploadManager extends Notifier<List<UploadItem>> {
     if (!ref.mounted) return;
     state = List.unmodifiable(items);
     final uploading = items.any((i) => i.status == UploadStatus.uploading);
-    if (uploading != _awake) {
-      _awake = uploading;
-      final wake = ref.read(screenWakeHolderProvider);
-      uploading ? wake.acquire(this) : wake.release(this);
-    }
+    // The holder ignores a repeated acquire or release.
+    final wake = ref.read(screenWakeHolderProvider);
+    uploading ? wake.acquire(this) : wake.release(this);
   }
 
   void _startQueued() {

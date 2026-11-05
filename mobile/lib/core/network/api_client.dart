@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
@@ -10,26 +8,20 @@ import 'package:letslive_mobile/core/network/auth_interceptor.dart';
 /// Default per-request timeout (mirrors `DEFAULT_TIMEOUT_MS` in the web client).
 const Duration defaultRequestTimeout = Duration(seconds: 15);
 
-/// Supplies headers attached to every request the client sends, including the
-/// silent token refresh and the replay after it (e.g. `X-Firebase-AppCheck`).
-/// Called per request, so it can return a fresh token each time. Explicit
-/// per-call `headers` win over provider values with the same name. It must not
-/// set `Cookie` or `Authorization` (the session lives in the cookie jar); a
-/// request whose provider does is not sent and the call throws a
-/// [StateError].
-typedef RequestHeaderProvider = FutureOr<Map<String, String>> Function();
-
 /// HTTP client for the LetsLive gateway. Cookie based auth, envelope parsing,
 /// silent single-flight token refresh. Calls never throw for server errors or
 /// transport failures; inspect [ApiResponse.success] / [ApiResponse.failure].
-/// Only caller bugs throw (see [RequestHeaderProvider]).
+///
+/// [defaultHeaders] go on every request, the silent refresh and its replay
+/// included (the contract harness sets a User-Agent this way); per-call
+/// `headers` add to them and win on a clash. App Check tokens are per call.
 class ApiClient {
   ApiClient({
     required String baseUrl,
     required CookieJar cookieJar,
     HttpClientAdapter? adapter,
     Duration timeout = defaultRequestTimeout,
-    RequestHeaderProvider? headerProvider,
+    Map<String, String> defaultHeaders = const {},
   }) : _dio = Dio(
          BaseOptions(
            baseUrl: baseUrl,
@@ -39,7 +31,7 @@ class ApiClient {
            responseType: ResponseType.plain,
            // Error envelopes are values, not exceptions.
            validateStatus: (_) => true,
-           headers: {'Cache-Control': 'no-store'},
+           headers: {'Cache-Control': 'no-store', ...defaultHeaders},
          ),
        ) {
     if (adapter != null) _dio.httpClientAdapter = adapter;
@@ -51,7 +43,6 @@ class ApiClient {
       );
     });
     _dio.interceptors
-      ..add(_HeaderInterceptor(headerProvider))
       ..add(CookieManager(cookieJar))
       ..add(AuthInterceptor(_dio, _refresher));
   }
@@ -68,6 +59,7 @@ class ApiClient {
   /// concurrent callers share one request. Returns true on success.
   Future<bool> refreshSession() => _refresher.refresh();
 
+  /// `GET [path]` with [query]; [parse] turns the envelope `data` into [T].
   Future<ApiResponse<T>> get<T>(
     String path, {
     Map<String, Object?>? query,
@@ -83,6 +75,7 @@ class ApiClient {
     headers: headers,
   );
 
+  /// `POST [path]` with a JSON [body] (see [get]).
   Future<ApiResponse<T>> post<T>(
     String path, {
     Object? body,
@@ -100,6 +93,7 @@ class ApiClient {
     headers: headers,
   );
 
+  /// `PUT [path]` with a JSON [body] (see [get]).
   Future<ApiResponse<T>> put<T>(
     String path, {
     Object? body,
@@ -117,6 +111,7 @@ class ApiClient {
     headers: headers,
   );
 
+  /// `PATCH [path]` with a JSON [body] (see [get]).
   Future<ApiResponse<T>> patch<T>(
     String path, {
     Object? body,
@@ -134,6 +129,7 @@ class ApiClient {
     headers: headers,
   );
 
+  /// `DELETE [path]`, optionally with a JSON [body] (see [get]).
   Future<ApiResponse<T>> delete<T>(
     String path, {
     Object? body,
@@ -174,6 +170,7 @@ class ApiClient {
     noTimeout: true,
   );
 
+  /// Closes the HTTP client and the refresh stream.
   Future<void> dispose() async {
     _dio.close();
     await _refresher.dispose();
@@ -211,10 +208,6 @@ class ApiClient {
         parse: parse,
       );
     } on DioException catch (e) {
-      // Caller misuse surfaces as the bug it is, never as a network failure.
-      if (e.error case final _ForbiddenHeaderError misuse) {
-        Error.throwWithStackTrace(misuse, e.stackTrace);
-      }
       return ApiResponse<T>.transportFailure(_kindOf(e), _messageOf(e));
     }
   }
@@ -239,50 +232,4 @@ class ApiClient {
     DioExceptionType.cancel => 'Request cancelled',
     _ => 'Network error: ${e.message ?? e.type.name}',
   };
-}
-
-/// Headers a [RequestHeaderProvider] may not set: they would replace or
-/// forge the cookie-jar session.
-const Set<String> _forbiddenProviderHeaders = {'cookie', 'authorization'};
-
-/// A [RequestHeaderProvider] tried to set a [_forbiddenProviderHeaders] entry.
-/// A programming error: [ApiClient] rethrows it instead of reporting a
-/// (retryable) network failure.
-class _ForbiddenHeaderError extends StateError {
-  _ForbiddenHeaderError(String name)
-    : super('headerProvider must not set the $name header');
-}
-
-/// Adds [RequestHeaderProvider] headers to every outgoing request. Placed
-/// first so the refresh call and the post-refresh replay carry them too.
-class _HeaderInterceptor extends Interceptor {
-  _HeaderInterceptor(this._provider);
-
-  final RequestHeaderProvider? _provider;
-
-  @override
-  Future<void> onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
-    final provider = _provider;
-    if (provider != null) {
-      final extra = await provider();
-      for (final entry in extra.entries) {
-        final name = entry.key.toLowerCase();
-        if (_forbiddenProviderHeaders.contains(name)) {
-          // Fail the request loudly instead of silently dropping the header.
-          handler.reject(
-            DioException(
-              requestOptions: options,
-              error: _ForbiddenHeaderError(name),
-            ),
-          );
-          return;
-        }
-        options.headers.putIfAbsent(entry.key, () => entry.value);
-      }
-    }
-    handler.next(options);
-  }
 }

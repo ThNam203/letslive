@@ -111,8 +111,9 @@ class ProfileHeader extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: muted,
                     ),
-                    // Under the text, not beside it: a long label (Vietnamese
-                    // "Bỏ theo dõi" at large text) would squeeze the name away.
+                    // Under the text, not beside it: a long label
+                    // (Vietnamese "Bỏ theo dõi" at large text) would squeeze
+                    // the name away.
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Wrap(

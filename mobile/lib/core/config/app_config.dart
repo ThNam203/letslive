@@ -58,8 +58,8 @@ class GoogleSignInConfig {
 ///
 /// Always required: BACKEND_PROTOCOL, BACKEND_WS_PROTOCOL, BACKEND_HOST,
 /// BACKEND_PORT, FLAVOR. Staging and prod also require Firebase (bot proof
-/// via App Check), GOOGLE_SERVER_CLIENT_ID and WEB_BASE_URL. Dev without Firebase requires
-/// TURNSTILE_DEV_TOKEN instead.
+/// via App Check), GOOGLE_SERVER_CLIENT_ID and WEB_BASE_URL. Dev without
+/// Firebase requires TURNSTILE_DEV_TOKEN instead.
 class AppConfig {
   const AppConfig._({
     required this.apiBaseUrl,
@@ -132,7 +132,11 @@ class AppConfig {
 
   /// Gateway origin without a path; Envoy rewrites `/` to `/v1/`.
   final String apiBaseUrl;
+
+  /// Realtime socket URL: `<ws protocol>://<host>:<port>/realtime`.
   final String wsBaseUrl;
+
+  /// The build flavor (FLAVOR); decides which keys are required.
   final Flavor flavor;
 
   /// Null when FIREBASE_PROJECT_ID is unset (dev only).

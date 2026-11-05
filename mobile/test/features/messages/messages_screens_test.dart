@@ -173,6 +173,9 @@ void main() {
       find.byKey(const ValueKey('edit-message-input')),
       'better words',
     );
+    await tester.pump();
+    // The counter counts UTF-16 units against the server's 2000 limit.
+    expect(find.text('12/2000'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('save-message')));
     await tester.pumpAndSettle();
     expect(find.text('better words'), findsOneWidget);

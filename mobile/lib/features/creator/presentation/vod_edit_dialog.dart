@@ -12,6 +12,7 @@ import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/network/api_response.dart';
 import 'package:letslive_mobile/core/validation/field_limits.dart';
+import 'package:letslive_mobile/core/widgets/action_feedback.dart';
 import 'package:letslive_mobile/features/auth/presentation/auth_widgets.dart';
 import 'package:letslive_mobile/features/creator/creator_providers.dart';
 import 'package:letslive_mobile/features/home/data/vod.dart';
@@ -63,7 +64,7 @@ class _VodEditDialogState extends ConsumerState<_VodEditDialog> {
 
   Future<void> _pickThumbnail() async {
     final l10n = AppLocalizations.of(context);
-    final image = await ref.read(imagePickProvider)();
+    final image = await pickWithFeedback(context, ref.read(imagePickProvider));
     if (image == null || !mounted) return;
     const maxMb = FieldLimits.generalUploadMaxFileMb;
     setState(() {

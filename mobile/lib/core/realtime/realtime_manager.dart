@@ -5,8 +5,11 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:letslive_mobile/core/realtime/realtime_channel.dart';
 import 'package:letslive_mobile/core/realtime/realtime_frame.dart';
 
+/// Ends a subscription made with [RealtimeManager]; calling it twice is
+/// harmless.
 typedef Unsubscribe = void Function();
 
+/// Connection state of the realtime socket, for UI that shows it.
 enum RealtimeStatus {
   /// [RealtimeManager.start] has not been called yet.
   idle,
