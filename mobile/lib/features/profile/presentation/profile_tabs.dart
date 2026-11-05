@@ -19,7 +19,8 @@ const double profileTabBarHeight = 48;
 /// [user] is what the parent loaded; the live copy from
 /// [publicUserProvider] replaces it, so following changes the count here.
 /// With [compact] (the keyboard is open) only [chat] shows, with no header
-/// or tab bar, to leave room for typing.
+/// or tab bar, to leave room for typing. The chat keeps its place in the
+/// widget tree either way, so its draft and focus survive the switch.
 class ProfileTabs extends ConsumerStatefulWidget {
   const ProfileTabs({
     required this.user,
@@ -58,7 +59,14 @@ class _ProfileTabsState extends ConsumerState<ProfileTabs>
   void initState() {
     super.initState();
     _controller = TabController(length: _hasChat ? 4 : 3, vsync: this)
-      ..addListener(() => setState(() {}));
+      ..addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    // The chat stays mounted while hidden; its message box must not keep
+    // the focus (and the keyboard) on another tab.
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {});
   }
 
   @override
@@ -73,12 +81,14 @@ class _ProfileTabsState extends ConsumerState<ProfileTabs>
     final user =
         ref.watch(publicUserProvider(widget.user.id)).value ?? widget.user;
     final chat = widget.chat;
-    if (widget.compact && chat != null) return chat;
+    final compact = widget.compact && chat != null;
     final tab = _controller.index - (_hasChat ? 1 : 0);
     // Only the selected tab is built, except the chat: it stays mounted
     // (hidden) so its room subscription, scroll position and typed draft
-    // survive a visit to another tab.
+    // survive a visit to another tab. In compact mode the chat shows in the
+    // same place in the tree, so opening the keyboard never rebuilds it.
     final other = switch (tab) {
+      _ when compact => null,
       < 0 => null,
       0 => ProfileHomeTab(
         user: user,
@@ -89,19 +99,24 @@ class _ProfileTabsState extends ConsumerState<ProfileTabs>
     };
     return Column(
       children: [
-        ProfileHeader(user: user, showBanner: widget.showBanner),
-        TabBar(
-          controller: _controller,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
-          tabs: [
-            if (_hasChat) Tab(text: l10n.chat_title),
-            Tab(text: l10n.users_channel_tabs_home),
-            Tab(text: l10n.users_channel_tabs_videos),
-            Tab(text: l10n.users_channel_tabs_about),
-          ],
-        ),
+        if (!compact) ...[
+          ProfileHeader(user: user, showBanner: widget.showBanner),
+          TabBar(
+            controller: _controller,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            tabs: [
+              if (_hasChat) Tab(text: l10n.chat_title),
+              Tab(text: l10n.users_channel_tabs_home),
+              Tab(text: l10n.users_channel_tabs_videos),
+              Tab(text: l10n.users_channel_tabs_about),
+            ],
+          ),
+        ],
         Expanded(
+          // Keyed so it keeps its element when the header and tab bar
+          // above it come and go.
+          key: const ValueKey('profile-tab-content'),
           child: Stack(
             fit: StackFit.expand,
             children: [

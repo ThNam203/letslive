@@ -22,4 +22,5 @@ const Map<String, String> compileTimeEnv = {
   'FIREBASE_IOS_APP_ID': String.fromEnvironment('FIREBASE_IOS_APP_ID'),
   'GOOGLE_SERVER_CLIENT_ID': String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID'),
   'GOOGLE_IOS_CLIENT_ID': String.fromEnvironment('GOOGLE_IOS_CLIENT_ID'),
+  'WEB_BASE_URL': String.fromEnvironment('WEB_BASE_URL'),
 };

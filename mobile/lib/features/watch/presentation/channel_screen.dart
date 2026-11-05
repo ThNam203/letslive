@@ -110,6 +110,16 @@ class ChannelScreen extends ConsumerWidget {
 const double _minChatHeight = 240;
 const double _minCompactChatHeight = 200;
 
+/// The stream title block's vertical padding (16 + 16) plus 1 px of slack
+/// for rounding.
+const double _infoPadding = 33;
+
+/// `titleMedium`'s font size and line height (Material 3), and the title's
+/// line limit.
+const double _titleFontSize = 16;
+const double _titleLineHeight = 1.5;
+const int _titleMaxLines = 2;
+
 /// The player and the stream title, then the profile tabs with the chat.
 ///
 /// With the keyboard open ([keyboardOpen]) the title block, the profile
@@ -145,10 +155,12 @@ class _LiveBodyState extends ConsumerState<_LiveBody> {
     if (old.stream.id != widget.stream.id) _playerKey = GlobalKey();
   }
 
-  /// An upper bound of the title block's height at the current text scale.
+  /// An upper bound of the title block's height at the current text scale:
+  /// its padding plus [_titleMaxLines] lines of `titleMedium`.
   double _infoHeight(BuildContext context) {
     final scaler = MediaQuery.textScalerOf(context);
-    return 33 + scaler.scale(16) * 1.5 * 2;
+    return _infoPadding +
+        scaler.scale(_titleFontSize) * _titleLineHeight * _titleMaxLines;
   }
 
   @override
@@ -169,7 +181,7 @@ class _LiveBodyState extends ConsumerState<_LiveBody> {
       padding: const EdgeInsets.all(16),
       child: Text(
         stream.title,
-        maxLines: 2,
+        maxLines: _titleMaxLines,
         overflow: TextOverflow.ellipsis,
         style: theme.textTheme.titleMedium,
       ),

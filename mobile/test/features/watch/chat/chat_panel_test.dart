@@ -187,6 +187,26 @@ void main() {
     expect(find.text('Type a message...'), findsOneWidget);
   });
 
+  testWidgets('switching tabs takes the focus from the hidden chat box', (
+    tester,
+  ) async {
+    await pumpChannel(
+      tester,
+      liveServer()..liveByUser = {},
+      FakePlayers(),
+      'u-1',
+      overrides: _Realtime().overrides,
+    );
+    await tester.showKeyboard(_input);
+    final field = tester.state<EditableTextState>(find.byType(EditableText));
+    expect(field.widget.focusNode.hasFocus, isTrue);
+
+    await tester.tap(find.text('About'));
+    await tester.pumpAndSettle();
+
+    expect(field.widget.focusNode.hasFocus, isFalse);
+  });
+
   testWidgets('a live message appears once, even if pushed again', (
     tester,
   ) async {
@@ -535,6 +555,12 @@ void main() {
 
       await tester.enterText(_input, 'kept while the keyboard opens');
       await openKeyboard(tester);
+      // Opening the keyboard must not rebuild the field from scratch: the
+      // draft and the focus (which keeps the keyboard up) survive.
+      final field = tester.state<EditableTextState>(find.byType(EditableText));
+      expect(field.textEditingValue.text, 'kept while the keyboard opens');
+      expect(field.widget.focusNode.hasFocus, isTrue);
+
       await tester.enterText(_input, '/');
       await tester.pump();
 
