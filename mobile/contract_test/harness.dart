@@ -58,12 +58,17 @@ class ContractUser {
     required this.username,
     required this.password,
     required this.client,
+    required this.cookieJar,
   });
 
   final String email;
   final String username;
   final String password;
   final ApiClient client;
+
+  /// The session cookies of [client]; a `RealtimeManager` needs the same jar
+  /// to open its socket as this user.
+  final CookieJar cookieJar;
 }
 
 /// Two users created through the real signup path.
@@ -125,9 +130,10 @@ String _runId() {
 Future<ContractUser> _signUp(AppConfig config, String name) async {
   final email = '$name@contract.test';
   final username = 'user_$name';
+  final jar = CookieJar();
   final client = ApiClient(
     baseUrl: config.apiBaseUrl,
-    cookieJar: CookieJar(),
+    cookieJar: jar,
     headerProvider: () => {'User-Agent': _userAgent},
   );
   try {
@@ -163,6 +169,7 @@ Future<ContractUser> _signUp(AppConfig config, String name) async {
       username: username,
       password: _testPassword,
       client: client,
+      cookieJar: jar,
     );
   } on Object {
     await client.dispose();

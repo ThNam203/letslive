@@ -81,7 +81,8 @@ class RealtimeManager {
   final Duration _pongTimeout;
 
   final Map<String, int> _topicCounts = {};
-  final Map<String, Set<void Function(Object?)>> _eventHandlers = {};
+  final Map<String, Set<void Function(String topic, Object? data)>>
+  _eventHandlers = {};
   final Set<void Function()> _reconnectHandlers = {};
   final StreamController<RealtimeStatus> _statusController =
       StreamController<RealtimeStatus>.broadcast();
@@ -189,12 +190,22 @@ class RealtimeManager {
     };
   }
 
-  /// Calls [handler] with the event payload for every frame of [type].
-  Unsubscribe onEvent(String type, void Function(Object? data) handler) {
+  /// Calls [handler] with the event payload for every frame of [type]; with
+  /// [topic] only for frames pushed on that topic (several rooms can be
+  /// subscribed at once and payloads do not name their room).
+  Unsubscribe onEvent(
+    String type,
+    void Function(Object? data) handler, {
+    String? topic,
+  }) {
     final handlers = _eventHandlers.putIfAbsent(type, () => {});
-    handlers.add(handler);
+    void entry(String frameTopic, Object? data) {
+      if (topic == null || topic == frameTopic) handler(data);
+    }
+
+    handlers.add(entry);
     return () {
-      handlers.remove(handler);
+      handlers.remove(entry);
       if (handlers.isEmpty && identical(_eventHandlers[type], handlers)) {
         _eventHandlers.remove(type);
       }
@@ -406,11 +417,11 @@ class RealtimeManager {
     _pongTimer = null;
     final frame = parseRealtimeFrame(raw);
     switch (frame) {
-      case RealtimeEventFrame(:final type, :final data):
+      case RealtimeEventFrame(:final topic, :final type, :final data):
         final handlers = _eventHandlers[type];
         if (handlers == null) return;
         for (final handler in List.of(handlers)) {
-          _guard('event $type', () => handler(data));
+          _guard('event $type', () => handler(topic, data));
         }
       case RealtimeErrorFrame(:final code):
         _log('server error: $code');

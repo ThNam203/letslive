@@ -26,6 +26,14 @@ abstract final class ApiEndpoints {
   /// client; the player loads it.
   static const String transcode = '/transcode';
 
+  /// Livestream chat: `GET ?roomId=` history, `POST {roomId, text}` send.
+  /// Not direct messages (those are `/conversations`).
+  static const String messages = '/messages';
+
+  /// Custom chat commands: `GET ?roomId=<streamerId>` for a room; the
+  /// settings screen also uses `/chat-commands/mine` and `/<id>`.
+  static const String chatCommands = '/chat-commands';
+
   /// Prefix of a public profile: `/user/<id>`.
   static const String user = '/user';
 }

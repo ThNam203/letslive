@@ -45,7 +45,7 @@ Source of the feature list: section 4 of
 | `/settings/upload` | - | - | planned |
 | `/settings/vods` | - | - | planned |
 | `/shop` | - | - | planned |
-| `/users/[userId]` | `ChannelScreen` (`mobile/lib/features/watch/presentation/channel_screen.dart`): live player, offline / ended / not-found states (Task 13a); profile header, tabs, follow and videos come in Task 15 | `mobile/test/features/watch/channel_screen_test.dart`, `mobile/test/features/watch/channel_navigation_test.dart`, `mobile/contract_test/watch_contract_test.dart` | planned |
+| `/users/[userId]` | `ChannelScreen` (`mobile/lib/features/watch/presentation/channel_screen.dart`): live player, offline / ended / not-found states (Task 13a); live chat with emotes and slash commands (Task 13b, `mobile/lib/features/watch/chat/`, `mobile/lib/core/chat_parser/`); profile header, tabs, follow and videos come in Task 15 | `mobile/test/features/watch/channel_screen_test.dart`, `mobile/test/features/watch/channel_navigation_test.dart`, `mobile/contract_test/watch_contract_test.dart`, `mobile/test/features/watch/chat/chat_panel_test.dart`, `mobile/test/features/watch/chat/chat_controller_test.dart`, `mobile/test/core/chat_parser/command_test.dart`, `mobile/contract_test/chat_contract_test.dart` | planned |
 | `/users/[userId]/gifts` | - | - | planned |
 | `/users/[userId]/vods/[vodId]` | - | - | planned |
 | `/wallet/deposit` | - | - | differs: out of scope (Stripe deposits/payments excluded) |
@@ -67,8 +67,6 @@ constant for yet. Remove a bullet when its constant lands.
 - `/shop` - shop items and purchase
 - `/vods` - VOD feed, detail, reactions, comments, upload
 - `/vod-comments` - comment edit, delete, like, replies
-- `/messages` - live chat history and send
-- `/chat-commands` - chat command settings
 - `/conversations` - direct messages
 - `/files` - media host path (thumbnails, VOD segments) used by web image/player URLs
 

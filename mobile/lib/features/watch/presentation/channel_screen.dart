@@ -3,8 +3,9 @@
 /// notice. A stream that ends while watched turns into an "ended" notice;
 /// an unknown user shows "not found". Every notice has a way back.
 ///
-/// The body is a list so the profile header, tabs, follow button and videos
-/// (Task 15) slot in under the player. How the end of a stream is noticed is
+/// The live chat (`chat/`) sits under the player, and under the offline /
+/// ended notice. The profile header, tabs, follow button and videos
+/// (Task 15) slot in between the player and the chat. How the end of a stream is noticed is
 /// described in `watch_providers.dart`.
 library;
 
@@ -17,6 +18,7 @@ import 'package:letslive_mobile/core/router/app_routes.dart';
 import 'package:letslive_mobile/features/home/data/livestream.dart';
 import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
 import 'package:letslive_mobile/features/user/data/public_user.dart';
+import 'package:letslive_mobile/features/watch/chat/presentation/chat_panel.dart';
 import 'package:letslive_mobile/features/watch/domain/channel_state.dart';
 import 'package:letslive_mobile/features/watch/domain/live_stream_url.dart';
 import 'package:letslive_mobile/features/watch/presentation/live_player_view.dart';
@@ -59,14 +61,20 @@ class ChannelScreen extends ConsumerWidget {
           stream: stream,
           onStopped: ref.read(channelProvider(userId).notifier).recheck,
         ),
-        ChannelOffline(:final user) => _Notice(
-          icon: Icons.videocam_off_outlined,
-          title: l10n.users_offline,
-          message: l10n.users_channel_offline_notice(user.username),
+        ChannelOffline(:final user) => _NoticeWithChat(
+          roomId: user.id,
+          notice: _Notice(
+            icon: Icons.videocam_off_outlined,
+            title: l10n.users_offline,
+            message: l10n.users_channel_offline_notice(user.username),
+          ),
         ),
-        ChannelEnded() => _Notice(
-          icon: Icons.live_tv_outlined,
-          message: l10n.users_channel_stream_ended,
+        ChannelEnded(:final user) => _NoticeWithChat(
+          roomId: user.id,
+          notice: _Notice(
+            icon: Icons.live_tv_outlined,
+            message: l10n.users_channel_stream_ended,
+          ),
         ),
         ChannelNotFound() => _Notice(
           icon: Icons.person_off_outlined,
@@ -102,7 +110,7 @@ class _LiveBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final apiBaseUrl = ref.watch(appConfigProvider).apiBaseUrl;
-    return ListView(
+    return Column(
       children: [
         LivePlayerView(
           // A new stream (the user restarted) gets a new player.
@@ -134,9 +142,30 @@ class _LiveBody extends ConsumerWidget {
             ],
           ),
         ),
+        const Divider(height: 1),
+        // The room id is the streamer's user id.
+        Expanded(child: ChatPanel(roomId: user.id)),
       ],
     );
   }
+}
+
+/// The offline / ended [notice] above the room's chat, which web also shows
+/// when nobody is streaming.
+class _NoticeWithChat extends StatelessWidget {
+  const _NoticeWithChat({required this.roomId, required this.notice});
+
+  final String roomId;
+  final Widget notice;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      Expanded(child: notice),
+      const Divider(height: 1),
+      Expanded(flex: 2, child: ChatPanel(roomId: roomId)),
+    ],
+  );
 }
 
 /// A centered icon, optional [title], [message] and a back button. Back
