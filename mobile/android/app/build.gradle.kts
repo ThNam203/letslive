@@ -14,6 +14,18 @@ val keystoreProperties: Properties? =
         null
     }
 
+// A partial key.properties would otherwise fail later with an unclear error.
+val keystoreKeys = listOf("keyAlias", "keyPassword", "storeFile", "storePassword")
+keystoreProperties?.let { properties ->
+    val missing = keystoreKeys.filter { properties.getProperty(it).isNullOrBlank() }
+    if (missing.isNotEmpty()) {
+        throw GradleException(
+            "android/key.properties is missing ${missing.joinToString()} " +
+                "(see mobile/README.md).",
+        )
+    }
+}
+
 android {
     namespace = "vn.letslive.mobile"
     compileSdk = flutter.compileSdkVersion
@@ -65,8 +77,9 @@ android {
 
     buildTypes {
         release {
-            // Staging and prod release builds are signed with the keystore from
-            // key.properties (enforced below); the dev flavor uses the debug key.
+            // Release builds are signed with the keystore from key.properties
+            // when it exists (required for staging and prod, enforced below);
+            // without it the dev flavor falls back to the debug key.
             signingConfig = signingConfigs.findByName("upload")
                 ?: signingConfigs.getByName("debug")
         }
