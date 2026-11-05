@@ -186,10 +186,15 @@ final unreadNotificationCountProvider =
 
 /// Loads the unread count and counts new notifications from pushes. A count
 /// the server sent while the event was in flight is the fresher one: events
-/// that arrive before the first load are dropped.
+/// that arrive before the first load are dropped. A notification counts once
+/// however often its event arrives.
 class UnreadNotificationsNotifier extends AsyncNotifier<int> {
+  /// Ids of the notifications counted from events since the last load.
+  final Set<String> _counted = {};
+
   @override
   Future<int> build() async {
+    _counted.clear();
     _listenToEvents(ref, _onEvent);
     return unwrapData(
       await ref.read(notificationRepositoryProvider).unreadCount(),
@@ -213,7 +218,11 @@ class UnreadNotificationsNotifier extends AsyncNotifier<int> {
         ref.invalidateSelf();
       case NotificationCreated(:final notification):
         final count = state.value;
-        if (count != null && !notification.isRead) state = AsyncData(count + 1);
+        if (count != null &&
+            !notification.isRead &&
+            _counted.add(notification.id)) {
+          state = AsyncData(count + 1);
+        }
     }
   }
 }

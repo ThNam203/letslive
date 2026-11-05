@@ -63,10 +63,11 @@ void main() {
     expect(_badge(tester), 1);
 
     await socket.push(tester, 'notification.created', _pushedJson('n-3'));
-    // The same event twice (a retry) must not show twice.
+    // The same event twice (a retry) must show and count once: 1 unread
+    // before plus the new one.
     await socket.push(tester, 'notification.created', _pushedJson('n-3'));
 
-    expect(_badge(tester), 3);
+    expect(_badge(tester), 2);
     expect(find.text('Pushed'), findsOneWidget);
     final firstY = tester.getTopLeft(find.text('Pushed')).dy;
     expect(firstY, lessThan(tester.getTopLeft(find.text('First')).dy));

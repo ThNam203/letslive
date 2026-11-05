@@ -115,7 +115,9 @@ Steps:
 
 1. Run the app (`flutter run --flavor dev --dart-define-from-file=env/dev.json`
    on the device), sign in as user A and allow notifications.
-2. Check the server has the device:
+2. Check the server has the device (this is also the first sign-in on a
+   fresh install: the APNs token on iOS can arrive late, and the row must
+   still appear without restarting the app):
    `SELECT platform, locale FROM device_tokens WHERE user_id = '<A id>'` in
    the user database shows one row.
 3. Background the app (home button) or swipe it away. With the web app or

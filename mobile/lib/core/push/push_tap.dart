@@ -67,7 +67,11 @@ String? _routeOfActionUrl(String? actionUrl) {
     return null;
   }
   final parts = uri.pathSegments;
-  if (parts.any((part) => part.isEmpty)) return null;
+  // Empty and dot segments are never ids; rejecting them also keeps `..`
+  // from walking out of the path.
+  if (parts.any((part) => part.isEmpty || part == '.' || part == '..')) {
+    return null;
+  }
   return switch (parts) {
     ['messages', final id] when id != 'new' => AppRoutes.conversation(id),
     ['users', final id] => AppRoutes.channel(id),

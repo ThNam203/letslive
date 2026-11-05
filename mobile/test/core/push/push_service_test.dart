@@ -106,9 +106,13 @@ void main() {
     await push.unregister();
     expect(fcm.tokensDeleted, 1);
 
+    // A fresh token (FCM hands one out after deleteToken) and a call that
+    // throws instead of answering.
+    fcm.currentToken = 'id:APA91b-token-2';
     await push.registerForUser();
     devices.unregisterThrows = true;
     await push.unregister();
+    expect(devices.calls.last, 'unregister id:APA91b-token-2');
     expect(fcm.tokensDeleted, 2);
   });
 

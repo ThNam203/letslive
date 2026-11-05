@@ -101,13 +101,14 @@ class PushService {
     try {
       final token = _registeredToken ?? await messaging.token();
       if (token != null) await _devices.unregister(token);
-    } on Exception catch (e, stack) {
+    } on Object catch (e, stack) {
+      // Object, not Exception: nothing may stop the local token deletion.
       _log('server unregister failed', e, stack);
     } finally {
       _registeredToken = null;
       try {
         await messaging.deleteToken();
-      } on Exception catch (e, stack) {
+      } on Object catch (e, stack) {
         _log('deleting the FCM token failed', e, stack);
       }
     }

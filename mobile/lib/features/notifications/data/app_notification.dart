@@ -42,14 +42,23 @@ class AppNotification {
   static List<AppNotification> parseList(Object? data) =>
       parseJsonList(data, 'AppNotification', AppNotification.fromJson);
 
+  /// The notification's id.
   final String id;
 
   /// What happened: `dm`, `vod_comment`, `vod_comment_reply`,
   /// `gift_received`, ...
   final String type;
+
+  /// Short headline, as stored (not localized).
   final String title;
+
+  /// The text under the title, as stored (not localized).
   final String message;
+
+  /// Whether the user has read it.
   final bool isRead;
+
+  /// When it was created.
   final DateTime createdAt;
 
   /// A web path to open, e.g. `/users/<id>/vods/<id>`; see `resolveDeepLink`.

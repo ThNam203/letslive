@@ -3,6 +3,12 @@
 library;
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
+
+/// How long [FirebasePushMessaging.token] waits for the iOS APNs token:
+/// [_apnsAttempts] tries, [_apnsRetryDelay] apart (about 10 s at most).
+const int _apnsAttempts = 20;
+const Duration _apnsRetryDelay = Duration(milliseconds: 500);
 
 /// What the app uses of FCM.
 abstract interface class PushMessaging {
@@ -38,6 +44,9 @@ class FirebasePushMessaging implements PushMessaging {
 
   FirebaseMessaging get _fcm => FirebaseMessaging.instance;
 
+  // Explicit only: with this call absent, iOS already shows nothing in the
+  // foreground and Android never shows FCM notifications there. Calling it
+  // keeps that true if a default ever changes.
   @override
   Future<void> silenceForeground() =>
       _fcm.setForegroundNotificationPresentationOptions();
@@ -53,8 +62,19 @@ class FirebasePushMessaging implements PushMessaging {
     };
   }
 
+  /// On iOS the FCM token needs the APNs token, which can arrive a moment
+  /// after the permission prompt (the very first launch): wait for it a
+  /// bounded time, then let `getToken` answer or fail.
   @override
-  Future<String?> token() => _fcm.getToken();
+  Future<String?> token() async {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      for (var i = 0; i < _apnsAttempts; i++) {
+        if (await _fcm.getAPNSToken() != null) break;
+        await Future<void>.delayed(_apnsRetryDelay);
+      }
+    }
+    return _fcm.getToken();
+  }
 
   @override
   Stream<String> get tokenRefreshes => _fcm.onTokenRefresh;

@@ -84,6 +84,10 @@ void main() {
       '/login',
       '/account-setup',
       '/../settings',
+      '/users/..',
+      '/users/./vods/v-1',
+      '/messages/.',
+      '/users/u-1/vods/..',
       '',
     ];
 
