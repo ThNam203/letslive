@@ -5,8 +5,8 @@
 /// popular videos. The videos load page by page as the user nears the end of
 /// the list. Pull-to-refresh reloads everything, and so does coming back after
 /// a real stretch in the background. Live cards and channels open the channel
-/// (`/users/:userId`); video cards are not tappable until the VOD screen
-/// exists.
+/// (`/users/:userId`); video cards open the video
+/// (`/users/:userId/vods/:vodId`).
 library;
 
 import 'package:flutter/material.dart';
@@ -215,6 +215,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     meta:
         '${viewsLabel(l10n, vod.viewCount)} · '
         '${timeAgo(l10n, vod.createdAt, now)}',
+    onTap: () => context.push(AppRoutes.vod(vod.userId, vod.id)),
   );
 }
 

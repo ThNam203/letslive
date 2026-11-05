@@ -117,7 +117,7 @@ class LiveResultRow extends StatelessWidget {
   }
 }
 
-/// A video that matched the search.
+/// A video that matched the search. Opens the video.
 class VodResultRow extends StatelessWidget {
   const VodResultRow({required this.vod, required this.query, super.key});
 
@@ -138,6 +138,7 @@ class VodResultRow extends StatelessWidget {
       description: vod.description,
       userId: vod.userId,
       query: query,
+      onTap: () => context.push(AppRoutes.vod(vod.userId, vod.id)),
       meta:
           '${viewsLabel(l10n, vod.viewCount)}'
           ' · ${timeAgo(l10n, vod.createdAt, DateTime.now())}',

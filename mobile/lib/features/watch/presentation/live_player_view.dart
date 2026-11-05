@@ -155,7 +155,9 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
             valueListenable: _player.value,
             builder: (context, value, _) {
               if (_showError) return _PlaybackError(onRetry: _retry);
-              if (value.hasError || value.hasEnded) return const _Spinner();
+              if (value.hasError || value.hasEnded) {
+                return const PlayerSpinner();
+              }
               return _Controls(player: _player, value: value);
             },
           ),
@@ -177,7 +179,7 @@ class _Controls extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Stack(
       children: [
-        if (value.isBuffering) const _Spinner(),
+        if (value.isBuffering) const PlayerSpinner(),
         Positioned(
           left: 0,
           right: 0,
@@ -202,7 +204,7 @@ class _Controls extends StatelessWidget {
                           icon: const Icon(Icons.play_arrow),
                           onPressed: player.play,
                         ),
-                  _QualityMenu(player: player, value: value),
+                  PlayerQualityMenu(player: player, value: value),
                   IconButton(
                     tooltip: l10n.users_player_picture_in_picture,
                     icon: const Icon(Icons.picture_in_picture_alt),
@@ -220,8 +222,8 @@ class _Controls extends StatelessWidget {
 
 /// Buffering, restarting, or waiting for the server to say whether the
 /// stream is still live.
-class _Spinner extends StatelessWidget {
-  const _Spinner();
+class PlayerSpinner extends StatelessWidget {
+  const PlayerSpinner({super.key});
 
   @override
   Widget build(BuildContext context) =>
@@ -229,8 +231,12 @@ class _Spinner extends StatelessWidget {
 }
 
 /// "Auto" plus one entry per variant, the one in use checked.
-class _QualityMenu extends StatelessWidget {
-  const _QualityMenu({required this.player, required this.value});
+class PlayerQualityMenu extends StatelessWidget {
+  const PlayerQualityMenu({
+    required this.player,
+    required this.value,
+    super.key,
+  });
 
   final LivePlayerController player;
   final LivePlayerValue value;

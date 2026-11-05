@@ -14,7 +14,13 @@ class PagedFeed<T> {
     this.nextPage = 1,
     this.isLoadingMore = false,
     this.loadMoreError,
+    this.total,
   });
+
+  /// How many items the server says the whole list has (`meta.total` of the
+  /// first page); null when the endpoint reports none. Notifiers that add or
+  /// remove items keep it in step.
+  final int? total;
 
   /// The items loaded so far, in order, without duplicates.
   final List<T> items;
@@ -35,8 +41,10 @@ class PagedFeed<T> {
     int? nextPage,
     bool? isLoadingMore,
     ApiLoadException? loadMoreError,
+    int? total,
     bool clearError = false,
   }) => PagedFeed(
+    total: total ?? this.total,
     items: items ?? this.items,
     hasMore: hasMore ?? this.hasMore,
     nextPage: nextPage ?? this.nextPage,
@@ -64,8 +72,13 @@ abstract class PagedFeedNotifier<T> extends AsyncNotifier<PagedFeed<T>> {
 
   @override
   Future<PagedFeed<T>> build() async {
-    final first = unwrapList(await fetchPage(0));
-    return PagedFeed(items: first, hasMore: first.length >= pageSize);
+    final response = await fetchPage(0);
+    final first = unwrapList(response);
+    return PagedFeed(
+      items: first,
+      hasMore: first.length >= pageSize,
+      total: response.meta?.total,
+    );
   }
 
   /// Appends the next page. Does nothing while a page is loading, after the

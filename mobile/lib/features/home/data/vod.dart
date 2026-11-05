@@ -43,6 +43,9 @@ class Vod {
     );
   }
 
+  /// `ParseData<Vod>` for `ApiClient`.
+  static Vod parse(Object? data) => parseJsonObject(data, 'Vod', Vod.fromJson);
+
   /// `ParseData<List<Vod>>` for `ApiClient`.
   static List<Vod> parseList(Object? data) =>
       parseJsonList(data, 'Vod', Vod.fromJson);

@@ -2,8 +2,8 @@
 ///
 /// Screens only talk to a [LivePlayerController]; the app builds the
 /// `better_player_plus` one (`BetterLivePlayerController`) and widget tests a
-/// fake. Kept small on purpose: what the live screen shows and does, and what
-/// the VOD screen (Task 14) will need on top can be added here then.
+/// fake. Kept small on purpose: what the live screen and the VOD screen
+/// show and do. It plays live streams and recorded videos alike.
 library;
 
 import 'package:flutter/foundation.dart';
@@ -46,6 +46,8 @@ class LivePlayerValue {
     this.hasError = false,
     this.qualities = const [],
     this.quality = VideoQuality.auto,
+    this.position = Duration.zero,
+    this.duration = Duration.zero,
   });
 
   /// Playing (or about to, once buffered) rather than paused by the viewer.
@@ -66,6 +68,12 @@ class LivePlayerValue {
 
   /// The variant in use; [VideoQuality.auto] by default.
   final VideoQuality quality;
+
+  /// Playback position (recorded videos; the live screen ignores it).
+  final Duration position;
+
+  /// Length of the video, zero until known (recorded videos only).
+  final Duration duration;
 }
 
 /// Plays one HLS stream. Created per stream by [LivePlayerFactory] and
@@ -83,6 +91,10 @@ abstract interface class LivePlayerController {
   /// Pauses playback; the stream keeps going on the server.
   Future<void> pause();
 
+  /// Jumps to [position] in a recorded video. Asked before the video can
+  /// play, it is held and applied once it can (like web's pending seek).
+  Future<void> seekTo(Duration position);
+
   /// Switches to [quality]; [VideoQuality.auto] goes back to adaptive.
   Future<void> selectQuality(VideoQuality quality);
 
@@ -96,8 +108,13 @@ abstract interface class LivePlayerController {
 
 /// Builds the player for the stream at [url]. [title] and [author] label the
 /// background-playback notification / lock screen controls.
+///
+/// [isLive] is true for a stream (the default) and false for a recorded
+/// video (VOD), which can seek and reports position and duration. The name
+/// `LivePlayerController` is kept for both: one wrapper, one fake.
 typedef LivePlayerFactory = LivePlayerController Function({
   required String url,
   required String title,
   required String author,
+  bool isLive,
 });

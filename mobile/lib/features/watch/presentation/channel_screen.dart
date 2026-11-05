@@ -11,10 +11,9 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/providers.dart';
-import 'package:letslive_mobile/core/router/app_routes.dart';
+import 'package:letslive_mobile/core/widgets/back_notice.dart';
 import 'package:letslive_mobile/features/home/data/livestream.dart';
 import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
 import 'package:letslive_mobile/features/user/data/public_user.dart';
@@ -67,7 +66,7 @@ class ChannelScreen extends ConsumerWidget {
         ChannelOffline(:final user) => _NoticeWithChat(
           roomId: user.id,
           keyboardOpen: keyboardOpen,
-          notice: _Notice(
+          notice: BackNotice(
             icon: Icons.videocam_off_outlined,
             title: l10n.users_offline,
             message: l10n.users_channel_offline_notice(user.username),
@@ -76,12 +75,12 @@ class ChannelScreen extends ConsumerWidget {
         ChannelEnded(:final user) => _NoticeWithChat(
           roomId: user.id,
           keyboardOpen: keyboardOpen,
-          notice: _Notice(
+          notice: BackNotice(
             icon: Icons.live_tv_outlined,
             message: l10n.users_channel_stream_ended,
           ),
         ),
-        ChannelNotFound() => _Notice(
+        ChannelNotFound() => BackNotice(
           icon: Icons.person_off_outlined,
           message: l10n.api_response_res_err_user_not_found,
         ),
@@ -240,43 +239,4 @@ class _NoticeWithChat extends StatelessWidget {
       ),
     ],
   );
-}
-
-/// A centered icon, optional [title], [message] and a back button. Back
-/// pops to where the user came from, or goes home after a deep link.
-class _Notice extends StatelessWidget {
-  const _Notice({required this.icon, required this.message, this.title});
-
-  final IconData icon;
-  final String? title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final heading = title;
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        Icon(icon, size: 48, color: theme.colorScheme.onSurfaceVariant),
-        const SizedBox(height: 12),
-        if (heading != null)
-          Text(
-            heading,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.titleMedium,
-          ),
-        Text(message, textAlign: TextAlign.center),
-        const SizedBox(height: 16),
-        Center(
-          child: FilledButton.tonal(
-            onPressed: () =>
-                context.canPop() ? context.pop() : context.go(AppRoutes.home),
-            child: Text(l10n.users_channel_back),
-          ),
-        ),
-      ],
-    );
-  }
 }

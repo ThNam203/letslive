@@ -22,6 +22,7 @@ class BetterLivePlayerController implements LivePlayerController {
     required String url,
     required String title,
     required String author,
+    bool isLive = true,
   }) {
     _zone = playerErrorZone(_onUncaughtError);
     // Built (and so autoplayed) inside the zone: the position timer the
@@ -43,7 +44,7 @@ class BetterLivePlayerController implements LivePlayerController {
         ),
         betterPlayerDataSource: BetterPlayerDataSource.network(
           url,
-          liveStream: true,
+          liveStream: isLive,
           videoFormat: BetterPlayerVideoFormat.hls,
           useAsmsTracks: true,
           notificationConfiguration: BetterPlayerNotificationConfiguration(
@@ -75,11 +76,18 @@ class BetterLivePlayerController implements LivePlayerController {
   bool _disposed = false;
   VideoQuality _quality = VideoQuality.auto;
 
+  /// A seek asked before the video could play; applied on `initialized`.
+  Duration? _pendingSeek;
+
   @override
   ValueListenable<LivePlayerValue> get value => _value;
 
   void _onEvent(BetterPlayerEvent event) {
     switch (event.betterPlayerEventType) {
+      case BetterPlayerEventType.initialized:
+        final pending = _pendingSeek;
+        _pendingSeek = null;
+        if (pending != null) unawaited(seekTo(pending));
       case BetterPlayerEventType.finished:
         _hasEnded = true;
       case BetterPlayerEventType.exception:
@@ -113,7 +121,20 @@ class BetterLivePlayerController implements LivePlayerController {
       hasError: _hasError || (native?.hasError ?? false),
       qualities: qualitiesOf(_player.betterPlayerAsmsTracks),
       quality: _quality,
+      position: native?.position ?? Duration.zero,
+      duration: native?.duration ?? Duration.zero,
     );
+  }
+
+  @override
+  Future<void> seekTo(Duration position) async {
+    final native = _player.videoPlayerController?.value;
+    if (native == null || !native.initialized) {
+      _pendingSeek = position;
+      return;
+    }
+    await _zone.run(() => _player.seekTo(position));
+    _sync();
   }
 
   @override

@@ -34,6 +34,15 @@ abstract final class ApiEndpoints {
   /// settings screen also uses `/chat-commands/mine` and `/<id>`.
   static const String chatCommands = '/chat-commands';
 
+  /// Prefix of the video service: `/vods/<id>` (detail), `/vods/<id>/view`,
+  /// `/vods/<id>/reaction`, `/vods/<id>/comments`, and `?userId=` for the
+  /// videos of one user.
+  static const String vods = '/vods';
+
+  /// Prefix of comment actions: `/vod-comments/<id>` (edit, delete),
+  /// `/<id>/replies`, `/<id>/like` and `/liked-ids`.
+  static const String vodComments = '/vod-comments';
+
   /// Prefix of a public profile: `/user/<id>`.
   static const String user = '/user';
 }

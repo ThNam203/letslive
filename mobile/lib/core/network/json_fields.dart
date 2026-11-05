@@ -30,6 +30,13 @@ class JsonFields {
     throw _error(key, 'int', value);
   }
 
+  /// A required boolean.
+  bool boolean(String key) {
+    final value = json[key];
+    if (value is bool) return value;
+    throw _error(key, 'bool', value);
+  }
+
   /// A required ISO 8601 timestamp.
   DateTime date(String key) {
     final value = DateTime.tryParse(string(key));

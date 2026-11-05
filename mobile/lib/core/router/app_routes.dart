@@ -9,6 +9,15 @@ abstract final class AppRoutes {
   /// The channel of [userId]: its live stream, or an offline notice.
   static String channel(String userId) =>
       '/users/${Uri.encodeComponent(userId)}';
+
+  /// Route pattern of a video (web `/users/[userId]/vods/[vodId]`); see
+  /// [vod].
+  static const String vodPattern = '/users/:userId/vods/:vodId';
+
+  /// The video [vodId] of [userId], with its comments.
+  static String vod(String userId, String vodId) =>
+      '/users/${Uri.encodeComponent(userId)}'
+      '/vods/${Uri.encodeComponent(vodId)}';
   static const String login = '/login';
   static const String signup = '/signup';
   static const String accountSetup = '/account-setup';

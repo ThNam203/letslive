@@ -45,6 +45,21 @@ String apiErrorMessage(AppLocalizations l10n, ApiResponse<Object?> response) {
     'res_err_unauthorized' => l10n.api_response_res_err_unauthorized,
     'res_err_user_not_found' => l10n.api_response_res_err_user_not_found,
     'res_err_username_taken' => l10n.api_response_res_err_username_taken,
+    'res_err_vod_not_found' => l10n.api_response_res_err_vod_not_found,
+    'res_err_vod_view_threshold' =>
+      l10n.api_response_res_err_vod_view_threshold,
+    'res_err_vod_comment_not_found' =>
+      l10n.api_response_res_err_vod_comment_not_found,
+    'res_err_vod_comment_create_failed' =>
+      l10n.api_response_res_err_vod_comment_create_failed,
+    'res_err_vod_comment_update_failed' =>
+      l10n.api_response_res_err_vod_comment_update_failed,
+    'res_err_vod_comment_delete_failed' =>
+      l10n.api_response_res_err_vod_comment_delete_failed,
+    'res_err_vod_comment_already_liked' =>
+      l10n.api_response_res_err_vod_comment_already_liked,
+    'res_err_vod_comment_not_liked' =>
+      l10n.api_response_res_err_vod_comment_not_liked,
     _ => null,
   };
   if (known != null) return known;

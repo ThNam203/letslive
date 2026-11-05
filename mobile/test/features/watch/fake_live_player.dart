@@ -9,6 +9,7 @@ class FakeLivePlayer implements LivePlayerController {
     required this.url,
     required this.title,
     required this.author,
+    this.isLive = true,
     List<VideoQuality> qualities = const [],
   }) : _value = ValueNotifier(
          LivePlayerValue(
@@ -21,7 +22,13 @@ class FakeLivePlayer implements LivePlayerController {
   final String url;
   final String title;
   final String author;
+
+  /// Whether the screen asked for a live stream (false = recorded video).
+  final bool isLive;
   final ValueNotifier<LivePlayerValue> _value;
+
+  /// Every position the screen sought to, in order.
+  final List<Duration> seeks = [];
 
   /// Every quality the screen selected, in order.
   final List<VideoQuality> selected = [];
@@ -71,6 +78,22 @@ class FakeLivePlayer implements LivePlayerController {
   }
 
   @override
+  Future<void> seekTo(Duration position) async {
+    seeks.add(position);
+    final old = _value.value;
+    emit(
+      LivePlayerValue(
+        isPlaying: old.isPlaying,
+        isBuffering: false,
+        qualities: old.qualities,
+        quality: old.quality,
+        position: position,
+        duration: old.duration,
+      ),
+    );
+  }
+
+  @override
   Future<void> enterPictureInPicture() async => pipRequests++;
 
   @override
@@ -109,11 +132,13 @@ class FakeLivePlayers {
     required String url,
     required String title,
     required String author,
+    bool isLive = true,
   }) {
     final player = FakeLivePlayer(
       url: url,
       title: title,
       author: author,
+      isLive: isLive,
       qualities: qualities,
     );
     created.add(player);

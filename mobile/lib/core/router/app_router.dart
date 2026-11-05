@@ -10,6 +10,7 @@ import 'package:letslive_mobile/features/auth/presentation/account_setup_screen.
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/signup_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/splash_screen.dart';
+import 'package:letslive_mobile/features/vod/presentation/vod_screen.dart';
 import 'package:letslive_mobile/features/watch/presentation/channel_screen.dart';
 
 export 'package:letslive_mobile/core/router/app_routes.dart';
@@ -63,6 +64,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.channelPattern,
         builder: (context, state) =>
             ChannelScreen(userId: state.pathParameters['userId']!),
+      ),
+      GoRoute(
+        path: AppRoutes.vodPattern,
+        builder: (context, state) => VodScreen(
+          userId: state.pathParameters['userId']!,
+          vodId: state.pathParameters['vodId']!,
+        ),
       ),
       GoRoute(
         path: AppRoutes.login,
