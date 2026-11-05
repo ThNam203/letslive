@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
+import 'package:letslive_mobile/core/validation/field_limits.dart';
 
 /// A password that passes every signup rule, padded to [length].
 String validPassword(int length) => 'Aa!'.padRight(length, 'x');
@@ -8,11 +9,11 @@ void main() {
   group('signup validates same field limits as web', () {
     // Limits from web/constant/field-limits.ts and web/constant/password.ts.
     test('limits match the web constants', () {
-      expect(emailMaxLength, 320);
-      expect(passwordMinLength, 8);
-      expect(passwordMaxLength, 72);
-      expect(usernameMinLength, 6);
-      expect(usernameMaxLength, 30);
+      expect(FieldLimits.emailMax, 320);
+      expect(FieldLimits.passwordMin, 8);
+      expect(FieldLimits.passwordMax, 72);
+      expect(FieldLimits.usernameMin, 6);
+      expect(FieldLimits.usernameMax, 30);
     });
 
     test('email', () {

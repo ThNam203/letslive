@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
 import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
+import 'package:letslive_mobile/features/profile/presentation/own_profile_screen.dart';
 import 'package:letslive_mobile/features/search/presentation/search_screen.dart';
 
 /// One tab of the bottom navigation: where it lives, how it looks, what it
@@ -47,5 +48,11 @@ final List<AppTab> appTabs = [
     icon: Icons.search,
     label: (l10n) => l10n.common_search_title,
     builder: (context) => const SearchScreen(),
+  ),
+  AppTab(
+    path: AppRoutes.profile,
+    icon: Icons.person_outline,
+    label: (l10n) => l10n.settings_navigation_profile,
+    builder: (context) => const OwnProfileScreen(),
   ),
 ];

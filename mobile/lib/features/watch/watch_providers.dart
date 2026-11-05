@@ -19,6 +19,7 @@ import 'package:letslive_mobile/features/watch/data/better_player_controller_wra
 import 'package:letslive_mobile/features/watch/data/watch_repository.dart';
 import 'package:letslive_mobile/features/watch/domain/channel_state.dart';
 import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
+import 'package:letslive_mobile/features/user/data/public_user.dart';
 import 'package:letslive_mobile/features/user/user_providers.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -64,15 +65,21 @@ class ChannelNotifier extends AsyncNotifier<ChannelState> {
 
   @override
   Future<ChannelState> build() async {
-    final (user, live) = await (
-      ref.watch(userRepositoryProvider).byId(userId),
-      ref.watch(watchRepositoryProvider).liveOf(userId),
-    ).wait;
-    // 404 for an unknown id, 400 for one that is not a UUID.
-    if (user.statusCode == 404 || user.statusCode == 400) {
-      return const ChannelNotFound();
+    // The profile comes from the shared user provider, which the profile
+    // header watches (follow changes the count there); keep it alive so it
+    // is not dropped between this load and the header's first build.
+    ref.listen(publicUserProvider(userId), (_, _) {});
+    final liveFuture = ref.watch(watchRepositoryProvider).liveOf(userId);
+    final PublicUser profile;
+    try {
+      profile = await ref.read(publicUserProvider(userId).future);
+    } on ApiLoadException catch (e) {
+      // 404 for an unknown id, 400 for one that is not a UUID.
+      final status = e.response.statusCode;
+      if (status == 404 || status == 400) return const ChannelNotFound();
+      rethrow;
     }
-    final profile = unwrapData(user);
+    final live = await liveFuture;
     if (!live.success) throw ApiLoadException(live);
 
     // Keeps polling in the background too: background audio may be playing,

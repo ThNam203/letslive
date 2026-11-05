@@ -101,7 +101,7 @@ void main() {
     // Harness usernames are ~18 characters; one more stays within 6..30.
     final renamed = 'r${ctx.userA.username}';
 
-    final res = await me.updateUsername(renamed);
+    final res = await me.update(username: renamed);
 
     expect(res.success, isTrue, reason: '${res.key} ${res.message}');
     expect(res.data?.username, renamed);

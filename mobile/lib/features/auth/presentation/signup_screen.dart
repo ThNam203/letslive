@@ -8,6 +8,7 @@ import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
 import 'package:letslive_mobile/features/auth/presentation/auth_widgets.dart';
 import 'package:letslive_mobile/features/auth/presentation/otp_dialog.dart';
+import 'package:letslive_mobile/core/validation/field_limits.dart';
 
 /// Signup with email verification (web `app/(auth)/signup/page.tsx` and
 /// `components/forms/SignupForm.tsx`): validate the form, mail a code
@@ -135,7 +136,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 controller: _email,
                 keyboardType: TextInputType.emailAddress,
                 autofillHints: const [AutofillHints.email],
-                maxLength: emailMaxLength,
+                maxLength: FieldLimits.emailMax,
                 decoration: InputDecoration(
                   labelText: l10n.auth_email,
                   errorText: authFieldErrorText(l10n, _emailError),
@@ -148,7 +149,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 key: const ValueKey('username'),
                 controller: _username,
                 autofillHints: const [AutofillHints.newUsername],
-                maxLength: usernameMaxLength,
+                maxLength: FieldLimits.usernameMax,
                 decoration: InputDecoration(
                   labelText: l10n.common_username,
                   errorText: authFieldErrorText(l10n, _usernameError),

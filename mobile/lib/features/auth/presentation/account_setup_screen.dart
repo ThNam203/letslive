@@ -5,6 +5,7 @@ import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
 import 'package:letslive_mobile/features/auth/presentation/auth_widgets.dart';
+import 'package:letslive_mobile/core/validation/field_limits.dart';
 
 /// Username picker for sessions without one (Google signups; web
 /// `app/(auth)/account-setup/page.tsx`). The router keeps the user here until
@@ -61,7 +62,7 @@ class _AccountSetupScreenState extends ConsumerState<AccountSetupScreen> {
           key: const ValueKey('username'),
           controller: _username,
           enabled: !_busy,
-          maxLength: usernameMaxLength,
+          maxLength: FieldLimits.usernameMax,
           autofillHints: const [AutofillHints.newUsername],
           onChanged: (_) => setState(() => _error = null),
           decoration: InputDecoration(

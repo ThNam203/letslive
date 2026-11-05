@@ -51,6 +51,8 @@ dependencies:
   cached_network_image: ^4.0.6
   better_player_plus: ^2.0.1
   wakelock_plus: ^1.8.2
+  image_picker: ^1.2.4
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:

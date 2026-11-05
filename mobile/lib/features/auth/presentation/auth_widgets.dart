@@ -10,6 +10,7 @@ import 'package:letslive_mobile/core/l10n/api_message.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
+import 'package:letslive_mobile/core/validation/field_limits.dart';
 
 /// The localized message for a validation [error], or null.
 String? authFieldErrorText(AppLocalizations l10n, AuthFieldError? error) =>
@@ -22,10 +23,10 @@ String? authFieldErrorText(AppLocalizations l10n, AuthFieldError? error) =>
       AuthFieldError.emailTooLong => l10n.error_email_invalid,
       AuthFieldError.passwordRequired => l10n.error_password_required,
       AuthFieldError.passwordTooShort => l10n.error_password_too_short(
-        passwordMinLength,
+        FieldLimits.passwordMin,
       ),
       AuthFieldError.passwordTooLong => l10n.error_password_too_long(
-        passwordMaxLength,
+        FieldLimits.passwordMax,
       ),
       AuthFieldError.passwordMissingLowercase =>
         l10n.error_password_missing_lowercase,
@@ -39,6 +40,8 @@ String? authFieldErrorText(AppLocalizations l10n, AuthFieldError? error) =>
       AuthFieldError.usernameRequired => l10n.error_username_required,
       AuthFieldError.usernameTooShort => l10n.error_username_too_short,
       AuthFieldError.usernameTooLong => l10n.error_username_too_long,
+      AuthFieldError.newPasswordMustDiffer =>
+        l10n.error_new_password_must_be_different,
     };
 
 /// Page frame of the auth screens (web `app/(auth)/layout.tsx`): brand,
@@ -127,7 +130,7 @@ class _PasswordFieldState extends State<PasswordField> {
       key: widget.fieldKey,
       controller: widget.controller,
       obscureText: _hidden,
-      maxLength: passwordMaxLength,
+      maxLength: FieldLimits.passwordMax,
       autofillHints: [widget.autofillHint],
       decoration: InputDecoration(
         labelText: widget.label,

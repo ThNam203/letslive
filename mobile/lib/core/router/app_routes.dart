@@ -3,6 +3,18 @@ abstract final class AppRoutes {
   static const String home = '/';
   static const String search = '/search';
 
+  /// The own profile tab.
+  static const String profile = '/profile';
+
+  /// Settings hub: edit profile, security, log out (web `/settings`).
+  static const String settings = '/settings';
+
+  /// Edit the own profile (web `/settings/profile`).
+  static const String settingsProfile = '/settings/profile';
+
+  /// Account security: email and password (web `/settings/security`).
+  static const String settingsSecurity = '/settings/security';
+
   /// Route pattern of a channel (web `/users/[userId]`); see [channel].
   static const String channelPattern = '/users/:userId';
 

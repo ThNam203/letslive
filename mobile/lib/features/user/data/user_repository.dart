@@ -14,6 +14,16 @@ class UserRepository {
   Future<ApiResponse<PublicUser>> byId(String id) =>
       _client.get('${ApiEndpoints.user}/$id', parse: PublicUser.parse);
 
+  /// `POST /user/<id>/follow`: the signed-in user follows [id].
+  Future<ApiResponse<void>> follow(String id) =>
+      _client.post('${ApiEndpoints.user}/$id/follow', parse: _ignoreData);
+
+  /// `DELETE /user/<id>/unfollow`.
+  Future<ApiResponse<void>> unfollow(String id) =>
+      _client.delete('${ApiEndpoints.user}/$id/unfollow', parse: _ignoreData);
+
+  static void _ignoreData(Object? _) {}
+
   /// `GET /user/me/following`: channels the signed-in user follows.
   Future<ApiResponse<List<PublicUser>>> following() =>
       _client.get(ApiEndpoints.following, parse: PublicUser.parseList);

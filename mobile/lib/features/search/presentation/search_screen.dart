@@ -3,7 +3,7 @@
 ///
 /// - The box waits [searchDebounce] after the last keystroke, then searches
 ///   the trimmed text; an empty text shows a prompt and sends nothing, and
-///   Enter searches at once. Input is capped at [searchQueryMaxLength].
+///   Enter searches at once. Input is capped at [FieldLimits.searchQueryMax].
 /// - Each query reads its own providers (see `search_providers.dart`), so a
 ///   slow answer to an older query never replaces newer results.
 /// - Result rows are not tappable until the profile and player routes exist.
@@ -20,6 +20,7 @@ import 'package:letslive_mobile/features/search/presentation/search_all_tab.dart
 import 'package:letslive_mobile/features/search/presentation/search_result_rows.dart';
 import 'package:letslive_mobile/features/search/presentation/search_type_tab.dart';
 import 'package:letslive_mobile/features/search/search_providers.dart';
+import 'package:letslive_mobile/core/validation/field_limits.dart';
 
 /// The Search tab's screen.
 class SearchScreen extends StatefulWidget {
@@ -88,7 +89,7 @@ class _SearchScreenState extends State<SearchScreen>
                 controller: _controller,
                 textInputAction: TextInputAction.search,
                 inputFormatters: [
-                  LengthLimitingTextInputFormatter(searchQueryMaxLength),
+                  LengthLimitingTextInputFormatter(FieldLimits.searchQueryMax),
                 ],
                 onChanged: _onChanged,
                 onSubmitted: _apply,

@@ -7,6 +7,7 @@ import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
 import 'package:letslive_mobile/features/home/data/vod.dart';
 import 'package:letslive_mobile/features/home/domain/media_format.dart';
+import 'package:letslive_mobile/features/user/presentation/follow_button.dart';
 import 'package:letslive_mobile/features/user/presentation/user_avatar.dart';
 import 'package:letslive_mobile/features/user/user_providers.dart';
 import 'package:letslive_mobile/features/vod/presentation/timestamped_text.dart';
@@ -17,7 +18,7 @@ const int _collapsedDescriptionLines = 3;
 
 /// Title, uploader, like/dislike, a copy-link button and the description box
 /// under the player (web `VODDetails`). The uploader is [ownerId] from the
-/// route, as on web. Following is not here yet (Task 15 adds it). The link
+/// route, as on web, with a follow button. The link
 /// is the web page of the video (`WEB_BASE_URL`); without that setting (dev
 /// only) the button is hidden. Web's "start at the current time" switch is
 /// not ported.
@@ -107,6 +108,7 @@ class VodDetails extends ConsumerWidget {
                   ],
                 ),
               ),
+              FollowButton(userId: ownerId),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

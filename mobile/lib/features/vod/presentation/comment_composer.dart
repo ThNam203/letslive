@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
+import 'package:letslive_mobile/core/validation/field_limits.dart';
 
-/// Longest comment the server accepts (web `VOD_COMMENT_MAX_LENGTH`).
-const int commentMaxLength = 2000;
-
-/// Caps the text at [commentMaxLength] UTF-16 units, like web's
+/// Caps the text at [FieldLimits.vodCommentMax] UTF-16 units, like web's
 /// `maxLength` (an emoji counts 2). Pasted text is cut, not refused, and a
 /// cut never splits an emoji.
 final TextInputFormatter _lengthLimit = TextInputFormatter.withFunction((
@@ -13,8 +11,8 @@ final TextInputFormatter _lengthLimit = TextInputFormatter.withFunction((
   value,
 ) {
   final text = value.text;
-  if (text.length <= commentMaxLength) return value;
-  var end = commentMaxLength;
+  if (text.length <= FieldLimits.vodCommentMax) return value;
+  var end = FieldLimits.vodCommentMax;
   final lastUnit = text.codeUnitAt(end - 1);
   if (lastUnit >= 0xD800 && lastUnit <= 0xDBFF) end--;
   return TextEditingValue(
@@ -122,7 +120,7 @@ class _CommentComposerState extends State<CommentComposer> {
               text.isEmpty
                   ? ''
                   : l10n.comments_char_remaining(
-                      commentMaxLength - text.length,
+                      FieldLimits.vodCommentMax - text.length,
                     ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,

@@ -53,9 +53,17 @@ Map<String, Object?> publicUserJson({
   String id = 'u-1',
   String username = 'streamer',
   String? profilePicture,
+  String? bio,
+  int followerCount = 7,
+  bool? isFollowing,
+  Map<String, Object?>? socialMediaLinks,
 }) => {
   'id': id,
   'username': username,
-  'followerCount': 7,
+  'followerCount': followerCount,
+  'createdAt': '2026-01-15T00:00:00Z',
   'profilePicture': profilePicture,
+  'bio': bio,
+  'isFollowing': ?isFollowing,
+  'socialMediaLinks': ?socialMediaLinks,
 };

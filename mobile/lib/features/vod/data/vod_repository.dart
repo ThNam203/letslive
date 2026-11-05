@@ -22,13 +22,16 @@ class VodRepository {
   Future<ApiResponse<Vod>> byId(String vodId) =>
       _client.get('${ApiEndpoints.vods}/$vodId', parse: Vod.parse);
 
-  /// `GET /vods?userId=`: the public videos of [userId].
-  Future<ApiResponse<List<Vod>>> ofUser(String userId, {int page = 0}) =>
-      _client.get(
-        ApiEndpoints.vods,
-        query: {'userId': userId, 'page': page, 'limit': userVodsPageSize},
-        parse: Vod.parseList,
-      );
+  /// `GET /vods?userId=`: the public videos of [userId], [limit] per page.
+  Future<ApiResponse<List<Vod>>> ofUser(
+    String userId, {
+    int page = 0,
+    int limit = userVodsPageSize,
+  }) => _client.get(
+    ApiEndpoints.vods,
+    query: {'userId': userId, 'page': page, 'limit': limit},
+    parse: Vod.parseList,
+  );
 
   /// `POST /vods/<id>/view`: counts one view after [watchedSeconds] of
   /// playback. The backend refuses less than the view threshold.

@@ -10,10 +10,7 @@ import 'dart:math';
 
 import 'package:letslive_mobile/core/chat_parser/chat_command.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
-
-/// Longest message the chat accepts (`CHAT_MESSAGE_MAX_LENGTH` on web,
-/// `MaxLiveMessageLength` in the chat service), in UTF-16 units.
-const int chatMessageMaxLength = 500;
+import 'package:letslive_mobile/core/validation/field_limits.dart';
 
 const int _rollDefaultMax = 100;
 const int _rollLargestMax = 1000000;
@@ -33,7 +30,7 @@ class ParsedSend extends ParsedInput {
   const ParsedSend(this.text);
 
   /// The exact text to post: trimmed, or the command expanded and cut to
-  /// [chatMessageMaxLength].
+  /// [FieldLimits.chatMessageMax].
   final String text;
 }
 
@@ -230,12 +227,12 @@ String _englishRoll(int value, int max) => '🎲 rolled $value (1-$max)';
 
 final RegExp _leadingInt = RegExp(r'^[+-]?\d+');
 
-/// Cuts [text] to [chatMessageMaxLength] UTF-16 units (what the server
+/// Cuts [text] to [FieldLimits.chatMessageMax] UTF-16 units (what the server
 /// counts) without splitting a surrogate pair. Intentionally differs from
 /// web's plain `slice`, which can leave half an emoji.
 String truncateChatMessage(String text) {
-  if (text.length <= chatMessageMaxLength) return text;
-  var end = chatMessageMaxLength;
+  if (text.length <= FieldLimits.chatMessageMax) return text;
+  var end = FieldLimits.chatMessageMax;
   final last = text.codeUnitAt(end - 1);
   if (last >= 0xD800 && last <= 0xDBFF) end--;
   return text.substring(0, end);
@@ -279,7 +276,7 @@ ParsedInput _runBuiltin(
 /// custom command from [commands]; when several share the name, the one the
 /// user picked ([pickedId], a suggestion id) wins, otherwise built-in, then
 /// channel, then user. An expanded command is cut to
-/// [chatMessageMaxLength]. [random] and [rollMessage] make `/roll`
+/// [FieldLimits.chatMessageMax]. [random] and [rollMessage] make `/roll`
 /// deterministic and localizable.
 ParsedInput parseChatInput(
   String input, {

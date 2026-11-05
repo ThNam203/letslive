@@ -33,21 +33,21 @@ Source of the feature list: section 4 of
 | `/login` | `LoginScreen` (`mobile/lib/features/auth/presentation/login_screen.dart`) | `mobile/test/features/auth/login_screen_test.dart`, `mobile/contract_test/auth_contract_test.dart`, `mobile/integration_test/auth_flow_test.dart` | done |
 | `/signup` | `SignupScreen` + `OtpDialog` (`mobile/lib/features/auth/presentation/`) | `mobile/test/features/auth/signup_screen_test.dart`, `mobile/test/features/auth/auth_validators_test.dart`, `mobile/contract_test/auth_contract_test.dart` | done |
 | `/account-setup` | `AccountSetupScreen` (`mobile/lib/features/auth/presentation/account_setup_screen.dart`) | `mobile/test/features/auth/account_setup_screen_test.dart`, `mobile/test/core/router/app_router_test.dart`, `mobile/contract_test/auth_contract_test.dart` | done |
-| `/cookie-policy` | - | - | planned |
+| `/cookie-policy` | - | - | differs: native app sets no browser cookies; policy linked from the store listing |
 | `/search` | `SearchScreen` (`mobile/lib/features/search/presentation/search_screen.dart`): debounced box, tabs All / Channels / Live / Videos, accent-insensitive highlight | `mobile/test/features/search/search_screen_test.dart`, `mobile/test/features/search/search_repository_test.dart`, `mobile/test/features/search/highlight_test.dart`, `mobile/contract_test/search_contract_test.dart` | done |
 | `/messages` | - | - | planned |
 | `/messages/[conversationId]` | - | - | planned |
 | `/notifications` | - | - | planned |
 | `/settings/chat-commands` | - | - | planned |
-| `/settings/profile` | - | - | planned |
-| `/settings/security` | - | - | planned |
+| `/settings/profile` | `ProfileSettingsScreen` (`mobile/lib/features/settings/presentation/profile_settings_screen.dart`): banner and profile picture from the photo library with upload progress, username, bio and social links; reached from the Profile tab via `SettingsScreen`. Web's crop dialog, theme, language and disable-account sections are not ported (the server needs JPEG or WebP, so PNG and GIF are refused before upload) | `mobile/test/features/profile/profile_settings_test.dart`, `mobile/test/features/profile/profile_units_test.dart`, `mobile/contract_test/profile_contract_test.dart` | done |
+| `/settings/security` | `SecurityScreen` (`mobile/lib/features/settings/presentation/security_screen.dart`): account email and the change-password form (web `changePassword.ts` rules, `PATCH /auth/password`). Phone number, stream key and two-factor are not ported | `mobile/test/features/profile/security_screen_test.dart`, `mobile/test/features/profile/profile_units_test.dart`, `mobile/contract_test/profile_contract_test.dart` | done |
 | `/settings/stream` | - | - | planned |
 | `/settings/upload` | - | - | planned |
 | `/settings/vods` | - | - | planned |
 | `/shop` | - | - | planned |
-| `/users/[userId]` | `ChannelScreen` (`mobile/lib/features/watch/presentation/channel_screen.dart`): live player, offline / ended / not-found states (Task 13a); live chat with emotes and slash commands (Task 13b, `mobile/lib/features/watch/chat/`, `mobile/lib/core/chat_parser/`); Tab/arrow suggestion navigation is desktop-only, not ported; profile header, tabs, follow and videos come in Task 15 | `mobile/test/features/watch/channel_screen_test.dart`, `mobile/test/features/watch/channel_navigation_test.dart`, `mobile/contract_test/watch_contract_test.dart`, `mobile/test/features/watch/chat/chat_panel_test.dart`, `mobile/test/features/watch/chat/chat_controller_test.dart`, `mobile/test/core/chat_parser/command_test.dart`, `mobile/contract_test/chat_contract_test.dart` | planned |
+| `/users/[userId]` | `ChannelScreen` (`mobile/lib/features/watch/presentation/channel_screen.dart`): live player, offline / ended / not-found states (Task 13a); live chat with emotes and slash commands (Task 13b, `mobile/lib/features/watch/chat/`, `mobile/lib/core/chat_parser/`); Tab/arrow suggestion navigation is desktop-only, not ported; profile header, follow button and the tabs Chat / Home / Videos / About (`mobile/lib/features/profile/`; chat is a tab because a phone cannot show it beside the profile). The Profile tab (`OwnProfileScreen`) shows the signed-in user's own profile. Web's gift button is not ported (shop is planned) | `mobile/test/features/watch/channel_screen_test.dart`, `mobile/test/features/watch/channel_navigation_test.dart`, `mobile/contract_test/watch_contract_test.dart`, `mobile/test/features/watch/chat/chat_panel_test.dart`, `mobile/test/features/watch/chat/chat_controller_test.dart`, `mobile/test/core/chat_parser/command_test.dart`, `mobile/contract_test/chat_contract_test.dart`, `mobile/test/features/profile/profile_tabs_test.dart`, `mobile/test/features/profile/follow_test.dart`, `mobile/contract_test/profile_contract_test.dart` | done |
 | `/users/[userId]/gifts` | - | - | planned |
-| `/users/[userId]/vods/[vodId]` | `VodScreen` (`mobile/lib/features/vod/presentation/vod_screen.dart`): player with seek bar, details, like/dislike, other streams, comments with replies, likes, edit and delete, tappable timestamps; a copy-link button (clipboard, needs `WEB_BASE_URL`; web's share dialog and its "start at current time" switch are not ported); the follow button on the uploader row is not ported yet (follow comes with Task 15) | `mobile/test/features/vod/vod_screen_test.dart`, `mobile/test/features/vod/vod_comments_test.dart`, `mobile/test/features/vod/vod_reaction_test.dart`, `mobile/test/features/vod/timestamps_test.dart`, `mobile/test/features/vod/view_threshold_test.dart`, `mobile/test/features/watch/channel_navigation_test.dart`, `mobile/contract_test/vod_contract_test.dart` | done |
+| `/users/[userId]/vods/[vodId]` | `VodScreen` (`mobile/lib/features/vod/presentation/vod_screen.dart`): player with seek bar, details, like/dislike, other streams, comments with replies, likes, edit and delete, tappable timestamps; a copy-link button (clipboard, needs `WEB_BASE_URL`; web's share dialog and its "start at current time" switch are not ported); the uploader row has the follow button (`FollowButton`, `mobile/test/features/profile/follow_test.dart`) | `mobile/test/features/vod/vod_screen_test.dart`, `mobile/test/features/vod/vod_comments_test.dart`, `mobile/test/features/vod/vod_reaction_test.dart`, `mobile/test/features/vod/timestamps_test.dart`, `mobile/test/features/vod/view_threshold_test.dart`, `mobile/test/features/watch/channel_navigation_test.dart`, `mobile/contract_test/vod_contract_test.dart` | done |
 | `/wallet/deposit` | - | - | differs: out of scope (Stripe deposits/payments excluded) |
 | `/wallet/inventory` | - | - | planned |
 | `/wallet/overview` | - | - | planned |
@@ -58,9 +58,8 @@ Source of the feature list: section 4 of
 Gateway / web-client paths mobile will call but has no `ApiEndpoints`
 constant for yet. Remove a bullet when its constant lands.
 
-- `/auth/password` - update password (settings/security)
 - `/user` - public profile, follow/unfollow, own profile, stream key, notifications, inventory, gifts
-- `/upload-file` - profile/background picture upload
+- `/upload-file` - general file upload (settings/stream thumbnails); profile and banner pictures use `/user/me/*-picture` instead
 - `/currencies` - wallet
 - `/wallet` - wallet overview
 - `/transactions` - wallet transactions

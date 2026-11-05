@@ -34,6 +34,7 @@ import 'package:letslive_mobile/features/auth/data/google_sign_in_service.dart';
 import 'package:letslive_mobile/features/auth/domain/session.dart';
 import 'package:letslive_mobile/features/auth/domain/session_lifecycle.dart';
 import 'package:letslive_mobile/features/user/data/me_repository.dart';
+import 'package:letslive_mobile/features/user/data/picked_image.dart';
 
 /// App Check when Firebase is configured, else the dev Turnstile token
 /// (`AppConfig` guarantees one of the two).
@@ -155,11 +156,78 @@ class SessionNotifier extends AsyncNotifier<Session?> {
       _signIn(ref.read(authRepositoryProvider).loginWithGoogle(idToken));
 
   /// Sets the username of a session that has none yet.
-  Future<ApiResponse<void>> completeAccountSetup(String username) async {
-    final res = await ref.read(meRepositoryProvider).updateUsername(username);
+  Future<ApiResponse<void>> completeAccountSetup(String username) =>
+      updateProfile(username: username);
+
+  /// Saves the given profile fields (`PUT /user/me`) and, on success,
+  /// replaces the session user with the server's answer, so every screen
+  /// showing the own profile updates at once. Account setup uses it too.
+  Future<ApiResponse<void>> updateProfile({
+    String? username,
+    String? bio,
+    Map<String, String>? socialMediaLinks,
+  }) async {
+    final res = await ref
+        .read(meRepositoryProvider)
+        .update(
+          username: username,
+          bio: bio,
+          socialMediaLinks: socialMediaLinks,
+        );
     final user = res.data;
     if (res.success && user != null) state = AsyncData(Session(user));
     return res;
+  }
+
+  /// Uploads a new profile picture; on success the session user gets the
+  /// new URL.
+  Future<ApiResponse<String>> uploadProfilePicture(
+    PickedImage image, {
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    final res = await ref
+        .read(meRepositoryProvider)
+        .uploadProfilePicture(image, onProgress: onProgress);
+    _applyPictures(
+      res,
+      (url) => (profilePicture: url, backgroundPicture: null),
+    );
+    return res;
+  }
+
+  /// Uploads a new profile banner; on success the session user gets the new
+  /// URL.
+  Future<ApiResponse<String>> uploadBackgroundPicture(
+    PickedImage image, {
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    final res = await ref
+        .read(meRepositoryProvider)
+        .uploadBackgroundPicture(image, onProgress: onProgress);
+    _applyPictures(
+      res,
+      (url) => (profilePicture: null, backgroundPicture: url),
+    );
+    return res;
+  }
+
+  void _applyPictures(
+    ApiResponse<String> res,
+    ({String? profilePicture, String? backgroundPicture}) Function(String url)
+    pictures,
+  ) {
+    final url = res.data;
+    final current = state.value?.user;
+    if (!res.success || url == null || current == null) return;
+    final changed = pictures(url);
+    state = AsyncData(
+      Session(
+        current.withPictures(
+          profilePicture: changed.profilePicture,
+          backgroundPicture: changed.backgroundPicture,
+        ),
+      ),
+    );
   }
 
   /// User-initiated logout.

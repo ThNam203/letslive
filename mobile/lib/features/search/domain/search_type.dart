@@ -16,7 +16,3 @@ const int searchPreviewLimit = 5;
 /// Results per page on a type tab (web `SEARCH_PAGE_SIZE`; the server's
 /// maximum).
 const int searchPageSize = 20;
-
-/// Longest query the search box accepts (web `SEARCH_QUERY_MAX_LENGTH`, the
-/// server's limit of 100 characters).
-const int searchQueryMaxLength = 100;

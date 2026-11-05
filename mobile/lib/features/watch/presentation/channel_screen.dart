@@ -3,10 +3,10 @@
 /// notice. A stream that ends while watched turns into an "ended" notice;
 /// an unknown user shows "not found". Every notice has a way back.
 ///
-/// The live chat (`chat/`) sits under the player, and under the offline /
-/// ended notice. The profile header, tabs, follow button and videos
-/// (Task 15) slot in between the player and the chat. How the end of a stream is noticed is
-/// described in `watch_providers.dart`.
+/// Under the player (or the offline / ended notice) sits the profile
+/// (`features/profile`): header with the follow button and the tabs Chat /
+/// Home / Videos / About, Chat being the default one. How the end of a
+/// stream is noticed is described in `watch_providers.dart`.
 library;
 
 import 'package:flutter/material.dart';
@@ -16,7 +16,10 @@ import 'package:letslive_mobile/core/providers.dart';
 import 'package:letslive_mobile/core/widgets/back_notice.dart';
 import 'package:letslive_mobile/features/home/data/livestream.dart';
 import 'package:letslive_mobile/features/home/presentation/feed_section.dart';
+import 'package:letslive_mobile/features/profile/presentation/profile_header.dart';
+import 'package:letslive_mobile/features/profile/presentation/profile_tabs.dart';
 import 'package:letslive_mobile/features/user/data/public_user.dart';
+import 'package:letslive_mobile/features/user/user_providers.dart';
 import 'package:letslive_mobile/features/watch/chat/presentation/chat_panel.dart';
 import 'package:letslive_mobile/features/watch/domain/channel_state.dart';
 import 'package:letslive_mobile/features/watch/domain/live_stream_url.dart';
@@ -50,7 +53,10 @@ class ChannelScreen extends ConsumerWidget {
       body = Center(
         child: FeedError(
           error: error,
-          onRetry: () => ref.invalidate(channelProvider(userId)),
+          onRetry: () {
+            ref.invalidate(publicUserProvider(userId));
+            ref.invalidate(channelProvider(userId));
+          },
         ),
       );
     } else if (state == null) {
@@ -64,7 +70,7 @@ class ChannelScreen extends ConsumerWidget {
           onStopped: ref.read(channelProvider(userId).notifier).recheck,
         ),
         ChannelOffline(:final user) => _NoticeWithChat(
-          roomId: user.id,
+          user: user,
           keyboardOpen: keyboardOpen,
           notice: BackNotice(
             icon: Icons.videocam_off_outlined,
@@ -73,7 +79,7 @@ class ChannelScreen extends ConsumerWidget {
           ),
         ),
         ChannelEnded(:final user) => _NoticeWithChat(
-          roomId: user.id,
+          user: user,
           keyboardOpen: keyboardOpen,
           notice: BackNotice(
             icon: Icons.live_tv_outlined,
@@ -98,17 +104,18 @@ class ChannelScreen extends ConsumerWidget {
   }
 }
 
-/// Chat height below which the live layout scrolls instead of squeezing the
-/// chat: room for a few lines plus the message box (and its suggestions).
+/// Tab content height below which the live layout scrolls instead of
+/// squeezing it: room for a few chat lines plus the message box (and its
+/// suggestions).
 const double _minChatHeight = 240;
 const double _minCompactChatHeight = 200;
 
-/// The player, the stream title and the streamer's name, then the chat.
+/// The player and the stream title, then the profile tabs with the chat.
 ///
-/// With the keyboard open ([keyboardOpen]) the title block goes and the chat
-/// drops its heading. If the chat would still get less than its minimum
-/// height the page scrolls (player on top, chat at the minimum) rather than
-/// overflow. Player and chat hold [GlobalKey]s so switching between the two
+/// With the keyboard open ([keyboardOpen]) the title block, the profile
+/// header and the tab bar go and only the chat remains. If the tabs would
+/// still get less than their minimum height the page scrolls (player on
+/// top, tabs at the minimum) rather than overflow. Player and chat hold [GlobalKey]s so switching between the two
 /// layouts keeps playback and the typed text.
 class _LiveBody extends ConsumerStatefulWidget {
   const _LiveBody({
@@ -141,7 +148,7 @@ class _LiveBodyState extends ConsumerState<_LiveBody> {
   /// An upper bound of the title block's height at the current text scale.
   double _infoHeight(BuildContext context) {
     final scaler = MediaQuery.textScalerOf(context);
-    return 33 + scaler.scale(16) * 1.5 * 2 + scaler.scale(14) * 1.5;
+    return 33 + scaler.scale(16) * 1.5 * 2;
   }
 
   @override
@@ -160,41 +167,35 @@ class _LiveBodyState extends ConsumerState<_LiveBody> {
     );
     final info = Padding(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            stream.title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleMedium,
-          ),
-          Text(
-            user.username,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+      child: Text(
+        stream.title,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: theme.textTheme.titleMedium,
       ),
     );
     // The room id is the streamer's user id.
-    final chat = ChatPanel(key: _chatKey, roomId: user.id, compact: keyboard);
-    final minChat = keyboard ? _minCompactChatHeight : _minChatHeight;
+    final chat = ChatPanel(key: _chatKey, roomId: user.id, compact: true);
+    final tabs = ProfileTabs(
+      user: user,
+      chat: chat,
+      showBanner: false,
+      compact: keyboard,
+    );
+    final minTabs = keyboard
+        ? _minCompactChatHeight
+        : _minChatHeight + _profileChromeHeight(context);
 
     return LayoutBuilder(
       builder: (context, box) {
         final used =
             box.maxWidth * 9 / 16 + (keyboard ? 0 : _infoHeight(context));
-        if (box.maxHeight - used >= minChat) {
+        if (box.maxHeight - used >= minTabs) {
           return Column(
             children: [
               player,
               if (!keyboard) info,
-              const Divider(height: 1),
-              Expanded(child: chat),
+              Expanded(child: tabs),
             ],
           );
         }
@@ -203,8 +204,7 @@ class _LiveBodyState extends ConsumerState<_LiveBody> {
             children: [
               player,
               if (!keyboard) info,
-              const Divider(height: 1),
-              SizedBox(height: minChat, child: chat),
+              SizedBox(height: minTabs, child: tabs),
             ],
           ),
         );
@@ -214,29 +214,42 @@ class _LiveBodyState extends ConsumerState<_LiveBody> {
 }
 
 /// The offline / ended [notice] above the room's chat, which web also shows
-/// when nobody is streaming. With the keyboard open only the chat remains.
+/// when nobody is streaming, inside the profile (banner and tabs). With the
+/// keyboard open only the chat remains.
 class _NoticeWithChat extends StatelessWidget {
   const _NoticeWithChat({
-    required this.roomId,
+    required this.user,
     required this.notice,
     required this.keyboardOpen,
   });
 
-  final String roomId;
+  final PublicUser user;
   final Widget notice;
   final bool keyboardOpen;
 
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      if (!keyboardOpen) ...[Expanded(child: notice), const Divider(height: 1)],
-      // Keyed so the chat (and the typed text) survives the keyboard
-      // changing the children around it.
-      Expanded(
-        key: const ValueKey('chat'),
-        flex: 2,
-        child: ChatPanel(roomId: roomId, compact: keyboardOpen),
-      ),
-    ],
+  Widget build(BuildContext context) => ProfileTabs(
+    user: user,
+    compact: keyboardOpen,
+    chat: Column(
+      children: [
+        if (!keyboardOpen) ...[
+          Expanded(child: notice),
+          const Divider(height: 1),
+        ],
+        // Keyed so the chat (and the typed text) survives the keyboard
+        // changing the children around it.
+        Expanded(
+          key: const ValueKey('chat'),
+          flex: 2,
+          child: ChatPanel(roomId: user.id, compact: true),
+        ),
+      ],
+    ),
   );
 }
+
+/// An upper bound of the profile header and tab bar height at the current
+/// text scale.
+double _profileChromeHeight(BuildContext context) =>
+    profileHeaderHeight(context) + profileTabBarHeight;

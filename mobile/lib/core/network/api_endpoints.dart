@@ -11,6 +11,9 @@ abstract final class ApiEndpoints {
   static const String googleMobile = '/auth/google/mobile';
   static const String userMe = '/user/me';
   static const String following = '/user/me/following';
+  static const String profilePicture = '/user/me/profile-picture';
+  static const String backgroundPicture = '/user/me/background-picture';
+  static const String changePassword = '/auth/password';
   static const String recommendedChannels = '/users/recommendations';
   static const String popularLivestreams = '/popular-livestreams';
   static const String popularVods = '/popular-vods';

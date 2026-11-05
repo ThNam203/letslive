@@ -1,3 +1,5 @@
+import 'package:letslive_mobile/features/user/data/social_links.dart';
+
 /// The authenticated user returned by `GET /user/me`.
 ///
 /// Typed after `web/types/user.ts` (`MeUser`) and the Go `domains.User` of
@@ -19,6 +21,7 @@ class MeUser {
     this.backgroundPicture,
     this.phoneNumber,
     this.locale,
+    this.socialMediaLinks = const {},
   });
 
   factory MeUser.fromJson(Map<String, Object?> json) => MeUser(
@@ -37,6 +40,7 @@ class MeUser {
     backgroundPicture: _optString(json, 'backgroundPicture'),
     phoneNumber: _optString(json, 'phoneNumber'),
     locale: _optString(json, 'locale'),
+    socialMediaLinks: parseSocialLinks(json['socialMediaLinks'], 'MeUser'),
   );
 
   /// `ParseData<MeUser>` for `ApiClient`.
@@ -69,6 +73,28 @@ class MeUser {
 
   /// BCP-47 tag; null when the user never chose one.
   final String? locale;
+
+  /// Platform -> URL, see [parseSocialLinks].
+  final Map<String, String> socialMediaLinks;
+
+  /// A copy with a new profile or background picture URL.
+  MeUser withPictures({String? profilePicture, String? backgroundPicture}) =>
+      MeUser(
+        id: id,
+        username: username,
+        email: email,
+        status: status,
+        authProvider: authProvider,
+        createdAt: createdAt,
+        followerCount: followerCount,
+        streamApiKey: streamApiKey,
+        bio: bio,
+        profilePicture: profilePicture ?? this.profilePicture,
+        backgroundPicture: backgroundPicture ?? this.backgroundPicture,
+        phoneNumber: phoneNumber,
+        locale: locale,
+        socialMediaLinks: socialMediaLinks,
+      );
 }
 
 String _string(Map<String, Object?> json, String key) {

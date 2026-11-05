@@ -33,6 +33,12 @@ String apiErrorMessage(AppLocalizations l10n, ApiResponse<Object?> response) {
       l10n.api_response_res_err_failed_to_create_sign_up_otp,
     'res_err_failed_to_send_verification' =>
       l10n.api_response_res_err_failed_to_send_verification,
+    'res_err_image_dimensions_out_of_range' =>
+      l10n.api_response_res_err_image_dimensions_out_of_range,
+    'res_err_image_too_large' => l10n.api_response_res_err_image_too_large,
+    'res_err_invalid_image' => l10n.api_response_res_err_invalid_image,
+    'res_err_password_not_match' =>
+      l10n.api_response_res_err_password_not_match,
     'res_err_internal_server' => l10n.api_response_res_err_internal_server,
     'res_err_invalid_input' => l10n.api_response_res_err_invalid_input,
     'res_err_invalid_payload' => l10n.api_response_res_err_invalid_payload,

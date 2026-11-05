@@ -52,6 +52,17 @@ class AuthRepository {
   Future<ApiResponse<void>> logout() =>
       _client.delete(ApiEndpoints.logout, parse: _ignoreData);
 
+  /// `PATCH /auth/password` (answers 204). No bot proof: the backend only
+  /// runs that check on login and verify-email.
+  Future<ApiResponse<void>> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) => _client.patch(
+    ApiEndpoints.changePassword,
+    body: {'oldPassword': oldPassword, 'newPassword': newPassword},
+    parse: _ignoreData,
+  );
+
   Future<ApiResponse<void>> _postWithBotProof(
     String path,
     Map<String, Object?> body,

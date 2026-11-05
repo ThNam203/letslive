@@ -10,6 +10,9 @@ import 'package:letslive_mobile/features/auth/presentation/account_setup_screen.
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/signup_screen.dart';
 import 'package:letslive_mobile/features/auth/presentation/splash_screen.dart';
+import 'package:letslive_mobile/features/settings/presentation/profile_settings_screen.dart';
+import 'package:letslive_mobile/features/settings/presentation/security_screen.dart';
+import 'package:letslive_mobile/features/settings/presentation/settings_screen.dart';
 import 'package:letslive_mobile/features/vod/presentation/vod_screen.dart';
 import 'package:letslive_mobile/features/watch/presentation/channel_screen.dart';
 
@@ -45,7 +48,7 @@ String? authRedirect(AsyncValue<Session?> session, String location) {
 
 /// The app router. Re-runs [authRedirect] whenever [sessionProvider]
 /// changes. The signed-in app is the [AppShell] over the registered
-/// [appTabs]; pushed screens (the channel) and auth screens sit outside it.
+/// [appTabs]; pushed screens (the channel, settings) and auth screens sit outside it.
 final appRouterProvider = Provider<GoRouter>((ref) {
   final session = ValueNotifier<AsyncValue<Session?>>(
     ref.read(sessionProvider),
@@ -71,6 +74,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           userId: state.pathParameters['userId']!,
           vodId: state.pathParameters['vodId']!,
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.settings,
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settingsProfile,
+        builder: (context, state) => const ProfileSettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settingsSecurity,
+        builder: (context, state) => const SecurityScreen(),
       ),
       GoRoute(
         path: AppRoutes.login,
