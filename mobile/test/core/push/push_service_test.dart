@@ -66,6 +66,32 @@ void main() {
     expect(devices.calls.last, 'register id:APA91b-token-2 android vi');
   });
 
+  test(
+    'changing the app language re-sends it for the registered token',
+    () async {
+      var language = 'vi';
+      final service = PushService(
+        messaging: fcm,
+        devices: devices,
+        platform: 'android',
+        locale: () => language,
+      );
+      addTearDown(service.dispose);
+
+      await service.resendLocale(); // nobody signed in: nothing to update
+      expect(devices.calls, isEmpty);
+
+      await service.registerForUser();
+      language = 'en';
+      await service.resendLocale();
+
+      expect(devices.calls, [
+        'register id:APA91b-token-1 android vi',
+        'register id:APA91b-token-1 android en',
+      ]);
+    },
+  );
+
   test('a denied permission registers nothing', () async {
     fcm.permission = false;
     await push.init();

@@ -92,6 +92,19 @@ class PushService {
     }
   }
 
+  /// Posts the current app language again after the user changes it, so
+  /// pushes follow it. Does nothing unless a token is registered (the next
+  /// registration sends the language anyway). The server upserts by token.
+  Future<void> resendLocale() async {
+    final token = _registeredToken;
+    if (!_active || token == null) return;
+    try {
+      await _register(token);
+    } on Exception catch (e, stack) {
+      _log('locale update failed', e, stack);
+    }
+  }
+
   /// Removes this device from the signed-in user, then drops the local FCM
   /// token even when the server call failed.
   Future<void> unregister() async {

@@ -49,6 +49,7 @@ final pushServiceProvider = Provider<PushService>((ref) {
 ///
 /// - Registers the device each time a user with a finished account signs in
 ///   (also at a cold start with a saved session).
+/// - Re-sends the device's language when the user changes the app language.
 /// - Opens the screen a tapped push names ([resolveDeepLink]). A tap that
 ///   launched the app waits for the session to load first; for a signed-out
 ///   user the tap is dropped (the router would only show the login).
@@ -66,6 +67,7 @@ final pushBridgeProvider = Provider<void>((ref) {
     },
     fireImmediately: true,
   );
+  ref.listen(localeProvider, (_, _) => unawaited(push.resendLocale()));
   final taps = push.taps.listen((tap) => unawaited(_openTap(ref, tap)));
   ref.onDispose(() => unawaited(taps.cancel()));
 });
