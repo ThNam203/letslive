@@ -58,14 +58,14 @@ Source of the feature list: section 4 of
 Gateway / web-client paths mobile will call but has no `ApiEndpoints`
 constant for yet. Remove a bullet when its constant lands.
 
-- `/user` - public profile, follow/unfollow, own profile, stream key, inventory, gifts
-- `/files` - media host path (thumbnails, VOD segments) used by web image/player URLs
+None: every gateway path mobile calls now has an `ApiEndpoints` constant.
 
 ## Intentionally differs
 
 Gateway prefixes mobile never calls through `ApiEndpoints`.
 
 - `/realtime` - WebSocket, not REST: mobile uses `AppConfig.wsBaseUrl` (`<ws origin>/realtime`)
+- `/files` - media host path, not an API call: the only `/files` URL mobile builds is the transcoder-thumbnail fallback (`mediaThumbnailUrl` in `lib/features/home/domain/media_format.dart`, same as web); other media uses the absolute URLs the API returns
 - `/deposits` - Stripe deposits are out of scope for mobile
 - `/payments` - Stripe payment history is out of scope for mobile
 - `/gifts` - gateway route with no backend handler (user service only has `/user/{id}/gifts/received`, `/user/me/gifts/sent`) and no web caller

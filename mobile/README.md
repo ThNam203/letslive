@@ -104,7 +104,8 @@ What you need:
 - iOS: an APNs authentication key (`.p8`) uploaded in Firebase console
   (Project settings, Cloud Messaging), a provisioning profile with the Push
   Notifications capability for the bundle id (the entitlement is in
-  `ios/Runner/Runner.entitlements`), and a physical iPhone (the simulator has
+  `ios/Runner/Runner.entitlements`, `development`; the `Release-*` build
+  configurations use `RunnerRelease.entitlements`, `production`), and a physical iPhone (the simulator has
   no APNs token).
 - Android: a device or emulator with Google Play services, Android 13+ to
   see the permission prompt.
@@ -346,3 +347,83 @@ storePassword=<keystore password>
 ```
 
 The dev flavor release build uses the debug key.
+
+## Release checklist
+
+Releases are built by `.github/workflows/mobile-release.yml` (jobs `verify`,
+`android`, `ios`). It runs only when started by hand or by a tag, never on
+pull requests or branch pushes. Nothing below has been done yet: it needs the
+Apple and Google accounts and physical devices.
+
+### Repository secrets
+
+Add them in GitHub, Settings, Secrets and variables, Actions. The workflow
+only references them by name and deletes every file it writes from them.
+
+| Secret | How to produce it |
+|---|---|
+| `MOBILE_ENV_JSON_STAGING`, `MOBILE_ENV_JSON_PROD` | The whole content of `env/<flavor>.json`: backend keys (`BACKEND_*`, `FLAVOR`, `WEB_BASE_URL`), `FIREBASE_*`, `GOOGLE_SERVER_CLIENT_ID`, `GOOGLE_IOS_CLIENT_ID`. HTTPS only. |
+| `ANDROID_KEYSTORE_BASE64` | `keytool -genkeypair -v -keystore upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000`, then `base64 -i upload-keystore.jks \| pbcopy`. Keep the original `.jks` safe. |
+| `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, `ANDROID_STORE_PASSWORD` | The alias and the two passwords chosen above. |
+| `IOS_CERTIFICATE_P12_BASE64`, `IOS_CERTIFICATE_PASSWORD` | An "Apple Distribution" certificate: create it in Xcode (Settings, Accounts, Manage Certificates) or the developer portal, export it from Keychain Access as `.p12` with a password, then `base64 -i cert.p12 \| pbcopy`. |
+| `IOS_PROFILE_BASE64_STAGING`, `IOS_PROFILE_BASE64_PROD` | An App Store distribution provisioning profile per bundle id (`vn.letslive.mobile.staging`, `vn.letslive.mobile`) with Push Notifications enabled, then `base64 -i profile.mobileprovision \| pbcopy`. The workflow reads the team id, bundle id and profile name from the profile. |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8_BASE64` | App Store Connect, Users and Access, Integrations, Team Keys: create a key with the App Manager role. Key id and issuer id are shown on that page; `base64 -i AuthKey_<id>.p8 \| pbcopy` for the key file (downloadable once). |
+
+### One-time store setup
+
+- App Store Connect: register both bundle ids with the Push Notifications
+  capability, create an app record per bundle id, fill the privacy and
+  review information, and add testers to the TestFlight internal group.
+  Upload the APNs authentication key (`.p8`) to Firebase (Project settings,
+  Cloud Messaging) for each Firebase iOS app.
+- Play Console: create the app per application id (`vn.letslive.mobile`,
+  `.staging`), enrol in Play App Signing (the keystore above is then the
+  upload key), complete the store listing and data-safety form, and create an
+  internal testing track with a tester list. The first upload of a new app
+  has to be done in the console.
+- Google sign-in: register each flavor's package name with the SHA-1 of the
+  Play App Signing key and of the upload key (see "Auth" above).
+
+### Run the workflow
+
+1. Open Actions, `mobile-release`, Run workflow, pick the branch and flavor
+   (`staging` or `prod`). Or push a tag: `mobile-v1.0.0` builds prod,
+   `mobile-v1.0.0-staging` builds staging.
+2. `verify` must pass (format, analyze, tests, parity `--release`, locales).
+3. `android` attaches `android-<flavor>-aab` to the run. Upload that file to
+   Play Console, Testing, Internal testing, Create new release. (An automated
+   upload would need a third-party action or fastlane, which needs approval.)
+4. `ios` uploads to TestFlight itself (`xcrun altool --upload-app` with the
+   App Store Connect key) and also attaches `ios-<flavor>-ipa`. The build shows
+   up in TestFlight after Apple's processing, a few minutes later. The build
+   number is the workflow run number; the version comes from `pubspec.yaml`.
+
+The iOS job rewrites the signing settings of its throwaway checkout to
+manual distribution signing (see the step in the workflow); the repository
+keeps automatic signing for development.
+
+### Manual device pass
+
+On a physical iPhone (iOS 15+) and an Android phone (Android 8+), with a
+staging build from TestFlight / Play internal testing. Tick each in the pull
+request:
+
+- [ ] Background playback: start a live stream and a video, lock the screen or
+  switch apps; audio continues, lock-screen controls work.
+- [ ] Picture-in-picture: leave the app while watching; the PiP window plays
+  and returns to the app on tap.
+- [ ] Rotation: watch screens, chat and the player in portrait and landscape;
+  no overflow, the player goes fullscreen and back.
+- [ ] Kill and relaunch: force-quit while signed in and relaunch; the session
+  is restored without a login.
+- [ ] Airplane mode: in a live chat and a direct message, turn on airplane
+  mode, then off; the connection recovers, missed messages appear, nothing is
+  duplicated.
+- [ ] Push: foreground, background and tap behaviour, steps 1 to 7 of "Manual
+  verification" above, with the production APNs environment on iOS.
+- [ ] Language: change the app language, then send a push to the device; the
+  title is in the new language (the device row's `locale` is updated).
+- [ ] Uploads: start a video upload, background the app mid-upload and return;
+  the upload finishes or reports a retryable error.
+- [ ] Pickers: choose a photo for the avatar and background, and a video for
+  upload, from the library; cancelling the picker changes nothing.

@@ -1,0 +1,255 @@
+name: mobile-release
+
+# Builds the signed staging/prod mobile app. Never runs on pull requests or
+# branch pushes: start it by hand (Actions > mobile-release > Run workflow)
+# or by pushing a tag `mobile-v<version>` (prod) / `mobile-v<version>-staging`.
+# Setup, required secrets and the manual store steps: mobile/README.md,
+# section "Release checklist".
+
+on:
+  workflow_dispatch:
+    inputs:
+      flavor:
+        description: App flavor to build
+        type: choice
+        options:
+          - staging
+          - prod
+        default: staging
+  push:
+    tags:
+      - "mobile-v*"
+
+# One release build per ref at a time.
+concurrency:
+  group: mobile-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # Must match the Flutter version the app is developed with (`flutter --version`).
+  FLUTTER_VERSION: "3.47.9"
+  # Manual run: the chosen input. Tag run: `-staging` suffix selects staging.
+  FLAVOR: ${{ inputs.flavor || (contains(github.ref_name, '-staging') && 'staging' || 'prod') }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # Official git checkout instead of a third-party action.
+      - name: Install Flutter
+        working-directory: ${{ github.workspace }}
+        run: |
+          git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Check formatting
+        run: dart format --set-exit-if-changed lib test tool
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Check web/mobile parity (release mode)
+        run: dart run tool/parity_check.dart --release
+
+      - name: Check locales are in sync with web
+        run: dart run tool/sync_locales.dart --check
+
+  android:
+    needs: verify
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Flutter
+        working-directory: ${{ github.workspace }}
+        run: |
+          git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+
+      - name: Write app config and signing files
+        env:
+          APP_ENV_JSON: ${{ env.FLAVOR == 'prod' && secrets.MOBILE_ENV_JSON_PROD || secrets.MOBILE_ENV_JSON_STAGING }}
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          mkdir -p env
+          printf '%s' "$APP_ENV_JSON" > "env/$FLAVOR.json"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > android/upload-keystore.jks
+          # storeFile is relative to android/ (see android/app/build.gradle.kts).
+          {
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+            echo "storeFile=upload-keystore.jks"
+            echo "storePassword=$STORE_PASSWORD"
+          } > android/key.properties
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Build app bundle
+        run: |
+          flutter build appbundle --release --flavor "$FLAVOR" \
+            --build-number="${{ github.run_number }}" \
+            --dart-define-from-file="env/$FLAVOR.json"
+
+      # Upload to the Play internal track by hand (mobile/README.md).
+      - name: Upload app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ env.FLAVOR }}-aab
+          path: mobile/build/app/outputs/bundle/${{ env.FLAVOR }}Release/app-${{ env.FLAVOR }}-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Delete secrets from the runner
+        if: always()
+        run: rm -f android/upload-keystore.jks android/key.properties "env/$FLAVOR.json"
+
+  ios:
+    needs: verify
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      KEYCHAIN_PATH: ${{ github.workspace }}/../ci-signing.keychain-db
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Flutter
+        working-directory: ${{ github.workspace }}
+        run: |
+          git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+
+      - name: Write app config
+        env:
+          APP_ENV_JSON: ${{ env.FLAVOR == 'prod' && secrets.MOBILE_ENV_JSON_PROD || secrets.MOBILE_ENV_JSON_STAGING }}
+        run: |
+          mkdir -p env
+          printf '%s' "$APP_ENV_JSON" > "env/$FLAVOR.json"
+
+      # The distribution certificate goes into a throwaway keychain that is
+      # deleted at the end; the provisioning profile is installed where Xcode
+      # looks for it.
+      - name: Import signing certificate and profile
+        env:
+          CERT_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          PROFILE_BASE64: ${{ env.FLAVOR == 'prod' && secrets.IOS_PROFILE_BASE64_PROD || secrets.IOS_PROFILE_BASE64_STAGING }}
+        run: |
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          printf '%s' "$CERT_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$RUNNER_TEMP/certificate.p12" -P "$CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+          printf '%s' "$PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/app.mobileprovision"
+          security cms -D -i "$RUNNER_TEMP/app.mobileprovision" > "$RUNNER_TEMP/profile.plist"
+          PROFILE_UUID="$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$RUNNER_TEMP/profile.plist")"
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$RUNNER_TEMP/app.mobileprovision" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
+
+          # Values the next steps need; none of them is secret.
+          {
+            echo "PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$RUNNER_TEMP/profile.plist")"
+            echo "TEAM_ID=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$RUNNER_TEMP/profile.plist")"
+            echo "BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$RUNNER_TEMP/profile.plist" | cut -d. -f2-)"
+          } >> "$GITHUB_ENV"
+
+      # The project signs automatically for development. The checkout is
+      # throwaway, so switch it to manual distribution signing with the
+      # imported profile instead of keeping a second signing setup in git.
+      - name: Switch the project to manual distribution signing
+        run: |
+          sed -i '' \
+            -e "s/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual; DEVELOPMENT_TEAM = $TEAM_ID; PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";/" \
+            -e 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer";/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";/' \
+            ios/Runner.xcodeproj/project.pbxproj
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>iPhone Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict><key>$BUNDLE_ID</key><string>$PROFILE_NAME</string></dict>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Build IPA
+        run: |
+          flutter build ipa --release --flavor "$FLAVOR" \
+            --build-number="${{ github.run_number }}" \
+            --dart-define-from-file="env/$FLAVOR.json" \
+            --export-options-plist="$RUNNER_TEMP/ExportOptions.plist"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ env.FLAVOR }}-ipa
+          path: mobile/build/ios/ipa/*.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+      # altool reads the key from ~/.appstoreconnect/private_keys/AuthKey_<id>.p8.
+      - name: Upload to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          printf '%s' "$ASC_KEY_P8_BASE64" | base64 --decode > "$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8"
+          xcrun altool --upload-app --type ios \
+            --file build/ios/ipa/*.ipa \
+            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+
+      - name: Delete secrets from the runner
+        if: always()
+        run: |
+          security delete-keychain "$KEYCHAIN_PATH" || true
+          rm -f "$RUNNER_TEMP/certificate.p12" "$RUNNER_TEMP/app.mobileprovision" \
+            "$RUNNER_TEMP/profile.plist" "$HOME"/.appstoreconnect/private_keys/AuthKey_*.p8 \
+            "$HOME"/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision "env/$FLAVOR.json"
