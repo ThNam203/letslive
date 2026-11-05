@@ -66,17 +66,15 @@ func (c *JWTService) RefreshToken(ctx context.Context, refreshToken string) (*ty
 
 	myClaims := types.MyClaims{}
 	parser := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
-	parsedToken, err := parser.ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (any, error) {
+	_, err := parser.ParseWithClaims(refreshToken, &myClaims, func(t *jwt.Token) (any, error) {
 		return []byte(secret), nil
 	})
 
 	// A malformed, expired or wrongly signed refresh token is a client problem
 	// (401, so the app re-authenticates), not a server fault.
+	// jwt v5 returns an error for every invalid token, so err covers it.
 	if err != nil {
-		logger.Errorf(ctx, "refresh token rejected: %s", err)
-		return nil, domains.ErrUnauthorized
-	} else if !parsedToken.Valid {
-		logger.Errorf(ctx, "token not valid")
+		logger.Warnf(ctx, "refresh token rejected: %s", err)
 		return nil, domains.ErrUnauthorized
 	}
 

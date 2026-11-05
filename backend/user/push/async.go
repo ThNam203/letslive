@@ -23,10 +23,13 @@ const (
 )
 
 var (
+	// ErrQueueFull: the push was dropped because the queue is full.
 	ErrQueueFull = errors.New("push queue full")
-	ErrClosed    = errors.New("push sender closed")
+	// ErrClosed: the push was dropped because the sender is shutting down.
+	ErrClosed = errors.New("push sender closed")
 )
 
+// AsyncOptions sizes an Async sender; zero values take the defaults above.
 type AsyncOptions struct {
 	Workers   int
 	QueueSize int

@@ -114,7 +114,8 @@ func main() {
 				logger.Errorf(shutdownCtx, "server shutdown timed out.")
 			}
 		}
-		// in-flight requests have finished enqueueing pushes; let them deliver
+		// After Shutdown returns (or times out): requests that finished have
+		// enqueued their pushes; let the queue deliver them.
 		closePush()
 		shutdownWg.Done()
 	})()

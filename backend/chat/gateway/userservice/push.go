@@ -8,12 +8,14 @@ import (
 	"net/http"
 )
 
+// pushData is the data payload of a push: what the app opens on a tap.
 type pushData struct {
 	Type        string `json:"type"`
 	ReferenceID string `json:"referenceId"`
 	ActionURL   string `json:"actionUrl"`
 }
 
+// pushRequest is the body of the user service's POST /v1/internal/push.
 type pushRequest struct {
 	UserIDs []string `json:"userIds"`
 	Title   string   `json:"title"`

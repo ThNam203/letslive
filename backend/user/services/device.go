@@ -9,10 +9,12 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
+// DeviceService registers and removes users' FCM device tokens.
 type DeviceService struct {
 	deviceRepo domains.DeviceTokenRepository
 }
 
+// NewDeviceService builds a DeviceService over deviceRepo.
 func NewDeviceService(deviceRepo domains.DeviceTokenRepository) *DeviceService {
 	return &DeviceService{deviceRepo: deviceRepo}
 }

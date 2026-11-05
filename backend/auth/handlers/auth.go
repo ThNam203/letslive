@@ -58,7 +58,8 @@ const AppCheckHeader = "X-Firebase-AppCheck"
 func (h *AuthHandler) verifyNotBot(ctx context.Context, r *http.Request, turnstileToken string) error {
 	if appCheckToken := r.Header.Get(AppCheckHeader); h.appCheck != nil && appCheckToken != "" {
 		if err := h.appCheck.Verify(ctx, appCheckToken); err != nil {
-			logger.Errorf(ctx, "app check verification failed: %s", err)
+			// A rejected token is a client problem, not a server fault.
+			logger.Warnf(ctx, "app check verification failed: %s", err)
 			return domains.ErrCaptchaFailed
 		}
 		return nil
