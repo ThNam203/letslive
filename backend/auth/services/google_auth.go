@@ -7,25 +7,36 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"sen1or/letslive/auth/domains"
 	usergateway "sen1or/letslive/auth/gateway/user"
 	usergatewaydto "sen1or/letslive/auth/gateway/user/dto"
 	"sen1or/letslive/shared/pkg/logger"
+	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
 
+// googleTokenInfoURL is Google's endpoint that validates an ID token.
+const googleTokenInfoURL = "https://oauth2.googleapis.com/tokeninfo"
+
+// tokenInfoTimeout bounds the call to Google's tokeninfo endpoint.
+const tokenInfoTimeout = 10 * time.Second
+
 type GoogleAuthService struct {
 	repo        domains.AuthRepository
 	userGateway usergateway.UserGateway
+	// tokenInfoURL is a field so tests can point it at a local server.
+	tokenInfoURL string
 }
 
 func NewGoogleAuthService(repo domains.AuthRepository, userGateway usergateway.UserGateway) *GoogleAuthService {
 	return &GoogleAuthService{
-		repo:        repo,
-		userGateway: userGateway,
+		repo:         repo,
+		userGateway:  userGateway,
+		tokenInfoURL: googleTokenInfoURL,
 	}
 }
 
@@ -74,8 +85,15 @@ func (s GoogleAuthService) CallbackHandler(ctx context.Context, googleCode strin
 // VerifyIDTokenAndGetUser verifies a Google ID token (from mobile's google_sign_in)
 // by calling Google's tokeninfo endpoint, then finds or creates the user.
 func (s GoogleAuthService) VerifyIDTokenAndGetUser(ctx context.Context, idToken string) (*domains.Auth, error) {
-	tokenInfoURL := "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken
-	resp, err := http.Get(tokenInfoURL)
+	ctx, cancel := context.WithTimeout(ctx, tokenInfoTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, s.tokenInfoURL+"?id_token="+url.QueryEscape(idToken), nil)
+	if err != nil {
+		logger.Errorf(ctx, "failed to build google tokeninfo request: %s", err)
+		return nil, domains.ErrInternal
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		logger.Errorf(ctx, "failed to verify google id token: %s", err)
 		return nil, domains.ErrInternal

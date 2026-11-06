@@ -1,6 +1,6 @@
 # Issues — letslive
 
-_Last updated: 2026-10-08_
+_Last updated: 2026-11-05_
 
 ---
 
@@ -72,6 +72,16 @@ File: [docker-compose.yaml:191-203](docker-compose.yaml#L191-L203)
 **S16. CSRF — cookie-based JWT with no CSRF token**
 Combined with the CORS wildcard (S5), cookie-based auth with no CSRF token allows cross-site request forgery. Fix: add `SameSite=Strict` or per-request CSRF tokens. Fixing CORS alone (S5) mitigates most of this.
 
+**S20. DM `imageUrls` are not validated server-side**
+_Added 2026-11-05 from the Flutter mobile app final review._ Any string is stored as a picture URL and shown as a link and an image by web (`message-bubble.tsx`) and mobile. Mobile opens only `http`/`https` links, but the server should not store the rest.
+Fix: accept only `https` URLs on the upload (MinIO) host, with a length cap.
+File: [backend/chat/handlers/dmmessage/send_message_private.go:53-56](backend/chat/handlers/dmmessage/send_message_private.go#L53-L56)
+
+**S21. `PATCH /auth/password` does not revoke refresh tokens**
+_Added 2026-11-05 from the Flutter mobile app final review._ After a password change, other sessions keep refreshing. Related to S2/S3.
+Fix: call `RevokeAllTokensOfUser` on success.
+File: [backend/auth/services/auth.go:126](backend/auth/services/auth.go#L126)
+
 ---
 
 ### 🟢 LOW
@@ -86,6 +96,31 @@ File: [docker-compose.yaml:62-63](docker-compose.yaml#L62-L63)
 **S19. Weak input validation on livestream fields**
 `title` and `description` are only checked for max length. No whitespace-only check, no HTML filtering.
 File: [backend/user/handlers/livestream_information/update_private.go:52-63](backend/user/handlers/livestream_information/update_private.go#L52-L63)
+
+**S22. Envoy does not normalize paths**
+_Added 2026-11-05 from the Flutter mobile app final review._ The HTTP connection manager has no `normalize_path` or `merge_slashes`. Internal routes (`/v1/internal/*`) rely on Go's ServeMux redirecting unclean paths.
+Fix: enable both, for defense in depth.
+File: [configs/envoy/envoy.yaml](configs/envoy/envoy.yaml)
+
+**S23. Turnstile verification HTTP call has no timeout**
+_Added 2026-11-05 from the Flutter mobile app final review._ A slow Cloudflare call blocks login.
+Fix: an `http.Client` with a timeout and the request context.
+File: [backend/auth/utils/captcha.go](backend/auth/utils/captcha.go)
+
+**S24. App Check replay guard is per instance and sweeps O(n) at its cap**
+_Added 2026-11-05 from the Flutter mobile app final review._ With several auth instances a token can be replayed once per instance. At 100k live entries every call sweeps under the lock (only verified tokens enter).
+Fix: a shared store (Redis) behind `ReplayGuard`.
+File: [backend/auth/utils/replay_guard.go](backend/auth/utils/replay_guard.go)
+
+**S25. App Check JWKS refresh failures are invisible**
+_Added 2026-11-05 from the Flutter mobile app final review._ The SDK refreshes keys internally with no error hook, so a JWKS outage after boot only shows as rejected tokens (logged at Warn).
+Fix: a periodic health log or a metric of verification failures by cause.
+File: [backend/auth/utils/appcheck.go](backend/auth/utils/appcheck.go)
+
+**S26. Request bodies are unbounded in user-service handlers**
+_Added 2026-11-05 from the Flutter mobile app final review._ Only one user handler wraps its body in `http.MaxBytesReader`.
+Fix: `http.MaxBytesReader` in every handler, or a shared middleware.
+File: [backend/user/handlers/device/register_device_private.go](backend/user/handlers/device/register_device_private.go) and most handlers under `backend/user/handlers/`
 
 ---
 
@@ -108,6 +143,11 @@ Frontend call: [web/lib/api/dm.ts:27-43](web/lib/api/dm.ts#L27-L43)
 Backend types: [backend/chat/src/types/dm-event.ts:11-18](backend/chat/src/types/dm-event.ts#L11-L18)
 Frontend types: [web/types/dm.ts:90-98](web/types/dm.ts#L90-L98)
 
+**L16. Account deletion for App Store guideline 5.1.1(v)**
+_Added 2026-11-05 from the Flutter mobile app final review._ The backend only disables accounts (status `disabled`; mobile ports web's disable-account section). Apple requires in-app account deletion for apps that offer signup. Blocks the first App Store submission.
+Fix: confirm whether disable satisfies review; otherwise add a delete-account flow (backend first, then web and mobile).
+Files: `backend/user/services/user.go`, `backend/auth/services/auth.go`
+
 ---
 
 ### 🟡 MEDIUM
@@ -120,6 +160,26 @@ WebSocket: [web/types/dm.ts:94](web/types/dm.ts#L94)
 **L5. `GetMessages` silently swallows errors**
 The function catches all errors and returns `{ messages: [] }` rather than propagating the error. Callers cannot distinguish a successful empty result from a network/server failure. All other API functions in the same file return `ApiResponse<T>`.
 File: [web/lib/api/chat.ts:5-16](web/lib/api/chat.ts#L5-L16)
+
+**L9. DM push notifications ignore conversation mute**
+`DmMessageService.Send` pushes every participant except the sender, including participants who muted the conversation (`isMuted` on the participant record). Muting today only affects the in-app UI, so a muted conversation still buzzes the phone.
+Fix: skip participants with `IsMuted == true` when building the push recipient list in `pushDm`, plus a unit test.
+Files: [backend/chat/services/dm_message.go:155](backend/chat/services/dm_message.go#L155), [backend/chat/domains/conversation.go:46](backend/chat/domains/conversation.go#L46)
+
+**L10. A social link cannot be removed**
+_Added 2026-11-05 from the Flutter mobile app final review._ The social-link validator rejects `""`, so the delete branch in `UpdateUser` is unreachable from web and mobile.
+Fix: treat `""` as delete before validation.
+Files: [backend/user/dto/social_media_links.go](backend/user/dto/social_media_links.go), [backend/user/services/user.go](backend/user/services/user.go)
+
+**L12. Push queue drain at shutdown is unbounded**
+_Added 2026-11-05 from the Flutter mobile app final review._ `Close` waits for every queued push; that can take queue × timeout / workers (about 5 min) and outlive the container stop grace.
+Fix: drain with a deadline, then drop what is left.
+File: [backend/user/push/async.go:107](backend/user/push/async.go#L107)
+
+**L15. Pushes are not localized; `device_tokens.locale` is unused**
+_Added 2026-11-05 from the Flutter mobile app final review._ Mobile sends the app language with each device registration and when it changes (`PushService.resendLocale`), but pushes are built from the stored notification text.
+Fix: localize by device locale, or stop collecting the locale.
+File: [backend/user/push/sender.go:47](backend/user/push/sender.go#L47) (`FromNotification`)
 
 ---
 
@@ -137,6 +197,16 @@ File: [backend/user/handlers/user/update_current_user_private.go:45](backend/use
 The app reads only one active livestream (`GET /v1/livestreams?userId=...`) and now picks the latest one in query order, but the database schema still allows multiple active rows for the same user. This can create nondeterministic behavior across other queries and background jobs.
 Suggested future fix: add a partial unique index on `livestreams(user_id)` where `vod_id IS NULL AND ended_at IS NULL` after data cleanup.
 File: [backend/livestream/migrations/0001_init_tables.sql](backend/livestream/migrations/0001_init_tables.sql)
+
+**L13. Image-only DM push detection depends on web's placeholder text**
+_Added 2026-11-05 from the Flutter mobile app final review._ The chat service treats a message as image-only when its text matches `^Sent (an image|\d+ images)$`, the text web puts there.
+Fix: decide by message type `image` with empty user text, sent explicitly by clients.
+File: [backend/chat/services/dm_push.go:27](backend/chat/services/dm_push.go#L27)
+
+**L14. Group DM push shows only the sender's name**
+_Added 2026-11-05 from the Flutter mobile app final review._ A push from a group conversation does not say which group.
+Fix: title "<group> · <sender>" for group conversations (product decision).
+File: [backend/chat/gateway/userservice/push.go](backend/chat/gateway/userservice/push.go)
 
 ---
 
@@ -242,6 +312,43 @@ Files: [web/hooks/queries/use-conversations.ts](web/hooks/queries/use-conversati
 
 **W5. Settings mutations** — profile (username/bio/pictures), stream info, password change, chat-commands CRUD. Straightforward `useMutation` wraps of existing logic; spot-check each save button once.
 **W6. VOD comment create/delete/like** — optimistic local state preserved as-is, only the API-call plumbing changed.
+
+### 🟢 Small fixes
+
+**W7. `REFRESH_EXCLUDE_PATHS` lists `/auth/register`, which does not exist**
+_Added 2026-11-05 from the Flutter mobile app final review._ The signup route is `/auth/signup`, so a 401 from it triggers a pointless refresh.
+Fix: replace it with `/auth/signup` (what mobile excludes).
+File: [web/utils/fetchClient.ts:120](web/utils/fetchClient.ts#L120)
+
+---
+
+## Mobile app
+
+_Added 2026-11-05 from the final review of the Flutter app (`mobile/`, branch `feat/mobile-app`). Tooling and performance gaps; nothing here is a wrong behavior shipped today._
+
+### 🟡 MEDIUM
+
+**M1. `parity_check` accounting is coarse**
+A prefix such as `/user` or `/vods` accounts for every sub-endpoint under it. `fetchClient` calls with non-literal paths are skipped. Changes under `web/types` are not checked, although the spec asks for it.
+Fix: per-path accounting, and a warning on skipped calls.
+File: [mobile/tool/parity_check.dart](mobile/tool/parity_check.dart)
+
+### 🟢 LOW
+
+**M2. Plural forms are not reconciled across locales**
+`sync_locales` copies each plural key as it is; it does not check that `en` and `vi` have the same categories.
+Fix: check that each plural key has the same categories in both locales.
+File: [mobile/tool/sync_locales.dart](mobile/tool/sync_locales.dart)
+
+**M3. `Info-Dev.plist` duplicates `Info.plist`**
+Every plist change (purpose strings, URL types) must be made in both files.
+Fix: one plist, with the dev ATS exception from a build setting.
+Files: [mobile/ios/Runner/Info.plist](mobile/ios/Runner/Info.plist), [mobile/ios/Runner/Info-Dev.plist](mobile/ios/Runner/Info-Dev.plist)
+
+**M4. Feed cards refetch their owner on scroll-back**
+`publicUserProvider` is an `autoDispose` family, so a card scrolled out and back in fetches its owner again.
+Fix: `ref.keepAlive()` with a short timer, or pass the owner from the list response.
+File: [mobile/lib/features/user/user_providers.dart:26-30](mobile/lib/features/user/user_providers.dart#L26-L30)
 
 ---
 

@@ -137,7 +137,8 @@ func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequ
 		return nil, err
 	}
 
-	// Create welcome notification for the new user (ignore if fails)
+	// Create welcome notification for the new user (ignore if fails).
+	// Written to the repo directly, so no push: a brand-new account has no device tokens.
 	welcomeNotif := domains.Notification{
 		UserId:  createdUser.Id,
 		Type:    "system", // TODO: add system notification type enum/default values

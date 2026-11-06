@@ -12,7 +12,7 @@ func CheckCAPTCHA(token string, userIPAddress string) error {
 	formData := url.Values{}
 	formData.Set("secret", os.Getenv("CLOUDFLARE_TURNSTILE_SECRET_KEY"))
 	formData.Set("response", token)
-	if len(userIPAddress) == 0 {
+	if len(userIPAddress) != 0 {
 		formData.Set("remoteip", userIPAddress)
 	}
 

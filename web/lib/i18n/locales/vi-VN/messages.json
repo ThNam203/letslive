@@ -43,5 +43,13 @@
     "preview_alt": "Xem trước {{number}}",
     "open_in_messages": "Mở trong Tin nhắn",
     "minimize_chat": "Thu nhỏ cuộc trò chuyện",
-    "close_chat": "Đóng cuộc trò chuyện"
+    "close_chat": "Đóng cuộc trò chuyện",
+    "edited": "(đã chỉnh sửa)",
+    "edit_message": "Sửa tin nhắn",
+    "delete_message": "Xóa tin nhắn",
+    "delete_message_confirm": "Xóa tin nhắn này? Hành động này không thể hoàn tác.",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "attach_images": "Đính kèm ảnh",
+    "remove_image": "Xóa ảnh"
 }

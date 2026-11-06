@@ -10,5 +10,9 @@
     "emote_category_gestures": "Cử chỉ",
     "emote_category_hype": "Sôi động",
     "emote_category_misc": "Khác",
-    "connection_error": "Không thể kết nối tới chat. Vui lòng tải lại trang."
+    "connection_error": "Không thể kết nối tới chat. Vui lòng tải lại trang.",
+    "send_failed": "Chưa gửi được tin nhắn. Nội dung vẫn được giữ lại.",
+    "send_retry": "Thử lại",
+    "send_action": "Gửi tin nhắn",
+    "emotes_action": "Emote"
 }

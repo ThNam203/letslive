@@ -9,7 +9,8 @@
         "tabs": {
             "home": "Trang chủ",
             "videos": "Video",
-            "about": "Giới thiệu"
+            "about": "Giới thiệu",
+            "people": "Mọi người"
         },
         "latest_video": "Video mới nhất",
         "more_videos": "Video khác",
@@ -22,6 +23,19 @@
         "load_more": "Tải thêm",
         "no_bio": "{{username}} chưa viết giới thiệu.",
         "links": "Liên kết",
-        "stats": "Thông tin kênh"
+        "stats": "Thông tin kênh",
+        "back": "Quay lại",
+        "offline_notice": "{{username}} hiện không phát trực tiếp.",
+        "stream_ended": "Buổi phát trực tiếp đã kết thúc.",
+        "playback_error": "Không phát được buổi phát trực tiếp."
+    },
+    "player": {
+        "quality": "Chất lượng",
+        "quality_auto": "Tự động",
+        "picture_in_picture": "Hình trong hình",
+        "play": "Phát",
+        "pause": "Tạm dừng",
+        "fullscreen": "Toàn màn hình",
+        "exit_fullscreen": "Thoát toàn màn hình"
     }
 }

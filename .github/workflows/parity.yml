@@ -1,0 +1,44 @@
+name: parity
+
+on:
+  push:
+    paths:
+      - "web/**"
+      - "backend/**/api/**"
+      - "configs/envoy/**"
+      - "mobile/**"
+      - "docs/PARITY.md"
+      - ".github/workflows/parity.yml"
+  pull_request:
+    paths:
+      - "web/**"
+      - "backend/**/api/**"
+      - "configs/envoy/**"
+      - "mobile/**"
+      - "docs/PARITY.md"
+      - ".github/workflows/parity.yml"
+  workflow_dispatch:
+
+jobs:
+  parity-check:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check web/mobile parity
+        run: dart run tool/parity_check.dart

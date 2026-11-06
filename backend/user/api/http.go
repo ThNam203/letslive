@@ -4,16 +4,18 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sen1or/letslive/shared/middlewares"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/user/config"
+	devicehandler "sen1or/letslive/user/handlers/device"
 	"sen1or/letslive/user/handlers/follow"
 	"sen1or/letslive/user/handlers/general"
 	gifthandler "sen1or/letslive/user/handlers/gift"
 	inventoryhandler "sen1or/letslive/user/handlers/inventory"
 	"sen1or/letslive/user/handlers/livestream_information"
 	"sen1or/letslive/user/handlers/notification"
+	pushhandler "sen1or/letslive/user/handlers/push"
 	"sen1or/letslive/user/handlers/user"
-	"sen1or/letslive/shared/middlewares"
-	"sen1or/letslive/shared/pkg/logger"
 
 	"time"
 
@@ -34,9 +36,11 @@ type APIServer struct {
 	notificationHandler          *notification.NotificationHandler
 	inventoryHandler             *inventoryhandler.InventoryHandler
 	giftHandler                  *gifthandler.GiftHandler
+	deviceHandler                *devicehandler.DeviceHandler
+	pushHandler                  *pushhandler.PushHandler
 }
 
-func NewAPIServer(userHandler *user.UserHandler, livestreamInfoHandler *livestream_information.LivestreamInformationHandler, followHandler *follow.FollowHandler, notificationHandler *notification.NotificationHandler, invHandler *inventoryhandler.InventoryHandler, gHandler *gifthandler.GiftHandler, cfg *config.Config, db *pgxpool.Pool) *APIServer {
+func NewAPIServer(userHandler *user.UserHandler, livestreamInfoHandler *livestream_information.LivestreamInformationHandler, followHandler *follow.FollowHandler, notificationHandler *notification.NotificationHandler, invHandler *inventoryhandler.InventoryHandler, gHandler *gifthandler.GiftHandler, dHandler *devicehandler.DeviceHandler, pHandler *pushhandler.PushHandler, cfg *config.Config, db *pgxpool.Pool) *APIServer {
 	return &APIServer{
 		logger: logger.Logger,
 		config: cfg,
@@ -48,6 +52,8 @@ func NewAPIServer(userHandler *user.UserHandler, livestreamInfoHandler *livestre
 		notificationHandler:          notificationHandler,
 		inventoryHandler:             invHandler,
 		giftHandler:                  gHandler,
+		deviceHandler:                dHandler,
+		pushHandler:                  pHandler,
 	}
 }
 
@@ -87,10 +93,15 @@ func (a *APIServer) getHandler() http.Handler {
 	wrap("GET /v1/user/me/inventory", a.inventoryHandler.GetInventoryPrivateHandler)
 	wrap("POST /v1/internal/inventory/add", a.inventoryHandler.AddInventoryInternalHandler) // internal
 
+	// device tokens (push notifications)
+	wrap("POST /v1/user/me/devices", a.deviceHandler.RegisterDevicePrivateHandler)
+	wrap("DELETE /v1/user/me/devices/{token}", a.deviceHandler.UnregisterDevicePrivateHandler)
+
 	// gifts
 	wrap("GET /v1/user/{userId}/gifts/received", a.giftHandler.GetGiftsReceivedPublicHandler)
 	wrap("GET /v1/user/me/gifts/sent", a.giftHandler.GetGiftsSentPrivateHandler)
 	wrap("POST /v1/internal/gifts/create", a.giftHandler.CreateGiftInternalHandler) // internal
+	wrap("POST /v1/internal/push", a.pushHandler.SendPushInternalHandler)           // internal
 
 	wrap("POST /v1/user", a.userHandler.CreateUserInternalHandler)                        // internal
 	wrap("PUT /v1/user/{userId}", a.userHandler.UpdateUserInternalHandler)                // internal

@@ -9,7 +9,8 @@
         "tabs": {
             "home": "Home",
             "videos": "Videos",
-            "about": "About"
+            "about": "About",
+            "people": "People"
         },
         "latest_video": "Latest video",
         "more_videos": "More videos",
@@ -22,6 +23,19 @@
         "load_more": "Load more",
         "no_bio": "{{username}} hasn't written a bio yet.",
         "links": "Links",
-        "stats": "Channel info"
+        "stats": "Channel info",
+        "back": "Back",
+        "offline_notice": "{{username}} isn't live right now.",
+        "stream_ended": "This stream has ended.",
+        "playback_error": "Couldn't play the stream."
+    },
+    "player": {
+        "quality": "Quality",
+        "quality_auto": "Auto",
+        "picture_in_picture": "Picture in picture",
+        "play": "Play",
+        "pause": "Pause",
+        "fullscreen": "Full screen",
+        "exit_fullscreen": "Exit full screen"
     }
 }
