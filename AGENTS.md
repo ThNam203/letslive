@@ -22,6 +22,11 @@ How to satisfy the rule:
   endpoint under "Planned endpoints" / "Intentionally differs" in
   `docs/PARITY.md` (format described at the top of that file).
 
+App-wide UI choices where mobile deliberately looks or works unlike web
+(navigation, bars hiding on scroll, player controls, the People tab) are
+listed under "Mobile UI differences" in `docs/PARITY.md`. Keep them when
+porting web changes, and update that list whenever one changes.
+
 CI enforces this with `.github/workflows/parity.yml`, which runs
 `cd mobile && dart run tool/parity_check.dart`. Run it locally before pushing
 web, gateway, or mobile changes.

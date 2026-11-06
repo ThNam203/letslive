@@ -53,6 +53,37 @@ Source of the feature list: section 4 of
 | `/wallet/overview` | `WalletScreen` + `WalletOverviewTab` (`mobile/lib/features/wallet/presentation/`), reached from the Profile tab's app bar: a card per currency (SPARK, FLARE; 0 when missing) and the five latest transactions. Amounts are exact decimals (`DecimalAmount`), never doubles, formatted as web does (grouping, at most 2 fraction digits). No deposit entry point | `mobile/test/features/wallet/wallet_screen_test.dart`, `mobile/test/features/wallet/decimal_amount_test.dart`, `mobile/contract_test/wallet_contract_test.dart` | done |
 | `/wallet/transactions` | `WalletTransactionsTab` (`mobile/lib/features/wallet/presentation/transactions_tab.dart`): type filter chips (web's set, no deposit) over the loaded rows, next page loads as the list scrolls (web has a Load more button) | `mobile/test/features/wallet/wallet_screen_test.dart`, `mobile/contract_test/wallet_contract_test.dart` | done |
 
+## Mobile UI differences
+
+App-wide layout and behaviour where mobile deliberately looks or works
+unlike web. Per-page differences are in the rows above. Keep these when
+porting a web change; change one only on the owner's request, and update
+this list in the same commit. (Plain bullets: the parity check does not
+read this section.)
+
+- Navigation: bottom tabs Home, Messages, Profile, icons only (the label is
+  the tooltip). Web's top navbar search and notification bell sit at the top
+  right of every tab's header (`HeaderActions`) and open full screens over
+  the tabs (web's bell opens a popover).
+- Like YouTube, the tab's top bar and the bottom bar slide away while the
+  content scrolls down and come back on scrolling up or at the top
+  (`mobile/lib/core/router/app_chrome.dart`; a tab root uses `TabScaffold`).
+- Web's left bar (followed and recommended channels) is the People tab of
+  the user's own profile (`ProfilePeopleTab`), not part of Home.
+- Channel and video pages have no app bar; the system back leaves them.
+- Players (`PlayerChrome`, `mobile/lib/features/watch/presentation/player_chrome.dart`):
+  - tapping the video pauses or plays it;
+  - the control bar fades 3 s after the last touch while playing and stays
+    while paused;
+  - picture-in-picture is an entry in the gear menu, above the quality list;
+  - the full-screen button turns the screen sideways (the landscape layout,
+    system bars hidden), and turning the phone does the same. Leaving full
+    screen with the button keeps the page upright until it closes.
+- Video page: the uploader row and the description box span the full width;
+  follow and gift sit at the end of the uploader row, like/dislike and share
+  on their own row below.
+- Sign-in is required for every screen (web lets guests browse).
+
 ## Planned endpoints
 
 Gateway / web-client paths mobile will call but has no `ApiEndpoints`
