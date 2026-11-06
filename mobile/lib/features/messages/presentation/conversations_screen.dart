@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
+import 'package:letslive_mobile/core/router/app_chrome.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
 import 'package:letslive_mobile/core/router/header_actions.dart';
 import 'package:letslive_mobile/core/widgets/feed_section.dart';
@@ -41,7 +42,7 @@ class ConversationsScreen extends ConsumerWidget {
         title: l10n.messages_no_conversations_yet,
       ),
     );
-    return Scaffold(
+    return TabScaffold(
       appBar: AppBar(
         title: Text(l10n.messages_title),
         actions: [

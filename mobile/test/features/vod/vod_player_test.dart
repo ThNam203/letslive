@@ -25,6 +25,20 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('0:30 / 1:02:05'), findsOneWidget);
+    expect(find.byTooltip('Full screen'), findsOneWidget);
+  });
+
+  testWidgets('picture-in-picture is in the settings menu', (tester) async {
+    final players = FakePlayers();
+    await pumpVod(tester, FakeVodServer(), players);
+
+    await tester.tap(find.byKey(const ValueKey('player-settings')));
+    await tester.pumpAndSettle();
+    expect(find.text('Auto'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('player-pip')));
+    await tester.pumpAndSettle();
+
+    expect(players.last.pipRequests, 1);
   });
 
   group('skip buttons', () {
@@ -111,7 +125,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(wake.calls, [true]);
 
-      await tester.pageBack();
+      await tester.binding.handlePopRoute(); // System back: no app bar here.
       await tester.pumpAndSettle();
       expect(wake.calls, [true, false]);
       expect(wake.isAwake, isFalse);

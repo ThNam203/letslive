@@ -9,7 +9,8 @@
         "tabs": {
             "home": "Home",
             "videos": "Videos",
-            "about": "About"
+            "about": "About",
+            "people": "People"
         },
         "latest_video": "Latest video",
         "more_videos": "More videos",
@@ -33,6 +34,8 @@
         "quality_auto": "Auto",
         "picture_in_picture": "Picture in picture",
         "play": "Play",
-        "pause": "Pause"
+        "pause": "Pause",
+        "fullscreen": "Full screen",
+        "exit_fullscreen": "Exit full screen"
     }
 }

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/network/api_endpoints.dart';
@@ -229,12 +228,7 @@ Future<TestApp> pumpMessages(
     textScale: textScale,
     overrides: [...?socket?.overrides, ...overrides],
   );
-  await tester.tap(
-    find.descendant(
-      of: find.byType(NavigationBar),
-      matching: find.text('Messages'),
-    ),
-  );
+  await tester.tap(find.byTooltip('Messages'));
   await tester.pumpAndSettle();
   return app;
 }

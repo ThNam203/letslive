@@ -3,13 +3,15 @@ import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/features/home/domain/media_format.dart';
 import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
 import 'package:letslive_mobile/features/watch/presentation/live_player_view.dart';
+import 'package:letslive_mobile/features/watch/presentation/player_chrome.dart';
 
 /// How far the skip buttons jump (web `SKIP_SECONDS`).
 const Duration skipStep = Duration(seconds: 10);
 
 /// A 16:9 player for a recorded video: the video plus a control bar with a
-/// seek slider, play/pause, 10 second skips, the time, the quality menu and
-/// picture-in-picture. The [player] is owned by the screen (it needs it to
+/// seek slider, play/pause, 10 second skips, the time, the settings menu
+/// (picture-in-picture and quality) and full screen. Tapping the video pauses or plays
+/// it; the bar fades out while playing ([PlayerChrome]). The [player] is owned by the screen (it needs it to
 /// seek from timestamps and to count the view); this view only draws it.
 ///
 /// When playback fails it shows [onRetry] instead of the controls.
@@ -76,76 +78,50 @@ class _ControlsState extends State<_Controls> {
     final total = value.duration.inSeconds;
     final shown = _dragging ?? value.position.inSeconds.toDouble();
     final time = '${formatDuration(shown.round())} / ${formatDuration(total)}';
-    return Stack(
-      children: [
-        if (value.isBuffering) const PlayerSpinner(),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: ColoredBox(
-            color: Colors.black45,
-            child: IconTheme(
-              data: const IconThemeData(color: Colors.white),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (total > 0)
-                    Slider(
-                      value: shown.clamp(0, total.toDouble()),
-                      max: total.toDouble(),
-                      onChanged: (v) => setState(() => _dragging = v),
-                      onChangeEnd: (v) {
-                        setState(() => _dragging = null);
-                        player.seekTo(Duration(seconds: v.round()));
-                      },
-                    ),
-                  Row(
-                    children: [
-                      value.isPlaying
-                          ? IconButton(
-                              tooltip: l10n.users_player_pause,
-                              icon: const Icon(Icons.pause),
-                              onPressed: player.pause,
-                            )
-                          : IconButton(
-                              tooltip: l10n.users_player_play,
-                              icon: const Icon(Icons.play_arrow),
-                              onPressed: player.play,
-                            ),
-                      IconButton(
-                        tooltip: l10n.accessibility_seek_back_10,
-                        icon: const Icon(Icons.replay_10),
-                        onPressed: () => _skip(-skipStep),
-                      ),
-                      IconButton(
-                        tooltip: l10n.accessibility_seek_forward_10,
-                        icon: const Icon(Icons.forward_10),
-                        onPressed: () => _skip(skipStep),
-                      ),
-                      Expanded(
-                        child: Text(
-                          time,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: Colors.white),
-                        ),
-                      ),
-                      PlayerQualityMenu(player: player, value: value),
-                      IconButton(
-                        tooltip: l10n.users_player_picture_in_picture,
-                        icon: const Icon(Icons.picture_in_picture_alt),
-                        onPressed: player.enterPictureInPicture,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+    return PlayerChrome(
+      player: player,
+      value: value,
+      bar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (total > 0)
+            Slider(
+              value: shown.clamp(0, total.toDouble()),
+              max: total.toDouble(),
+              onChanged: (v) => setState(() => _dragging = v),
+              onChangeEnd: (v) {
+                setState(() => _dragging = null);
+                player.seekTo(Duration(seconds: v.round()));
+              },
             ),
+          Row(
+            children: [
+              PlayPauseButton(player: player, value: value),
+              IconButton(
+                tooltip: l10n.accessibility_seek_back_10,
+                icon: const Icon(Icons.replay_10),
+                onPressed: () => _skip(-skipStep),
+              ),
+              IconButton(
+                tooltip: l10n.accessibility_seek_forward_10,
+                icon: const Icon(Icons.forward_10),
+                onPressed: () => _skip(skipStep),
+              ),
+              Expanded(
+                child: Text(
+                  time,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: Colors.white),
+                ),
+              ),
+              PlayerSettingsMenu(player: player, value: value),
+              const FullscreenButton(),
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

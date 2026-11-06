@@ -29,7 +29,7 @@ const failed = PlayerValue(isBuffering: false, hasError: true);
 
 /// The quality menu entry labelled [label].
 Finder menuItem(String label) =>
-    find.widgetWithText(CheckedPopupMenuItem<VideoQuality>, label);
+    find.widgetWithText(CheckedPopupMenuItem<VoidCallback>, label);
 
 void main() {
   testWidgets('live user shows player with title', (tester) async {
@@ -234,7 +234,7 @@ void main() {
     final players = FakePlayers();
     final app = await pumpChannel(tester, liveServer(), players, 'u-1');
 
-    await tester.pageBack();
+    await tester.binding.handlePopRoute(); // System back: no app bar here.
     await tester.pumpAndSettle();
     await tester.pump(liveRecheckInterval * 3);
     await tester.pumpAndSettle();
@@ -280,7 +280,7 @@ void main() {
     );
     await pumpChannel(tester, liveServer(), players, 'u-1');
 
-    await tester.tap(find.byKey(const ValueKey('player-quality')));
+    await tester.tap(find.byKey(const ValueKey('player-settings')));
     await tester.pumpAndSettle();
     for (final label in ['Auto', '1080p', '720p', '360p']) {
       expect(find.text(label), findsOneWidget, reason: label);
@@ -291,7 +291,7 @@ void main() {
     expect(players.last.selected, [const VideoQuality(720)]);
 
     // Back to adaptive.
-    await tester.tap(find.byKey(const ValueKey('player-quality')));
+    await tester.tap(find.byKey(const ValueKey('player-settings')));
     await tester.pumpAndSettle();
     await tester.tap(menuItem('Auto'));
     await tester.pumpAndSettle();
@@ -311,9 +311,14 @@ void main() {
     await tester.pump();
     expect(players.last.value.value.isPlaying, isTrue);
 
-    await tester.tap(find.byTooltip('Picture in picture'));
-    await tester.pump();
+    // Picture-in-picture sits in the settings menu.
+    expect(find.byTooltip('Picture in picture'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('player-settings')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('player-pip')));
+    await tester.pumpAndSettle();
     expect(players.last.pipRequests, 1);
+    expect(find.byTooltip('Full screen'), findsOneWidget);
   });
 
   testWidgets('long titles and names do not overflow on a small phone', (
@@ -387,7 +392,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.byType(AppBar), findsOneWidget);
+    // No app bar upright either, like YouTube.
+    expect(find.byType(AppBar), findsNothing);
     expect(find.byType(ChatPanel), findsOneWidget);
     expect(players.created, hasLength(1));
     expect(players.last.disposed, isFalse);
@@ -441,7 +447,7 @@ void screenWakeTests() {
     await pumpChannel(tester, liveServer(), FakePlayers(), 'u-1', wake: wake);
     expect(wake.isAwake, isTrue);
 
-    await tester.pageBack();
+    await tester.binding.handlePopRoute(); // System back: no app bar here.
     await tester.pumpAndSettle();
     expect(wake.isAwake, isFalse);
   });

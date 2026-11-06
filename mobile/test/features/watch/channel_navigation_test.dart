@@ -11,7 +11,7 @@ import '../vod/vod_test_app.dart';
 import 'fake_player.dart';
 import 'watch_test_app.dart';
 
-/// Taps on Home and Search cards that lead to `/users/:userId`.
+/// Taps on Home, People and Search entries that lead to `/users/:userId`.
 void main() {
   testWidgets('tapping a live card on home opens the channel', (tester) async {
     final server = FakeWatchServer()
@@ -29,12 +29,14 @@ void main() {
     expect(players.last.url, endsWith('/transcode/ls-1/index.m3u8'));
 
     // Back returns to the feed.
-    await tester.pageBack();
+    await tester.binding.handlePopRoute(); // System back: no app bar here.
     await tester.pumpAndSettle();
     expect(find.byType(HomeScreen), findsOneWidget);
   });
 
-  testWidgets('tapping a followed channel on home opens it', (tester) async {
+  testWidgets('tapping a followed channel in the People tab opens it', (
+    tester,
+  ) async {
     final server = FakeWatchServer()
       ..users = {
         'u-1': publicUserJson(),
@@ -42,6 +44,10 @@ void main() {
       }
       ..following = [publicUserJson(id: 'u-2', username: 'followed_one')];
     await pumpWatchHome(tester, server, FakePlayers());
+    await tester.tap(find.byTooltip('Profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(Tab, 'People'));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('followed_one'));
     await tester.pumpAndSettle();
@@ -65,7 +71,7 @@ void main() {
     expect(find.byType(VodScreen), findsOneWidget);
     expect(players.last.url, playbackUrl);
 
-    await tester.pageBack();
+    await tester.binding.handlePopRoute(); // System back: no app bar here.
     await tester.pumpAndSettle();
     expect(find.byType(HomeScreen), findsOneWidget);
   });

@@ -10,8 +10,9 @@
 /// - The player pins to the top while the page scrolls, so a tapped
 ///   timestamp in the description or a comment is seen to work. With the
 ///   keyboard open it is hidden (but keeps playing) to leave room to type.
-/// - Held sideways, only the player shows (no app bar): rotating is the
-///   fullscreen mode, and the same player keeps playing.
+/// - There is no app bar (the system back leaves). Held sideways, or after
+///   the player's full-screen button, only the player shows, and the same
+///   player keeps playing.
 /// - One view is counted per opening, once the viewer has watched long
 ///   enough (`domain/view_threshold.dart`). A refused request is not
 ///   retried: web retries on every progress tick, which on a phone would
@@ -36,6 +37,7 @@ import 'package:letslive_mobile/features/vod/presentation/vod_player_view.dart';
 import 'package:letslive_mobile/features/vod/vod_providers.dart';
 import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
 import 'package:letslive_mobile/features/watch/presentation/live_player_view.dart';
+import 'package:letslive_mobile/features/watch/presentation/player_chrome.dart';
 import 'package:letslive_mobile/features/watch/watch_providers.dart';
 
 /// The screen of video [vodId] uploaded by [userId].
@@ -75,19 +77,10 @@ class VodScreen extends ConsumerWidget {
             )
           : _VodBody(vod: found, userId: userId);
     }
-    // Sideways, a loaded video shows only its player (see _VodBody).
-    final playerOnly = isLandscape(context) && body is _VodBody;
-    return Scaffold(
-      appBar: playerOnly
-          ? null
-          : AppBar(
-              title: Text(
-                vod.value?.title ?? '',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+    return WatchScaffold(
       body: body,
+      // Sideways, a loaded player screen shows only its player.
+      playerOnly: isLandscape(context) && body is _VodBody,
     );
   }
 }
@@ -202,6 +195,7 @@ class _VodBodyState extends ConsumerState<_VodBody> {
   @override
   void dispose() {
     _releasePlayer();
+    unawaited(resetPlayerOrientation());
     super.dispose();
   }
 

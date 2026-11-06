@@ -41,16 +41,10 @@ void main() {
     );
     expect(find.text('Best of week'), findsOne);
     expect(find.text('1:02:05'), findsOne);
-    expect(inSection('section-following', find.text('followed_one')), findsOne);
-    // Already followed channels are not recommended again.
-    expect(
-      inSection('section-recommended', find.text('followed_one')),
-      findsNothing,
-    );
-    expect(
-      inSection('section-recommended', find.text('suggested_one')),
-      findsOne,
-    );
+    // The channel lists live in the profile's People tab, not on home.
+    expect(find.byKey(const ValueKey('section-following')), findsNothing);
+    expect(find.byKey(const ValueKey('section-recommended')), findsNothing);
+    expect(find.text('followed_one'), findsNothing);
   });
 
   testWidgets('empty feed shows empty state', (tester) async {
@@ -58,9 +52,6 @@ void main() {
 
     expect(find.text('No livestreams'), findsOneWidget);
     expect(find.text('No Videos Available'), findsOneWidget);
-    // Channel lists are hidden when empty, like on web.
-    expect(find.text('Following'), findsNothing);
-    expect(find.text('Recommended'), findsNothing);
   });
 
   testWidgets('error shows retry that refetches', (tester) async {
@@ -99,8 +90,6 @@ void main() {
     for (final path in [
       ApiEndpoints.popularLivestreams,
       ApiEndpoints.popularVods,
-      ApiEndpoints.following,
-      ApiEndpoints.recommendedChannels,
     ]) {
       expect(app.requestsTo(path), hasLength(2), reason: path);
     }
@@ -304,12 +293,9 @@ void main() {
   testWidgets("logging in as another account shows none of the previous "
       "account's data", (tester) async {
     final server = FakeHomeServer()
-      ..following = [publicUserJson(id: 'u-a', username: 'only_for_a')]
-      ..recommended = [publicUserJson(id: 'u-ra', username: 'rec_for_a')]
       ..live = [livestreamJson(title: 'Stream of A')];
     final app = await pumpHome(tester, server);
-    expect(find.text('only_for_a'), findsOneWidget);
-    expect(find.text('rec_for_a'), findsOneWidget);
+    expect(find.text('Stream of A'), findsOneWidget);
 
     // Widget tests run in fake time: start the call, pump it through, await.
     final loggedOut = app.container.read(sessionProvider.notifier).logout();
@@ -317,24 +303,15 @@ void main() {
     await loggedOut;
     expect(find.byType(LoginScreen), findsOneWidget);
 
-    server
-      ..following = [publicUserJson(id: 'u-b', username: 'only_for_b')]
-      ..recommended = [publicUserJson(id: 'u-rb', username: 'rec_for_b')]
-      ..live = [livestreamJson(title: 'Stream of B')];
+    server.live = [livestreamJson(title: 'Stream of B')];
     final loggedIn = app.container
         .read(sessionProvider.notifier)
         .login('b@example.com', testPassword);
     await tester.pumpAndSettle();
     await loggedIn;
 
-    expect(find.text('only_for_b'), findsOneWidget);
-    expect(find.text('rec_for_b'), findsOneWidget);
     expect(find.text('Stream of B'), findsOneWidget);
-    expect(find.text('only_for_a'), findsNothing);
-    expect(find.text('rec_for_a'), findsNothing);
     expect(find.text('Stream of A'), findsNothing);
-    expect(app.requestsTo(ApiEndpoints.following), hasLength(2));
-    expect(app.requestsTo(ApiEndpoints.recommendedChannels), hasLength(2));
     expect(app.requestsTo(ApiEndpoints.popularLivestreams), hasLength(2));
   });
 }

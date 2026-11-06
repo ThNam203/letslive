@@ -188,10 +188,18 @@ Each line gives the decision, then its cost if it turns out to be wrong.
 
 ### Features
 
-- Bottom tabs: Home, Messages, Profile (changed 2026-11-06 at your request).
-  Search and the notification bell sit at the top right of every tab's
-  header, like web's navbar, and open over the tabs. Web's left bar (followed and recommended channels) became
-  home sections. Cost: none.
+- Bottom tabs: Home, Messages, Profile (changed 2026-11-06 at your request),
+  icons only. Search and the notification bell sit at the top right of every
+  tab's header, like web's navbar, and open over the tabs. Like YouTube, the
+  top and bottom bars slide away while scrolling down and come back on
+  scrolling up. Web's left bar (followed and recommended channels) is the
+  People tab of your own profile (moved from Home 2026-11-06). Cost: none.
+- Watch screens (channel, video) have no app bar; the system back leaves
+  them. Tapping the video pauses or plays it, the controls fade 3 s after the
+  last touch while playing, and a full-screen button turns the screen
+  sideways. Leaving full screen with the button keeps the screen upright until
+  you close the watch screen. Cost: after that, turning the phone does not
+  enter full screen again on that screen (the button still does).
 - Home has one live list (`/popular-livestreams`), and VODs paginate. Cost:
   none.
 - Search has one repository method per type and no refetch on resume.

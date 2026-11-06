@@ -223,7 +223,7 @@ void main() {
     await pumpVod(tester, FakeVodServer(), players);
     expect(players.last.disposed, isFalse);
 
-    await tester.pageBack();
+    await tester.binding.handlePopRoute(); // System back: no app bar here.
     await tester.pumpAndSettle();
     expect(players.last.disposed, isTrue);
   });
@@ -285,7 +285,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.byType(AppBar), findsOneWidget);
+    // No app bar upright either, like YouTube.
+    expect(find.byType(AppBar), findsNothing);
     expect(find.byType(CommentsSection), findsOneWidget);
     // The same player: playback goes on across the rotation.
     expect(players.created, hasLength(1));

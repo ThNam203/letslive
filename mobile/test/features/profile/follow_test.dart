@@ -78,16 +78,24 @@ void main() {
     expect(_follow, findsNothing);
   });
 
-  testWidgets('following refreshes the home following section', (tester) async {
+  testWidgets('following refreshes the People tab\'s following list', (
+    tester,
+  ) async {
     final server = FakeProfileServer();
-    final app = await pumpRoute(tester, server, AppRoutes.channel('u-2'));
+    final app = await pumpRoute(tester, server, AppRoutes.profile);
+    await tester.tap(find.widgetWithText(Tab, 'People'));
+    await tester.pumpAndSettle();
     expect(app.requestsTo(ApiEndpoints.following), hasLength(1));
 
+    unawaited(
+      app.container.read(appRouterProvider).push(AppRoutes.channel('u-2')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(_follow);
     await tester.pumpAndSettle();
 
-    // Home is paused under the channel; it reloads when it shows again.
-    await tester.pageBack();
+    // The tab is paused under the channel; it reloads when it shows again.
+    await tester.binding.handlePopRoute(); // System back: no app bar here.
     await tester.pumpAndSettle();
     expect(app.requestsTo(ApiEndpoints.following), hasLength(2));
   });

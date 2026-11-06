@@ -62,7 +62,8 @@ class PublicUserNotifier extends AsyncNotifier<PublicUser> {
       state = AsyncData(current);
       return response;
     }
-    // Home keeps this list alive, so tell it the followed channels changed.
+    // The profile's People tab may keep this list alive, so tell it the
+    // followed channels changed.
     ref.invalidate(followingChannelsProvider);
     return null;
   }

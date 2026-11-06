@@ -62,76 +62,79 @@ class VodDetails extends ConsumerWidget {
         children: [
           Text(vod.title, style: theme.textTheme.titleLarge),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            alignment: WrapAlignment.spaceBetween,
+          // The uploader across the full width, the follow and gift
+          // buttons at its end (they wrap under each other at large text).
+          Row(
             children: [
-              InkWell(
-                onTap: () => context.push(AppRoutes.channel(ownerId)),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    UserAvatar(
-                      pictureUrl: owner?.profilePicture,
-                      name: owner?.username,
-                    ),
-                    const SizedBox(width: 12),
-                    if (owner != null)
-                      ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: MediaQuery.sizeOf(context).width * 0.5,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              owner.username,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleSmall,
-                            ),
-                            Text(
-                              l10n.common_followers_count(
-                                compactCount(l10n, owner.followerCount),
-                                owner.followerCount,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
+              Expanded(
+                child: InkWell(
+                  key: const ValueKey('vod-uploader'),
+                  onTap: () => context.push(AppRoutes.channel(ownerId)),
+                  child: Row(
+                    children: [
+                      UserAvatar(
+                        pictureUrl: owner?.profilePicture,
+                        name: owner?.username,
                       ),
+                      const SizedBox(width: 12),
+                      if (owner != null)
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                owner.username,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleSmall,
+                              ),
+                              Text(
+                                l10n.common_followers_count(
+                                  compactCount(l10n, owner.followerCount),
+                                  owner.followerCount,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width * 0.5,
+                ),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    FollowButton(userId: ownerId),
+                    GiftButton(userId: ownerId),
                   ],
                 ),
               ),
-              // A Wrap: at large text the gift button drops under the follow
-              // button instead of overflowing.
-              Wrap(
-                spacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  FollowButton(userId: ownerId),
-                  GiftButton(userId: ownerId),
-                ],
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  VodReactionButtons(vod: vod),
-                  if (webBaseUrl != null)
-                    IconButton(
-                      key: const ValueKey('vod-copy-link'),
-                      tooltip: l10n.common_vod_share,
-                      icon: const Icon(Icons.share_outlined),
-                      onPressed: () => _copyLink(context, webBaseUrl),
-                    ),
-                ],
-              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              VodReactionButtons(vod: vod),
+              if (webBaseUrl != null)
+                IconButton(
+                  key: const ValueKey('vod-copy-link'),
+                  tooltip: l10n.common_vod_share,
+                  icon: const Icon(Icons.share_outlined),
+                  onPressed: () => _copyLink(context, webBaseUrl),
+                ),
             ],
           ),
           const SizedBox(height: 12),

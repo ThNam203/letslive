@@ -82,6 +82,23 @@ bar ends with `HeaderActions` (`lib/core/router/header_actions.dart`): a
 search button and the notification bell with its unread count, each opening
 its screen over the tabs with a back arrow.
 
+The bottom bar shows icons only (the label is the tooltip). Like YouTube,
+scrolling a tab's content down slides the bottom bar and the tab's top bar
+away, and scrolling up (or reaching the top) brings them back
+(`lib/core/router/app_chrome.dart`). A tab root gets this by building a
+`TabScaffold(appBar: ..., body: ...)` instead of a `Scaffold` with an
+`appBar`.
+
+The watch screens (channel, video) have no app bar; the system back leaves
+them. Their players share `PlayerChrome`
+(`lib/features/watch/presentation/player_chrome.dart`): tapping the video
+pauses or plays it, the control bar fades out 3 seconds after the last touch
+while playing (it stays while paused), and the full-screen button turns the
+screen sideways (the landscape layout, status and navigation bars hidden).
+Leaving full screen with the button keeps the screen upright until the watch
+screen closes; otherwise a phone still held sideways would turn straight
+back.
+
 ## Notifications and push
 
 The notifications screen (`lib/features/notifications/`), opened from the
@@ -466,6 +483,8 @@ request:
 - [ ] Rotation: on a live channel and a video, turn the phone sideways; only
   the player shows, filling the screen (that is the fullscreen mode), and
   playback goes on. Turn it back; the page returns with the same playback.
+  The full-screen button does the same without turning the phone, and its
+  exit button brings the page back upright.
   Offline channels, chat and other screens show no overflow either way.
 - [ ] Kill and relaunch: force-quit while signed in and relaunch; the session
   is restored without a login.

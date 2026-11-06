@@ -62,8 +62,6 @@ Future<void> refreshHome(WidgetRef ref) {
   final reloads = [
     ref.refresh(popularLiveProvider.future),
     ref.refresh(popularVodsProvider.future),
-    ref.refresh(followingChannelsProvider.future),
-    ref.refresh(recommendedChannelsProvider.future),
   ];
   return Future.wait([
     for (final reload in reloads)

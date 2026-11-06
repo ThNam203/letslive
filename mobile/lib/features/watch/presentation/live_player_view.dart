@@ -1,14 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:letslive_mobile/core/router/app_chrome.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
+import 'package:letslive_mobile/features/watch/presentation/player_chrome.dart';
 import 'package:letslive_mobile/features/watch/watch_providers.dart';
 
 /// A 16:9 live player: the video plus a small overlay (web's live player
-/// controls that make sense on a phone): live badge, play/pause, quality
-/// menu (Auto + the stream's variants) and picture-in-picture.
+/// controls that make sense on a phone): live badge, play/pause, the
+/// settings menu (picture-in-picture and the quality: Auto + the stream's
+/// variants) and full screen.
+/// Tapping the video pauses or plays it; the bar fades out while playing
+/// ([PlayerChrome]).
 ///
 /// Owns its [PlayerController] (from [playerFactoryProvider]) and
 /// disposes it with the widget.
@@ -167,7 +173,7 @@ class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
   );
 }
 
-/// Spinner while buffering, the control bar at the bottom.
+/// The control bar in a [PlayerChrome] (tap to pause, auto-hide).
 class _Controls extends StatelessWidget {
   const _Controls({required this.player, required this.value});
 
@@ -177,46 +183,44 @@ class _Controls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Stack(
-      children: [
-        if (value.isBuffering) const PlayerSpinner(),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: ColoredBox(
-            color: Colors.black45,
-            child: IconTheme(
-              data: const IconThemeData(color: Colors.white),
-              child: Row(
-                children: [
-                  const SizedBox(width: 8),
-                  _LiveBadge(l10n.users_live),
-                  const Spacer(),
-                  value.isPlaying
-                      ? IconButton(
-                          tooltip: l10n.users_player_pause,
-                          icon: const Icon(Icons.pause),
-                          onPressed: player.pause,
-                        )
-                      : IconButton(
-                          tooltip: l10n.users_player_play,
-                          icon: const Icon(Icons.play_arrow),
-                          onPressed: player.play,
-                        ),
-                  PlayerQualityMenu(player: player, value: value),
-                  IconButton(
-                    tooltip: l10n.users_player_picture_in_picture,
-                    icon: const Icon(Icons.picture_in_picture_alt),
-                    onPressed: player.enterPictureInPicture,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
+    return PlayerChrome(
+      player: player,
+      value: value,
+      bar: Row(
+        children: [
+          const SizedBox(width: 8),
+          _LiveBadge(l10n.users_live),
+          const Spacer(),
+          PlayPauseButton(player: player, value: value),
+          PlayerSettingsMenu(player: player, value: value),
+          const FullscreenButton(),
+        ],
+      ),
     );
+  }
+}
+
+/// Pause while playing, play otherwise.
+class PlayPauseButton extends StatelessWidget {
+  const PlayPauseButton({required this.player, required this.value, super.key});
+
+  final PlayerController player;
+  final PlayerValue value;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return value.isPlaying
+        ? IconButton(
+            tooltip: l10n.users_player_pause,
+            icon: const Icon(Icons.pause),
+            onPressed: player.pause,
+          )
+        : IconButton(
+            tooltip: l10n.users_player_play,
+            icon: const Icon(Icons.play_arrow),
+            onPressed: player.play,
+          );
   }
 }
 
@@ -230,9 +234,10 @@ class PlayerSpinner extends StatelessWidget {
       const Center(child: CircularProgressIndicator(color: Colors.white));
 }
 
-/// "Auto" plus one entry per variant, the one in use checked.
-class PlayerQualityMenu extends StatelessWidget {
-  const PlayerQualityMenu({
+/// The gear menu of a player: picture-in-picture, then the quality ("Auto"
+/// plus one entry per variant, the one in use checked).
+class PlayerSettingsMenu extends StatelessWidget {
+  const PlayerSettingsMenu({
     required this.player,
     required this.value,
     super.key,
@@ -244,15 +249,26 @@ class PlayerQualityMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return PopupMenuButton<VideoQuality>(
-      key: const ValueKey('player-quality'),
-      tooltip: l10n.users_player_quality,
+    // Each entry carries what it does; the menu runs it once closed.
+    return PopupMenuButton<VoidCallback>(
+      key: const ValueKey('player-settings'),
+      tooltip: l10n.settings_page_title,
       icon: const Icon(Icons.settings),
-      onSelected: player.selectQuality,
+      onSelected: (action) => action(),
       itemBuilder: (context) => [
+        PopupMenuItem(
+          key: const ValueKey('player-pip'),
+          value: () => unawaited(player.enterPictureInPicture()),
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.picture_in_picture_alt),
+            title: Text(l10n.users_player_picture_in_picture),
+          ),
+        ),
+        const PopupMenuDivider(),
         for (final quality in [VideoQuality.auto, ...value.qualities])
           CheckedPopupMenuItem(
-            value: quality,
+            value: () => unawaited(player.selectQuality(quality)),
             checked: quality == value.quality,
             child: Text(
               quality.isAuto
@@ -323,21 +339,68 @@ class PlayerError extends StatelessWidget {
 }
 
 /// True when the phone is held sideways. The watch screens then show only
-/// the player ([LandscapePlayer]): rotating is the fullscreen mode.
+/// the player ([LandscapePlayer]): rotating (or the [FullscreenButton]) is
+/// the fullscreen mode.
 bool isLandscape(BuildContext context) =>
     MediaQuery.orientationOf(context) == Orientation.landscape;
 
 /// The landscape layout of a watch screen: [player] (a 16:9 player view)
-/// as large as fits, centered on black, clear of notches.
-class LandscapePlayer extends StatelessWidget {
+/// as large as fits, centered on black, clear of notches. The status and
+/// navigation bars hide while it shows (a swipe from the edge brings them
+/// back for a moment).
+class LandscapePlayer extends StatefulWidget {
   const LandscapePlayer({required this.player, super.key});
 
   /// The screen's player view; keep its key, so rotating keeps playback.
   final Widget player;
 
   @override
+  State<LandscapePlayer> createState() => _LandscapePlayerState();
+}
+
+class _LandscapePlayerState extends State<LandscapePlayer> {
+  @override
+  void initState() {
+    super.initState();
+    unawaited(
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky),
+    );
+  }
+
+  @override
+  void dispose() {
+    unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => ColoredBox(
     color: Colors.black,
-    child: SafeArea(child: Center(child: player)),
+    child: SafeArea(child: Center(child: widget.player)),
+  );
+}
+
+/// The frame of a watch screen (channel, video): no app bar, like YouTube;
+/// the body starts below the status bar. With [playerOnly] (the body is a
+/// [LandscapePlayer]) it goes edge to edge instead: that player keeps clear
+/// of notches itself, on black.
+class WatchScaffold extends StatelessWidget {
+  const WatchScaffold({required this.body, this.playerOnly = false, super.key});
+
+  final Widget body;
+  final bool playerOnly;
+
+  @override
+  Widget build(BuildContext context) => ThemedStatusBar(
+    child: Scaffold(
+      // One SafeArea either way, so rotating keeps the body's state.
+      body: SafeArea(
+        left: !playerOnly,
+        top: !playerOnly,
+        right: !playerOnly,
+        bottom: false,
+        child: body,
+      ),
+    ),
   );
 }

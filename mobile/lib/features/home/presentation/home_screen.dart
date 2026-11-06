@@ -1,8 +1,8 @@
-/// The Home tab: web's home page plus its left-bar channel lists as sections.
+/// The Home tab: web's home page.
 ///
-/// Sections, each loading and failing on its own: live streams, followed
-/// channels, recommended channels (those not already followed, like web) and
-/// popular videos. The videos load page by page as the user nears the end of
+/// Sections, each loading and failing on its own: live streams and popular
+/// videos. Web's left-bar channel lists (followed and recommended) live in
+/// the People tab of the user's profile (`profile_people_tab.dart`). The videos load page by page as the user nears the end of
 /// the list. Pull-to-refresh reloads everything, and so does coming back after
 /// a real stretch in the background. Live cards and channels open the channel
 /// (`/users/:userId`); video cards open the video
@@ -16,6 +16,7 @@ import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/pagination/paged_feed.dart';
 import 'package:letslive_mobile/core/providers.dart';
+import 'package:letslive_mobile/core/router/app_chrome.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
 import 'package:letslive_mobile/core/router/header_actions.dart';
 import 'package:letslive_mobile/core/widgets/feed_section.dart';
@@ -24,9 +25,6 @@ import 'package:letslive_mobile/features/home/data/vod.dart';
 import 'package:letslive_mobile/features/home/domain/media_format.dart';
 import 'package:letslive_mobile/features/home/home_providers.dart';
 import 'package:letslive_mobile/features/home/presentation/media_card.dart';
-import 'package:letslive_mobile/features/user/data/public_user.dart';
-import 'package:letslive_mobile/features/user/presentation/user_avatar.dart';
-import 'package:letslive_mobile/features/user/user_providers.dart';
 
 /// How close to the end of the list (in logical pixels) the next page of
 /// videos starts loading: the list builds the [PagedFooter], which triggers
@@ -83,21 +81,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final apiBaseUrl = ref.watch(appConfigProvider).apiBaseUrl;
     final live = ref.watch(popularLiveProvider);
     final vods = ref.watch(popularVodsProvider);
-    final following = ref.watch(followingChannelsProvider);
-    final recommended = ref.watch(recommendedChannelsProvider);
     final now = DateTime.now();
-
-    // Web hides followed channels from the recommended list. If the following
-    // request failed, recommended may include channels the user follows.
-    final followedIds = {
-      for (final user in following.value ?? const <PublicUser>[]) user.id,
-    };
-    final recommendedNotFollowed = recommended.whenData(
-      (users) => [
-        for (final user in users)
-          if (!followedIds.contains(user.id)) user,
-      ],
-    );
 
     // The rows are plain widgets in a lazy list: only the visible cards (plus
     // a little ahead) are built, however many pages of videos were loaded.
@@ -122,25 +106,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
-      FeedSection(
-        key: const ValueKey('section-following'),
-        title: l10n.common_following,
-        value: following,
-        onRetry: () => ref.invalidate(followingChannelsProvider),
-        builder: (context, users) => _ChannelRow(users: users),
-      ),
-      FeedSection(
-        key: const ValueKey('section-recommended'),
-        title: l10n.common_recommended,
-        value: recommendedNotFollowed,
-        onRetry: () => ref.invalidate(recommendedChannelsProvider),
-        builder: (context, users) => _ChannelRow(users: users),
-      ),
       SectionHeader(l10n.common_videos),
       ..._vodRows(l10n, apiBaseUrl, vods, now),
     ];
 
-    return Scaffold(
+    return TabScaffold(
       appBar: AppBar(
         title: Text(l10n.common_app_title),
         actions: const [HeaderActions()],
@@ -221,54 +191,4 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         '${timeAgo(l10n, vod.createdAt, now)}',
     onTap: () => context.push(AppRoutes.vod(vod.userId, vod.id)),
   );
-}
-
-/// Horizontal avatar + name strip of channels; a tap opens the channel.
-class _ChannelRow extends StatelessWidget {
-  const _ChannelRow({required this.users});
-
-  final List<PublicUser> users;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    // Avatar (56) + gap (4) + one line of the name; grows with the text scale
-    // so large accessibility fonts do not overflow.
-    final nameHeight = MediaQuery.textScalerOf(context)
-        .scale((textTheme.bodySmall?.fontSize ?? 12) * 1.5);
-    return SizedBox(
-      height: 60 + nameHeight,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: _cardPadding,
-        itemCount: users.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 16),
-        itemBuilder: (context, index) {
-          final user = users[index];
-          return InkWell(
-            onTap: () => context.push(AppRoutes.channel(user.id)),
-            child: SizedBox(
-              width: 64,
-              child: Column(
-                children: [
-                  UserAvatar(
-                    pictureUrl: user.profilePicture,
-                    name: user.username,
-                    radius: 28,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user.username,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
 }

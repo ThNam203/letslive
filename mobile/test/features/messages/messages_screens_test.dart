@@ -406,12 +406,7 @@ void main() {
         .login('b@example.com', testPassword);
     await tester.pumpAndSettle();
     await loggedIn;
-    await tester.tap(
-      find.descendant(
-        of: find.byType(NavigationBar),
-        matching: find.text('Messages'),
-      ),
-    );
+    await tester.tap(find.byTooltip('Messages'));
     await tester.pumpAndSettle();
 
     expect(app.requestsTo('/conversations'), hasLength(2));

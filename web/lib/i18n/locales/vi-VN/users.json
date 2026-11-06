@@ -9,7 +9,8 @@
         "tabs": {
             "home": "Trang chủ",
             "videos": "Video",
-            "about": "Giới thiệu"
+            "about": "Giới thiệu",
+            "people": "Mọi người"
         },
         "latest_video": "Video mới nhất",
         "more_videos": "Video khác",
@@ -33,6 +34,8 @@
         "quality_auto": "Tự động",
         "picture_in_picture": "Hình trong hình",
         "play": "Phát",
-        "pause": "Tạm dừng"
+        "pause": "Tạm dừng",
+        "fullscreen": "Toàn màn hình",
+        "exit_fullscreen": "Thoát toàn màn hình"
     }
 }

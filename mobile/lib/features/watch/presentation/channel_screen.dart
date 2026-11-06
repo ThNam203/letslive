@@ -1,14 +1,17 @@
 /// The channel screen, `/users/:userId` (web `app/(main)/users/[userId]`):
 /// the live player and title while the user streams, otherwise an offline
 /// notice. A stream that ends while watched turns into an "ended" notice;
-/// an unknown user shows "not found". Every notice has a way back. Held
-/// sideways, a live channel shows only the player (the fullscreen mode).
+/// an unknown user shows "not found". Every notice has a way back. There is
+/// no app bar (the system back leaves); held sideways, or after the player's
+/// full-screen button, a live channel shows only the player.
 ///
 /// Under the player (or the offline / ended notice) sits the profile
 /// (`features/profile`): header with the follow button and the tabs Chat /
 /// Home / Videos / About, Chat being the default one. How the end of a
 /// stream is noticed is described in `watch_providers.dart`.
 library;
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,6 +28,7 @@ import 'package:letslive_mobile/features/watch/chat/presentation/chat_panel.dart
 import 'package:letslive_mobile/features/watch/domain/channel_state.dart';
 import 'package:letslive_mobile/features/watch/domain/live_stream_url.dart';
 import 'package:letslive_mobile/features/watch/presentation/live_player_view.dart';
+import 'package:letslive_mobile/features/watch/presentation/player_chrome.dart';
 import 'package:letslive_mobile/features/watch/watch_providers.dart';
 
 /// The channel of [userId].
@@ -41,12 +45,6 @@ class ChannelScreen extends ConsumerWidget {
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     final channel = ref.watch(channelProvider(userId));
     final state = channel.value;
-    final user = switch (state) {
-      ChannelLive(:final user) ||
-      ChannelOffline(:final user) ||
-      ChannelEnded(:final user) => user,
-      ChannelNotFound() || null => null,
-    };
 
     final error = channel.error;
     final Widget body;
@@ -94,21 +92,10 @@ class ChannelScreen extends ConsumerWidget {
       };
     }
 
-    // Sideways, a live channel shows only its player (see _LiveBody).
-    final playerOnly = isLandscape(context) && body is _LiveBody;
-    return Scaffold(
-      appBar: playerOnly
-          ? null
-          : AppBar(
-              title: user == null
-                  ? null
-                  : Text(
-                      user.username,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-            ),
+    return WatchScaffold(
       body: body,
+      // Sideways, a loaded player screen shows only its player.
+      playerOnly: isLandscape(context) && body is _LiveBody,
     );
   }
 }
@@ -159,6 +146,12 @@ class _LiveBody extends ConsumerStatefulWidget {
 class _LiveBodyState extends ConsumerState<_LiveBody> {
   var _playerKey = GlobalKey();
   final _chatKey = GlobalKey();
+
+  @override
+  void dispose() {
+    unawaited(resetPlayerOrientation());
+    super.dispose();
+  }
 
   @override
   void didUpdateWidget(_LiveBody old) {

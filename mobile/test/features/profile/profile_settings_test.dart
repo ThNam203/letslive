@@ -38,12 +38,7 @@ void main() {
       final app = await pumpRoute(tester, FakeProfileServer(), AppRoutes.home);
       expect(app.container.read(appRouterProvider), isNotNull);
 
-      await tester.tap(
-        find.descendant(
-          of: find.byType(NavigationBar),
-          matching: find.text('Profile'),
-        ),
-      );
+      await tester.tap(find.byTooltip('Profile'));
       await tester.pumpAndSettle();
       expect(find.text('abcdef'), findsOneWidget);
 

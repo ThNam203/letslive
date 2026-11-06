@@ -3,13 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/providers.dart';
+import 'package:letslive_mobile/core/router/app_chrome.dart';
 import 'package:letslive_mobile/core/router/app_tabs.dart';
 
 /// The signed-in app frame: the current tab above a bottom navigation bar.
 ///
-/// - The bar lists [tabs] (see `appTabs` for how a task adds one) and is
-///   hidden while there are fewer than two (Flutter requires at least two
-///   destinations).
+/// - The bar lists [tabs] (see `appTabs` for how a task adds one) as icons
+///   only, and is left out while there are fewer than two (Flutter requires
+///   at least two destinations).
+/// - Like YouTube, scrolling a tab's content down slides the bottom bar and
+///   the tab's top bar away; scrolling up brings them back
+///   (`app_chrome.dart`).
 /// - Each tab keeps its own navigation stack and state while another tab is
 ///   shown ([StatefulShellRoute.indexedStack]).
 /// - The realtime socket pauses while the app is in the background and
@@ -54,6 +58,9 @@ class AppShell extends ConsumerStatefulWidget {
 class _AppShellState extends ConsumerState<AppShell> {
   late final AppLifecycleListener _lifecycle;
 
+  /// Whether the bars show; scrolling a tab's content hides them.
+  final _barsVisible = ValueNotifier(true);
+
   @override
   void initState() {
     super.initState();
@@ -66,7 +73,14 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   void dispose() {
     _lifecycle.dispose();
+    _barsVisible.dispose();
     super.dispose();
+  }
+
+  void _selectTab(int index) {
+    final shell = widget.navigationShell;
+    // Tapping the current tab goes back to its root screen.
+    shell.goBranch(index, initialLocation: index == shell.currentIndex);
   }
 
   @override
@@ -78,29 +92,49 @@ class _AppShellState extends ConsumerState<AppShell> {
     final badges = [
       for (final tab in tabs) tab.badge == null ? 0 : ref.watch(tab.badge!),
     ];
-    return Scaffold(
-      body: shell,
-      bottomNavigationBar: tabs.length < 2
-          ? null
-          : NavigationBar(
-              selectedIndex: shell.currentIndex,
-              // Tapping the current tab goes back to its root screen.
-              onDestinationSelected: (index) => shell.goBranch(
-                index,
-                initialLocation: index == shell.currentIndex,
-              ),
-              destinations: [
-                for (var i = 0; i < tabs.length; i++)
-                  NavigationDestination(
-                    icon: Badge.count(
-                      count: badges[i],
-                      isLabelVisible: badges[i] > 0,
-                      child: Icon(tabs[i].icon),
-                    ),
-                    label: tabs[i].label(l10n),
+    // Icons only; the label stays as the tooltip and for screen readers.
+    final bar = tabs.length < 2
+        ? null
+        : NavigationBar(
+            height: _barHeight,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+            selectedIndex: shell.currentIndex,
+            onDestinationSelected: _selectTab,
+            destinations: [
+              for (var i = 0; i < tabs.length; i++)
+                NavigationDestination(
+                  icon: Badge.count(
+                    count: badges[i],
+                    isLabelVisible: badges[i] > 0,
+                    child: Icon(tabs[i].icon),
                   ),
-              ],
-            ),
+                  label: tabs[i].label(l10n),
+                ),
+            ],
+          );
+    return AppChrome(
+      visible: _barsVisible,
+      child: Scaffold(
+        body: NotificationListener<ScrollNotification>(
+          onNotification: (event) => updateChromeOnScroll(_barsVisible, event),
+          child: shell,
+        ),
+        bottomNavigationBar: bar == null
+            ? null
+            : ValueListenableBuilder<bool>(
+                valueListenable: _barsVisible,
+                builder: (context, visible, bar) => CollapsibleBar(
+                  visible: visible,
+                  alignment: Alignment.topCenter,
+                  child: bar!,
+                ),
+                child: bar,
+              ),
+      ),
     );
   }
 }
+
+/// Bottom bar height without labels (Material's default leaves room for
+/// them).
+const double _barHeight = 64;

@@ -4,6 +4,7 @@ import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/features/profile/presentation/profile_about_tab.dart';
 import 'package:letslive_mobile/features/profile/presentation/profile_header.dart';
 import 'package:letslive_mobile/features/profile/presentation/profile_home_tab.dart';
+import 'package:letslive_mobile/features/profile/presentation/profile_people_tab.dart';
 import 'package:letslive_mobile/features/profile/presentation/profile_videos_tab.dart';
 import 'package:letslive_mobile/features/user/data/public_user.dart';
 import 'package:letslive_mobile/features/user/user_providers.dart';
@@ -11,10 +12,14 @@ import 'package:letslive_mobile/features/user/user_providers.dart';
 /// Height of the tab bar (Material's fixed tab height).
 const double profileTabBarHeight = 48;
 
+/// The tabs a profile can have, in display order.
+enum _ProfileTab { chat, home, videos, about, people }
+
 /// A profile (web `ProfileView`): [ProfileHeader], then tabs Home / Videos /
 /// About, with [chat] as an extra first tab when given (a channel's live
-/// chat; the own profile has none). Fills the height it gets; each tab
-/// scrolls on its own.
+/// chat; the own profile has none) and People last when [showPeople] (the
+/// own profile: followed and recommended channels). Fills the height it
+/// gets; each tab scrolls on its own.
 ///
 /// [user] is what the parent loaded; the live copy from
 /// [publicUserProvider] replaces it, so following changes the count here.
@@ -27,6 +32,7 @@ class ProfileTabs extends ConsumerStatefulWidget {
     this.chat,
     this.showBanner = true,
     this.compact = false,
+    this.showPeople = false,
     super.key,
   });
 
@@ -42,6 +48,9 @@ class ProfileTabs extends ConsumerStatefulWidget {
   /// See the class doc.
   final bool compact;
 
+  /// Adds the People tab (see the class doc).
+  final bool showPeople;
+
   @override
   ConsumerState<ProfileTabs> createState() => _ProfileTabsState();
 }
@@ -50,15 +59,19 @@ class _ProfileTabsState extends ConsumerState<ProfileTabs>
     with SingleTickerProviderStateMixin {
   late final TabController _controller;
 
-  bool get _hasChat => widget.chat != null;
-
-  /// Index of the Videos tab.
-  int get _videosIndex => _hasChat ? 2 : 1;
+  /// The tabs shown, fixed for the widget's life.
+  late final List<_ProfileTab> _tabs = [
+    if (widget.chat != null) _ProfileTab.chat,
+    _ProfileTab.home,
+    _ProfileTab.videos,
+    _ProfileTab.about,
+    if (widget.showPeople) _ProfileTab.people,
+  ];
 
   @override
   void initState() {
     super.initState();
-    _controller = TabController(length: _hasChat ? 4 : 3, vsync: this)
+    _controller = TabController(length: _tabs.length, vsync: this)
       ..addListener(_onTabChanged);
   }
 
@@ -82,20 +95,21 @@ class _ProfileTabsState extends ConsumerState<ProfileTabs>
         ref.watch(publicUserProvider(widget.user.id)).value ?? widget.user;
     final chat = widget.chat;
     final compact = widget.compact && chat != null;
-    final tab = _controller.index - (_hasChat ? 1 : 0);
     // Only the selected tab is built, except the chat: it stays mounted
     // (hidden) so its room subscription, scroll position and typed draft
     // survive a visit to another tab. In compact mode the chat shows in the
     // same place in the tree, so opening the keyboard never rebuilds it.
-    final other = switch (tab) {
+    final other = switch (_tabs[_controller.index]) {
       _ when compact => null,
-      < 0 => null,
-      0 => ProfileHomeTab(
+      _ProfileTab.chat => null,
+      _ProfileTab.home => ProfileHomeTab(
         user: user,
-        onViewAll: () => _controller.animateTo(_videosIndex),
+        onViewAll: () =>
+            _controller.animateTo(_tabs.indexOf(_ProfileTab.videos)),
       ),
-      1 => ProfileVideosTab(user: user),
-      _ => ProfileAboutTab(user: user),
+      _ProfileTab.videos => ProfileVideosTab(user: user),
+      _ProfileTab.about => ProfileAboutTab(user: user),
+      _ProfileTab.people => const ProfilePeopleTab(),
     };
     return Column(
       children: [
@@ -106,10 +120,16 @@ class _ProfileTabsState extends ConsumerState<ProfileTabs>
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             tabs: [
-              if (_hasChat) Tab(text: l10n.chat_title),
-              Tab(text: l10n.users_channel_tabs_home),
-              Tab(text: l10n.users_channel_tabs_videos),
-              Tab(text: l10n.users_channel_tabs_about),
+              for (final tab in _tabs)
+                Tab(
+                  text: switch (tab) {
+                    _ProfileTab.chat => l10n.chat_title,
+                    _ProfileTab.home => l10n.users_channel_tabs_home,
+                    _ProfileTab.videos => l10n.users_channel_tabs_videos,
+                    _ProfileTab.about => l10n.users_channel_tabs_about,
+                    _ProfileTab.people => l10n.users_channel_tabs_people,
+                  },
+                ),
             ],
           ),
         ],

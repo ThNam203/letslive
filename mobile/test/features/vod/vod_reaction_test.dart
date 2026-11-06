@@ -141,7 +141,7 @@ void main() {
     final app = await pumpVod(tester, server, FakePlayers());
     expect(app.requestsTo('${ApiEndpoints.vods}/vod-1/reaction'), hasLength(1));
 
-    await tester.pageBack();
+    await tester.binding.handlePopRoute(); // System back: no app bar here.
     await tester.pumpAndSettle();
     server.reaction = null;
     // Open it again from the router.

@@ -63,14 +63,9 @@ void main() {
     expect(find.text('B video'), findsOneWidget);
     expect(find.text('Video 0'), findsNothing);
 
-    await tester.pageBack();
+    await tester.binding.handlePopRoute(); // System back: no app bar here.
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.descendant(
-        of: find.byType(NavigationBar),
-        matching: find.text('Profile'),
-      ),
-    );
+    await tester.tap(find.byTooltip('Profile'));
     await tester.pumpAndSettle();
     expect(app.requestsTo('${ApiEndpoints.user}/u-9'), hasLength(1));
     expect(find.text('bravo'), findsOneWidget);

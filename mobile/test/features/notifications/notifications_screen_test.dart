@@ -282,12 +282,7 @@ void main() {
     expect(labels, ['Home', 'Messages', 'Profile']);
 
     for (final tab in labels) {
-      await tester.tap(
-        find.descendant(
-          of: find.byType(NavigationBar),
-          matching: find.text(tab),
-        ),
-      );
+      await tester.tap(find.byTooltip(tab));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('open-search')), findsOneWidget);
       expect(find.byKey(const ValueKey('open-notifications')), findsOneWidget);
