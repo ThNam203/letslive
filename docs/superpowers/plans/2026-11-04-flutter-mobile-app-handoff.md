@@ -20,7 +20,7 @@ Status as of 2026-11-05, for the owner to review later. The plan is
 - Coverage when last measured: data 84%, state/providers 92%, lib 83%.
 - Release steps, required secrets and the device checklist are in
   `mobile/README.md` under "Release checklist". Backend gaps are in
-  `docs/ISSUES.md`. Web/mobile differences are in `docs/PARITY.md`.
+  `docs/ISSUES.md`, mobile ones in `docs/MOBILE_ISSUES.md`. Web/mobile differences are in `docs/PARITY.md`.
 
 ## What needs the owner
 
@@ -98,9 +98,12 @@ checklist has the detail.
 - L15: pushes are not localized.
 - L16: account deletion.
 - W7: web `REFRESH_EXCLUDE_PATHS` lists a nonexistent `/auth/register`.
-- Mobile M1–M4: coarse `parity_check` accounting, plural forms not
-  reconciled across locales, the duplicated `Info-Dev.plist`, and feed cards
-  refetching their owner on scroll-back.
+- Mobile M1–M12 are in `docs/MOBILE_ISSUES.md`. They include:
+  - the profile header that does not scroll away;
+  - the shared player code living in the live player's file;
+  - no device check of the 2026-11-06 UI changes;
+  - the full-screen orientation and system-bar compromises;
+  - coarse `parity_check` accounting.
 
 ## Decisions made during the build
 

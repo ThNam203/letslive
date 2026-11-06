@@ -324,31 +324,7 @@ File: [web/utils/fetchClient.ts:120](web/utils/fetchClient.ts#L120)
 
 ## Mobile app
 
-_Added 2026-11-05 from the final review of the Flutter app (`mobile/`, branch `feat/mobile-app`). Tooling and performance gaps; nothing here is a wrong behavior shipped today._
-
-### 🟡 MEDIUM
-
-**M1. `parity_check` accounting is coarse**
-A prefix such as `/user` or `/vods` accounts for every sub-endpoint under it. `fetchClient` calls with non-literal paths are skipped. Changes under `web/types` are not checked, although the spec asks for it.
-Fix: per-path accounting, and a warning on skipped calls.
-File: [mobile/tool/parity_check.dart](mobile/tool/parity_check.dart)
-
-### 🟢 LOW
-
-**M2. Plural forms are not reconciled across locales**
-`sync_locales` copies each plural key as it is; it does not check that `en` and `vi` have the same categories.
-Fix: check that each plural key has the same categories in both locales.
-File: [mobile/tool/sync_locales.dart](mobile/tool/sync_locales.dart)
-
-**M3. `Info-Dev.plist` duplicates `Info.plist`**
-Every plist change (purpose strings, URL types) must be made in both files.
-Fix: one plist, with the dev ATS exception from a build setting.
-Files: [mobile/ios/Runner/Info.plist](mobile/ios/Runner/Info.plist), [mobile/ios/Runner/Info-Dev.plist](mobile/ios/Runner/Info-Dev.plist)
-
-**M4. Feed cards refetch their owner on scroll-back**
-`publicUserProvider` is an `autoDispose` family, so a card scrolled out and back in fetches its owner again.
-Fix: `ref.keepAlive()` with a short timer, or pass the owner from the list response.
-File: [mobile/lib/features/user/user_providers.dart:26-30](mobile/lib/features/user/user_providers.dart#L26-L30)
+Moved to [MOBILE_ISSUES.md](MOBILE_ISSUES.md) (M1–M12).
 
 ---
 
