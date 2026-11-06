@@ -38,6 +38,23 @@ void main() {
     expect(players.last.title, 'Best of week');
   });
 
+  testWidgets('the uploader row and a short description span the full '
+      'width', (tester) async {
+    final server = FakeVodServer()
+      ..vodById = {'vod-1': vodDetailJson(description: 'Hi')};
+    await pumpVod(tester, server, FakePlayers(), width: 400, height: 2000);
+
+    // The screen minus the 16 px side padding.
+    const content = 400 - 2 * 16;
+    final box = tester.getSize(
+      find.byKey(const ValueKey('vod-description-box')),
+    );
+    expect(box.width, content);
+    final uploader = tester.getRect(find.byKey(const ValueKey('vod-uploader')));
+    expect(uploader.left, 16);
+    expect(uploader.width, greaterThan(content / 2));
+  });
+
   testWidgets('shows a spinner while the video loads', (tester) async {
     final server = FakeVodServer()..holdVod = Completer<void>();
     await pumpVod(tester, server, FakePlayers(), settle: false);

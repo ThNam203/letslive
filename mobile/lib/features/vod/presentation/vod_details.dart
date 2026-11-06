@@ -138,7 +138,10 @@ class VodDetails extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
-          DecoratedBox(
+          // Full width like web, however short the description.
+          Container(
+            key: const ValueKey('vod-description-box'),
+            width: double.infinity,
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
