@@ -1,5 +1,6 @@
 /// Edit the own profile (web `/settings/profile`): banner and profile
-/// picture, username, bio and social links.
+/// picture (tap either to change it, see [ProfileImagesHeader]), username,
+/// bio and social links.
 ///
 /// Like web, nothing is sent until Save. Save uploads the chosen banner,
 /// then the chosen picture (with a progress bar), then sends the changed text
@@ -11,7 +12,6 @@
 /// and language, on this page on web, are on the settings hub.
 library;
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:letslive_mobile/core/l10n/api_message.dart';
@@ -24,11 +24,11 @@ import 'package:letslive_mobile/features/auth/domain/auth_validators.dart';
 import 'package:letslive_mobile/features/auth/presentation/auth_widgets.dart';
 import 'package:letslive_mobile/features/settings/domain/image_checks.dart';
 import 'package:letslive_mobile/features/settings/presentation/disable_account_section.dart';
+import 'package:letslive_mobile/features/settings/presentation/profile_images_header.dart';
 import 'package:letslive_mobile/features/settings/settings_providers.dart';
 import 'package:letslive_mobile/features/user/data/me_user.dart';
 import 'package:letslive_mobile/features/user/data/picked_image.dart';
 import 'package:letslive_mobile/features/user/data/social_links.dart';
-import 'package:letslive_mobile/features/user/presentation/user_avatar.dart';
 import 'package:letslive_mobile/features/user/user_providers.dart';
 
 /// Names shown for the social platforms (brand names, not translated; web
@@ -261,32 +261,14 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _Banner(pending: _background, url: me.backgroundPicture),
-          Wrap(
-            spacing: 8,
-            children: [
-              OutlinedButton.icon(
-                key: const ValueKey('pick-background'),
-                onPressed: _busy ? null : () => _pick(avatar: false),
-                icon: const Icon(Icons.image_outlined),
-                label: Text(l10n.settings_profile_update_background),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _avatarPreview(me),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  key: const ValueKey('pick-avatar'),
-                  onPressed: _busy ? null : () => _pick(avatar: true),
-                  icon: const Icon(Icons.photo_camera_outlined),
-                  label: Text(l10n.settings_profile_update_profile_picture),
-                ),
-              ),
-            ],
+          ProfileImagesHeader(
+            pendingBackground: _background,
+            backgroundUrl: me.backgroundPicture,
+            pendingAvatar: _avatar,
+            avatarUrl: me.profilePicture,
+            name: me.username,
+            onPickBackground: _busy ? null : () => _pick(avatar: false),
+            onPickAvatar: _busy ? null : () => _pick(avatar: true),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -354,54 +336,6 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
           const SizedBox(height: 8),
           const DisableAccountSection(),
         ],
-      ),
-    );
-  }
-
-  Widget _avatarPreview(MeUser me) {
-    final pending = _avatar;
-    if (pending == null) {
-      return UserAvatar(
-        pictureUrl: me.profilePicture,
-        name: me.username,
-        radius: 32,
-      );
-    }
-    return CircleAvatar(
-      radius: 32,
-      backgroundImage: MemoryImage(pending.bytes),
-    );
-  }
-}
-
-/// The banner preview: the chosen image, else the saved one, else a flat
-/// placeholder.
-class _Banner extends StatelessWidget {
-  const _Banner({required this.pending, required this.url});
-
-  final PickedImage? pending;
-  final String? url;
-
-  @override
-  Widget build(BuildContext context) {
-    final image = pending;
-    final saved = url;
-    return AspectRatio(
-      aspectRatio: 3,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: ColoredBox(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          child: image != null
-              ? Image.memory(image.bytes, fit: BoxFit.cover)
-              : saved == null
-              ? null
-              : CachedNetworkImage(
-                  imageUrl: saved,
-                  fit: BoxFit.cover,
-                  errorWidget: (_, _, _) => const SizedBox.shrink(),
-                ),
-        ),
       ),
     );
   }

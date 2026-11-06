@@ -243,6 +243,27 @@ void main() {
   });
 
   group('pictures', () {
+    testWidgets('the pictures themselves are the change buttons, like web', (
+      tester,
+    ) async {
+      await pumpRoute(tester, FakeProfileServer(), AppRoutes.settingsProfile);
+
+      // No separate text buttons: each picture says what a tap does.
+      expect(find.byType(OutlinedButton), findsNothing);
+      expect(find.byTooltip('Update background'), findsOneWidget);
+      expect(find.byTooltip('Update profile picture'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: field('pick-avatar'),
+          matching: find.byType(InkWell),
+          matchRoot: true,
+        ),
+        findsOneWidget,
+      );
+      // Both pictures carry the camera badge.
+      expect(find.byIcon(Icons.photo_camera_outlined), findsNWidgets(2));
+    });
+
     testWidgets('image upload sends multipart and shows progress', (
       tester,
     ) async {
