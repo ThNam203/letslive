@@ -1,4 +1,5 @@
-/// The Notifications tab (web `/notifications`): the user's notifications,
+/// The notifications screen (web `/notifications`), opened from the header
+/// bell: the user's notifications,
 /// newest first, unread ones marked. Tapping a row marks it read and opens
 /// what it is about; a menu on the row marks it read or deletes it, and the
 /// app bar marks everything read.
@@ -17,7 +18,7 @@ import 'package:letslive_mobile/features/notifications/data/app_notification.dar
 import 'package:letslive_mobile/features/notifications/domain/time_ago.dart';
 import 'package:letslive_mobile/features/notifications/notifications_providers.dart';
 
-/// The Notifications tab screen.
+/// The notifications screen.
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 

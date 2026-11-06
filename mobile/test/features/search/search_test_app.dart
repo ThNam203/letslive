@@ -51,7 +51,8 @@ class FakeSearchServer extends FakeHomeServer {
   }
 }
 
-/// Pumps the signed-in app against [server] and opens the Search tab.
+/// Pumps the signed-in app against [server] and opens search from the
+/// header.
 Future<TestApp> pumpSearch(
   WidgetTester tester,
   FakeSearchServer server, {
@@ -68,15 +69,19 @@ Future<TestApp> pumpSearch(
     textScale: textScale,
     overrides: overrides,
   );
-  await tester.tap(
-    find.descendant(
-      of: find.byType(NavigationBar),
-      matching: find.text('Search'),
-    ),
-  );
+  await tester.tap(find.byKey(const ValueKey('open-search')));
   await tester.pumpAndSettle();
   return app;
 }
+
+/// The vertical results list (the search box and the type tabs above it
+/// scroll sideways).
+Finder resultsList() => find
+    .byWidgetPredicate(
+      (widget) =>
+          widget is Scrollable && widget.axisDirection == AxisDirection.down,
+    )
+    .last;
 
 /// Types [text] into the search box and waits for the debounce and the
 /// answers.

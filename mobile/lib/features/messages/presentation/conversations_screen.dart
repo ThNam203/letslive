@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
+import 'package:letslive_mobile/core/router/header_actions.dart';
 import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/messages/data/dm_models.dart';
 import 'package:letslive_mobile/features/messages/messages_providers.dart';
@@ -50,6 +51,7 @@ class ConversationsScreen extends ConsumerWidget {
             icon: const Icon(Icons.add),
             onPressed: () => context.push(AppRoutes.newConversation),
           ),
+          const HeaderActions(),
         ],
       ),
       body: RefreshIndicator(

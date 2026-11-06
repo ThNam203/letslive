@@ -69,19 +69,24 @@ dart format --set-exit-if-changed lib test tool contract_test integration_test
 
 Signed-in screens live in `AppShell` (`lib/core/router/app_shell.dart`): the
 current tab above a bottom `NavigationBar`. The tabs come from one registry,
-`appTabs` in `lib/core/router/app_tabs.dart`, in display order (Home, Search,
-Notifications, Messages, Profile). **To add a tab**, insert one `AppTab`
-(`path`, `icon`, `label` from l10n, `builder`) at its place in that list;
-the router branches and the bar are built from it, nothing else to wire. There
-are no placeholder tabs: a tab appears when its screen exists, and the bar is
-hidden while fewer than two tabs are registered. Each tab keeps its own
-navigation stack. The shell also pauses the realtime socket in the background
-and resumes it on return.
+`appTabs` in `lib/core/router/app_tabs.dart`, in display order (Home,
+Messages, Profile). **To add a tab**, insert one `AppTab` (`path`, `icon`,
+`label` from l10n, `builder`) at its place in that list; the router branches
+and the bar are built from it, nothing else to wire. The bar is hidden while
+fewer than two tabs are registered. Each tab keeps its own navigation stack.
+The shell also pauses the realtime socket in the background and resumes it on
+return.
+
+Search and notifications are not tabs. Like web's top navbar, every tab's app
+bar ends with `HeaderActions` (`lib/core/router/header_actions.dart`): a
+search button and the notification bell with its unread count, each opening
+its screen over the tabs with a back arrow.
 
 ## Notifications and push
 
-The Notifications tab (`lib/features/notifications/`) lists the user's
-notifications and counts unread ones on its tab icon; new ones arrive live
+The notifications screen (`lib/features/notifications/`), opened from the
+header bell, lists the user's notifications; the bell counts unread ones. New
+ones arrive live
 over the realtime socket (`notification.created`). Push notifications
 (`lib/core/push/`) reach the user while the app is closed or in the
 background:
@@ -93,7 +98,8 @@ background:
   and deleted locally, so a logged-out device gets no more pushes.
 - **Taps.** A tap opens the screen the push names (`resolveDeepLink` in
   `lib/core/push/push_tap.dart`): a DM opens its conversation, a comment its
-  video, anything else the notifications tab. Only the app's own routes are
+  video, anything else the notifications screen. Each opens over the current
+  screen, so back returns to it. Only the app's own routes are
   ever opened.
 - **Foreground.** The server skips the push for a user with a live realtime
   connection, and the app shows nothing for a push that arrives while open
@@ -137,7 +143,8 @@ Steps:
    in-app notification arrives within a few seconds (Android channel
    "Notifications" / "Thông báo").
 4. Tap it. Expected: the app opens on the matching screen (DM: the
-   conversation; comment: the video; follow or other: the Notifications tab),
+   conversation; comment: the video; follow or other: the notifications
+   screen),
    with back returning to the tabs. Repeat once with the app fully closed.
 5. Keep the app open on screen and repeat step 3. Expected: no system
    notification; the Notifications (or Messages) tab badge goes up instead.

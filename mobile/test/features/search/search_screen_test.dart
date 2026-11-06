@@ -116,7 +116,7 @@ void main() {
     expect(vods.last.queryParameters, {'q': 'tro', 'page': 0, 'limit': 20});
     expect(find.textContaining('vod 24'), findsNothing);
 
-    await tester.drag(find.byType(Scrollable).last, const Offset(0, -20000));
+    await tester.drag(resultsList(), const Offset(0, -20000));
     await tester.pumpAndSettle();
 
     expect(
@@ -124,7 +124,7 @@ void main() {
       1,
     );
     // The page that arrived is below the old end of the list.
-    await tester.drag(find.byType(Scrollable).last, const Offset(0, -20000));
+    await tester.drag(resultsList(), const Offset(0, -20000));
     await tester.pumpAndSettle();
     expect(find.textContaining('vod 24'), findsOne);
   });
@@ -142,14 +142,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.drag(find.byType(Scrollable).last, const Offset(0, -20000));
+    await tester.drag(resultsList(), const Offset(0, -20000));
     await tester.pumpAndSettle();
     expect(find.text('Try again'), findsOne);
 
     server.failSearchPage = null;
     await tester.tap(find.text('Try again'));
     await tester.pumpAndSettle();
-    await tester.drag(find.byType(Scrollable).last, const Offset(0, -20000));
+    await tester.drag(resultsList(), const Offset(0, -20000));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('live 24'), findsOne);

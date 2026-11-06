@@ -16,6 +16,8 @@ import 'package:letslive_mobile/features/creator/presentation/stream_settings_sc
 import 'package:letslive_mobile/features/creator/presentation/upload_screen.dart';
 import 'package:letslive_mobile/features/messages/presentation/conversation_screen.dart';
 import 'package:letslive_mobile/features/messages/presentation/new_conversation_screen.dart';
+import 'package:letslive_mobile/features/notifications/presentation/notifications_screen.dart';
+import 'package:letslive_mobile/features/search/presentation/search_screen.dart';
 import 'package:letslive_mobile/features/settings/presentation/profile_settings_screen.dart';
 import 'package:letslive_mobile/features/settings/presentation/security_screen.dart';
 import 'package:letslive_mobile/features/settings/presentation/settings_screen.dart';
@@ -71,6 +73,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         authRedirect(session.value, state.matchedLocation),
     routes: [
       AppShell.route(appTabs),
+      // Opened from the header (HeaderActions) over the tabs, with back.
+      GoRoute(
+        path: AppRoutes.search,
+        builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (context, state) => const NotificationsScreen(),
+      ),
       // Above the shell: the player gets the whole screen, no tab bar.
       GoRoute(
         path: AppRoutes.channelPattern,

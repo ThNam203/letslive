@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:letslive_mobile/core/router/app_router.dart';
 import 'package:letslive_mobile/features/auth/auth_providers.dart';
 import 'package:letslive_mobile/features/auth/presentation/login_screen.dart';
+import 'package:letslive_mobile/features/notifications/notifications_providers.dart';
 
 import '../auth/auth_test_app.dart';
 import 'notifications_test_app.dart';
@@ -13,8 +15,15 @@ FakeNotificationsServer _server() => FakeNotificationsServer()
     notificationJson('n-1', title: 'First'),
   ]);
 
-/// The badge count the Notifications tab shows (0 when hidden).
-int _badge(WidgetTester tester) {
+/// The unread count behind the header bell. The bell itself is covered while
+/// the notifications screen is open (it shows the count again on going back,
+/// see the bell test below), so this reads the count it shows.
+int _badge(WidgetTester tester) =>
+    ProviderScope.containerOf(tester.element(find.byType(Scaffold).first))
+        .read(notificationBadgeProvider);
+
+/// The number on the visible header bell (0 when hidden).
+int _bellLabel(WidgetTester tester) {
   final badge = tester.widget<Badge>(notificationsTabBadge());
   return badge.isLabelVisible ? int.parse((badge.label! as Text).data!) : 0;
 }
@@ -256,15 +265,53 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  notifTest('the tab order is Home, Search, Notifications, Messages, '
-      'Profile', (tester, socket, push) async {
-    await pumpNotifications(tester, _server(), socket: socket, push: push);
+  notifTest('the bar has Home, Messages, Profile; search and the bell are in '
+      'every tab header', (tester, socket, push) async {
+    await pumpNotifications(
+      tester,
+      _server(),
+      socket: socket,
+      push: push,
+      openTab: false,
+    );
 
     final labels = tester
         .widgetList<NavigationDestination>(find.byType(NavigationDestination))
         .map((d) => d.label)
         .toList();
-    expect(labels, ['Home', 'Search', 'Notifications', 'Messages', 'Profile']);
+    expect(labels, ['Home', 'Messages', 'Profile']);
+
+    for (final tab in labels) {
+      await tester.tap(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.text(tab),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('open-search')), findsOneWidget);
+      expect(find.byKey(const ValueKey('open-notifications')), findsOneWidget);
+    }
     expect(tester.takeException(), isNull);
+  });
+
+  notifTest('the bell opens notifications over the tabs and back returns', (
+    tester,
+    socket,
+    push,
+  ) async {
+    await pumpNotifications(tester, _server(), socket: socket, push: push);
+
+    expect(find.text('First'), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
+
+    // A notification arrives while the bell is covered.
+    await socket.push(tester, 'notification.created', _pushedJson('n-3'));
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(_bellLabel(tester), 2);
   });
 }

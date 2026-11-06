@@ -3,7 +3,8 @@ abstract final class AppRoutes {
   static const String home = '/';
   static const String search = '/search';
 
-  /// The Notifications tab (web `/notifications`). Also where a push tap
+  /// The notifications screen (web `/notifications`), opened from the header
+  /// bell. Also where a push tap
   /// lands when it names nothing the app can open.
   static const String notifications = '/notifications';
 

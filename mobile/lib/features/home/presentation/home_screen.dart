@@ -17,6 +17,7 @@ import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:letslive_mobile/core/pagination/paged_feed.dart';
 import 'package:letslive_mobile/core/providers.dart';
 import 'package:letslive_mobile/core/router/app_routes.dart';
+import 'package:letslive_mobile/core/router/header_actions.dart';
 import 'package:letslive_mobile/core/widgets/feed_section.dart';
 import 'package:letslive_mobile/features/home/data/livestream.dart';
 import 'package:letslive_mobile/features/home/data/vod.dart';
@@ -140,7 +141,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.common_app_title)),
+      appBar: AppBar(
+        title: Text(l10n.common_app_title),
+        actions: const [HeaderActions()],
+      ),
       body: RefreshIndicator(
         onRefresh: () => refreshHome(ref),
         child: ListView.builder(

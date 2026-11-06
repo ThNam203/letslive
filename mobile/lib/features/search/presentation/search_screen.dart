@@ -1,5 +1,5 @@
-/// The Search tab (web `/search`): a search box above the tabs All / Channels /
-/// Live / Videos.
+/// The search screen (web `/search`), opened from the header search button:
+/// a search box in the app bar above the tabs All / Channels / Live / Videos.
 ///
 /// - The box waits [searchDebounce] after the last keystroke, then searches
 ///   the trimmed text; an empty text shows a prompt and sends nothing, and
@@ -22,7 +22,7 @@ import 'package:letslive_mobile/features/search/presentation/search_result_rows.
 import 'package:letslive_mobile/features/search/presentation/search_type_tab.dart';
 import 'package:letslive_mobile/features/search/search_providers.dart';
 
-/// The Search tab's screen.
+/// The search screen.
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -78,51 +78,51 @@ class _SearchScreenState extends State<SearchScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    // Opened from the header over the tabs: the search box sits in the app
+    // bar next to the back arrow, and the result types below it.
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-              child: TextField(
-                key: const ValueKey('search-input'),
-                controller: _controller,
-                textInputAction: TextInputAction.search,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(FieldLimits.searchQueryMax),
-                ],
-                onChanged: _onChanged,
-                onSubmitted: _apply,
-                decoration: InputDecoration(
-                  hintText: l10n.common_search_placeholder,
-                  isDense: true,
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _controller.text.isEmpty
-                      ? null
-                      : IconButton(
-                          tooltip: l10n.accessibility_clear_search,
-                          icon: const Icon(Icons.close),
-                          onPressed: _clear,
-                        ),
-                ),
-              ),
+      appBar: AppBar(
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.only(right: 16),
+          child: TextField(
+            key: const ValueKey('search-input'),
+            controller: _controller,
+            autofocus: true,
+            textInputAction: TextInputAction.search,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(FieldLimits.searchQueryMax),
+            ],
+            onChanged: _onChanged,
+            onSubmitted: _apply,
+            decoration: InputDecoration(
+              hintText: l10n.common_search_placeholder,
+              isDense: true,
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _controller.text.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: l10n.accessibility_clear_search,
+                      icon: const Icon(Icons.close),
+                      onPressed: _clear,
+                    ),
             ),
-            TabBar(
-              controller: _tabs,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              onTap: (index) => _selectTab(SearchType.values[index]),
-              tabs: [
-                Tab(text: l10n.common_search_tabs_all),
-                Tab(text: l10n.common_search_tabs_users),
-                Tab(text: l10n.common_search_tabs_lives),
-                Tab(text: l10n.common_search_tabs_vods),
-              ],
-            ),
-            Expanded(child: _body(l10n)),
+          ),
+        ),
+        bottom: TabBar(
+          controller: _tabs,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
+          onTap: (index) => _selectTab(SearchType.values[index]),
+          tabs: [
+            Tab(text: l10n.common_search_tabs_all),
+            Tab(text: l10n.common_search_tabs_users),
+            Tab(text: l10n.common_search_tabs_lives),
+            Tab(text: l10n.common_search_tabs_vods),
           ],
         ),
       ),
+      body: _body(l10n),
     );
   }
 

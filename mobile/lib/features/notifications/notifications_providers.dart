@@ -227,8 +227,8 @@ class UnreadNotificationsNotifier extends AsyncNotifier<int> {
   }
 }
 
-/// The Notifications tab badge. The shell watches it for the whole session,
-/// which keeps the count (and so its realtime listener) alive.
+/// The count on the header bell. Every tab's header watches it, which keeps
+/// the count (and so its realtime listener) alive while the app is open.
 final notificationBadgeProvider = Provider.autoDispose<int>(
   (ref) => ref.watch(unreadNotificationCountProvider).value ?? 0,
 );

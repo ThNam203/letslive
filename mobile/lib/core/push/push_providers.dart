@@ -79,10 +79,8 @@ Future<void> _openTap(Ref ref, PushTap tap) async {
   if (session == null || !ref.mounted) return;
   final route = resolveDeepLink(tap);
   final router = ref.read(appRouterProvider);
-  // A tab is switched to; a screen is pushed over the tabs so back works.
-  if (route == AppRoutes.notifications) {
-    router.go(route);
-  } else {
-    unawaited(router.push<void>(route));
-  }
+  // Pushed over the current screen so back returns to it; a tap for the
+  // screen already on top does not stack a second copy.
+  if (router.state.uri.path == route) return;
+  unawaited(router.push<void>(route));
 }

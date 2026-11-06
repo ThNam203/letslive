@@ -188,8 +188,9 @@ Each line gives the decision, then its cost if it turns out to be wrong.
 
 ### Features
 
-- Tab registry order: Home, Search, Notifications, Messages, Profile, with no
-  placeholder tabs. Web's left bar (followed and recommended channels) became
+- Bottom tabs: Home, Messages, Profile (changed 2026-11-06 at your request).
+  Search and the notification bell sit at the top right of every tab's
+  header, like web's navbar, and open over the tabs. Web's left bar (followed and recommended channels) became
   home sections. Cost: none.
 - Home has one live list (`/popular-livestreams`), and VODs paginate. Cost:
   none.

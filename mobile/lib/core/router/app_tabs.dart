@@ -5,10 +5,7 @@ import 'package:letslive_mobile/core/router/app_routes.dart';
 import 'package:letslive_mobile/features/home/presentation/home_screen.dart';
 import 'package:letslive_mobile/features/messages/messages_providers.dart';
 import 'package:letslive_mobile/features/messages/presentation/conversations_screen.dart';
-import 'package:letslive_mobile/features/notifications/notifications_providers.dart';
-import 'package:letslive_mobile/features/notifications/presentation/notifications_screen.dart';
 import 'package:letslive_mobile/features/profile/presentation/own_profile_screen.dart';
-import 'package:letslive_mobile/features/search/presentation/search_screen.dart';
 
 /// One tab of the bottom navigation: where it lives, how it looks, what it
 /// shows.
@@ -39,33 +36,21 @@ class AppTab {
   final ProviderListenable<int>? badge;
 }
 
-/// The tab registry, in display order. The final order is Home, Search,
-/// Notifications, Messages, Profile.
+/// The tab registry, in display order: Home, Messages, Profile.
 ///
-/// To add a tab, a task inserts one [AppTab] at its place in this list
-/// (nothing else to wire: [AppShell] builds the navigation bar and the
-/// router builds the branches from it). No placeholder tabs: a tab appears
-/// only when its screen exists. The bar is hidden while fewer than two tabs
-/// are registered.
+/// Search and notifications are not tabs: they open from the
+/// `HeaderActions` at the top right of each tab, like web's navbar.
+///
+/// To add a tab, insert one [AppTab] at its place in this list (nothing else
+/// to wire: [AppShell] builds the navigation bar and the router builds the
+/// branches from it). The bar is hidden while fewer than two tabs are
+/// registered.
 final List<AppTab> appTabs = [
   AppTab(
     path: AppRoutes.home,
     icon: Icons.home_outlined,
     label: (l10n) => l10n.common_home,
     builder: (context) => const HomeScreen(),
-  ),
-  AppTab(
-    path: AppRoutes.search,
-    icon: Icons.search,
-    label: (l10n) => l10n.common_search_title,
-    builder: (context) => const SearchScreen(),
-  ),
-  AppTab(
-    path: AppRoutes.notifications,
-    icon: Icons.notifications_none,
-    label: (l10n) => l10n.notification_title,
-    builder: (context) => const NotificationsScreen(),
-    badge: notificationBadgeProvider,
   ),
   AppTab(
     path: AppRoutes.messages,

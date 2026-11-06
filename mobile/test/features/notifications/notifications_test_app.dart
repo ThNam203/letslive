@@ -225,22 +225,15 @@ Future<TestApp> pumpNotifications(
   return app;
 }
 
+/// Opens notifications from the bell in the current tab's header.
 Future<void> openNotificationsTab(WidgetTester tester) async {
-  await tester.tap(
-    find.descendant(
-      of: find.byType(NavigationBar),
-      matching: find.byIcon(Icons.notifications_none),
-    ),
-  );
+  await tester.tap(find.byKey(const ValueKey('open-notifications')));
   await tester.pumpAndSettle();
 }
 
-/// The badge on the Notifications tab icon.
-Finder notificationsTabBadge() => find.ancestor(
-  of: find.descendant(
-    of: find.byType(NavigationBar),
-    matching: find.byIcon(Icons.notifications_none),
-  ),
+/// The badge on the visible header bell.
+Finder notificationsTabBadge() => find.descendant(
+  of: find.byKey(const ValueKey('open-notifications')),
   matching: find.byType(Badge),
 );
 
