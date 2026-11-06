@@ -95,7 +95,6 @@ class _SearchScreenState extends State<SearchScreen>
                 onSubmitted: _apply,
                 decoration: InputDecoration(
                   hintText: l10n.common_search_placeholder,
-                  border: const OutlineInputBorder(),
                   isDense: true,
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: _controller.text.isEmpty

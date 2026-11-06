@@ -155,7 +155,6 @@ class _NewConversationScreenState extends ConsumerState<NewConversationScreen> {
                     ],
                     decoration: InputDecoration(
                       hintText: l10n.messages_group_name_placeholder,
-                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ],
@@ -184,7 +183,6 @@ class _NewConversationScreenState extends ConsumerState<NewConversationScreen> {
                   decoration: InputDecoration(
                     hintText: l10n.messages_search_users_placeholder,
                     prefixIcon: const Icon(Icons.search),
-                    border: const OutlineInputBorder(),
                   ),
                 ),
                 if (_query.length >= _minQueryLength)

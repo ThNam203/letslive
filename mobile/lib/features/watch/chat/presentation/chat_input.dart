@@ -199,7 +199,6 @@ class _ChatInputState extends ConsumerState<ChatInput> {
                   decoration: InputDecoration(
                     hintText: l10n.chat_placeholder_typing,
                     isDense: true,
-                    border: const OutlineInputBorder(),
                   ),
                   onChanged: _onChanged,
                   // Overridden so a send in flight does not also close the

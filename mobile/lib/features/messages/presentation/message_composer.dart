@@ -272,7 +272,6 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
                     decoration: InputDecoration(
                       hintText: l10n.messages_placeholder_type_message,
                       isDense: true,
-                      border: const OutlineInputBorder(),
                     ),
                     onChanged: _onChanged,
                   ),

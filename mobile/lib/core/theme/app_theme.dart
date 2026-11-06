@@ -44,11 +44,32 @@ final ColorScheme darkColorScheme = ColorScheme(
 /// Success color shared by both themes (`--success` on the web).
 final Color successColor = _hsl(142, 70.6, 45.3);
 
+/// Corner radius of text fields; the web's `rounded-md` (0.375rem).
+const double _inputRadius = 6;
+
+OutlineInputBorder _inputBorder(Color color, {double width = 1}) =>
+    OutlineInputBorder(
+      borderRadius: BorderRadius.circular(_inputRadius),
+      borderSide: BorderSide(color: color, width: width),
+    );
+
+/// Every text field gets a full rounded border, like the web's
+/// `rounded-md border border-border` inputs, instead of Material's underline.
+InputDecorationTheme _inputTheme(ColorScheme scheme) => InputDecorationTheme(
+  border: _inputBorder(scheme.outline),
+  enabledBorder: _inputBorder(scheme.outline),
+  focusedBorder: _inputBorder(scheme.primary, width: 2),
+  errorBorder: _inputBorder(scheme.error),
+  focusedErrorBorder: _inputBorder(scheme.error, width: 2),
+  disabledBorder: _inputBorder(scheme.outline.withValues(alpha: 0.4)),
+);
+
 ThemeData _build(ColorScheme scheme) => ThemeData(
   useMaterial3: true,
   colorScheme: scheme,
   scaffoldBackgroundColor: scheme.surface,
   dividerColor: scheme.outline.withValues(alpha: 0.4),
+  inputDecorationTheme: _inputTheme(scheme),
 );
 
 final ThemeData lightTheme = _build(lightColorScheme);

@@ -105,10 +105,7 @@ class _CommentComposerState extends State<CommentComposer> {
           keyboardType: TextInputType.multiline,
           textCapitalization: TextCapitalization.sentences,
           inputFormatters: [_lengthLimit],
-          decoration: InputDecoration(
-            hintText: widget.hint,
-            border: const OutlineInputBorder(),
-          ),
+          decoration: InputDecoration(hintText: widget.hint),
         ),
         const SizedBox(height: 4),
         Wrap(
