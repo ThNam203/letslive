@@ -133,7 +133,7 @@ jobs:
 
       # Upload to the Play internal track by hand (mobile/README.md).
       - name: Upload app bundle
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-${{ env.FLAVOR }}-aab
           path: mobile/build/app/outputs/bundle/${{ env.FLAVOR }}Release/app-${{ env.FLAVOR }}-release.aab
@@ -250,7 +250,7 @@ jobs:
             --export-options-plist="$RUNNER_TEMP/ExportOptions.plist"
 
       - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ios-${{ env.FLAVOR }}-ipa
           path: mobile/build/ios/ipa/*.ipa
