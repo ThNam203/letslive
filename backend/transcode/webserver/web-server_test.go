@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -153,5 +154,52 @@ func TestRequestLogging(t *testing.T) {
 	serve(vod)
 	if got := loggedFor(vod); len(got) != 1 || got[0].Level != zapcore.InfoLevel {
 		t.Errorf("VOD request: logged %+v, want the shared middleware's info line", got)
+	}
+}
+
+// The VOD tree must not be listable: a directory listing names every VOD id,
+// private ones included.
+func TestVODDirectoriesAreNotListed(t *testing.T) {
+	h, _, base := newTestServer(t)
+	vod := "0358ebe0-38f8-419a-939d-d86568f217d6"
+	dir := filepath.Join(base, "vods", vod, "0")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for name, body := range map[string]string{
+		filepath.Join(base, "vods", vod, "index.m3u8"): "#EXTM3U master",
+		filepath.Join(dir, "stream.m3u8"):              "#EXTM3U variant",
+	} {
+		if err := os.WriteFile(name, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for _, path := range []string{
+		"/static/vods/",
+		"/static/vods/" + vod + "/",
+		"/static/vods/" + vod,
+		"/static/vods/" + vod + "/0/",
+		"/static/vods/" + vod + "/0",
+	} {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest(http.MethodGet, path, nil))
+		if w.Code != http.StatusNotFound {
+			t.Errorf("GET %s = %d, want 404", path, w.Code)
+		}
+		if strings.Contains(w.Body.String(), vod) || strings.Contains(w.Body.String(), "stream.m3u8") {
+			t.Errorf("GET %s leaks a listing: %q", path, w.Body.String())
+		}
+	}
+
+	for path, want := range map[string]string{
+		"/static/vods/" + vod + "/index.m3u8":    "#EXTM3U master",
+		"/static/vods/" + vod + "/0/stream.m3u8": "#EXTM3U variant",
+	} {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest(http.MethodGet, path, nil))
+		if w.Code != http.StatusOK || w.Body.String() != want {
+			t.Errorf("GET %s = %d %q, want 200 %q", path, w.Code, w.Body.String(), want)
+		}
 	}
 }
