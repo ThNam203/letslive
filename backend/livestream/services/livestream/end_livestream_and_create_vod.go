@@ -12,25 +12,27 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-func (s *LivestreamService) EndLivestreamAndCreateVOD(ctx context.Context, streamId uuid.UUID, endReqDTO dto.EndLivestreamRequestDTO) error {
+// EndLivestreamAndCreateVOD ends the livestream, creates its VOD and returns
+// the VOD id (nil if the vod service returned none).
+func (s *LivestreamService) EndLivestreamAndCreateVOD(ctx context.Context, streamId uuid.UUID, endReqDTO dto.EndLivestreamRequestDTO) (*uuid.UUID, error) {
 	if err := utils.Validator.Struct(&endReqDTO); err != nil {
-		return domains.ErrInvalidPayload
+		return nil, domains.ErrInvalidPayload
 	}
 
 	currentLivestream, err := s.livestreamRepo.GetById(ctx, streamId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if currentLivestream.EndedAt != nil {
-		return domains.ErrEndAlreadyEndedLivestream
+		return nil, domains.ErrEndAlreadyEndedLivestream
 	}
 
 	now := time.Now()
 	currentLivestream.EndedAt = &now
 	updatedLs, err := s.livestreamRepo.Update(ctx, *currentLivestream)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Create VOD via VOD service gateway
@@ -55,12 +57,13 @@ func (s *LivestreamService) EndLivestreamAndCreateVOD(ctx context.Context, strea
 		ThumbnailURL: thumbnailURL,
 		PlaybackURL:  playbackURL,
 		Duration:     endReqDTO.Duration,
+		Status:       endReqDTO.VODStatus,
 	}
 
 	vodId, createErr := s.vodGateway.CreateVOD(ctx, createReq)
 	if createErr != nil {
 		logger.Warnf(ctx, "failed to create VOD via gateway for livestream %s: %v", currentLivestream.Id, createErr)
-		return domains.ErrVODCreateFailed
+		return nil, domains.ErrVODCreateFailed
 	}
 
 	if vodId != nil {
@@ -72,5 +75,5 @@ func (s *LivestreamService) EndLivestreamAndCreateVOD(ctx context.Context, strea
 		logger.Warnf(ctx, "failed to link VOD id %s to livestream id %s: %v", vodId, updatedLs.Id, updateErr)
 	}
 
-	return nil
+	return vodId, nil
 }

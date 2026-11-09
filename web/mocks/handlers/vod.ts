@@ -35,9 +35,10 @@ export const vodHandlers = [
         const page = parseInt(url.searchParams.get("page") ?? "0");
         const limit = parseInt(url.searchParams.get("limit") ?? "10");
 
-        // newest first, like the backend's ORDER BY created_at DESC
+        // public and ready, newest first, like the backend's
+        // GetPublicVODsByUser query
         let results = vods
-            .filter((v) => v.visibility === "public")
+            .filter((v) => v.visibility === "public" && v.status === "ready")
             .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         if (userId) results = results.filter((v) => v.userId === userId);
 
@@ -88,7 +89,13 @@ export const vodHandlers = [
     http.get(`${API_BASE}/vods/:vodId`, ({ params }) => {
         const { vodId } = params as { vodId: string };
         const vod = vods.find((v) => v.id === vodId);
-        if (!vod) return notFound("res_err_vod_not_found", "VOD not found");
+        // like the backend's VOD.VisibleTo: the owner (always "me" here) sees
+        // every VOD of theirs, anyone else only public ready ones
+        const visible =
+            vod &&
+            (vod.userId === ME_USER_ID ||
+                (vod.visibility === "public" && vod.status === "ready"));
+        if (!visible) return notFound("res_err_vod_not_found", "VOD not found");
         return ok<VOD>(vod);
     }),
 

@@ -2,6 +2,7 @@ package webserver
 
 import (
 	"context"
+	"io/fs"
 	"net/http"
 	"sen1or/letslive/shared/middlewares"
 	"sen1or/letslive/shared/pkg/logger"
@@ -11,24 +12,32 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// writeTimeout is long enough for a blocking playlist request to be held
+// until the next part is ready.
+const writeTimeout = 30 * time.Second
+
 type WebServer struct {
-	httpServer      *http.Server
-	ListenPort      int
-	AllowedSuffixes []string
-	BaseDirectory   string
+	httpServer    *http.Server
+	ListenPort    int
+	BaseDirectory string
+	live          http.Handler
 }
 
-func NewWebServer(listenPort int, allowedSuffixes []string, baseDirectory string) *WebServer {
+// NewWebServer serves VODs from baseDirectory under /static/vods/ and
+// everything else under /static/ through live, with the /static prefix
+// removed.
+func NewWebServer(listenPort int, baseDirectory string, live http.Handler) *WebServer {
 	return &WebServer{
-		ListenPort:      listenPort,
-		AllowedSuffixes: allowedSuffixes,
-		BaseDirectory:   baseDirectory,
+		ListenPort:    listenPort,
+		BaseDirectory: baseDirectory,
+		live:          live,
 	}
 }
 
-func (ws *WebServer) ListenAndServe() {
+func (ws *WebServer) routes() http.Handler {
 	router := mux.NewRouter()
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(ws.BaseDirectory))))
+	router.PathPrefix(vodPrefix).Handler(http.StripPrefix(livePrefix, http.FileServer(filesOnly{http.Dir(ws.BaseDirectory)})))
+	router.PathPrefix(livePrefix).Handler(http.StripPrefix("/static", ws.live))
 	router.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -36,13 +45,16 @@ func (ws *WebServer) ListenAndServe() {
 	corsMiddleware := middlewares.NewCORSMiddleware()
 	router.Use(corsMiddleware.GetMiddleware)
 	router.Use(middlewares.RequestIDMiddleware)
-	router.Use(middlewares.LoggingMiddleware)
+	router.Use(requestLogging)
+	return router
+}
 
+func (ws *WebServer) ListenAndServe() {
 	ws.httpServer = &http.Server{
 		Addr:         ":" + strconv.Itoa(ws.ListenPort),
-		Handler:      router,
+		Handler:      ws.routes(),
 		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		WriteTimeout: writeTimeout,
 	}
 
 	if err := ws.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -66,4 +78,30 @@ func (ws *WebServer) Shutdown(ctx context.Context) error {
 
 	logger.Infof(ctx, "web server shutdown completed.")
 	return nil
+}
+
+// filesOnly serves the files of fs and reports every directory as missing, so
+// http.FileServer answers 404 instead of a listing (the VOD tree's listing
+// would name every VOD id) or a redirect.
+type filesOnly struct {
+	fs http.FileSystem
+}
+
+func (f filesOnly) Open(name string) (http.File, error) {
+	file, err := f.fs.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	info, err := file.Stat()
+	if err != nil {
+		_ = file.Close()
+		return nil, err
+	}
+	if info.IsDir() {
+		if err := file.Close(); err != nil {
+			return nil, err
+		}
+		return nil, fs.ErrNotExist
+	}
+	return file, nil
 }

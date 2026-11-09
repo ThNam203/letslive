@@ -30,7 +30,7 @@ func (h *LivestreamHandler) EndLivestreamAndCreateVODInternalHandler(w http.Resp
 	}
 
 	ctx, span := tracer.MyTracer.Start(ctx, "end_livestream_and_create_vod_internal_handler.livestream_service.end_livestream_and_create_vod")
-	serviceErr := h.livestreamService.EndLivestreamAndCreateVOD(ctx, streamId, requestBody)
+	vodId, serviceErr := h.livestreamService.EndLivestreamAndCreateVOD(ctx, streamId, requestBody)
 	span.End()
 
 	if serviceErr != nil {
@@ -38,5 +38,5 @@ func (h *LivestreamHandler) EndLivestreamAndCreateVODInternalHandler(w http.Resp
 		return
 	}
 
-	h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_SUCC_OK, nil, nil, nil))
+	h.WriteResponse(w, ctx, response.NewResponseFromTemplate(response.RES_SUCC_OK, &dto.EndLivestreamResponseDTO{VODId: vodId}, nil, nil))
 }

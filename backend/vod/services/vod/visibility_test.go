@@ -27,8 +27,8 @@ func (r *vodRepoStub) IncrementViewCount(context.Context, uuid.UUID) error {
 	return nil
 }
 
-func newService(visibility domains.VODVisibility, ownerId uuid.UUID) (*VODService, *vodRepoStub) {
-	repo := &vodRepoStub{vod: &domains.VOD{Id: uuid.Must(uuid.NewV4()), UserId: ownerId, Visibility: visibility, Duration: 600}}
+func newService(visibility domains.VODVisibility, status domains.VODStatus, ownerId uuid.UUID) (*VODService, *vodRepoStub) {
+	repo := &vodRepoStub{vod: &domains.VOD{Id: uuid.Must(uuid.NewV4()), UserId: ownerId, Visibility: visibility, Status: status, Duration: 600}}
 	return &VODService{vodRepo: repo}, repo
 }
 
@@ -39,19 +39,23 @@ func TestGetVODById_visibility(t *testing.T) {
 	tests := []struct {
 		name       string
 		visibility domains.VODVisibility
+		status     domains.VODStatus
 		viewer     *uuid.UUID
 		wantErr    error
 	}{
-		{"public vod is visible when signed out", domains.VODPublicVisibility, nil, nil},
-		{"public vod is visible to a stranger", domains.VODPublicVisibility, &stranger, nil},
-		{"private vod is hidden when signed out", domains.VODPrivateVisibility, nil, domains.ErrVODNotFound},
-		{"private vod is hidden from a stranger", domains.VODPrivateVisibility, &stranger, domains.ErrVODNotFound},
-		{"private vod is visible to its owner", domains.VODPrivateVisibility, &owner, nil},
+		{"public vod is visible when signed out", domains.VODPublicVisibility, domains.VODStatusReady, nil, nil},
+		{"public vod is visible to a stranger", domains.VODPublicVisibility, domains.VODStatusReady, &stranger, nil},
+		{"private vod is hidden when signed out", domains.VODPrivateVisibility, domains.VODStatusReady, nil, domains.ErrVODNotFound},
+		{"private vod is hidden from a stranger", domains.VODPrivateVisibility, domains.VODStatusReady, &stranger, domains.ErrVODNotFound},
+		{"private vod is visible to its owner", domains.VODPrivateVisibility, domains.VODStatusReady, &owner, nil},
+		{"processing public vod is hidden from a stranger", domains.VODPublicVisibility, domains.VODStatusProcessing, &stranger, domains.ErrVODNotFound},
+		{"failed public vod is hidden when signed out", domains.VODPublicVisibility, domains.VODStatusFailed, nil, domains.ErrVODNotFound},
+		{"processing public vod is visible to its owner", domains.VODPublicVisibility, domains.VODStatusProcessing, &owner, nil},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			svc, repo := newService(tt.visibility, owner)
+			svc, repo := newService(tt.visibility, tt.status, owner)
 
 			got, err := svc.GetVODById(context.Background(), repo.vod.Id, tt.viewer)
 
@@ -75,19 +79,21 @@ func TestRegisterView_visibility(t *testing.T) {
 	tests := []struct {
 		name       string
 		visibility domains.VODVisibility
+		status     domains.VODStatus
 		viewer     *uuid.UUID
 		wantErr    error
 		wantViews  int
 	}{
-		{"public vod counts a signed-out view", domains.VODPublicVisibility, nil, nil, 1},
-		{"private vod ignores a signed-out view", domains.VODPrivateVisibility, nil, domains.ErrVODNotFound, 0},
-		{"private vod ignores a stranger's view", domains.VODPrivateVisibility, &stranger, domains.ErrVODNotFound, 0},
-		{"private vod counts its owner's view", domains.VODPrivateVisibility, &owner, nil, 1},
+		{"public vod counts a signed-out view", domains.VODPublicVisibility, domains.VODStatusReady, nil, nil, 1},
+		{"processing vod ignores a stranger's view", domains.VODPublicVisibility, domains.VODStatusProcessing, &stranger, domains.ErrVODNotFound, 0},
+		{"private vod ignores a signed-out view", domains.VODPrivateVisibility, domains.VODStatusReady, nil, domains.ErrVODNotFound, 0},
+		{"private vod ignores a stranger's view", domains.VODPrivateVisibility, domains.VODStatusReady, &stranger, domains.ErrVODNotFound, 0},
+		{"private vod counts its owner's view", domains.VODPrivateVisibility, domains.VODStatusReady, &owner, nil, 1},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			svc, repo := newService(tt.visibility, owner)
+			svc, repo := newService(tt.visibility, tt.status, owner)
 
 			err := svc.RegisterView(context.Background(), repo.vod.Id, tt.viewer, 600)
 
