@@ -968,3 +968,64 @@ func ffmpegInput(t *testing.T, path string) []av.Packet {
 		pkts = append(pkts, pkt)
 	}
 }
+
+// Duration runs from the first source keyframe to the last source video
+// packet, on the media timeline, so neither Close time nor connect time counts.
+func TestSessionDuration(t *testing.T) {
+	rig := newSessionRig(t, filepath.Join(t.TempDir(), "no-ffmpeg"))
+	s, _ := rig.newSession(t)
+	pkts := readFLV(t, "src_640x360.flv")
+
+	if got := s.Duration(); got != 0 {
+		t.Fatalf("Duration before any packet = %v, want 0", got)
+	}
+
+	var first, last time.Duration
+	started := false
+	for _, pkt := range pkts {
+		if pkt.Type != av.H264 {
+			continue
+		}
+		if !started && pkt.IsKeyFrame {
+			first, started = pkt.Time, true
+		}
+		if started {
+			last = pkt.Time
+		}
+	}
+	if !started || last <= first {
+		t.Fatalf("fixture has no usable video span (first %v, last %v)", first, last)
+	}
+
+	feedSession(t, s, pkts)
+	want := last - first
+	if got := s.Duration(); got != want {
+		t.Errorf("Duration while live = %v, want %v", got, want)
+	}
+
+	if err := closeSession(t, s); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	if got := s.Duration(); got != want {
+		t.Errorf("Duration after Close = %v, want %v", got, want)
+	}
+}
+
+func TestSessionDurationNeverStarted(t *testing.T) {
+	rig := newSessionRig(t, filepath.Join(t.TempDir(), "no-ffmpeg"))
+	s, _ := rig.newSession(t)
+	for _, pkt := range readFLV(t, "src_640x360.flv") {
+		if pkt.Type == av.H264 && pkt.IsKeyFrame {
+			break
+		}
+		if err := s.HandlePacket(pkt); err != nil {
+			t.Fatalf("HandlePacket: %v", err)
+		}
+	}
+	if err := closeSession(t, s); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	if got := s.Duration(); got != 0 {
+		t.Errorf("Duration of a session that never started = %v, want 0", got)
+	}
+}
