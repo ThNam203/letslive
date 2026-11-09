@@ -110,7 +110,7 @@ Live playlists, parts and segments are now served from the transcode process
 (segments used to come from MinIO). Viewers of one stream ask for the same
 part or blocking playlist at nearly the same moment.
 
-**Fixed:** `configs/nginx.conf` gets two `/transcode/` locations backed by a
+**Fixed:** `configs/nginx.conf` gets cached `/transcode/` locations backed by a
 cache zone defined in the new `configs/nginx-http.conf` (that file goes in the
 host nginx's `http { }` block):
 
@@ -119,6 +119,8 @@ host nginx's `http { }` block):
 - Playlists: only LL-HLS blocking requests (with `_HLS_msn`) are cached, for
   1 s, overriding gohlslib's `no-cache`. The master, plain reloads and VOD
   playlists always go to the gateway.
+- `/transcode/vods/` is a plain, uncached pass-through (`location ^~`), so
+  VOD Range and conditional requests reach the file server unchanged.
 - `proxy_cache_lock` turns concurrent identical requests into one upstream
   request. The cache key includes `Origin`, because Envoy echoes it in
   `Access-Control-Allow-Origin` with credentials.
@@ -127,7 +129,8 @@ Verified with nginx 1.27 in Docker against a fake upstream: 20 concurrent
 blocking playlist requests → 1 upstream hit; another origin → its own entry
 with its own `Access-Control-Allow-Origin`; the same request after 1.5 s → a
 new hit; master, plain reload, VOD playlist and 404 → never cached; 21 part
-requests → 1 hit.
+requests → 1 hit; VOD paths (even with `_HLS_msn`) → never cached, no
+`X-Cache-Status`.
 
 **To apply:** the host nginx is not deployed by CI. Add
 `include .../nginx-http.conf;` to its `http` block, reload it with the new
