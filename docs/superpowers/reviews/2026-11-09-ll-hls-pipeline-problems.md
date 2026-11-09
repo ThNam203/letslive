@@ -15,7 +15,7 @@ watcher pipeline. Each fix is its own commit that ticks its entry here.
 | 6b | VOD master has no `CODECS` attribute | fixed |
 | 6c | VOD folder `0` is now the source quality | won't fix (intentional) |
 | 7 | Branch far behind `main`, `go.work.sum` conflict | fixed |
-| 8 | `/transcode/vods/` lists every VOD id publicly | open |
+| 8 | `/transcode/vods/` lists every VOD id publicly | fixed |
 
 (#4, iOS LL-HLS over HTTP/2, was dropped: prod serves HTTP/2 and iOS plays it.)
 
@@ -161,5 +161,11 @@ The VOD file server is a plain `http.FileServer`, which renders directory
 listings: `GET /transcode/vods/` returned every VOD id, including those of
 private VODs. Live on `main` in production.
 
-**Fix:** the VOD handler returns 404 for any request that resolves to a
-directory; playlists and other files are served as before.
+**Fixed:** the VOD file server is backed by a `filesOnly` file system that
+reports directories as missing, so any directory path (with or without the
+trailing slash) is a 404: no listing, no redirect. Playlists and other files
+are served as before. Test: `TestVODDirectoriesAreNotListed`.
+
+This is live on `main` too. Production keeps listing VOD ids until this branch
+(or a cherry-pick of this commit) is deployed; VOD ids already listed stay
+known.

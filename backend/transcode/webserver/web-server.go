@@ -2,6 +2,7 @@ package webserver
 
 import (
 	"context"
+	"io/fs"
 	"net/http"
 	"sen1or/letslive/shared/middlewares"
 	"sen1or/letslive/shared/pkg/logger"
@@ -35,7 +36,7 @@ func NewWebServer(listenPort int, baseDirectory string, live http.Handler) *WebS
 
 func (ws *WebServer) routes() http.Handler {
 	router := mux.NewRouter()
-	router.PathPrefix(vodPrefix).Handler(http.StripPrefix(livePrefix, http.FileServer(http.Dir(ws.BaseDirectory))))
+	router.PathPrefix(vodPrefix).Handler(http.StripPrefix(livePrefix, http.FileServer(filesOnly{http.Dir(ws.BaseDirectory)})))
 	router.PathPrefix(livePrefix).Handler(http.StripPrefix("/static", ws.live))
 	router.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -77,4 +78,30 @@ func (ws *WebServer) Shutdown(ctx context.Context) error {
 
 	logger.Infof(ctx, "web server shutdown completed.")
 	return nil
+}
+
+// filesOnly serves the files of fs and reports every directory as missing, so
+// http.FileServer answers 404 instead of a listing (the VOD tree's listing
+// would name every VOD id) or a redirect.
+type filesOnly struct {
+	fs http.FileSystem
+}
+
+func (f filesOnly) Open(name string) (http.File, error) {
+	file, err := f.fs.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	info, err := file.Stat()
+	if err != nil {
+		_ = file.Close()
+		return nil, err
+	}
+	if info.IsDir() {
+		if err := file.Close(); err != nil {
+			return nil, err
+		}
+		return nil, fs.ErrNotExist
+	}
+	return file, nil
 }
