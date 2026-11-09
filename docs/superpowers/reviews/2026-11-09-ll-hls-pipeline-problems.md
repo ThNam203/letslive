@@ -10,7 +10,7 @@ watcher pipeline. Each fix is its own commit that ticks its entry here.
 | 1 | Wrong stream duration | fixed |
 | 2 | Livestream ends late; VOD published even when the recording failed | fixed |
 | 3 | Non-AAC audio becomes a silent stream without saying so | fixed |
-| 5 | Every live viewer request reaches the transcode service | open |
+| 5 | Every live viewer request reaches the transcode service | fixed (needs host nginx apply) |
 | 6a | First thumbnail taken at the first keyframe | open |
 | 6b | VOD master has no `CODECS` attribute | open |
 | 6c | VOD folder `0` is now the source quality | open |
@@ -92,11 +92,28 @@ Live playlists, parts and segments are now served from the transcode process
 (segments used to come from MinIO). Viewers of one stream ask for the same
 part or blocking playlist at nearly the same moment.
 
-**Fix:** `configs/nginx.conf` gets a `/transcode/` location with `proxy_cache`
-and `proxy_cache_lock`, keyed on the full URI (so `_HLS_msn` / `_HLS_part`
-blocking requests are distinct entries). Concurrent identical requests are
-collapsed into one upstream request; cache lifetimes come from the upstream
-`Cache-Control` headers, and playlists are cached for at most 1 s.
+**Fixed:** `configs/nginx.conf` gets two `/transcode/` locations backed by a
+cache zone defined in the new `configs/nginx-http.conf` (that file goes in the
+host nginx's `http { }` block):
+
+- Parts, segments and init files are cached for as long as gohlslib's
+  `Cache-Control` allows (an hour). Errors are not cached.
+- Playlists: only LL-HLS blocking requests (with `_HLS_msn`) are cached, for
+  1 s, overriding gohlslib's `no-cache`. The master, plain reloads and VOD
+  playlists always go to the gateway.
+- `proxy_cache_lock` turns concurrent identical requests into one upstream
+  request. The cache key includes `Origin`, because Envoy echoes it in
+  `Access-Control-Allow-Origin` with credentials.
+
+Verified with nginx 1.27 in Docker against a fake upstream: 20 concurrent
+blocking playlist requests → 1 upstream hit; another origin → its own entry
+with its own `Access-Control-Allow-Origin`; the same request after 1.5 s → a
+new hit; master, plain reload, VOD playlist and 404 → never cached; 21 part
+requests → 1 hit.
+
+**To apply:** the host nginx is not deployed by CI. Add
+`include .../nginx-http.conf;` to its `http` block, reload it with the new
+`nginx.conf`, and create `/var/cache/nginx/letslive_hls` if nginx cannot.
 
 ## 6a. First thumbnail taken at the first keyframe
 
