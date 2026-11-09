@@ -1,0 +1,108 @@
+# LL-HLS live pipeline — review problems
+
+Date: 2026-11-09 · Branch: `feat/ll-hls-packager` · Compared against: `main`
+
+Problems found while comparing the LL-HLS rework with the old ffmpeg + disk
+watcher pipeline. Each fix is its own commit that ticks its entry here.
+
+| # | Problem | Status |
+|---|---|---|
+| 1 | Wrong stream duration | open |
+| 2 | Livestream ends late; VOD published even when the recording failed | open |
+| 3 | Non-AAC audio becomes a silent stream without saying so | open |
+| 5 | Every live viewer request reaches the transcode service | open |
+| 6a | First thumbnail taken at the first keyframe | open |
+| 6b | VOD master has no `CODECS` attribute | open |
+| 6c | VOD folder `0` is now the source quality | open |
+| 7 | Branch far behind `main`, `go.work.sum` conflict | open |
+| 8 | `/transcode/vods/` lists every VOD id publicly | open |
+
+(#4, iOS LL-HLS over HTTP/2, was dropped: prod serves HTTP/2 and iOS plays it.)
+
+## 1. Wrong stream duration
+
+`rtmp/rtmp.go` computed the duration as wall-clock time since connect minus a
+fixed 7 s, *after* `session.Close()`. Close waits for the last VOD segments to
+upload (up to 75 s), so that wait was counted, and the 7 s was the old ffmpeg
+start-up delay, which the new pipeline does not have.
+
+**Fix:** the `Session` tracks the last source-video DTS on the shared clock and
+reports `Duration()`; the RTMP server uses it. A session that never reached its
+first keyframe reports 0.
+
+## 2. Livestream ends late; VOD published even when the recording failed
+
+`HandleConnection` closed the session (writing the VOD) before calling
+`EndLivestream`, so the livestream stayed "live" in the DB for up to 75 s after
+the streamer stopped. It then always sent the VOD playback URL, even when
+`Recorder.Finish` failed, and the vod service creates livestream VODs as
+`ready` — leaving a VOD that points at a playlist that does not exist. (`main`
+had the same false-ready problem.)
+
+**Fix:** end the livestream as soon as the RTMP connection ends. The VOD is
+created with status `processing` and the livestream service returns its id.
+After the recording is written, transcode marks the VOD `ready` with its
+playback URL and duration, or `failed` if nothing was recorded, through the
+existing `PATCH /v1/internal/vods/{id}/status`.
+
+## 3. Non-AAC audio becomes a silent stream without saying so
+
+joy5 (the RTMP library) only demuxes AAC; any other audio codec is discarded
+before the session sees it. This was already true on `main` (its ffmpeg got
+joy5's packets), so it is not a regression, and transcoding other codecs would
+need a different RTMP library.
+
+**Fix:** when a stream starts without an AAC config the session logs a Warn
+saying the stream is video-only and why.
+
+## 5. Every live viewer request reaches the transcode service
+
+Live playlists, parts and segments are now served from the transcode process
+(segments used to come from MinIO). Viewers of one stream ask for the same
+part or blocking playlist at nearly the same moment.
+
+**Fix:** `configs/nginx.conf` gets a `/transcode/` location with `proxy_cache`
+and `proxy_cache_lock`, keyed on the full URI (so `_HLS_msn` / `_HLS_part`
+blocking requests are distinct entries). Concurrent identical requests are
+collapsed into one upstream request; cache lifetimes come from the upstream
+`Cache-Control` headers, and playlists are cached for at most 1 s.
+
+## 6a. First thumbnail taken at the first keyframe
+
+The old thumbnail filter skipped the first 5 s (`gte(t,5)`); the new
+thumbnailer used the very first keyframe, often a black or title frame.
+
+**Fix:** keyframes in the first 5 s of the stream are not offered.
+
+## 6b. VOD master has no `CODECS` attribute
+
+The old VOD master was ffmpeg's and carried `CODECS`; the recorder's master
+had only `BANDWIDTH` and `RESOLUTION`.
+
+**Fix:** each variant gets `CODECS="avc1.PPCCLL[,mp4a.40.N]"`, built from that
+rendition's SPS and the source audio config.
+
+## 6c. VOD folder `0` is now the source quality
+
+Old VODs used folders `0/1/2` = 360p/720p/1080p; new VODs use the ladder index
+(`0` = source, then descending). No code reads folder numbers — players and
+the VOD service go through the master playlist — so this is kept as is.
+
+**Status:** intentional, no change.
+
+## 7. Branch far behind `main`, `go.work.sum` conflict
+
+The branch was cut at `4da77e43` and is 79 commits behind `origin/main`; the
+only conflict is `backend/go.work.sum`.
+
+**Fix:** merge `origin/main` into the branch (it is already pushed, so no
+rebase) and regenerate `go.work.sum`.
+
+## 8. `/transcode/vods/` lists every VOD id publicly
+
+The VOD file server is a plain `http.FileServer`, which renders directory
+listings: `GET /transcode/vods/` returned every VOD id, including those of
+private VODs. Live on `main` in production.
+
+**Fix:** the VOD handler returns 404 for any request that resolves to a
+directory; playlists and other files are served as before.
