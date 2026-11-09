@@ -62,8 +62,26 @@ Related changes in the same commit:
   no database test harness in the vod service.
 - The transcode gateway's `EndLivestream` and `UpdateVODStatus` requests now
   carry their context, so the 10 s timeouts actually apply.
-- Gateway calls use a context detached from the server's, so a stream that
-  ends during a service shutdown is still ended and its VOD still settled.
+- Gateway calls use a context detached from the server's, so they are not
+  cut short when the server context ends. (This does not make shutdown safe:
+  `RTMPServer.Shutdown` only closes the listener and the process exits without
+  waiting for live connections, as before.)
+- The final status update is retried twice (after 2 s and 5 s), so a brief
+  vod service outage does not leave the VOD stuck in `processing`
+  (`TestFinishStreamRetriesVODStatus`).
+
+**Known gaps (not fixed):**
+
+- If `EndLivestream` times out *after* the livestream service already ended
+  the stream and created the VOD, transcode never learns the VOD id, so the
+  VOD stays `processing` and hidden from the channel. If all three status
+  updates fail, the same happens. Fixing this needs a reconciliation step (for
+  example the vod service settling livestream VODs still `processing` after a
+  few minutes by checking for their master playlist).
+- If `Session.Close` hits its 75 s bound while the recorder is still
+  finishing, the VOD is marked `failed` even though the playlist may appear
+  moments later. The recorder (60 s) and thumbnailer bounds fit inside 75 s,
+  so this needs storage to be stuck.
 
 **Deploy order:** vod, then livestream, then transcode. A new transcode
 against an old livestream service gets no VOD id back; it logs that and the
