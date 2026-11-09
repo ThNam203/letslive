@@ -8,7 +8,7 @@ watcher pipeline. Each fix is its own commit that ticks its entry here.
 | # | Problem | Status |
 |---|---|---|
 | 1 | Wrong stream duration | fixed |
-| 2 | Livestream ends late; VOD published even when the recording failed | open |
+| 2 | Livestream ends late; VOD published even when the recording failed | fixed |
 | 3 | Non-AAC audio becomes a silent stream without saying so | open |
 | 5 | Every live viewer request reaches the transcode service | open |
 | 6a | First thumbnail taken at the first keyframe | open |
@@ -40,11 +40,39 @@ the streamer stopped. It then always sent the VOD playback URL, even when
 `ready` — leaving a VOD that points at a playlist that does not exist. (`main`
 had the same false-ready problem.)
 
-**Fix:** end the livestream as soon as the RTMP connection ends. The VOD is
-created with status `processing` and the livestream service returns its id.
-After the recording is written, transcode marks the VOD `ready` with its
-playback URL and duration, or `failed` if nothing was recorded, through the
-existing `PATCH /v1/internal/vods/{id}/status`.
+**Fixed:** the livestream is ended as soon as the RTMP connection ends
+(`rtmp/finish.go`, `finishStream`):
+
+1. `EndLivestream` is sent with `vodStatus: "processing"`, the media duration
+   and no playback URL. The vod service creates the VOD as `processing`
+   (`status` on `POST /v1/internal/vods`; empty still means `ready`, anything
+   other than `ready`/`processing` is a 400), and the livestream service now
+   returns `{"vodId": ...}`.
+2. The session is closed, which writes the VOD.
+3. Transcode marks the VOD `ready` with its playback URL and duration, or
+   `failed` (no playback URL) when Close returned an error — including the new
+   `live.ErrNothingRecorded` for a session that never reached a keyframe.
+
+Related changes in the same commit:
+
+- `GetPublicVODsByUser` (a channel's public VOD list) now only returns `ready`
+  VODs, like the popular and search queries already did, so a VOD that is
+  still processing or failed is not shown as an unplayable card. The web mock
+  for `GET /vods` mirrors it. The SQL change is compile-checked only; there is
+  no database test harness in the vod service.
+- The transcode gateway's `EndLivestream` and `UpdateVODStatus` requests now
+  carry their context, so the 10 s timeouts actually apply.
+- Gateway calls use a context detached from the server's, so a stream that
+  ends during a service shutdown is still ended and its VOD still settled.
+
+**Deploy order:** vod, then livestream, then transcode. A new transcode
+against an old livestream service gets no VOD id back; it logs that and the
+VOD stays as the old service created it (`ready`, no playback URL).
+
+Tests: `TestFinishStream` (rtmp), `TestEndLivestream*` and
+`TestUpdateVODStatusHonoursContext` (transcode gateway),
+`TestCreateVODInternal*` (vod), `TestEndLivestreamRequestDTOVODStatus`
+(livestream), and the updated `TestSessionCloseBeforeFirstKeyframe`.
 
 ## 3. Non-AAC audio becomes a silent stream without saying so
 

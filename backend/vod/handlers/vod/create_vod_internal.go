@@ -20,6 +20,22 @@ type CreateVODInternalRequest struct {
 	ThumbnailURL string `json:"thumbnailUrl,omitempty"`
 	PlaybackURL  string `json:"playbackUrl,omitempty"`
 	Duration     int64  `json:"duration"`
+	// Status is "processing" while the recording is still being written
+	// (it is marked ready later through the status endpoint); empty means ready.
+	Status string `json:"status,omitempty"`
+}
+
+// createVODInternalStatus maps the requested status of a livestream VOD:
+// empty or "ready", or "processing". Anything else is rejected.
+func createVODInternalStatus(raw string) (domains.VODStatus, bool) {
+	switch domains.VODStatus(raw) {
+	case "", domains.VODStatusReady:
+		return domains.VODStatusReady, true
+	case domains.VODStatusProcessing:
+		return domains.VODStatusProcessing, true
+	default:
+		return "", false
+	}
 }
 
 func (h *VODHandler) CreateVODInternalHandler(w http.ResponseWriter, r *http.Request) {
@@ -30,6 +46,12 @@ func (h *VODHandler) CreateVODInternalHandler(w http.ResponseWriter, r *http.Req
 
 	var reqBody CreateVODInternalRequest
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
+		return
+	}
+
+	status, ok := createVODInternalStatus(reqBody.Status)
+	if !ok {
 		h.WriteResponse(w, ctx, response.NewResponseFromTemplate[any](response.RES_ERR_INVALID_PAYLOAD, nil, nil, nil))
 		return
 	}
@@ -69,7 +91,7 @@ func (h *VODHandler) CreateVODInternalHandler(w http.ResponseWriter, r *http.Req
 		ThumbnailURL: thumbURL,
 		PlaybackURL:  playURL,
 		Visibility:   domains.VODPublicVisibility,
-		Status:       domains.VODStatusReady,
+		Status:       status,
 		ViewCount:    0,
 		Duration:     reqBody.Duration,
 		CreatedAt:    now,

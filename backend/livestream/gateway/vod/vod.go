@@ -14,6 +14,7 @@ type CreateVODRequest struct {
 	ThumbnailURL string `json:"thumbnailUrl,omitempty"`
 	PlaybackURL  string `json:"playbackUrl,omitempty"`
 	Duration     int64  `json:"duration"`
+	Status       string `json:"status,omitempty"`
 }
 
 type VODGateway interface {

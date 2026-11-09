@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sen1or/letslive/shared/pkg/discovery"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/transcode/domains"
 	"sen1or/letslive/transcode/gateway"
 	dto "sen1or/letslive/transcode/gateway/livestream/dto"
-	"sen1or/letslive/shared/pkg/discovery"
-	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/transcode/response"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 type LivestreamGateway struct {
@@ -84,35 +86,37 @@ func (g *LivestreamGateway) Create(ctx context.Context, data dto.CreateLivestrea
 	return livestreamResponse.Data, nil
 }
 
-func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, endDTO dto.EndLivestreamRequestDTO) *response.Response[any] {
+// EndLivestream ends the livestream and returns the id of the VOD the
+// livestream service created for it (nil if it returned none).
+func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, endDTO dto.EndLivestreamRequestDTO) (*uuid.UUID, *response.Response[any]) {
 	addr, err := g.registry.ServiceAddress(ctx, "livestream")
 	if err != nil {
 		logger.Debugf(ctx, "get service address from gateway failed")
-		return response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
 	url := fmt.Sprintf("http://%s/v1/internal/livestreams/%s/end", addr, streamId)
 	payloadBuf := new(bytes.Buffer)
 	if err := json.NewEncoder(payloadBuf).Encode(endDTO); err != nil {
 		logger.Debugf(ctx, "failed to encode data for end livestream request: %s", err)
-		return response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, url, payloadBuf)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, payloadBuf)
 	if err != nil {
 		logger.Debugf(ctx, "failed to create request: %s", err)
-		return response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
 	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
 		logger.Debugf(ctx, "failed to set request id header: %s", err)
-		return response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		logger.Debugf(ctx, "failed to call request: %s", err)
-		return response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
 	}
 	defer resp.Body.Close()
 
@@ -120,14 +124,22 @@ func (g *LivestreamGateway) EndLivestream(ctx context.Context, streamId string, 
 		resInfo := response.Response[any]{}
 		if err := json.NewDecoder(resp.Body).Decode(&resInfo); err != nil {
 			logger.Debugf(ctx, "failed to decode error response when end user livestream: %s", err)
-			return &resInfo
+			return nil, &resInfo
 		}
 
 		logger.Debugf(ctx, "failed to end livestream from livestream service with status code: %d", resp.StatusCode)
-		return &resInfo
+		return nil, &resInfo
 	}
 
-	return nil
+	var endResponse response.Response[dto.EndLivestreamResponseDTO]
+	if err := json.NewDecoder(resp.Body).Decode(&endResponse); err != nil {
+		logger.Errorf(ctx, "failed to decode end livestream response: %s", err)
+		return nil, response.NewResponseFromTemplate[any](response.RES_ERR_INTERNAL_SERVER, nil, nil, nil)
+	}
+	if endResponse.Data == nil {
+		return nil, nil
+	}
+	return endResponse.Data.VODId, nil
 }
 
 func (g *LivestreamGateway) UpdateVODStatus(ctx context.Context, vodId string, status domains.VODStatus, playbackUrl string, thumbnailUrl string, duration *int64) error {
@@ -155,7 +167,7 @@ func (g *LivestreamGateway) UpdateVODStatus(ctx context.Context, vodId string, s
 		return fmt.Errorf("failed to encode UpdateVODStatus payload: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPatch, url, payloadBuf)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPatch, url, payloadBuf)
 	if err != nil {
 		return fmt.Errorf("failed to create UpdateVODStatus request: %w", err)
 	}
