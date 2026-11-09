@@ -29,6 +29,10 @@ const recordedURLPrefix = "http://minio.test/bucket"
 var testLogs *observer.ObservedLogs
 
 func init() {
+	// Tests offer keyframes from the first second of short fixtures; the
+	// start delay has its own test.
+	thumbnailStartDelay = 0
+
 	logger.Init(logger.Error)
 	core, logs := observer.New(zapcore.DebugLevel)
 	testLogs = logs
