@@ -49,6 +49,16 @@ type VOD struct {
 	UpdatedAt       time.Time `json:"updatedAt" db:"updated_at"`
 }
 
+// VisibleTo reports whether viewerId (nil when signed out) may see the VOD:
+// its owner always can, anyone else only once it is public and ready, so an
+// unready VOD can't be told apart from a missing one.
+func (v *VOD) VisibleTo(viewerId *uuid.UUID) bool {
+	if viewerId != nil && *viewerId == v.UserId {
+		return true
+	}
+	return v.Visibility == VODPublicVisibility && v.Status == VODStatusReady
+}
+
 type TranscodeJobStatus string
 
 const (

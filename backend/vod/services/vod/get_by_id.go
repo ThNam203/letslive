@@ -7,23 +7,17 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-// GetVODById returns a public VOD, or a private one to its owner. viewerId is
-// the verified caller, or nil when signed out. Anyone else gets ErrVODNotFound
-// so a private VOD can't be told apart from a missing one.
+// GetVODById returns a VOD the caller may see (domains.VOD.VisibleTo).
+// viewerId is the verified caller, or nil when signed out. Anyone else gets
+// ErrVODNotFound so a private or unready VOD can't be told apart from a
+// missing one.
 func (s *VODService) GetVODById(ctx context.Context, vodId uuid.UUID, viewerId *uuid.UUID) (*domains.VOD, error) {
 	vod, err := s.vodRepo.GetById(ctx, vodId)
 	if err != nil {
 		return nil, err
 	}
-	if !canView(vod, viewerId) {
+	if !vod.VisibleTo(viewerId) {
 		return nil, domains.ErrVODNotFound
 	}
 	return vod, nil
-}
-
-func canView(vod *domains.VOD, viewerId *uuid.UUID) bool {
-	if vod.Visibility == domains.VODPublicVisibility {
-		return true
-	}
-	return viewerId != nil && *viewerId == vod.UserId
 }

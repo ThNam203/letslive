@@ -20,7 +20,7 @@ func (s *VODService) RegisterView(ctx context.Context, vodId uuid.UUID, viewerId
 	if errResp != nil {
 		return errResp
 	}
-	if !canView(vod, viewerId) {
+	if !vod.VisibleTo(viewerId) {
 		return domains.ErrVODNotFound
 	}
 
