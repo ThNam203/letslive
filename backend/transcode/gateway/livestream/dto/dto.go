@@ -20,6 +20,12 @@ type EndLivestreamRequestDTO struct {
 	PlaybackURL *string   `json:"playbackUrl,omitempty" validate:"omitempty,url,lte=2048"`
 	EndedAt     time.Time `json:"endedAt" validate:"omitempty"`
 	Duration    int64     `json:"duration" validate:"omitempty"`
+	// VODStatus is "processing" when the recording is still being written.
+	VODStatus string `json:"vodStatus,omitempty"`
+}
+
+type EndLivestreamResponseDTO struct {
+	VODId *uuid.UUID `json:"vodId,omitempty"`
 }
 
 type LivestreamResponseDTO struct {

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"net"
 	"sen1or/letslive/shared/pkg/discovery"
 	"sen1or/letslive/shared/pkg/logger"
@@ -138,18 +137,7 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	})
 
 	s.readPackets(c, session, streamId)
-
-	// Close first so the VOD master exists before the playback URL is published.
-	closeCtx, cancelClose := context.WithTimeout(context.WithoutCancel(s.ctx), sessionCloseTimeout)
-	if err := session.Close(closeCtx); err != nil {
-		logger.Errorf(s.ctx, "failed to close livestream %s session: %v", streamId, err)
-	}
-	cancelClose()
-
-	// The media duration, not wall-clock time: Close (which waits for the last
-	// VOD uploads) and the wait for the first keyframe are not part of it.
-	duration := int64(math.Ceil(session.Duration().Seconds()))
-	s.onDisconnect(streamId, duration)
+	finishStream(s.ctx, s.livestreamGateway, session, streamId, s.config.VODPlaybackUrlPrefix)
 }
 
 // readPackets feeds the connection's packets to session until the connection
@@ -210,23 +198,6 @@ func (s *RTMPServer) onConnect(streamingKey string) (streamId string, userId str
 	livestreamId := createdLivestream.Id.String()
 
 	return livestreamId, userInfo.Data.Id.String(), nil
-}
-
-func (s *RTMPServer) onDisconnect(streamId string, duration int64) {
-	playbackURL := fmt.Sprintf("%s/%s/index.m3u8", s.config.VODPlaybackUrlPrefix, streamId)
-	endDTO := &livestreamdto.EndLivestreamRequestDTO{
-		PlaybackURL: &playbackURL,
-		EndedAt:     time.Now(),
-		Duration:    duration,
-	}
-
-	reqCtx, reqCtxCancel := context.WithTimeout(s.ctx, 10*time.Second)
-	defer reqCtxCancel()
-
-	createErrRes := s.livestreamGateway.EndLivestream(reqCtx, streamId, *endDTO)
-	if createErrRes != nil {
-		logger.Errorf(s.ctx, "failed to end livestream: %s", createErrRes.Message)
-	}
 }
 
 func (s *RTMPServer) Shutdown(ctx context.Context) error {

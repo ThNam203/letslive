@@ -35,9 +35,10 @@ export const vodHandlers = [
         const page = parseInt(url.searchParams.get("page") ?? "0");
         const limit = parseInt(url.searchParams.get("limit") ?? "10");
 
-        // newest first, like the backend's ORDER BY created_at DESC
+        // public and ready, newest first, like the backend's
+        // GetPublicVODsByUser query
         let results = vods
-            .filter((v) => v.visibility === "public")
+            .filter((v) => v.visibility === "public" && v.status === "ready")
             .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         if (userId) results = results.filter((v) => v.userId === userId);
 

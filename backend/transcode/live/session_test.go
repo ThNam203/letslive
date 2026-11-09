@@ -538,8 +538,8 @@ func TestSessionCloseBeforeFirstKeyframe(t *testing.T) {
 	}
 	mustGet(t, base+"/index.m3u8", http.StatusNotFound)
 
-	if err := closeSession(t, s); err != nil {
-		t.Fatalf("Close: %v", err)
+	if err := closeSession(t, s); !errors.Is(err, ErrNothingRecorded) {
+		t.Fatalf("Close = %v, want ErrNothingRecorded", err)
 	}
 	if _, err := os.Stat(filepath.Join(rig.tc.PublicHLSPath, "vods", s.id)); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("VOD dir for a session that never started: %v", err)
@@ -1022,8 +1022,8 @@ func TestSessionDurationNeverStarted(t *testing.T) {
 			t.Fatalf("HandlePacket: %v", err)
 		}
 	}
-	if err := closeSession(t, s); err != nil {
-		t.Fatalf("Close: %v", err)
+	if err := closeSession(t, s); !errors.Is(err, ErrNothingRecorded) {
+		t.Fatalf("Close = %v, want ErrNothingRecorded", err)
 	}
 	if got := s.Duration(); got != 0 {
 		t.Errorf("Duration of a session that never started = %v, want 0", got)

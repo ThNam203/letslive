@@ -14,7 +14,7 @@ func (r postgresVODRepo) GetPublicVODsByUser(ctx context.Context, userId uuid.UU
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT *
 		FROM vods
-		WHERE user_id = $1 AND visibility = 'public'
+		WHERE user_id = $1 AND visibility = 'public' AND status = 'ready'
 		ORDER BY created_at DESC
 		OFFSET $2
 		LIMIT $3

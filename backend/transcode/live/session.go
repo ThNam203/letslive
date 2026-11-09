@@ -24,6 +24,10 @@ const sessionLogInterval = 5 * time.Second
 // ErrSessionClosed is returned by HandlePacket after Close.
 var ErrSessionClosed = errors.New("session closed")
 
+// ErrNothingRecorded is returned by Close when the session ended before its
+// first keyframe, so no VOD was written.
+var ErrNothingRecorded = errors.New("session ended before its first keyframe, nothing recorded")
+
 // SessionDeps is what every Session shares with the rest of the service.
 // Registry and Storage are required; Now defaults to time.Now.
 type SessionDeps struct {
@@ -317,8 +321,9 @@ func ladderNamesOf(rs []Rendition) []string {
 // finished and the thumbnailer closed concurrently. If ctx ends first Close
 // returns ctx.Err() while that work continues in the background, still
 // bounded by the recorder's and thumbnailer's own timeouts. Close is
-// idempotent: every call waits for the same shutdown and returns its result,
-// which is the recorder's Finish error, if any.
+// idempotent: every call waits for the same shutdown and returns its result:
+// the recorder's Finish error, ErrNothingRecorded if the session never
+// started, or nil once the VOD is written.
 func (s *Session) Close(ctx context.Context) error {
 	s.closeOnce.Do(s.beginClose)
 	select {
@@ -340,6 +345,7 @@ func (s *Session) beginClose() {
 
 	if !started {
 		logger.Infof(s.ctx, "livestream %s: closed before the first keyframe, nothing recorded", s.id)
+		s.closeErr = ErrNothingRecorded
 		close(s.closeDone)
 		return
 	}
