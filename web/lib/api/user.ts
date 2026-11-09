@@ -4,9 +4,11 @@ import { fetchClient } from "@/utils/fetchClient";
 
 export async function SearchUsersByUsername(
     query: string,
+    page: number = 0,
+    limit: number = 10,
 ): Promise<ApiResponse<PublicUser[]>> {
     return fetchClient<ApiResponse<PublicUser[]>>(
-        `/users/search?username=${encodeURIComponent(query)}`,
+        `/users/search?username=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
     );
 }
 

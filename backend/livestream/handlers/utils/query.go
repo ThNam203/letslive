@@ -7,6 +7,7 @@ import (
 
 const (
 	requestPageQueryDefaultMinValue  = 0
+	requestPageQueryDefaultMaxValue  = 10000
 	requestLimitQueryDefaultMinValue = 1
 	requestLimitQueryDefaultMaxValue = 20
 )
@@ -16,6 +17,8 @@ func GetPageAndLimitQuery(r *http.Request) (finalPage int, finalLimit int) {
 	finalPage, pageErr := strconv.Atoi(page)
 	if pageErr != nil || finalPage < requestPageQueryDefaultMinValue {
 		finalPage = requestPageQueryDefaultMinValue
+	} else if finalPage > requestPageQueryDefaultMaxValue {
+		finalPage = requestPageQueryDefaultMaxValue
 	}
 
 	limit := r.URL.Query().Get("limit")

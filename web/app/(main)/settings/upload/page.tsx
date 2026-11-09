@@ -102,8 +102,6 @@ export default function UploadVODPage() {
             isPublic ? "public" : "private",
         );
 
-        toast(t("settings:upload.upload_queued"), { type: "success" });
-
         // Reset form for next upload
         setFile(null);
         setTitle("");

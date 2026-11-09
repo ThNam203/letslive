@@ -169,12 +169,30 @@ paths:
     get:
       summary: Search users by username
       operationId: searchUsers
+      description: Results are ordered by username similarity. The response meta carries page and page_size (no total).
       parameters:
         - name: username
           in: query
           required: true
           schema:
             type: string
+            maxLength: 100
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          required: false
+          description: Values outside 1..20 are clamped into that range.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 10
       responses:
         "200":
           description: List of matching users
@@ -556,6 +574,167 @@ paths:
                 $ref: "#/components/schemas/Error"
         "500":
           description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /internal/push:
+    post:
+      summary: "INTERNAL: push a message to users' devices"
+      description: >
+        Internal only (called by the chat service for direct messages); envoy
+        has no route for it. Delivery is best-effort and asynchronous: users
+        with a live realtime connection are skipped and nothing is stored as a
+        notification. Returns 200 once the payload is accepted.
+      operationId: sendPushInternal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userIds, title, body, data]
+              properties:
+                userIds:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: string
+                    format: uuid
+                title:
+                  type: string
+                  maxLength: 100
+                body:
+                  type: string
+                  maxLength: 500
+                data:
+                  type: object
+                  description: Deep-link data. No other keys are accepted.
+                  required: [type]
+                  properties:
+                    type:
+                      type: string
+                      maxLength: 50
+                      example: dm
+                    referenceId:
+                      type: string
+                      maxLength: 100
+                    actionUrl:
+                      type: string
+                      maxLength: 2048
+                      example: /messages/65f0c0ffee
+      responses:
+        "200":
+          description: Accepted
+        "400":
+          description: Invalid payload or unknown data key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /user/me/devices:
+    post:
+      summary: Register a push-notification device token
+      description: >
+        Upserts by token. A token already registered to another user is
+        reassigned to the caller, and its platform, locale and last-seen time
+        are refreshed.
+      operationId: registerDevice
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, platform]
+              properties:
+                token:
+                  type: string
+                  minLength: 1
+                  maxLength: 4096
+                platform:
+                  type: string
+                  enum: [ios, android]
+                locale:
+                  type: string
+                  maxLength: 35
+                  description: Optional BCP 47 language tag, for example vi or en-US
+      responses:
+        "200":
+          description: Token registered; data holds the stored device token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      userId:
+                        type: string
+                        format: uuid
+                      token:
+                        type: string
+                      platform:
+                        type: string
+                        enum: [ios, android]
+                      locale:
+                        type: string
+                        nullable: true
+                      createdAt:
+                        type: string
+                        format: date-time
+                      lastSeenAt:
+                        type: string
+                        format: date-time
+        "400":
+          description: Invalid payload (empty token, unknown platform, bad locale)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /user/me/devices/{token}:
+    delete:
+      summary: Unregister a push-notification device token
+      description: >
+        Deletes the token only when it belongs to the caller. A missing token or
+        one owned by another user is a no-op success, so existence never leaks.
+      operationId: unregisterDevice
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 4096
+      responses:
+        "200":
+          description: Token removed or nothing to remove
+        "400":
+          description: Token empty or longer than 4096 characters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
           content:
             application/json:
               schema:

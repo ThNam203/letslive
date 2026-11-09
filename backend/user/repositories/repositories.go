@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"sen1or/letslive/user/domains"
+	devicerepo "sen1or/letslive/user/repositories/device"
 	followerrepo "sen1or/letslive/user/repositories/follower"
 	giftrepo "sen1or/letslive/user/repositories/gift"
 	inventoryrepo "sen1or/letslive/user/repositories/inventory"
@@ -30,6 +31,10 @@ func NewNotificationRepository(conn *pgxpool.Pool) domains.NotificationRepositor
 
 func NewInventoryRepository(conn *pgxpool.Pool) domains.InventoryRepository {
 	return inventoryrepo.NewInventoryRepository(conn)
+}
+
+func NewDeviceTokenRepository(conn *pgxpool.Pool) domains.DeviceTokenRepository {
+	return devicerepo.NewDeviceTokenRepository(conn)
 }
 
 func NewGiftRepository(conn *pgxpool.Pool) domains.GiftRepository {

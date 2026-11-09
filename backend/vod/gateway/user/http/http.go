@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"sen1or/letslive/shared/pkg/discovery"
 	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/vod/gateway"
 	usergateway "sen1or/letslive/vod/gateway/user"
+	"strconv"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -65,6 +67,55 @@ func (g *userHTTPGateway) GetUserPublicInfo(ctx context.Context, userId uuid.UUI
 	}
 
 	return result.Data, nil
+}
+
+type userSearchResponse struct {
+	Success bool `json:"success"`
+	Data    []struct {
+		Id uuid.UUID `json:"id"`
+	} `json:"data"`
+}
+
+func (g *userHTTPGateway) SearchUserIds(ctx context.Context, query string, limit int) ([]uuid.UUID, error) {
+	addr, err := g.registry.ServiceAddress(ctx, "user")
+	if err != nil {
+		return nil, fmt.Errorf("user service unavailable: %w", err)
+	}
+
+	params := url.Values{}
+	params.Set("username", query)
+	params.Set("limit", strconv.Itoa(limit))
+	reqURL := fmt.Sprintf("http://%s/v1/users/search?%s", addr, params.Encode())
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create SearchUserIds request: %w", err)
+	}
+
+	if err := gateway.SetRequestIDHeader(ctx, req); err != nil {
+		logger.Warnf(ctx, "failed to set request id header: %v", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to call user service SearchUserIds: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 != 2 {
+		return nil, fmt.Errorf("user service returned status %d on SearchUserIds", resp.StatusCode)
+	}
+
+	var result userSearchResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode user service SearchUserIds response: %w", err)
+	}
+
+	ids := make([]uuid.UUID, 0, len(result.Data))
+	for _, u := range result.Data {
+		ids = append(ids, u.Id)
+	}
+
+	return ids, nil
 }
 
 func (g *userHTTPGateway) CreateNotification(ctx context.Context, data usergateway.CreateNotificationRequest) error {

@@ -47,7 +47,16 @@
         "thumbnail_description": "Nếu để trống, ảnh thu nhỏ sẽ được tạo tự động.",
         "thumbnail_hover": "Thay đổi ảnh thu nhỏ",
         "confirm_edit_button": "Xác nhận chỉnh sửa",
-        "updated_success": "Cập nhật thông tin livestream thành công"
+        "updated_success": "Cập nhật thông tin livestream thành công",
+        "key_title": "Khóa phát trực tiếp",
+        "key_description": "Dán khóa này vào phần mềm phát trực tiếp của bạn. Bất kỳ ai có khóa này đều có thể phát trực tiếp lên kênh của bạn.",
+        "key_show": "Hiện khóa",
+        "key_hide": "Ẩn khóa",
+        "key_copy": "Sao chép khóa",
+        "key_reset_confirm_title": "Tạo khóa mới?",
+        "key_reset_confirm_description": "Khóa hiện tại sẽ ngừng hoạt động ngay lập tức. Hãy cập nhật khóa mới vào phần mềm phát trực tiếp của bạn.",
+        "key_reset_confirm_action": "Tạo mới",
+        "thumbnail_remove": "Xóa ảnh thu nhỏ"
     },
     "file_size_exceeds": "Kích thước tệp vượt quá {{size}} MB",
     "save_changes": "Lưu thay đổi",
@@ -79,7 +88,10 @@
         "metadata": {
             "view": "lượt xem",
             "views": "lượt xem"
-        }
+        },
+        "empty": "Bạn chưa có video nào.",
+        "status_processing": "Đang xử lý",
+        "status_failed": "Xử lý thất bại"
     },
     "upload": {
         "title": "Tải lên VOD",
@@ -101,7 +113,6 @@
         "error_invalid_format": "Định dạng tệp không hợp lệ. Hỗ trợ: MP4, MOV, AVI, MKV, WebM.",
         "error_file_too_large": "Tệp quá lớn. Kích thước tối đa là 100 MB.",
         "error_max_concurrent": "Tối đa {{max}} lượt tải lên đồng thời. Video của bạn sẽ được đưa vào hàng chờ.",
-        "upload_queued": "Video đã được thêm vào hàng chờ tải lên",
         "manager_waiting": "Đang chờ...",
         "manager_processing": "Đang xử lý trên máy chủ...",
         "manager_complete": "Tải lên hoàn tất",
@@ -117,7 +128,9 @@
         "manager_header_failed_one": "1 lượt tải lên thất bại",
         "manager_header_failed_other": "{{count}} lượt tải lên thất bại",
         "manager_header_complete_one": "1 lượt tải lên hoàn tất",
-        "manager_header_complete_other": "{{count}} lượt tải lên hoàn tất"
+        "manager_header_complete_other": "{{count}} lượt tải lên hoàn tất",
+        "keep_open_note": "Hãy giữ ứng dụng mở trong khi tải video lên. Nếu bị gián đoạn, nhấn Thử lại để gửi lại tệp.",
+        "processing_failed": "Máy chủ không thể xử lý video này."
     },
     "disable": {
         "title": "Vô hiệu hóa tài khoản của bạn",

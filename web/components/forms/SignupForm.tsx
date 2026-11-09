@@ -11,8 +11,7 @@ import IconEmail from "../icons/email";
 import FormErrorText from "./FormErrorText";
 import IconUserOutline from "../icons/user";
 import IconPasswordOutline from "../icons/password";
-import IconEye from "../icons/eye";
-import IconEyeOff from "../icons/eye-off";
+import PasswordVisibilityToggle from "./PasswordVisibilityToggle";
 import Turnstile, { useTurnstile } from "react-turnstile";
 import {
     Dialog,
@@ -173,6 +172,7 @@ export default function SignUpForm() {
                         id="email"
                         aria-label={t("email")}
                         className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"
+                        autoComplete="email"
                         placeholder={t("email")}
                         type="email"
                         maxLength={EMAIL_MAX_LENGTH}
@@ -206,23 +206,18 @@ export default function SignUpForm() {
                         id="password"
                         aria-label={t("password")}
                         className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"
+                        autoComplete="new-password"
                         placeholder={t("password")}
                         type={hidingPassword ? "password" : "text"}
                         maxLength={PASSWORD_MAX_LENGTH}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    {!hidingPassword ? (
-                        <IconEye
-                            className="opacity-50 hover:cursor-pointer"
-                            onClick={() => setHidingPassword(true)}
-                        />
-                    ) : (
-                        <IconEyeOff
-                            className="opacity-50 hover:cursor-pointer"
-                            onClick={() => setHidingPassword(false)}
-                        />
-                    )}
+                    <PasswordVisibilityToggle
+                        inputId="password"
+                        isVisible={!hidingPassword}
+                        onToggle={() => setHidingPassword((prev) => !prev)}
+                    />
                 </div>
                 <FormErrorText textError={errors.password} />
 
@@ -234,27 +229,25 @@ export default function SignUpForm() {
                         id="confirm-password"
                         aria-label={t("confirm_password")}
                         className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"
+                        autoComplete="new-password"
                         placeholder={t("confirm_password")}
                         type={hidingConfirmPassword ? "password" : "text"}
                         maxLength={PASSWORD_MAX_LENGTH}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                     />
-                    {!hidingConfirmPassword ? (
-                        <IconEye
-                            className="opacity-50 hover:cursor-pointer"
-                            onClick={() => setHidingConfirmPassword(true)}
-                        />
-                    ) : (
-                        <IconEyeOff
-                            className="opacity-50 hover:cursor-pointer"
-                            onClick={() => setHidingConfirmPassword(false)}
-                        />
-                    )}
+                    <PasswordVisibilityToggle
+                        inputId="confirm-password"
+                        isVisible={!hidingConfirmPassword}
+                        onToggle={() =>
+                            setHidingConfirmPassword((prev) => !prev)
+                        }
+                    />
                 </div>
                 <FormErrorText textError={errors.confirmPassword} />
-                <div className="mt-4 flex h-[4.063rem] flex-col items-end">
+                <div className="mt-4 flex min-h-[4.063rem] flex-col">
                     <Turnstile
+                        size="flexible"
                         language={i18n.resolvedLanguage || i18n.language}
                         sitekey={
                             process.env
@@ -274,6 +267,7 @@ export default function SignUpForm() {
                                 turnstile: err ?? "",
                             }));
                         }}
+                        onExpire={() => setTurnstileToken("")}
                     />
                     <FormErrorText textError={errors.turnstile} />
                 </div>
@@ -282,7 +276,7 @@ export default function SignUpForm() {
                     disabled={isLoading}
                     className="mt-4 flex h-12 w-full items-center justify-center rounded-md border border-transparent bg-blue-400 font-semibold text-white uppercase hover:bg-blue-500"
                 >
-                    {isLoading && <IconLoader className="ml-2" />}
+                    {isLoading && <IconLoader className="mr-2" />}
                     {t("signup")}
                 </button>
             </form>

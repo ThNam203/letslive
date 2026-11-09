@@ -43,5 +43,13 @@
     "preview_alt": "Preview {{number}}",
     "open_in_messages": "Open in Messages",
     "minimize_chat": "Minimize chat",
-    "close_chat": "Close chat"
+    "close_chat": "Close chat",
+    "edited": "(edited)",
+    "edit_message": "Edit message",
+    "delete_message": "Delete message",
+    "delete_message_confirm": "Delete this message? This cannot be undone.",
+    "save": "Save",
+    "delete": "Delete",
+    "attach_images": "Attach images",
+    "remove_image": "Remove image"
 }

@@ -30,5 +30,6 @@ type CreateNotificationRequest struct {
 
 type UserGateway interface {
 	GetUserPublicInfo(ctx context.Context, userId uuid.UUID) (*UserPublicInfo, error)
+	SearchUserIds(ctx context.Context, query string, limit int) ([]uuid.UUID, error)
 	CreateNotification(ctx context.Context, req CreateNotificationRequest) error
 }

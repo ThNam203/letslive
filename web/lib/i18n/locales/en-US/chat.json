@@ -10,5 +10,9 @@
     "emote_category_gestures": "Gestures",
     "emote_category_hype": "Hype",
     "emote_category_misc": "Misc",
-    "connection_error": "Failed to connect to chat. Please refresh the page."
+    "connection_error": "Failed to connect to chat. Please refresh the page.",
+    "send_failed": "Message not sent. Your text is kept.",
+    "send_retry": "Retry",
+    "send_action": "Send message",
+    "emotes_action": "Emotes"
 }

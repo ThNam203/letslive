@@ -12,7 +12,6 @@ import { ThemeProviderWrapper } from "@/components/utils/theme-provider-wrapper"
 import UserInformationWrapper from "@/components/wrappers/UserInformationWrapper";
 import MockProvider from "@/components/utils/mock-provider";
 import QueryProvider from "@/components/utils/query-provider";
-import CookieConsentBanner from "@/components/utils/cookie-consent-banner";
 
 const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
 
@@ -74,7 +73,6 @@ export default async function RootLayout({
             <Suspense fallback={null}>
                 <Toast />
                 <UploadManager />
-                <CookieConsentBanner />
             </Suspense>
         </ThemeProviderWrapper>
     );

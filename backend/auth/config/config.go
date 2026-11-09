@@ -50,10 +50,10 @@ type Config struct {
 }
 
 // TracerConfig interface implementation
-func (c Config) GetServiceName() string      { return c.Service.Name }
-func (c Config) GetTracerEndpoint() string   { return c.Tracer.Endpoint }
-func (c Config) GetTracerBatchTimeout() int  { return c.Tracer.BatchTimeout }
-func (c Config) IsSecure() bool              { return c.Tracer.Secure }
+func (c Config) GetServiceName() string     { return c.Service.Name }
+func (c Config) GetTracerEndpoint() string  { return c.Tracer.Endpoint }
+func (c Config) GetTracerBatchTimeout() int { return c.Tracer.BatchTimeout }
+func (c Config) IsSecure() bool             { return c.Tracer.Secure }
 
 // PostProcess builds the database connection string from environment variables.
 func PostProcess(config *Config) error {

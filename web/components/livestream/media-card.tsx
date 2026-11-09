@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { dateDiffFromNow, formatSeconds } from "@/utils/timeFormats";
-import GLOBAL from "../../global";
+import { mediaThumbnailUrl } from "@/utils/thumbnail";
 import { VOD } from "@/types/vod";
 import { Livestream } from "@/types/livestream";
 import { PublicUser } from "@/types/user";
@@ -13,9 +14,7 @@ import useT from "@/hooks/use-translation";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import UserAvatar from "@/components/ui/user-avatar";
-import IconEye from "../icons/eye";
 import IconEyeOff from "../icons/eye-off";
-import IconClock from "../icons/clock";
 import IconDotsVertical from "../icons/dots-vertical";
 import { Button } from "../ui/button";
 import {
@@ -25,6 +24,7 @@ import {
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { usePublicUser } from "@/hooks/queries/use-users";
+import useCompactNumber from "@/hooks/use-compact-number";
 
 // Matches the 1/2/3/4-column card grids (sm/md/lg breakpoints).
 const THUMBNAIL_SIZES =
@@ -75,9 +75,10 @@ export default function MediaCard(props: MediaCardProps) {
     const id = isLive ? props.livestream.id : props.vod.id;
     const title = isLive ? props.livestream.title : props.vod.title;
     const viewCount = isLive ? props.livestream.viewCount : props.vod.viewCount;
-    const thumbnailUrl =
-        (isLive ? props.livestream.thumbnailUrl : props.vod.thumbnailUrl) ??
-        `${GLOBAL.API_URL}/files/livestreams/${id}/thumbnail.jpeg`;
+    const thumbnailUrl = mediaThumbnailUrl(
+        id,
+        isLive ? props.livestream.thumbnailUrl : props.vod.thumbnailUrl,
+    );
 
     // A card either receives the user from its parent (lists that already
     // fetched them) or looks it up itself; only live cards and the
@@ -87,12 +88,14 @@ export default function MediaCard(props: MediaCardProps) {
     const { data: fetchedUser } = usePublicUser(userId, needsLookup);
     const user = providedUser ?? (needsLookup ? (fetchedUser ?? null) : null);
 
+    const formatCompact = useCompactNumber();
+
+    const targetHref = isLive
+        ? `/users/${userId}`
+        : `/users/${userId}/vods/${id}`;
+
     const goToTarget = () => {
-        if (isLive) {
-            router.push(`/users/${userId}`);
-        } else {
-            router.push(`/users/${userId}/vods/${id}`);
-        }
+        router.push(targetHref);
     };
 
     const goToUser = (e: React.MouseEvent) => {
@@ -131,21 +134,24 @@ export default function MediaCard(props: MediaCardProps) {
                         {formatSeconds(vod.duration)}
                     </Badge>
                 </div>
-                <LiveImage
-                    src={thumbnailUrl}
-                    alt={title}
-                    className={cn(
-                        "h-full w-full",
-                        !isEditable && "hover:cursor-pointer",
-                    )}
-                    width={500}
-                    height={500}
-                    sizes={THUMBNAIL_SIZES}
-                    preload={props.preload ?? false}
-                    onClick={isEditable ? undefined : goToTarget}
-                    fallbackSrc="/images/streaming.webp"
-                    alwaysRefresh={false}
-                />
+                <Link
+                    href={targetHref}
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    className="block h-full w-full"
+                >
+                    <LiveImage
+                        src={thumbnailUrl}
+                        alt={title}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        width={500}
+                        height={500}
+                        sizes={THUMBNAIL_SIZES}
+                        preload={props.preload ?? false}
+                        fallbackSrc="/images/streaming.webp"
+                        alwaysRefresh={false}
+                    />
+                </Link>
             </div>
         );
     };
@@ -163,7 +169,10 @@ export default function MediaCard(props: MediaCardProps) {
         }
         return (
             <span>
-                {viewCount} {viewCount < 2 ? "view" : "views"}
+                {t("common:vod.views_compact", {
+                    count: viewCount,
+                    formatted: formatCompact(viewCount),
+                })}
             </span>
         );
     };
@@ -182,15 +191,10 @@ export default function MediaCard(props: MediaCardProps) {
     };
 
     const renderMetaRow = () => (
-        <div className="text-muted-foreground mt-1 flex items-center gap-3 text-xs">
-            <div className="flex items-center gap-1">
-                <IconEye className="h-3 w-3" />
-                {renderViewCount()}
-            </div>
-            <div className="flex items-center gap-1">
-                <IconClock className="h-3 w-3" />
-                {renderTimeMeta()}
-            </div>
+        <div className="text-muted-foreground mt-1 flex items-center gap-1.5 truncate text-xs">
+            {renderViewCount()}
+            <span aria-hidden="true">·</span>
+            {renderTimeMeta()}
         </div>
     );
 
@@ -247,11 +251,13 @@ export default function MediaCard(props: MediaCardProps) {
                         />
                     </button>
                     <div className="min-w-0 flex-1">
-                        <h3
-                            className="line-clamp-2 text-base font-semibold hover:cursor-pointer"
-                            onClick={goToTarget}
-                        >
-                            {title}
+                        <h3 className="line-clamp-2 text-base font-semibold">
+                            <Link
+                                href={targetHref}
+                                className="group-hover:text-primary focus-visible:underline focus-visible:outline-none"
+                            >
+                                {title}
+                            </Link>
                         </h3>
                         <p
                             className="text-muted-foreground truncate text-sm hover:cursor-pointer hover:underline"
@@ -266,9 +272,17 @@ export default function MediaCard(props: MediaCardProps) {
         }
         return (
             <div>
-                <div className="flex items-center gap-2">
-                    <h3 className="text-foreground line-clamp-2 flex-1 text-base font-semibold">
-                        {title}
+                <div className="flex items-start gap-2">
+                    <h3
+                        className="text-foreground line-clamp-2 flex-1 text-base leading-snug font-semibold"
+                        title={title}
+                    >
+                        <Link
+                            href={targetHref}
+                            className="group-hover:text-primary focus-visible:underline focus-visible:outline-none"
+                        >
+                            {title}
+                        </Link>
                     </h3>
                     {renderEditMenu()}
                 </div>
@@ -280,7 +294,7 @@ export default function MediaCard(props: MediaCardProps) {
     return (
         <Card
             className={cn(
-                "border-border w-full overflow-hidden rounded-sm transition-all hover:shadow-md",
+                "group border-border w-full overflow-hidden rounded-sm transition-all hover:shadow-md",
                 props.className,
             )}
         >

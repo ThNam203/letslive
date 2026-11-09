@@ -19,14 +19,16 @@ type DmMessageService struct {
 	conversations *repositories.ConversationRepository
 	messages      *repositories.DmMessageRepository
 	notifier      *events.Notifier
+	push          PushClient
 }
 
 func NewDmMessageService(
 	conversations *repositories.ConversationRepository,
 	messages *repositories.DmMessageRepository,
 	notifier *events.Notifier,
+	push PushClient,
 ) *DmMessageService {
-	return &DmMessageService{conversations: conversations, messages: messages, notifier: notifier}
+	return &DmMessageService{conversations: conversations, messages: messages, notifier: notifier, push: push}
 }
 
 // loadAsParticipant finds the conversation and the caller's participant record.
@@ -81,7 +83,8 @@ type SendDmMessageInput struct {
 
 // Send saves the message, updates the conversation preview and pushes
 // dm:new_message to every participant, the sender included so their other
-// tabs see it too.
+// tabs see it too. It also asks the user service to push the message to
+// every participant except the sender (best-effort, see pushDm).
 func (s *DmMessageService) Send(ctx context.Context, input SendDmMessageInput) (*domains.DmMessage, []string, error) {
 	conversation, participant, err := s.loadAsParticipant(ctx, input.ConversationID, input.SenderID)
 	if err != nil {
@@ -146,6 +149,10 @@ func (s *DmMessageService) Send(ctx context.Context, input SendDmMessageInput) (
 		ConversationID: conversation.ID.Hex(),
 		Message:        dto.FromDmMessage(message),
 	})
+
+	// Push runs in a goroutine on a context detached from the request, so a slow
+	// or down user service never delays or fails the send.
+	go s.pushDm(context.WithoutCancel(ctx), participantIDs, input.SenderID, senderUsername, message, conversation.ID.Hex())
 
 	return message, participantIDs, nil
 }

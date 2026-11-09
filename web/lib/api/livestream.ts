@@ -11,6 +11,16 @@ export async function GetPopularLivestreams(
     );
 }
 
+export async function SearchLivestreams(
+    query: string,
+    page: number = 0,
+    limit: number = 20,
+): Promise<ApiResponse<Livestream[]>> {
+    return fetchClient<ApiResponse<Livestream[]>>(
+        `/livestreams/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
+    );
+}
+
 export async function GetLivestreamOfUser(
     userId: string,
 ): Promise<ApiResponse<Livestream | null>> {

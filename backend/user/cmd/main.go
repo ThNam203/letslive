@@ -10,13 +10,17 @@ import (
 
 	"sen1or/letslive/user/api"
 	cfg "sen1or/letslive/user/config"
+	"sen1or/letslive/user/domains"
 	financehttp "sen1or/letslive/user/gateway/finance/http"
+	devicehandler "sen1or/letslive/user/handlers/device"
 	"sen1or/letslive/user/handlers/follow"
 	gifthandler "sen1or/letslive/user/handlers/gift"
 	inventoryhandler "sen1or/letslive/user/handlers/inventory"
 	"sen1or/letslive/user/handlers/livestream_information"
 	notificationhandler "sen1or/letslive/user/handlers/notification"
+	pushhandler "sen1or/letslive/user/handlers/push"
 	"sen1or/letslive/user/handlers/user"
+	"sen1or/letslive/user/push"
 	"sen1or/letslive/user/repositories"
 	"sen1or/letslive/user/services"
 
@@ -79,7 +83,13 @@ func main() {
 	}
 	realtimePublisher := realtime.NewNATSPublisher(natsConn)
 
-	server := SetupServer(ctx, dbConn, registry, config, realtimePublisher)
+	deviceRepo := repositories.NewDeviceTokenRepository(dbConn)
+	pushSender, closePush, err := push.NewFromEnv(ctx, deviceRepo, natsConn)
+	if err != nil {
+		logger.Panicf(ctx, "invalid push configuration: %v", err)
+	}
+
+	server := SetupServer(ctx, dbConn, registry, config, realtimePublisher, deviceRepo, pushSender)
 	go func() {
 		logger.Infof(ctx, "starting server on %s:%d...", config.Service.Hostname, config.Service.APIPort)
 		// ListenAndServe should ideally block until an error occurs (e.g., server stopped)
@@ -104,6 +114,9 @@ func main() {
 				logger.Errorf(shutdownCtx, "server shutdown timed out.")
 			}
 		}
+		// After Shutdown returns (or times out): requests that finished have
+		// enqueued their pushes; let the queue deliver them.
+		closePush()
 		shutdownWg.Done()
 	})()
 
@@ -119,6 +132,8 @@ func main() {
 		shutdownWg.Done()
 	})()
 
+	shutdownWg.Wait()
+	// nats is drained last so queued pushes can still read presence
 	shutdownWg.Add(1)
 	go (func() {
 		if err := natsConn.Drain(); err != nil {
@@ -131,7 +146,7 @@ func main() {
 	logger.Infof(shutdownCtx, "service shut down complete.")
 }
 
-func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config, publisher realtime.Publisher) *api.APIServer {
+func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.Registry, cfg *cfg.Config, publisher realtime.Publisher, deviceRepo domains.DeviceTokenRepository, pushSender push.Sender) *api.APIServer {
 	var userRepo = repositories.NewUserRepository(dbConn)
 	var livestreamInfoRepo = repositories.NewLivestreamInformationRepository(dbConn)
 	var followRepo = repositories.NewFollowRepository(dbConn)
@@ -143,8 +158,9 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var userService = services.NewUserService(userRepo, livestreamInfoRepo, notificationRepo, followRepo, *minioService)
 	var livestreamInfoService = services.NewLivestreamInformationService(livestreamInfoRepo)
 	var followService = services.NewFollowService(followRepo)
-	var notificationService = services.NewNotificationService(notificationRepo, publisher)
+	var notificationService = services.NewNotificationService(notificationRepo, publisher, pushSender)
 	var inventoryService = services.NewInventoryService(inventoryRepo)
+	var deviceService = services.NewDeviceService(deviceRepo)
 	var financeGateway = financehttp.NewFinanceGateway(registry)
 	var giftService = services.NewGiftService(giftRepo, userRepo, financeGateway, notificationService)
 
@@ -154,5 +170,6 @@ func SetupServer(ctx context.Context, dbConn *pgxpool.Pool, registry discovery.R
 	var notifHandler = notificationhandler.NewNotificationHandler(*notificationService)
 	var invHandler = inventoryhandler.NewInventoryHandler(inventoryService)
 	var gHandler = gifthandler.NewGiftHandler(giftService)
-	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, notifHandler, invHandler, gHandler, cfg, dbConn)
+	var dHandler = devicehandler.NewDeviceHandler(deviceService)
+	return api.NewAPIServer(userHandler, livestreamInfoHandler, followHandler, notifHandler, invHandler, gHandler, dHandler, pushhandler.NewPushHandler(pushSender), cfg, dbConn)
 }

@@ -1,0 +1,406 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:letslive_mobile/core/router/app_chrome.dart';
+import 'package:letslive_mobile/core/l10n/generated/app_localizations.dart';
+import 'package:letslive_mobile/features/watch/domain/player_controller.dart';
+import 'package:letslive_mobile/features/watch/presentation/player_chrome.dart';
+import 'package:letslive_mobile/features/watch/watch_providers.dart';
+
+/// A 16:9 live player: the video plus a small overlay (web's live player
+/// controls that make sense on a phone): live badge, play/pause, the
+/// settings menu (picture-in-picture and the quality: Auto + the stream's
+/// variants) and full screen.
+/// Tapping the video pauses or plays it; the bar fades out while playing
+/// ([PlayerChrome]).
+///
+/// Owns its [PlayerController] (from [playerFactoryProvider]) and
+/// disposes it with the widget.
+///
+/// When playback stops it shows a spinner, never an error first:
+/// - The first error silently starts a fresh player, which joins at the live
+///   edge (this also recovers a player that fell behind the live window).
+///   Once that player plays, the next error gets the same second chance.
+/// - A further error, or the end of the playlist, calls [onStopped] so the
+///   screen can ask the server whether the stream is still live. If it
+///   ended, the screen replaces this view. If it is still live, an error
+///   shows a retry; an ended playlist keeps the spinner until the next
+///   check notices the end.
+class LivePlayerView extends ConsumerStatefulWidget {
+  const LivePlayerView({
+    required this.url,
+    required this.title,
+    required this.author,
+    required this.onStopped,
+    super.key,
+  });
+
+  /// HLS master playlist.
+  final String url;
+
+  /// Stream title, for the background-playback notification.
+  final String title;
+
+  /// Streamer name, for the background-playback notification.
+  final String author;
+
+  /// Playback ended or failed for good; completes once the server was asked.
+  final Future<void> Function() onStopped;
+
+  @override
+  ConsumerState<LivePlayerView> createState() => _LivePlayerViewState();
+}
+
+class _LivePlayerViewState extends ConsumerState<LivePlayerView> {
+  late PlayerController _player;
+
+  /// Whether [LivePlayerView.onStopped] was called for the current player.
+  bool _reportedStop = false;
+
+  /// Whether the silent restart was used and no player has played since.
+  bool _autoRetried = false;
+
+  /// The server said the stream is still live after a playback error.
+  bool _showError = false;
+
+  /// Read once: `ref` is not usable in [dispose].
+  late final ScreenWakeHolder _screenWake;
+
+  /// Whether this view currently keeps the screen on.
+  bool _awake = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _screenWake = ref.read(screenWakeHolderProvider);
+    _player = _createPlayer();
+    _syncWake();
+  }
+
+  /// Keeps the screen on exactly while the stream plays.
+  void _syncWake() {
+    final value = _player.value.value;
+    _setAwake(value.isPlaying && !value.hasError && !value.hasEnded);
+  }
+
+  void _setAwake(bool awake) {
+    if (awake == _awake) return;
+    _awake = awake;
+    awake ? _screenWake.acquire(this) : _screenWake.release(this);
+  }
+
+  PlayerController _createPlayer() {
+    final player = ref.read(playerFactoryProvider)(
+      url: widget.url,
+      title: widget.title,
+      author: widget.author,
+    );
+    player.value.addListener(_onPlayerChanged);
+    return player;
+  }
+
+  /// Also lets the screen sleep: on leaving (dispose, which logout and
+  /// navigating away both cause) and before a restart.
+  void _releasePlayer() {
+    _player.value.removeListener(_onPlayerChanged);
+    _setAwake(false);
+    _player.dispose();
+  }
+
+  void _onPlayerChanged() {
+    _syncWake();
+    final value = _player.value.value;
+    if (value.isPlaying && !value.hasError && !value.hasEnded) {
+      _autoRetried = false;
+    }
+    if (_reportedStop || !(value.hasEnded || value.hasError)) return;
+    if (value.hasError && !_autoRetried) {
+      _autoRetried = true;
+      // Not while the player is still notifying its listeners.
+      scheduleMicrotask(() {
+        if (mounted) _retry();
+      });
+      return;
+    }
+    _reportedStop = true;
+    unawaited(_checkStream(isError: value.hasError));
+  }
+
+  Future<void> _checkStream({required bool isError}) async {
+    await widget.onStopped();
+    // Still here, so the server says the stream is still live.
+    if (mounted && isError) setState(() => _showError = true);
+  }
+
+  void _retry() => setState(() {
+    _releasePlayer();
+    _reportedStop = false;
+    _showError = false;
+    _player = _createPlayer();
+    _syncWake();
+  });
+
+  @override
+  void dispose() {
+    _releasePlayer();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AspectRatio(
+    aspectRatio: 16 / 9,
+    child: ColoredBox(
+      color: Colors.black,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          _player.buildVideo(context),
+          ValueListenableBuilder<PlayerValue>(
+            valueListenable: _player.value,
+            builder: (context, value, _) {
+              if (_showError) return PlayerError(onRetry: _retry);
+              if (value.hasError || value.hasEnded) {
+                return const PlayerSpinner();
+              }
+              return _Controls(player: _player, value: value);
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// The control bar in a [PlayerChrome] (tap to pause, auto-hide).
+class _Controls extends StatelessWidget {
+  const _Controls({required this.player, required this.value});
+
+  final PlayerController player;
+  final PlayerValue value;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return PlayerChrome(
+      player: player,
+      value: value,
+      bar: Row(
+        children: [
+          const SizedBox(width: 8),
+          _LiveBadge(l10n.users_live),
+          const Spacer(),
+          PlayPauseButton(player: player, value: value),
+          PlayerSettingsMenu(player: player, value: value),
+          const FullscreenButton(),
+        ],
+      ),
+    );
+  }
+}
+
+/// Pause while playing, play otherwise.
+class PlayPauseButton extends StatelessWidget {
+  const PlayPauseButton({required this.player, required this.value, super.key});
+
+  final PlayerController player;
+  final PlayerValue value;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return value.isPlaying
+        ? IconButton(
+            tooltip: l10n.users_player_pause,
+            icon: const Icon(Icons.pause),
+            onPressed: player.pause,
+          )
+        : IconButton(
+            tooltip: l10n.users_player_play,
+            icon: const Icon(Icons.play_arrow),
+            onPressed: player.play,
+          );
+  }
+}
+
+/// Buffering, restarting, or waiting for the server to say whether the
+/// stream is still live.
+class PlayerSpinner extends StatelessWidget {
+  const PlayerSpinner({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      const Center(child: CircularProgressIndicator(color: Colors.white));
+}
+
+/// The gear menu of a player: picture-in-picture, then the quality ("Auto"
+/// plus one entry per variant, the one in use checked).
+class PlayerSettingsMenu extends StatelessWidget {
+  const PlayerSettingsMenu({
+    required this.player,
+    required this.value,
+    super.key,
+  });
+
+  final PlayerController player;
+  final PlayerValue value;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    // Each entry carries what it does; the menu runs it once closed.
+    return PopupMenuButton<VoidCallback>(
+      key: const ValueKey('player-settings'),
+      tooltip: l10n.settings_page_title,
+      icon: const Icon(Icons.settings),
+      onSelected: (action) => action(),
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          key: const ValueKey('player-pip'),
+          value: () => unawaited(player.enterPictureInPicture()),
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.picture_in_picture_alt),
+            title: Text(l10n.users_player_picture_in_picture),
+          ),
+        ),
+        const PopupMenuDivider(),
+        for (final quality in [VideoQuality.auto, ...value.qualities])
+          CheckedPopupMenuItem(
+            value: () => unawaited(player.selectQuality(quality)),
+            checked: quality == value.quality,
+            child: Text(
+              quality.isAuto
+                  ? l10n.users_player_quality_auto
+                  : '${quality.height}p',
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _LiveBadge extends StatelessWidget {
+  const _LiveBadge(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: Colors.red.shade600,
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall
+            ?.copyWith(color: Colors.white),
+      ),
+    ),
+  );
+}
+
+/// Playback failed: the reason and a retry button. Shared by the live and
+/// the VOD player (live: failed twice while the server still says the
+/// stream is live).
+class PlayerError extends StatelessWidget {
+  const PlayerError({required this.onRetry, super.key});
+
+  /// Starts a fresh player.
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.users_channel_playback_error,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white),
+            ),
+            const SizedBox(height: 8),
+            FilledButton(
+              onPressed: onRetry,
+              child: Text(l10n.users_channel_retry),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// True when the phone is held sideways. The watch screens then show only
+/// the player ([LandscapePlayer]): rotating (or the [FullscreenButton]) is
+/// the fullscreen mode.
+bool isLandscape(BuildContext context) =>
+    MediaQuery.orientationOf(context) == Orientation.landscape;
+
+/// The landscape layout of a watch screen: [player] (a 16:9 player view)
+/// as large as fits, centered on black, clear of notches. The status and
+/// navigation bars hide while it shows (a swipe from the edge brings them
+/// back for a moment).
+class LandscapePlayer extends StatefulWidget {
+  const LandscapePlayer({required this.player, super.key});
+
+  /// The screen's player view; keep its key, so rotating keeps playback.
+  final Widget player;
+
+  @override
+  State<LandscapePlayer> createState() => _LandscapePlayerState();
+}
+
+class _LandscapePlayerState extends State<LandscapePlayer> {
+  @override
+  void initState() {
+    super.initState();
+    unawaited(
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky),
+    );
+  }
+
+  @override
+  void dispose() {
+    unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: Colors.black,
+    child: SafeArea(child: Center(child: widget.player)),
+  );
+}
+
+/// The frame of a watch screen (channel, video): no app bar, like YouTube;
+/// the body starts below the status bar. With [playerOnly] (the body is a
+/// [LandscapePlayer]) it goes edge to edge instead: that player keeps clear
+/// of notches itself, on black.
+class WatchScaffold extends StatelessWidget {
+  const WatchScaffold({required this.body, this.playerOnly = false, super.key});
+
+  final Widget body;
+  final bool playerOnly;
+
+  @override
+  Widget build(BuildContext context) => ThemedStatusBar(
+    child: Scaffold(
+      // One SafeArea either way, so rotating keeps the body's state.
+      body: SafeArea(
+        left: !playerOnly,
+        top: !playerOnly,
+        right: !playerOnly,
+        bottom: false,
+        child: body,
+      ),
+    ),
+  );
+}
