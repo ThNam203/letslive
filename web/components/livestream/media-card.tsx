@@ -90,6 +90,10 @@ export default function MediaCard(props: MediaCardProps) {
 
     const formatCompact = useCompactNumber();
 
+    // A VOD that is still processing (or failed) has nothing to play: its card
+    // links nowhere and shows no duration. Only the owner's list returns one.
+    const isPlayable = isLive || props.vod.status === "ready";
+
     const targetHref = isLive
         ? `/users/${userId}`
         : `/users/${userId}/vods/${id}`;
@@ -127,32 +131,60 @@ export default function MediaCard(props: MediaCardProps) {
                             <IconEyeOff className="h-4 w-4" />
                         </Badge>
                     )}
-                    <Badge
-                        variant="secondary"
-                        className="h-6 bg-black/70 text-white"
-                    >
-                        {formatSeconds(vod.duration)}
-                    </Badge>
+                    {isPlayable && (
+                        <Badge
+                            variant="secondary"
+                            className="h-6 bg-black/70 text-white"
+                        >
+                            {formatSeconds(vod.duration)}
+                        </Badge>
+                    )}
                 </div>
-                <Link
-                    href={targetHref}
-                    tabIndex={-1}
-                    aria-hidden="true"
-                    className="block h-full w-full"
-                >
-                    <LiveImage
-                        src={thumbnailUrl}
-                        alt={title}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        width={500}
-                        height={500}
-                        sizes={THUMBNAIL_SIZES}
-                        preload={props.preload ?? false}
-                        fallbackSrc="/images/streaming.webp"
-                        alwaysRefresh={false}
-                    />
-                </Link>
+                {isPlayable ? (
+                    <Link
+                        href={targetHref}
+                        tabIndex={-1}
+                        aria-hidden="true"
+                        className="block h-full w-full"
+                    >
+                        {renderVODImage()}
+                    </Link>
+                ) : (
+                    renderVODImage()
+                )}
             </div>
+        );
+    };
+
+    const renderVODImage = () => (
+        <LiveImage
+            src={thumbnailUrl}
+            alt={title}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            width={500}
+            height={500}
+            sizes={THUMBNAIL_SIZES}
+            preload={!isLive && (props.preload ?? false)}
+            fallbackSrc="/images/streaming.webp"
+            alwaysRefresh={false}
+        />
+    );
+
+    // The owner's status label for a VOD that is not ready; null otherwise.
+    const renderStatus = () => {
+        if (isPlayable || !isEditable || isLive) return null;
+        const isFailed = props.vod.status === "failed";
+        return (
+            <>
+                <span aria-hidden="true">·</span>
+                <span className={cn(isFailed && "text-destructive")}>
+                    {t(
+                        isFailed
+                            ? "settings:vods.status_failed"
+                            : "settings:vods.status_processing",
+                    )}
+                </span>
+            </>
         );
     };
 
@@ -195,6 +227,7 @@ export default function MediaCard(props: MediaCardProps) {
             {renderViewCount()}
             <span aria-hidden="true">·</span>
             {renderTimeMeta()}
+            {renderStatus()}
         </div>
     );
 
@@ -277,12 +310,16 @@ export default function MediaCard(props: MediaCardProps) {
                         className="text-foreground line-clamp-2 flex-1 text-base leading-snug font-semibold"
                         title={title}
                     >
-                        <Link
-                            href={targetHref}
-                            className="group-hover:text-primary focus-visible:underline focus-visible:outline-none"
-                        >
-                            {title}
-                        </Link>
+                        {isPlayable ? (
+                            <Link
+                                href={targetHref}
+                                className="group-hover:text-primary focus-visible:underline focus-visible:outline-none"
+                            >
+                                {title}
+                            </Link>
+                        ) : (
+                            title
+                        )}
                     </h3>
                     {renderEditMenu()}
                 </div>

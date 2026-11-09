@@ -212,6 +212,41 @@ export const livestreams: Livestream[] = [
 // ---------------------------------------------------------------------------
 
 export const vods: VOD[] = [
+    // Not ready yet: only the owner's list (GET /vods/author) returns these.
+    {
+        id: "vod-processing",
+        livestreamId: null,
+        userId: ME_USER_ID,
+        title: "Stream that just ended",
+        description: "Still being processed",
+        thumbnailUrl: null,
+        visibility: "public",
+        viewCount: 0,
+        likeCount: 0,
+        duration: 0,
+        playbackUrl: null,
+        status: "processing",
+        originalFileUrl: null,
+        createdAt: daysAgo(0),
+        updatedAt: daysAgo(0),
+    },
+    {
+        id: "vod-failed",
+        livestreamId: null,
+        userId: ME_USER_ID,
+        title: "Upload that failed",
+        description: null,
+        thumbnailUrl: null,
+        visibility: "public",
+        viewCount: 0,
+        likeCount: 0,
+        duration: 0,
+        playbackUrl: null,
+        status: "failed",
+        originalFileUrl: null,
+        createdAt: daysAgo(1),
+        updatedAt: daysAgo(1),
+    },
     {
         id: "vod-001",
         livestreamId: null,
