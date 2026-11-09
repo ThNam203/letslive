@@ -70,6 +70,10 @@ type Session struct {
 	enc        *sessionEncoder // nil when the ladder is source only or ffmpeg failed to start
 	srcReady   bool            // the encoded-rendition deadline is armed
 
+	// lastVideo is the DTS of the latest source video packet relative to the
+	// first keyframe; guarded by mu.
+	lastVideo time.Duration
+
 	closeOnce sync.Once
 	closeDone chan struct{}
 	closeErr  error // valid after closeDone is closed
@@ -207,6 +211,7 @@ func (s *Session) writeVideo(pkt av.Packet) {
 	if dts < 0 {
 		return // earlier than the first keyframe
 	}
+	s.lastVideo = max(s.lastVideo, pkt.Time-s.clk.zero)
 	if s.enc != nil {
 		s.enc.offer(pkt)
 	}
@@ -264,6 +269,15 @@ func (s *Session) writeAudio(pkt av.Packet) {
 		s.logBadInput("write audio at %v: %v", pkt.Time, err)
 	}
 	s.rec.WriteAudio(pts90k, aus)
+}
+
+// Duration is how much of the stream was received: from the first source
+// keyframe to the latest source video packet, on the stream's own timeline.
+// It is 0 until the session starts and keeps its value after Close.
+func (s *Session) Duration() time.Duration {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.lastVideo
 }
 
 func (s *Session) logBadInput(format string, args ...any) {

@@ -7,7 +7,7 @@ watcher pipeline. Each fix is its own commit that ticks its entry here.
 
 | # | Problem | Status |
 |---|---|---|
-| 1 | Wrong stream duration | open |
+| 1 | Wrong stream duration | fixed |
 | 2 | Livestream ends late; VOD published even when the recording failed | open |
 | 3 | Non-AAC audio becomes a silent stream without saying so | open |
 | 5 | Every live viewer request reaches the transcode service | open |
@@ -26,9 +26,10 @@ fixed 7 s, *after* `session.Close()`. Close waits for the last VOD segments to
 upload (up to 75 s), so that wait was counted, and the 7 s was the old ffmpeg
 start-up delay, which the new pipeline does not have.
 
-**Fix:** the `Session` tracks the last source-video DTS on the shared clock and
-reports `Duration()`; the RTMP server uses it. A session that never reached its
-first keyframe reports 0.
+**Fixed:** the `Session` tracks the last source-video DTS on the shared clock and
+reports `Duration()`; the RTMP server uses it and the 7 s offset is gone. A
+session that never reached its first keyframe reports 0. Tests:
+`TestSessionDuration`, `TestSessionDurationNeverStarted`.
 
 ## 2. Livestream ends late; VOD published even when the recording failed
 

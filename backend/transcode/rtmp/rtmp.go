@@ -7,12 +7,12 @@ import (
 	"io"
 	"math"
 	"net"
+	"sen1or/letslive/shared/pkg/discovery"
+	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/transcode/config"
 	livestreamdto "sen1or/letslive/transcode/gateway/livestream/dto"
 	livestreamgateway "sen1or/letslive/transcode/gateway/livestream/http"
 	usergateway "sen1or/letslive/transcode/gateway/user/http"
-	"sen1or/letslive/shared/pkg/discovery"
-	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/transcode/live"
 	"sen1or/letslive/transcode/storage"
 	"strconv"
@@ -26,10 +26,6 @@ import (
 // sessionCloseTimeout bounds Session.Close: the recorder's Finish may take up
 // to 60s, plus room to stop ffmpeg and the thumbnailer.
 const sessionCloseTimeout = 75 * time.Second
-
-// startupOffsetSeconds is subtracted from the wall-clock stream duration to
-// account for the time before the first keyframe starts the recording.
-const startupOffsetSeconds = 7
 
 // RTMPServerConfig.Registry is the service discovery registry; LiveRegistry
 // is where live streams are published for the web server.
@@ -135,7 +131,6 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 		return
 	}
 
-	startTime := time.Now()
 	session := live.NewSession(s.ctx, streamId, live.SessionDeps{
 		Registry:  s.liveRegistry,
 		Storage:   s.storage,
@@ -151,8 +146,10 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 	}
 	cancelClose()
 
-	duration := int64(math.Ceil(time.Since(startTime).Seconds())) - startupOffsetSeconds
-	s.onDisconnect(streamId, max(duration, 0))
+	// The media duration, not wall-clock time: Close (which waits for the last
+	// VOD uploads) and the wait for the first keyframe are not part of it.
+	duration := int64(math.Ceil(session.Duration().Seconds()))
+	s.onDisconnect(streamId, duration)
 }
 
 // readPackets feeds the connection's packets to session until the connection
