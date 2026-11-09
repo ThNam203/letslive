@@ -379,6 +379,24 @@ static_resources:
                     '@type': type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig
                     requirement_name: access_token_required
               - match:
+                  path_separated_prefix: /user/me/devices
+                route:
+                  cluster: user
+                  auto_host_rewrite: true
+                  timeout: 0s
+                  idle_timeout: 60s
+                  regex_rewrite:
+                    pattern:
+                      regex: ^/
+                    substitution: /v1/
+                  retry_policy:
+                    retry_on: connect-failure,refused-stream
+                    num_retries: 3
+                typed_per_filter_config:
+                  envoy.filters.http.jwt_authn:
+                    '@type': type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig
+                    requirement_name: access_token_required
+              - match:
                   path_separated_prefix: /user/me/gifts/sent
                   headers:
                   - name: :method

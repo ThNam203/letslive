@@ -6,8 +6,7 @@ import { useLogin } from "@/hooks/queries/use-auth-mutations";
 import IconEmail from "../icons/email";
 import FormErrorText from "./FormErrorText";
 import IconPasswordOutline from "../icons/password";
-import IconEye from "../icons/eye";
-import IconEyeOff from "../icons/eye-off";
+import PasswordVisibilityToggle from "./PasswordVisibilityToggle";
 import Turnstile, { useTurnstile } from "react-turnstile";
 import IconLoader from "../icons/loader";
 import useT from "@/hooks/use-translation";
@@ -120,27 +119,23 @@ export default function LogInForm({
                     id="password"
                     aria-label={t("password")}
                     className="h-12 flex-1 border-none bg-transparent shadow-none focus-visible:ring-0"
+                    autoComplete="current-password"
                     placeholder={t("password")}
                     type={hidingPassword ? "password" : "text"}
                     maxLength={PASSWORD_MAX_LENGTH}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                 />
-                {!hidingPassword ? (
-                    <IconEye
-                        className="opacity-50 hover:cursor-pointer"
-                        onClick={() => setHidingPassword(true)}
-                    />
-                ) : (
-                    <IconEyeOff
-                        className="opacity-50 hover:cursor-pointer"
-                        onClick={() => setHidingPassword(false)}
-                    />
-                )}
+                <PasswordVisibilityToggle
+                    inputId="password"
+                    isVisible={!hidingPassword}
+                    onToggle={() => setHidingPassword((prev) => !prev)}
+                />
             </div>
             <FormErrorText textError={errors.password} />
-            <div className="mt-4 flex h-[4.063rem] flex-col items-end">
+            <div className="mt-4 flex min-h-[4.063rem] flex-col">
                 <Turnstile
+                    size="flexible"
                     language={i18n.resolvedLanguage || i18n.language}
                     sitekey={
                         process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!
@@ -159,6 +154,7 @@ export default function LogInForm({
                             turnstile: err ?? "",
                         }));
                     }}
+                    onExpire={() => setTurnstileToken("")}
                 />
                 <FormErrorText textError={errors.turnstile} />
             </div>
@@ -167,7 +163,7 @@ export default function LogInForm({
                 disabled={isLoading}
                 className="mt-4 flex h-12 w-full items-center justify-center rounded-md border border-transparent bg-blue-400 font-semibold text-white uppercase hover:bg-blue-500"
             >
-                {isLoading && <IconLoader className="ml-2" />}
+                {isLoading && <IconLoader className="mr-2" />}
                 {t("login")}
             </button>
         </form>

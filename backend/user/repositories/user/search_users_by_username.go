@@ -10,7 +10,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, error) {
+func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query string, authenticatedUserId *uuid.UUID, page int, limit int) ([]dto.GetUserPublicResponseDTO, error) {
+	offset := limit * page
 	rows, err := r.dbConn.Query(ctx, `
 		SELECT
 		    u.id,
@@ -51,9 +52,10 @@ func (r *postgresUserRepo) SearchUsersByUsername(ctx context.Context, query stri
 		    l.user_id, l.title, l.description, l.thumbnail_url
 		ORDER BY
 		    similarity(u.username, $1) DESC,
-		    levenshtein(u.username, $1) ASC
-		LIMIT 10;
-	`, query, authenticatedUserId)
+		    levenshtein(u.username, $1) ASC,
+		    u.id ASC
+		OFFSET $3 LIMIT $4;
+	`, query, authenticatedUserId, offset, limit)
 
 	if err != nil {
 		logger.Errorf(ctx, "failed to search for users: %s", err)

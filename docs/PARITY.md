@@ -1,0 +1,103 @@
+# Web / mobile parity
+
+The Flutter app in `mobile/` must keep the web app's feature set. This file is
+the ledger; `cd mobile && dart run tool/parity_check.dart` (CI:
+`.github/workflows/parity.yml`) enforces it. See `AGENTS.md` for the rule.
+
+Source of the feature list: section 4 of
+`docs/superpowers/specs/2026-11-04-flutter-mobile-app-design.md`.
+
+## How to edit this file
+
+- **Screens table**: one row per web page (`page.tsx` under `web/app`, route
+  groups like `(main)` removed, dynamic segments such as `[userId]` kept).
+  Columns: `web route/feature | mobile screen | tests | status`.
+  - Status is exactly one of `done`, `planned`, or `differs: <reason>`.
+  - To flip a row to `done`: put the mobile screen/widget in column 2 and the
+    test file(s) in column 3 (both required), then set status `done`.
+  - Rows whose first cell starts with `/` must match a real web page; other
+    first cells are free-form feature rows.
+- **Planned endpoints** and **Intentionally differs** are bullet lists:
+  ``- `/path` - reason``. An entry accounts for every gateway/web-client path
+  that starts with it (whole segments). The reason is required.
+  - When a task adds an `ApiEndpoints` constant covering a planned entry,
+    delete that bullet in the same commit (the constant now accounts for it).
+- `dart run tool/parity_check.dart --release` additionally fails while any
+  row is `planned` or any "Planned endpoints" bullet remains (Task 20).
+
+## Screens
+
+| web route/feature | mobile screen | tests | status |
+|---|---|---|---|
+| `/` | `HomeScreen` + `AppShell` (`mobile/lib/features/home/presentation/home_screen.dart`, `mobile/lib/core/router/app_shell.dart`): live and popular videos; web's left-bar followed/recommended channels are the People tab of the own profile (`ProfilePeopleTab`, `mobile/lib/features/profile/presentation/profile_people_tab.dart`); the top and bottom bars slide away while scrolling down, like YouTube (`mobile/lib/core/router/app_chrome.dart`) | `mobile/test/features/home/home_screen_test.dart`, `mobile/test/features/home/home_repository_test.dart`, `mobile/test/core/router/app_shell_test.dart`, `mobile/test/features/profile/profile_people_tab_test.dart`, `mobile/contract_test/home_contract_test.dart` | done |
+| `/login` | `LoginScreen` (`mobile/lib/features/auth/presentation/login_screen.dart`) | `mobile/test/features/auth/login_screen_test.dart`, `mobile/contract_test/auth_contract_test.dart`, `mobile/integration_test/auth_flow_test.dart` | done |
+| `/signup` | `SignupScreen` + `OtpDialog` (`mobile/lib/features/auth/presentation/`) | `mobile/test/features/auth/signup_screen_test.dart`, `mobile/test/features/auth/auth_validators_test.dart`, `mobile/contract_test/auth_contract_test.dart` | done |
+| `/account-setup` | `AccountSetupScreen` (`mobile/lib/features/auth/presentation/account_setup_screen.dart`) | `mobile/test/features/auth/account_setup_screen_test.dart`, `mobile/test/core/router/app_router_test.dart`, `mobile/contract_test/auth_contract_test.dart` | done |
+| `/cookie-policy` | - | - | differs: native app sets no browser cookies; policy linked from the store listing |
+| `/search` | `SearchScreen` (`mobile/lib/features/search/presentation/search_screen.dart`), opened from the search button in every tab's header (like web's navbar search): debounced box, tabs All / Channels / Live / Videos, accent-insensitive highlight | `mobile/test/features/search/search_screen_test.dart`, `mobile/test/features/search/search_repository_test.dart`, `mobile/test/features/search/highlight_test.dart`, `mobile/contract_test/search_contract_test.dart` | done |
+| `/messages` | `ConversationsScreen` (`mobile/lib/features/messages/presentation/conversations_screen.dart`) as the Messages tab, with the unread badge on the tab icon; new direct message or group via `NewConversationScreen` (user search, group name, member limit). Rows bubble to the top on a new message (web updates in place). Web's chat dock and header popover are desktop-only, not ported; there is no mute, add/remove member, leave or rename UI because web has none (the repository covers those endpoints) | `mobile/test/features/messages/messages_screens_test.dart`, `mobile/test/features/messages/dm_state_test.dart`, `mobile/test/features/messages/dm_units_test.dart`, `mobile/contract_test/messages_contract_test.dart` | done |
+| `/messages/[conversationId]` | `ConversationScreen` (`mobile/lib/features/messages/presentation/conversation_screen.dart`): header with online state, messages paged by cursor, typing indicator, emote picker and composer, read marking, reconnect catch-up, not-found state; long-press on an own message edits or deletes it (web's API has this but no UI). Sending pictures like web's `MessageInput`: attach button (photo library, up to 10 pictures of 10 MB), removable thumbnails, upload through `UploadFileRepository` (`/upload-file`) then one picture message; a failed upload keeps the pictures for a retry, a failed send does not upload them again, a partial upload sends what arrived. Web's drag-and-drop and paste are desktop-only. Received pictures are shown | `mobile/test/features/messages/messages_screens_test.dart`, `mobile/test/features/messages/dm_state_test.dart`, `mobile/test/features/messages/message_pictures_test.dart`, `mobile/contract_test/messages_contract_test.dart`, `mobile/contract_test/creator_contract_test.dart` | done |
+| `/notifications` | `NotificationsScreen` (`mobile/lib/features/notifications/presentation/notifications_screen.dart`) opened from the bell in every tab's header (like web's header bell), the unread count on the bell: list newest first and paged, unread dot, open what it is about (`resolveDeepLink`, only the app's own routes), mark read, mark all read, delete; new ones arrive live (`notification.created`) and a reconnect loads them again. Push notifications (`PushService`, `mobile/lib/core/push/`): the FCM token is registered for the signed-in user and removed on logout or session expiry, taps open the screen the push names; foreground pushes are not shown (the app is already connected live). Web's bell opens a popover; the mobile bell opens the full screen; relative times are computed when a row is built, not ticked every minute; the mark-all action is an icon (a text button overflows a narrow bar) | `mobile/test/features/notifications/notifications_screen_test.dart`, `mobile/test/features/notifications/push_flow_test.dart`, `mobile/test/core/push/push_service_test.dart`, `mobile/test/core/push/deep_link_test.dart`, `mobile/contract_test/notifications_contract_test.dart` | done |
+| `/settings/chat-commands` | `ChatCommandsScreen` (`mobile/lib/features/creator/presentation/chat_commands_screen.dart`): personal and channel commands with add / edit / remove forms (web's name, response and description rules) and the built-in list; reached from the Profile tab's settings menu | `mobile/test/features/creator/creator_screens_test.dart`, `mobile/contract_test/creator_contract_test.dart` | done |
+| `/settings/profile` | `ProfileSettingsScreen` (`mobile/lib/features/settings/presentation/profile_settings_screen.dart`): banner and profile picture from the photo library with upload progress, username, bio and social links; reached from the Profile tab via `SettingsScreen`. Disable account at the bottom (`DisableAccountSection`, `mobile/lib/features/settings/presentation/disable_account_section.dart`: web's confirmation dialog, `PUT /user/me {status: disabled}`, then logout). Web's theme and language lists are on the settings hub (`SettingsScreen`, `mobile/lib/features/settings/presentation/settings_screen.dart`) as two pickers: theme light / dark / system and language English / Tiếng Việt, stored on the device; the language is also saved on the profile (`PUT /user/me {locale}`) like web. Web's crop dialog is not ported (the server needs JPEG or WebP, so PNG and GIF are refused before upload) | `mobile/test/features/profile/profile_settings_test.dart`, `mobile/test/features/profile/profile_units_test.dart`, `mobile/test/features/profile/account_settings_test.dart`, `mobile/test/features/profile/settings_appearance_test.dart`, `mobile/contract_test/profile_contract_test.dart` | done |
+| `/settings/security` | `SecurityScreen` (`mobile/lib/features/settings/presentation/security_screen.dart`): account email, the phone number (`PhoneNumberTile`, `mobile/lib/features/settings/presentation/phone_number_tile.dart`: web's "Add a number" / edit, empty removes it, `PUT /user/me {phoneNumber}`; web validates with libphonenumber-js, mobile checks the international E.164 shape without a phone library, so a few numbers web refuses pass) and the change-password form (web `changePassword.ts` rules, `PATCH /auth/password`). Two-factor is not ported; the stream key lives on the Stream settings screen instead (web shows it on this page) | `mobile/test/features/profile/security_screen_test.dart`, `mobile/test/features/profile/profile_units_test.dart`, `mobile/test/features/profile/account_settings_test.dart`, `mobile/contract_test/profile_contract_test.dart` | done |
+| `/settings/stream` | `StreamSettingsScreen` (`mobile/lib/features/creator/presentation/stream_settings_screen.dart`): the stream key (masked, show / copy, generate-new behind a confirmation dialog; web's security tab has no confirmation) and the next-livestream title, description and thumbnail | `mobile/test/features/creator/creator_screens_test.dart`, `mobile/contract_test/creator_contract_test.dart` | done |
+| `/settings/upload` | `UploadScreen` + app-wide `UploadManager` (`mobile/lib/features/creator/presentation/upload_screen.dart`, `mobile/lib/features/creator/upload_manager.dart`): pick a video from the library (mp4 mov avi mkv webm, 100 MB, checked before sending), title / description / public switch, progress list with cancel, retry, dismiss and clear; at most 3 uploads at once; uploads continue when the screen is left and are cancelled on logout; the screen stays awake while sending; after sending, the video is polled every 5 s until `ready` or `failed` (web does not poll). Foreground only: if the app is backgrounded or killed the upload fails and Retry sends the whole file again (no background transfer, no resume). A cancelled upload is removed from the list (web keeps a cancelled row with Retry) | `mobile/test/features/creator/upload_manager_test.dart`, `mobile/test/features/creator/creator_screens_test.dart`, `mobile/contract_test/creator_contract_test.dart` | done |
+| `/settings/vods` | `MyVodsScreen` + edit dialog (`mobile/lib/features/creator/presentation/my_vods_screen.dart`, `vod_edit_dialog.dart`): the creator's videos paged, with status (processing / failed), edit (title, description, public, new thumbnail uploaded first) and delete behind a confirmation; a ready video opens its player page | `mobile/test/features/creator/creator_screens_test.dart`, `mobile/contract_test/creator_contract_test.dart` | done |
+| `/shop` | `ShopScreen` (`mobile/lib/features/shop/presentation/shop_screen.dart`): catalogue with price and a Buy button, reached from the Profile tab's app bar. One purchase request, never retried; every Buy button is disabled while it runs; balance and inventory reload afterwards, also after a failure. Errors show the translation of the server's error key (e.g. insufficient balance). Items are rows, not web's grid cards | `mobile/test/features/shop/shop_test.dart`, `mobile/contract_test/wallet_contract_test.dart` | done |
+| `/users/[userId]` | `ChannelScreen` (`mobile/lib/features/watch/presentation/channel_screen.dart`): live player, offline / ended / not-found states (Task 13a); live chat with emotes and slash commands (Task 13b, `mobile/lib/features/watch/chat/`, `mobile/lib/core/chat_parser/`); Tab/arrow suggestion navigation is desktop-only, not ported; profile header, follow button and the tabs Chat / Home / Videos / About (`mobile/lib/features/profile/`; chat is a tab because a phone cannot show it beside the profile). The Profile tab (`OwnProfileScreen`) shows the signed-in user's own profile. Gift button (`GiftButton`, `mobile/lib/features/shop/presentation/gift_button.dart`) next to the follow button in the profile header, opening the gift picker as a bottom sheet (`GiftSheet`): picking an item buys and sends it (one request, never retried; web sends no message). The video page's uploader row has it too, beside the follow button (`mobile/lib/features/vod/presentation/vod_details.dart`). No app bar (system back). Held sideways, or after the player's full-screen button, a live channel shows only the player; tapping the video pauses or plays it and the controls fade after 3 s (`PlayerChrome`, `mobile/lib/features/watch/presentation/player_chrome.dart`, `mobile/test/features/watch/player_chrome_test.dart`) | `mobile/test/features/watch/channel_screen_test.dart`, `mobile/test/features/watch/channel_navigation_test.dart`, `mobile/contract_test/watch_contract_test.dart`, `mobile/test/features/watch/chat/chat_panel_test.dart`, `mobile/test/features/watch/chat/chat_controller_test.dart`, `mobile/test/core/chat_parser/command_test.dart`, `mobile/contract_test/chat_contract_test.dart`, `mobile/test/features/profile/profile_tabs_test.dart`, `mobile/test/features/profile/follow_test.dart`, `mobile/contract_test/profile_contract_test.dart`, `mobile/test/features/shop/shop_test.dart`, `mobile/contract_test/wallet_contract_test.dart` | done |
+| `/users/[userId]/gifts` | `GiftsScreen` (`mobile/lib/features/shop/presentation/gifts_screen.dart`): gifts a user received, paged (web shows only the first 20), opened from the About tab of the profile (web has no link to the page, only the URL). The backend's sent-gifts list (`GET /user/me/gifts/sent`) is in `GiftRepository.sent` and contract-tested; web has no screen for it, so neither has mobile | `mobile/test/features/shop/shop_test.dart`, `mobile/contract_test/wallet_contract_test.dart` | done |
+| `/users/[userId]/vods/[vodId]` | `VodScreen` (`mobile/lib/features/vod/presentation/vod_screen.dart`): player with seek bar, details, like/dislike, other streams, comments with replies, likes, edit and delete, tappable timestamps; a copy-link button (clipboard, needs `WEB_BASE_URL`; web's share dialog and its "start at current time" switch are not ported); the uploader row has the follow button (`FollowButton`, `mobile/test/features/profile/follow_test.dart`) and the gift button (`GiftButton`); no app bar (system back); the uploader row spans the full width with follow and gift at its end; held sideways, or after the full-screen button, only the player shows; tap to pause/play and fading controls as on the live player (`PlayerChrome`) | `mobile/test/features/vod/vod_screen_test.dart`, `mobile/test/features/vod/vod_comments_test.dart`, `mobile/test/features/vod/vod_reaction_test.dart`, `mobile/test/features/vod/timestamps_test.dart`, `mobile/test/features/vod/view_threshold_test.dart`, `mobile/test/features/watch/channel_navigation_test.dart`, `mobile/contract_test/vod_contract_test.dart` | done |
+| `/wallet/deposit` | - | - | differs: deposits/payments are out of scope for the mobile release |
+| `/wallet/inventory` | `InventoryTab` (`mobile/lib/features/shop/presentation/inventory_tab.dart`), the third tab of `WalletScreen`: owned items with quantity, paged (web shows the first 20), unknown items as "Unknown item" | `mobile/test/features/wallet/wallet_screen_test.dart`, `mobile/test/features/shop/shop_test.dart`, `mobile/contract_test/wallet_contract_test.dart` | done |
+| `/wallet/overview` | `WalletScreen` + `WalletOverviewTab` (`mobile/lib/features/wallet/presentation/`), reached from the Profile tab's app bar: a card per currency (SPARK, FLARE; 0 when missing) and the five latest transactions. Amounts are exact decimals (`DecimalAmount`), never doubles, formatted as web does (grouping, at most 2 fraction digits). No deposit entry point | `mobile/test/features/wallet/wallet_screen_test.dart`, `mobile/test/features/wallet/decimal_amount_test.dart`, `mobile/contract_test/wallet_contract_test.dart` | done |
+| `/wallet/transactions` | `WalletTransactionsTab` (`mobile/lib/features/wallet/presentation/transactions_tab.dart`): type filter chips (web's set, no deposit) over the loaded rows, next page loads as the list scrolls (web has a Load more button) | `mobile/test/features/wallet/wallet_screen_test.dart`, `mobile/contract_test/wallet_contract_test.dart` | done |
+
+## Mobile UI differences
+
+App-wide layout and behaviour where mobile deliberately looks or works
+unlike web. Per-page differences are in the rows above. Keep these when
+porting a web change; change one only on the owner's request, and update
+this list in the same commit. (Plain bullets: the parity check does not
+read this section.)
+
+- Navigation: bottom tabs Home, Messages, Profile, icons only (the label is
+  the tooltip). Web's top navbar search and notification bell sit at the top
+  right of every tab's header (`HeaderActions`) and open full screens over
+  the tabs (web's bell opens a popover).
+- Like YouTube, the tab's top bar and the bottom bar slide away while the
+  content scrolls down and come back on scrolling up or at the top
+  (`mobile/lib/core/router/app_chrome.dart`; a tab root uses `TabScaffold`).
+- Web's left bar (followed and recommended channels) is the People tab of
+  the user's own profile (`ProfilePeopleTab`), not part of Home.
+- Channel and video pages have no app bar; the system back leaves them.
+- Players (`PlayerChrome`, `mobile/lib/features/watch/presentation/player_chrome.dart`):
+  - tapping the video pauses or plays it;
+  - the control bar fades 3 s after the last touch while playing and stays
+    while paused;
+  - picture-in-picture is an entry in the gear menu, above the quality list;
+  - the full-screen button turns the screen sideways (the landscape layout,
+    system bars hidden), and turning the phone does the same. Leaving full
+    screen with the button keeps the page upright until it closes.
+- Video page: the uploader row and the description box span the full width;
+  follow and gift sit at the end of the uploader row, like/dislike and share
+  on their own row below.
+- Sign-in is required for every screen (web lets guests browse).
+
+## Planned endpoints
+
+Gateway / web-client paths mobile will call but has no `ApiEndpoints`
+constant for yet. Remove a bullet when its constant lands.
+
+None: every gateway path mobile calls now has an `ApiEndpoints` constant.
+
+## Intentionally differs
+
+Gateway prefixes mobile never calls through `ApiEndpoints`.
+
+- `/realtime` - WebSocket, not REST: mobile uses `AppConfig.wsBaseUrl` (`<ws origin>/realtime`)
+- `/deposits` - Stripe deposits are out of scope for mobile
+- `/payments` - Stripe payment history is out of scope for mobile
+- `/gifts` - gateway route with no backend handler (user service only has `/user/{id}/gifts/received`, `/user/me/gifts/sent`) and no web caller
+- `/livestreamings` - gateway route with no backend handler and no web caller
+- `/is-streaming` - gateway route with no backend handler and no web caller

@@ -14,7 +14,7 @@ watcher pipeline. Each fix is its own commit that ticks its entry here.
 | 6a | First thumbnail taken at the first keyframe | open |
 | 6b | VOD master has no `CODECS` attribute | open |
 | 6c | VOD folder `0` is now the source quality | open |
-| 7 | Branch far behind `main`, `go.work.sum` conflict | open |
+| 7 | Branch far behind `main`, `go.work.sum` conflict | fixed |
 | 8 | `/transcode/vods/` lists every VOD id publicly | open |
 
 (#4, iOS LL-HLS over HTTP/2, was dropped: prod serves HTTP/2 and iOS plays it.)
@@ -95,8 +95,8 @@ the VOD service go through the master playlist — so this is kept as is.
 The branch was cut at `4da77e43` and is 79 commits behind `origin/main`; the
 only conflict is `backend/go.work.sum`.
 
-**Fix:** merge `origin/main` into the branch (it is already pushed, so no
-rebase) and regenerate `go.work.sum`.
+**Fixed:** merged `origin/main` into the branch (it is already pushed, so no
+rebase); `go.work.sum` is the union of both sides and every module builds.
 
 ## 8. `/transcode/vods/` lists every VOD id publicly
 

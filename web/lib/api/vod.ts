@@ -25,6 +25,16 @@ export async function GetPopularVODs(
     );
 }
 
+export async function SearchVODs(
+    query: string,
+    page: number = 0,
+    limit: number = 20,
+): Promise<ApiResponse<VOD[]>> {
+    return fetchClient<ApiResponse<VOD[]>>(
+        `/vods/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
+    );
+}
+
 export async function GetVODInformation(
     vodId: string,
 ): Promise<ApiResponse<VOD | null>> {

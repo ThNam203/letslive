@@ -108,12 +108,12 @@ func (s *UserService) GetRecommendedUsers(ctx context.Context, authenticatedUser
 	return users, nil
 }
 
-func (s *UserService) SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID) ([]dto.GetUserPublicResponseDTO, error) {
+func (s *UserService) SearchUsersByUsername(ctx context.Context, username string, authenticatedUserId *uuid.UUID, page int, limit int) ([]dto.GetUserPublicResponseDTO, error) {
 	if len(username) == 0 {
 		return nil, domains.ErrInvalidInput
 	}
 
-	users, err := s.userRepo.SearchUsersByUsername(ctx, username, authenticatedUserId)
+	users, err := s.userRepo.SearchUsersByUsername(ctx, username, authenticatedUserId, page, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,8 @@ func (s *UserService) CreateNewUser(ctx context.Context, data dto.CreateUserRequ
 		return nil, err
 	}
 
-	// Create welcome notification for the new user (ignore if fails)
+	// Create welcome notification for the new user (ignore if fails).
+	// Written to the repo directly, so no push: a brand-new account has no device tokens.
 	welcomeNotif := domains.Notification{
 		UserId:  createdUser.Id,
 		Type:    "system", // TODO: add system notification type enum/default values

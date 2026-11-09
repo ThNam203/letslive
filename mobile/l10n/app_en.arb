@@ -1,0 +1,1003 @@
+{
+  "@@locale": "en",
+  "accessibility_clear_search": "Clear search",
+  "accessibility_close_field_button": "Close field",
+  "accessibility_error_404_illustration": "404 error illustration",
+  "accessibility_error_500_illustration": "500 error illustration",
+  "accessibility_livestream_preview": "Livestream preview image",
+  "accessibility_open_menu": "Open menu",
+  "accessibility_profile_banner": "Profile banner",
+  "accessibility_seek_back_10": "Rewind 10 seconds",
+  "accessibility_seek_forward_10": "Forward 10 seconds",
+  "accessibility_update_field_button": "Update field",
+  "accessibility_user_avatar": "User avatar",
+  "accessibility_wallet": "Wallet",
+  "accessibility_wallet_open": "Open wallet",
+  "api_response_default_error": "Something went wrong. Please try again.",
+  "api_response_res_err_account_frozen": "Your wallet account is currently frozen.",
+  "api_response_res_err_account_not_found": "Wallet account not found.",
+  "api_response_res_err_auth_already_exists": "Email has already been registered.",
+  "api_response_res_err_auth_not_found": "Authentication credentials not found.",
+  "api_response_res_err_cannot_message_self": "You cannot start a conversation with yourself.",
+  "api_response_res_err_captcha_failed": "Failed to verify CAPTCHA, please try again.",
+  "api_response_res_err_conversation_not_found": "Conversation not found.",
+  "api_response_res_err_database_issue": "Database issue, please try again.",
+  "api_response_res_err_database_query": "Error querying database, please try again.",
+  "api_response_res_err_deposit_limit_exceeded": "Deposit limit exceeded.",
+  "api_response_res_err_dm_already_exists": "A conversation with this user already exists.",
+  "api_response_res_err_dm_message_not_found": "Message not found.",
+  "api_response_res_err_email_or_password_incorrect": "Username or password incorrect.",
+  "api_response_res_err_end_already_ended_livestream": "The livestream has already been ended.",
+  "api_response_res_err_failed_to_create_sign_up_otp": "Failed to generate the OTP, please try again later.",
+  "api_response_res_err_failed_to_send_verification": "Failed to send email verification, please try again later.",
+  "api_response_res_err_forbidden": "Forbidden.",
+  "api_response_res_err_image_dimensions_out_of_range": "Image must be between 80x80 and 2048x2048 pixels.",
+  "api_response_res_err_image_too_large": "Image exceeds 10mb limit.",
+  "api_response_res_err_insufficient_balance": "Insufficient balance.",
+  "api_response_res_err_insufficient_role": "You do not have permission for this action.",
+  "api_response_res_err_internal_server": "Something went wrong.",
+  "api_response_res_err_invalid_amount": "Invalid amount.",
+  "api_response_res_err_invalid_image": "Unsupported image, use JPEG or WebP.",
+  "api_response_res_err_invalid_input": "Input invalid.",
+  "api_response_res_err_invalid_payload": "Payload invalid.",
+  "api_response_res_err_livestream_create_failed": "Failed to create livestream record.",
+  "api_response_res_err_livestream_not_found": "Livestream not found.",
+  "api_response_res_err_livestream_update_after_ended": "Failed to update, the livestream has ended.",
+  "api_response_res_err_livestream_update_failed": "Failed to update livestream record.",
+  "api_response_res_err_not_participant": "You are not a participant of this conversation.",
+  "api_response_res_err_notification_not_found": "Notification not found.",
+  "api_response_res_err_password_not_match": "Old password does not match.",
+  "api_response_res_err_payment_failed": "Payment failed, please try again.",
+  "api_response_res_err_payment_not_found": "Payment not found.",
+  "api_response_res_err_refresh_token_not_found": "Refresh token not found.",
+  "api_response_res_err_room_not_found": "Room not found.",
+  "api_response_res_err_route_not_found": "Requested endpoint not found.",
+  "api_response_res_err_shop_item_not_found": "Shop item not found or unavailable.",
+  "api_response_res_err_sign_up_otp_already_used": "The OTP has already been used.",
+  "api_response_res_err_sign_up_otp_expired": "OTP code has expired, please issue a new one.",
+  "api_response_res_err_sign_up_otp_not_found": "OTP code not found.",
+  "api_response_res_err_too_many_participants": "Too many participants.",
+  "api_response_res_err_transaction_failed": "Transaction failed, please try again.",
+  "api_response_res_err_transaction_not_found": "Transaction not found.",
+  "api_response_res_err_unauthorized": "Unauthorized.",
+  "api_response_res_err_unsupported_currency": "Unsupported currency.",
+  "api_response_res_err_user_not_found": "User not found.",
+  "api_response_res_err_user_service_error": "Could not deliver the item, your payment was refunded.",
+  "api_response_res_err_user_setup_incomplete": "This user has not finished setting up their account yet.",
+  "api_response_res_err_username_taken": "Username already taken.",
+  "api_response_res_err_video_too_large": "Video exceeds upload size limit.",
+  "api_response_res_err_vod_comment_already_liked": "Comment already liked.",
+  "api_response_res_err_vod_comment_create_failed": "Failed to create comment.",
+  "api_response_res_err_vod_comment_delete_failed": "Failed to delete comment.",
+  "api_response_res_err_vod_comment_not_found": "Comment not found.",
+  "api_response_res_err_vod_comment_not_liked": "Comment has not been liked.",
+  "api_response_res_err_vod_comment_update_failed": "Failed to update comment.",
+  "api_response_res_err_vod_create_failed": "Failed to create VOD record.",
+  "api_response_res_err_vod_not_found": "VOD not found.",
+  "api_response_res_err_vod_update_failed": "Failed to update VOD record.",
+  "api_response_res_err_vod_view_threshold": "Watch time threshold not met.",
+  "api_response_res_succ_email_verified": "Email verified successfully, please continue to sign up.",
+  "api_response_res_succ_login": "Login successfully",
+  "api_response_res_succ_ok": "Success",
+  "api_response_res_succ_sent_verification_email": "Verification email sent, please check your inbox",
+  "api_response_res_succ_sign_up": "Sign up successfully",
+  "auth_account_created_success": "Account created successfully",
+  "auth_account_setup_submit": "Continue",
+  "auth_account_setup_subtitle": "Pick a unique username. It''s how others will find you.",
+  "auth_account_setup_title": "Choose your username",
+  "auth_confirm_password": "Confirm password",
+  "auth_email": "Email",
+  "auth_enter_verification_code": "Enter Verification Code",
+  "auth_forgot_password": "Forgot password?",
+  "auth_have_account": "Already have an account?",
+  "auth_hide_password": "Hide password",
+  "auth_login": "Log in",
+  "auth_login_subtitle": "Gain access to the world right now.",
+  "auth_login_title": "Welcome back!",
+  "auth_logout": "Log out",
+  "auth_no_account": "Don''t have an account?",
+  "auth_otp_dialog_description_part_1": "A 6-digit code has been sent to",
+  "auth_otp_dialog_description_part_2": ". Please enter it below to verify your email address.",
+  "auth_otp_resend_count_down": "Resend in {countdown}s",
+  "@auth_otp_resend_count_down": {
+    "placeholders": {
+      "countdown": {}
+    }
+  },
+  "auth_password": "Password",
+  "auth_resend_otp": "Resend OTP",
+  "auth_retry": "Try again",
+  "auth_sending_otp": "Sending OTP...",
+  "auth_show_password": "Show password",
+  "auth_signup": "Sign up",
+  "auth_signup_subtitle": "Choose a method below to begin",
+  "auth_signup_title": "Welcome! Sign up for a new world?",
+  "auth_verify_otp": "Verify OTP",
+  "chat_commands_builtin_help": "Show available chat commands",
+  "chat_commands_builtin_roll": "Roll a die (default 1-100)",
+  "chat_commands_builtin_shrug": "Append a shrug to your message",
+  "chat_commands_builtin_tableflip": "Flip a table",
+  "chat_commands_builtin_unflip": "Put the table back",
+  "chat_commands_errors_roll_usage": "Usage: /roll [1-1000000]",
+  "chat_commands_errors_unknown": "Unknown chat command: /{name}",
+  "@chat_commands_errors_unknown": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "chat_commands_help_custom_header": "Custom chat commands:",
+  "chat_commands_help_header": "Available chat commands:",
+  "chat_commands_page_added_toast": "/{name} added",
+  "@chat_commands_page_added_toast": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "chat_commands_page_builtin_description": "These are always available in every channel.",
+  "chat_commands_page_builtin_title": "Built-in chat commands",
+  "chat_commands_page_cancel_edit": "Cancel",
+  "chat_commands_page_channel_description": "Available to anyone chatting in your channel.",
+  "chat_commands_page_channel_title": "Your channel chat commands",
+  "chat_commands_page_create_failed_toast": "Could not create chat command (name may be taken)",
+  "chat_commands_page_description_label": "Description (optional)",
+  "chat_commands_page_description_placeholder": "Link to our Discord server",
+  "chat_commands_page_edit_aria": "Edit",
+  "chat_commands_page_edit_title": "Editing /{name}",
+  "@chat_commands_page_edit_title": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "chat_commands_page_empty": "No chat commands yet.",
+  "chat_commands_page_name_invalid_toast": "Name must be 1-32 chars, lowercase letters/numbers/_-",
+  "chat_commands_page_name_label": "Chat command name",
+  "chat_commands_page_name_placeholder": "discord",
+  "chat_commands_page_personal_description": "Available to you in any channel.",
+  "chat_commands_page_personal_title": "Your personal chat commands",
+  "chat_commands_page_remove_aria": "Remove",
+  "chat_commands_page_remove_failed_toast": "Could not remove chat command",
+  "chat_commands_page_removed_toast": "Chat command removed",
+  "chat_commands_page_response_label": "Response",
+  "chat_commands_page_response_placeholder": "Join us at discord.gg/example",
+  "chat_commands_page_response_required_toast": "Response is required",
+  "chat_commands_page_submit": "Add chat command",
+  "chat_commands_page_submit_edit": "Save changes",
+  "chat_commands_page_update_failed_toast": "Could not update chat command (name may be taken)",
+  "chat_commands_page_updated_toast": "/{name} updated",
+  "@chat_commands_page_updated_toast": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "chat_commands_roll_message": "🎲 rolled {value} (1-{max})",
+  "@chat_commands_roll_message": {
+    "placeholders": {
+      "max": {},
+      "value": {}
+    }
+  },
+  "chat_commands_source_builtin": "built-in",
+  "chat_commands_source_channel": "channel",
+  "chat_commands_source_user": "yours",
+  "chat_connection_error": "Failed to connect to chat. Please refresh the page.",
+  "chat_emote_category_gestures": "Gestures",
+  "chat_emote_category_hype": "Hype",
+  "chat_emote_category_misc": "Misc",
+  "chat_emote_category_smileys": "Smileys",
+  "chat_emote_empty_state": "No emotes found",
+  "chat_emote_search_placeholder": "Search emotes...",
+  "chat_emotes_action": "Emotes",
+  "chat_joined": "joined the chat",
+  "chat_left": "left the chat",
+  "chat_placeholder_login": "Login to start messaging",
+  "chat_placeholder_typing": "Type a message...",
+  "chat_send_action": "Send message",
+  "chat_send_failed": "Message not sent. Your text is kept.",
+  "chat_send_retry": "Retry",
+  "chat_title": "Chat",
+  "comments_char_remaining": "{count} characters remaining",
+  "@comments_char_remaining": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "comments_comment_actions": "Comment actions",
+  "comments_delete": "Delete",
+  "comments_delete_confirm_description": "This action cannot be undone.",
+  "comments_delete_confirm_title": "Delete comment?",
+  "comments_deleted_comment": "This comment has been deleted.",
+  "comments_edit": "Edit",
+  "comments_edit_comment": "Edit comment",
+  "comments_edited": "(edited)",
+  "comments_like": "Like",
+  "comments_load_more_replies": "Load more replies",
+  "comments_login_to_comment": "Log in to leave a comment.",
+  "comments_no_comments": "No comments yet. Be the first to comment!",
+  "comments_owner": "Owner",
+  "comments_post": "Post",
+  "comments_reply": "Reply",
+  "comments_save": "Save",
+  "comments_title": "Comments",
+  "comments_unlike": "Unlike",
+  "comments_view_replies": "{count, plural, one{View {count} reply} other{View {count} replies}}",
+  "@comments_view_replies": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "comments_write_comment": "Write a comment...",
+  "comments_write_reply": "Write a reply...",
+  "comments_you": "You",
+  "common_add": "Add",
+  "common_app_description": "Go live, watch streams, and keep every broadcast as a video you can share.",
+  "common_app_title": "Let''s Live",
+  "common_bio": "Bio",
+  "common_cancel": "Cancel",
+  "common_channels": "Channels",
+  "common_close": "Close",
+  "common_follow": "Follow",
+  "common_followers_count": "{count, plural, one{{formatted} follower} other{{formatted} followers}}",
+  "@common_followers_count": {
+    "placeholders": {
+      "formatted": {},
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "common_following": "Following",
+  "common_go_home": "Go home",
+  "common_got_it": "Got it",
+  "common_home": "Home",
+  "common_how_to_livestream": "How to livestream",
+  "common_joined": "Joined",
+  "common_live": "Live",
+  "common_live_streaming": "Live Streaming",
+  "common_livestreams": "Livestreams",
+  "common_loading": "Loading...",
+  "common_more": "More",
+  "common_no_description": "No description",
+  "common_no_livestreams": "No livestreams",
+  "common_no_livestreams_description": "There is currently no one streaming, check back later or explore our video on demand content",
+  "common_no_videos": "No Videos Available",
+  "common_no_videos_description": "There are currently no videos available. Check back later for new content",
+  "common_oops": "Oops!",
+  "common_or": "or",
+  "common_other_streams": "Other streams",
+  "common_page_not_found": "We couldn''t find the page you were looking for",
+  "common_photo_library_error": "Could not open your photos",
+  "common_recommended": "Recommended",
+  "common_save": "Save",
+  "common_save_changes": "Save changes",
+  "common_search_empty_prompt": "Search for channels, live streams and videos",
+  "common_search_error": "Search failed. Please try again.",
+  "common_search_no_results": "No results for “{query}”",
+  "@common_search_no_results": {
+    "placeholders": {
+      "query": {}
+    }
+  },
+  "common_search_no_results_hint": "Check the spelling or try a shorter search.",
+  "common_search_no_results_type_lives": "No one matching is live right now",
+  "common_search_no_results_type_users": "No channels found",
+  "common_search_no_results_type_vods": "No videos found",
+  "common_search_open": "Open search",
+  "common_search_placeholder": "Search channels, live streams, videos",
+  "common_search_results_for": "Results for “{query}”",
+  "@common_search_results_for": {
+    "placeholders": {
+      "query": {}
+    }
+  },
+  "common_search_retry": "Try again",
+  "common_search_sections_lives": "Live now",
+  "common_search_sections_users": "Channels",
+  "common_search_sections_vods": "Videos",
+  "common_search_see_all": "See all",
+  "common_search_see_all_results": "See all results for “{query}”",
+  "@common_search_see_all_results": {
+    "placeholders": {
+      "query": {}
+    }
+  },
+  "common_search_tabs_all": "All",
+  "common_search_tabs_lives": "Live",
+  "common_search_tabs_users": "Channels",
+  "common_search_tabs_vods": "Videos",
+  "common_search_title": "Search",
+  "common_search_viewers": "{count, plural, one{{formatted} watching} other{{formatted} watching}}",
+  "@common_search_viewers": {
+    "placeholders": {
+      "formatted": {},
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "common_searching": "Searching...",
+  "common_setting": "Setting",
+  "common_show_more": "Show more",
+  "common_start_your_livestream": "Start your livestream",
+  "common_started_at": "Started {time}",
+  "@common_started_at": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "common_stream_guide_step_1": "Open OBS → Settings → Stream",
+  "common_stream_guide_step_2": "Enter: \"Server: {server_url}, StreamKey: Get your key in setting\"",
+  "@common_stream_guide_step_2": {
+    "placeholders": {
+      "server_url": {}
+    }
+  },
+  "common_streamer": "Streamer",
+  "common_time_days_ago": "{count, plural, one{{count} day ago} other{{count} days ago}}",
+  "@common_time_days_ago": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "common_time_hours_ago": "{count, plural, one{{count} hour ago} other{{count} hours ago}}",
+  "@common_time_hours_ago": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "common_time_minutes_ago": "{count, plural, one{{count} minute ago} other{{count} minutes ago}}",
+  "@common_time_minutes_ago": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "common_time_months_ago": "{count, plural, one{{count} month ago} other{{count} months ago}}",
+  "@common_time_months_ago": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "common_time_seconds_ago": "{count, plural, one{{count} second ago} other{{count} seconds ago}}",
+  "@common_time_seconds_ago": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "common_time_weeks_ago": "{count, plural, one{{count} week ago} other{{count} weeks ago}}",
+  "@common_time_weeks_ago": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "common_time_years_ago": "{count, plural, one{{count} year ago} other{{count} years ago}}",
+  "@common_time_years_ago": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "common_unfollow": "Unfollow",
+  "common_username": "Username",
+  "common_videos": "Videos",
+  "common_vod_copy": "Copy",
+  "common_vod_copy_failed": "Couldn''t copy the link",
+  "common_vod_dislike": "Dislike",
+  "common_vod_like": "Like",
+  "common_vod_link_copied": "Link copied",
+  "common_vod_login_to_react": "Log in to like or dislike this video",
+  "common_vod_remove_dislike": "Remove dislike",
+  "common_vod_remove_like": "Remove like",
+  "common_vod_seek_to": "Jump to {time}",
+  "@common_vod_seek_to": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "common_vod_share": "Share",
+  "common_vod_share_description": "Anyone with this link can watch the video.",
+  "common_vod_share_link": "Video link",
+  "common_vod_show_less": "Show less",
+  "common_vod_show_more": "...more",
+  "common_vod_start_at": "Start at {time}",
+  "@common_vod_start_at": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "common_vod_views": "{count, plural, one{{count} view} other{{count} views}}",
+  "@common_vod_views": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "common_vod_views_compact": "{count, plural, one{{formatted} view} other{{formatted} views}}",
+  "@common_vod_views_compact": {
+    "placeholders": {
+      "formatted": {},
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "error_confirm_password_required": "Please confirm your password",
+  "error_email_invalid": "Email is invalid",
+  "error_email_required": "Email is required",
+  "error_general_description": "Something has gone wrong, please try again later",
+  "error_general_title": "Oops!",
+  "error_msw_failed_description": "NEXT_PUBLIC_USE_MOCK_API=true but the mock service worker could not be installed, so requests would hit the real backend. Fix the worker or unset the flag.",
+  "error_msw_failed_title": "MSW worker failed to start — refusing to render with mocks disabled",
+  "error_new_password_must_be_different": "New password must be different from current password",
+  "error_otp_required": "Please enter OTP code",
+  "error_otp_send_fail": "Failed to send OTP",
+  "error_password_missing_lowercase": "Password must contain at least one lowercase letter",
+  "error_password_missing_special": "Password must contain at least one special character",
+  "error_password_missing_uppercase": "Password must contain at least one uppercase letter",
+  "error_password_required": "Password is required",
+  "error_password_too_long": "Password must be at most {maxLength} characters",
+  "@error_password_too_long": {
+    "placeholders": {
+      "maxLength": {}
+    }
+  },
+  "error_password_too_short": "Password must be at least {minLength} characters",
+  "@error_password_too_short": {
+    "placeholders": {
+      "minLength": {}
+    }
+  },
+  "error_passwords_do_not_match": "Passwords do not match",
+  "error_turnstile_required": "Please complete the CAPTCHA.",
+  "error_username_required": "Username is required",
+  "error_username_too_long": "Username must be <= 20 characters",
+  "error_username_too_short": "Username must be >= 6 characters",
+  "fetch_error_client_fetch_error": "Failed to fetch data, please try again.",
+  "legal_cookie_policy_contact_body": "Contact us if you have questions about this policy or how we handle cookies.",
+  "legal_cookie_policy_contact_title": "Questions",
+  "legal_cookie_policy_control_body": "You can delete or block cookies through your browser settings. Blocking the ACCESS_TOKEN or REFRESH_TOKEN cookies will sign you out and prevent you from staying logged in.",
+  "legal_cookie_policy_control_title": "Managing cookies",
+  "legal_cookie_policy_essential_note": "All cookies above are essential — the site cannot authenticate you or remember your language without them, so there is no optional/reject toggle for them.",
+  "legal_cookie_policy_intro_body": "Cookies are small text files a website stores on your device. Let''s Live uses a small, fixed set of cookies to keep the site working. We do not use cookies for advertising, tracking, or analytics.",
+  "legal_cookie_policy_intro_title": "What are cookies?",
+  "legal_cookie_policy_row_access_duration": "Set by the server; cleared on logout.",
+  "legal_cookie_policy_row_access_purpose": "Keeps you signed in and authorizes your requests while you use the site.",
+  "legal_cookie_policy_row_left_bar_duration": "1 year.",
+  "legal_cookie_policy_row_left_bar_purpose": "Remembers the width of the channels sidebar and whether it is collapsed.",
+  "legal_cookie_policy_row_lng_duration": "1 year.",
+  "legal_cookie_policy_row_lng_purpose": "Remembers your chosen display language.",
+  "legal_cookie_policy_row_refresh_duration": "Set by the server; cleared on logout.",
+  "legal_cookie_policy_row_refresh_purpose": "Lets the site renew your session without asking you to log in again.",
+  "legal_cookie_policy_table_duration": "Duration",
+  "legal_cookie_policy_table_name": "Name",
+  "legal_cookie_policy_table_purpose": "Purpose",
+  "legal_cookie_policy_table_title": "Cookies we use",
+  "legal_cookie_policy_table_type": "Type",
+  "legal_cookie_policy_title": "Cookie Policy",
+  "legal_cookie_policy_type_essential": "Essential",
+  "legal_cookie_policy_updated": "Last updated: {date}",
+  "@legal_cookie_policy_updated": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "messages_attach_images": "Attach images",
+  "messages_attach_images_limit": "You can attach up to {max} images",
+  "@messages_attach_images_limit": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "messages_back_to_list": "Back to list",
+  "messages_beginning_of_conversation": "Beginning of conversation",
+  "messages_cancel": "Cancel",
+  "messages_close_chat": "Close chat",
+  "messages_close_section": "Close message section",
+  "messages_create": "Create",
+  "messages_creating": "Creating...",
+  "messages_delete": "Delete",
+  "messages_delete_message": "Delete message",
+  "messages_delete_message_confirm": "Delete this message? This cannot be undone.",
+  "messages_direct_message": "Direct Message",
+  "messages_edit_message": "Edit message",
+  "messages_edited": "(edited)",
+  "messages_emote_category_gestures": "Gestures",
+  "messages_emote_category_hype": "Hype",
+  "messages_emote_category_misc": "Misc",
+  "messages_emote_category_smileys": "Smileys",
+  "messages_emote_empty_state": "No emotes found",
+  "messages_emote_search_placeholder": "Search emotes...",
+  "messages_file_exceeds_limit": "{name} exceeds {size}MB limit",
+  "@messages_file_exceeds_limit": {
+    "placeholders": {
+      "name": {},
+      "size": {}
+    }
+  },
+  "messages_group": "Group",
+  "messages_group_member_limit": "A group can have up to {max} members, including you",
+  "@messages_group_member_limit": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "messages_group_name_placeholder": "Group name (optional)",
+  "messages_image_alt": "Image {number}",
+  "@messages_image_alt": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "messages_load_more": "Load more",
+  "messages_members_count": "{count} members",
+  "@messages_members_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "messages_message_deleted": "This message was deleted",
+  "messages_minimize_chat": "Minimize chat",
+  "messages_new_conversation": "New Conversation",
+  "messages_no_conversations_yet": "No conversations yet",
+  "messages_no_messages_yet": "No messages yet",
+  "messages_offline": "Offline",
+  "messages_online": "Online",
+  "messages_open_in_messages": "Open in Messages",
+  "messages_placeholder_type_message": "Type a message...",
+  "messages_preview_alt": "Preview {number}",
+  "@messages_preview_alt": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "messages_remove_image": "Remove image",
+  "messages_save": "Save",
+  "messages_search_users_placeholder": "Search users...",
+  "messages_searching": "Searching...",
+  "messages_select_conversation": "Select a conversation",
+  "messages_sent_an_image": "Sent an image",
+  "messages_sent_images_count": "Sent {count} images",
+  "@messages_sent_images_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "messages_title": "Messages",
+  "messages_typing_many": "{name} and {count} others are typing...",
+  "@messages_typing_many": {
+    "placeholders": {
+      "count": {},
+      "name": {}
+    }
+  },
+  "messages_typing_one": "{name} is typing...",
+  "@messages_typing_one": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "messages_typing_two": "{name1} and {name2} are typing...",
+  "@messages_typing_two": {
+    "placeholders": {
+      "name1": {},
+      "name2": {}
+    }
+  },
+  "messages_unknown": "Unknown",
+  "messages_upload_failed": "Failed to upload files",
+  "messages_upload_some_failed": "Some files failed to upload",
+  "messages_yesterday_at": "{time} Yesterday",
+  "@messages_yesterday_at": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "notification_delete": "Delete",
+  "notification_load_more": "Load more",
+  "notification_loading": "Loading...",
+  "notification_mark_all_as_read": "Mark all as read",
+  "notification_mark_as_read": "Mark as read",
+  "notification_no_notifications": "No notifications",
+  "notification_no_notifications_yet": "No notifications yet.",
+  "notification_time_d_ago": "{d}d ago",
+  "@notification_time_d_ago": {
+    "placeholders": {
+      "d": {}
+    }
+  },
+  "notification_time_h_ago": "{h}h ago",
+  "@notification_time_h_ago": {
+    "placeholders": {
+      "h": {}
+    }
+  },
+  "notification_time_just_now": "just now",
+  "notification_time_m_ago": "{m}m ago",
+  "@notification_time_m_ago": {
+    "placeholders": {
+      "m": {}
+    }
+  },
+  "notification_title": "Notifications",
+  "notification_view": "View",
+  "notification_view_all": "View all notifications",
+  "settings_disable_button": "Disable Your Let''s Live Account",
+  "settings_disable_description": "Completely deactivate your account",
+  "settings_disable_dialog_confirm": "I understand!",
+  "settings_disable_dialog_description": "Are you sure you want to disable your account? You can reactivate your account at any time by logging back in.",
+  "settings_disable_dialog_title": "Disable your account!",
+  "settings_disable_note": "When you disable your account, your profile and notifications will be hidden, and your account will be deactivated. You can reactivate your account at any time.",
+  "settings_disable_title": "Disabling your Let''s Live account",
+  "settings_disable_unknown_error": "An unknown error occurred",
+  "settings_file_size_exceeds": "File size exceeds {size} MB",
+  "@settings_file_size_exceeds": {
+    "placeholders": {
+      "size": {}
+    }
+  },
+  "settings_language_description": "Select your preferred language",
+  "settings_language_title": "Language",
+  "settings_navigation_chat_commands": "Chat Commands",
+  "settings_navigation_profile": "Profile",
+  "settings_navigation_security": "Security",
+  "settings_navigation_stream": "Stream",
+  "settings_navigation_upload": "Upload",
+  "settings_navigation_vods": "VODs",
+  "settings_page_title": "Settings",
+  "settings_profile_bio": "Bio",
+  "settings_profile_crop_apply": "Apply",
+  "settings_profile_crop_image_alt": "Photo to crop",
+  "settings_profile_crop_title": "Crop profile picture",
+  "settings_profile_description": "Change identifying details for your account",
+  "settings_profile_image_load_failed": "This image couldn''t be read. Please choose another file.",
+  "settings_profile_photo_dimensions_out_of_range": "Photo must be between {min}x{min} and {max}x{max} pixels.",
+  "@settings_profile_photo_dimensions_out_of_range": {
+    "placeholders": {
+      "max": {},
+      "min": {}
+    }
+  },
+  "settings_profile_title": "Profile Settings",
+  "settings_profile_update_background": "Update background",
+  "settings_profile_update_profile_picture": "Update profile picture",
+  "settings_profile_update_success": "Profile information updated successfully!",
+  "settings_profile_username": "Username",
+  "settings_save_changes": "Save Changes",
+  "settings_security_api_key_copied": "API Key copied to clipboard",
+  "settings_security_api_key_generate": "Generate New API Key",
+  "settings_security_api_key_label": "Your API Key",
+  "settings_security_contact_add_phone": "Add a number",
+  "settings_security_contact_description": "Where we send important messages about your account",
+  "settings_security_contact_email": "Email",
+  "settings_security_contact_phone": "Phone Number",
+  "settings_security_contact_phone_invalid": "Invalid phone number, please try again",
+  "settings_security_contact_title": "Contact",
+  "settings_security_security_description": "Keep your account safe and sound",
+  "settings_security_security_password_change": "Change password",
+  "settings_security_security_password_dialog_title": "Change Password",
+  "settings_security_security_password_error_min_length": "Password must be at least 8 characters",
+  "settings_security_security_password_error_mismatch": "Passwords do not match",
+  "settings_security_security_password_error_same": "New password must be different from current password",
+  "settings_security_security_password_form_confirm_label": "Confirm New Password",
+  "settings_security_security_password_form_confirm_placeholder": "Confirm your new password",
+  "settings_security_security_password_form_current_label": "Current Password",
+  "settings_security_security_password_form_current_placeholder": "Enter your current password",
+  "settings_security_security_password_form_new_label": "New Password",
+  "settings_security_security_password_form_new_placeholder": "Enter your new password",
+  "settings_security_security_password_form_submit": "Confirm",
+  "settings_security_security_password_local_description": "Improve your security with a strong password.",
+  "settings_security_security_password_third_party_description": "Your account is secured with a password from a third-party provider.",
+  "settings_security_security_password_title": "Password",
+  "settings_security_security_password_updated_success": "Password updated successfully",
+  "settings_security_security_sign_out_button": "Sign Out Everywhere",
+  "settings_security_security_sign_out_change_password": "change your password",
+  "settings_security_security_sign_out_description": "This will log out you of Let''s Live everywhere you''re logged in. If you believe your account has been compromised, we recommend you",
+  "settings_security_security_sign_out_title": "Sign Out Everywhere",
+  "settings_security_security_title": "Security",
+  "settings_security_security_two_factor_local_description": "Add an extra layer of security to your Let''s Live account by enabling 2FA before logging in.",
+  "settings_security_security_two_factor_setup": "Set Up Two-Factor Authentication",
+  "settings_security_security_two_factor_third_party_description": "Your account is secured with third-party provider.",
+  "settings_security_security_two_factor_title": "Two-Factor Authentication",
+  "settings_social_media_links_description": "Manage links to your social media profiles",
+  "settings_social_media_links_err_empty_url": "Link can''t be empty",
+  "settings_social_media_links_invalid_url": "Invalid link, please try again",
+  "settings_social_media_links_title": "Edit Social Media Links",
+  "settings_stream_confirm_edit_button": "Confirm edit",
+  "settings_stream_description": "Your next livestream information will be based on the information. It won''t change even after livestream ends.",
+  "settings_stream_description_label": "Description",
+  "settings_stream_key_copy": "Copy key",
+  "settings_stream_key_description": "Paste this key into your streaming software. Anyone who has it can stream to your channel.",
+  "settings_stream_key_hide": "Hide key",
+  "settings_stream_key_reset_confirm_action": "Generate",
+  "settings_stream_key_reset_confirm_description": "Your current key stops working immediately. Update your streaming software with the new key.",
+  "settings_stream_key_reset_confirm_title": "Generate a new key?",
+  "settings_stream_key_show": "Show key",
+  "settings_stream_key_title": "Stream key",
+  "settings_stream_thumbnail_description": "If empty, the thumbnail will be generated automatically.",
+  "settings_stream_thumbnail_hover": "Change thumbnail",
+  "settings_stream_thumbnail_label": "Thumbnail",
+  "settings_stream_thumbnail_remove": "Remove thumbnail",
+  "settings_stream_title": "Livestream",
+  "settings_stream_title_description": "If empty, the title will be generated automatically.",
+  "settings_stream_title_label": "Title",
+  "settings_stream_updated_success": "Livestream information updated successfully",
+  "settings_themes_description": "Customize the look and feel of the website",
+  "settings_themes_title": "Theme",
+  "settings_title": "Settings",
+  "settings_upload_change_video": "Change video",
+  "settings_upload_description": "Upload a new video on demand to your channel.",
+  "settings_upload_description_label": "Description",
+  "settings_upload_error_file_too_large": "File is too large. Maximum size is 100 MB.",
+  "settings_upload_error_invalid_format": "Invalid file format. Supported: MP4, MOV, AVI, MKV, WebM.",
+  "settings_upload_error_max_concurrent": "Maximum {max} concurrent uploads allowed. Your video will be queued.",
+  "@settings_upload_error_max_concurrent": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "settings_upload_error_no_file": "Please select a video file.",
+  "settings_upload_error_no_title": "Please enter a title.",
+  "settings_upload_keep_open_note": "Keep the app open while the video uploads. If it is interrupted, Retry sends the file again.",
+  "settings_upload_manager_cancel": "Cancel",
+  "settings_upload_manager_cancelled": "Cancelled",
+  "settings_upload_manager_clear": "Clear",
+  "settings_upload_manager_complete": "Upload complete",
+  "settings_upload_manager_dismiss": "Dismiss",
+  "settings_upload_manager_failed": "Upload failed",
+  "settings_upload_manager_header_complete": "{count, plural, one{1 upload complete} other{{count} uploads complete}}",
+  "@settings_upload_manager_header_complete": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "settings_upload_manager_header_failed": "{count, plural, one{1 upload failed} other{{count} uploads failed}}",
+  "@settings_upload_manager_header_failed": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "settings_upload_manager_header_uploading": "{count, plural, one{Uploading 1 video} other{Uploading {count} videos}}",
+  "@settings_upload_manager_header_uploading": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "settings_upload_manager_parse_error": "Failed to parse response",
+  "settings_upload_manager_processing": "Processing on server...",
+  "settings_upload_manager_retry": "Retry",
+  "settings_upload_manager_waiting": "Waiting...",
+  "settings_upload_note_max_time": "Max upload time is 3 hours.",
+  "settings_upload_processing_failed": "The server could not process this video.",
+  "settings_upload_select_video": "Select Video",
+  "settings_upload_select_video_description": "Supported formats: MP4, MOV, AVI, MKV, WebM. Max size: 100 MB.",
+  "settings_upload_selected_file": "Selected: {filename} ({size})",
+  "@settings_upload_selected_file": {
+    "placeholders": {
+      "filename": {},
+      "size": {}
+    }
+  },
+  "settings_upload_title": "Upload VOD",
+  "settings_upload_title_description": "Give your video a descriptive title.",
+  "settings_upload_title_label": "Title",
+  "settings_upload_upload_button": "Upload Video",
+  "settings_upload_upload_success": "Video uploaded successfully! It will be available after processing.",
+  "settings_upload_uploading": "Uploading...",
+  "settings_upload_visibility_label": "Public",
+  "settings_vods_actions_delete": "Delete",
+  "settings_vods_actions_edit": "Edit",
+  "settings_vods_delete_dialog_cancel": "Cancel",
+  "settings_vods_delete_dialog_delete": "Delete",
+  "settings_vods_delete_dialog_description": "Are you sure you want to delete this item? This action cannot be undone.",
+  "settings_vods_delete_dialog_title": "Confirm Deletion",
+  "settings_vods_description": "Manage your VODs and edit their information here.",
+  "settings_vods_edit_dialog_cancel": "Cancel",
+  "settings_vods_edit_dialog_change_thumbnail": "Change thumbnail",
+  "settings_vods_edit_dialog_description": "Make changes to the VOD information here.",
+  "settings_vods_edit_dialog_description_label": "Description",
+  "settings_vods_edit_dialog_public": "Public",
+  "settings_vods_edit_dialog_save_changes": "Save Changes",
+  "settings_vods_edit_dialog_thumbnail": "Thumbnail",
+  "settings_vods_edit_dialog_title": "Edit Information",
+  "settings_vods_edit_dialog_title_label": "Title",
+  "settings_vods_edit_dialog_update_success": "VOD updated successfully",
+  "settings_vods_empty": "You have no videos yet.",
+  "settings_vods_metadata_view": "view",
+  "settings_vods_metadata_views": "views",
+  "settings_vods_status_failed": "Processing failed",
+  "settings_vods_status_processing": "Processing",
+  "settings_vods_title": "VODs Manager",
+  "shop_gifts_received_empty": "No gifts received yet.",
+  "shop_gifts_received_from": "From {name}",
+  "@shop_gifts_received_from": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "shop_gifts_received_page_title": "Gift Collection",
+  "shop_gifts_received_quantity_label": "×{quantity}",
+  "@shop_gifts_received_quantity_label": {
+    "placeholders": {
+      "quantity": {}
+    }
+  },
+  "shop_inventory_empty": "You don''t own any items yet.",
+  "shop_inventory_page_title": "My Inventory",
+  "shop_inventory_quantity_label": "×{quantity}",
+  "@shop_inventory_quantity_label": {
+    "placeholders": {
+      "quantity": {}
+    }
+  },
+  "shop_shop_buy_button": "Buy",
+  "shop_shop_empty": "No items available right now.",
+  "shop_shop_gift_button": "Send Gift",
+  "shop_shop_gift_message_placeholder": "Add a message (optional)",
+  "shop_shop_gift_no_items": "No items in your inventory.",
+  "shop_shop_gift_pick_item": "Pick an item to send",
+  "shop_shop_gift_quick_send": "Quick Buy & Send",
+  "shop_shop_gift_send": "Send Gift",
+  "shop_shop_gift_sending": "Sending...",
+  "shop_shop_gift_sent": "Gift sent!",
+  "shop_shop_login_to_buy": "Log in to buy",
+  "shop_shop_page_title": "Shop",
+  "shop_shop_price_label": "{price} SPARK",
+  "@shop_shop_price_label": {
+    "placeholders": {
+      "price": {}
+    }
+  },
+  "shop_shop_purchase_success": "Purchase successful!",
+  "shop_shop_unknown_item": "Unknown item",
+  "theme_dark": "Dark",
+  "theme_light": "Light",
+  "theme_system": "System",
+  "users_channel_back": "Back",
+  "users_channel_latest_video": "Latest video",
+  "users_channel_links": "Links",
+  "users_channel_load_more": "Load more",
+  "users_channel_more_videos": "More videos",
+  "users_channel_no_bio": "{username} hasn''t written a bio yet.",
+  "@users_channel_no_bio": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "users_channel_no_videos": "No videos yet",
+  "users_channel_no_videos_description": "{username} hasn''t published any videos. Follow to get notified when they do.",
+  "@users_channel_no_videos_description": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "users_channel_offline_notice": "{username} isn''t live right now.",
+  "@users_channel_offline_notice": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "users_channel_playback_error": "Couldn''t play the stream.",
+  "users_channel_retry": "Try again",
+  "users_channel_stats": "Channel info",
+  "users_channel_stream_ended": "This stream has ended.",
+  "users_channel_tabs_about": "About",
+  "users_channel_tabs_home": "Home",
+  "users_channel_tabs_people": "People",
+  "users_channel_tabs_videos": "Videos",
+  "users_channel_videos_error": "Couldn''t load videos.",
+  "users_channel_view_all": "View all",
+  "users_channel_watch": "Watch",
+  "users_live": "Live",
+  "users_offline": "Offline",
+  "users_player_exit_fullscreen": "Exit full screen",
+  "users_player_fullscreen": "Full screen",
+  "users_player_pause": "Pause",
+  "users_player_picture_in_picture": "Picture in picture",
+  "users_player_play": "Play",
+  "users_player_quality": "Quality",
+  "users_player_quality_auto": "Auto",
+  "users_profile_about": "About",
+  "users_profile_joined_prefix": "Joined",
+  "wallet_currency_flare": "Flare",
+  "wallet_currency_flare_description": "Premium currency with exclusive benefits",
+  "wallet_currency_spark": "Spark",
+  "wallet_currency_spark_description": "Standard currency for tips and purchases",
+  "wallet_deposit_amount": "Amount",
+  "wallet_deposit_amount_placeholder": "Enter amount",
+  "wallet_deposit_confirm": "Proceed to Payment",
+  "wallet_deposit_confirming": "Redirecting...",
+  "wallet_deposit_description": "Add funds to your wallet using a payment provider",
+  "wallet_deposit_error_invalid_amount": "Please enter a valid amount",
+  "wallet_deposit_error_max_amount": "Amount cannot exceed {amount}",
+  "@wallet_deposit_error_max_amount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "wallet_deposit_error_min_amount": "Amount must be at least {amount}",
+  "@wallet_deposit_error_min_amount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "wallet_deposit_fee": "Processing fee",
+  "wallet_deposit_max_amount": "Maximum deposit: {amount}",
+  "@wallet_deposit_max_amount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "wallet_deposit_min_amount": "Minimum deposit: {amount}",
+  "@wallet_deposit_min_amount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "wallet_deposit_provider_stripe": "Credit / Debit Card",
+  "wallet_deposit_provider_stripe_description": "Pay securely with Stripe",
+  "wallet_deposit_select_currency": "Select Currency",
+  "wallet_deposit_select_provider": "Payment Method",
+  "wallet_deposit_success": "Deposit initiated! You will be redirected to complete payment.",
+  "wallet_deposit_summary": "Summary",
+  "wallet_deposit_title": "Deposit Funds",
+  "wallet_deposit_you_pay": "You pay",
+  "wallet_deposit_you_receive": "You receive",
+  "wallet_navigation_deposit": "Deposit",
+  "wallet_navigation_inventory": "Inventory",
+  "wallet_navigation_overview": "Overview",
+  "wallet_navigation_transactions": "Transactions",
+  "wallet_overview_deposit_funds": "Deposit Funds",
+  "wallet_overview_description": "View your current wallet balances",
+  "wallet_overview_no_transactions": "No transactions yet",
+  "wallet_overview_recent_transactions": "Recent Transactions",
+  "wallet_overview_title": "Your Balances",
+  "wallet_overview_total_balance": "Total Balance",
+  "wallet_overview_view_all": "View all transactions",
+  "wallet_page_title": "Wallet",
+  "wallet_payments_status_cancelled": "Cancelled",
+  "wallet_payments_status_completed": "Completed",
+  "wallet_payments_status_failed": "Failed",
+  "wallet_payments_status_pending": "Pending",
+  "wallet_payments_status_processing": "Processing",
+  "wallet_payments_title": "Payment History",
+  "wallet_transactions_description": "View all your past transactions",
+  "wallet_transactions_details": "Details",
+  "wallet_transactions_filter_all": "All",
+  "wallet_transactions_load_more": "Load more",
+  "wallet_transactions_no_transactions": "No transactions found",
+  "wallet_transactions_no_transactions_description": "Your transaction history will appear here once you make your first transaction.",
+  "wallet_transactions_status_cancelled": "Cancelled",
+  "wallet_transactions_status_completed": "Completed",
+  "wallet_transactions_status_created": "Created",
+  "wallet_transactions_status_failed": "Failed",
+  "wallet_transactions_status_processing": "Processing",
+  "wallet_transactions_title": "Transaction History",
+  "wallet_transactions_type_adjustment": "Adjustment",
+  "wallet_transactions_type_deposit": "Deposit",
+  "wallet_transactions_type_donate": "Donation",
+  "wallet_transactions_type_fee": "Fee",
+  "wallet_transactions_type_purchase": "Purchase",
+  "wallet_transactions_type_refund": "Refund",
+  "wallet_transactions_type_reward": "Reward",
+  "wallet_transactions_type_trade": "Trade"
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"sen1or/letslive/user/domains"
 	"sen1or/letslive/user/dto"
+	"sen1or/letslive/user/push"
 
 	"sen1or/letslive/shared/pkg/logger"
 	"sen1or/letslive/shared/pkg/realtime"
@@ -14,15 +15,18 @@ import (
 type NotificationService struct {
 	notificationRepo domains.NotificationRepository
 	publisher        realtime.Publisher
+	push             push.PushSender
 }
 
 func NewNotificationService(
 	notificationRepo domains.NotificationRepository,
 	publisher realtime.Publisher,
+	pushSender push.PushSender,
 ) *NotificationService {
 	return &NotificationService{
 		notificationRepo: notificationRepo,
 		publisher:        publisher,
+		push:             pushSender,
 	}
 }
 
@@ -82,7 +86,23 @@ func (s NotificationService) CreateNotification(ctx context.Context, req dto.Cre
 		logger.Errorf(ctx, "failed to publish notification %s to %s: %v", created.Id, topic.String(), pubErr)
 	}
 
+	s.sendPush(ctx, created)
+
 	return created, nil
+}
+
+// sendPush is best effort: the row is stored, so neither an error nor a panic
+// from the sender may fail the request.
+func (s NotificationService) sendPush(ctx context.Context, n *domains.Notification) {
+	// PushSender is an interface: any implementation, not only push.Async, may panic
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Errorf(ctx, "push sender panicked for notification %s user %s: %v", n.Id, n.UserId, r)
+		}
+	}()
+	if err := s.push.Send(ctx, n.UserId, *n); err != nil {
+		logger.Errorf(ctx, "failed to queue push for notification %s user %s: %v", n.Id, n.UserId, err)
+	}
 }
 
 func (s NotificationService) MarkAsRead(ctx context.Context, notificationId, userId string) error {

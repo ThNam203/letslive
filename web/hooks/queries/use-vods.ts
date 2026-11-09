@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
     GetAllVODsAsAuthor,
     GetMyVODReaction,
@@ -6,6 +6,9 @@ import {
     GetVODInformation,
 } from "@/lib/api/vod";
 import { unwrapResponse } from "@/lib/api/api-error";
+import { nextPageParam, unwrapPage } from "@/lib/query/paginated";
+
+const CHANNEL_VODS_PAGE_SIZE = 12;
 
 export const AUTHOR_VODS_QUERY_KEY = ["vods", "author"] as const;
 
@@ -26,6 +29,24 @@ export function usePublicVodsOfUser(userId: string | undefined) {
         queryKey: publicVodsOfUserQueryKey(userId ?? ""),
         queryFn: async () =>
             unwrapResponse(await GetPublicVODsOfUser(userId as string)),
+        enabled: Boolean(userId),
+    });
+}
+
+export function usePublicVodsOfUserInfinite(userId: string | undefined) {
+    return useInfiniteQuery({
+        queryKey: [...publicVodsOfUserQueryKey(userId ?? ""), "paged"],
+        queryFn: async ({ pageParam }) =>
+            unwrapPage(
+                await GetPublicVODsOfUser(
+                    userId as string,
+                    pageParam,
+                    CHANNEL_VODS_PAGE_SIZE,
+                ),
+            ),
+        initialPageParam: 0,
+        getNextPageParam: (_lastPage, allPages) =>
+            nextPageParam(allPages, CHANNEL_VODS_PAGE_SIZE),
         enabled: Boolean(userId),
     });
 }

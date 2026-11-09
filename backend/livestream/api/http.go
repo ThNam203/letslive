@@ -45,6 +45,7 @@ func (a *APIServer) getHandler() http.Handler {
 
 	wrap("GET /v1/popular-livestreams", a.livestreamHandler.GetRecommendedLivestreamsPublicHandler)
 	wrap("GET /v1/livestreams", a.livestreamHandler.GetLivestreamOfUserPublicHandler)
+	wrap("GET /v1/livestreams/search", a.livestreamHandler.SearchLivestreamsPublicHandler)
 
 	wrap("POST /v1/internal/livestreams/{livestreamId}/end", a.livestreamHandler.EndLivestreamAndCreateVODInternalHandler)
 	wrap("POST /v1/internal/livestreams", a.livestreamHandler.CreateLivestreamInternalHandler)

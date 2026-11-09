@@ -33,6 +33,7 @@ type LivestreamRepository interface {
 	GetById(ctx context.Context, id uuid.UUID) (*Livestream, error)
 	GetByUser(ctx context.Context, userId uuid.UUID) (*Livestream, error)
 	GetRecommendedLivestreams(ctx context.Context, page int, limit int) ([]Livestream, error)
+	SearchLive(ctx context.Context, query string, streamerIds []uuid.UUID, page int, limit int) ([]Livestream, error)
 	Create(ctx context.Context, ls Livestream) (*Livestream, error)
 	Update(ctx context.Context, ls Livestream) (*Livestream, error)
 	Delete(ctx context.Context, id uuid.UUID) error

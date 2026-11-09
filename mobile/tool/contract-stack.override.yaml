@@ -1,0 +1,57 @@
+# Compose override for the mobile contract-test stack. The base file uses fixed
+# `letslive-*` container names, which collide with any other LetsLive checkout
+# on the same Docker host (stopped containers keep their names). This renames
+# the services the mobile app needs to `ll-mobile-*`. Ports and networks stay
+# as in docker-compose-dev.yaml (envoy hardcodes consul at 172.29.0.10), so
+# stop any other LetsLive stack first.
+#
+#   docker compose -f docker-compose-dev.yaml -f mobile/tool/contract-stack.override.yaml up -d <services>
+#
+# The config server normally clones the private letslive-configs repo. Here it
+# serves a local checkout read-only instead (Spring Cloud Config `native`
+# profile). Set LETSLIVE_CONFIGS_DIR to a checkout of letslive-configs; compose
+# fails with a clear message when it is unset.
+services:
+  configserver:
+    container_name: ll-mobile-configserver
+    environment:
+      - SPRING_PROFILES_ACTIVE=native
+      - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:/configs
+    volumes:
+      - ${LETSLIVE_CONFIGS_DIR:?Set LETSLIVE_CONFIGS_DIR to a checkout of letslive-configs}:/configs:ro
+  consul:
+    container_name: ll-mobile-consul
+  envoy:
+    container_name: ll-mobile-envoy
+  auth:
+    container_name: ll-mobile-auth
+  user:
+    container_name: ll-mobile-user
+  # Turns uploaded videos into HLS so they reach `ready` (creator contract
+  # test). The base file names it `letslive-transcode`, which is another
+  # stack's container: never reuse that name.
+  transcode:
+    container_name: ll-mobile-transcode
+  livestream:
+    container_name: ll-mobile-livestream
+  vod:
+    container_name: ll-mobile-vod
+  finance:
+    container_name: ll-mobile-finance
+  chat:
+    container_name: ll-mobile-chat
+  realtime:
+    container_name: ll-mobile-realtime
+  main_db:
+    container_name: ll-mobile-db
+    # The service configs address the database as `letslive-db`.
+    networks:
+      general_network:
+        aliases:
+          - letslive-db
+  chat_db:
+    container_name: ll-mobile-chat-db
+  nats:
+    container_name: ll-mobile-nats
+  minio:
+    container_name: ll-mobile-minio
