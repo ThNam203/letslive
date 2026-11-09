@@ -887,3 +887,50 @@ func TestRecorderUploadsSurviveCancelledContext(t *testing.T) {
 		}
 	}
 }
+
+// Each VOD variant advertises its codecs: avc1 from the rendition's own SPS
+// (profile, constraint flags, level) and mp4a from the source audio config.
+func TestRecorderMasterCodecs(t *testing.T) {
+	tests := []struct {
+		fixture string
+		audio   bool
+	}{
+		{fixture: "src_640x360.flv", audio: true},
+		{fixture: "src_640x360_noaudio.flv", audio: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.fixture, func(t *testing.T) {
+			rig := newRecorderRig(t, tt.fixture, []string{"source"})
+			rig.feed(t, 1, rig.f.pkts)
+			if err := rig.finish(t); err != nil {
+				t.Fatalf("Finish: %v", err)
+			}
+
+			want := fmt.Sprintf("avc1.%02x%02x%02x", rig.f.sps[1], rig.f.sps[2], rig.f.sps[3])
+			if tt.audio {
+				want += fmt.Sprintf(",mp4a.40.%d", rig.f.audio.Type)
+			}
+			master := rig.read(t, "index.m3u8")
+			if !strings.Contains(master, `CODECS="`+want+`"`) {
+				t.Errorf("master lacks CODECS=%q:\n%s", want, master)
+			}
+		})
+	}
+}
+
+func TestAVCCodecString(t *testing.T) {
+	tests := []struct {
+		sps  []byte
+		want string
+	}{
+		{sps: []byte{0x67, 0x64, 0x00, 0x1f, 0xac}, want: "avc1.64001f"},
+		{sps: []byte{0x67, 0x42, 0xc0, 0x1e}, want: "avc1.42c01e"},
+		{sps: []byte{0x67, 0x64, 0x00}, want: ""},
+		{sps: nil, want: ""},
+	}
+	for _, tt := range tests {
+		if got := avcCodecString(tt.sps); got != tt.want {
+			t.Errorf("avcCodecString(% x) = %q, want %q", tt.sps, got, tt.want)
+		}
+	}
+}

@@ -136,6 +136,7 @@ type recRendition struct {
 	// Guarded by Recorder.resMu.
 	segments      []*recSegment
 	width, height int
+	videoCodec    string // RFC 6381 avc1 string from the SPS; empty if unknown
 }
 
 // Recorder records every rendition to MPEG-TS segment files, uploads them in
@@ -537,6 +538,7 @@ func (w *segmentWriter) readSPS(au [][]byte) {
 		w.haveSize = true
 		w.rec.resMu.Lock()
 		w.rend.width, w.rend.height = sps.Width(), sps.Height()
+		w.rend.videoCodec = avcCodecString(nalu)
 		w.rec.resMu.Unlock()
 		return
 	}
@@ -759,6 +761,7 @@ type variantPlan struct {
 	bytes         int64
 	totalTicks    int64
 	width, height int
+	codecs        string // CODECS attribute value; empty if unknown
 }
 
 // plans snapshots every rendition that has at least one uploaded segment and
@@ -785,7 +788,7 @@ func (r *Recorder) plans() []variantPlan {
 
 // planVariant lists rr's uploaded segments with their durations. resMu is held.
 func (r *Recorder) planVariant(rr *recRendition) variantPlan {
-	plan := variantPlan{rendition: rr.index, width: rr.width, height: rr.height}
+	plan := variantPlan{rendition: rr.index, width: rr.width, height: rr.height, codecs: r.codecs(rr.videoCodec)}
 	for _, seg := range rr.segments {
 		if !seg.ok {
 			continue
@@ -808,6 +811,29 @@ func (r *Recorder) planVariant(rr *recRendition) variantPlan {
 
 func seconds(t int64) float64 { return float64(t) / videoClockRate }
 
+// avcCodecString is the RFC 6381 codec string of an H.264 SPS NAL unit:
+// "avc1." and the hex of profile_idc, the constraint flags and level_idc
+// (the three bytes after the NAL header). It is empty for a truncated SPS.
+func avcCodecString(sps []byte) string {
+	if len(sps) < 4 {
+		return ""
+	}
+	return fmt.Sprintf("avc1.%02x%02x%02x", sps[1], sps[2], sps[3])
+}
+
+// codecs is a variant's CODECS value: its video codec plus the source AAC,
+// or empty when the video codec is unknown (a partial CODECS list would make
+// players reject the variant).
+func (r *Recorder) codecs(videoCodec string) string {
+	if videoCodec == "" {
+		return ""
+	}
+	if r.audio == nil {
+		return videoCodec
+	}
+	return fmt.Sprintf("%s,mp4a.40.%d", videoCodec, r.audio.Type)
+}
+
 func (p variantPlan) playlist() string {
 	var maxTicks int64
 	for _, e := range p.entries {
@@ -829,6 +855,9 @@ func (p variantPlan) playlist() string {
 func (p variantPlan) masterEntry() string {
 	bandwidth := int64(float64(p.bytes) * 8 / seconds(p.totalTicks))
 	attrs := fmt.Sprintf("BANDWIDTH=%d", bandwidth)
+	if p.codecs != "" {
+		attrs += fmt.Sprintf(",CODECS=\"%s\"", p.codecs)
+	}
 	if p.width > 0 && p.height > 0 {
 		attrs += fmt.Sprintf(",RESOLUTION=%dx%d", p.width, p.height)
 	}

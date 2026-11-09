@@ -12,7 +12,7 @@ watcher pipeline. Each fix is its own commit that ticks its entry here.
 | 3 | Non-AAC audio becomes a silent stream without saying so | fixed |
 | 5 | Every live viewer request reaches the transcode service | fixed (needs host nginx apply) |
 | 6a | First thumbnail taken at the first keyframe | fixed |
-| 6b | VOD master has no `CODECS` attribute | open |
+| 6b | VOD master has no `CODECS` attribute | fixed |
 | 6c | VOD folder `0` is now the source quality | open |
 | 7 | Branch far behind `main`, `go.work.sum` conflict | fixed |
 | 8 | `/transcode/vods/` lists every VOD id publicly | open |
@@ -129,8 +129,11 @@ takes. Test: `TestThumbnailerSkipsStart`.
 The old VOD master was ffmpeg's and carried `CODECS`; the recorder's master
 had only `BANDWIDTH` and `RESOLUTION`.
 
-**Fix:** each variant gets `CODECS="avc1.PPCCLL[,mp4a.40.N]"`, built from that
-rendition's SPS and the source audio config.
+**Fixed:** each variant gets `CODECS="avc1.PPCCLL[,mp4a.40.N]"` (before
+`RESOLUTION`, as gohlslib orders it), built from that rendition's own SPS and
+the source audio config. When the SPS is unknown `CODECS` is left out rather
+than listing audio only. Tests: `TestRecorderMasterCodecs`,
+`TestAVCCodecString`.
 
 ## 6c. VOD folder `0` is now the source quality
 
