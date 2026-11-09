@@ -16,7 +16,7 @@ watcher pipeline. Each fix is its own commit that ticks its entry here.
 | 6c | VOD folder `0` is now the source quality | won't fix (intentional) |
 | 7 | Branch far behind `main`, `go.work.sum` conflict | fixed |
 | 8 | `/transcode/vods/` lists every VOD id publicly | fixed |
-| 9 | Unready VODs reachable by anyone; web owner tab shows no status | backend fixed, web open |
+| 9 | Unready VODs reachable by anyone; web owner tab shows no status | fixed |
 
 (#4, iOS LL-HLS over HTTP/2, was dropped: prod serves HTTP/2 and iOS plays it.)
 
@@ -207,6 +207,15 @@ the owner sees every VOD of theirs, anyone else only a public, `ready` one
 and otherwise gets "not found", as for a private VOD. `GetVODById`,
 `RegisterView` and the reaction service use it. Tests: `TestVODVisibleTo`,
 `TestGetVODById_visibility`, `TestRegisterView_visibility`.
+
+**Fixed (web):** the owner's VOD cards show "Processing" or "Processing failed"
+(in the error colour) on the metadata line, like mobile's "My videos", using
+the `settings:vods.status_*` strings that already existed in both languages.
+A VOD that is not ready has no duration badge and its thumbnail and title
+link nowhere (there is nothing to play); edit and delete stay available. The
+mock API has a processing and a failed VOD of the signed-in user, and its
+`GET /vods/{id}` mirrors `VisibleTo`. Checked with `tsc`, ESLint and the page
+itself in mock mode (no web unit-test setup exists).
 
 (Comments do not check visibility at all, private VODs included; that is
 older than this branch and left as it is.)
