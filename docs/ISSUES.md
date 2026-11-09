@@ -1,6 +1,6 @@
 # Issues — letslive
 
-_Last updated: 2026-11-05_
+_Last updated: 2026-11-09_
 
 ---
 
@@ -82,6 +82,11 @@ _Added 2026-11-05 from the Flutter mobile app final review._ After a password ch
 Fix: call `RevokeAllTokensOfUser` on success.
 File: [backend/auth/services/auth.go:126](backend/auth/services/auth.go#L126)
 
+**S27. VOD comments ignore VOD visibility**
+_Added 2026-11-09 from the second review of `feat/ll-hls-packager` (details in [the problems file](docs/superpowers/reviews/2026-11-09-ll-hls-pipeline-problems.md))._ Listing, replying to and posting comments only check that the VOD exists, so anyone with a VOD id can read and write comments on a private or not-yet-ready VOD, and learn that it exists. `GetVODById`, view counting and reactions use `domains.VOD.VisibleTo`; comments do not. Older than this branch.
+Fix: check `vod.VisibleTo(viewer)` in comment list, replies, create and like (the public list handlers need the optional cookie viewer, like `GetVODByIdPublicHandler`).
+Files: [backend/vod/services/vod_comment/create.go](backend/vod/services/vod_comment/create.go), [backend/vod/services/vod_comment/get_comments.go](backend/vod/services/vod_comment/get_comments.go), [backend/vod/services/vod_comment/get_replies.go](backend/vod/services/vod_comment/get_replies.go)
+
 ---
 
 ### 🟢 LOW
@@ -148,6 +153,11 @@ _Added 2026-11-05 from the Flutter mobile app final review._ The backend only di
 Fix: confirm whether disable satisfies review; otherwise add a delete-account flow (backend first, then web and mobile).
 Files: `backend/user/services/user.go`, `backend/auth/services/auth.go`
 
+**L17. A livestream VOD can stay `processing` for good**
+_Added 2026-11-09 from the second review of `feat/ll-hls-packager` (details in [the problems file](docs/superpowers/reviews/2026-11-09-ll-hls-pipeline-problems.md))._ Transcode ends the livestream with `vodStatus: processing` and later marks the VOD `ready`/`failed` by the VOD id the livestream service returns. If that reply is lost (the 10 s timeout fires after the VOD was created, a dropped connection, a decode error), transcode never learns the id and the VOD stays `processing` and hidden. On `main` the same timeout still left a playable VOD, since the playback URL went in that one call. The same id dependency forces the deploy order vod → livestream → transcode: against an old livestream service the VOD is created `ready` with no playback URL.
+Fix: settle the VOD by livestream id (the `vods.livestream_id` column is indexed): a vod internal route such as `PATCH /v1/internal/livestreams/{id}/vod/status`, and transcode stops depending on the returned id. Keep the 2 s / 5 s retries for the moment the VOD is not created yet.
+Files: [backend/transcode/rtmp/finish.go](backend/transcode/rtmp/finish.go), [backend/vod/handlers/vod/update_vod_status_internal.go](backend/vod/handlers/vod/update_vod_status_internal.go)
+
 ---
 
 ### 🟡 MEDIUM
@@ -181,6 +191,11 @@ _Added 2026-11-05 from the Flutter mobile app final review._ Mobile sends the ap
 Fix: localize by device locale, or stop collecting the locale.
 File: [backend/user/push/sender.go:47](backend/user/push/sender.go#L47) (`FromNotification`)
 
+**L18. VOD master `CODECS` goes stale after a mid-stream encoder change**
+_Added 2026-11-09 from the second review of `feat/ll-hls-packager` (details in [the problems file](docs/superpowers/reviews/2026-11-09-ll-hls-pipeline-problems.md))._ The recorder takes each rendition's `avc1` string from the first SPS only. When a streamer changes profile/level mid-stream (supported, ruling R10), the master keeps advertising the old one, and players that trust `CODECS` (Safari, MSE `isTypeSupported`) may pick a variant they then fail to decode. The hand-written `avcCodecString` / `Recorder.codecs` also duplicate gohlslib's `codecparams.Marshal`, already a dependency.
+Fix: leave `CODECS` out for a rendition whose SPS changed partway (as before #6b), and build the strings with `codecparams.Marshal`.
+File: [backend/transcode/live/recorder.go](backend/transcode/live/recorder.go) (`readSPS`, `avcCodecString`, `codecs`)
+
 ---
 
 ### 🟢 LOW
@@ -207,6 +222,21 @@ File: [backend/chat/services/dm_push.go:27](backend/chat/services/dm_push.go#L27
 _Added 2026-11-05 from the Flutter mobile app final review._ A push from a group conversation does not say which group.
 Fix: title "<group> · <sender>" for group conversations (product decision).
 File: [backend/chat/gateway/userservice/push.go](backend/chat/gateway/userservice/push.go)
+
+**L19. The final VOD status update retries permanent errors**
+_Added 2026-11-09 from the second review of `feat/ll-hls-packager` (details in [the problems file](docs/superpowers/reviews/2026-11-09-ll-hls-pipeline-problems.md))._ `UpdateVODStatus` turns every non-2xx into an error, so `finishStream` retries a 404 (the owner deleted the processing VOD) or a 400 twice, waits 7 s and logs "gave up marking VOD …, it stays processing", which is wrong for a deleted VOD.
+Fix: retry only transport errors and 5xx; log a 4xx once with its status.
+Files: [backend/transcode/rtmp/finish.go](backend/transcode/rtmp/finish.go), [backend/transcode/gateway/livestream/http/http.go](backend/transcode/gateway/livestream/http/http.go)
+
+**L20. The `with-user` media card still links an unready VOD**
+_Added 2026-11-09 from the second review of `feat/ll-hls-packager` (details in [the problems file](docs/superpowers/reviews/2026-11-09-ll-hls-pipeline-problems.md))._ The owner's card variant hides the duration and the links for a VOD that is not `ready`, but the `with-user` variant still wraps the title in a link to the watch page. No list sends that variant an unready VOD today.
+Fix: gate that title link on `isPlayable` like the other branches.
+File: [web/components/livestream/media-card.tsx](web/components/livestream/media-card.tsx) (`renderContent`, with-user branch)
+
+**L21. A slow session close marks a good recording `failed`**
+_Added 2026-11-09 from the second review of `feat/ll-hls-packager` (details in [the problems file](docs/superpowers/reviews/2026-11-09-ll-hls-pipeline-problems.md))._ `finishStream` marks the VOD `failed` on any `Session.Close` error, including its 75 s timeout, while the shutdown keeps running and may still write the VOD master moments later. The recorder (60 s) and thumbnailer bounds fit inside 75 s, so this needs storage to be stuck. Accepted for now.
+Fix (if it shows up): on a close timeout, wait for the session to finish in the background and settle the VOD then.
+File: [backend/transcode/rtmp/finish.go](backend/transcode/rtmp/finish.go)
 
 ---
 
@@ -420,6 +450,11 @@ The whole Go backend has 4 `_test.go` files (all under finance + shared/natsbus)
 **C34. `shared/middlewares/cors.go` is used only by transcode's webserver.** The 5 API servers apply only `LoggingMiddleware` + `RequestIDMiddleware`.
 
 **C35. Response-package import aliases vary** — `serviceresponse "…/auth/response"`, bare `"…/vod/response"`, and redundant `response "…/vod/response"` all appear (50 sites use the redundant alias).
+
+**C36. Web mock mode gained two fake VODs**
+_Added 2026-11-09 from the second review of `feat/ll-hls-packager` (details in [the problems file](docs/superpowers/reviews/2026-11-09-ll-hls-pipeline-problems.md))._ To check the owner's "Processing" / "Processing failed" labels, two records (`vod-processing`, `vod-failed`) were added to the existing MSW mock data, and the mock `GET /vods/{id}` mirrors `VisibleTo`. The user-global rules forbid mock / fake data.
+Decide: keep them (mock mode is opt-in local tooling that already existed) or remove them (the labels then have nothing to show in mock mode).
+File: [web/mocks/db.ts](web/mocks/db.ts)
 
 ---
 
