@@ -13,7 +13,7 @@ watcher pipeline. Each fix is its own commit that ticks its entry here.
 | 5 | Every live viewer request reaches the transcode service | fixed (needs host nginx apply) |
 | 6a | First thumbnail taken at the first keyframe | fixed |
 | 6b | VOD master has no `CODECS` attribute | fixed |
-| 6c | VOD folder `0` is now the source quality | open |
+| 6c | VOD folder `0` is now the source quality | won't fix (intentional) |
 | 7 | Branch far behind `main`, `go.work.sum` conflict | fixed |
 | 8 | `/transcode/vods/` lists every VOD id publicly | open |
 
@@ -138,10 +138,14 @@ than listing audio only. Tests: `TestRecorderMasterCodecs`,
 ## 6c. VOD folder `0` is now the source quality
 
 Old VODs used folders `0/1/2` = 360p/720p/1080p; new VODs use the ladder index
-(`0` = source, then descending). No code reads folder numbers — players and
-the VOD service go through the master playlist — so this is kept as is.
+(`0` = source, then descending). Nothing reads live VOD folder numbers: web,
+mobile and the vod service only use the master playlist URL. The one
+`0/stream.m3u8` reader in the codebase is the upload worker
+(`worker.getHLSDurationSeconds`), on its own uploaded-video output. Old VODs
+keep their layout and still play.
 
-**Status:** intentional, no change.
+**Status:** intentional, no change. A folder name now matches the ladder
+index used in the live URLs and the MinIO keys (`{id}/{index}/{n}.ts`).
 
 ## 7. Branch far behind `main`, `go.work.sum` conflict
 
