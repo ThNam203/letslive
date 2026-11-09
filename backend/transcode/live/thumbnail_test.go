@@ -334,3 +334,28 @@ func TestThumbnailerStderrCarriesLivestreamID(t *testing.T) {
 		}
 	}
 }
+
+// Keyframes in the first thumbnailStartDelay are not used, like the old
+// ffmpeg filter's gte(t,5): a stream often opens on a black or title frame.
+func TestThumbnailerSkipsStart(t *testing.T) {
+	requireFFmpeg(t)
+	old := thumbnailStartDelay
+	thumbnailStartDelay = 300 * time.Millisecond
+	t.Cleanup(func() { thumbnailStartDelay = old })
+
+	f := loadStreamFixture(t, "src_640x360.flv")
+	st := newRecordingStorage(t)
+	th := NewThumbnailer(context.Background(), "live1", "ffmpeg", fixtureSource(f), st, time.Nanosecond)
+	au := keyframeAUs(t, f, 1)[0]
+
+	th.Offer(au)
+	time.Sleep(100 * time.Millisecond)
+	if calls := st.Calls(); len(calls) != 0 {
+		t.Fatalf("thumbnail taken %d time(s) during the start delay", len(calls))
+	}
+
+	time.Sleep(thumbnailStartDelay)
+	th.Offer(au)
+	waitForCalls(t, st, 1)
+	th.Close()
+}

@@ -11,7 +11,7 @@ watcher pipeline. Each fix is its own commit that ticks its entry here.
 | 2 | Livestream ends late; VOD published even when the recording failed | fixed |
 | 3 | Non-AAC audio becomes a silent stream without saying so | fixed |
 | 5 | Every live viewer request reaches the transcode service | fixed (needs host nginx apply) |
-| 6a | First thumbnail taken at the first keyframe | open |
+| 6a | First thumbnail taken at the first keyframe | fixed |
 | 6b | VOD master has no `CODECS` attribute | open |
 | 6c | VOD folder `0` is now the source quality | open |
 | 7 | Branch far behind `main`, `go.work.sum` conflict | fixed |
@@ -120,7 +120,9 @@ requests → 1 hit.
 The old thumbnail filter skipped the first 5 s (`gte(t,5)`); the new
 thumbnailer used the very first keyframe, often a black or title frame.
 
-**Fix:** keyframes in the first 5 s of the stream are not offered.
+**Fixed:** the thumbnailer ignores keyframes for the first 5 s after the stream
+starts (`thumbnailStartDelay`); the 60 s cadence follows from the first one it
+takes. Test: `TestThumbnailerSkipsStart`.
 
 ## 6b. VOD master has no `CODECS` attribute
 

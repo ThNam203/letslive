@@ -34,6 +34,9 @@ var (
 	// detached from the caller's, so the upload still finishes when the caller's
 	// context ends together with the stream.
 	thumbnailUploadTimeout = 30 * time.Second
+	// thumbnailStartDelay skips the stream's first keyframes, which are often
+	// a black or title frame (the old ffmpeg filter used gte(t,5)).
+	thumbnailStartDelay = 5 * time.Second
 )
 
 var annexBStartCode = []byte{0, 0, 0, 1}
@@ -55,6 +58,8 @@ type Thumbnailer struct {
 	accepted bool
 	last     time.Time // when the last offer was accepted
 	jobs     sync.WaitGroup
+
+	notBefore time.Time // offers before this are ignored; read-only
 }
 
 // NewThumbnailer returns a Thumbnailer for livestream id. ctx is only used for
@@ -66,6 +71,7 @@ func NewThumbnailer(ctx context.Context, id, ffmpegPath string, src SourceInfo, 
 		ffmpegPath: ffmpegPath,
 		st:         st,
 		every:      every,
+		notBefore:  time.Now().Add(thumbnailStartDelay),
 	}
 	t.header = t.paramHeader(src)
 	return t
@@ -92,9 +98,10 @@ func (t *Thumbnailer) paramHeader(src SourceInfo) []byte {
 }
 
 // Offer submits a keyframe access unit (NAL units without start codes). It
-// returns at once. The access unit is ignored when a thumbnail job is running,
-// when less than `every` has passed since the last accepted one, after Close,
-// or when it holds no data. The access unit is copied; the caller may reuse it.
+// returns at once. The access unit is ignored during the first
+// thumbnailStartDelay, when a thumbnail job is running, when less than `every`
+// has passed since the last accepted one, after Close, or when it holds no
+// data. The access unit is copied; the caller may reuse it.
 func (t *Thumbnailer) Offer(au [][]byte) {
 	t.mu.Lock()
 	header := t.header
@@ -109,7 +116,7 @@ func (t *Thumbnailer) Offer(au [][]byte) {
 
 	t.mu.Lock()
 	now := time.Now()
-	if t.closed || t.running || (t.accepted && now.Sub(t.last) < t.every) {
+	if t.closed || t.running || now.Before(t.notBefore) || (t.accepted && now.Sub(t.last) < t.every) {
 		t.mu.Unlock()
 		return
 	}
