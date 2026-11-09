@@ -26,13 +26,14 @@ func NewVODReactionService(reactionRepo domains.VODReactionRepository, vodRepo d
 	}
 }
 
-// getReactableVOD loads the VOD, hiding private ones from everyone but the owner.
+// getReactableVOD loads the VOD, hiding private and unready ones from everyone
+// but the owner.
 func (s *VODReactionService) getReactableVOD(ctx context.Context, vodId uuid.UUID, userId uuid.UUID) (*domains.VOD, error) {
 	vod, err := s.vodRepo.GetById(ctx, vodId)
 	if err != nil {
 		return nil, err
 	}
-	if vod.Visibility != domains.VODPublicVisibility && vod.UserId != userId {
+	if !vod.VisibleTo(&userId) {
 		return nil, domains.ErrVODNotFound
 	}
 	return vod, nil
