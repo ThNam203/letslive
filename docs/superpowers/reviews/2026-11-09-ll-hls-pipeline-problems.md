@@ -9,7 +9,7 @@ watcher pipeline. Each fix is its own commit that ticks its entry here.
 |---|---|---|
 | 1 | Wrong stream duration | fixed |
 | 2 | Livestream ends late; VOD published even when the recording failed | fixed |
-| 3 | Non-AAC audio becomes a silent stream without saying so | open |
+| 3 | Non-AAC audio becomes a silent stream without saying so | fixed |
 | 5 | Every live viewer request reaches the transcode service | open |
 | 6a | First thumbnail taken at the first keyframe | open |
 | 6b | VOD master has no `CODECS` attribute | open |
@@ -81,8 +81,10 @@ before the session sees it. This was already true on `main` (its ffmpeg got
 joy5's packets), so it is not a regression, and transcoding other codecs would
 need a different RTMP library.
 
-**Fix:** when a stream starts without an AAC config the session logs a Warn
-saying the stream is video-only and why.
+**Fixed:** when a stream starts without a usable AAC config the session logs a
+Warn saying the stream is video-only and that only AAC audio is supported.
+Supporting other codecs stays out of scope (it needs an RTMP library other
+than joy5). Test: `TestSessionWarnsWhenVideoOnly`.
 
 ## 5. Every live viewer request reaches the transcode service
 

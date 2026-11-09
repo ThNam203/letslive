@@ -22,6 +22,7 @@ import (
 	"github.com/gofrs/uuid/v5"
 	"github.com/nareix/joy5/av"
 	"github.com/nareix/joy5/format/flv"
+	"go.uber.org/zap/zapcore"
 
 	"sen1or/letslive/transcode/config"
 )
@@ -1027,5 +1028,33 @@ func TestSessionDurationNeverStarted(t *testing.T) {
 	}
 	if got := s.Duration(); got != 0 {
 		t.Errorf("Duration of a session that never started = %v, want 0", got)
+	}
+}
+
+// A source without AAC is served video-only, and the session says so at Warn.
+func TestSessionWarnsWhenVideoOnly(t *testing.T) {
+	tests := []struct {
+		fixture  string
+		wantWarn bool
+	}{
+		{fixture: "src_640x360_noaudio.flv", wantWarn: true},
+		{fixture: "src_640x360.flv", wantWarn: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.fixture, func(t *testing.T) {
+			rig := newSessionRig(t, filepath.Join(t.TempDir(), "no-ffmpeg"))
+			s, _ := rig.newSession(t)
+			feedSession(t, s, readFLV(t, tt.fixture))
+
+			warned := false
+			for _, e := range logsContaining(s.id) {
+				if e.Level == zapcore.WarnLevel && strings.Contains(e.Message, "video-only") {
+					warned = true
+				}
+			}
+			if warned != tt.wantWarn {
+				t.Errorf("video-only warning logged = %v, want %v", warned, tt.wantWarn)
+			}
+		})
 	}
 }

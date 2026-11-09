@@ -196,15 +196,19 @@ func (s *Session) start(key av.Packet) (ok bool, err error) {
 	return true, nil
 }
 
-// probeAudio parses the buffered AAC config; a bad one makes the stream
-// video-only rather than failing it.
+// probeAudio parses the buffered AAC config; a bad or missing one makes the
+// stream video-only rather than failing it.
 func (s *Session) probeAudio() *mpeg4audio.AudioSpecificConfig {
 	if s.audioConfig == nil {
+		// joy5 only demuxes AAC, so a source sending another audio codec
+		// looks the same as one sending no audio.
+		logger.Warnf(s.ctx, "livestream %s: no AAC audio before the first keyframe, the stream is video-only (only AAC audio is supported)", s.id)
 		return nil
 	}
 	audio, err := AudioConfig(*s.audioConfig)
 	if err != nil {
 		logger.Errorf(s.ctx, "livestream %s: ignoring audio, bad AAC config: %v", s.id, err)
+		logger.Warnf(s.ctx, "livestream %s: the stream is video-only", s.id)
 		return nil
 	}
 	return audio
