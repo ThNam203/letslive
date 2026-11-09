@@ -19,6 +19,11 @@ import (
 // gatewayTimeout bounds each call to the livestream and vod services.
 const gatewayTimeout = 10 * time.Second
 
+// vodStatusRetryDelays are the waits before each retry of the final VOD
+// status update; without it the VOD would stay "processing". A variable only
+// so tests can shorten it.
+var vodStatusRetryDelays = []time.Duration{2 * time.Second, 5 * time.Second}
+
 // livestreamEnder is the part of the livestream gateway used when a stream ends.
 type livestreamEnder interface {
 	EndLivestream(ctx context.Context, streamId string, endDTO livestreamdto.EndLivestreamRequestDTO) (*uuid.UUID, *response.Response[any])
@@ -75,9 +80,21 @@ func finishStream(ctx context.Context, ender livestreamEnder, sess liveSession, 
 		status, playbackURL, vodDuration = domains.VODStatusFailed, "", nil
 	}
 
-	updateCtx, cancelUpdate := context.WithTimeout(base, gatewayTimeout)
-	defer cancelUpdate()
-	if err := ender.UpdateVODStatus(updateCtx, vodId.String(), status, playbackURL, "", vodDuration); err != nil {
-		logger.Errorf(ctx, "livestream %s: failed to mark VOD %s %s: %v", streamId, vodId, status, err)
+	update := func() error {
+		updateCtx, cancelUpdate := context.WithTimeout(base, gatewayTimeout)
+		defer cancelUpdate()
+		return ender.UpdateVODStatus(updateCtx, vodId.String(), status, playbackURL, "", vodDuration)
+	}
+	err := update()
+	for _, delay := range vodStatusRetryDelays {
+		if err == nil {
+			return
+		}
+		logger.Warnf(ctx, "livestream %s: failed to mark VOD %s %s, retrying in %v: %v", streamId, vodId, status, delay, err)
+		time.Sleep(delay)
+		err = update()
+	}
+	if err != nil {
+		logger.Errorf(ctx, "livestream %s: gave up marking VOD %s %s, it stays processing: %v", streamId, vodId, status, err)
 	}
 }

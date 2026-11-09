@@ -35,6 +35,8 @@ type fakeEnder struct {
 	endErr  *response.Response[any]
 	ended   livestreamdto.EndLivestreamRequestDTO
 	updates []statusUpdate
+	// updateFailures is how many UpdateVODStatus calls fail before one succeeds.
+	updateFailures int
 }
 
 func (f *fakeEnder) EndLivestream(_ context.Context, _ string, d livestreamdto.EndLivestreamRequestDTO) (*uuid.UUID, *response.Response[any]) {
@@ -46,6 +48,9 @@ func (f *fakeEnder) EndLivestream(_ context.Context, _ string, d livestreamdto.E
 func (f *fakeEnder) UpdateVODStatus(_ context.Context, vodId string, status domains.VODStatus, playbackUrl, _ string, duration *int64) error {
 	*f.events = append(*f.events, "update")
 	f.updates = append(f.updates, statusUpdate{vodId: vodId, status: status, playbackURL: playbackUrl, duration: duration})
+	if len(f.updates) <= f.updateFailures {
+		return errors.New("vod service unavailable")
+	}
 	return nil
 }
 
@@ -121,5 +126,41 @@ func TestFinishStream(t *testing.T) {
 				t.Errorf("failed update has a playback URL %q", u.playbackURL)
 			}
 		})
+	}
+}
+
+func noRetryDelay(t *testing.T) {
+	t.Helper()
+	old := vodStatusRetryDelays
+	vodStatusRetryDelays = []time.Duration{0, 0}
+	t.Cleanup(func() { vodStatusRetryDelays = old })
+}
+
+// A failed status update is retried, so a brief vod service outage does not
+// leave the VOD stuck in processing.
+func TestFinishStreamRetriesVODStatus(t *testing.T) {
+	noRetryDelay(t)
+	vodId := uuid.Must(uuid.NewV4())
+	tests := []struct {
+		failures    int
+		wantUpdates int
+	}{
+		{failures: 1, wantUpdates: 2},
+		{failures: 2, wantUpdates: 3},
+		{failures: 5, wantUpdates: 3}, // gives up after the last retry
+	}
+	for _, tt := range tests {
+		var events []string
+		ender := &fakeEnder{events: &events, vodId: &vodId, updateFailures: tt.failures}
+		finishStream(context.Background(), ender, &fakeSession{events: &events, duration: time.Second}, "ls-1", testPrefix)
+
+		if len(ender.updates) != tt.wantUpdates {
+			t.Errorf("%d failure(s): updates = %d, want %d", tt.failures, len(ender.updates), tt.wantUpdates)
+		}
+		for _, u := range ender.updates {
+			if u.status != domains.VODStatusReady {
+				t.Errorf("retry changed the status to %s", u.status)
+			}
+		}
 	}
 }
