@@ -18,10 +18,6 @@ import (
 	"sen1or/letslive/transcode/storage"
 )
 
-// closeTimeout bounds the session's Close: the encoder drain, the recorder's
-// last uploads and the thumbnail are each bounded on their own well below it.
-const closeTimeout = 5 * time.Minute
-
 // ErrInput marks a failure after the file was accepted for processing, which
 // converting every stream may fix (a copied stream the engine could not use).
 // The worker retries such a job with forceConvert. A storage failure is
@@ -58,9 +54,10 @@ func Run(ctx context.Context, tc config.Transcode, st storage.Storage, vodID, in
 
 	feedErr := feed(ctx, tc, input, plan, sess)
 
-	closeCtx, cancelClose := context.WithTimeout(context.WithoutCancel(ctx), closeTimeout)
-	closeErr := sess.Close(closeCtx)
-	cancelClose()
+	// Close is not given a deadline: the encoder drain, each recorder upload
+	// and the thumbnail are bounded on their own, and returning while the
+	// session still uploads would let the retry overlap this attempt.
+	closeErr := sess.Close(context.WithoutCancel(ctx))
 
 	if err := errors.Join(feedErr, closeErr); err != nil {
 		return Result{Plan: plan}, fmt.Errorf("%w: %w", ErrInput, err)

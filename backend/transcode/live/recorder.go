@@ -59,8 +59,9 @@ var (
 	// detached from the caller's, so uploads still finish when the caller's
 	// context ends together with the stream.
 	recorderUploadTimeout = 30 * time.Second
-	// recorderFinishTimeout bounds how long Finish waits for the writers and
-	// uploads; what has not finished by then is abandoned and logged.
+	// recorderFinishTimeout is how long a livestream's Finish waits for the
+	// writers and uploads; what has not finished by then is abandoned and
+	// logged.
 	recorderFinishTimeout = 60 * time.Second
 )
 
@@ -157,6 +158,7 @@ type Recorder struct {
 	abandon chan struct{} // closed when Finish gives up waiting
 	bp      Backpressure  // what a full rendition queue does
 	fail    Failures      // told about every segment or rendition lost
+	wait    time.Duration // bound of Finish's wait; 0: none
 
 	dropped    atomic.Int64
 	lateAudio  atomic.Int64
@@ -174,13 +176,15 @@ type Recorder struct {
 // Segment files go under {dir}/{id}/{rendition}/{n}.ts and are cut at the
 // first random-access AU once at least segDur has passed. audio is nil for a
 // video-only source. bp decides what a full queue does and fail is told about
-// every segment or rendition the VOD loses. Finish must be called to stop the
-// goroutines.
-func NewRecorder(ctx context.Context, label, id string, rs []Rendition, audio *mpeg4audio.AudioSpecificConfig, st storage.Storage, dir string, segDur time.Duration, bp Backpressure, fail Failures) *Recorder {
-	return newRecorder(ctx, label, id, rs, audio, st, dir, segDur, recorderQueueSize, recorderUploadQueue, bp, fail)
+// every segment or rendition the VOD loses. finishWait bounds Finish's wait
+// for the last writes and uploads; 0 waits for all of them (each upload is
+// bounded by recorderUploadTimeout on its own). Finish must be called to stop
+// the goroutines.
+func NewRecorder(ctx context.Context, label, id string, rs []Rendition, audio *mpeg4audio.AudioSpecificConfig, st storage.Storage, dir string, segDur time.Duration, bp Backpressure, fail Failures, finishWait time.Duration) *Recorder {
+	return newRecorder(ctx, label, id, rs, audio, st, dir, segDur, recorderQueueSize, recorderUploadQueue, bp, fail, finishWait)
 }
 
-func newRecorder(ctx context.Context, label, id string, rs []Rendition, audio *mpeg4audio.AudioSpecificConfig, st storage.Storage, dir string, segDur time.Duration, itemQueue, uploadQueue int, bp Backpressure, fail Failures) *Recorder {
+func newRecorder(ctx context.Context, label, id string, rs []Rendition, audio *mpeg4audio.AudioSpecificConfig, st storage.Storage, dir string, segDur time.Duration, itemQueue, uploadQueue int, bp Backpressure, fail Failures, finishWait time.Duration) *Recorder {
 	r := &Recorder{
 		ctx:      ctx,
 		id:       id,
@@ -195,6 +199,7 @@ func newRecorder(ctx context.Context, label, id string, rs []Rendition, audio *m
 		abandon:  make(chan struct{}),
 		bp:       bp,
 		fail:     fail,
+		wait:     finishWait,
 		badInput: dropLimiter{interval: recorderDropLogInterval},
 	}
 
@@ -666,8 +671,9 @@ func discard(file *os.File, path string) {
 // uploaded Finish writes nothing and returns an error. Later writes are
 // ignored and a second Finish returns an error.
 //
-// Finish waits at most recorderFinishTimeout in total. Segments still being
-// written or uploaded then are logged and left out of the playlists.
+// Finish waits at most the recorder's finishWait in total (0: until all work
+// ends). Segments still being written or uploaded then are logged and left
+// out of the playlists.
 func (r *Recorder) Finish(publicHLSPath, masterFileName string) error {
 	r.mu.Lock()
 	if r.finished {
@@ -717,17 +723,21 @@ func (r *Recorder) Finish(publicHLSPath, masterFileName string) error {
 }
 
 // waitForWork waits for the writers to close their last segments and for the
-// uploader to drain, for at most recorderFinishTimeout in all. On timeout it
+// uploader to drain, for at most r.wait in all (0: no bound). On timeout it
 // signals everything still running to give up.
 func (r *Recorder) waitForWork() {
-	timer := time.NewTimer(recorderFinishTimeout)
-	defer timer.Stop()
+	var deadline <-chan time.Time // nil: never fires
+	if r.wait > 0 {
+		timer := time.NewTimer(r.wait)
+		defer timer.Stop()
+		deadline = timer.C
+	}
 
 	timedOut := false
 	for _, rr := range r.rends {
 		select {
 		case <-rr.done:
-		case <-timer.C:
+		case <-deadline:
 			timedOut = true
 		}
 		if timedOut {
@@ -739,13 +749,13 @@ func (r *Recorder) waitForWork() {
 		close(r.uploads)
 		select {
 		case <-r.upDone:
-		case <-timer.C:
+		case <-deadline:
 			timedOut = true
 		}
 	}
 	if timedOut {
 		close(r.abandon)
-		logger.Errorf(r.ctx, "%s: recorder gave up waiting after %v", r.label, recorderFinishTimeout)
+		logger.Errorf(r.ctx, "%s: recorder gave up waiting after %v", r.label, r.wait)
 	}
 }
 

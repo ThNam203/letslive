@@ -28,6 +28,9 @@ type Mode struct {
 	profile EncoderProfile
 	// endEncoder ends ffmpeg when the session closes.
 	endEncoder encoderEnd
+	// recorderWait bounds the recorder's wait for its last uploads at Close;
+	// 0 waits for all of them.
+	recorderWait time.Duration
 	// thumbs picks the keyframes that become thumbnails; every is the
 	// configured thumbnail interval.
 	thumbs func(every time.Duration) ThumbSchedule
@@ -56,7 +59,9 @@ func LiveMode(reg *Registry, cfg config.Live) (Mode, error) {
 		fail:       logOnly{},
 		profile:    liveProfile,
 		endEncoder: (*sessionEncoder).terminate,
-		thumbs:     func(every time.Duration) ThumbSchedule { return newWallSchedule(every) },
+		// Viewers are gone; a stream is not held up by slow storage.
+		recorderWait: recorderFinishTimeout,
+		thumbs:       func(every time.Duration) ThumbSchedule { return newWallSchedule(every) },
 	}, nil
 }
 
@@ -70,8 +75,8 @@ const fileThumbnailAt = 5 * time.Second
 // FileMode is the mode of an uploaded file: nobody watches it live, full
 // queues wait instead of dropping, the first lost segment or quality fails the
 // session (so the job is retried), ffmpeg uses normal tuning at the niceness
-// in u and drains at Close, and one thumbnail is taken at fileThumbnailAt of
-// media time. cancel releases the mode's context; call it once the session
+// in u and drains at Close, the recorder waits for every upload at Close, and
+// one thumbnail is taken at fileThumbnailAt of media time. cancel releases the mode's context; call it once the session
 // is closed.
 func FileMode(ctx context.Context, u config.Upload) (m Mode, cancel context.CancelFunc) {
 	fctx, cancel := context.WithCancel(ctx)
@@ -84,6 +89,9 @@ func FileMode(ctx context.Context, u config.Upload) (m Mode, cancel context.Canc
 		fail:       &firstError{cancel: cancel},
 		profile:    fileProfile(u),
 		endEncoder: (*sessionEncoder).drain,
-		thumbs:     func(time.Duration) ThumbSchedule { return &mediaSchedule{min: fileThumbnailAt} },
+		// The waiting queues leave a backlog of up to recorderUploadQueue
+		// segments at Close; every one of them belongs in the VOD.
+		recorderWait: 0,
+		thumbs:       func(time.Duration) ThumbSchedule { return &mediaSchedule{min: fileThumbnailAt} },
 	}, cancel
 }

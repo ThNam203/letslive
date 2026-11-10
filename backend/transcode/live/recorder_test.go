@@ -38,6 +38,9 @@ type recorderRig struct {
 	cancel  context.CancelFunc
 	workDir string
 	pubDir  string
+	ctx     context.Context
+	rs      []Rendition
+	st2     storage.Storage
 }
 
 func newRecorderRig(t *testing.T, fixture string, names []string) *recorderRig {
@@ -54,6 +57,7 @@ func newRecorderRigWith(t *testing.T, fixture string, names []string, wrap func(
 	t.Cleanup(cancel)
 
 	rig := &recorderRig{
+		ctx:     ctx,
 		id:      "stream-1",
 		f:       loadStreamFixture(t, fixture),
 		st:      newRecordingStorage(t),
@@ -69,8 +73,15 @@ func newRecorderRigWith(t *testing.T, fixture string, names []string, wrap func(
 	for i, name := range names {
 		rs[i] = Rendition{Name: name, Encoded: i > 0}
 	}
-	rig.rec = NewRecorder(ctx, "livestream "+rig.id, rig.id, rs, rig.f.audio, st, rig.workDir, recorderTestSegDur, dropWhenFull{}, logOnly{})
+	rig.rs, rig.st2 = rs, st
+	rig.rec = NewRecorder(ctx, "livestream "+rig.id, rig.id, rs, rig.f.audio, st, rig.workDir, recorderTestSegDur, dropWhenFull{}, logOnly{}, recorderFinishTimeout)
 	return rig
+}
+
+// withFinishWait rebuilds the rig's (unused) Recorder with finishWait.
+func (rig *recorderRig) withFinishWait(t *testing.T, finishWait time.Duration) {
+	t.Helper()
+	rig.rec = NewRecorder(rig.ctx, "upload "+rig.id, rig.id, rig.rs, rig.f.audio, rig.st2, rig.workDir, recorderTestSegDur, dropWhenFull{}, logOnly{}, finishWait)
 }
 
 // feed hands pkts to the recorder the way a session does: video to every
@@ -418,7 +429,7 @@ func TestRecorderDropsWhenQueueFull(t *testing.T) {
 	}
 	// A tiny item queue and no upload buffer: the stalled first upload blocks
 	// the rendition goroutine at the second cut, so the item queue overflows.
-	rec := newRecorder(ctx, "livestream "+"stream-1", "stream-1", []Rendition{{Name: "source"}}, nil, st, t.TempDir(), recorderTestSegDur, 8, 0, dropWhenFull{}, logOnly{})
+	rec := newRecorder(ctx, "livestream "+"stream-1", "stream-1", []Rendition{{Name: "source"}}, nil, st, t.TempDir(), recorderTestSegDur, 8, 0, dropWhenFull{}, logOnly{}, recorderFinishTimeout)
 
 	rig := &recorderRig{f: f, rec: rec}
 	fed := make(chan struct{})
@@ -932,5 +943,36 @@ func TestAVCCodecString(t *testing.T) {
 		if got := avcCodecString(tt.sps); got != tt.want {
 			t.Errorf("avcCodecString(% x) = %q, want %q", tt.sps, got, tt.want)
 		}
+	}
+}
+
+// Review finding: with file mode's waiting queues the upload backlog at Close
+// takes longer than the live bound on slow storage; an upload must keep it.
+func TestRecorderUnboundedFinishKeepsSlowUploads(t *testing.T) {
+	shortRecorderTimeouts(t, 200*time.Millisecond, 30*time.Second)
+	rig := newRecorderRig(t, "src_640x360.flv", []string{"source"})
+	rig.withFinishWait(t, 0)
+	rig.st.before = func(storageCall) error {
+		time.Sleep(150 * time.Millisecond) // slow storage
+		return nil
+	}
+	rig.feed(t, 1, rig.f.pkts)
+	if err := rig.finish(t); err != nil {
+		t.Fatalf("Finish: %v", err)
+	}
+	select {
+	case <-rig.rec.abandon:
+		t.Fatal("recorder gave up although every upload was progressing")
+	default:
+	}
+	uploaded := 0
+	for _, c := range rig.st.Calls() {
+		if c.Kind == "segment" {
+			uploaded++
+		}
+	}
+	durs, _ := parseVariant(t, rig.read(t, "0/stream.m3u8"))
+	if uploaded < 2 || len(durs) != uploaded {
+		t.Errorf("playlist entries = %d, uploaded segments = %d; want all listed (>= 2)", len(durs), uploaded)
 	}
 }

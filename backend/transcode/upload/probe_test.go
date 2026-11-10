@@ -75,6 +75,18 @@ func TestParseStreamsRotateTag(t *testing.T) {
 	}
 }
 
+// Review finding: a VFR file's average rate (17.3 here: frames dropped in
+// gaps) is not its motion rate; converting at it would look choppy.
+func TestParseStreamsVFRUsesBaseRate(t *testing.T) {
+	got, err := parseStreams(readTestdata(t, "vfr.streams.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.FrameRate != 30 {
+		t.Errorf("FrameRate = %v, want 30 (r_frame_rate; avg_frame_rate is 294/17)", got.FrameRate)
+	}
+}
+
 func TestMaxKeyframeGap(t *testing.T) {
 	gap, err := maxKeyframeGap(readTestdata(t, "h264.keyframes.json"), 3*time.Second)
 	if err != nil {

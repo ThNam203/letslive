@@ -26,7 +26,7 @@ type Probe struct {
 	ColorTransfer  string
 	Width, Height  int
 	Rotation       int     // degrees from the display matrix or rotate tag
-	FrameRate      float64 // average; 0 when unknown
+	FrameRate      float64 // the higher of the average and base rate; 0 when unknown
 	MaxKeyframeGap time.Duration
 	Duration       time.Duration
 
@@ -92,6 +92,7 @@ type probeJSON struct {
 		Width         int               `json:"width"`
 		Height        int               `json:"height"`
 		AvgFrameRate  string            `json:"avg_frame_rate"`
+		BaseFrameRate string            `json:"r_frame_rate"`
 		Channels      int               `json:"channels"`
 		Tags          map[string]string `json:"tags"`
 		SideData      []struct {
@@ -119,7 +120,9 @@ func parseStreams(data []byte) (Probe, error) {
 			p.HasVideo = true
 			p.VideoCodec, p.PixFmt, p.FieldOrder, p.ColorTransfer = s.CodecName, s.PixFmt, s.FieldOrder, s.ColorTransfer
 			p.Width, p.Height = s.Width, s.Height
-			p.FrameRate = parseRate(s.AvgFrameRate)
+			// A VFR file's average drops with every gap (a still screen
+			// recording); the base rate is the rate its motion plays at.
+			p.FrameRate = max(parseRate(s.AvgFrameRate), parseRate(s.BaseFrameRate))
 			if r, err := strconv.Atoi(s.Tags["rotate"]); err == nil {
 				p.Rotation = r
 			}

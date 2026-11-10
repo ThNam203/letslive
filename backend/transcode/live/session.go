@@ -180,7 +180,7 @@ func (s *Session) start(key av.Packet) (ok bool, err error) {
 	s.src, s.audio, s.renditions, s.clk, s.out = src, audio, rs, clk, out
 	s.params = src
 	s.rec = NewRecorder(s.ctx, s.label, s.id, rs, audio, s.d.Storage, tc.PrivateHLSPath,
-		time.Duration(tc.Live.RecordSegmentDurationMs)*time.Millisecond, s.d.Mode.bp, s.d.Mode.fail)
+		time.Duration(tc.Live.RecordSegmentDurationMs)*time.Millisecond, s.d.Mode.bp, s.d.Mode.fail, s.d.Mode.recorderWait)
 	s.thumbs = newThumbnailer(s.ctx, s.label, s.id, tc.FFMpegSetting.FFMpegPath, src, s.d.Storage,
 		s.d.Mode.thumbs(time.Duration(tc.Live.ThumbnailIntervalMs)*time.Millisecond))
 	s.started = true
