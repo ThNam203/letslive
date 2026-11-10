@@ -62,7 +62,7 @@ func TestThumbnailer(t *testing.T) {
 
 	th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
 	for _, au := range keyframeAUs(t, f, 3) {
-		th.Offer(au)
+		th.Offer(au, 0)
 		time.Sleep(3 * time.Millisecond)
 	}
 	waitForCalls(t, st, 1)
@@ -105,12 +105,12 @@ func TestThumbnailerOfferNeverBlocks(t *testing.T) {
 	au := keyframeAUs(t, f, 1)[0]
 
 	// Let the first job reach the slow upload, so the timed Offers meet a busy job.
-	th.Offer(au)
+	th.Offer(au, 0)
 	waitForCalls(t, st, 1)
 
 	begin := time.Now()
 	for i := 0; i < 100; i++ {
-		th.Offer(au)
+		th.Offer(au, 0)
 	}
 	if elapsed := time.Since(begin); elapsed > 50*time.Millisecond {
 		t.Errorf("100 Offer calls took %v while an upload was in flight, want < 50ms", elapsed)
@@ -137,7 +137,7 @@ func TestThumbnailerCloseWaitsForInFlightJob(t *testing.T) {
 	}
 
 	th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
-	th.Offer(keyframeAUs(t, f, 1)[0])
+	th.Offer(keyframeAUs(t, f, 1)[0], 0)
 	waitForCalls(t, st, 1)
 
 	closed := make(chan struct{})
@@ -161,7 +161,7 @@ func TestThumbnailerCloseWaitsForInFlightJob(t *testing.T) {
 	finished.Wait()
 
 	th.Close() // second call must be harmless
-	th.Offer(keyframeAUs(t, f, 1)[0])
+	th.Offer(keyframeAUs(t, f, 1)[0], 0)
 	time.Sleep(50 * time.Millisecond)
 	if n := len(st.Calls()); n != 1 {
 		t.Errorf("AddThumbnail calls = %d, want 1 (Offer after Close is ignored)", n)
@@ -175,10 +175,10 @@ func TestThumbnailerSkipsBadInput(t *testing.T) {
 	t.Run("empty access units", func(t *testing.T) {
 		st := newRecordingStorage(t)
 		th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
-		th.Offer(nil)
-		th.Offer([][]byte{})
-		th.Offer([][]byte{{}})
-		th.Offer([][]byte{nil, {}})
+		th.Offer(nil, 0)
+		th.Offer([][]byte{}, 0)
+		th.Offer([][]byte{{}}, 0)
+		th.Offer([][]byte{nil, {}}, 0)
 		th.Close()
 		if n := len(st.Calls()); n != 0 {
 			t.Errorf("AddThumbnail calls = %d, want 0", n)
@@ -188,8 +188,8 @@ func TestThumbnailerSkipsBadInput(t *testing.T) {
 	t.Run("empty access units do not use up the rate limit", func(t *testing.T) {
 		st := newRecordingStorage(t)
 		th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
-		th.Offer(nil)
-		th.Offer(keyframeAUs(t, f, 1)[0])
+		th.Offer(nil, 0)
+		th.Offer(keyframeAUs(t, f, 1)[0], 0)
 		waitForCalls(t, st, 1)
 		th.Close()
 	})
@@ -199,7 +199,7 @@ func TestThumbnailerSkipsBadInput(t *testing.T) {
 		src := fixtureSource(f)
 		src.SPS, src.PPS = nil, nil
 		th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", src, st, time.Hour)
-		th.Offer(keyframeAUs(t, f, 1)[0])
+		th.Offer(keyframeAUs(t, f, 1)[0], 0)
 		th.Close()
 		if n := len(st.Calls()); n != 0 {
 			t.Errorf("AddThumbnail calls = %d, want 0", n)
@@ -209,7 +209,7 @@ func TestThumbnailerSkipsBadInput(t *testing.T) {
 	t.Run("undecodable access unit", func(t *testing.T) {
 		st := newRecordingStorage(t)
 		th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
-		th.Offer([][]byte{{0x65, 0x00, 0x01, 0x02}})
+		th.Offer([][]byte{{0x65, 0x00, 0x01, 0x02}}, 0)
 		th.Close()
 		if n := len(st.Calls()); n != 0 {
 			t.Errorf("AddThumbnail calls = %d, want 0 (ffmpeg produced no picture)", n)
@@ -219,7 +219,7 @@ func TestThumbnailerSkipsBadInput(t *testing.T) {
 	t.Run("ffmpeg missing", func(t *testing.T) {
 		st := newRecordingStorage(t)
 		th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "/nonexistent/ffmpeg", fixtureSource(f), st, time.Hour)
-		th.Offer(keyframeAUs(t, f, 1)[0])
+		th.Offer(keyframeAUs(t, f, 1)[0], 0)
 		th.Close()
 		if n := len(st.Calls()); n != 0 {
 			t.Errorf("AddThumbnail calls = %d, want 0", n)
@@ -236,7 +236,7 @@ func TestThumbnailerIgnoresOfferAfterClose(t *testing.T) {
 	// flag can reject this offer.
 	th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Nanosecond)
 	th.Close()
-	th.Offer(keyframeAUs(t, f, 1)[0])
+	th.Offer(keyframeAUs(t, f, 1)[0], 0)
 	th.Close()
 
 	time.Sleep(200 * time.Millisecond)
@@ -254,11 +254,11 @@ func TestThumbnailerAcceptsAgainAfterEvery(t *testing.T) {
 	th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, every)
 	au := keyframeAUs(t, f, 1)[0]
 
-	th.Offer(au)
+	th.Offer(au, 0)
 	waitForCalls(t, st, 1)
 	// The job has uploaded; wait until it is no longer "running" and `every` is over.
 	time.Sleep(3 * every)
-	th.Offer(au)
+	th.Offer(au, 0)
 	waitForCalls(t, st, 2)
 	th.Close()
 
@@ -281,7 +281,7 @@ func TestThumbnailerSetSource(t *testing.T) {
 	newSrc := SourceInfo{Width: 640, Height: 360, SPS: []byte{0x67, 0x0a, 0x0b}, PPS: []byte{0x68, 0x0c}}
 	th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", script, oldSrc, newRecordingStorage(t), 0)
 	th.SetSource(newSrc)
-	th.Offer([][]byte{{0x65, 0xaa}})
+	th.Offer([][]byte{{0x65, 0xaa}}, 0)
 	th.Close()
 
 	got, err := os.ReadFile(captured)
@@ -300,7 +300,7 @@ func TestThumbnailerSetSource(t *testing.T) {
 		t.Fatal(err)
 	}
 	th2.SetSource(SourceInfo{Width: 640, Height: 360})
-	th2.Offer([][]byte{{0x65, 0xaa}})
+	th2.Offer([][]byte{{0x65, 0xaa}}, 0)
 	th2.Close()
 	if _, err := os.Stat(captured); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("thumbnail job ran without parameter sets: %v", err)
@@ -321,7 +321,7 @@ func TestThumbnailerStderrCarriesLivestreamID(t *testing.T) {
 
 	src := SourceInfo{Width: 640, Height: 360, SPS: []byte{0x67, 0x01}, PPS: []byte{0x68, 0x02}}
 	th := NewThumbnailer(context.Background(), "livestream "+id, id, script, src, newRecordingStorage(t), 0)
-	th.Offer([][]byte{{0x65, 0xaa}})
+	th.Offer([][]byte{{0x65, 0xaa}}, 0)
 	th.Close()
 
 	lines := logsContaining(marker)
@@ -348,14 +348,14 @@ func TestThumbnailerSkipsStart(t *testing.T) {
 	th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Nanosecond)
 	au := keyframeAUs(t, f, 1)[0]
 
-	th.Offer(au)
+	th.Offer(au, 0)
 	time.Sleep(100 * time.Millisecond)
 	if calls := st.Calls(); len(calls) != 0 {
 		t.Fatalf("thumbnail taken %d time(s) during the start delay", len(calls))
 	}
 
 	time.Sleep(thumbnailStartDelay)
-	th.Offer(au)
+	th.Offer(au, 0)
 	waitForCalls(t, st, 1)
 	th.Close()
 }

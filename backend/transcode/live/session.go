@@ -181,8 +181,8 @@ func (s *Session) start(key av.Packet) (ok bool, err error) {
 	s.params = src
 	s.rec = NewRecorder(s.ctx, s.label, s.id, rs, audio, s.d.Storage, tc.PrivateHLSPath,
 		time.Duration(tc.Live.RecordSegmentDurationMs)*time.Millisecond, s.d.Mode.bp, s.d.Mode.fail)
-	s.thumbs = NewThumbnailer(s.ctx, s.label, s.id, tc.FFMpegSetting.FFMpegPath, src, s.d.Storage,
-		time.Duration(tc.Live.ThumbnailIntervalMs)*time.Millisecond)
+	s.thumbs = newThumbnailer(s.ctx, s.label, s.id, tc.FFMpegSetting.FFMpegPath, src, s.d.Storage,
+		s.d.Mode.thumbs(time.Duration(tc.Live.ThumbnailIntervalMs)*time.Millisecond))
 	s.started = true
 
 	if len(rs) > 1 {
@@ -242,7 +242,7 @@ func (s *Session) writeVideo(pkt av.Packet) {
 	}
 	s.rec.WriteVideo(0, pts, dts, au)
 	if pkt.IsKeyFrame {
-		s.thumbs.Offer(nalus)
+		s.thumbs.Offer(nalus, pkt.Time-s.clk.zero)
 	}
 
 	if s.enc != nil && !s.srcReady && s.out.Ready(0) {
@@ -295,6 +295,18 @@ func (s *Session) Duration() time.Duration {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.lastVideo
+}
+
+// ThumbnailURL is the URL of the session's last uploaded thumbnail, or ""
+// when none was. It is final once Close has returned.
+func (s *Session) ThumbnailURL() string {
+	s.mu.Lock()
+	started := s.started
+	s.mu.Unlock()
+	if !started {
+		return ""
+	}
+	return s.thumbs.URL()
 }
 
 func (s *Session) logBadInput(format string, args ...any) {

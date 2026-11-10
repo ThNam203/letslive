@@ -3,6 +3,7 @@ package live
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/bluenviron/mediacommon/v2/pkg/codecs/mpeg4audio"
 
@@ -26,6 +27,9 @@ type Mode struct {
 	profile EncoderProfile
 	// endEncoder ends ffmpeg when the session closes.
 	endEncoder encoderEnd
+	// thumbs picks the keyframes that become thumbnails; every is the
+	// configured thumbnail interval.
+	thumbs func(every time.Duration) ThumbSchedule
 }
 
 // LiveMode is the mode of an RTMP livestream: viewers watch it through reg
@@ -51,6 +55,7 @@ func LiveMode(reg *Registry, cfg config.Live) (Mode, error) {
 		fail:       logOnly{},
 		profile:    liveProfile,
 		endEncoder: (*sessionEncoder).terminate,
+		thumbs:     func(every time.Duration) ThumbSchedule { return newWallSchedule(every) },
 	}, nil
 }
 
