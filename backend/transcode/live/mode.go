@@ -18,6 +18,10 @@ type Mode struct {
 	noun string
 	// open creates where viewers get the stream while it runs.
 	open func(id string, rs []Rendition, audio *mpeg4audio.AudioSpecificConfig) (Output, error)
+	// bp is what a full encoder or recorder queue does.
+	bp Backpressure
+	// fail is told about everything that makes the recording incomplete.
+	fail Failures
 }
 
 // LiveMode is the mode of an RTMP livestream: viewers watch it through reg
@@ -39,6 +43,8 @@ func LiveMode(reg *Registry, cfg config.Live) (Mode, error) {
 			}
 			return liveOutput{Stream: stream, reg: reg}, nil
 		},
+		bp:   dropWhenFull{},
+		fail: logOnly{},
 	}, nil
 }
 

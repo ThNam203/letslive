@@ -113,6 +113,9 @@ func (s *Session) HandlePacket(pkt av.Packet) error {
 	if s.closed {
 		return ErrSessionClosed
 	}
+	if err := s.d.Mode.fail.Err(); err != nil {
+		return fmt.Errorf("%s: %w", s.label, err)
+	}
 
 	switch pkt.Type {
 	case av.H264DecoderConfig:
@@ -174,7 +177,7 @@ func (s *Session) start(key av.Packet) (ok bool, err error) {
 	s.src, s.audio, s.renditions, s.clk, s.out = src, audio, rs, clk, out
 	s.params = src
 	s.rec = NewRecorder(s.ctx, s.label, s.id, rs, audio, s.d.Storage, tc.PrivateHLSPath,
-		time.Duration(tc.Live.RecordSegmentDurationMs)*time.Millisecond)
+		time.Duration(tc.Live.RecordSegmentDurationMs)*time.Millisecond, s.d.Mode.bp, s.d.Mode.fail)
 	s.thumbs = NewThumbnailer(s.ctx, s.label, s.id, tc.FFMpegSetting.FFMpegPath, src, s.d.Storage,
 		time.Duration(tc.Live.ThumbnailIntervalMs)*time.Millisecond)
 	s.started = true
@@ -187,11 +190,12 @@ func (s *Session) start(key av.Packet) (ok bool, err error) {
 		s.enc = startSessionEncoder(s.ctx, s.label, encoderWiring{
 			out: out, rec: s.rec, clk: clk, src: src, ladder: rs,
 			headers: headers, hasAudio: audio != nil, transcode: tc,
+			bp: s.d.Mode.bp, fail: s.d.Mode.fail,
 		})
 	}
 
 	logger.Infof(s.ctx, "%s: started %dx%d with ladder %v, audio %v",
-		s.id, src.Width, src.Height, ladderNamesOf(rs), audio != nil)
+		s.label, src.Width, src.Height, ladderNamesOf(rs), audio != nil)
 	return true, nil
 }
 
@@ -226,10 +230,12 @@ func (s *Session) writeVideo(pkt av.Packet) {
 	pts, dts, au, nalus, err := s.sourceAU(pkt)
 	if err != nil {
 		s.logBadInput("skipping video packet at %v: %v", pkt.Time, err)
+		s.d.Mode.fail.Report(fmt.Errorf("unusable video packet at %v: %w", pkt.Time, err))
 		return
 	}
 	if err := s.out.WriteVideo(0, s.clk.NTP(pts), pts, au); err != nil {
 		s.logBadInput("write source video at %v: %v", pkt.Time, err)
+		s.d.Mode.fail.Report(fmt.Errorf("write source video at %v: %w", pkt.Time, err))
 	}
 	s.rec.WriteVideo(0, pts, dts, au)
 	if pkt.IsKeyFrame {
@@ -274,6 +280,7 @@ func (s *Session) writeAudio(pkt av.Packet) {
 	aus := [][]byte{pkt.Data}
 	if err := s.out.WriteAudio(s.clk.NTP(pts90k), s.clk.Audio(pkt.Time, s.audio.SampleRate), aus); err != nil {
 		s.logBadInput("write audio at %v: %v", pkt.Time, err)
+		s.d.Mode.fail.Report(fmt.Errorf("write audio at %v: %w", pkt.Time, err))
 	}
 	s.rec.WriteAudio(pts90k, aus)
 }

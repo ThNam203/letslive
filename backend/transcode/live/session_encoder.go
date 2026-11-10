@@ -30,18 +30,22 @@ type encoderWiring struct {
 	headers   []av.Packet // decoder configs, written to ffmpeg before any media
 	hasAudio  bool
 	transcode config.Transcode
+	bp        Backpressure
+	fail      Failures
 }
 
 // sessionEncoder feeds one ffmpeg process through a bounded queue and feeds
 // its outputs into the encoded renditions. When ffmpeg fails in any way the
 // encoded renditions are dropped from the stream and the source keeps going.
 type sessionEncoder struct {
-	ctx   context.Context
-	label string
-	out   Output
-	rec   *Recorder
-	count int // encoded renditions, ladder indexes 1..count
-	enc   *Encoder
+	ctx    context.Context
+	label  string
+	out    Output
+	rec    *Recorder
+	count  int // encoded renditions, ladder indexes 1..count
+	enc    *Encoder
+	bp     Backpressure
+	report Failures
 
 	queue      chan av.Packet
 	halt       chan struct{} // closed once the queue must no longer be fed
@@ -67,6 +71,7 @@ func startSessionEncoder(ctx context.Context, label string, w encoderWiring) *se
 	encoded := w.ladder[1:]
 	disable := func(err error) {
 		logger.Errorf(ctx, "%s: encoder unavailable, serving source only: %v", label, err)
+		w.fail.Report(fmt.Errorf("encoder unavailable: %w", err))
 		for r := 1; r < len(w.ladder); r++ {
 			w.out.DropRendition(r)
 			w.rec.DropRendition(r)
@@ -97,6 +102,8 @@ func startSessionEncoder(ctx context.Context, label string, w encoderWiring) *se
 		rec:        w.rec,
 		count:      len(encoded),
 		enc:        enc,
+		bp:         w.bp,
+		report:     w.fail,
 		queue:      make(chan av.Packet, size),
 		halt:       make(chan struct{}),
 		feedCancel: feedCancel,
@@ -110,7 +117,7 @@ func startSessionEncoder(ctx context.Context, label string, w encoderWiring) *se
 		go func() {
 			defer e.wg.Done()
 			onAU := func(pts90k, dts90k int64, au [][]byte) { rec.WriteVideo(r, pts90k, dts90k, au) }
-			if err := FeedTS(feedCtx, out, w.out, r, label, w.clk, onAU); err != nil {
+			if err := FeedTS(feedCtx, out, w.out, r, label, w.clk, onAU, w.fail); err != nil {
 				e.fail(fmt.Errorf("feed rendition %s: %w", name, err))
 			}
 		}()
@@ -141,16 +148,14 @@ func (e *sessionEncoder) offer(pkt av.Packet) bool {
 		e.drop()
 		return false
 	}
-	select {
-	case e.queue <- pkt:
-		if e.dropping {
-			e.endDropRun("resumed at a keyframe")
-		}
-		return true
-	default:
+	if !send(e.bp, e.queue, pkt) {
 		e.drop()
 		return false
 	}
+	if e.dropping {
+		e.endDropRun("resumed at a keyframe")
+	}
+	return true
 }
 
 // offerConfig queues a mid-stream AVC config for ffmpeg (ruling R10). It is
@@ -175,13 +180,11 @@ func (e *sessionEncoder) flushPending() bool {
 	if e.pending == nil {
 		return true
 	}
-	select {
-	case e.queue <- *e.pending:
-		e.pending = nil
-		return true
-	default:
+	if !send(e.bp, e.queue, *e.pending) {
 		return false
 	}
+	e.pending = nil
+	return true
 }
 
 func (e *sessionEncoder) halted() bool {
@@ -287,6 +290,7 @@ func (e *sessionEncoder) fail(err error) {
 	}
 	e.failOnce.Do(func() {
 		logger.Errorf(e.ctx, "%s: encoder failed, encoded renditions dropped, source continues: %v", e.label, err)
+		e.report.Report(fmt.Errorf("encoder failed: %w", err))
 		e.haltEncoder()
 		for r := 1; r <= e.count; r++ {
 			e.out.DropRendition(r)

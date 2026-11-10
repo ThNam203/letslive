@@ -28,14 +28,14 @@ import (
 // not an io.Closer FeedTS cannot interrupt the read: it returns at once, the
 // goroutine lives until that read returns, and the callback may still run
 // once more, but never calls WriteVideo or onAU after a ctx check fails.
-func FeedTS(ctx context.Context, r io.Reader, out RenditionWriter, rendition int, label string, clk *Clock, onAU func(pts90k, dts90k int64, au [][]byte)) error {
+func FeedTS(ctx context.Context, r io.Reader, out RenditionWriter, rendition int, label string, clk *Clock, onAU func(pts90k, dts90k int64, au [][]byte), fail Failures) error {
 	name, ok := out.Rendition(rendition)
 	if !ok {
 		return fmt.Errorf("%s: rendition index %d out of range", label, rendition)
 	}
 
 	done := make(chan error, 1)
-	go func() { done <- readTS(ctx, r, out, rendition, name, label, clk, onAU) }()
+	go func() { done <- readTS(ctx, r, out, rendition, name, label, clk, onAU, fail) }()
 
 	select {
 	case err := <-done:
@@ -54,7 +54,7 @@ func FeedTS(ctx context.Context, r io.Reader, out RenditionWriter, rendition int
 	}
 }
 
-func readTS(ctx context.Context, r io.Reader, out RenditionWriter, rendition int, name, label string, clk *Clock, onAU func(pts90k, dts90k int64, au [][]byte)) error {
+func readTS(ctx context.Context, r io.Reader, out RenditionWriter, rendition int, name, label string, clk *Clock, onAU func(pts90k, dts90k int64, au [][]byte), fail Failures) error {
 
 	reader := &mpegts.Reader{R: r}
 	if err := reader.Initialize(); err != nil {
@@ -65,6 +65,7 @@ func readTS(ctx context.Context, r io.Reader, out RenditionWriter, rendition int
 	}
 	reader.OnDecodeError(func(err error) {
 		logger.Errorf(ctx, "%s rendition %s: decode ts: %v", label, name, err)
+		fail.Report(fmt.Errorf("rendition %s: decode ts: %w", name, err))
 	})
 
 	var track *mpegts.Track

@@ -588,10 +588,12 @@ func TestSessionCloseRespectsContext(t *testing.T) {
 
 func newQueueTestEncoder(size int) *sessionEncoder {
 	return &sessionEncoder{
-		ctx:   context.Background(),
-		label: "livestream queue-test",
-		queue: make(chan av.Packet, size),
-		halt:  make(chan struct{}),
+		ctx:    context.Background(),
+		label:  "livestream queue-test",
+		bp:     dropWhenFull{},
+		report: logOnly{},
+		queue:  make(chan av.Packet, size),
+		halt:   make(chan struct{}),
 	}
 }
 

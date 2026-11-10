@@ -879,7 +879,7 @@ func TestStreamPartDurationsStableAt30fps(t *testing.T) {
 
 			enc, written := startFixtureEncoderFrom(t, ctx, fixture)
 			fed := make(chan error, 1)
-			go func() { fed <- FeedTS(ctx, enc.Outputs()[0], s, 1, "livestream "+s.ID(), f.clock, nil) }()
+			go func() { fed <- FeedTS(ctx, enc.Outputs()[0], s, 1, "livestream "+s.ID(), f.clock, nil, logOnly{}) }()
 			f.feed(t, s, 1, f.pkts)
 			if err := <-written; err != nil {
 				t.Fatalf("write FLV to ffmpeg: %v", err)

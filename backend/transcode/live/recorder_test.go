@@ -69,7 +69,7 @@ func newRecorderRigWith(t *testing.T, fixture string, names []string, wrap func(
 	for i, name := range names {
 		rs[i] = Rendition{Name: name, Encoded: i > 0}
 	}
-	rig.rec = NewRecorder(ctx, "livestream "+rig.id, rig.id, rs, rig.f.audio, st, rig.workDir, recorderTestSegDur)
+	rig.rec = NewRecorder(ctx, "livestream "+rig.id, rig.id, rs, rig.f.audio, st, rig.workDir, recorderTestSegDur, dropWhenFull{}, logOnly{})
 	return rig
 }
 
@@ -418,7 +418,7 @@ func TestRecorderDropsWhenQueueFull(t *testing.T) {
 	}
 	// A tiny item queue and no upload buffer: the stalled first upload blocks
 	// the rendition goroutine at the second cut, so the item queue overflows.
-	rec := newRecorder(ctx, "livestream "+"stream-1", "stream-1", []Rendition{{Name: "source"}}, nil, st, t.TempDir(), recorderTestSegDur, 8, 0)
+	rec := newRecorder(ctx, "livestream "+"stream-1", "stream-1", []Rendition{{Name: "source"}}, nil, st, t.TempDir(), recorderTestSegDur, 8, 0, dropWhenFull{}, logOnly{})
 
 	rig := &recorderRig{f: f, rec: rec}
 	fed := make(chan struct{})
