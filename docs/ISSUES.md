@@ -1,6 +1,6 @@
 # Issues — letslive
 
-_Last updated: 2026-11-09_
+_Last updated: 2026-11-10_
 
 ---
 
@@ -158,6 +158,11 @@ _Added 2026-11-09 from the second review of `feat/ll-hls-packager` (details in [
 Fix: settle the VOD by livestream id (the `vods.livestream_id` column is indexed): a vod internal route such as `PATCH /v1/internal/livestreams/{id}/vod/status`, and transcode stops depending on the returned id. Keep the 2 s / 5 s retries for the moment the VOD is not created yet.
 Files: [backend/transcode/rtmp/finish.go](backend/transcode/rtmp/finish.go), [backend/vod/handlers/vod/update_vod_status_internal.go](backend/vod/handlers/vod/update_vod_status_internal.go)
 
+**L22. An upload being processed during a transcode restart stays `processing` forever**
+_Added 2026-11-10 from the final review of the upload file mode (PR #484; spec [2026-11-09-upload-file-mode-design.md](docs/superpowers/specs/2026-11-09-upload-file-mode-design.md))._ On SIGTERM the worker's context is cancelled, `upload.Run` fails, and `markJobFailed` runs with that cancelled context, so its DB update fails too. The job stays `processing`, and the claim query only takes `pending` jobs. Nothing ever retries it, and its VOD stays `processing`, hidden from viewers. Any deploy or crash during an upload loses that upload. This predates the file mode; the old transcoder had the same gap.
+Fix: settle the job with a context detached from the cancelled one. Also requeue stale `processing` jobs at worker start (e.g. `started_at` older than the longest allowed job) back to `pending`.
+File: [backend/transcode/worker/worker.go](backend/transcode/worker/worker.go) (`processNextJob`, `markJobFailed`)
+
 ---
 
 ### 🟡 MEDIUM
@@ -195,6 +200,21 @@ File: [backend/user/push/sender.go:47](backend/user/push/sender.go#L47) (`FromNo
 _Added 2026-11-09 from the second review of `feat/ll-hls-packager` (details in [the problems file](docs/superpowers/reviews/2026-11-09-ll-hls-pipeline-problems.md))._ The recorder takes each rendition's `avc1` string from the first SPS only. When a streamer changes profile/level mid-stream (supported, ruling R10), the master keeps advertising the old one, and players that trust `CODECS` (Safari, MSE `isTypeSupported`) may pick a variant they then fail to decode. The hand-written `avcCodecString` / `Recorder.codecs` also duplicate gohlslib's `codecparams.Marshal`, already a dependency.
 Fix: leave `CODECS` out for a rendition whose SPS changed partway (as before #6b), and build the strings with `codecparams.Marshal`.
 File: [backend/transcode/live/recorder.go](backend/transcode/live/recorder.go) (`readSPS`, `avcCodecString`, `codecs`)
+
+**L23. Uploads are processed one at a time, with no time limit per job**
+_Added 2026-11-10 from the final review of the upload file mode (PR #484; spec [2026-11-09-upload-file-mode-design.md](docs/superpowers/specs/2026-11-09-upload-file-mode-design.md))._ Production runs one transcode container with one worker loop, so all uploads queue behind the current one. A file that never finishes (a hung ffmpeg, endlessly slow storage) blocks the queue until restart, and then hits L22. Many workers would be safe, because the claim uses `FOR UPDATE … SKIP LOCKED`, but each upload costs CPU next to the live encoders.
+Fix: an overall per-job deadline that fails the attempt (retried as usual). If the queue grows, add an `upload.workers` setting (default 1, keep it at 2–3). Running more transcode containers needs the worker split out first, because the same container serves RTMP and live playlists.
+Files: [backend/transcode/worker/worker.go](backend/transcode/worker/worker.go), [backend/transcode/cmd/](backend/transcode/cmd/)
+
+**L24. Failed upload attempts leave files behind**
+_Added 2026-11-10 from the final review of the upload file mode (PR #484; spec [2026-11-09-upload-file-mode-design.md](docs/superpowers/specs/2026-11-09-upload-file-mode-design.md))._ A failed attempt still writes playlists to `public/vods/{vodId}`, and its MinIO segments and thumbnail are never removed. A retry overwrites the playlists, but a converted retry with fewer segments leaves the extra ones orphaned. After the final failure, a partial VOD stays reachable at `/vods/{vodId}/index.m3u8`; nobody is given that URL, and the VOD is `failed`. The doc comment on `upload.Run` ("never a partial VOD") overstates this.
+Fix: remove `public/vods/{vodId}` when `Run` fails, and delete the attempt's MinIO objects (or the VOD's prefix) before each attempt; then correct the doc comment.
+Files: [backend/transcode/upload/run.go](backend/transcode/upload/run.go), [backend/transcode/worker/worker.go](backend/transcode/worker/worker.go) (`prepareAttempt`)
+
+**L25. Upload retries don't tell input failures from other failures**
+_Added 2026-11-10 from the final review of the upload file mode (PR #484; spec [2026-11-09-upload-file-mode-design.md](docs/superpowers/specs/2026-11-09-upload-file-mode-design.md))._ `upload.Run` marks every failure after probing as an input failure (`ErrInput`), MinIO outages included. The retry then converts a file that could have been copied, and that VOD keeps a lower, bitrate-capped top quality. The worker's `"transcode failed: "` message can therefore never appear. An attempt that fails while downloading also overwrites the `input:` marker, so attempt 3 copies again and repeats attempt 1's failure.
+Fix: mark only probe, intake-ffmpeg and session-input failures as `ErrInput`. Keep the `input:` marker across non-input failures, e.g. a separate `force_convert` column, or check every previous error rather than only the last.
+Files: [backend/transcode/upload/run.go](backend/transcode/upload/run.go), [backend/transcode/worker/worker.go](backend/transcode/worker/worker.go) (`failureMessage`, `forceConvert`)
 
 ---
 
@@ -237,6 +257,31 @@ File: [web/components/livestream/media-card.tsx](web/components/livestream/media
 _Added 2026-11-09 from the second review of `feat/ll-hls-packager` (details in [the problems file](docs/superpowers/reviews/2026-11-09-ll-hls-pipeline-problems.md))._ `finishStream` marks the VOD `failed` on any `Session.Close` error, including its 75 s timeout, while the shutdown keeps running and may still write the VOD master moments later. The recorder (60 s) and thumbnailer bounds fit inside 75 s, so this needs storage to be stuck. Accepted for now.
 Fix (if it shows up): on a close timeout, wait for the session to finish in the background and settle the VOD then.
 File: [backend/transcode/rtmp/finish.go](backend/transcode/rtmp/finish.go)
+
+**L26. The upload keyframe scan is slow and runs at normal priority**
+_Added 2026-11-10 from the final review of the upload file mode (PR #484; spec [2026-11-09-upload-file-mode-design.md](docs/superpowers/specs/2026-11-09-upload-file-mode-design.md))._ `RunProbe` scans keyframes with `-skip_frame nokey`, which decodes them. It runs before niceness applies, and it runs even for non-H.264 files, whose result `Decide` never uses. That cost 1.6 s of a core per 60 s of 4K HEVC, so about 48 s for a 30-minute iPhone clip, competing with live encoders.
+Fix: skip the scan unless the video is H.264, read packet flags instead (`-show_entries packet=pts_time,flags`, 0.02 s on the same file), and nice the ffprobe.
+File: [backend/transcode/upload/probe.go](backend/transcode/upload/probe.go) (`RunProbe`)
+
+**L27. A resolution change inside a copied upload is not detected**
+_Added 2026-11-10 from the final review of the upload file mode (PR #484; spec [2026-11-09-upload-file-mode-design.md](docs/superpowers/specs/2026-11-09-upload-file-mode-design.md))._ With `-c:v copy`, the intake FLV carries no new sequence header when the size changes partway, so the session never sees it. A concatenated 720p→360p file completed "fine" with the master advertising 1280x720, while the source rendition switched size. The design assumed a size change would fail the attempt and trigger a converting retry. Rare input.
+Fix: compare each keyframe's SPS size with the first in the session (or in intake), and fail the copied attempt as an input failure so the retry converts.
+Files: [backend/transcode/live/session.go](backend/transcode/live/session.go), [backend/transcode/upload/run.go](backend/transcode/upload/run.go)
+
+**L28. The live thumbnailer copies every keyframe**
+_Added 2026-11-10 from the final review of the upload file mode (PR #484; spec [2026-11-09-upload-file-mode-design.md](docs/superpowers/specs/2026-11-09-upload-file-mode-design.md))._ `Thumbnailer.Offer` copies each keyframe under the session lock before asking the schedule whether it wants it. Before the change, only accepted keyframes were copied. On the live path this is one keyframe copy per GOP, which is small but needless.
+Fix: copy only when the first keyframe is not kept yet or when `Want` accepts it.
+File: [backend/transcode/live/thumbnail.go](backend/transcode/live/thumbnail.go) (`Offer`)
+
+**L29. `TestDrainKeepsEncodedTail` tolerance is too loose**
+_Added 2026-11-10 from the final review of the upload file mode (PR #484; spec [2026-11-09-upload-file-mode-design.md](docs/superpowers/specs/2026-11-09-upload-file-mode-design.md))._ It allows one 4 s segment of difference between encoded and source durations on a 6 s clip, so losing most of the tail would still pass.
+Fix: tighten it to about one GOP.
+File: [backend/transcode/live/profile_test.go](backend/transcode/live/profile_test.go)
+
+**L30. `ffmpegSetting.hlsTime`, `hlsListSize` and `hlsMaxSize` are unused**
+_Added 2026-11-10 from the final review of the upload file mode (PR #484; spec [2026-11-09-upload-file-mode-design.md](docs/superpowers/specs/2026-11-09-upload-file-mode-design.md))._ Only the deleted uploaded-video transcoder read them. They stay in `config.go` so existing YAML keeps loading.
+Fix: remove the fields and the keys in letslive-configs together.
+File: [backend/transcode/config/config.go](backend/transcode/config/config.go)
 
 ---
 
