@@ -1,6 +1,6 @@
 ---
 ticket: LL-HLS
-status: draft
+status: implemented
 ---
 
 # Uploads on the live engine ("file mode") — design
@@ -249,3 +249,27 @@ parsing, exact non-live x264 flags, GOP/FPS of converted output within the
 rules above, audio channel handling, cleanup after a failed attempt, what a
 thumbnail failure does (it must not fail the job), the CPU-sharing mechanism
 and its default, and log wording beyond the "upload {id}" prefix.
+
+## Results (2026-11-10)
+
+Implemented per `docs/superpowers/plans/2026-11-10-upload-file-mode.md`.
+
+Benchmark, one 60 s 1080p30 input, production settings (`ultrafast`, CRF 24,
+qualities 360p/720p/1080p), local machine. CPU is ffmpeg child CPU; size is
+all `.ts` segments.
+
+| Input | Path | CPU | Wall | Segments |
+|---|---|---|---|---|
+| H.264/AAC MP4 | old `TranscodeFile` | 35.8 s | 4.2 s | 44.7 MB |
+| H.264/AAC MP4 | new (video copied) | 19.9 s | 2.5 s | 71.6 MB |
+| HEVC/AAC MP4 | old `TranscodeFile` | 39.5 s | 4.6 s | 44.7 MB |
+| HEVC/AAC MP4 | new (converted) | 36.3 s | 4.2 s | 45.7 MB |
+
+- A copied upload keeps the uploader's bitrate as its top quality (this
+  design's call), so it can be larger than before. Here the test input was
+  ~7.5 Mbit/s; phone videos are often 10–17 Mbit/s.
+- Converted video is capped at the bitrate of the configured quality for its
+  size. Without that cap the HEVC run produced 123 MB.
+- HDR tone mapping was verified with the production image's Alpine ffmpeg
+  8.1.3. The Homebrew ffmpeg used locally has no `zscale`, so the test skips
+  there.
