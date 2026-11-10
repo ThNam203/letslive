@@ -53,8 +53,10 @@ CPU than re-encoding everything.
 
 ## Decisions (owner's)
 
-1. **One engine with a file mode** (option A): the same `Session` code with a
-   mode switch, not a second engine and not real-time playback of the file.
+1. **One engine with a file mode** (option A): the same `Session` code, not
+   a second engine and not real-time playback of the file. The two modes
+   differ only through strategy objects, never through `if mode` branches
+   (owner, 2026-11-10; see section 2).
 2. **File mode uses normal compression settings**, not live's low-latency
    ones (`-tune zerolatency`). Ladder, folders and playlists are identical to
    live; only the encoded files are smaller.
@@ -122,34 +124,63 @@ H.264 + AAC, at most 1080p short side, upright, with correct timestamps.
 The bitrate of a file ≤ 1080p that is copied is not capped. *(My call; the
 owner capped resolution only.)*
 
-### 2. Session file mode
+### 2. Session file mode: one `Session`, two strategies
 
-`SessionDeps` gains a mode (live, the default, or file). Live behaviour is
-untouched; in file mode:
+The `Session` must not branch on the mode. A flag checked in many places
+(`if s.mode == file`) is ruled out: every new rule would add another branch,
+and live code would keep being edited for uploads. Instead the parts that
+differ are **strategies**. A **`Mode`** value is built once by
+`LiveMode(...)` or `FileMode(...)` and handed to `NewSession`. The session,
+encoder, recorder and thumbnailer call these strategies without checking
+which mode they got. The live strategies are today's code, moved behind the
+interfaces as they are.
 
-| | Live (unchanged) | File mode |
-|---|---|---|
-| Full encoder / recorder queue | drop until next keyframe | **wait** (bounded by the session context) |
-| Live LL-HLS `Stream` + `Registry` | created and registered | **none**; `Registry` not required |
-| Encoder args | `-tune zerolatency`, live probe/flush flags | **normal x264 tuning**; preset/CRF/maxrate/bufsize/GOP/FPS rules as live |
-| Encoder or rendition failure | drop the rendition, keep going | **`Close` returns an error** (job fails, is retried) |
-| Recorder drops, abandoned segments, failed segment uploads | logged | **`Close` returns an error** |
-| Unparsable video access units, mid-stream resolution change | logged, ladder kept | **`Close` returns an error** |
-| Packets before the first keyframe, audio just before the first video frame, empty NAL units | discarded | discarded (normal in good files, not an error) |
-| Thumbnails | wall clock: first after 5 s, then every 60 s | **media time:** one thumbnail, first keyframe at ≥ 5 s, or the first keyframe when the video is shorter *(my call)* |
-| Thumbnail URL | discarded | **returned** to the caller after `Close` |
-| Log wording | "livestream {id}" | "upload {id}" |
+| Difference | Strategy (where it's used) | Live (today's code, moved) | File |
+|---|---|---|---|
+| Where viewers get the stream | **`Output`** (Session, `FeedTS`): `WriteVideo`, `WriteAudio`, `Ready`, `DropRendition`, `Unpublish`, `Close` | `*Stream` (has every method except `Unpublish`) plus `Registry`; `Unpublish` = `Registry.Remove` | **Null Object** `noOutput`: writes are no-ops, `Ready` is always true, so the 10 s encoded-ready deadline never fires and needs no check |
+| Full encoder / recorder queue | **`send` policy**: a function value picked at construction, used by `sessionEncoder.offer` and `Recorder.enqueue` | drop, with today's drop-until-keyframe runs | wait until there is room, or until the session context ends |
+| Failure of a quality, segment, upload or input | **`Failures`** (encoder `fail`, recorder drops/abandons/upload errors, bad access units, resize): `Report(err)`, `Err() error` | log, as today (rate limits kept); `Err()` is always nil | keep the first error and cancel the session; `Close` returns `Err()` |
+| ffmpeg settings | **`EncoderProfile`** (data passed to `EncoderArgs`): tuning flags and probe/flush flags | `-tune zerolatency`, `-probesize 32 -analyzeduration 0`, `-flush_packets 1` … | normal x264 tuning, default probing. The ladder rules are shared. |
+| End of ffmpeg on `Close` | **`EncoderStop`** (`sessionEncoder.stop`) | SIGTERM, as today | close stdin, then wait for ffmpeg and the feeders to drain (bounded by ctx) |
+| When to take thumbnails | **`ThumbSchedule`** (Thumbnailer): `Want(media time.Duration) bool`, `Fallback() bool` | wall clock: after 5 s, then every 60 s; no fallback | media time: one at the first keyframe at ≥ 5 s; if the video is shorter, the first keyframe, kept as the fallback |
+| Recorder finish limit | **data** (`FinishTimeout`) | 60 s | long enough for a whole upload (configurable) |
+| Log noun | **data** (`Noun`) | "livestream" | "upload" |
 
-Everything else is shared: ladder (`BuildLadder`; source copied, only lower
-qualities encoded), `Clock` media timeline, `Recorder` segment length and
-layout (`{id}/{index}/{n}.ts` in MinIO, playlists and master with `CODECS`
-under `public/vods/{id}/`), `Session.Duration()`.
+Two things are the same in both modes, so they need no strategy:
+
+- **Thumbnail URL.** The `Thumbnailer` always remembers the last URL it
+  uploaded and the `Session` exposes it. The live caller ignores it.
+- **Packets the session discards** (before the first keyframe, audio just
+  before the first video frame, empty NAL units). Both modes discard them; in
+  good files they are normal, not errors.
+
+**Where the remaining checks go.** `start` currently checks whether there is
+a `Registry`; that check moves into `LiveMode`'s constructor. The duplicate-id
+error from `Registry.Add` becomes an error from `Output` creation:
+`Mode.Open(id, ladder, audio) (Output, error)`.
+
+The only conditional left in the design is "is the ladder larger than the
+source?". It already exists and is the same in both modes.
+
+**Why this fits the code (checked 2026-11-10):**
+
+- `Stream` already has `WriteVideo`, `WriteAudio`, `Ready`, `DropRendition`
+  and `Close` with the signatures `Output` needs.
+- `FeedTS` only uses those methods, so it takes an `Output` instead of a
+  `*Stream`.
+- Drops happen in two places only: `sessionEncoder.offer` and
+  `Recorder.enqueue`.
+- `Thumbnailer.Offer` reads `time.Now()` in one place; that becomes the
+  schedule call.
+- There is one caller (`rtmp/rtmp.go`), which becomes
+  `NewSession(ctx, id, LiveMode(registry, …), deps)`.
+- Existing live tests pass a live `Mode` and must pass unchanged.
 
 **Retry with conversion** *(my call)*: when a file-mode attempt fails on the
-input (unparsable access units, resolution change, ffmpeg failure on a copied
-stream), the next attempt of the same job forces the convert path, so a
-quirky H.264 file that slipped past the copy rules still ends up `ready`
-instead of using up every attempt the same way.
+input (unparsable access units, a resolution change, ffmpeg failing on a
+copied stream), the next attempt of the same job forces the convert path. A
+quirky H.264 file that slipped past the copy rules then still ends up `ready`
+instead of failing every attempt the same way.
 
 ### 3. Worker
 
@@ -211,7 +242,9 @@ Checked against the code by the design reviewer:
 
 ## Left to the builder
 
-Package and type layout, how waiting is implemented, ffprobe invocation and
+Package and type layout (the exact method sets of the section 2 interfaces
+may change to fit the code, but no mode branches may appear), how waiting is
+implemented, ffprobe invocation and
 parsing, exact non-live x264 flags, GOP/FPS of converted output within the
 rules above, audio channel handling, cleanup after a failed attempt, what a
 thumbnail failure does (it must not fail the job), the CPU-sharing mechanism
