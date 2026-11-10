@@ -1,9 +1,17 @@
 package upload
 
 import (
+	"os"
 	"os/exec"
 	"testing"
+
+	"sen1or/letslive/shared/pkg/logger"
 )
+
+func TestMain(m *testing.M) {
+	logger.Init(logger.Error)
+	os.Exit(m.Run())
+}
 
 // requireFFmpeg returns the ffmpeg path, skipping the test when ffmpeg or
 // ffprobe is missing.
