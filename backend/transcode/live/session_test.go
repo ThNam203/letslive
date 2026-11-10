@@ -70,7 +70,7 @@ func (r *sessionRig) newSession(t *testing.T) (s *Session, base string) {
 	t.Helper()
 	id := uuid.Must(uuid.NewV4()).String()
 	s = NewSession(context.Background(), id, SessionDeps{
-		Registry:  r.reg,
+		Mode:      mustLiveMode(t, r.reg),
 		Storage:   r.st,
 		Transcode: r.tc,
 		Now:       time.Now,
@@ -195,7 +195,7 @@ func TestSessionEncoderMissing(t *testing.T) {
 
 	feedSession(t, s, readFLV(t, "src_1280x720.flv"))
 
-	if !s.stream.Ready(0) {
+	if !s.out.Ready(0) {
 		t.Error("source not ready")
 	}
 	waitMaster(t, base, []string{"source"}, []string{"480p"})
@@ -226,7 +226,7 @@ func TestSessionEncoderStalls(t *testing.T) {
 	if s.enc.dropRuns == 0 {
 		t.Error("no drop run was started (and logged)")
 	}
-	if !s.stream.Ready(0) {
+	if !s.out.Ready(0) {
 		t.Error("source not ready")
 	}
 }
@@ -534,7 +534,7 @@ func TestSessionCloseBeforeFirstKeyframe(t *testing.T) {
 			t.Fatalf("HandlePacket: %v", err)
 		}
 	}
-	if s.stream != nil {
+	if s.out != nil {
 		t.Fatal("stream created before the first keyframe")
 	}
 	mustGet(t, base+"/index.m3u8", http.StatusNotFound)
@@ -588,10 +588,12 @@ func TestSessionCloseRespectsContext(t *testing.T) {
 
 func newQueueTestEncoder(size int) *sessionEncoder {
 	return &sessionEncoder{
-		ctx:   context.Background(),
-		id:    "queue-test",
-		queue: make(chan av.Packet, size),
-		halt:  make(chan struct{}),
+		ctx:    context.Background(),
+		label:  "livestream queue-test",
+		bp:     dropWhenFull{},
+		report: logOnly{},
+		queue:  make(chan av.Packet, size),
+		halt:   make(chan struct{}),
 	}
 }
 

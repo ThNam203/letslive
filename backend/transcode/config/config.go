@@ -44,7 +44,8 @@ type Transcode struct {
 		Qualities      []Quality `yaml:"qualities"`
 	} `yaml:"ffmpegSetting"`
 
-	Live Live `yaml:"live"`
+	Live   Live   `yaml:"live"`
+	Upload Upload `yaml:"upload"`
 }
 
 type Database struct {
@@ -86,6 +87,7 @@ func PostProcess(config *Config) error {
 	}
 
 	config.Transcode.Live = config.Transcode.Live.WithDefaults()
+	config.Transcode.Upload = config.Transcode.Upload.WithDefaults()
 
 	return Validate(config.Transcode)
 }

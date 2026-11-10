@@ -59,8 +59,9 @@ var (
 	// detached from the caller's, so uploads still finish when the caller's
 	// context ends together with the stream.
 	recorderUploadTimeout = 30 * time.Second
-	// recorderFinishTimeout bounds how long Finish waits for the writers and
-	// uploads; what has not finished by then is abandoned and logged.
+	// recorderFinishTimeout is how long a livestream's Finish waits for the
+	// writers and uploads; what has not finished by then is abandoned and
+	// logged.
 	recorderFinishTimeout = 60 * time.Second
 )
 
@@ -140,11 +141,12 @@ type recRendition struct {
 }
 
 // Recorder records every rendition to MPEG-TS segment files, uploads them in
-// the background and, at Finish, writes the VOD playlists. Nothing it does
-// blocks WriteVideo or WriteAudio.
+// the background and, at Finish, writes the VOD playlists. WriteVideo and
+// WriteAudio wait on a full queue only as long as the Backpressure allows.
 type Recorder struct {
 	ctx      context.Context
 	id       string
+	label    string // starts every log line
 	audio    *mpeg4audio.AudioSpecificConfig
 	st       storage.Storage
 	dir      string
@@ -154,6 +156,9 @@ type Recorder struct {
 	uploads chan recUpload
 	upDone  chan struct{}
 	abandon chan struct{} // closed when Finish gives up waiting
+	bp      Backpressure  // what a full rendition queue does
+	fail    Failures      // told about every segment or rendition lost
+	wait    time.Duration // bound of Finish's wait; 0: none
 
 	dropped    atomic.Int64
 	lateAudio  atomic.Int64
@@ -170,15 +175,20 @@ type Recorder struct {
 // NewRecorder starts one writer goroutine per rendition and one uploader.
 // Segment files go under {dir}/{id}/{rendition}/{n}.ts and are cut at the
 // first random-access AU once at least segDur has passed. audio is nil for a
-// video-only source. Finish must be called to stop the goroutines.
-func NewRecorder(ctx context.Context, id string, rs []Rendition, audio *mpeg4audio.AudioSpecificConfig, st storage.Storage, dir string, segDur time.Duration) *Recorder {
-	return newRecorder(ctx, id, rs, audio, st, dir, segDur, recorderQueueSize, recorderUploadQueue)
+// video-only source. bp decides what a full queue does and fail is told about
+// every segment or rendition the VOD loses. finishWait bounds Finish's wait
+// for the last writes and uploads; 0 waits for all of them (each upload is
+// bounded by recorderUploadTimeout on its own). Finish must be called to stop
+// the goroutines.
+func NewRecorder(ctx context.Context, label, id string, rs []Rendition, audio *mpeg4audio.AudioSpecificConfig, st storage.Storage, dir string, segDur time.Duration, bp Backpressure, fail Failures, finishWait time.Duration) *Recorder {
+	return newRecorder(ctx, label, id, rs, audio, st, dir, segDur, recorderQueueSize, recorderUploadQueue, bp, fail, finishWait)
 }
 
-func newRecorder(ctx context.Context, id string, rs []Rendition, audio *mpeg4audio.AudioSpecificConfig, st storage.Storage, dir string, segDur time.Duration, itemQueue, uploadQueue int) *Recorder {
+func newRecorder(ctx context.Context, label, id string, rs []Rendition, audio *mpeg4audio.AudioSpecificConfig, st storage.Storage, dir string, segDur time.Duration, itemQueue, uploadQueue int, bp Backpressure, fail Failures, finishWait time.Duration) *Recorder {
 	r := &Recorder{
 		ctx:      ctx,
 		id:       id,
+		label:    label,
 		audio:    audio,
 		st:       st,
 		dir:      dir,
@@ -187,6 +197,9 @@ func newRecorder(ctx context.Context, id string, rs []Rendition, audio *mpeg4aud
 		uploads:  make(chan recUpload, uploadQueue),
 		upDone:   make(chan struct{}),
 		abandon:  make(chan struct{}),
+		bp:       bp,
+		fail:     fail,
+		wait:     finishWait,
 		badInput: dropLimiter{interval: recorderDropLogInterval},
 	}
 
@@ -213,8 +226,8 @@ func newRecorder(ctx context.Context, id string, rs []Rendition, audio *mpeg4aud
 }
 
 // WriteVideo queues one H.264 access unit for rendition r. The NAL units must
-// not be modified afterwards. Empty NAL units are discarded. It never blocks:
-// a full queue drops the item.
+// not be modified afterwards. Empty NAL units are discarded. A full queue
+// drops the item once the Backpressure gives up waiting.
 func (r *Recorder) WriteVideo(rendition int, pts90k, dts90k int64, au [][]byte) {
 	au = r.withoutEmpty(au)
 	if len(au) == 0 {
@@ -229,7 +242,8 @@ func (r *Recorder) WriteVideo(rendition int, pts90k, dts90k int64, au [][]byte) 
 
 // WriteAudio queues AAC access units, stamped on the 90 kHz timeline, for
 // every rendition so each VOD variant is self-contained. The slices must not
-// be modified afterwards; empty ones are discarded. It never blocks.
+// be modified afterwards; empty ones are discarded. A full queue drops them
+// once the Backpressure gives up waiting.
 func (r *Recorder) WriteAudio(pts90k int64, aus [][]byte) {
 	if r.audio == nil {
 		return
@@ -253,11 +267,12 @@ func (r *Recorder) WriteAudio(pts90k int64, aus [][]byte) {
 // for players that picked it. The source (r == 0) cannot be dropped.
 func (r *Recorder) DropRendition(rendition int) {
 	if rendition < 1 || rendition >= len(r.rends) {
-		logger.Errorf(r.ctx, "livestream %s: recorder cannot drop rendition %d, encoded renditions are [1, %d)", r.id, rendition, len(r.rends))
+		logger.Errorf(r.ctx, "%s: recorder cannot drop rendition %d, encoded renditions are [1, %d)", r.label, rendition, len(r.rends))
 		return
 	}
 	if !r.rends[rendition].truncated.Swap(true) {
-		logger.Warnf(r.ctx, "livestream %s rendition %s: encoder stopped mid-stream, the rendition will be left out of the VOD", r.id, r.rends[rendition].name)
+		logger.Warnf(r.ctx, "%s rendition %s: encoder stopped mid-stream, the rendition will be left out of the VOD", r.label, r.rends[rendition].name)
+		r.fail.Report(fmt.Errorf("rendition %s left out of the VOD: its encoder stopped", r.rends[rendition].name))
 	}
 }
 
@@ -295,13 +310,13 @@ func (r *Recorder) logBadInput(format string, args ...any) {
 	n, ok := r.badInput.record(time.Now())
 	r.badInputMu.Unlock()
 	if ok {
-		logger.Errorf(r.ctx, "livestream %s: "+format+" (%d report(s) since the last log)", append(append([]any{r.id}, args...), n)...)
+		logger.Errorf(r.ctx, "%s: "+format+" (%d report(s) since the last log)", append(append([]any{r.label}, args...), n)...)
 	}
 }
 
 func (r *Recorder) enqueue(i int, it recItem) {
 	if i < 0 || i >= len(r.rends) {
-		logger.Errorf(r.ctx, "livestream %s: recorder rendition index %d out of range [0, %d)", r.id, i, len(r.rends))
+		logger.Errorf(r.ctx, "%s: recorder rendition index %d out of range [0, %d)", r.label, i, len(r.rends))
 		return
 	}
 	rr := r.rends[i]
@@ -315,13 +330,13 @@ func (r *Recorder) enqueue(i int, it recItem) {
 		return
 	}
 
-	select {
-	case rr.in <- it:
-	default:
-		r.dropped.Add(1)
-		if n, ok := rr.drops.record(time.Now()); ok {
-			logger.Errorf(r.ctx, "livestream %s rendition %s: recorder queue full, dropped %d item(s) since the last report", r.id, rr.name, n)
-		}
+	if send(r.bp, rr.in, it) {
+		return
+	}
+	r.dropped.Add(1)
+	r.fail.Report(fmt.Errorf("rendition %s: recorder queue full, item dropped", rr.name))
+	if n, ok := rr.drops.record(time.Now()); ok {
+		logger.Errorf(r.ctx, "%s rendition %s: recorder queue full, dropped %d item(s) since the last report", r.label, rr.name, n)
 	}
 }
 
@@ -356,7 +371,8 @@ func (r *Recorder) upload(job recUpload) {
 	seg := job.seg
 	info, err := os.Stat(seg.path)
 	if err != nil {
-		logger.Errorf(r.ctx, "livestream %s rendition %d: stat segment %s: %v", r.id, job.rendition, seg.path, err)
+		logger.Errorf(r.ctx, "%s rendition %d: stat segment %s: %v", r.label, job.rendition, seg.path, err)
+		r.fail.Report(fmt.Errorf("rendition %d: stat segment %d: %w", job.rendition, seg.index, err))
 		r.settle(seg, false, "", 0)
 		return
 	}
@@ -365,7 +381,8 @@ func (r *Recorder) upload(job recUpload) {
 	url, err := r.st.AddSegment(ctx, seg.path, r.id, job.rendition)
 	cancel()
 	if err != nil {
-		logger.Errorf(r.ctx, "livestream %s rendition %d: upload segment %d, leaving it out of the VOD: %v", r.id, job.rendition, seg.index, err)
+		logger.Errorf(r.ctx, "%s rendition %d: upload segment %d, leaving it out of the VOD: %v", r.label, job.rendition, seg.index, err)
+		r.fail.Report(fmt.Errorf("rendition %d: upload segment %d: %w", job.rendition, seg.index, err))
 		r.settle(seg, false, "", 0)
 		r.removeSegmentFile(job.rendition, seg.path, "failed")
 		return
@@ -379,7 +396,7 @@ func (r *Recorder) upload(job recUpload) {
 // either way, so local disk use stays bounded while storage is failing.
 func (r *Recorder) removeSegmentFile(rendition int, path, state string) {
 	if err := os.Remove(path); err != nil && !errors.Is(err, fs.ErrNotExist) {
-		logger.Errorf(r.ctx, "livestream %s rendition %d: remove %s segment %s: %v", r.id, rendition, state, path, err)
+		logger.Errorf(r.ctx, "%s rendition %d: remove %s segment %s: %v", r.label, rendition, state, path, err)
 	}
 }
 
@@ -429,7 +446,13 @@ func (w *segmentWriter) run() {
 }
 
 func (w *segmentWriter) logf(format string, args ...any) {
-	logger.Errorf(w.rec.ctx, "livestream %s rendition %s: "+format, append([]any{w.rec.id, w.rend.name}, args...)...)
+	logger.Errorf(w.rec.ctx, "%s rendition %s: "+format, append([]any{w.rec.label, w.rend.name}, args...)...)
+}
+
+// failf is logf for a problem that loses part of the VOD; it is also reported.
+func (w *segmentWriter) failf(format string, args ...any) {
+	w.logf(format, args...)
+	w.rec.fail.Report(fmt.Errorf("rendition %s: "+format, append([]any{w.rend.name}, args...)...))
 }
 
 func (w *segmentWriter) writeVideo(it recItem) {
@@ -453,7 +476,7 @@ func (w *segmentWriter) writeVideo(it recItem) {
 	}
 
 	if err := w.ts.WriteH264(w.vid, it.pts+recorderTSOffset, it.dts+recorderTSOffset, it.au); err != nil {
-		w.logf("write video to segment %d: %v", w.cur.index, err)
+		w.failf("write video to segment %d: %w", w.cur.index, err)
 		w.abandonSegment(it.dts)
 		return
 	}
@@ -512,7 +535,7 @@ func (w *segmentWriter) emitAudio(it recItem) {
 		return
 	}
 	if err := w.ts.WriteMPEG4Audio(w.aud, it.pts+recorderTSOffset, it.au); err != nil {
-		w.logf("write audio to segment %d: %v", w.cur.index, err)
+		w.failf("write audio to segment %d: %w", w.cur.index, err)
 		w.abandonSegment(w.lastDTS)
 		return
 	}
@@ -549,13 +572,13 @@ func (w *segmentWriter) readSPS(au [][]byte) {
 func (w *segmentWriter) openSegment(dts int64) bool {
 	dir := filepath.Join(w.rec.dir, w.rec.id, fmt.Sprint(w.rend.index))
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		w.logf("create segment dir %s: %v", dir, err)
+		w.failf("create segment dir %s: %w", dir, err)
 		return false
 	}
 	path := filepath.Join(dir, fmt.Sprintf("%d.ts", w.nextIndex))
 	file, err := os.Create(path)
 	if err != nil {
-		w.logf("create segment %s: %v", path, err)
+		w.failf("create segment %s: %w", path, err)
 		return false
 	}
 
@@ -569,7 +592,7 @@ func (w *segmentWriter) openSegment(dts int64) bool {
 	buf := bufio.NewWriterSize(file, recorderFileBuffer)
 	ts := &mpegts.Writer{W: buf, Tracks: tracks}
 	if err := ts.Initialize(); err != nil {
-		w.logf("init mpegts writer for %s: %v", path, err)
+		w.failf("init mpegts writer for %s: %w", path, err)
 		discard(file, path)
 		return false
 	}
@@ -601,13 +624,13 @@ func (w *segmentWriter) closeSegment(endDTS int64) {
 	w.list(seg, endDTS)
 
 	if err := buf.Flush(); err != nil {
-		w.logf("flush segment %d: %v", seg.index, err)
+		w.failf("flush segment %d: %w", seg.index, err)
 		discard(file, seg.path)
 		w.rec.settle(seg, false, "", 0)
 		return
 	}
 	if err := file.Close(); err != nil {
-		w.logf("close segment %d: %v", seg.index, err)
+		w.failf("close segment %d: %w", seg.index, err)
 		_ = os.Remove(seg.path)
 		w.rec.settle(seg, false, "", 0)
 		return
@@ -617,6 +640,7 @@ func (w *segmentWriter) closeSegment(endDTS int64) {
 	case w.rec.uploads <- recUpload{rendition: w.rend.index, seg: seg}:
 	case <-w.rec.abandon:
 		_ = os.Remove(seg.path)
+		w.rec.fail.Report(fmt.Errorf("rendition %s: segment %d abandoned before upload", w.rend.name, seg.index))
 	}
 }
 
@@ -647,13 +671,14 @@ func discard(file *os.File, path string) {
 // uploaded Finish writes nothing and returns an error. Later writes are
 // ignored and a second Finish returns an error.
 //
-// Finish waits at most recorderFinishTimeout in total. Segments still being
-// written or uploaded then are logged and left out of the playlists.
+// Finish waits at most the recorder's finishWait in total (0: until all work
+// ends). Segments still being written or uploaded then are logged and left
+// out of the playlists.
 func (r *Recorder) Finish(publicHLSPath, masterFileName string) error {
 	r.mu.Lock()
 	if r.finished {
 		r.mu.Unlock()
-		return fmt.Errorf("livestream %s: recorder already finished", r.id)
+		return fmt.Errorf("%s: recorder already finished", r.label)
 	}
 	r.finished = true
 	for _, rr := range r.rends {
@@ -666,14 +691,14 @@ func (r *Recorder) Finish(publicHLSPath, masterFileName string) error {
 	defer func() {
 		tree := filepath.Join(r.dir, r.id)
 		if err := os.RemoveAll(tree); err != nil {
-			logger.Errorf(r.ctx, "livestream %s: remove local segments %s: %v", r.id, tree, err)
+			logger.Errorf(r.ctx, "%s: remove local segments %s: %v", r.label, tree, err)
 		}
 	}()
 	r.logSummary()
 
 	plans := r.plans()
 	if len(plans) == 0 {
-		return fmt.Errorf("livestream %s: no segment was recorded and uploaded, VOD not written", r.id)
+		return fmt.Errorf("%s: no segment was recorded and uploaded, VOD not written", r.label)
 	}
 
 	outDir := filepath.Join(publicHLSPath, "vods", r.id)
@@ -693,22 +718,26 @@ func (r *Recorder) Finish(publicHLSPath, masterFileName string) error {
 	if err := os.WriteFile(filepath.Join(outDir, masterFileName), []byte(master.String()), 0o644); err != nil {
 		return fmt.Errorf("write VOD master %s: %w", masterFileName, err)
 	}
-	logger.Infof(r.ctx, "livestream %s: wrote VOD with %d rendition(s) to %s", r.id, len(plans), outDir)
+	logger.Infof(r.ctx, "%s: wrote VOD with %d rendition(s) to %s", r.label, len(plans), outDir)
 	return nil
 }
 
 // waitForWork waits for the writers to close their last segments and for the
-// uploader to drain, for at most recorderFinishTimeout in all. On timeout it
+// uploader to drain, for at most r.wait in all (0: no bound). On timeout it
 // signals everything still running to give up.
 func (r *Recorder) waitForWork() {
-	timer := time.NewTimer(recorderFinishTimeout)
-	defer timer.Stop()
+	var deadline <-chan time.Time // nil: never fires
+	if r.wait > 0 {
+		timer := time.NewTimer(r.wait)
+		defer timer.Stop()
+		deadline = timer.C
+	}
 
 	timedOut := false
 	for _, rr := range r.rends {
 		select {
 		case <-rr.done:
-		case <-timer.C:
+		case <-deadline:
 			timedOut = true
 		}
 		if timedOut {
@@ -720,23 +749,23 @@ func (r *Recorder) waitForWork() {
 		close(r.uploads)
 		select {
 		case <-r.upDone:
-		case <-timer.C:
+		case <-deadline:
 			timedOut = true
 		}
 	}
 	if timedOut {
 		close(r.abandon)
-		logger.Errorf(r.ctx, "livestream %s: recorder gave up waiting after %v", r.id, recorderFinishTimeout)
+		logger.Errorf(r.ctx, "%s: recorder gave up waiting after %v", r.label, r.wait)
 	}
 }
 
 // logSummary reports drops and the segments that never finished.
 func (r *Recorder) logSummary() {
 	if n := r.dropped.Load(); n > 0 {
-		logger.Errorf(r.ctx, "livestream %s: recorder dropped %d queued item(s) in total", r.id, n)
+		logger.Errorf(r.ctx, "%s: recorder dropped %d queued item(s) in total", r.label, n)
 	}
 	if n := r.lateAudio.Load(); n > 0 {
-		logger.Errorf(r.ctx, "livestream %s: recorder discarded %d audio unit(s) that fell outside their segment", r.id, n)
+		logger.Errorf(r.ctx, "%s: recorder discarded %d audio unit(s) that fell outside their segment", r.label, n)
 	}
 
 	r.resMu.Lock()
@@ -744,7 +773,8 @@ func (r *Recorder) logSummary() {
 	for _, rr := range r.rends {
 		for _, seg := range rr.segments {
 			if !seg.settled {
-				logger.Errorf(r.ctx, "livestream %s rendition %s: segment %d was abandoned unfinished and is left out of the VOD", r.id, rr.name, seg.index)
+				logger.Errorf(r.ctx, "%s rendition %s: segment %d was abandoned unfinished and is left out of the VOD", r.label, rr.name, seg.index)
+				r.fail.Report(fmt.Errorf("rendition %s: segment %d abandoned unfinished", rr.name, seg.index))
 			}
 		}
 	}
@@ -773,12 +803,12 @@ func (r *Recorder) plans() []variantPlan {
 	plans := make([]variantPlan, 0, len(r.rends))
 	for _, rr := range r.rends {
 		if rr.truncated.Load() {
-			logger.Errorf(r.ctx, "livestream %s rendition %s: encoder stopped mid-stream, leaving it out of the VOD", r.id, rr.name)
+			logger.Errorf(r.ctx, "%s rendition %s: encoder stopped mid-stream, leaving it out of the VOD", r.label, rr.name)
 			continue
 		}
 		plan := r.planVariant(rr)
 		if len(plan.entries) == 0 {
-			logger.Errorf(r.ctx, "livestream %s rendition %s: no segment was recorded, leaving it out of the VOD", r.id, rr.name)
+			logger.Errorf(r.ctx, "%s rendition %s: no segment was recorded, leaving it out of the VOD", r.label, rr.name)
 			continue
 		}
 		plans = append(plans, plan)
@@ -795,7 +825,7 @@ func (r *Recorder) planVariant(rr *recRendition) variantPlan {
 		}
 		d := seg.endDTS - seg.startDTS
 		if d <= 0 {
-			logger.Errorf(r.ctx, "livestream %s rendition %s: segment %d has no duration, leaving it out", r.id, rr.name, seg.index)
+			logger.Errorf(r.ctx, "%s rendition %s: segment %d has no duration, leaving it out", r.label, rr.name, seg.index)
 			continue
 		}
 		plan.entries = append(plan.entries, variantEntry{

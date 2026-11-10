@@ -41,37 +41,43 @@ var (
 
 var annexBStartCode = []byte{0, 0, 0, 1}
 
-// Thumbnailer turns a keyframe into a JPEG at most once per `every`. It decodes
-// only the offered keyframe with a one-shot ffmpeg and uploads the result, one
-// job at a time, never blocking the caller of Offer.
+// Thumbnailer turns the keyframes its ThumbSchedule picks into JPEGs. It
+// decodes only the offered keyframe with a one-shot ffmpeg and uploads the
+// result, one job at a time, never blocking the caller of Offer.
 type Thumbnailer struct {
 	ctx        context.Context
 	id         string
+	label      string // starts every log line
 	ffmpegPath string
 	st         storage.Storage
-	every      time.Duration
 
-	mu       sync.Mutex // guards the fields below; held only for O(1) work
-	header   []byte     // Annex-B SPS and PPS; empty disables the thumbnailer
-	closed   bool
-	running  bool
-	accepted bool
-	last     time.Time // when the last offer was accepted
-	jobs     sync.WaitGroup
-
-	notBefore time.Time // offers before this are ignored; read-only
+	mu      sync.Mutex // guards the fields below; held only for O(1) work
+	header  []byte     // Annex-B SPS and PPS; empty disables the thumbnailer
+	sched   ThumbSchedule
+	closed  bool
+	running bool
+	first   []byte // Annex-B stream of the first usable keyframe, for Fallback
+	url     string // of the last uploaded thumbnail
+	jobs    sync.WaitGroup
 }
 
-// NewThumbnailer returns a Thumbnailer for livestream id. ctx is only used for
-// logging; uploads and ffmpeg runs get their own bounded contexts.
-func NewThumbnailer(ctx context.Context, id, ffmpegPath string, src SourceInfo, st storage.Storage, every time.Duration) *Thumbnailer {
+// NewThumbnailer returns a livestream's Thumbnailer: the first thumbnail after
+// thumbnailStartDelay, then one every `every` of wall-clock time.
+func NewThumbnailer(ctx context.Context, label, id, ffmpegPath string, src SourceInfo, st storage.Storage, every time.Duration) *Thumbnailer {
+	return newThumbnailer(ctx, label, id, ffmpegPath, src, st, newWallSchedule(every))
+}
+
+// newThumbnailer returns a Thumbnailer for session id that logs under label
+// and takes the keyframes sched picks. ctx is only used for logging; uploads
+// and ffmpeg runs get their own bounded contexts.
+func newThumbnailer(ctx context.Context, label, id, ffmpegPath string, src SourceInfo, st storage.Storage, sched ThumbSchedule) *Thumbnailer {
 	t := &Thumbnailer{
 		ctx:        ctx,
 		id:         id,
+		label:      label,
 		ffmpegPath: ffmpegPath,
 		st:         st,
-		every:      every,
-		notBefore:  time.Now().Add(thumbnailStartDelay),
+		sched:      sched,
 	}
 	t.header = t.paramHeader(src)
 	return t
@@ -91,18 +97,19 @@ func (t *Thumbnailer) SetSource(src SourceInfo) {
 // either is missing.
 func (t *Thumbnailer) paramHeader(src SourceInfo) []byte {
 	if len(src.SPS) == 0 || len(src.PPS) == 0 {
-		logger.Errorf(t.ctx, "livestream %s: thumbnails disabled, source has no SPS/PPS", t.id)
+		logger.Errorf(t.ctx, "%s: thumbnails disabled, source has no SPS/PPS", t.label)
 		return nil
 	}
 	return appendAnnexB(nil, [][]byte{src.SPS, src.PPS})
 }
 
-// Offer submits a keyframe access unit (NAL units without start codes). It
-// returns at once. The access unit is ignored during the first
-// thumbnailStartDelay, when a thumbnail job is running, when less than `every`
-// has passed since the last accepted one, after Close, or when it holds no
-// data. The access unit is copied; the caller may reuse it.
-func (t *Thumbnailer) Offer(au [][]byte) {
+// Offer submits a keyframe access unit (NAL units without start codes) at
+// media time `media` from the first keyframe. It returns at once. The access
+// unit is ignored when the schedule does not want it, when a thumbnail job is
+// running, after Close, or when it holds no data. The first usable one is
+// kept for the schedule's Fallback. The access unit is copied; the caller may
+// reuse it.
+func (t *Thumbnailer) Offer(au [][]byte, media time.Duration) {
 	t.mu.Lock()
 	header := t.header
 	t.mu.Unlock()
@@ -110,23 +117,23 @@ func (t *Thumbnailer) Offer(au [][]byte) {
 		return
 	}
 	if !hasNALData(au) {
-		logger.Errorf(t.ctx, "livestream %s: thumbnail skipped, access unit is empty", t.id)
+		logger.Errorf(t.ctx, "%s: thumbnail skipped, access unit is empty", t.label)
 		return
 	}
 
+	stream := appendAnnexB(append([]byte(nil), header...), au)
 	t.mu.Lock()
-	now := time.Now()
-	if t.closed || t.running || now.Before(t.notBefore) || (t.accepted && now.Sub(t.last) < t.every) {
+	if t.first == nil {
+		t.first = stream
+	}
+	if t.closed || t.running || !t.sched.Want(media) {
 		t.mu.Unlock()
 		return
 	}
 	t.running = true
-	t.accepted = true
-	t.last = now
 	t.jobs.Add(1)
 	t.mu.Unlock()
 
-	stream := appendAnnexB(append([]byte(nil), header...), au)
 	go func() {
 		defer t.jobs.Done()
 		t.run(stream)
@@ -137,12 +144,32 @@ func (t *Thumbnailer) Offer(au [][]byte) {
 }
 
 // Close stops accepting offers and waits for a job in flight, which is bounded
-// by the ffmpeg and upload timeouts. It is safe to call more than once.
+// by the ffmpeg and upload timeouts. When the schedule asks for its Fallback,
+// the first keyframe is turned into the thumbnail first. It is safe to call
+// more than once.
 func (t *Thumbnailer) Close() {
 	t.mu.Lock()
+	wasClosed := t.closed
 	t.closed = true
 	t.mu.Unlock()
 	t.jobs.Wait()
+	if wasClosed {
+		return
+	}
+
+	t.mu.Lock()
+	first, fallback := t.first, t.sched.Fallback()
+	t.mu.Unlock()
+	if fallback && first != nil {
+		t.run(first)
+	}
+}
+
+// URL is the URL of the last uploaded thumbnail, or "" when none was.
+func (t *Thumbnailer) URL() string {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.url
 }
 
 func hasNALData(au [][]byte) bool {
@@ -171,26 +198,31 @@ func appendAnnexB(dst []byte, nalus [][]byte) []byte {
 func (t *Thumbnailer) run(stream []byte) {
 	dir, err := os.MkdirTemp("", "thumbnail-"+t.id+"-")
 	if err != nil {
-		logger.Errorf(t.ctx, "livestream %s: create thumbnail temp dir: %v", t.id, err)
+		logger.Errorf(t.ctx, "%s: create thumbnail temp dir: %v", t.label, err)
 		return
 	}
 	defer func() {
 		if err := os.RemoveAll(dir); err != nil {
-			logger.Errorf(t.ctx, "livestream %s: remove thumbnail temp dir %s: %v", t.id, dir, err)
+			logger.Errorf(t.ctx, "%s: remove thumbnail temp dir %s: %v", t.label, dir, err)
 		}
 	}()
 
 	out := filepath.Join(dir, thumbnailFileName)
 	if err := t.decode(stream, out); err != nil {
-		logger.Errorf(t.ctx, "livestream %s: thumbnail: %v", t.id, err)
+		logger.Errorf(t.ctx, "%s: thumbnail: %v", t.label, err)
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(t.ctx), thumbnailUploadTimeout)
 	defer cancel()
-	if _, err := t.st.AddThumbnail(ctx, out, t.id, "image/jpeg"); err != nil {
-		logger.Errorf(t.ctx, "livestream %s: upload thumbnail: %v", t.id, err)
+	url, err := t.st.AddThumbnail(ctx, out, t.id, "image/jpeg")
+	if err != nil {
+		logger.Errorf(t.ctx, "%s: upload thumbnail: %v", t.label, err)
+		return
 	}
+	t.mu.Lock()
+	t.url = url
+	t.mu.Unlock()
 }
 
 // decode runs ffmpeg once over stream, writing the first picture to out.

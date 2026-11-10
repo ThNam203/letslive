@@ -22,7 +22,7 @@ var encodedReadyDeadline = 10 * time.Second
 
 // encoderWiring is what the encoder side of a Session connects to.
 type encoderWiring struct {
-	stream    *Stream
+	out       Output
 	rec       *Recorder
 	clk       *Clock
 	src       SourceInfo
@@ -30,6 +30,9 @@ type encoderWiring struct {
 	headers   []av.Packet // decoder configs, written to ffmpeg before any media
 	hasAudio  bool
 	transcode config.Transcode
+	bp        Backpressure
+	fail      Failures
+	profile   EncoderProfile
 }
 
 // sessionEncoder feeds one ffmpeg process through a bounded queue and feeds
@@ -37,14 +40,17 @@ type encoderWiring struct {
 // encoded renditions are dropped from the stream and the source keeps going.
 type sessionEncoder struct {
 	ctx    context.Context
-	id     string
-	stream *Stream
+	label  string
+	out    Output
 	rec    *Recorder
 	count  int // encoded renditions, ladder indexes 1..count
 	enc    *Encoder
+	bp     Backpressure
+	report Failures
 
 	queue      chan av.Packet
 	halt       chan struct{} // closed once the queue must no longer be fed
+	inputDone  chan struct{} // closed by drain: write what is queued, then close stdin
 	haltOnce   sync.Once
 	failOnce   sync.Once
 	closing    atomic.Bool
@@ -63,12 +69,13 @@ type sessionEncoder struct {
 
 // startSessionEncoder starts ffmpeg for the encoded renditions of w.ladder. If
 // it cannot, it drops them from the stream, logs why and returns nil.
-func startSessionEncoder(ctx context.Context, id string, w encoderWiring) *sessionEncoder {
+func startSessionEncoder(ctx context.Context, label string, w encoderWiring) *sessionEncoder {
 	encoded := w.ladder[1:]
 	disable := func(err error) {
-		logger.Errorf(ctx, "livestream %s: encoder unavailable, serving source only: %v", id, err)
+		logger.Errorf(ctx, "%s: encoder unavailable, serving source only: %v", label, err)
+		w.fail.Report(fmt.Errorf("encoder unavailable: %w", err))
 		for r := 1; r < len(w.ladder); r++ {
-			w.stream.DropRendition(r)
+			w.out.DropRendition(r)
 			w.rec.DropRendition(r)
 		}
 	}
@@ -82,23 +89,29 @@ func startSessionEncoder(ctx context.Context, id string, w encoderWiring) *sessi
 	// ffmpeg's lifetime is the session's, ended by stop, not by ctx.
 	encCtx := context.WithoutCancel(ctx)
 	ff := w.transcode.FFMpegSetting
-	args := EncoderArgs(w.src, encoded, ff.Preset, ff.CRF)
-	enc, err := StartEncoder(encCtx, id, ff.FFMpegPath, args, len(encoded))
+	args := EncoderArgs(w.src, encoded, ff.Preset, ff.CRF, w.profile)
+	enc, err := StartEncoder(encCtx, label, ff.FFMpegPath, args, len(encoded))
 	if err != nil {
 		disable(err)
 		return nil
+	}
+	if err := SetNiceness(enc.Pid(), w.profile.Niceness); err != nil {
+		logger.Warnf(ctx, "%s: encoder runs at normal priority: %v", label, err)
 	}
 
 	feedCtx, feedCancel := context.WithCancel(encCtx)
 	e := &sessionEncoder{
 		ctx:        ctx,
-		id:         id,
-		stream:     w.stream,
+		label:      label,
+		out:        w.out,
 		rec:        w.rec,
 		count:      len(encoded),
 		enc:        enc,
+		bp:         w.bp,
+		report:     w.fail,
 		queue:      make(chan av.Packet, size),
 		halt:       make(chan struct{}),
+		inputDone:  make(chan struct{}),
 		feedCancel: feedCancel,
 	}
 
@@ -110,7 +123,7 @@ func startSessionEncoder(ctx context.Context, id string, w encoderWiring) *sessi
 		go func() {
 			defer e.wg.Done()
 			onAU := func(pts90k, dts90k int64, au [][]byte) { rec.WriteVideo(r, pts90k, dts90k, au) }
-			if err := FeedTS(feedCtx, out, w.stream, r, w.clk, onAU); err != nil {
+			if err := FeedTS(feedCtx, out, w.out, r, label, w.clk, onAU, w.fail); err != nil {
 				e.fail(fmt.Errorf("feed rendition %s: %w", name, err))
 			}
 		}()
@@ -141,16 +154,14 @@ func (e *sessionEncoder) offer(pkt av.Packet) bool {
 		e.drop()
 		return false
 	}
-	select {
-	case e.queue <- pkt:
-		if e.dropping {
-			e.endDropRun("resumed at a keyframe")
-		}
-		return true
-	default:
+	if !send(e.bp, e.queue, pkt) {
 		e.drop()
 		return false
 	}
+	if e.dropping {
+		e.endDropRun("resumed at a keyframe")
+	}
+	return true
 }
 
 // offerConfig queues a mid-stream AVC config for ffmpeg (ruling R10). It is
@@ -175,13 +186,11 @@ func (e *sessionEncoder) flushPending() bool {
 	if e.pending == nil {
 		return true
 	}
-	select {
-	case e.queue <- *e.pending:
-		e.pending = nil
-		return true
-	default:
+	if !send(e.bp, e.queue, *e.pending) {
 		return false
 	}
+	e.pending = nil
+	return true
 }
 
 func (e *sessionEncoder) halted() bool {
@@ -207,13 +216,13 @@ func (e *sessionEncoder) startDropRun() {
 	}
 	e.dropping = true
 	e.dropRuns++
-	logger.Errorf(e.ctx, "livestream %s: encoder queue full (%d packets), dropping packets for ffmpeg until the next keyframe; encoded renditions stall meanwhile",
-		e.id, cap(e.queue))
+	logger.Errorf(e.ctx, "%s: encoder queue full (%d packets), dropping packets for ffmpeg until the next keyframe; encoded renditions stall meanwhile",
+		e.label, cap(e.queue))
 }
 
 func (e *sessionEncoder) endDropRun(how string) {
-	logger.Errorf(e.ctx, "livestream %s: encoder queue drop run over, dropped %d packet(s) for ffmpeg, %s",
-		e.id, e.dropped, how)
+	logger.Errorf(e.ctx, "%s: encoder queue drop run over, dropped %d packet(s) for ffmpeg, %s",
+		e.label, e.dropped, how)
 	e.dropping, e.dropped = false, 0
 }
 
@@ -233,7 +242,7 @@ func (e *sessionEncoder) armReadyDeadline(d time.Duration) {
 	e.readyTimer = time.AfterFunc(d, func() {
 		defer e.wg.Done()
 		for r := 1; r <= e.count; r++ {
-			if !e.stream.Ready(r) {
+			if !e.out.Ready(r) {
 				e.fail(fmt.Errorf("rendition %d not ready %v after the source", r, d))
 				return
 			}
@@ -254,15 +263,43 @@ func (e *sessionEncoder) writeLoop(headers []av.Packet, hasAudio bool) {
 			return
 		}
 	}
+	write := func(pkt av.Packet) bool {
+		if err := mux.WritePacket(pkt); err != nil {
+			e.fail(fmt.Errorf("write to ffmpeg: %w", err))
+			return false
+		}
+		return true
+	}
 	for {
 		select {
 		case <-e.halt:
 			return
+		case <-e.inputDone:
+			e.writeRest(write)
+			return
 		case pkt := <-e.queue:
-			if err := mux.WritePacket(pkt); err != nil {
-				e.fail(fmt.Errorf("write to ffmpeg: %w", err))
+			if !write(pkt) {
 				return
 			}
+		}
+	}
+}
+
+// writeRest writes what is still queued, then closes ffmpeg's stdin so it
+// flushes its outputs and exits. Nothing is queued any more: the session is
+// closed.
+func (e *sessionEncoder) writeRest(write func(av.Packet) bool) {
+	for {
+		select {
+		case pkt := <-e.queue:
+			if !write(pkt) {
+				return
+			}
+		default:
+			if err := e.enc.Input().Close(); err != nil {
+				e.fail(fmt.Errorf("close ffmpeg stdin: %w", err))
+			}
+			return
 		}
 	}
 }
@@ -271,6 +308,9 @@ func (e *sessionEncoder) writeLoop(headers []av.Packet, hasAudio bool) {
 func (e *sessionEncoder) waitLoop() {
 	defer e.wg.Done()
 	err := e.enc.Wait()
+	if err == nil && e.closing.Load() {
+		return // drained: ffmpeg finished its input
+	}
 	if err == nil {
 		err = errors.New("exit status 0")
 	}
@@ -279,17 +319,21 @@ func (e *sessionEncoder) waitLoop() {
 
 // fail handles the first encoder failure while the session is live: it logs
 // it, stops feeding the queue, drops every encoded rendition from the stream
-// and the VOD and stops ffmpeg. It may block for ffmpeg's stop grace period, so it is never called
-// from HandlePacket. Failures during stop are expected and ignored.
+// and the VOD and stops ffmpeg. It may block for ffmpeg's stop grace period,
+// so it is never called from HandlePacket. Once the encoder is closing nothing
+// is degraded any more; the failure is only reported, so a drain learns of it
+// (a terminated live encoder's errors are expected, and live ignores reports).
 func (e *sessionEncoder) fail(err error) {
 	if e.closing.Load() {
+		e.report.Report(fmt.Errorf("encoder failed while closing: %w", err))
 		return
 	}
 	e.failOnce.Do(func() {
-		logger.Errorf(e.ctx, "livestream %s: encoder failed, encoded renditions dropped, source continues: %v", e.id, err)
+		logger.Errorf(e.ctx, "%s: encoder failed, encoded renditions dropped, source continues: %v", e.label, err)
+		e.report.Report(fmt.Errorf("encoder failed: %w", err))
 		e.haltEncoder()
 		for r := 1; r <= e.count; r++ {
-			e.stream.DropRendition(r)
+			e.out.DropRendition(r)
 			e.rec.DropRendition(r)
 		}
 		e.feedCancel()
@@ -297,16 +341,58 @@ func (e *sessionEncoder) fail(err error) {
 	})
 }
 
-// stop ends the encoder for Close: it stops feeding, stops the feeders and
-// ffmpeg, and waits for every goroutine of the encoder.
-func (e *sessionEncoder) stop() {
+// encoderEnd is how Close ends the encoder: terminate for a livestream, drain
+// for a file. ctx bounds a drain.
+type encoderEnd func(e *sessionEncoder, ctx context.Context)
+
+// terminate stops feeding, stops the feeders and ffmpeg (SIGTERM), and waits
+// for every goroutine of the encoder. What ffmpeg still held is lost, which a
+// livestream accepts to end at once.
+func (e *sessionEncoder) terminate(context.Context) {
 	e.closing.Store(true)
-	e.haltEncoder()
+	e.stopReadyTimer()
+	e.kill()
+	e.finishStop()
+}
+
+// drain lets ffmpeg encode everything it was given: the rest of the queue is
+// written, stdin closed, and ffmpeg and the feeders run until EOF. If ctx ends
+// first the drain is reported as failed and the encoder terminated.
+func (e *sessionEncoder) drain(ctx context.Context) {
+	e.closing.Store(true)
+	e.stopReadyTimer()
+	close(e.inputDone)
+
+	done := make(chan struct{})
+	go func() {
+		e.wg.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-ctx.Done():
+		e.report.Report(fmt.Errorf("encoder did not finish draining: %w", ctx.Err()))
+		e.kill()
+		<-done
+	}
+	e.enc.Stop() // ffmpeg has exited; this closes the pipes
+	e.finishStop()
+}
+
+func (e *sessionEncoder) stopReadyTimer() {
 	if e.readyTimer != nil && e.readyTimer.Stop() {
 		e.wg.Done() // the timer callback will never run
 	}
+}
+
+// kill stops feeding, the feeders and ffmpeg at once.
+func (e *sessionEncoder) kill() {
+	e.haltEncoder()
 	e.feedCancel()
 	e.enc.Stop()
+}
+
+func (e *sessionEncoder) finishStop() {
 	e.wg.Wait()
 	if e.dropping {
 		e.endDropRun("until the session closed")

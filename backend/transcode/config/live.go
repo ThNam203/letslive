@@ -13,6 +13,7 @@ const (
 	defaultRecordSegmentDurationMs = 4000
 	defaultEncoderQueuePackets     = 512
 	defaultThumbnailIntervalMs     = 60000
+	defaultUploadNiceness          = 10
 
 	// LL-HLS requires the playlist to hold at least this many segments.
 	minSegmentCount = 7
@@ -74,6 +75,23 @@ func (l Live) WithDefaults() Live {
 		l.ThumbnailIntervalMs = defaultThumbnailIntervalMs
 	}
 	return l
+}
+
+// Upload tunes how uploaded videos are encoded beside live streams.
+type Upload struct {
+	// Niceness is the nice value of an upload's ffmpeg processes, so live
+	// encoders win the CPU. 0 means the default (10).
+	Niceness int `yaml:"niceness"`
+	// Threads caps each ffmpeg output's encoder threads; 0 lets ffmpeg decide.
+	Threads int `yaml:"threads"`
+}
+
+// WithDefaults returns a copy of u with every zero field replaced by its default.
+func (u Upload) WithDefaults() Upload {
+	if u.Niceness == 0 {
+		u.Niceness = defaultUploadNiceness
+	}
+	return u
 }
 
 // Validate reports the first setting the live pipeline cannot run with.

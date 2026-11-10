@@ -249,6 +249,14 @@ func (s *Stream) Ready(r int) bool {
 	return m.ready.Load() && !m.dropped.Load()
 }
 
+// Rendition reports the name of rendition r and whether r is in the ladder.
+func (s *Stream) Rendition(r int) (string, bool) {
+	if r < 0 || r >= len(s.renditions) {
+		return "", false
+	}
+	return s.renditions[r].name, true
+}
+
 // Close stops every muxer. Pending blocking playlist requests return 404.
 func (s *Stream) Close() {
 	if s.closed.Swap(true) {

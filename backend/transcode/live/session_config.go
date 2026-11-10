@@ -2,6 +2,7 @@ package live
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/nareix/joy5/av"
 
@@ -37,7 +38,8 @@ func (s *Session) onVideoConfig(pkt av.Packet) configChange {
 	}
 	info, err := ProbeAVCConfig(pkt.Data)
 	if err != nil {
-		logger.Errorf(s.ctx, "livestream %s: ignoring unparsable AVC config mid-stream: %v", s.id, err)
+		logger.Errorf(s.ctx, "%s: ignoring unparsable AVC config mid-stream: %v", s.label, err)
+		s.d.Mode.fail.Report(fmt.Errorf("unparsable AVC config mid-stream: %w", err))
 		return configInvalid
 	}
 
@@ -50,10 +52,12 @@ func (s *Session) onVideoConfig(pkt av.Packet) configChange {
 	}
 
 	if info.Width != old.Width || info.Height != old.Height {
-		logger.Warnf(s.ctx, "livestream %s: source resolution changed from %dx%d to %dx%d; keeping the original ladder",
-			s.id, old.Width, old.Height, info.Width, info.Height)
+		logger.Warnf(s.ctx, "%s: source resolution changed from %dx%d to %dx%d; keeping the original ladder",
+			s.label, old.Width, old.Height, info.Width, info.Height)
+		s.d.Mode.fail.Report(fmt.Errorf("source resolution changed from %dx%d to %dx%d",
+			old.Width, old.Height, info.Width, info.Height))
 		return configResized
 	}
-	logger.Infof(s.ctx, "livestream %s: source sent new H.264 parameter sets (%dx%d)", s.id, info.Width, info.Height)
+	logger.Infof(s.ctx, "%s: source sent new H.264 parameter sets (%dx%d)", s.label, info.Width, info.Height)
 	return configParamsChanged
 }
