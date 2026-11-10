@@ -1,6 +1,7 @@
 package live
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -61,3 +62,28 @@ func LiveMode(reg *Registry, cfg config.Live) (Mode, error) {
 
 // label is what log lines about session id start with.
 func (m Mode) label(id string) string { return m.noun + " " + id }
+
+// fileThumbnailAt is the media time of an upload's thumbnail; earlier
+// keyframes are often a black or title frame.
+const fileThumbnailAt = 5 * time.Second
+
+// FileMode is the mode of an uploaded file: nobody watches it live, full
+// queues wait instead of dropping, the first lost segment or quality fails the
+// session (so the job is retried), ffmpeg uses normal tuning at the niceness
+// in u and drains at Close, and one thumbnail is taken at fileThumbnailAt of
+// media time. cancel releases the mode's context; call it once the session
+// is closed.
+func FileMode(ctx context.Context, u config.Upload) (m Mode, cancel context.CancelFunc) {
+	fctx, cancel := context.WithCancel(ctx)
+	return Mode{
+		noun: "upload",
+		open: func(_ string, rs []Rendition, _ *mpeg4audio.AudioSpecificConfig) (Output, error) {
+			return newNoOutput(rs), nil
+		},
+		bp:         waitUntil{ctx: fctx},
+		fail:       &firstError{cancel: cancel},
+		profile:    fileProfile(u),
+		endEncoder: (*sessionEncoder).drain,
+		thumbs:     func(time.Duration) ThumbSchedule { return &mediaSchedule{min: fileThumbnailAt} },
+	}, cancel
+}

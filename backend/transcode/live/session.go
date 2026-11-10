@@ -401,6 +401,11 @@ func (s *Session) shutdown() error {
 	}()
 	wg.Wait()
 
+	// A reported failure is the cause of whatever Finish then lacked.
+	if err := s.d.Mode.fail.Err(); err != nil {
+		logger.Errorf(s.ctx, "%s: closed, VOD incomplete: %v", s.label, err)
+		return fmt.Errorf("%s: VOD incomplete: %w", s.label, err)
+	}
 	if finishErr != nil {
 		logger.Errorf(s.ctx, "%s: closed, VOD not written: %v", s.label, finishErr)
 		return finishErr
