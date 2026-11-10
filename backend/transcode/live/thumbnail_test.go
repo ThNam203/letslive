@@ -60,7 +60,7 @@ func TestThumbnailer(t *testing.T) {
 	f := loadStreamFixture(t, "src_640x360.flv")
 	st := newRecordingStorage(t)
 
-	th := NewThumbnailer(context.Background(), "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
+	th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
 	for _, au := range keyframeAUs(t, f, 3) {
 		th.Offer(au)
 		time.Sleep(3 * time.Millisecond)
@@ -101,7 +101,7 @@ func TestThumbnailerOfferNeverBlocks(t *testing.T) {
 		return nil
 	}
 
-	th := NewThumbnailer(context.Background(), "live1", "ffmpeg", fixtureSource(f), st, time.Nanosecond)
+	th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Nanosecond)
 	au := keyframeAUs(t, f, 1)[0]
 
 	// Let the first job reach the slow upload, so the timed Offers meet a busy job.
@@ -136,7 +136,7 @@ func TestThumbnailerCloseWaitsForInFlightJob(t *testing.T) {
 		return nil
 	}
 
-	th := NewThumbnailer(context.Background(), "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
+	th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
 	th.Offer(keyframeAUs(t, f, 1)[0])
 	waitForCalls(t, st, 1)
 
@@ -174,7 +174,7 @@ func TestThumbnailerSkipsBadInput(t *testing.T) {
 
 	t.Run("empty access units", func(t *testing.T) {
 		st := newRecordingStorage(t)
-		th := NewThumbnailer(context.Background(), "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
+		th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
 		th.Offer(nil)
 		th.Offer([][]byte{})
 		th.Offer([][]byte{{}})
@@ -187,7 +187,7 @@ func TestThumbnailerSkipsBadInput(t *testing.T) {
 
 	t.Run("empty access units do not use up the rate limit", func(t *testing.T) {
 		st := newRecordingStorage(t)
-		th := NewThumbnailer(context.Background(), "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
+		th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
 		th.Offer(nil)
 		th.Offer(keyframeAUs(t, f, 1)[0])
 		waitForCalls(t, st, 1)
@@ -198,7 +198,7 @@ func TestThumbnailerSkipsBadInput(t *testing.T) {
 		st := newRecordingStorage(t)
 		src := fixtureSource(f)
 		src.SPS, src.PPS = nil, nil
-		th := NewThumbnailer(context.Background(), "live1", "ffmpeg", src, st, time.Hour)
+		th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", src, st, time.Hour)
 		th.Offer(keyframeAUs(t, f, 1)[0])
 		th.Close()
 		if n := len(st.Calls()); n != 0 {
@@ -208,7 +208,7 @@ func TestThumbnailerSkipsBadInput(t *testing.T) {
 
 	t.Run("undecodable access unit", func(t *testing.T) {
 		st := newRecordingStorage(t)
-		th := NewThumbnailer(context.Background(), "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
+		th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Hour)
 		th.Offer([][]byte{{0x65, 0x00, 0x01, 0x02}})
 		th.Close()
 		if n := len(st.Calls()); n != 0 {
@@ -218,7 +218,7 @@ func TestThumbnailerSkipsBadInput(t *testing.T) {
 
 	t.Run("ffmpeg missing", func(t *testing.T) {
 		st := newRecordingStorage(t)
-		th := NewThumbnailer(context.Background(), "live1", "/nonexistent/ffmpeg", fixtureSource(f), st, time.Hour)
+		th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "/nonexistent/ffmpeg", fixtureSource(f), st, time.Hour)
 		th.Offer(keyframeAUs(t, f, 1)[0])
 		th.Close()
 		if n := len(st.Calls()); n != 0 {
@@ -234,7 +234,7 @@ func TestThumbnailerIgnoresOfferAfterClose(t *testing.T) {
 
 	// Nothing was accepted before Close and every is tiny, so only the closed
 	// flag can reject this offer.
-	th := NewThumbnailer(context.Background(), "live1", "ffmpeg", fixtureSource(f), st, time.Nanosecond)
+	th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Nanosecond)
 	th.Close()
 	th.Offer(keyframeAUs(t, f, 1)[0])
 	th.Close()
@@ -251,7 +251,7 @@ func TestThumbnailerAcceptsAgainAfterEvery(t *testing.T) {
 	st := newRecordingStorage(t)
 	const every = 50 * time.Millisecond
 
-	th := NewThumbnailer(context.Background(), "live1", "ffmpeg", fixtureSource(f), st, every)
+	th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, every)
 	au := keyframeAUs(t, f, 1)[0]
 
 	th.Offer(au)
@@ -279,7 +279,7 @@ func TestThumbnailerSetSource(t *testing.T) {
 
 	oldSrc := SourceInfo{Width: 640, Height: 360, SPS: []byte{0x67, 0x01}, PPS: []byte{0x68, 0x02}}
 	newSrc := SourceInfo{Width: 640, Height: 360, SPS: []byte{0x67, 0x0a, 0x0b}, PPS: []byte{0x68, 0x0c}}
-	th := NewThumbnailer(context.Background(), "live1", script, oldSrc, newRecordingStorage(t), 0)
+	th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", script, oldSrc, newRecordingStorage(t), 0)
 	th.SetSource(newSrc)
 	th.Offer([][]byte{{0x65, 0xaa}})
 	th.Close()
@@ -295,7 +295,7 @@ func TestThumbnailerSetSource(t *testing.T) {
 
 	// Parameter sets that cannot be used disable thumbnails instead of
 	// pairing new pictures with stale headers.
-	th2 := NewThumbnailer(context.Background(), "live1", script, oldSrc, newRecordingStorage(t), 0)
+	th2 := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", script, oldSrc, newRecordingStorage(t), 0)
 	if err := os.Remove(captured); err != nil {
 		t.Fatal(err)
 	}
@@ -320,7 +320,7 @@ func TestThumbnailerStderrCarriesLivestreamID(t *testing.T) {
 	}
 
 	src := SourceInfo{Width: 640, Height: 360, SPS: []byte{0x67, 0x01}, PPS: []byte{0x68, 0x02}}
-	th := NewThumbnailer(context.Background(), id, script, src, newRecordingStorage(t), 0)
+	th := NewThumbnailer(context.Background(), "livestream "+id, id, script, src, newRecordingStorage(t), 0)
 	th.Offer([][]byte{{0x65, 0xaa}})
 	th.Close()
 
@@ -345,7 +345,7 @@ func TestThumbnailerSkipsStart(t *testing.T) {
 
 	f := loadStreamFixture(t, "src_640x360.flv")
 	st := newRecordingStorage(t)
-	th := NewThumbnailer(context.Background(), "live1", "ffmpeg", fixtureSource(f), st, time.Nanosecond)
+	th := NewThumbnailer(context.Background(), "livestream "+"live1", "live1", "ffmpeg", fixtureSource(f), st, time.Nanosecond)
 	au := keyframeAUs(t, f, 1)[0]
 
 	th.Offer(au)

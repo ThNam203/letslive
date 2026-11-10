@@ -28,13 +28,14 @@ import (
 // not an io.Closer FeedTS cannot interrupt the read: it returns at once, the
 // goroutine lives until that read returns, and the callback may still run
 // once more, but never calls WriteVideo or onAU after a ctx check fails.
-func FeedTS(ctx context.Context, r io.Reader, s *Stream, rendition int, clk *Clock, onAU func(pts90k, dts90k int64, au [][]byte)) error {
-	if rendition < 0 || rendition >= len(s.renditions) {
-		return fmt.Errorf("livestream %s: rendition index %d out of range [0, %d)", s.id, rendition, len(s.renditions))
+func FeedTS(ctx context.Context, r io.Reader, out RenditionWriter, rendition int, label string, clk *Clock, onAU func(pts90k, dts90k int64, au [][]byte)) error {
+	name, ok := out.Rendition(rendition)
+	if !ok {
+		return fmt.Errorf("%s: rendition index %d out of range", label, rendition)
 	}
 
 	done := make(chan error, 1)
-	go func() { done <- readTS(ctx, r, s, rendition, clk, onAU) }()
+	go func() { done <- readTS(ctx, r, out, rendition, name, label, clk, onAU) }()
 
 	select {
 	case err := <-done:
@@ -46,25 +47,24 @@ func FeedTS(ctx context.Context, r io.Reader, s *Stream, rendition int, clk *Clo
 		// A closer's pending read fails once closed, so waiting for the
 		// goroutine is bounded and no callback runs after we return.
 		if c, ok := r.(io.Closer); ok {
-			closeLogged(ctx, s.id, "ts reader", c)
+			closeLogged(ctx, label, "ts reader", c)
 			<-done
 		}
 		return nil
 	}
 }
 
-func readTS(ctx context.Context, r io.Reader, s *Stream, rendition int, clk *Clock, onAU func(pts90k, dts90k int64, au [][]byte)) error {
-	name := s.renditions[rendition].name
+func readTS(ctx context.Context, r io.Reader, out RenditionWriter, rendition int, name, label string, clk *Clock, onAU func(pts90k, dts90k int64, au [][]byte)) error {
 
 	reader := &mpegts.Reader{R: r}
 	if err := reader.Initialize(); err != nil {
 		if errors.Is(err, io.EOF) {
 			return nil
 		}
-		return fmt.Errorf("livestream %s rendition %s: read ts: %w", s.id, name, err)
+		return fmt.Errorf("%s rendition %s: read ts: %w", label, name, err)
 	}
 	reader.OnDecodeError(func(err error) {
-		logger.Errorf(ctx, "livestream %s rendition %s: decode ts: %v", s.id, name, err)
+		logger.Errorf(ctx, "%s rendition %s: decode ts: %v", label, name, err)
 	})
 
 	var track *mpegts.Track
@@ -75,7 +75,7 @@ func readTS(ctx context.Context, r io.Reader, s *Stream, rendition int, clk *Clo
 		}
 	}
 	if track == nil {
-		return fmt.Errorf("livestream %s rendition %s: ts has no H.264 track", s.id, name)
+		return fmt.Errorf("%s rendition %s: ts has no H.264 track", label, name)
 	}
 
 	unwrap := clk.NewTSUnwrapper()
@@ -87,13 +87,13 @@ func readTS(ctx context.Context, r io.Reader, s *Stream, rendition int, clk *Clo
 		}
 		pts, dts := unwrap.Rel(rawPTS), unwrap.Rel(rawDTS)
 
-		err := s.WriteVideo(rendition, clk.NTP(pts), pts, au)
+		err := out.WriteVideo(rendition, clk.NTP(pts), pts, au)
 		switch {
 		case errors.Is(err, ErrRenditionDropped), errors.Is(err, ErrStreamClosed):
 			stopped = true
 			return err
 		case err != nil:
-			logger.Errorf(ctx, "livestream %s rendition %s: write video at pts %d: %v", s.id, name, pts, err)
+			logger.Errorf(ctx, "%s rendition %s: write video at pts %d: %v", label, name, pts, err)
 		}
 
 		if onAU != nil {
@@ -109,7 +109,7 @@ func readTS(ctx context.Context, r io.Reader, s *Stream, rendition int, clk *Clo
 		case stopped, errors.Is(err, io.EOF):
 			return nil
 		default:
-			return fmt.Errorf("livestream %s rendition %s: read ts: %w", s.id, name, err)
+			return fmt.Errorf("%s rendition %s: read ts: %w", label, name, err)
 		}
 	}
 }

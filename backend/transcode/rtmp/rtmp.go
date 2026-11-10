@@ -130,8 +130,14 @@ func (s *RTMPServer) HandleConnection(c *rtmp.Conn, nc net.Conn) {
 		return
 	}
 
+	mode, err := live.LiveMode(s.liveRegistry, s.config.Transcode.Live)
+	if err != nil {
+		logger.Errorf(s.ctx, "livestream %s: %v", streamId, err)
+		nc.Close()
+		return
+	}
 	session := live.NewSession(s.ctx, streamId, live.SessionDeps{
-		Registry:  s.liveRegistry,
+		Mode:      mode,
 		Storage:   s.storage,
 		Transcode: s.config.Transcode,
 	})

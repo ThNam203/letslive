@@ -47,6 +47,7 @@ var annexBStartCode = []byte{0, 0, 0, 1}
 type Thumbnailer struct {
 	ctx        context.Context
 	id         string
+	label      string // starts every log line
 	ffmpegPath string
 	st         storage.Storage
 	every      time.Duration
@@ -62,12 +63,13 @@ type Thumbnailer struct {
 	notBefore time.Time // offers before this are ignored; read-only
 }
 
-// NewThumbnailer returns a Thumbnailer for livestream id. ctx is only used for
+// NewThumbnailer returns a Thumbnailer for session id, logging under label. ctx is only used for
 // logging; uploads and ffmpeg runs get their own bounded contexts.
-func NewThumbnailer(ctx context.Context, id, ffmpegPath string, src SourceInfo, st storage.Storage, every time.Duration) *Thumbnailer {
+func NewThumbnailer(ctx context.Context, label, id, ffmpegPath string, src SourceInfo, st storage.Storage, every time.Duration) *Thumbnailer {
 	t := &Thumbnailer{
 		ctx:        ctx,
 		id:         id,
+		label:      label,
 		ffmpegPath: ffmpegPath,
 		st:         st,
 		every:      every,
@@ -91,7 +93,7 @@ func (t *Thumbnailer) SetSource(src SourceInfo) {
 // either is missing.
 func (t *Thumbnailer) paramHeader(src SourceInfo) []byte {
 	if len(src.SPS) == 0 || len(src.PPS) == 0 {
-		logger.Errorf(t.ctx, "livestream %s: thumbnails disabled, source has no SPS/PPS", t.id)
+		logger.Errorf(t.ctx, "%s: thumbnails disabled, source has no SPS/PPS", t.label)
 		return nil
 	}
 	return appendAnnexB(nil, [][]byte{src.SPS, src.PPS})
@@ -110,7 +112,7 @@ func (t *Thumbnailer) Offer(au [][]byte) {
 		return
 	}
 	if !hasNALData(au) {
-		logger.Errorf(t.ctx, "livestream %s: thumbnail skipped, access unit is empty", t.id)
+		logger.Errorf(t.ctx, "%s: thumbnail skipped, access unit is empty", t.label)
 		return
 	}
 
@@ -171,25 +173,25 @@ func appendAnnexB(dst []byte, nalus [][]byte) []byte {
 func (t *Thumbnailer) run(stream []byte) {
 	dir, err := os.MkdirTemp("", "thumbnail-"+t.id+"-")
 	if err != nil {
-		logger.Errorf(t.ctx, "livestream %s: create thumbnail temp dir: %v", t.id, err)
+		logger.Errorf(t.ctx, "%s: create thumbnail temp dir: %v", t.label, err)
 		return
 	}
 	defer func() {
 		if err := os.RemoveAll(dir); err != nil {
-			logger.Errorf(t.ctx, "livestream %s: remove thumbnail temp dir %s: %v", t.id, dir, err)
+			logger.Errorf(t.ctx, "%s: remove thumbnail temp dir %s: %v", t.label, dir, err)
 		}
 	}()
 
 	out := filepath.Join(dir, thumbnailFileName)
 	if err := t.decode(stream, out); err != nil {
-		logger.Errorf(t.ctx, "livestream %s: thumbnail: %v", t.id, err)
+		logger.Errorf(t.ctx, "%s: thumbnail: %v", t.label, err)
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(t.ctx), thumbnailUploadTimeout)
 	defer cancel()
 	if _, err := t.st.AddThumbnail(ctx, out, t.id, "image/jpeg"); err != nil {
-		logger.Errorf(t.ctx, "livestream %s: upload thumbnail: %v", t.id, err)
+		logger.Errorf(t.ctx, "%s: upload thumbnail: %v", t.label, err)
 	}
 }
 

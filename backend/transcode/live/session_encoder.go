@@ -22,7 +22,7 @@ var encodedReadyDeadline = 10 * time.Second
 
 // encoderWiring is what the encoder side of a Session connects to.
 type encoderWiring struct {
-	stream    *Stream
+	out       Output
 	rec       *Recorder
 	clk       *Clock
 	src       SourceInfo
@@ -36,12 +36,12 @@ type encoderWiring struct {
 // its outputs into the encoded renditions. When ffmpeg fails in any way the
 // encoded renditions are dropped from the stream and the source keeps going.
 type sessionEncoder struct {
-	ctx    context.Context
-	id     string
-	stream *Stream
-	rec    *Recorder
-	count  int // encoded renditions, ladder indexes 1..count
-	enc    *Encoder
+	ctx   context.Context
+	label string
+	out   Output
+	rec   *Recorder
+	count int // encoded renditions, ladder indexes 1..count
+	enc   *Encoder
 
 	queue      chan av.Packet
 	halt       chan struct{} // closed once the queue must no longer be fed
@@ -63,12 +63,12 @@ type sessionEncoder struct {
 
 // startSessionEncoder starts ffmpeg for the encoded renditions of w.ladder. If
 // it cannot, it drops them from the stream, logs why and returns nil.
-func startSessionEncoder(ctx context.Context, id string, w encoderWiring) *sessionEncoder {
+func startSessionEncoder(ctx context.Context, label string, w encoderWiring) *sessionEncoder {
 	encoded := w.ladder[1:]
 	disable := func(err error) {
-		logger.Errorf(ctx, "livestream %s: encoder unavailable, serving source only: %v", id, err)
+		logger.Errorf(ctx, "%s: encoder unavailable, serving source only: %v", label, err)
 		for r := 1; r < len(w.ladder); r++ {
-			w.stream.DropRendition(r)
+			w.out.DropRendition(r)
 			w.rec.DropRendition(r)
 		}
 	}
@@ -83,7 +83,7 @@ func startSessionEncoder(ctx context.Context, id string, w encoderWiring) *sessi
 	encCtx := context.WithoutCancel(ctx)
 	ff := w.transcode.FFMpegSetting
 	args := EncoderArgs(w.src, encoded, ff.Preset, ff.CRF)
-	enc, err := StartEncoder(encCtx, id, ff.FFMpegPath, args, len(encoded))
+	enc, err := StartEncoder(encCtx, label, ff.FFMpegPath, args, len(encoded))
 	if err != nil {
 		disable(err)
 		return nil
@@ -92,8 +92,8 @@ func startSessionEncoder(ctx context.Context, id string, w encoderWiring) *sessi
 	feedCtx, feedCancel := context.WithCancel(encCtx)
 	e := &sessionEncoder{
 		ctx:        ctx,
-		id:         id,
-		stream:     w.stream,
+		label:      label,
+		out:        w.out,
 		rec:        w.rec,
 		count:      len(encoded),
 		enc:        enc,
@@ -110,7 +110,7 @@ func startSessionEncoder(ctx context.Context, id string, w encoderWiring) *sessi
 		go func() {
 			defer e.wg.Done()
 			onAU := func(pts90k, dts90k int64, au [][]byte) { rec.WriteVideo(r, pts90k, dts90k, au) }
-			if err := FeedTS(feedCtx, out, w.stream, r, w.clk, onAU); err != nil {
+			if err := FeedTS(feedCtx, out, w.out, r, label, w.clk, onAU); err != nil {
 				e.fail(fmt.Errorf("feed rendition %s: %w", name, err))
 			}
 		}()
@@ -207,13 +207,13 @@ func (e *sessionEncoder) startDropRun() {
 	}
 	e.dropping = true
 	e.dropRuns++
-	logger.Errorf(e.ctx, "livestream %s: encoder queue full (%d packets), dropping packets for ffmpeg until the next keyframe; encoded renditions stall meanwhile",
-		e.id, cap(e.queue))
+	logger.Errorf(e.ctx, "%s: encoder queue full (%d packets), dropping packets for ffmpeg until the next keyframe; encoded renditions stall meanwhile",
+		e.label, cap(e.queue))
 }
 
 func (e *sessionEncoder) endDropRun(how string) {
-	logger.Errorf(e.ctx, "livestream %s: encoder queue drop run over, dropped %d packet(s) for ffmpeg, %s",
-		e.id, e.dropped, how)
+	logger.Errorf(e.ctx, "%s: encoder queue drop run over, dropped %d packet(s) for ffmpeg, %s",
+		e.label, e.dropped, how)
 	e.dropping, e.dropped = false, 0
 }
 
@@ -233,7 +233,7 @@ func (e *sessionEncoder) armReadyDeadline(d time.Duration) {
 	e.readyTimer = time.AfterFunc(d, func() {
 		defer e.wg.Done()
 		for r := 1; r <= e.count; r++ {
-			if !e.stream.Ready(r) {
+			if !e.out.Ready(r) {
 				e.fail(fmt.Errorf("rendition %d not ready %v after the source", r, d))
 				return
 			}
@@ -286,10 +286,10 @@ func (e *sessionEncoder) fail(err error) {
 		return
 	}
 	e.failOnce.Do(func() {
-		logger.Errorf(e.ctx, "livestream %s: encoder failed, encoded renditions dropped, source continues: %v", e.id, err)
+		logger.Errorf(e.ctx, "%s: encoder failed, encoded renditions dropped, source continues: %v", e.label, err)
 		e.haltEncoder()
 		for r := 1; r <= e.count; r++ {
-			e.stream.DropRendition(r)
+			e.out.DropRendition(r)
 			e.rec.DropRendition(r)
 		}
 		e.feedCancel()

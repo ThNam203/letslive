@@ -149,7 +149,7 @@ func TestEncoderEndToEnd(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
 	defer cancel()
 
-	enc, err := StartEncoder(ctx, "test-stream", ffmpegBinary(t), args, 1)
+	enc, err := StartEncoder(ctx, "livestream "+"test-stream", ffmpegBinary(t), args, 1)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}
@@ -252,7 +252,7 @@ func ffmpegBinary(t *testing.T) string {
 
 func TestStartEncoderBadPath(t *testing.T) {
 	missing := filepath.Join(t.TempDir(), "no-such-ffmpeg")
-	enc, err := StartEncoder(context.Background(), "test-stream", missing, []string{"-version"}, 2)
+	enc, err := StartEncoder(context.Background(), "livestream "+"test-stream", missing, []string{"-version"}, 2)
 	if err == nil {
 		enc.Stop()
 		t.Fatal("expected error for missing binary")
@@ -267,7 +267,7 @@ func TestEncoderStopKillsAndIsIdempotent(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
 	defer cancel()
 
-	enc, err := StartEncoder(ctx, "test-stream", "/bin/sh", []string{"-c", "sleep 30"}, 1)
+	enc, err := StartEncoder(ctx, "livestream "+"test-stream", "/bin/sh", []string{"-c", "sleep 30"}, 1)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}
@@ -298,7 +298,7 @@ func TestEncoderStopEscalatesToSIGKILL(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
 	defer cancel()
 
-	enc, err := StartEncoder(ctx, "test-stream", script, []string{ready}, 0)
+	enc, err := StartEncoder(ctx, "livestream "+"test-stream", script, []string{ready}, 0)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}
@@ -335,7 +335,7 @@ func TestEncoderStderrCarriesLivestreamID(t *testing.T) {
 	const id = "stderr-id-0f3a"
 	// Unique per run: the recorded logs outlive a test under -count.
 	marker := fmt.Sprintf("stderr-marker-%d", time.Now().UnixNano())
-	enc, err := StartEncoder(ctx, id, "/bin/sh", []string{"-c", "echo " + marker + "-1 >&2; echo " + marker + "-2 >&2"}, 0)
+	enc, err := StartEncoder(ctx, "livestream "+id, "/bin/sh", []string{"-c", "echo " + marker + "-1 >&2; echo " + marker + "-2 >&2"}, 0)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}

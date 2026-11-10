@@ -28,25 +28,27 @@ var ErrSessionClosed = errors.New("session closed")
 // first keyframe, so no VOD was written.
 var ErrNothingRecorded = errors.New("session ended before its first keyframe, nothing recorded")
 
-// SessionDeps is what every Session shares with the rest of the service.
-// Registry and Storage are required; Now defaults to time.Now.
+// SessionDeps is what a Session needs from the rest of the service. Mode
+// (from LiveMode or FileMode) and Storage are required; Now defaults to
+// time.Now.
 type SessionDeps struct {
-	Registry  *Registry
+	Mode      Mode
 	Storage   storage.Storage
 	Transcode config.Transcode
 	Now       func() time.Time
 }
 
-// Session turns one RTMP connection's packets into a live Stream, a VOD
-// recording and thumbnails. It buffers the decoder configs, drops media until
+// Session turns one source's packets (an RTMP connection or an uploaded
+// file) into the Mode's Output, a VOD recording and thumbnails. It buffers the decoder configs, drops media until
 // the first H.264 keyframe and builds everything at that keyframe. Nothing
 // HandlePacket does waits on ffmpeg, the recorder or the thumbnailer.
 //
 // HandlePacket and Close may be called from different goroutines.
 type Session struct {
-	ctx context.Context
-	id  string
-	d   SessionDeps
+	ctx   context.Context
+	id    string
+	label string // starts every log line, from the Mode
+	d     SessionDeps
 
 	// mu serializes HandlePacket with itself and with the start of Close.
 	mu          sync.Mutex
@@ -68,7 +70,7 @@ type Session struct {
 	audio      *mpeg4audio.AudioSpecificConfig
 	renditions []Rendition
 	clk        *Clock
-	stream     *Stream
+	out        Output
 	rec        *Recorder
 	thumbs     *Thumbnailer
 	enc        *sessionEncoder // nil when the ladder is source only or ffmpeg failed to start
@@ -83,7 +85,7 @@ type Session struct {
 	closeErr  error // valid after closeDone is closed
 }
 
-// NewSession returns a Session for livestream id. ctx carries the request
+// NewSession returns a Session for id (a livestream or VOD id). ctx carries the request
 // fields attached to log lines; the Session's own work is bounded by Close,
 // not by ctx.
 func NewSession(ctx context.Context, id string, d SessionDeps) *Session {
@@ -93,6 +95,7 @@ func NewSession(ctx context.Context, id string, d SessionDeps) *Session {
 	return &Session{
 		ctx:       ctx,
 		id:        id,
+		label:     d.Mode.label(id),
 		d:         d,
 		badInput:  dropLimiter{interval: sessionLogInterval},
 		closeDone: make(chan struct{}),
@@ -140,13 +143,13 @@ func (s *Session) HandlePacket(pkt av.Packet) error {
 // first keyframe. ok is false when the keyframe cannot start the session;
 // err is nil when that is only because no AVC config has arrived yet.
 func (s *Session) start(key av.Packet) (ok bool, err error) {
-	if s.d.Registry == nil || s.d.Storage == nil {
-		return false, fmt.Errorf("livestream %s: session needs a registry and a storage", s.id)
+	if s.d.Mode.open == nil || s.d.Storage == nil {
+		return false, fmt.Errorf("%s: session needs a mode and a storage", s.label)
 	}
 	if s.videoConfig == nil {
 		if !s.waitLogged {
 			s.waitLogged = true
-			logger.Errorf(s.ctx, "livestream %s: keyframe before any AVC config, waiting for one", s.id)
+			logger.Errorf(s.ctx, "%s: keyframe before any AVC config, waiting for one", s.label)
 		}
 		return false, nil
 	}
@@ -154,29 +157,25 @@ func (s *Session) start(key av.Packet) (ok bool, err error) {
 	tc := s.d.Transcode
 	src, err := ProbeAVCConfig(s.videoConfig.Data)
 	if err != nil {
-		return false, fmt.Errorf("livestream %s: probe AVC config: %w", s.id, err)
+		return false, fmt.Errorf("%s: probe AVC config: %w", s.label, err)
 	}
 	rs, err := BuildLadder(src, tc.FFMpegSetting.Qualities)
 	if err != nil {
-		return false, fmt.Errorf("livestream %s: build ladder: %w", s.id, err)
+		return false, fmt.Errorf("%s: build ladder: %w", s.label, err)
 	}
 	audio := s.probeAudio()
 
 	clk := NewClock(s.d.Now(), key.Time)
-	stream, err := NewStream(s.id, rs, audio, tc.Live)
+	out, err := s.d.Mode.open(s.id, rs, audio)
 	if err != nil {
-		return false, fmt.Errorf("livestream %s: %w", s.id, err)
-	}
-	if err := s.d.Registry.Add(stream); err != nil {
-		stream.Close()
-		return false, fmt.Errorf("livestream %s: register stream: %w", s.id, err)
+		return false, fmt.Errorf("%s: %w", s.label, err)
 	}
 
-	s.src, s.audio, s.renditions, s.clk, s.stream = src, audio, rs, clk, stream
+	s.src, s.audio, s.renditions, s.clk, s.out = src, audio, rs, clk, out
 	s.params = src
-	s.rec = NewRecorder(s.ctx, s.id, rs, audio, s.d.Storage, tc.PrivateHLSPath,
+	s.rec = NewRecorder(s.ctx, s.label, s.id, rs, audio, s.d.Storage, tc.PrivateHLSPath,
 		time.Duration(tc.Live.RecordSegmentDurationMs)*time.Millisecond)
-	s.thumbs = NewThumbnailer(s.ctx, s.id, tc.FFMpegSetting.FFMpegPath, src, s.d.Storage,
+	s.thumbs = NewThumbnailer(s.ctx, s.label, s.id, tc.FFMpegSetting.FFMpegPath, src, s.d.Storage,
 		time.Duration(tc.Live.ThumbnailIntervalMs)*time.Millisecond)
 	s.started = true
 
@@ -185,13 +184,13 @@ func (s *Session) start(key av.Packet) (ok bool, err error) {
 		if audio != nil {
 			headers = append(headers, *s.audioConfig)
 		}
-		s.enc = startSessionEncoder(s.ctx, s.id, encoderWiring{
-			stream: stream, rec: s.rec, clk: clk, src: src, ladder: rs,
+		s.enc = startSessionEncoder(s.ctx, s.label, encoderWiring{
+			out: out, rec: s.rec, clk: clk, src: src, ladder: rs,
 			headers: headers, hasAudio: audio != nil, transcode: tc,
 		})
 	}
 
-	logger.Infof(s.ctx, "livestream %s: started %dx%d with ladder %v, audio %v",
+	logger.Infof(s.ctx, "%s: started %dx%d with ladder %v, audio %v",
 		s.id, src.Width, src.Height, ladderNamesOf(rs), audio != nil)
 	return true, nil
 }
@@ -202,13 +201,13 @@ func (s *Session) probeAudio() *mpeg4audio.AudioSpecificConfig {
 	if s.audioConfig == nil {
 		// joy5 only demuxes AAC, so a source sending another audio codec
 		// looks the same as one sending no audio.
-		logger.Warnf(s.ctx, "livestream %s: no AAC audio before the first keyframe, the stream is video-only (only AAC audio is supported)", s.id)
+		logger.Warnf(s.ctx, "%s: no AAC audio before the first keyframe, the stream is video-only (only AAC audio is supported)", s.label)
 		return nil
 	}
 	audio, err := AudioConfig(*s.audioConfig)
 	if err != nil {
-		logger.Errorf(s.ctx, "livestream %s: ignoring audio, bad AAC config: %v", s.id, err)
-		logger.Warnf(s.ctx, "livestream %s: the stream is video-only", s.id)
+		logger.Errorf(s.ctx, "%s: ignoring audio, bad AAC config: %v", s.label, err)
+		logger.Warnf(s.ctx, "%s: the stream is video-only", s.label)
 		return nil
 	}
 	return audio
@@ -229,7 +228,7 @@ func (s *Session) writeVideo(pkt av.Packet) {
 		s.logBadInput("skipping video packet at %v: %v", pkt.Time, err)
 		return
 	}
-	if err := s.stream.WriteVideo(0, s.clk.NTP(pts), pts, au); err != nil {
+	if err := s.out.WriteVideo(0, s.clk.NTP(pts), pts, au); err != nil {
 		s.logBadInput("write source video at %v: %v", pkt.Time, err)
 	}
 	s.rec.WriteVideo(0, pts, dts, au)
@@ -237,7 +236,7 @@ func (s *Session) writeVideo(pkt av.Packet) {
 		s.thumbs.Offer(nalus)
 	}
 
-	if s.enc != nil && !s.srcReady && s.stream.Ready(0) {
+	if s.enc != nil && !s.srcReady && s.out.Ready(0) {
 		s.srcReady = true
 		s.enc.armReadyDeadline(encodedReadyDeadline)
 	}
@@ -273,7 +272,7 @@ func (s *Session) writeAudio(pkt av.Packet) {
 	}
 
 	aus := [][]byte{pkt.Data}
-	if err := s.stream.WriteAudio(s.clk.NTP(pts90k), s.clk.Audio(pkt.Time, s.audio.SampleRate), aus); err != nil {
+	if err := s.out.WriteAudio(s.clk.NTP(pts90k), s.clk.Audio(pkt.Time, s.audio.SampleRate), aus); err != nil {
 		s.logBadInput("write audio at %v: %v", pkt.Time, err)
 	}
 	s.rec.WriteAudio(pts90k, aus)
@@ -293,8 +292,8 @@ func (s *Session) logBadInput(format string, args ...any) {
 	if !ok {
 		return
 	}
-	logger.Errorf(s.ctx, "livestream %s: "+format+" (%d report(s) since the last log)",
-		append(append([]any{s.id}, args...), n)...)
+	logger.Errorf(s.ctx, "%s: "+format+" (%d report(s) since the last log)",
+		append(append([]any{s.label}, args...), n)...)
 }
 
 // withParamSets returns a new access unit with sps and pps ahead of nalus,
@@ -343,12 +342,12 @@ func (s *Session) beginClose() {
 	s.closed = true
 	started := s.started
 	if started {
-		s.d.Registry.Remove(s.id)
+		s.out.Unpublish()
 	}
 	s.mu.Unlock()
 
 	if !started {
-		logger.Infof(s.ctx, "livestream %s: closed before the first keyframe, nothing recorded", s.id)
+		logger.Infof(s.ctx, "%s: closed before the first keyframe, nothing recorded", s.label)
 		s.closeErr = ErrNothingRecorded
 		close(s.closeDone)
 		return
@@ -363,7 +362,7 @@ func (s *Session) shutdown() error {
 	if s.enc != nil {
 		s.enc.stop()
 	}
-	s.stream.Close()
+	s.out.Close()
 
 	var finishErr error
 	var wg sync.WaitGroup
@@ -379,9 +378,9 @@ func (s *Session) shutdown() error {
 	wg.Wait()
 
 	if finishErr != nil {
-		logger.Errorf(s.ctx, "livestream %s: closed, VOD not written: %v", s.id, finishErr)
+		logger.Errorf(s.ctx, "%s: closed, VOD not written: %v", s.label, finishErr)
 		return finishErr
 	}
-	logger.Infof(s.ctx, "livestream %s: closed", s.id)
+	logger.Infof(s.ctx, "%s: closed", s.label)
 	return nil
 }

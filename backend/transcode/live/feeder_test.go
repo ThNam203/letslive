@@ -30,7 +30,7 @@ func startFixtureEncoderFrom(t *testing.T, ctx context.Context, fixture string) 
 	t.Helper()
 
 	args := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "veryfast", 23)
-	enc, err := StartEncoder(ctx, "test-stream", ffmpegBinary(t), args, 1)
+	enc, err := StartEncoder(ctx, "livestream "+"test-stream", ffmpegBinary(t), args, 1)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}
@@ -67,7 +67,7 @@ func TestFeedTS(t *testing.T) {
 	var lastPTS int64
 	fed := make(chan error, 1)
 	go func() {
-		fed <- FeedTS(ctx, enc.Outputs()[0], s, 1, f.clock, func(pts90k, dts90k int64, au [][]byte) {
+		fed <- FeedTS(ctx, enc.Outputs()[0], s, 1, "livestream "+s.ID(), f.clock, func(pts90k, dts90k int64, au [][]byte) {
 			if firstPTS < 0 {
 				firstPTS, firstDTS = pts90k, dts90k
 			}
@@ -138,7 +138,7 @@ func feedAndStopAtFirstAU(t *testing.T, stop func(s *Stream)) (err error, calls 
 
 	fed := make(chan error, 1)
 	go func() {
-		fed <- FeedTS(ctx, enc.Outputs()[0], s, 1, f.clock, func(int64, int64, [][]byte) {
+		fed <- FeedTS(ctx, enc.Outputs()[0], s, 1, "livestream "+s.ID(), f.clock, func(int64, int64, [][]byte) {
 			calls++
 			if calls == 1 {
 				stop(s)
@@ -213,7 +213,7 @@ func TestFeedTSWaitsForReaderOnContextCancel(t *testing.T) {
 	var calls, finished atomic.Int32
 	fed := make(chan error, 1)
 	go func() {
-		fed <- FeedTS(ctx, src, s, 1, f.clock, func(int64, int64, [][]byte) {
+		fed <- FeedTS(ctx, src, s, 1, "livestream "+s.ID(), f.clock, func(int64, int64, [][]byte) {
 			if calls.Add(1) == 3 {
 				cancel()
 				time.Sleep(slowAU) // still inside the callback when ctx is done
@@ -258,7 +258,7 @@ func TestFeedTSReturnsPromptlyOnContextCancel(t *testing.T) {
 
 	// ffmpeg gets no input, so its output pipe stays open and silent.
 	args := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "veryfast", 23)
-	enc, err := StartEncoder(outer, "test-stream", ffmpegBinary(t), args, 1)
+	enc, err := StartEncoder(outer, "livestream "+"test-stream", ffmpegBinary(t), args, 1)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
 	}
@@ -266,7 +266,7 @@ func TestFeedTSReturnsPromptlyOnContextCancel(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(outer)
 	fed := make(chan error, 1)
-	go func() { fed <- FeedTS(ctx, enc.Outputs()[0], s, 1, f.clock, nil) }()
+	go func() { fed <- FeedTS(ctx, enc.Outputs()[0], s, 1, "livestream "+s.ID(), f.clock, nil) }()
 
 	time.Sleep(200 * time.Millisecond)
 	cancel()
@@ -301,7 +301,7 @@ func TestFeedTSNoH264Track(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
 	defer cancel()
-	err := FeedTS(ctx, &ts, s, 1, f.clock, nil)
+	err := FeedTS(ctx, &ts, s, 1, "livestream "+s.ID(), f.clock, nil)
 	if err == nil {
 		t.Fatal("FeedTS on an audio-only TS = nil, want error")
 	}
@@ -313,7 +313,7 @@ func TestFeedTSNoH264Track(t *testing.T) {
 func TestFeedTSBadRendition(t *testing.T) {
 	f := loadStreamFixture(t, "src_1280x720.flv")
 	s := newTestStream(t, []string{"source"}, f.audio, testLiveConfig())
-	err := FeedTS(context.Background(), io.LimitReader(bytes.NewReader(nil), 0), s, 5, f.clock, nil)
+	err := FeedTS(context.Background(), io.LimitReader(bytes.NewReader(nil), 0), s, 5, "livestream "+s.ID(), f.clock, nil)
 	if err == nil {
 		t.Fatal("FeedTS with rendition out of range = nil, want error")
 	}
