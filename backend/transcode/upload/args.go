@@ -40,6 +40,11 @@ func IntakeArgs(input string, pl Plan, preset string, crf, threads int) []string
 		args = append(args,
 			"-vf", videoFilters(pl),
 			"-c:v", "libx264", "-preset", preset, "-crf", strconv.Itoa(crf),
+		)
+		if pl.MaxRate != "" {
+			args = append(args, "-maxrate", pl.MaxRate, "-bufsize", pl.BufSize)
+		}
+		args = append(args,
 			"-fps_mode", "cfr", "-r", strconv.Itoa(pl.FPS),
 			"-force_key_frames", convertedKeyframeExpr,
 		)

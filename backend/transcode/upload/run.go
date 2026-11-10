@@ -46,7 +46,7 @@ func Run(ctx context.Context, tc config.Transcode, st storage.Storage, vodID, in
 		return Result{}, fmt.Errorf("%w: %w", ErrInput, err)
 	}
 	maxGap := 2 * time.Duration(tc.Live.RecordSegmentDurationMs) * time.Millisecond
-	plan, err := Decide(probe, maxGap, forceConvert)
+	plan, err := Decide(probe, maxGap, forceConvert, tc.FFMpegSetting.Qualities)
 	if err != nil {
 		return Result{}, fmt.Errorf("%w: %w", ErrInput, err)
 	}
