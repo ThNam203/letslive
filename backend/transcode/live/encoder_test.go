@@ -42,7 +42,7 @@ func landscape30() SourceInfo {
 
 func TestEncoderArgsLandscape(t *testing.T) {
 	got := EncoderArgs(SourceInfo{Width: 1920, Height: 1080, FPS: 30},
-		[]Rendition{encodedRendition(720, 30), encodedRendition(480, 30)}, "veryfast", 23)
+		[]Rendition{encodedRendition(720, 30), encodedRendition(480, 30)}, "veryfast", 23, liveProfile)
 
 	want := []string{
 		"-hide_banner", "-loglevel", "error", "-probesize", "32", "-analyzeduration", "0", "-f", "flv", "-i", "pipe:0", "-an", "-copyts",
@@ -60,7 +60,7 @@ func TestEncoderArgsLandscape(t *testing.T) {
 }
 
 func TestEncoderArgsSingle(t *testing.T) {
-	got := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "ultrafast", 28)
+	got := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "ultrafast", 28, liveProfile)
 
 	want := []string{
 		"-hide_banner", "-loglevel", "error", "-probesize", "32", "-analyzeduration", "0", "-f", "flv", "-i", "pipe:0", "-an", "-copyts",
@@ -76,7 +76,7 @@ func TestEncoderArgsSingle(t *testing.T) {
 
 func TestEncoderArgsPortrait(t *testing.T) {
 	got := EncoderArgs(SourceInfo{Width: 1080, Height: 1920, FPS: 30},
-		[]Rendition{encodedRendition(720, 30), encodedRendition(480, 30)}, "veryfast", 23)
+		[]Rendition{encodedRendition(720, 30), encodedRendition(480, 30)}, "veryfast", 23, liveProfile)
 
 	graph := graphArg(t, got)
 	want := "[0:v]split=2[s0][s1];[s0]scale=720:-2[v0];[s1]scale=480:-2[v1]"
@@ -89,18 +89,18 @@ func TestEncoderArgsPortrait(t *testing.T) {
 // x264 takes its VUI timing from ffmpeg's guess on the metadata-less FLV
 // input (60 fps for a 30 fps source), and the master advertises that rate.
 func TestEncoderArgsFPS(t *testing.T) {
-	same := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "veryfast", 23)
+	same := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "veryfast", 23, liveProfile)
 	if g := indexOf(same, "-g"); g < 0 || g+3 >= len(same) || same[g+2] != "-r" || same[g+3] != "30" {
 		t.Errorf("-r 30 must follow -g 300 for an equal fps: %q", same)
 	}
 
-	lower := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 24)}, "veryfast", 23)
+	lower := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 24)}, "veryfast", 23, liveProfile)
 	g := indexOf(lower, "-g")
 	if g < 0 || g+3 >= len(lower) || lower[g+1] != "300" || lower[g+2] != "-r" || lower[g+3] != "24" {
 		t.Errorf("-r 24 must follow -g 300: %q", lower)
 	}
 
-	unknown := EncoderArgs(SourceInfo{Width: 1280, Height: 720}, []Rendition{encodedRendition(480, 24)}, "veryfast", 23)
+	unknown := EncoderArgs(SourceInfo{Width: 1280, Height: 720}, []Rendition{encodedRendition(480, 24)}, "veryfast", 23, liveProfile)
 	if indexOf(unknown, "-r") >= 0 {
 		t.Errorf("unexpected -r when source fps unknown: %q", unknown)
 	}
@@ -144,7 +144,7 @@ func TestEncoderEndToEnd(t *testing.T) {
 	}
 
 	src := SourceInfo{Width: 1280, Height: 720, FPS: 30}
-	args := EncoderArgs(src, []Rendition{encodedRendition(480, 30)}, "veryfast", 23)
+	args := EncoderArgs(src, []Rendition{encodedRendition(480, 30)}, "veryfast", 23, liveProfile)
 
 	ctx, cancel := context.WithTimeout(context.Background(), testEncoderTimeout)
 	defer cancel()

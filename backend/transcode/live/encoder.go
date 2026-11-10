@@ -32,9 +32,9 @@ type Encoder struct {
 	closeOnce sync.Once
 }
 
-// StartEncoder runs ffmpegPath with args for the session named by label (it starts every log line), giving it stdin
-// plus `outputs` extra pipes on fd 3, 4, ... that match the pipe:N targets in
-// args.
+// StartEncoder runs ffmpegPath with args for the session named by label
+// (it starts every log line), giving it stdin plus `outputs` extra pipes on
+// fd 3, 4, ... that match the pipe:N targets in args.
 func StartEncoder(ctx context.Context, label, ffmpegPath string, args []string, outputs int) (*Encoder, error) {
 	if outputs < 0 {
 		return nil, fmt.Errorf("invalid output count %d", outputs)
@@ -140,6 +140,20 @@ func logStderr(ctx context.Context, label string, r io.Reader) {
 		logger.Errorf(ctx, "%s: read ffmpeg stderr: %v", label, err)
 	}
 }
+
+// SetNiceness sets the nice value of process pid; 0 leaves it unchanged.
+func SetNiceness(pid, nice int) error {
+	if nice == 0 {
+		return nil
+	}
+	if err := syscall.Setpriority(syscall.PRIO_PROCESS, pid, nice); err != nil {
+		return fmt.Errorf("set nice %d on pid %d: %w", nice, pid, err)
+	}
+	return nil
+}
+
+// Pid is ffmpeg's process id.
+func (e *Encoder) Pid() int { return e.cmd.Process.Pid }
 
 // Input is the writer ffmpeg reads FLV from. Close it to let ffmpeg flush and exit.
 func (e *Encoder) Input() io.WriteCloser { return e.stdin }

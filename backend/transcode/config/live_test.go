@@ -80,3 +80,12 @@ func TestPostProcessAppliesLiveDefaults(t *testing.T) {
 		t.Fatal("PostProcess() accepted segmentCount 6")
 	}
 }
+
+func TestUploadWithDefaults(t *testing.T) {
+	if got := (Upload{}).WithDefaults(); got.Niceness != 10 || got.Threads != 0 {
+		t.Fatalf("WithDefaults() = %+v, want Niceness 10, Threads 0", got)
+	}
+	if got := (Upload{Niceness: 3}).WithDefaults().Niceness; got != 3 {
+		t.Fatalf("Niceness = %d, want 3", got)
+	}
+}

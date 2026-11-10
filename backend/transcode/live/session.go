@@ -21,6 +21,9 @@ import (
 // of one session.
 const sessionLogInterval = 5 * time.Second
 
+// encoderEndTimeout bounds how long Close lets ffmpeg drain what it was given.
+const encoderEndTimeout = 2 * time.Minute
+
 // ErrSessionClosed is returned by HandlePacket after Close.
 var ErrSessionClosed = errors.New("session closed")
 
@@ -190,7 +193,7 @@ func (s *Session) start(key av.Packet) (ok bool, err error) {
 		s.enc = startSessionEncoder(s.ctx, s.label, encoderWiring{
 			out: out, rec: s.rec, clk: clk, src: src, ladder: rs,
 			headers: headers, hasAudio: audio != nil, transcode: tc,
-			bp: s.d.Mode.bp, fail: s.d.Mode.fail,
+			bp: s.d.Mode.bp, fail: s.d.Mode.fail, profile: s.d.Mode.profile,
 		})
 	}
 
@@ -367,7 +370,9 @@ func (s *Session) beginClose() {
 
 func (s *Session) shutdown() error {
 	if s.enc != nil {
-		s.enc.stop()
+		ctx, cancel := context.WithTimeout(context.WithoutCancel(s.ctx), encoderEndTimeout)
+		s.d.Mode.endEncoder(s.enc, ctx)
+		cancel()
 	}
 	s.out.Close()
 

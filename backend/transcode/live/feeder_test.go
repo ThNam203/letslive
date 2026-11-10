@@ -29,7 +29,7 @@ func startFixtureEncoder(t *testing.T, ctx context.Context) (*Encoder, <-chan er
 func startFixtureEncoderFrom(t *testing.T, ctx context.Context, fixture string) (*Encoder, <-chan error) {
 	t.Helper()
 
-	args := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "veryfast", 23)
+	args := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "veryfast", 23, liveProfile)
 	enc, err := StartEncoder(ctx, "livestream "+"test-stream", ffmpegBinary(t), args, 1)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)
@@ -257,7 +257,7 @@ func TestFeedTSReturnsPromptlyOnContextCancel(t *testing.T) {
 	s := newTestStream(t, []string{"source", "480p"}, f.audio, testLiveConfig())
 
 	// ffmpeg gets no input, so its output pipe stays open and silent.
-	args := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "veryfast", 23)
+	args := EncoderArgs(landscape30(), []Rendition{encodedRendition(480, 30)}, "veryfast", 23, liveProfile)
 	enc, err := StartEncoder(outer, "livestream "+"test-stream", ffmpegBinary(t), args, 1)
 	if err != nil {
 		t.Fatalf("StartEncoder: %v", err)

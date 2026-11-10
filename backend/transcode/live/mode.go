@@ -22,6 +22,10 @@ type Mode struct {
 	bp Backpressure
 	// fail is told about everything that makes the recording incomplete.
 	fail Failures
+	// profile is the ffmpeg tuning of the encoded renditions.
+	profile EncoderProfile
+	// endEncoder ends ffmpeg when the session closes.
+	endEncoder encoderEnd
 }
 
 // LiveMode is the mode of an RTMP livestream: viewers watch it through reg
@@ -43,8 +47,10 @@ func LiveMode(reg *Registry, cfg config.Live) (Mode, error) {
 			}
 			return liveOutput{Stream: stream, reg: reg}, nil
 		},
-		bp:   dropWhenFull{},
-		fail: logOnly{},
+		bp:         dropWhenFull{},
+		fail:       logOnly{},
+		profile:    liveProfile,
+		endEncoder: (*sessionEncoder).terminate,
 	}, nil
 }
 

@@ -37,8 +37,10 @@ func newFileishSession(t *testing.T, rig *sessionRig) (*Session, *firstError) {
 	t.Cleanup(cancel)
 	fail := &firstError{cancel: cancel}
 	id := uuid.Must(uuid.NewV4()).String()
+	m := testMode(t, openNothing, waitUntil{ctx: ctx}, fail)
+	m.endEncoder = (*sessionEncoder).drain
 	s := NewSession(context.Background(), id, SessionDeps{
-		Mode:      testMode(t, openNothing, waitUntil{ctx: ctx}, fail),
+		Mode:      m,
 		Storage:   rig.st,
 		Transcode: rig.tc,
 		Now:       time.Now,
